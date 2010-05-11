@@ -34,7 +34,8 @@ module mkvarctl
   character(len=256) :: mksrf_fmax     = ' '  ! fmax data file name
   character(len=256) :: mksrf_flai     = ' '  ! lai data filename
   character(len=256) :: mksrf_fdynuse  = ' '  ! ascii file containing names of dynamic land use files
-  character(len=256) :: mksrf_fvocef = ' '    ! VOC Emission Factor data file name
+  character(len=256) :: mksrf_fvocef   = ' '  ! VOC Emission Factor data file name
+  integer, public    :: nglcec         = 10   ! number of elevation classes for glaciers
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 11/04

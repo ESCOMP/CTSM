@@ -54,12 +54,13 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd   , only : clm_a2l
-    use clm_varcon   , only : tfrz, istice, istwet, istsoil, isturb, &
+    use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, isturb, &
                               icol_roof, icol_sunwall, icol_shadewall
     use FracWetMod   , only : FracWet
     use clm_time_manager , only : get_step_size
     use subgridAveMod, only : p2c
     use SNICARMod    , only : snw_rds_min
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -180,7 +181,6 @@ contains
     pgridcell          => clm3%g%l%c%p%gridcell
     forc_rain          => clm_a2l%forc_rain
     forc_snow          => clm_a2l%forc_snow
-    forc_t             => clm_a2l%forc_t
 
     ! Assign local pointers to derived type members (landunit-level)
 
@@ -194,6 +194,7 @@ contains
     pfti               => clm3%g%l%c%pfti
     npfts              => clm3%g%l%c%npfts
     do_capsnow         => clm3%g%l%c%cps%do_capsnow
+    forc_t             => clm3%g%l%c%ces%forc_t
     t_grnd             => clm3%g%l%c%ces%t_grnd
     snl                => clm3%g%l%c%cps%snl
     snowdp             => clm3%g%l%c%cps%snowdp
@@ -313,7 +314,7 @@ contains
              end if
           end if
 
-       else if (ltype(l) == istice) then
+       else if (ltype(l)==istice .or. ltype(l)==istice_mec) then
 
           h2ocan(p)            = 0._r8
           qflx_candrip(p)      = 0._r8
@@ -350,6 +351,7 @@ contains
        if (do_capsnow(c)) then
           qflx_snwcp_liq(p) = qflx_prec_grnd_rain(p)
           qflx_snwcp_ice(p) = qflx_prec_grnd_snow(p)
+
           qflx_snow_grnd_pft(p) = 0._r8
           qflx_rain_grnd(p) = 0._r8
        else
@@ -384,10 +386,10 @@ contains
        if (do_capsnow(c)) then
           dz_snowf = 0._r8
        else
-          if (forc_t(g) > tfrz + 2._r8) then
+          if (forc_t(c) > tfrz + 2._r8) then
              bifall=50._r8 + 1.7_r8*(17.0_r8)**1.5_r8
-          else if (forc_t(g) > tfrz - 15._r8) then
-             bifall=50._r8 + 1.7_r8*(forc_t(g) - tfrz + 15._r8)**1.5_r8
+          else if (forc_t(c) > tfrz - 15._r8) then
+             bifall=50._r8 + 1.7_r8*(forc_t(c) - tfrz + 15._r8)**1.5_r8
           else
              bifall=50._r8
           end if
@@ -412,7 +414,7 @@ contains
           dz(c,0) = snowdp(c)                       ! meter
           z(c,0) = -0.5_r8*dz(c,0)
           zi(c,-1) = -dz(c,0)
-          t_soisno(c,0) = min(tfrz, forc_t(g))      ! K
+          t_soisno(c,0) = min(tfrz, forc_t(c))      ! K
           h2osoi_ice(c,0) = h2osno(c)               ! kg/m2
           h2osoi_liq(c,0) = 0._r8                   ! kg/m2
           frac_iceold(c,0) = 1._r8

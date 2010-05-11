@@ -555,7 +555,7 @@ contains
 ! !IROUTINE: decompInit_glcp
 !
 ! !INTERFACE:
-  subroutine decompInit_glcp(ans,ani,anj,lns,lni,lnj)
+  subroutine decompInit_glcp(ans,ani,anj,lns,lni,lnj,glcmask)
 !
 ! !DESCRIPTION:
 ! This subroutine initializes the land surface decomposition into a clump
@@ -573,6 +573,7 @@ contains
     implicit none
     integer , intent(in) :: lns,lni,lnj ! land domain global size
     integer , intent(in) :: ans,ani,anj ! atm domain global size
+    integer , pointer, optional :: glcmask(:)  ! glc mask
 !
 ! !LOCAL VARIABLES:
     integer :: lg,ln,li,lj        ! indices
@@ -614,6 +615,7 @@ contains
     integer, pointer :: tarr1(:),tarr2(:)
     integer :: ntest
     character(len=8) :: clmlevel
+    character(len=32), parameter :: subname = 'decompInit_glcp'
 
 ! !CALLED FROM:
 ! subroutine initialize
@@ -667,10 +669,14 @@ contains
           an = adecomp%gdc2glo(anumg)
           cid = acid(an)
           do lnidx = 0,lncnt(an)-1
-!             ln = lnmap(lnoff(an)+lnidx)
              ln = ldecomp%glo2gdc(lnmap(lnoff(an)+lnidx))
-             call subgrid_get_gcellinfo (ln, nlunits=ilunits, &
+             if (present(glcmask)) then
+                call subgrid_get_gcellinfo (ln, nlunits=ilunits, &
+                                  ncols=icols, npfts=ipfts, glcmask=glcmask(ln))
+             else
+                call subgrid_get_gcellinfo (ln, nlunits=ilunits, &
                                   ncols=icols, npfts=ipfts)
+             endif
              allvecl(cid,1) = allvecl(cid,1) + 1
              allvecl(cid,2) = allvecl(cid,2) + ilunits
              allvecl(cid,3) = allvecl(cid,3) + icols
@@ -757,9 +763,6 @@ contains
           write(iulog,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits,allvecg(n,2)
           write(iulog,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols  ,allvecg(n,3)
           write(iulog,*) 'decompInit_glcp(): allvecg error pfts   ',iam,n,clumps(n)%npfts  ,allvecg(n,4)
-#ifndef UNICOSMP
-          call shr_sys_flush(iulog)
-#endif
           call endrun()
        endif
     enddo

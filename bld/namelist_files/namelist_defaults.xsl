@@ -21,6 +21,8 @@
        <li>Initial condition time of day (tod) (sec)</li>
        <li>River Transport Model (RTM) on or off</li>
        <li>Maximum number of Plant Function Types (maxpft)</li>
+       <li>Number of glacier multiple elevation classes (glc_nec)</li>
+       <li>Glacier model grid size (glc_grid)</li>
     </ul>
 
     <table BORDER="1" CELLPADDING="10">
@@ -56,6 +58,12 @@
         <xsl:if test="string-length(@maxpft)>0">
         maxpft=<xsl:value-of select="@maxpft"/>
         </xsl:if>
+        <xsl:if test="string-length(@glc_nec)>0">
+        glc_nec=<xsl:value-of select="@glc_nec"/>
+        </xsl:if>
+        <xsl:if test="string-length(@glc_grid)>0">
+        glc_grid=<xsl:value-of select="@glc_grid"/>
+        </xsl:if>
         </td>
       </tr>
       <tr>
@@ -78,6 +86,7 @@
     <td><xsl:value-of select="@maxpft"/></td>
     <td><xsl:value-of select="@mask"/></td>
     <td><xsl:value-of select="@bgc"/></td>
+    <td><xsl:value-of select="@glc_nec"/></td>
     <td><xsl:value-of select="@rtm"/></td>
     <td><xsl:value-of select="@ic_ymd"/></td>
     <td><xsl:value-of select="@ic_tod"/></td>

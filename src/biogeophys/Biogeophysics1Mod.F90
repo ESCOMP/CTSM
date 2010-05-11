@@ -67,7 +67,7 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
-                                    istice, istwet, istsoil, isturb, istdlak, &
+                                    istice, istice_mec, istwet, istsoil, isturb, istdlak, &
                                     zlnd, zsno, tfrz, &
                                     icol_roof, icol_sunwall, icol_shadewall,     &
                                     icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
@@ -170,7 +170,7 @@ contains
     real(r8), pointer :: eflx_sh_tot(:)   !total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_sh_tot_u(:) !urban total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_sh_tot_r(:) !rural total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_lh_tot(:)   !total latent heat flux (W/m8*2)  [+ to atm]
+    real(r8), pointer :: eflx_lh_tot(:)   !total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_lh_tot_u(:) !urban total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_lh_tot_r(:) !rural total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_sh_veg(:)   !sensible heat flux from leaves (W/m**2) [+ to atm]
@@ -184,6 +184,7 @@ contains
     real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
     real(r8) ,pointer :: soilbeta(:)      !factor that reduces ground evaporation
     real(r8) ,pointer :: soilalpha_u(:)   !Urban factor that reduces ground saturated specific humidity (-)
+
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -214,10 +215,6 @@ contains
    ! Assign local pointers to derived type members (gridcell-level)
 
     forc_hgt_t    => clm_a2l%forc_hgt_t
-    forc_pbot     => clm_a2l%forc_pbot
-    forc_q        => clm_a2l%forc_q
-    forc_t        => clm_a2l%forc_t
-    forc_th       => clm_a2l%forc_th
     forc_u        => clm_a2l%forc_u
     forc_v        => clm_a2l%forc_v
     forc_hgt_u    => clm_a2l%forc_hgt_u
@@ -232,6 +229,11 @@ contains
     z_d_town      => clm3%g%l%z_d_town
 
     ! Assign local pointers to derived type members (column-level)
+
+    forc_pbot     => clm3%g%l%c%cps%forc_pbot
+    forc_q        => clm3%g%l%c%cws%forc_q
+    forc_t        => clm3%g%l%c%ces%forc_t
+    forc_th       => clm3%g%l%c%ces%forc_th
 
     cgridcell     => clm3%g%l%c%gridcell
     clandunit     => clm3%g%l%c%landunit
@@ -318,7 +320,6 @@ contains
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
-       g = cgridcell(c)
 
        if (ctype(c) == icol_road_perv) then
           hr_road_perv = 0._r8
@@ -333,7 +334,8 @@ contains
        ! at ground surface
 
        qred = 1._r8
-       if (ityplun(l)/=istwet .AND. ityplun(l)/=istice) then
+       if (ityplun(l)/=istwet .AND. ityplun(l)/=istice  &
+                              .AND. ityplun(l)/=istice_mec) then
           if (ityplun(l) == istsoil) then
              wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)
              fac  = min(1._r8, wx/watsat(c,1))
@@ -394,13 +396,13 @@ contains
           soilbeta(c) =   1._r8
        end if
 
-       call QSat(t_grnd(c), forc_pbot(g), eg, degdT, qsatg, qsatgdT)
+       call QSat(t_grnd(c), forc_pbot(c), eg, degdT, qsatg, qsatgdT)
 
        qg(c) = qred*qsatg
        dqgdT(c) = qred*qsatgdT
 
-       if (qsatg > forc_q(g) .and. forc_q(g) > qred*qsatg) then
-          qg(c) = forc_q(g)
+       if (qsatg > forc_q(c) .and. forc_q(c) > qred*qsatg) then
+          qg(c) = forc_q(c)
           dqgdT(c) = 0._r8
        end if
 
@@ -408,7 +410,7 @@ contains
        ! Urban emissivities are currently read in from data file
 
        if (ityplun(l) /= isturb) then
-          if (ityplun(l)==istice) then
+          if (ityplun(l)==istice .or. ityplun(l)==istice_mec) then
              emg(c) = 0.97_r8
           else
              emg(c) = (1._r8-frac_sno(c))*0.96_r8 + frac_sno(c)*0.97_r8
@@ -444,7 +446,7 @@ contains
 
        beta(c) = 1._r8
        zii(c)  = 1000._r8
-       thv(c)  = forc_th(g)*(1._r8+0.61_r8*forc_q(g))
+       thv(c)  = forc_th(c)*(1._r8+0.61_r8*forc_q(c))
 
     end do ! (end of columns loop)
     
@@ -500,8 +502,9 @@ contains
        do g = lbg, ubg
           if (pi <= npfts(g)) then
             p = pfti(g) + pi - 1
-            if (pwtgcell(p) > 0._r8) then 
-              l = plandunit(p)
+            l = plandunit(p)
+            ! Note: Some glacier_mec pfts may have zero weight  
+            if (pwtgcell(p) > 0._r8 .or. ityplun(l)==istice_mec) then 
               c = pcolumn(p)
               if (ityplun(l) == istsoil) then
                 if (frac_veg_nosno(p) == 0) then
@@ -513,7 +516,8 @@ contains
                   forc_hgt_t_pft(p) = forc_hgt_t(g) + z0m(p) + displa(p)
                   forc_hgt_q_pft(p) = forc_hgt_q(g) + z0m(p) + displa(p)
                 end if
-              else if (ityplun(l) == istice .or. ityplun(l) == istwet) then
+              else if (ityplun(l) == istwet .or. ityplun(l) == istice      &
+                                            .or. ityplun(l) == istice_mec) then
                 forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c)
                 forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c)
                 forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c)
@@ -540,10 +544,8 @@ contains
 
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
-       g = pgridcell(p)
-
-       thm(p)  = forc_t(g) + 0.0098_r8*forc_hgt_t_pft(p)
-
+       c = pcolumn(p)
+       thm(p)  = forc_t(c) + 0.0098_r8*forc_hgt_t_pft(p)
     end do
 
   end subroutine Biogeophysics1

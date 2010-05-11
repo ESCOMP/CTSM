@@ -16,7 +16,9 @@ module initGridCellsMod
   use spmdMod     , only : masterproc,iam,mpicom
   use abortutils  , only : endrun
   use clm_varsur  , only : wtxy, vegxy
+  use clm_varsur  , only : topoxy
   use clm_varctl  , only : iulog
+
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -60,7 +62,8 @@ contains
                              column_type, pft_type
     use domainMod   , only : ldomain, adomain, gatm
     use decompMod   , only : ldecomp, adecomp, get_proc_global, get_proc_bounds
-    use clm_varcon  , only : istsoil, istice, istwet, istdlak, isturb
+    use clm_varcon  , only : istsoil, istice, istwet, istdlak, isturb, istice_mec
+    use clm_varctl  , only : create_glacier_mec_landunit
     use subgridMod  , only : subgrid_get_gcellinfo
     use shr_const_mod,only : SHR_CONST_PI
 !
@@ -84,6 +87,8 @@ contains
     real(r8):: wtwetland      ! weight (gridcell) of wetland landunit
     integer :: nglacier       ! number of pfts (columns) in glacier landunit
     real(r8):: wtglacier      ! weight (gridcell) of glacier landunit
+    integer :: nglacier_mec   ! number of pfts (columns) in glacier landunit
+    real(r8):: wtglacier_mec  ! weight (gridcell) of glacier_mec landunit
     integer :: ier            ! error status
     integer :: numg           ! total number of gridcells across all processors
     integer :: numl           ! total number of landunits across all processors 
@@ -163,6 +168,44 @@ contains
        call set_landunit_wet_ice_lake(              &
             ltype=istice, &
             nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
+
+       if (create_glacier_mec_landunit) then
+          call set_landunit_wet_ice_lake(              &
+               ltype=istice_mec, &
+               nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell, &
+               glcmask = ldomain%glcmask(gdc))
+       endif
+
+       ! Make ice sheet masks
+
+       gptr%gris_mask(gdc) = 0._r8
+       gptr%gris_area(gdc) = 0._r8
+       gptr%aais_mask(gdc) = 0._r8
+       gptr%aais_area(gdc) = 0._r8
+      
+       ! Greenland mask
+       if ( (ldomain%latc(gdc) >  58. .and. ldomain%latc(gdc) <= 67.  .and.   &
+             ldomain%lonc(gdc) > 302. .and. ldomain%lonc(gdc) < 330.)         &
+                                      .or.                                 &
+            (ldomain%latc(gdc) >  67. .and. ldomain%latc(gdc) <= 70. .and.    &
+             ldomain%lonc(gdc) > 300. .and. ldomain%lonc(gdc) < 345.)         &
+                                      .or.                                 &
+            (ldomain%latc(gdc) >  70. .and. ldomain%latc(gdc) <= 75. .and.    &
+             ldomain%lonc(gdc) > 295. .and. ldomain%lonc(gdc) < 350.)         &
+                                      .or.                                 &
+            (ldomain%latc(gdc) >  75. .and. ldomain%latc(gdc) <= 79. .and.    &
+             ldomain%lonc(gdc) > 285. .and. ldomain%lonc(gdc) < 350.)         &
+                                      .or.                                 &
+            (ldomain%latc(gdc) >  79. .and. ldomain%latc(gdc) <  85. .and.    &
+             ldomain%lonc(gdc) > 290. .and. ldomain%lonc(gdc) < 355.) ) then
+ 
+            gptr%gris_mask(gdc) = 1.0_r8
+
+      elseif (ldomain%latc(gdc) < -60.) then
+
+            gptr%aais_mask(gdc) = 1.0_r8
+
+       endif  ! Greenland or Antarctic grid cell
 
        ! Set clm3 lats/lons
 
@@ -672,17 +715,20 @@ end subroutine clm_ptrs_check
 ! !INTERFACE:
 !  subroutine set_landunit_wet_ice_lake (ltype, wtxy, vegxy, &
   subroutine set_landunit_wet_ice_lake (ltype, &
-                           nw, gi, li, ci, pi, setdata)
+                           nw, gi, li, ci, pi, setdata, glcmask)
 !
 ! !DESCRIPTION: 
-! Initialize wet_ice_lake landunits that are non-urban (lake, wetland, glacier)
+! Initialize wet_ice_lake landunits that are non-urban (lake, wetland, glacier, glacier_mec)
 !
 ! !USES
     use clmtype   , only : clm3, model_type, gridcell_type, landunit_type, &
                            column_type,pft_type
     use subgridMod, only : subgrid_get_gcellinfo
-    use clm_varcon, only : istice, istwet, istdlak
+    use clm_varcon, only : istice, istwet, istdlak, istice_mec
     use clm_varpar, only : npatch_lake, npatch_glacier, npatch_wet
+    use clm_varpar, only : npatch_glacier_mec
+    use clm_varctl, only : glc_nec 
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -695,6 +741,8 @@ end subroutine clm_ptrs_check
     integer , intent(inout) :: ci                ! column index
     integer , intent(inout) :: pi                ! pft index
     logical , intent(in)    :: setdata           ! set info or just compute
+    integer , intent(in), optional :: glcmask    ! = 1 where glc requires sfc mass balance
+                                                 ! = 0 otherwise
 !
 ! !REVISION HISTORY:
 ! Created by Sam Levis
@@ -714,6 +762,7 @@ end subroutine clm_ptrs_check
     type(landunit_type), pointer :: lptr         ! pointer to landunit
     type(column_type)  , pointer :: cptr         ! pointer to column
     type(pft_type)     , pointer :: pptr         ! pointer to pft
+
 !------------------------------------------------------------------------
 
     ! Set decomposition properties
@@ -730,9 +779,15 @@ end subroutine clm_ptrs_check
 !       call subgrid_get_gcellinfo(nw, wtxy, nglacier=npfts, wtglacier=wtlunit2gcell)
        call subgrid_get_gcellinfo(nw, nglacier=npfts, wtglacier=wtlunit2gcell)
        m = npatch_glacier
+    else if (ltype == istice_mec) then
+!       call subgrid_get_gcellinfo(nw, wtxy, nglacier_mec=npfts, wtglacier_mec=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nglacier_mec=npfts, wtglacier_mec=wtlunit2gcell, &
+                                  glcmask = glcmask)
+       ! NOTE: multiple columns per landunit, so m is not set here
+
     else
        write(iulog,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
-       write(iulog,*)' only istwet, istdlak or istice ltypes are valid'
+       write(iulog,*)' only istwet, istdlak, istice and istice_mec ltypes are valid'
        call endrun()
     end if
 
@@ -743,67 +798,135 @@ end subroutine clm_ptrs_check
        lptr => clm3%g%l
        cptr => clm3%g%l%c
        pptr => clm3%g%l%c%p
-       
-       if (npfts /=1) then
+
+       if (npfts /=1 .and. ltype /= istice_mec) then
           write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
                     ' have one column and one pft '
           write(iulog,*)' current values of ncols, pfts=',ncols,npfts
           call endrun()
        end if
 
-       ncols = 1
+       if (ltype==istice_mec) then   ! multiple columns per landunit
 
-       ! Currently assume that each landunit only has only one column 
-       ! (of type 1) and that each column has its own pft
+          ! Assume that columns are of type 1 and that each column has its own pft
+
+          ctype = 1
+          li = li + 1
+
+          if (setdata) then
+
+             ! Determine landunit properties
+
+             lptr%itype    (li) = ltype
+             lptr%ifspecial(li) = .true.
+             lptr%glcmecpoi(li) = .true.
+             lptr%lakpoi   (li) = .false.
+             lptr%urbpoi   (li) = .false.
+             lptr%gridcell (li) = gi
+             lptr%wtgcell  (li) = wtlunit2gcell
+
+             ! Determine column and properties
+             ! (Each column has its own pft)
+             ! 
+             ! For grid cells with glcmask = 1, make sure all the elevations classes
+             !  are populated, even if some have zero fractional area.  This ensures that the 
+             !  ice sheet component, glc, will receive a surface mass balance in each elevation 
+             !  class wherever the SMB is needed.
+             ! Columns with zero weight are referred to as "virtual" columns.
+ 
+             do m = npatch_glacier+1, npatch_glacier_mec
+
+                if (wtxy(nw,m) > 0._r8 .or. glcmask == 1) then
+
+                   ci = ci + 1
+                   pi = pi + 1
+                   if (wtlunit2gcell > 0._r8) then
+                      wtcol2lunit = wtxy(nw,m)/wtlunit2gcell
+                   else   ! virtual landunit
+                      wtcol2lunit = 0._r8
+                   endif
+
+                   cptr%itype    (ci) = ctype
+                   cptr%gridcell (ci) = gi
+                   cptr%wtgcell  (ci) = wtcol2lunit * wtlunit2gcell
+                   cptr%landunit (ci) = li
+                   cptr%wtlunit  (ci) = wtcol2lunit
+
+                   ! Set sfc elevation too
+
+                   cptr%cps%glc_topo(ci) = topoxy(nw,m)
+
+                   ! Set pft properties
+
+                   pptr%mxy      (pi) = m
+                   pptr%itype    (pi) = vegxy(nw,m)
+                   pptr%gridcell (pi) = gi
+                   pptr%wtgcell  (pi) = wtcol2lunit * wtlunit2gcell
+                   pptr%landunit (pi) = li
+                   pptr%wtlunit  (pi) = wtcol2lunit
+                   pptr%column   (pi) = ci
+                   pptr%wtcol    (pi) = 1.0_r8
+
+                endif   ! wtxy > 0 or glcmask = 1
+             enddo      ! loop over columns
+          endif         ! setdata
+
+       else
+
+          ncols = 1
+
+          ! Currently assume that each landunit only has only one column 
+          ! (of type 1) and that each column has its own pft
        
-       wtcol2lunit = 1.0_r8/ncols
-       ctype = 1
+          wtcol2lunit = 1.0_r8/ncols
+          ctype = 1
 
-       li = li + 1
-       ci = ci + 1
-       pi = pi + 1 
+          li = li + 1
+          ci = ci + 1
+          pi = pi + 1
 
-       if (setdata) then
+          if (setdata) then
        
-          ! Determine landunit properties 
+             ! Determine landunit properties 
 
-          lptr%itype(li)     = ltype
-          lptr%ifspecial(li) = .true.
-          lptr%urbpoi(li)    = .false.
-          if (ltype == istdlak) then
-             lptr%lakpoi(li) = .true.
-          else
-             lptr%lakpoi(li) = .false.
-          end if
+             lptr%itype    (li) = ltype
+             lptr%ifspecial(li) = .true.
+             lptr%urbpoi   (li) = .false.
+             if (ltype == istdlak) then
+                lptr%lakpoi(li) = .true.
+             else
+                lptr%lakpoi(li) = .false.
+             end if
        
-          lptr%gridcell (li) = gi
-          lptr%wtgcell(li) = wtlunit2gcell
+             lptr%gridcell (li) = gi
+             lptr%wtgcell(li) = wtlunit2gcell
 
-          ! Determine column and properties
-          ! For the wet, ice or lake landunits it is assumed that each 
-          ! column has its own pft
+             ! Determine column and properties
+             ! For the wet, ice or lake landunits it is assumed that each 
+             ! column has its own pft
        
-          cptr%itype(ci)    = ctype
+             cptr%itype(ci)    = ctype
        
-          cptr%gridcell (ci) = gi
-          cptr%wtgcell(ci) = wtcol2lunit * wtlunit2gcell
-          cptr%landunit (ci) = li
-          cptr%wtlunit(ci) = wtcol2lunit
+             cptr%gridcell (ci) = gi
+             cptr%wtgcell(ci) = wtcol2lunit * wtlunit2gcell
+             cptr%landunit (ci) = li
+             cptr%wtlunit(ci) = wtcol2lunit
 
-          ! Set pft properties
+             ! Set pft properties
 
-          pptr%mxy(pi)      = m
-          pptr%itype(pi)    = vegxy(nw,m)
+             pptr%mxy(pi)      = m
+             pptr%itype(pi)    = vegxy(nw,m)
      
-          pptr%gridcell (pi) = gi
-          pptr%wtgcell(pi) = wtcol2lunit * wtlunit2gcell
-          pptr%landunit (pi) = li
-          pptr%wtlunit(pi) = wtcol2lunit
-          pptr%column (pi) = ci
-          pptr%wtcol(pi) = 1.0_r8
-       endif ! setdata
-    end if
-       
+             pptr%gridcell (pi) = gi
+             pptr%wtgcell(pi) = wtcol2lunit * wtlunit2gcell
+             pptr%landunit (pi) = li
+             pptr%wtlunit(pi) = wtcol2lunit
+             pptr%column (pi) = ci
+             pptr%wtcol(pi) = 1.0_r8
+          endif ! setdata
+       end if   ! ltype = istice_mec
+    endif       ! npfts > 0       
+
   end subroutine set_landunit_wet_ice_lake
 
 !------------------------------------------------------------------------
@@ -824,7 +947,7 @@ end subroutine clm_ptrs_check
                            column_type,pft_type
     use subgridMod, only : subgrid_get_gcellinfo
     use clm_varctl, only : create_crop_landunit
-    use clm_varpar, only : maxpatch_pft, numcft
+    use clm_varpar, only : maxpatch_pft, numcft, npatch_glacier_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -878,7 +1001,6 @@ end subroutine clm_ptrs_check
           lptr%ifspecial(li) = .false.
           lptr%lakpoi(li)    = .false.
           lptr%urbpoi(li)    = .false.
-       
           lptr%gridcell (li) = gi
           lptr%wtgcell(li) = wtlunit2gcell
        endif ! setdata

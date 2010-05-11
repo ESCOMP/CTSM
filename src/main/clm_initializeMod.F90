@@ -18,7 +18,9 @@ module clm_initializeMod
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest
   use clm_varctl      , only : iulog
+  use clm_varctl      , only : create_glacier_mec_landunit
   use clm_varsur      , only : wtxy,vegxy
+  use clm_varsur      , only : topoxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use perf_mod        , only : t_startf, t_stopf
 ! !PUBLIC TYPES:
@@ -85,8 +87,10 @@ contains
                            surfrd_get_topo, surfrd_get_latlon
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
                            fatmtopo, flndtopo, noland
+    use clm_varctl, only : fglcmask
     use controlMod, only : control_init, control_print
     use UrbanInputMod    , only : UrbanInput
+
 !
 ! !ARGUMENTS:
 !
@@ -219,7 +223,23 @@ contains
        write(iulog,*) 'Attempting to read atm landfrac from fatmlndfrc'
        call shr_sys_flush(iulog)
     endif
-    call surfrd_get_frac(adomain, fatmlndfrc)
+
+    if (create_glacier_mec_landunit) then
+       call surfrd_get_frac(adomain, fatmlndfrc, fglcmask)
+
+       ! Make sure the glc mask is a subset of the land mask
+       do n = begg_atm, endg_atm
+          if (adomain%glcmask(n)==1 .and. adomain%mask(n)==0) then
+             write(iulog,*) 'initialize1: landmask/glcmask mismatch'
+             write(iulog,*) 'glc requires input where landmask = 0, gridcell index', n
+             call shr_sys_flush(iulog)
+             call endrun()
+          endif
+       enddo
+
+    else
+       call surfrd_get_frac(adomain, fatmlndfrc)
+    endif
 
     if (fatmtopo /= " ") then
     if (masterproc) then
@@ -302,6 +322,20 @@ contains
        write(iulog,*)'initialize allocation error'; call endrun()
     endif
 
+    ! Allocate additional dynamic memory for glacier_mec topo and thickness
+
+    if (create_glacier_mec_landunit) then
+       allocate (topoxy(begg:endg,maxpatch), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*)'initialize allocation error'; call endrun()
+       endif
+    else
+       allocate (topoxy(1,1), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*)'initialize allocation error'; call endrun()
+       endif
+    endif
+
     ! --------------------------------------------------------------------
     ! Read list of PFTs and their corresponding parameter values
     ! Independent of model resolution
@@ -315,7 +349,14 @@ contains
     
     call surfrd (fsurdat, ldomain)
 
-    call decompInit_glcp(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+    if (create_glacier_mec_landunit) then
+       call decompInit_glcp (alatlon%ns,   alatlon%ni,   alatlon%nj, &
+                             llatlon%ns,   llatlon%ni,   llatlon%nj, &
+                             ldomain%glcmask)
+    else
+       call decompInit_glcp (alatlon%ns, alatlon%ni, alatlon%nj, &
+                             llatlon%ns, llatlon%ni, llatlon%nj)
+    endif
 
     call t_stopf('init_surdat')
 
@@ -392,6 +433,9 @@ contains
     use UrbanMod        , only : UrbanClumpInit
     use UrbanInitMod    , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
     use UrbanInputMod   , only : UrbanInput
+    use clm_glclnd      , only : init_glc2lnd_type, init_lnd2glc_type, &
+                                 clm_x2s, clm_s2x, atm_x2s, atm_s2x
+
 !
 !
 ! !REVISION HISTORY:
@@ -443,6 +487,14 @@ contains
 
     call init_adiag_type()
 
+    if (create_glacier_mec_landunit) then
+       call init_glc2lnd_type  (begg    , endg    , clm_x2s)
+       call init_lnd2glc_type  (begg    , endg    , clm_s2x)
+
+       call init_glc2lnd_type  (begg    , endg    , atm_x2s)
+       call init_lnd2glc_type  (begg    , endg    , atm_s2x)
+    endif
+
     ! Build hierarchy and topological info for derived typees
 
     call initGridCells()
@@ -450,6 +502,9 @@ contains
     ! Deallocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
     deallocate (vegxy, wtxy)
+
+    deallocate (topoxy)
+
     call t_stopf('init_clmtype')
 
     ! ------------------------------------------------------------------------

@@ -174,7 +174,8 @@ contains
     use subgridAveMod
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
-                              spval, icol_road_perv, icol_road_imperv
+                              spval, icol_road_perv, icol_road_imperv, istice_mec
+    use clm_varctl   , only : glc_dyntopo
 !
 ! !ARGUMENTS:
     implicit none
@@ -228,6 +229,7 @@ contains
     real(r8), pointer :: qflx_runoffg(:)    ! total runoff at gridcell level inc land cover change flux (mm H2O /s)
     real(r8), pointer :: qflx_liq_dynbal(:) ! liq runoff due to dynamic land cover change (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
+    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s) [+ if ice grows]
     real(r8), pointer :: qflx_snwcp_iceg(:) ! excess snowfall due to snow cap inc land cover change flux (mm H20/s)
     real(r8), pointer :: qflx_ice_dynbal(:) ! ice runoff due to dynamic land cover change (mm H2O /s)
     real(r8), pointer :: forc_solad(:,:)    ! direct beam radiation (vis=forc_sols , nir=forc_soll )
@@ -256,6 +258,7 @@ contains
     integer  :: indexp,indexc,indexl,indexg ! index of first found in search loop
     real(r8) :: forc_rain_col(lbc:ubc)      ! column level rain rate [mm/s]
     real(r8) :: forc_snow_col(lbc:ubc)      ! column level snow rate [mm/s]
+
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
@@ -284,6 +287,7 @@ contains
     qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
     qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+    qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
     errh2o            => clm3%g%l%c%cwbal%errh2o
     errsoi_col        => clm3%g%l%c%cebal%errsoi
 
@@ -341,10 +345,20 @@ contains
 
     do c = lbc, ubc
        g = cgridcell(c)
-      
+
        errh2o(c) = endwb(c) - begwb(c) &
             - (forc_rain_col(c) + forc_snow_col(c) - qflx_evap_tot(c) - qflx_surf(c) &
             - qflx_qrgwl(c) - qflx_drain(c) - qflx_snwcp_ice(c)) * dtime
+
+! Suppose glc_dyntopo = T:   
+! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice.  
+!     This flux must be included here to complete the water balance.
+! (2) Meltwater from ice is allowed to run off and is included in qflx_qrgwl,
+!     but the water content of the ice column has not changed (at least for now) because
+!     an equivalent ice mass has been "borrowed" from the base of the column.  That
+!     meltwater is included in qflx_glcice.
+
+       if (glc_dyntopo) errh2o(c) = errh2o(c) - qflx_glcice(c)*dtime
 
     end do
 
@@ -395,9 +409,10 @@ contains
     ! Energy balance checks
 
     do p = lbp, ubp
-       if (pwtgcell(p)>0._r8) then
+       l = plandunit(p)
+       ! Note: Some glacier_mec pfts may have zero weight
+       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
           g = pgridcell(p)
-          l = plandunit(p)
 
           ! Solar radiation energy balance
           ! Do not do this check for an urban pft since it will not balance on a per-column
@@ -443,7 +458,8 @@ contains
 
     found = .false.
     do p = lbp, ubp
-       if (pwtgcell(p)>0._r8) then
+       l = plandunit(p)
+       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
           if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > .10_r8) ) then
              found = .true.
              indexp = p
@@ -469,7 +485,8 @@ contains
 
     found = .false.
     do p = lbp, ubp
-       if (pwtgcell(p)>0._r8) then
+       l = plandunit(p)
+       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
           if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > .10_r8) ) then
              found = .true.
              indexp = p
@@ -486,7 +503,8 @@ contains
 
     found = .false.
     do p = lbp, ubp
-       if (pwtgcell(p)>0._r8) then
+       l = plandunit(p)
+       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
           if (abs(errseb(p)) > .10_r8 ) then
              found = .true.
              indexp = p

@@ -45,19 +45,20 @@ NOTE: In order to successfully build, some source files are required from
     !    mksrf_fmax ----- Max fractional saturated area dataset
     !    mksrf_fsoicol -- Soil color dataset
     !    mksrf_fsoitex -- Soil texture dataset
+    !    mksrf_ftopo ---- Topography dataset (for glacier multiple elevation classes)
+    !                     (and for limiting urban areas)
     !    mksrf_furban --- Urban dataset
     !    mksrf_fvegtyp -- PFT vegetation type dataset
     !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
-    !    mksrf_firrig ------ Irrigation dataset
-    !    mksrf_ftopo ------- Topography dataset (for glacier multiple elevation classes)
-    !                        (and for limiting urban areas)
     !    all_urban --------- If entire area is urban
+    !    mksrf_firrig ------ Irrigation dataset
     !    mksrf_fdynuse ----- ASCII text file that lists the
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    mksrf_gridnm ------ Name of output grid resolution
+    !    nglcec ------------ If you want to change the number of Glacier elevation classes
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
     ! ==================

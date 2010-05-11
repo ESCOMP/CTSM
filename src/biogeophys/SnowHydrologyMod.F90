@@ -222,8 +222,6 @@ contains
     ! Renew the mass of ice lens (h2osoi_ice) and liquid (h2osoi_liq) in the
     ! surface snow layer resulting from sublimation (frost) / evaporation (condense)
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_snowc
        c = filter_snowc(fc)
        if (do_capsnow(c)) then
@@ -250,8 +248,6 @@ contains
     ! Porosity and partial volume
 
     do j = -nlevsno+1, 0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
@@ -290,8 +286,6 @@ contains
     qin_dst4(:)   = 0._r8
 
     do j = -nlevsno+1, 0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
@@ -406,16 +400,12 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        ! Qout from snow bottom
        qflx_top_soil(c) = qout(c) / dtime
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
        qflx_top_soil(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
@@ -493,7 +483,7 @@ contains
 ! !USES:
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : denice, denh2o, tfrz
+    use clm_varcon  , only : denice, denh2o, tfrz, istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -532,8 +522,8 @@ contains
 ! !OTHER LOCAL VARIABLES:
 !EOP
 !
-    integer :: j, c, fc                   ! indices
-    real(r8):: dtime                      ! land model time step (sec)
+    integer :: j, l, c, fc                   ! indices
+    real(r8):: dtime                         ! land model time step (sec)
     real(r8), parameter :: c2 = 23.e-3_r8    ! [m3/kg]
     real(r8), parameter :: c3 = 2.777e-6_r8  ! [1/s]
     real(r8), parameter :: c4 = 0.04_r8      ! [1/K]
@@ -552,6 +542,9 @@ contains
     real(r8) :: wx     ! water mass (ice+liquid) [kg/m2]
     real(r8) :: bi     ! partial density of ice [kg/m3]
 
+    integer, pointer :: clandunit(:)       !landunit index for each column
+    integer, pointer :: ltype(:)           !landunit type
+
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes (column-level)
@@ -563,6 +556,8 @@ contains
     t_soisno    => clm3%g%l%c%ces%t_soisno
     h2osoi_ice  => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq  => clm3%g%l%c%cws%h2osoi_liq
+    clandunit   => clm3%g%l%c%landunit
+    ltype       => clm3%g%l%itype
 
     ! Get time step
 
@@ -573,14 +568,20 @@ contains
     burden(:) = 0._r8
 
     do j = -nlevsno+1, 0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
 
              wx = h2osoi_ice(c,j) + h2osoi_liq(c,j)
              void = 1._r8 - (h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o) / dz(c,j)
+
+             ! If void is negative, then increase dz such that void = 0.
+             ! This should be done for any landunit, but for now is done only for glacier_mec 1andunits.
+             l = clandunit(c)
+             if (ltype(l)==istice_mec .and. void < 0._r8) then
+                dz(c,j) = h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o
+                void = 0._r8
+             endif
 
              ! Allow compaction only for non-saturated node and higher ice lens node.
              if (void > 0.001_r8 .and. h2osoi_ice(c,j) > .1_r8) then
@@ -740,8 +741,6 @@ contains
     ! Check the mass of ice lens of snow, when the total is less than a small value,
     ! combine it with the underlying neighbor.
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        msn_old(c) = snl(c)
@@ -814,8 +813,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        h2osno(c) = 0._r8
@@ -825,8 +822,6 @@ contains
     end do
 
     do j = -nlevsno+1,0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
@@ -841,8 +836,6 @@ contains
     ! Check the snow depth - all snow gone
     ! The liquid water assumes ponding on soil surface.
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        l = clandunit(c)
@@ -961,8 +954,6 @@ contains
     ! Reset the node depth and the depth of layer interface
 
     do j = 0, -nlevsno+1, -1
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c) + 1) then
@@ -1090,8 +1081,6 @@ contains
     ! for snow-covered columns
 
     do j = 1,nlevsno
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j <= abs(snl(c))) then
@@ -1114,8 +1103,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
 
@@ -1454,8 +1441,6 @@ contains
     end do
 
     do j = -nlevsno+1,0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
@@ -1479,8 +1464,6 @@ contains
     end do
 
     do j = 0, -nlevsno+1, -1
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then

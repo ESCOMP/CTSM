@@ -2428,6 +2428,7 @@ contains
                   data=histo, ncid=nfid(t), nt=nt, usepio=pioflag)
           end if
 
+
           ! Deallocate dynamic memory
 
           if (num2d == 1) then
@@ -2530,7 +2531,8 @@ contains
                long_name='landunit weight relative to corresponding gridcell', ncid=ncid, usepio=pioflag)
 
           call ncd_defvar(varname='land1d_ityplunit', xtype=ncd_int, dim1name='landunit', &
-               long_name='landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid, usepio=pioflag)
+               long_name='landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
+                  ncid=ncid, usepio=pioflag)
 
           ! Define column info
 
@@ -2559,7 +2561,8 @@ contains
                long_name='column weight relative to corresponding landunit', ncid=ncid, usepio=pioflag)
 
           call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name='column', &
-               long_name='column landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid, usepio=pioflag)
+               long_name='column landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
+                  ncid=ncid, usepio=pioflag)
 
           ! Define pft info
 
@@ -2597,7 +2600,8 @@ contains
                long_name='pft vegetation type', ncid=ncid, usepio=pioflag)
 
           call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name='pft', &
-               long_name='pft landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid, usepio=pioflag)
+               long_name='pft landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)',  &
+                  ncid=ncid, usepio=pioflag)
 
     else if (mode == 'write') then
 
@@ -3561,7 +3565,8 @@ contains
   subroutine hist_addfld1d (fname, units, avgflag, long_name, type1d_out, &
                         ptr_gcell, ptr_lunit, ptr_col, ptr_pft, ptr_lnd, &
                         ptr_rof, ptr_atm, p2c_scale_type, c2l_scale_type, &
-                        l2g_scale_type, set_lake, set_urb, set_nourb, set_spec, default)
+                        l2g_scale_type, set_lake, set_urb, set_nourb,     &
+                        set_noglcmec, set_spec, default)
 !
 ! !DESCRIPTION:
 ! Initialize a single level history field. The pointer, ptrhist,
@@ -3595,6 +3600,7 @@ contains
     real(r8)        , optional, intent(in) :: set_lake       ! value to set lakes to
     real(r8)        , optional, intent(in) :: set_urb        ! value to set urban to
     real(r8)        , optional, intent(in) :: set_nourb      ! value to set non-urban to
+    real(r8)        , optional, intent(in) :: set_noglcmec   ! value to set non-glacier_mec to
     real(r8)        , optional, intent(in) :: set_spec       ! value to set special to
     character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
@@ -3697,6 +3703,12 @@ contains
              if (clm3%g%l%ifspecial(l)) ptr_col(c) = set_spec
           end do
        end if
+       if (present(set_noglcmec)) then
+          do c = begc,endc
+             l = clm3%g%l%c%landunit(c)
+             if (.not.(clm3%g%l%glcmecpoi(l))) ptr_col(c) = set_noglcmec
+          end do
+       endif
 
     else if (present(ptr_pft)) then
        l_type1d = namep

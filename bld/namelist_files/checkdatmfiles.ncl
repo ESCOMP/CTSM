@@ -6,7 +6,7 @@
 ;  $HeadURL;
 ;
 
-  resolutions = (/ "4x5", "10x15", "2.65x3.33", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "360x720","128x256","64x128","48x96","32x64","8x16" /);
+  resolutions = (/ "4x5", "10x15", "2.5x3.33", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "128x256","64x128","48x96","32x64","8x16" /);
  
   space  = "      ";
   badres = 0
@@ -75,7 +75,7 @@ begin
         ;
         ; Get datm filename and open it
         ;
-        domfile  = systemfunc( querynmlres+" -var domainfile -namelist dshr_nml" );
+        domfile  = systemfunc( querynmlres+" -var domainfile -namelist shr_strdata_nml" );
         if ( ismissing(domfile) )then
           print( "Missing domainfile" );
           exit;

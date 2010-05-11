@@ -24,7 +24,7 @@ program mksrfdat
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
-    use mkvarpar    , only : numpft, nlevsoi, nglcec, elev_thresh
+    use mkvarpar    , only : numpft, nlevsoi, elev_thresh
     use mkvarsur    , only : spval, ldomain
     use mkvarctl
     use areaMod
@@ -82,6 +82,7 @@ program mksrfdat
     real(r8), allocatable  :: pctglcmec(:,:,:)     ! glacier_mec pct coverage in each gridcell and class
     real(r8), allocatable  :: topoglcmec(:,:,:)    ! glacier_mec sfc elevation in each gridcell and class
     real(r8), allocatable  :: thckglcmec(:,:,:)    ! glacier_mec ice sheet thcknss in each gridcell and class
+    real(r8), allocatable  :: elevclass(:)         ! glacier_mec elevation classes
     real(r8), allocatable  :: pctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:,:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pctirr(:,:)          ! percent of grid cell that is irrigated  
@@ -121,6 +122,7 @@ program mksrfdat
          mksrf_fdynuse,            &
          outnc_large_files,        &
          outnc_double,             &
+         nglcec,                   &
          all_urban
 !-----------------------------------------------------------------------
 
@@ -141,6 +143,8 @@ program mksrfdat
     !    mksrf_fmax ----- Max fractional saturated area dataset
     !    mksrf_fsoicol -- Soil color dataset
     !    mksrf_fsoitex -- Soil texture dataset
+    !    mksrf_ftopo ---- Topography dataset (for glacier multiple elevation classes)
+    !                     (and for limiting urban areas)
     !    mksrf_furban --- Urban dataset
     !    mksrf_fvegtyp -- PFT vegetation type dataset
     !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
@@ -148,14 +152,13 @@ program mksrfdat
     ! Optionally specify setting for:
     ! ======================================
     !    mksrf_firrig ------ Irrigation dataset
-    !    mksrf_ftopo ------- Topography dataset (for glacier multiple elevation classes)
-    !                        (and for limiting urban areas)
     !    all_urban --------- If entire area is urban
     !    mksrf_fdynuse ----- ASCII text file that lists the
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    mksrf_gridnm ------ Name of output grid resolution
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
+    !    nglcec ------------ If you want to change the number of Glacier elevation classes
     ! ==================
     ! ======================================================================
 
@@ -277,6 +280,7 @@ program mksrfdat
     write (ndiag,*) 'fmax from:                 ',trim(mksrf_fmax)
     write (ndiag,*) 'glaciers from:             ',trim(mksrf_fglacier)
     write (ndiag,*) 'topography from:           ',trim(mksrf_ftopo)
+    write (ndiag,*) '           with:           ', nglcec, ' glacier elevation classes'
     write (ndiag,*) 'fracdata from:             ',trim(mksrf_ffrac)
     write (ndiag,*) 'urban from:                ',trim(mksrf_furban)
     write (ndiag,*) 'inland water from:         ',trim(mksrf_flanwat)
@@ -483,19 +487,14 @@ program mksrfdat
     ! This call needs to occur after pctgla has been adjusted for the final time
     allocate ( pctglcmec(lsmlon,lsmlat,nglcec),  &
                topoglcmec(lsmlon,lsmlat,nglcec), &
-               thckglcmec(lsmlon,lsmlat,nglcec) )
-    if (mksrf_ftopo /= ' ') then 
+               thckglcmec(lsmlon,lsmlat,nglcec), &
+               elevclass(nglcec+1) )
 
-       pctglcmec(:,:,:)  = spval
-       topoglcmec(:,:,:) = spval
-       thckglcmec(:,:,:) = spval
-       call mkglcmec (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, mksrf_fglacier, ndiag, pctgla, &
-                      pctglcmec, topoglcmec, thckglcmec)
-    else
-       pctglcmec(:,:,:)  = 0._r8
-       topoglcmec(:,:,:) = 0._r8
-       thckglcmec(:,:,:) = 0._r8
-    endif
+    pctglcmec(:,:,:)  = spval
+    topoglcmec(:,:,:) = spval
+    thckglcmec(:,:,:) = spval
+    call mkglcmec (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, mksrf_fglacier, ndiag, pctgla, &
+                   pctglcmec, topoglcmec, thckglcmec, elevclass)
 
     write(6,*) ' timer_d mkglcmec-----'
     call shr_timer_print(t1)
@@ -537,6 +536,7 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_GLC_MEC' , data=pctglcmec   , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='GLC_MEC'     , data=elevclass   , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='TOPO_GLC_MEC', data=topoglcmec  , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='THCK_GLC_MEC', data=thckglcmec  , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
@@ -555,7 +555,7 @@ program mksrfdat
     ! Deallocate arrays NOT needed for dynamic-pft section of code
     deallocate ( organic3d )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-    deallocate ( pctglcmec, topoglcmec, thckglcmec )
+    deallocate ( pctglcmec, topoglcmec, thckglcmec, elevclass )
     deallocate ( fmax )
     deallocate ( sand3d, clay3d )
     deallocate ( soic2d )

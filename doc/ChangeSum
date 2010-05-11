@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_01         erik 05/11/2010 Move glacier multiple elevation class branch to the trunk so that we can work with the active glacier model
    clm4_0_00         erik 05/04/2010  Update to datm8, redirect aquifer overflow 
                      to drainage, add gx3v7 masks, script to extract regional 
                      datasets, add harvesting for CN, modify shrubs, include urban 

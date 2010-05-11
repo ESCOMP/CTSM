@@ -53,7 +53,7 @@ contains
 !
 ! !USES:
 
-   use clm_varcon, only : istsoil,istice,istwet, istdlak,istslak,isturb
+   use clm_varcon, only : istsoil,istice,istwet,istdlak,istslak,isturb,istice_mec
    use clm_varcon, only : icol_road_perv,icol_road_imperv,icol_roof
    use clm_varcon, only : icol_sunwall,icol_shadewall
    use clm_varcon, only : cpice,  cpliq
@@ -162,6 +162,7 @@ contains
             if ( (ltype(l) == istsoil                                  )  &
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
+            .or. (ltype(l) == istice_mec                               )  &           
             .or. (ltype(l) == isturb .and. ctype(c) == icol_roof       )  &
             .or. (ltype(l) == isturb .and. ctype(c) == icol_road_imperv)  &
             .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
@@ -180,6 +181,7 @@ contains
             if ( (ltype(l) == istsoil                                  )  &
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
+            .or. (ltype(l) == istice_mec                               )  &           
             .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
                do k = 1,nlevgrnd
                   liq   = liq   + cptr%cws%h2osoi_liq(c,k)
@@ -191,6 +193,7 @@ contains
             if ( (ltype(l) == istsoil                                  )  &
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
+            .or. (ltype(l) == istice_mec                               )  &           
             .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
                liq = liq + cptr%cws%wa(c)
             end if
@@ -215,7 +218,7 @@ contains
                       cv = cv_roof(l,k) * dz(c,k)
                    else if (ctype(c) == icol_road_imperv .and. k >= 1 .and. k <= nlev_improad(l)) then
                       cv = cv_improad(l,k) * dz(c,k)
-                   else if (ltype(l) /= istwet .AND. ltype(l) /= istice) then
+                   else if (ltype(l) /= istwet .AND. ltype(l) /= istice .AND. ltype(l) /= istice_mec) then
                       cv = csol(c,k)*(1-watsat(c,k))*dz(c,k) + (h2osoi_ice(c,k)*cpice + h2osoi_liq(c,k)*cpliq)
                    else
                       cv = (h2osoi_ice(c,k)*cpice + h2osoi_liq(c,k)*cpliq)

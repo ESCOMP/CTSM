@@ -51,6 +51,7 @@ contains
     use clm_varctl , only : nsrest
     use clm_atmlnd , only : clm_a2l, atm_a2l
     use clm_atmlnd , only : adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux
+    use clm_varctl , only : create_glacier_mec_landunit
 #if (defined RTM)
     use RunoffMod  , only : runoff, nt_rtm, rtm_tracers
 #endif
@@ -798,6 +799,34 @@ contains
     call hist_addfld1d (fname='QVEGT', units='mm/s',  &
          avgflag='A', long_name='canopy transpiration', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_tran_veg, set_lake=0._r8, c2l_scale_type='urbanf')
+
+    if (create_glacier_mec_landunit) then
+
+       call hist_addfld1d (fname='QICE',  units='mm/s',  &
+            avgflag='A', long_name='ice growth/melt', &
+            ptr_col=clm3%g%l%c%cwf%qflx_glcice, set_noglcmec=spval)
+
+       call hist_addfld1d (fname='QICEYR',  units='mm/s',  &
+            avgflag='A', long_name='ice growth/melt', &
+            ptr_col=clm3%g%l%c%cwf%qflx_glcice, set_noglcmec=spval)
+
+       call hist_addfld1d (fname='gris_mask',  units='unitless',  &
+            avgflag='A', long_name='Greenland mask', &
+            ptr_gcell=clm3%g%gris_mask)
+
+       call hist_addfld1d (fname='gris_area',  units='km^2',  &
+            avgflag='A', long_name='Greenland ice area', &
+            ptr_gcell=clm3%g%gris_area)
+
+       call hist_addfld1d (fname='aais_mask',  units='unitless',  &
+            avgflag='A', long_name='Antarctic mask', &
+            ptr_gcell=clm3%g%aais_mask)
+
+       call hist_addfld1d (fname='aais_area',  units='km^2',  &
+            avgflag='A', long_name='Antarctic ice area', &
+            ptr_gcell=clm3%g%aais_area)
+
+   endif
 
 #if (defined RTM)
     ! RTM River Routing

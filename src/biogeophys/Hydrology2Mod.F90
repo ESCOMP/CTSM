@@ -63,14 +63,17 @@ contains
     use clmtype
     use clm_atmlnd      , only : clm_a2l
     use clm_varcon      , only : denh2o, denice, spval, &
-                                 istice, istwet, istsoil, isturb, &
+                                 istice, istwet, istsoil, isturb, istice_mec, &
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall
+    use clm_varcon      , only : istice_mec
+    use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
     use clm_time_manager, only : get_step_size, get_nstep, is_perpetual
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -189,6 +192,7 @@ contains
     real(r8), pointer :: mss_cnc_dst3(:,:)  ! mass concentration of dust species 3 (col,lyr) [kg/kg]
     real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
     logical , pointer :: do_capsnow(:)      ! true => do snow capping
+    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s)
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -306,8 +310,9 @@ contains
     mss_cnc_dst2      => clm3%g%l%c%cps%mss_cnc_dst2
     mss_cnc_dst3      => clm3%g%l%c%cps%mss_cnc_dst3
     mss_cnc_dst4      => clm3%g%l%c%cps%mss_cnc_dst4
-    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     do_capsnow        => clm3%g%l%c%cps%do_capsnow
+    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
 
     ! Determine time step and step size
 
@@ -487,12 +492,23 @@ contains
        c = filter_nolakec(fc)
        l = clandunit(c)
        g = cgridcell(c)
-       if (ityplun(l)==istwet .or. ityplun(l)==istice) then
+       if (ityplun(l)==istwet .or. ityplun(l)==istice      &
+                              .or. ityplun(l)==istice_mec) then
           qflx_drain(c) = 0._r8
           qflx_surf(c)  = 0._r8
           qflx_infl(c)  = 0._r8
           qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
                           (endwb(c)-begwb(c))/dtime
+          ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
+          ! (Negative qflx_glcice => positive contribution to runoff)
+          ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).
+          !       This code will not work if Hydrology2 is called before Biogeophysics2, or if
+          !        qflx_snwcp_ice has alread been included in qflx_glcice.
+          !       (The snwcp flux is added to qflx_glcice later in this subroutine.)
+
+          if (glc_dyntopo .and. ityplun(l)==istice_mec) then
+             qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice(c)   ! meltwater from melted ice
+          endif
           fcov(c)       = spval
           fsat(c)       = spval
           qcharge(c)    = spval
@@ -503,6 +519,23 @@ contains
           qcharge(c)    = spval
           qflx_rsub_sat(c) = spval
        end if
+
+       ! If snow exceeds the thickness limit in glacier_mec columns, convert to an ice flux.
+       ! For dynamic glacier topography, remove qflx_snwcp_ice from the runoff.
+       ! Note that qflx_glcice can also have a negative component from melting of bare ice,
+       !  as computed in SoilTemperatureMod.F90
+
+       if (ityplun(l)==istice_mec) then
+
+          qflx_glcice(c) = qflx_glcice(c) + qflx_snwcp_ice(c)
+
+          ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
+          ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
+          !  CLM runoff terms are not changed.
+ 
+          if (glc_dyntopo) qflx_snwcp_ice(c) = 0._r8
+
+       endif   ! istice_mec
 
        qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
        if (ityplun(l)==isturb) then

@@ -107,6 +107,8 @@ module ncdio
      module procedure ncd_iolocal_real_2d
      module procedure ncd_iolocal_gs_real1d
      module procedure ncd_iolocal_gs_int1d
+     module procedure ncd_iolocal_gs_real2d
+     module procedure ncd_iolocal_gs_int2d
   end interface
   interface ncd_ioglobal
      module procedure ncd_ioglobal_int_var
@@ -205,7 +207,7 @@ contains
  else
     if (.not. masterproc) return
 
-    call check_ret(nf_inq_dimid (ncid, trim(dimname), dimid), 'check_dim')
+    call check_ret(nf_inq_dimid (ncid, trim(dimname), dimid), 'check_dim: dimname='//trim(dimname)//' ')
     call check_ret(nf_inq_dimlen (ncid, dimid, dimlen), 'check_dim')
     if (dimlen /= value) then
        write(iulog,*) trim(subname),' ERROR: mismatch of input dimension ',dimlen, &

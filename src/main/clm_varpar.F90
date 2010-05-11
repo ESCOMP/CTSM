@@ -52,21 +52,24 @@ module clm_varpar
 ! maxpatch_wet     = max number of wetland pfts (columns) in wetland landunit
 ! maxpatch_lake    = max number of lake pfts (columns) in lake landunit
 ! maxpatch_glacier = max number of glacier pfts (columns) in glacier landunit
+! maxpatch_glcmec  = max number of glacier_mec pfts (columns) in glacier_mec landunit
 
   integer, parameter :: numpft         = 16     ! actual # of pfts (without bare)
   integer, parameter :: numcft         =  2     ! actual # of crops
   integer, parameter :: numveg         = numpft ! number of veg types (without specific crop)
   integer, parameter :: maxpatch_urb   = 5
   integer            :: maxpatch_pft
+  integer, parameter :: maxpatch_glcmec = 10
   integer            :: npatch_urban
   integer            :: npatch_lake 
   integer            :: npatch_wet  
   integer            :: npatch_glacier
+  integer            :: npatch_glacier_mec
   integer            :: maxpatch    
 
 ! clm_varpar_init seems to do something similar; less prone to error to move
 ! these three lines there? (slevis)
-  integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + numcft
+  integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + numcft + maxpatch_glcmec
   integer, parameter :: max_pft_per_lu    = max(numpft+1, numcft, maxpatch_urb)
   integer, parameter :: max_pft_per_col   = max(numpft+1, numcft, maxpatch_urb)
 
@@ -112,7 +115,8 @@ contains
   npatch_lake    = npatch_urban + maxpatch_urb
   npatch_wet     = npatch_lake  + 1
   npatch_glacier = npatch_wet   + 1
-  maxpatch       = npatch_glacier
+  npatch_glacier_mec = npatch_glacier + maxpatch_glcmec
+  maxpatch       = npatch_glacier_mec
 
   end subroutine clm_varpar_init
 

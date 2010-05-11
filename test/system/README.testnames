@@ -32,6 +32,8 @@ O -- ccsm_seq VANCOUVER
 P -- unused
 Q -- generate_urban_input
 R -- ccsm_seq numpft=17, CN, C13
+S -- unused
+V -- ccsm_seq standard default, with glc_mec=10
 
 m is the resolution
 

@@ -9,6 +9,7 @@ Toggle to turn on accelerated decomposition spinup for CN biogeochemistry model
 </entry>
 <entry id="snicar_frc" valid_values="on,off" value="off" category="physics">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
+(SNICAR_FRC .true.is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="bgc" valid_values="none,cn,cndv,casa" value="none" category="bgc">
 CLM Biogeochemistry mode
@@ -16,6 +17,15 @@ CLM Biogeochemistry mode
    cn   = Carbon Nitrogen model
    cndv = Carbon Nitrogen with Dynamic Global Vegetation Model
    casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
+(CASA is EXPERIMENTAL NOT SUPPORTED!)
+</entry>
+<entry id="glc_grid" valid_values="gland20,gland10,gland5,none" value="none"
+category="glc">
+Glacier model grid
+</entry>
+<entry id="glc_nec" valid_values="0,1,3,5,10" value="0" category="glc">
+Glacier model number of elevation classes
+(Setting glc_nec to anything other than 0 or 10 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
@@ -56,6 +66,7 @@ Toggle to turn on dust module
 </entry>
 <entry id="c13" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
+(C13 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="mach" value="bluefire" category="mach_options">
 CCSM build machine name and compiler (set by create_newcase)
@@ -107,6 +118,7 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scr
 <entry id="maxpft"  value="numpft+1" 
 valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,numpft\+1" category="physics">
 Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use all available)
+(Setting maxpft to anything other than numpft+1 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
 <entry id="mpi_inc" value="" category="standalone_test">

@@ -461,6 +461,7 @@ contains
    allocate(l%ifspecial(beg:end))
    allocate(l%lakpoi(beg:end))
    allocate(l%urbpoi(beg:end))
+   allocate(l%glcmecpoi(beg:end))
 
    ! MV - these should be moved to landunit physical state -MV
    allocate(l%canyon_hwr(beg:end))
@@ -478,6 +479,8 @@ contains
    l%wind_hgt_canyon(beg:end) = nan
    l%z_0_town(beg:end) = nan
    l%z_d_town(beg:end) = nan
+
+   l%glcmecpoi(beg:end) = .false.
 
   end subroutine init_landunit_type
 
@@ -518,6 +521,16 @@ contains
    allocate(g%lon_a(beg:end))
    allocate(g%latdeg_a(beg:end))
    allocate(g%londeg_a(beg:end))
+
+   allocate(g%gris_mask(beg:end))
+   allocate(g%gris_area(beg:end))
+   allocate(g%aais_mask(beg:end))
+   allocate(g%aais_area(beg:end))
+
+   g%gris_mask(beg:end) = nan
+   g%gris_area(beg:end) = nan
+   g%aais_mask(beg:end) = nan
+   g%aais_area(beg:end) = nan
 
   end subroutine init_gridcell_type
 
@@ -2740,7 +2753,9 @@ contains
     allocate(cps%albgri_dst(beg:end,numrad))
     allocate(cps%dTdz_top(beg:end))
     allocate(cps%snot_top(beg:end))
-
+    allocate(cps%forc_pbot(beg:end))
+    allocate(cps%forc_rho(beg:end))
+    allocate(cps%glc_topo(beg:end))
     cps%isoicol(beg:end) = bigint
     cps%bsw(beg:end,1:nlevgrnd) = nan
     cps%watsat(beg:end,1:nlevgrnd) = nan
@@ -2847,6 +2862,10 @@ contains
     cps%albgri_dst(beg:end,:numrad) = nan
     cps%dTdz_top(beg:end) = nan
     cps%snot_top(beg:end) = nan
+    cps%forc_pbot(beg:end) = nan
+    cps%forc_rho(beg:end) = nan
+    cps%glc_topo(beg:end) = nan
+
   end subroutine init_column_pstate_type
 
 !------------------------------------------------------------------------
@@ -2883,6 +2902,8 @@ contains
     allocate(ces%thv(beg:end))
     allocate(ces%hc_soi(beg:end))
     allocate(ces%hc_soisno(beg:end))
+    allocate(ces%forc_t(beg:end))
+    allocate(ces%forc_th(beg:end))
 
     ces%t_grnd(beg:end)    = nan
     ces%t_grnd_u(beg:end)  = nan
@@ -2895,6 +2916,8 @@ contains
     ces%thv(beg:end)       = nan
     ces%hc_soi(beg:end)    = nan
     ces%hc_soisno(beg:end) = nan
+    ces%forc_t(beg:end) = nan
+    ces%forc_th(beg:end) = nan
 
   end subroutine init_column_estate_type
 
@@ -2943,6 +2966,7 @@ contains
     allocate(cws%qcharge(beg:end))
     allocate(cws%smp_l(beg:end,1:nlevgrnd))
     allocate(cws%hk_l(beg:end,1:nlevgrnd))
+    allocate(cws%forc_q(beg:end))
 
     cws%h2osno(beg:end) = nan
     cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd)= spval
@@ -2965,6 +2989,7 @@ contains
     cws%qcharge(beg:end) = nan
     cws%smp_l(beg:end,1:nlevgrnd) = spval
     cws%hk_l(beg:end,1:nlevgrnd) = spval
+    cws%forc_q(beg:end) = nan
 
   end subroutine init_column_wstate_type
 
@@ -3122,6 +3147,7 @@ contains
     allocate(cef%eflx_building_heat(beg:end))
     allocate(cef%eflx_urban_ac(beg:end))
     allocate(cef%eflx_urban_heat(beg:end))
+    allocate(cef%eflx_bot(beg:end))
 
     cef%eflx_snomelt(beg:end)       = nan
     cef%eflx_snomelt_u(beg:end)       = nan
@@ -3131,6 +3157,7 @@ contains
     cef%eflx_building_heat(beg:end) = nan
     cef%eflx_urban_ac(beg:end) = nan
     cef%eflx_urban_heat(beg:end) = nan
+    cef%eflx_bot(beg:end) = nan
 
   end subroutine init_column_eflux_type
 
@@ -3190,6 +3217,9 @@ contains
     allocate(cwf%flx_dst_dep_wet4(beg:end))
     allocate(cwf%flx_dst_dep(beg:end))
     allocate(cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0))
+    allocate(cwf%qflx_glcice(beg:end))
+    allocate(cwf%glc_rofi(beg:end))
+    allocate(cwf%glc_rofl(beg:end))
 
     cwf%qflx_infl(beg:end) = nan
     cwf%qflx_surf(beg:end) = nan
@@ -3223,6 +3253,9 @@ contains
     cwf%flx_dst_dep_wet4(beg:end) = nan
     cwf%flx_dst_dep(beg:end) = nan
     cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0) = spval
+    cwf%qflx_glcice(beg:end) = spval
+    cwf%glc_rofi(beg:end) = nan
+    cwf%glc_rofl(beg:end) = nan
 
   end subroutine init_column_wflux_type
 

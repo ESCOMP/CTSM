@@ -1,0 +1,5 @@
+-ignore_ic_date 
+-silent 
+-drv_case clmrun 
+-datm_source CLM_QIAN
+-use_case glacier_mec

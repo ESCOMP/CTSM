@@ -47,7 +47,9 @@ contains
                              nurban, wturban, &
                              nlake, wtlake, &
                              nwetland, wtwetland, &
-                             nglacier, wtglacier)
+                             nglacier, wtglacier, &
+                             nglacier_mec, wtglacier_mec,  &
+                             glcmask)
 !
 ! !DESCRIPTION:
 ! Obtain gridcell properties
@@ -55,8 +57,11 @@ contains
 ! !USES
   use clm_varpar  , only : numpft, maxpatch_pft, numcft, &
                            npatch_lake, npatch_glacier, npatch_wet, npatch_urban
+  use clm_varpar  , only : npatch_glacier_mec
   use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
+  use clm_varctl  , only : create_glacier_mec_landunit, glc_topomax
   use clm_varsur  , only : wtxy
+  use clm_varsur  , only : topoxy
 
 ! !ARGUMENTS
     implicit none
@@ -76,6 +81,9 @@ contains
     real(r8), optional, intent(out) :: wtwetland  ! weight (relative to gridcell) of wetland landunitof wetland pfts (columns) in wetland landunit
     integer , optional, intent(out) :: nglacier   ! number of glacier pfts (columns) in glacier landunit
     real(r8), optional, intent(out) :: wtglacier  ! weight (relative to gridcell) of glacier landunitof glacier pfts (columns) in glacier landunit
+    integer , optional, intent(out) :: nglacier_mec  ! number of glacier_mec pfts (columns) in glacier_mec landunit
+    real(r8), optional, intent(out) :: wtglacier_mec ! weight (relative to gridcell) of glacier_mec landunitof glacier pfts (columns) in glacier_mec landunit
+    integer , optional, intent(in)  :: glcmask  ! = 1 if glc requires surface mass balance in this gridcell
 !
 ! !CALLED FROM:
 ! subroutines decomp_init, initGridCells
@@ -87,6 +95,7 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     integer  :: m                ! loop index
+    integer  :: n                ! elevation class index
     integer  :: ipfts            ! number of pfts in gridcell
     integer  :: icols            ! number of columns in gridcell
     integer  :: ilunits          ! number of landunits in gridcell
@@ -201,6 +210,39 @@ contains
     ipfts = ipfts + npfts_per_lunit
     if (present(nglacier )) nglacier  = npfts_per_lunit
     if (present(wtglacier)) wtglacier = wtlunit
+
+    ! Set glacier_mec landunit
+    ! If glcmask = 1, we create a column for each elevation class even if wtxy = 0.
+
+    if (create_glacier_mec_landunit) then
+       npfts_per_lunit = 0
+       wtlunit = 0._r8
+       do m = npatch_glacier+1, npatch_glacier_mec
+          if (wtxy(nw,m) > 0._r8) then
+             npfts_per_lunit = npfts_per_lunit + 1
+             wtlunit = wtlunit + wtxy(nw,m)
+             topoxy(nw,m) = max (topoxy(nw,m), 0._r8)
+          elseif (present(glcmask)) then
+             if (glcmask == 1) then      ! create a virtual column 
+                npfts_per_lunit = npfts_per_lunit + 1
+                n = m - npatch_glacier    ! elevation class index
+                if (m < npatch_glacier_mec) then   ! classes 1 to glc_nec-1 
+                   topoxy(nw,m) = 0.5_r8 * (glc_topomax(n-1) + glc_topomax(n))
+                else                               ! class glc_nec
+                   topoxy(nw,m) = 2.0_r8*glc_topomax(n-1) - glc_topomax(n-2)     ! somewhat arbitrary
+                endif 
+             endif  ! glcmask = 1 
+          endif  ! wtxy > 0
+       enddo   ! npatch_glacier_mec
+       if (npfts_per_lunit > 0) then
+          ilunits = ilunits + 1
+          icols   = icols + npfts_per_lunit
+       end if
+       ipfts = ipfts + npfts_per_lunit
+       if (present(nglacier_mec )) nglacier_mec  = npfts_per_lunit
+       if (present(wtglacier_mec)) wtglacier_mec = wtlunit
+
+    endif    ! create_glacier_mec_landunit
 
     ! Set crop landunit if appropriate
 

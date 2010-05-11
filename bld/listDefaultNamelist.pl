@@ -30,6 +30,8 @@ my $ProgDir = $1;                         # name of directory where program live
 my $cwd = getcwd();  # current working directory
 my $cfgdir;
 
+my $printTimes = 0;
+
 if ($ProgDir) { $cfgdir = $ProgDir; }
 else { $cfgdir = $cwd; }
 
@@ -55,6 +57,7 @@ my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml"
                           "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                           "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
 my $list = "clm.input_data_list";
+my %list_of_all_files;
 
 sub usage {
     die <<EOF;
@@ -100,14 +103,18 @@ sub GetListofNeededFiles {
      my $isafile = $$defaults_ref{$var}{'isfile'};
      # If is a file
      if ( $isafile ) {
+        $value    =~ m#$csmdata/(.+?)/([^/]+)$#;
+        my $dir   = $1;
+        my $file  = $2;
+        
+        # If file is already in the list then do NOT do anything
+        if ( defined($list_of_all_files{"$dir/$file"} ) ) {
         # Test that this file exists
-        if ( -f "$value" ) {
+        } elsif ( -f "$value" ) {
            print "File $value exists\n" if $printing;
+           $list_of_all_files{"$dir/$file"} = 1;
         } else {
         # If doesn't exist add it to the list of files to copy
-           $value    =~ m#$csmdata/(.+?)/([^/]+)$#;
-           my $dir   = $1;
-           my $file  = $2;
            my $cfile = $$inputopts_ref{'scpfrom'} . "$dir/$file";
            my @dfiles;
            if ( defined($$files_ref{$dir}) ) {
@@ -125,9 +132,11 @@ sub GetListofNeededFiles {
               print "           ADD $cfile to list to copy\n";
            }
            $$files_ref{$dir} = \@dfiles;
+           $list_of_all_files{"$dir/$file"} = 0;
         }
      }
   }
+  $printTimes++;
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -213,9 +222,10 @@ sub GetListofNeededFiles {
         #
         # Loop over all possible simulation year: 1890, 2000, 2100 etc.
         #
-        foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
+YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
            print "sim_year = $sim_year\n" if $printing;
            $settings{'sim_year'} = $sim_year;   
+           if ( $sim_year ne 1850 && $sim_year ne 2000 && $sim_year > 1800 ) { next YEAR; }
 
            my @rcps;
            if ( $sim_year >= 2005 ) {
@@ -223,21 +233,37 @@ sub GetListofNeededFiles {
            } else {
              @rcps = ( -999. );
            }
+           my @bgcsettings   = $cfg->get_valid_values( "bgc" );
+           my @glc_meclasses = $cfg->get_valid_values( "glc_nec" );
+           my @glc_grids     = $cfg->get_valid_values( "glc_grid" );
            #
-           # Loop over all possible rcp's:
+           # Loop over all possible rcp's
            #
+           print "glc_nec = @glc_meclasses bgc=@bgcsettings rcp=@rcps glc_grids=@glc_grids\n" if $printing;
            foreach my $rcp ( @rcps ) {
-
               $settings{'rcp'} = $rcp;
-
               #
-              # Loop over all possible BGC seetings: none, cn, casa etc.
+              # Loop over all possible BGC seetings
               #
-              foreach my $bgc ( $cfg->get_valid_values( "bgc" ) ) {
-                 print "bgc = $bgc\n" if $printing;
+              foreach my $bgc ( @bgcsettings ) {
                  $settings{'bgc'} = $bgc;
-                 $inputopts{'namelist'} = "clm_inparm";
-                 &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+                 #
+                 # Loop over all possible glc_nec seetings
+                 #
+                 foreach my $glc_nec ( @glc_meclasses ) {
+                    $settings{'glc_nec'} = $glc_nec;
+                    #
+                    # Loop over all possible glc_grid seetings
+                    #
+                    foreach my $glc_grid ( @glc_grids ) {
+                       $settings{'glc_grid'} = $glc_grid;
+                       $inputopts{'namelist'} = "clm_inparm";
+                       &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+                       if ( $printTimes >= 1 ) {
+                          $inputopts{'printing'} = 0;
+                       }
+                    }
+                 }
               }
            }
         }

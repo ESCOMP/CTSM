@@ -64,6 +64,7 @@ contains
     use clm_varpar      , only : numrad
     use shr_orb_mod
     use clm_time_manager, only : get_nstep
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -480,7 +481,6 @@ contains
 
 #endif
 
-
     ! CLIMATE FEEDBACK CALCULATIONS, ALL AEROSOLS:
     flg_slr = 1; ! direct-beam
     call SNICAR_RT(flg_snw_ice, lbc, ubc, num_nourbanc, filter_nourbanc,    &
@@ -636,7 +636,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varpar, only : numrad
-    use clm_varcon, only : albsat, albdry, alblak, albice, tfrz, istice
+    use clm_varcon, only : albsat, albdry, alblak, albice, tfrz, istice, istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -723,7 +723,7 @@ contains
                 !albsoi = albsod
                 albsod(c,ib) = min(albsat(soilcol,ib)+inc, albdry(soilcol,ib))
                 albsoi(c,ib) = albsod(c,ib)
-             else if (ltype(l) == istice)  then          ! land ice
+             else if (ltype(l) == istice .or. ltype(l) == istice_mec)  then  ! land ice
                 ! changed from local variable to clm_type:
                 !albsod = albice(ib)
                 !albsoi = albsod

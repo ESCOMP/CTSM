@@ -12,10 +12,11 @@ module controlMod
 ! Module which initializes run control variables. The following possible
 ! namelist variables are set default values and possibly read in on startup
 !
-! Note: For definitions of namelist variablses see
+! Note: For definitions of namelist variables see
 !       ../../bld/namelist_files/namelist_definition.xml
 !       Display the file in a browser to see it neatly formatted in html.
 !
+
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
   use clm_varpar   , only : maxpatch_pft
@@ -26,8 +27,10 @@ module controlMod
                             co2_type, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
-                            ncd_pio_num_iotasks, fsnowaging, fsnowoptics, &
+                            ncd_pio_num_iotasks, fsnowaging, fsnowoptics, fglcmask, &
                             faerdep
+  use clm_varctl   , only : create_glacier_mec_landunit, glc_nec, glc_dyntopo, glc_smb, glc_topomax
+
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
@@ -162,7 +165,7 @@ contains
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  &
          fpftdyn, fndepdat, fndepdyn, nrevsn, &
-         fsnowoptics, fsnowaging
+         fsnowoptics, fsnowaging, fglcmask
 
     namelist /clm_inparm/ faerdep
 
@@ -191,13 +194,16 @@ contains
     namelist /clm_inparm / &
          co2_type
 
+     ! clm glacier_mec info
+    namelist /clm_inparm / &    
+         create_glacier_mec_landunit, glc_dyntopo, glc_smb
+
     ! clm other options
 
     integer :: override_nsrest   ! If want to override the startup type sent from driver
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, rtm_nsteps, pertlim, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest
-
     ! clm urban options
 
     namelist /clm_inparm/  &
@@ -381,8 +387,8 @@ contains
 #endif
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fglcmask,     len(fglcmask),     MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
-    
     call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
 
     ! Landunit generation
@@ -414,6 +420,13 @@ contains
     call mpi_bcast (ncd_pio_IODOF_rootonly, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (ncd_pio_DebugLevel    , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (ncd_pio_num_iotasks   , 1, MPI_INTEGER, 0, mpicom, ier)
+
+    ! glacier_mec variables
+    call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (glc_nec,                     1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (glc_dyntopo,                 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (glc_smb,                     1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (glc_topomax, size(glc_topomax), MPI_REAL8,   0, mpicom, ier) 
 
     ! history file variables
 
@@ -544,10 +557,29 @@ contains
     else
        write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
     endif
+    if (fglcmask == ' ') then
+       write(iulog,*) '   glacier mask file NOT set'
+    else
+       write(iulog,*) '   glacier mask file = ',trim(fglcmask)
+    endif
     if (faerdep == ' ') then
        write(iulog,*) '   aerosol deposition file NOT set'
     else
        write(iulog,*) '   aerosol deposition file = ',trim(faerdep)
+    endif
+
+    if (create_glacier_mec_landunit) then
+       write(iulog,*) '   number of elevation classes =', glc_nec
+       if (glc_dyntopo) then
+          write(iulog,*) '   CLM glacier topography will evolve dynamically'
+       else
+          write(iulog,*) '   CLM glacier topography will NOT evolve dynamically'
+       endif
+       if (glc_smb) then
+          write(iulog,*) '   Surface mass balance will be passed to ice sheet model'
+       else
+          write(iulog,*) '   Positive-degree-day info will be passed to ice sheet model'
+       endif
     endif
 
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'

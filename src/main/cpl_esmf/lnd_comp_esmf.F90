@@ -14,6 +14,7 @@ module lnd_comp_esmf
   use shr_kind_mod , only : r8 => shr_kind_r8
   use esmf_mod
   use esmfshr_mod
+
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -41,16 +42,21 @@ module lnd_comp_esmf
   private :: rof_domain_esmf
   private :: rof_export_esmf
 #endif
+  private :: sno_export_esmf
+  private :: sno_import_esmf
 !
 ! !PRIVATE VARIABLES
 !
 ! Time averaged flux fields
 !  
   type(ESMF_Array)  :: l2x_SNAP, l2x_SUM
+  type(ESMF_Array)  :: s2x_s_SNAP
+  type(ESMF_Array)  :: s2x_s_SUM
 !
 ! Time averaged counter for flux fields
 !
   integer :: avg_count
+  integer :: avg_count_sno
 !
 ! Atmospheric mode  
 !
@@ -115,6 +121,8 @@ end subroutine
         seq_infodata_start_type_brnch, seq_infodata_start_type_start
     use seq_flds_mod
     use seq_flds_indices
+    use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
+    use clm_varctl       , only : create_glacier_mec_landunit
     implicit none
 !
 ! !ARGUMENTS:
@@ -389,8 +397,12 @@ end subroutine
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 #endif
 
-!    call sno_export_esmf( s2x, rc=rc)
-!    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    if (create_glacier_mec_landunit) then
+
+       call sno_export_esmf( atm_s2x, s2x, rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    endif   ! create_glacier_mec_landunit
 
     ! Initialize averaging counter
 
@@ -405,15 +417,6 @@ end subroutine
     call ESMF_AttributeSet(export_state, name="lnd_ny", value=adomain%nj, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-    call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.false., rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-    call ESMF_AttributeSet(export_state, name="sno_nx", value=adomain%ni, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-    call ESMF_AttributeSet(export_state, name="sno_ny", value=adomain%nj, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
 #ifdef RTM
     call ESMF_AttributeSet(export_state, name="rof_present", value=.true., rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
@@ -425,6 +428,20 @@ end subroutine
     call ESMF_AttributeSet(export_state, name="rof_present", value=.false., rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 #endif
+
+    if (create_glacier_mec_landunit) then
+       call ESMF_AttributeSet(export_state, name="sno_present", value=.true., rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+       call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.true., rc=rc)   ! jw???
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+       call ESMF_AttributeSet(export_state, name="sno_nx", value=adomain%ni, rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+       call ESMF_AttributeSet(export_state, name="sno_ny", value=adomain%nj, rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    else
+       call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    endif
 
     call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
@@ -489,6 +506,9 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
     use aerdepMod      , only : aerdepini
+    use clm_varctl      ,only : create_glacier_mec_landunit
+    use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
+    use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     implicit none
 !
 ! !ARGUMENTS:
@@ -528,6 +548,8 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     logical,save :: first_call = .true.   ! first call work
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_esmf"
+    logical :: glcrun_alarm    ! if true, sno data is averaged and sent to glc this step
+    logical :: update_glc2sno_fields  ! if true, update glacier_mec fields
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein, Fei Liu
@@ -599,15 +621,35 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call t_stopf ('lc_lnd_import')
 
-!    call t_startf ('lc_sno_import')
-!    call sno_import_esmf( x2s, rc=rc )
-!    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-!    call t_stopf ('lc_sno_import')
-
     call t_startf ('lc_clm_mapa2l')
     call clm_mapa2l(atm_a2l, clm_a2l)
     call t_stopf ('lc_clm_mapa2l')
     
+    if (create_glacier_mec_landunit) then
+
+       ! Receive sno data
+
+       call t_startf ('lc_sno_import')
+       call sno_import_esmf( x2s, rc=rc )
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+       call t_stopf ('lc_sno_import')
+
+       ! Map to clm (only when state and/or fluxes need to be updated)
+
+       update_glc2sno_fields  = .false.
+       call seq_infodata_GetData(infodata, glc_g2supdate = update_glc2sno_fields)
+
+       if (update_glc2sno_fields) then
+
+          call t_startf ('lc_clm_mapa2s')
+          call clm_mapx2s(atm_x2s, clm_x2s)
+          call t_stopf ('lc_clm_mapa2s')
+
+          call unpack_clm_x2s(clm_x2s)
+       endif   ! update_glc2sno
+
+    endif      ! create_glacier_mec_landunit
+
     ! Loop over time steps in coupling interval
 
     call t_startf ('lc_lnd_run2')
@@ -688,7 +730,37 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
           avg_count = avg_count + 1
        endif
-       
+
+       if (create_glacier_mec_landunit) then
+
+       ! Map sno data type to MCT
+
+          call create_clm_s2x(clm_s2x)
+
+          call t_startf ('lc_clm_maps2a')
+          call clm_maps2x(clm_s2x, atm_s2x)
+          call t_stopf ('lc_clm_maps2a')
+
+          call t_startf ('lc_sno_export')
+          call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          call sno_export_esmf( atm_s2x, s2x, rc=rc )
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          call t_stopf ('lc_sno_export')
+
+          if (nstep <= 1) then
+             call esmfshr_util_ArrayCopy(s2x, s2x_SUM, rc=rc)
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+             avg_count_sno = 1
+          else
+             call esmfshr_util_ArrayCopy(s2x, s2x_SNAP, rc=rc)
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+             call esmfshr_util_ArraySum(s2x_SNAP, s2x_SUM, rc=rc)
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+             avg_count_sno = avg_count + 1
+          endif
+       endif    ! create_glacier_mec_landunit
+
        ! Advance clm time step
        
        call t_startf ('lc_clm2_adv_timestep')
@@ -709,6 +781,20 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     avg_count = 0                   
 
+    if (create_glacier_mec_landunit) then
+       call seq_infodata_GetData(infodata, glcrun_alarm = glcrun_alarm )
+       if (glcrun_alarm) then
+          call esmfshr_util_ArrayAvg(s2x_SUM, avg_count, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          call esmfshr_util_ArrayCopy(s2x_SUM, s2x, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          call esmfshr_util_ArrayZero(s2x_SUM, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          avg_count_sno = 0
+
+       endif
+    endif
+
 #ifdef RTM
     ! Create river runoff output state
 
@@ -719,15 +805,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call t_stopf ('lc_rof_export')
 #endif
-       
-    ! Create sno output state
-
-!    call t_startf ('lc_sno_export')
-!    call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
-!    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-!    call sno_export_esmf(s2x, rc=rc )
-!    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-!    call t_stopf ('lc_sno_export')
 
     ! Check that internal clock is in sync with master clock
 
@@ -996,10 +1073,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     end if
     call shr_sys_flush( iulog )
 
-    ! This will be removed...........
     set_caerdep_from_file = .not. caerdep_filled
     set_dustdep_from_file = .not. dustdep_filled
-    ! To here........................
 
   end subroutine lnd_chkAerDep_esmf
 
@@ -1552,6 +1627,188 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
   end subroutine rof_export_esmf
 #endif
+
+!====================================================================================
+
+  subroutine sno_export_esmf( s2x, s2x_array, rc )
+
+    !-----------------------------------------------------
+    use shr_kind_mod    , only : r8 => shr_kind_r8
+    use clm_glclnd      , only : lnd2glc_type
+    use decompMod       , only : get_proc_bounds_atm
+    use seq_flds_indices
+
+    type(lnd2glc_type), intent(inout) :: s2x
+    type(ESMF_Array)  , intent(inout) :: s2x_array
+    integer, intent(out)              :: rc
+
+    integer :: g,i
+    integer :: begg, endg    ! beginning and ending gridcell indices
+    real(r8), pointer :: fptr(:, :)
+    !-----------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call get_proc_bounds_atm(begg, endg)
+
+    call ESMF_ArrayGet(s2x_array, localDe=0, farrayPtr=fptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+   
+    fptr(:,:) = 0.0_r8
+
+    ! qice is positive if ice is growing, negative if melting
+
+    ! For now, pass separate fields for each elevation class.
+    ! Currently, the number of elevation classes must be 1, 3, 5, or 10.
+
+!dir$ concurrent
+    do g = begg,endg
+       i = 1 + (g-begg)
+
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 || defined GLC_NEC_1)
+       fptr(index_s2x_Ss_tsrf01,i)   =  s2x%tsrf(g,1)
+       fptr(index_s2x_Ss_topo01,i)   =  s2x%topo(g,1)
+       fptr(index_s2x_Fgss_qice01,i) =  s2x%qice(g,1)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 )
+       fptr(index_s2x_Ss_tsrf02,i)   =  s2x%tsrf(g,2)
+       fptr(index_s2x_Ss_topo02,i)   =  s2x%topo(g,2)
+       fptr(index_s2x_Fgss_qice02,i) =  s2x%qice(g,2)
+       fptr(index_s2x_Ss_tsrf03,i)   =  s2x%tsrf(g,3)
+       fptr(index_s2x_Ss_topo03,i)   =  s2x%topo(g,3)
+       fptr(index_s2x_Fgss_qice03,i) =  s2x%qice(g,3)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 )
+       fptr(index_s2x_Ss_tsrf04,i)   =  s2x%tsrf(g,4)
+       fptr(index_s2x_Ss_topo04,i)   =  s2x%topo(g,4)
+       fptr(index_s2x_Fgss_qice04,i) =  s2x%qice(g,4)
+       fptr(index_s2x_Ss_tsrf05,i)   =  s2x%tsrf(g,5)
+       fptr(index_s2x_Ss_topo05,i)   =  s2x%topo(g,5)
+       fptr(index_s2x_Fgss_qice05,i) =  s2x%qice(g,5)
+#endif
+#if (defined GLC_NEC_10 )
+       fptr(index_s2x_Ss_tsrf06,i)   =  s2x%tsrf(g,6)
+       fptr(index_s2x_Ss_topo06,i)   =  s2x%topo(g,6)
+       fptr(index_s2x_Fgss_qice06,i) =  s2x%qice(g,6)
+       fptr(index_s2x_Ss_tsrf07,i)   =  s2x%tsrf(g,7)
+       fptr(index_s2x_Ss_topo07,i)   =  s2x%topo(g,7)
+       fptr(index_s2x_Fgss_qice07,i) =  s2x%qice(g,7)
+       fptr(index_s2x_Ss_tsrf08,i)   =  s2x%tsrf(g,8)
+       fptr(index_s2x_Ss_topo08,i)   =  s2x%topo(g,8)
+       fptr(index_s2x_Fgss_qice08,i) =  s2x%qice(g,8)
+       fptr(index_s2x_Ss_tsrf09,i)   =  s2x%tsrf(g,9)
+       fptr(index_s2x_Ss_topo09,i)   =  s2x%topo(g,9)
+       fptr(index_s2x_Fgss_qice09,i) =  s2x%qice(g,9)
+       fptr(index_s2x_Ss_tsrf10,i)   =  s2x%tsrf(g,10)
+       fptr(index_s2x_Ss_topo10,i)   =  s2x%topo(g,10)
+       fptr(index_s2x_Fgss_qice10,i) =  s2x%qice(g,10)
+#endif
+
+    end do   ! g
+
+  end subroutine sno_export_esmf
+
+!====================================================================================
+  subroutine sno_import_esmf( x2s_array, x2s, rc )
+
+    !-----------------------------------------------------
+    use shr_kind_mod    , only: r8 => shr_kind_r8
+    use clm_glclnd      , only: glc2lnd_type
+    use decompMod       , only: get_proc_bounds_atm
+    use abortutils      , only: endrun
+    use clm_varctl      , only: iulog
+    use seq_flds_indices
+
+    !
+    ! Arguments
+    !
+    type(ESMF_Array)  , intent(inout) :: x2s_array
+    type(glc2lnd_type), intent(inout) :: x2s
+    integer, intent(out)              :: rc
+    !
+    ! Local Variables
+    !
+    integer  :: g,i
+    integer  :: begg, endg           ! beginning and ending gridcell indices
+    real(r8), pointer :: fptr(:, :)
+    character(len=32), parameter :: sub = 'sno_import_esmf'
+
+    !-----------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    call ESMF_ArrayGet(x2s_array, localDe=0, farrayPtr=fptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call get_proc_bounds_atm(begg, endg)
+
+!dir$ concurrent
+    do g = begg,endg
+        i = 1 + (g - begg)
+
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 || defined GLC_NEC_1)
+        x2s%frac(g,1)  = fptr(index_x2s_Sg_frac01,i)
+        x2s%thck(g,1)  = fptr(index_x2s_Sg_thck01,i)
+        x2s%topo(g,1)  = fptr(index_x2s_Sg_topo01,i)
+        x2s%hflx(g,1)  = fptr(index_x2s_Fsgg_hflx01,i)
+        x2s%roff(g,1)  = fptr(index_x2s_Fsgg_roff01,i)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 )
+        x2s%frac(g,2)  = fptr(index_x2s_Sg_frac02,i)
+        x2s%thck(g,2)  = fptr(index_x2s_Sg_thck02,i)
+        x2s%topo(g,2)  = fptr(index_x2s_Sg_topo02,i)
+        x2s%hflx(g,2)  = fptr(index_x2s_Fsgg_hflx02,i)
+        x2s%roff(g,2)  = fptr(index_x2s_Fsgg_roff02,i)
+        x2s%frac(g,3)  = fptr(index_x2s_Sg_frac03,i)
+        x2s%thck(g,3)  = fptr(index_x2s_Sg_thck03,i)
+        x2s%topo(g,3)  = fptr(index_x2s_Sg_topo03,i)
+        x2s%hflx(g,3)  = fptr(index_x2s_Fsgg_hflx03,i)
+        x2s%roff(g,3)  = fptr(index_x2s_Fsgg_roff03,i)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 )
+        x2s%frac(g,4)  = fptr(index_x2s_Sg_frac04,i)
+        x2s%thck(g,4)  = fptr(index_x2s_Sg_thck04,i)
+        x2s%topo(g,4)  = fptr(index_x2s_Sg_topo04,i)
+        x2s%hflx(g,4)  = fptr(index_x2s_Fsgg_hflx04,i)
+        x2s%roff(g,4)  = fptr(index_x2s_Fsgg_roff04,i)
+        x2s%frac(g,5)  = fptr(index_x2s_Sg_frac05,i)
+        x2s%thck(g,5)  = fptr(index_x2s_Sg_thck05,i)
+        x2s%topo(g,5)  = fptr(index_x2s_Sg_topo05,i)
+        x2s%hflx(g,5)  = fptr(index_x2s_Fsgg_hflx05,i)
+        x2s%roff(g,5)  = fptr(index_x2s_Fsgg_roff05,i)
+#endif
+#if (defined GLC_NEC_10 )
+        x2s%frac(g,6)  = fptr(index_x2s_Sg_frac06,i)
+        x2s%thck(g,6)  = fptr(index_x2s_Sg_thck06,i)
+        x2s%topo(g,6)  = fptr(index_x2s_Sg_topo06,i)
+        x2s%hflx(g,6)  = fptr(index_x2s_Fsgg_hflx06,i)
+        x2s%roff(g,6)  = fptr(index_x2s_Fsgg_roff06,i)
+        x2s%frac(g,7)  = fptr(index_x2s_Sg_frac07,i)
+        x2s%thck(g,7)  = fptr(index_x2s_Sg_thck07,i)
+        x2s%topo(g,7)  = fptr(index_x2s_Sg_topo07,i)
+        x2s%hflx(g,7)  = fptr(index_x2s_Fsgg_hflx07,i)
+        x2s%roff(g,7)  = fptr(index_x2s_Fsgg_roff07,i)
+        x2s%frac(g,8)  = fptr(index_x2s_Sg_frac08,i)
+        x2s%thck(g,8)  = fptr(index_x2s_Sg_thck08,i)
+        x2s%topo(g,8)  = fptr(index_x2s_Sg_topo08,i)
+        x2s%hflx(g,8)  = fptr(index_x2s_Fsgg_hflx08,i)
+        x2s%roff(g,8)  = fptr(index_x2s_Fsgg_roff08,i)
+        x2s%frac(g,9)  = fptr(index_x2s_Sg_frac09,i)
+        x2s%thck(g,9)  = fptr(index_x2s_Sg_thck09,i)
+        x2s%topo(g,9)  = fptr(index_x2s_Sg_topo09,i)
+        x2s%hflx(g,9)  = fptr(index_x2s_Fsgg_hflx09,i)
+        x2s%roff(g,9)  = fptr(index_x2s_Fsgg_roff09,i)
+        x2s%frac(g,10) = fptr(index_x2s_Sg_frac10,i)
+        x2s%thck(g,10) = fptr(index_x2s_Sg_thck10,i)
+        x2s%topo(g,10) = fptr(index_x2s_Sg_topo10,i)
+        x2s%hflx(g,10) = fptr(index_x2s_Fsgg_hflx10,i)
+        x2s%roff(g,10) = fptr(index_x2s_Fsgg_roff10,i)
+#endif
+
+     end do    ! g
+
+
+   end subroutine sno_import_esmf
 
 !====================================================================================
 

@@ -187,7 +187,7 @@ contains
 ! !USES:
     use clmtype
     use decompMod , only : get_proc_clumps, get_clump_bounds
-    use clm_varcon, only : istsoil, isturb, icol_road_perv
+    use clm_varcon, only : istsoil, isturb, icol_road_perv, istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -250,7 +250,11 @@ contains
        fnl = 0
        fnlu = 0
        do p = begp,endp
-          if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+          l = clm3%g%l%c%p%landunit(p)
+          if (clm3%g%l%c%p%wtgcell(p) > 0._r8    &
+                      .or.                       &
+              clm3%g%l%itype(l)==istice_mec) then  ! some glacier_mec columns have zero weight
+
              l = clm3%g%l%c%p%landunit(p)
              if (clm3%g%l%lakpoi(l) ) then
                 fl = fl + 1

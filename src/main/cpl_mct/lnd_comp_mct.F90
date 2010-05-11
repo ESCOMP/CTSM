@@ -17,6 +17,9 @@ module lnd_comp_mct
 ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use mct_mod          , only : mct_aVect
+
+!
+! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   SAVE
   private                              ! By default make data private
@@ -44,6 +47,9 @@ module lnd_comp_mct
   private :: rof_domain_mct           ! Set the river runoff model domain information
   private :: rof_export_mct           ! Export the river runoff model data to the CCSM coupler
 #endif
+  private :: sno_export_mct
+  private :: sno_import_mct
+
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -51,10 +57,14 @@ module lnd_comp_mct
 !  
   type(mct_aVect)   :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
   type(mct_aVect)   :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
+
+  type(mct_aVect)   :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
+  type(mct_aVect)   :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid 
 !
 ! Time averaged counter for flux fields
 !
   integer :: avg_count                ! Number of times snapshots of above flux data summed together
+  integer :: avg_count_sno
 !
 ! Atmospheric mode  
 !
@@ -105,6 +115,8 @@ contains
     use mct_mod          , only : mct_aVect, mct_gsMap, mct_gGrid, mct_aVect_init, mct_aVect_zero
     use seq_flds_mod
     use seq_flds_indices
+    use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
+    use clm_varctl       , only : create_glacier_mec_landunit
     use ESMF_mod
     implicit none
 !
@@ -125,6 +137,8 @@ contains
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
     type(mct_gsMap),         pointer :: GSMap_rof    ! Runoff model MCT GS map
     type(mct_gGrid),         pointer :: dom_r        ! Runoff model domain
+    type(mct_gsMap),         pointer :: GSMap_sno
+    type(mct_gGrid),         pointer :: dom_s
     type(seq_infodata_type), pointer :: infodata     ! CCSM driver level info data
     integer  :: lsize                                ! size of attribute vector
     integer  :: i,j                                  ! indices
@@ -168,6 +182,8 @@ contains
 
     call seq_cdata_setptrs(cdata_r, &
          gsMap=gsMap_rof, dom=dom_r) 
+
+    call seq_cdata_setptrs(cdata_s, gsMap=gsMap_sno, dom=dom_s)
 
     ! Initialize clm MPI communicator 
 
@@ -320,6 +336,39 @@ contains
     call rof_export_mct( r2x_r )
 #endif
 
+    if (create_glacier_mec_landunit) then
+
+       ! Initialize sno gsMap (same as gsMap_lnd)
+
+       call lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_sno )
+       lsize = mct_gsMap_lsize(gsMap_sno, mpicom_lnd)
+
+       ! Initialize sno domain (same as lnd domain)
+
+       call lnd_domain_mct( lsize, gsMap_sno, dom_s )
+
+       ! Initialize sno attribute vectors
+
+       call mct_aVect_init(x2s_s, rList=seq_flds_x2s_fields, lsize=lsize)
+       call mct_aVect_zero(x2s_s)
+
+       call mct_aVect_init(s2x_s, rList=seq_flds_s2x_fields, lsize=lsize)
+       call mct_aVect_zero(s2x_s)
+
+       call mct_aVect_init(s2x_s_SUM , rList=seq_flds_s2x_fluxes, lsize=lsize)
+       call mct_aVect_zero(s2x_s_SUM )
+
+       call mct_aVect_init(s2x_s_SNAP , rList=seq_flds_s2x_fluxes, lsize=lsize)
+       call mct_aVect_zero(s2x_s_SNAP )
+
+       ! Create mct sno export state
+
+       call create_clm_s2x(clm_s2x)
+       call clm_maps2x(clm_s2x, atm_s2x)
+       call sno_export_mct( atm_s2x, s2x_s )
+
+    endif   ! create_glacier_mec_landunit
+
     ! Initialize averaging counter
 
     avg_count = 0
@@ -334,6 +383,14 @@ contains
 #else
     call seq_infodata_PutData( infodata, rof_present=.false.)
 #endif
+
+    if (create_glacier_mec_landunit) then
+       call seq_infodata_PutData( infodata, sno_present=.true.)
+       call seq_infodata_PutData( infodata, sno_nx = adomain%ni, sno_ny = adomain%nj)
+    else
+       call seq_infodata_PutData( infodata, sno_present=.false.)
+    endif
+
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
     call set_nextsw_cday( nextsw_cday )
@@ -401,6 +458,9 @@ contains
                                 mct_aVect_zero
     use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
     use aerdepMod      , only : aerdepini
+    use clm_varctl      ,only : create_glacier_mec_landunit
+    use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
+    use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use ESMF_mod
     implicit none
 !
@@ -446,6 +506,8 @@ contains
     logical,save :: first_call = .true.         ! first call work
     character(len=32)            :: rdate       ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
+    logical :: glcrun_alarm    ! if true, sno data is averaged and sent to glc this step
+    logical :: update_glc2sno_fields  ! if true, update glacier_mec fields
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -493,7 +555,7 @@ contains
 
        call lnd_chkAerDep_mct( infodata )
 
-       call aerdepini( )
+       call aerdepini( )   ! Will be removed...  jw????
 
     endif
     
@@ -507,6 +569,30 @@ contains
     call clm_mapa2l(atm_a2l, clm_a2l)
     call t_stopf ('lc_clm_mapa2l')
     
+    if (create_glacier_mec_landunit) then
+
+       ! Receive sno data
+
+       call t_startf ('lc_sno_import')
+       call sno_import_mct( x2s_s, atm_x2s )
+       call t_stopf ('lc_sno_import')
+
+       ! Map to clm (only when state and/or fluxes need to be updated)
+
+       update_glc2sno_fields  = .false.
+       call seq_infodata_GetData(infodata, glc_g2supdate = update_glc2sno_fields)
+
+       if (update_glc2sno_fields) then
+
+          call t_startf ('lc_clm_mapa2s')
+          call clm_mapx2s(atm_x2s, clm_x2s)
+          call t_stopf ('lc_clm_mapa2s')
+
+          call unpack_clm_x2s(clm_x2s)
+       endif   ! update_glc2sno
+
+    endif      ! create_glacier_mec_landunit
+
     ! Loop over time steps in coupling interval
 
     dosend      = .false.
@@ -577,6 +663,30 @@ contains
           avg_count = avg_count + 1
        endif
        
+       if (create_glacier_mec_landunit) then
+
+       ! Map sno data type to MCT
+
+          call create_clm_s2x(clm_s2x)
+
+          call t_startf ('lc_clm_maps2a')
+          call clm_maps2x(clm_s2x, atm_s2x)
+          call t_stopf ('lc_clm_maps2a')
+
+          call t_startf ('lc_sno_export')
+          call sno_export_mct( atm_s2x, s2x_s )
+          call t_stopf ('lc_sno_export')
+
+          if (nstep <= 1) then
+             call mct_aVect_copy( s2x_s, s2x_s_SUM )
+             avg_count_sno = 1
+          else
+             call mct_aVect_copy( s2x_s, s2x_s_SNAP )
+             call mct_aVect_accum( aVin=s2x_s_SNAP, aVout=s2x_s_SUM )
+             avg_count_sno = avg_count_sno + 1
+          endif
+       endif    ! create_glacier_mec_landunit
+
        ! Advance clm time step
        
        call t_startf ('lc_clm2_adv_timestep')
@@ -591,6 +701,17 @@ contains
     call mct_aVect_copy( l2x_l_SUM, l2x_l )
     call mct_aVect_zero( l2x_l_SUM) 
     avg_count = 0                   
+
+    if (create_glacier_mec_landunit) then
+       call seq_infodata_GetData(infodata, glcrun_alarm = glcrun_alarm )
+       if (glcrun_alarm) then
+          call mct_aVect_avg ( s2x_s_SUM, avg_count_sno)
+          call mct_aVect_copy( s2x_s_SUM, s2x_s )
+          call mct_aVect_zero( s2x_s_SUM)
+          avg_count_sno = 0
+
+       endif
+    endif
 
 #ifdef RTM
     ! Create river runoff output state
@@ -1494,6 +1615,165 @@ contains
 
   end subroutine rof_export_mct
 #endif
+
+!====================================================================================
+
+  subroutine sno_export_mct( s2x, s2x_s )   
+
+    use clm_glclnd      , only : lnd2glc_type
+    use decompMod       , only : get_proc_bounds_atm
+    use seq_flds_indices
+
+    type(lnd2glc_type), intent(inout) :: s2x
+    type(mct_aVect)   , intent(inout) :: s2x_s
+
+    integer :: g,i
+    integer :: begg, endg    ! beginning and ending gridcell indices
+
+    call get_proc_bounds_atm(begg, endg)
+
+    s2x_s%rAttr(:,:) = 0.0_r8
+
+    ! qice is positive if ice is growing, negative if melting
+
+    do g = begg,endg
+       i = 1 + (g-begg)
+
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 || defined GLC_NEC_1)
+       s2x_s%rAttr(index_s2x_Ss_tsrf01,i)   =  s2x%tsrf(g,1)
+       s2x_s%rAttr(index_s2x_Ss_topo01,i)   =  s2x%topo(g,1)
+       s2x_s%rAttr(index_s2x_Fgss_qice01,i) =  s2x%qice(g,1)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 )
+       s2x_s%rAttr(index_s2x_Ss_tsrf02,i)   =  s2x%tsrf(g,2)
+       s2x_s%rAttr(index_s2x_Ss_topo02,i)   =  s2x%topo(g,2)
+       s2x_s%rAttr(index_s2x_Fgss_qice02,i) =  s2x%qice(g,2)
+       s2x_s%rAttr(index_s2x_Ss_tsrf03,i)   =  s2x%tsrf(g,3)
+       s2x_s%rAttr(index_s2x_Ss_topo03,i)   =  s2x%topo(g,3)
+       s2x_s%rAttr(index_s2x_Fgss_qice03,i) =  s2x%qice(g,3)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 )
+       s2x_s%rAttr(index_s2x_Ss_tsrf04,i)   =  s2x%tsrf(g,4)
+       s2x_s%rAttr(index_s2x_Ss_topo04,i)   =  s2x%topo(g,4)
+       s2x_s%rAttr(index_s2x_Fgss_qice04,i) =  s2x%qice(g,4)
+       s2x_s%rAttr(index_s2x_Ss_tsrf05,i)   =  s2x%tsrf(g,5)
+       s2x_s%rAttr(index_s2x_Ss_topo05,i)   =  s2x%topo(g,5)
+       s2x_s%rAttr(index_s2x_Fgss_qice05,i) =  s2x%qice(g,5)
+#endif
+#if (defined GLC_NEC_10 )
+       s2x_s%rAttr(index_s2x_Ss_tsrf06,i)   =  s2x%tsrf(g,6)
+       s2x_s%rAttr(index_s2x_Ss_topo06,i)   =  s2x%topo(g,6)
+       s2x_s%rAttr(index_s2x_Fgss_qice06,i) =  s2x%qice(g,6)
+       s2x_s%rAttr(index_s2x_Ss_tsrf07,i)   =  s2x%tsrf(g,7)
+       s2x_s%rAttr(index_s2x_Ss_topo07,i)   =  s2x%topo(g,7)
+       s2x_s%rAttr(index_s2x_Fgss_qice07,i) =  s2x%qice(g,7)
+       s2x_s%rAttr(index_s2x_Ss_tsrf08,i)   =  s2x%tsrf(g,8)
+       s2x_s%rAttr(index_s2x_Ss_topo08,i)   =  s2x%topo(g,8)
+       s2x_s%rAttr(index_s2x_Fgss_qice08,i) =  s2x%qice(g,8)
+       s2x_s%rAttr(index_s2x_Ss_tsrf09,i)   =  s2x%tsrf(g,9)
+       s2x_s%rAttr(index_s2x_Ss_topo09,i)   =  s2x%topo(g,9)
+       s2x_s%rAttr(index_s2x_Fgss_qice09,i) =  s2x%qice(g,9)
+       s2x_s%rAttr(index_s2x_Ss_tsrf10,i)   =  s2x%tsrf(g,10)
+       s2x_s%rAttr(index_s2x_Ss_topo10,i)   =  s2x%topo(g,10)
+       s2x_s%rAttr(index_s2x_Fgss_qice10,i) =  s2x%qice(g,10)
+#endif
+
+    end do   ! g
+
+  end subroutine sno_export_mct
+
+!====================================================================================
+
+  subroutine sno_import_mct( x2s_s, x2s )
+
+    use clm_glclnd      , only: glc2lnd_type
+    use decompMod       , only: get_proc_bounds_atm
+    use abortutils      , only: endrun
+    use clm_varctl      , only: iulog
+    use mct_mod         , only: mct_aVect
+    use seq_flds_indices
+
+    !
+    ! Arguments
+    !
+    type(mct_aVect)   , intent(inout) :: x2s_s
+    type(glc2lnd_type), intent(inout) :: x2s
+    !
+    ! Local Variables
+    !
+    integer  :: g,i
+    integer  :: begg, endg           ! beginning and ending gridcell indices
+    character(len=32), parameter :: sub = 'sno_import_mct'
+
+    !-----------------------------------------------------
+
+    call get_proc_bounds_atm(begg, endg)
+
+    do g = begg,endg
+        i = 1 + (g - begg)
+       
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 || defined GLC_NEC_1)
+        x2s%frac(g,1)  = x2s_s%rAttr(index_x2s_Sg_frac01,i)
+        x2s%topo(g,1)  = x2s_s%rAttr(index_x2s_Sg_topo01,i)
+        x2s%hflx(g,1)  = x2s_s%rAttr(index_x2s_Fsgg_hflx01,i)
+        x2s%rofi(g,1)  = x2s_s%rAttr(index_x2s_Fsgg_roff01,i)
+        x2s%rofl(g,1)  = x2s_s%rAttr(index_x2s_Fsgg_roff01,i)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 )
+        x2s%frac(g,2)  = x2s_s%rAttr(index_x2s_Sg_frac02,i)
+        x2s%topo(g,2)  = x2s_s%rAttr(index_x2s_Sg_topo02,i)
+        x2s%hflx(g,2)  = x2s_s%rAttr(index_x2s_Fsgg_hflx02,i)
+        x2s%rofi(g,2)  = x2s_s%rAttr(index_x2s_Fsgg_roff02,i)
+        x2s%rofi(g,2)  = x2s_s%rAttr(index_x2s_Fsgg_roff02,i)
+        x2s%frac(g,3)  = x2s_s%rAttr(index_x2s_Sg_frac03,i)
+        x2s%topo(g,3)  = x2s_s%rAttr(index_x2s_Sg_topo03,i)
+        x2s%hflx(g,3)  = x2s_s%rAttr(index_x2s_Fsgg_hflx03,i)
+        x2s%rofi(g,3)  = x2s_s%rAttr(index_x2s_Fsgg_roff03,i)
+        x2s%rofl(g,3)  = x2s_s%rAttr(index_x2s_Fsgg_roff03,i)
+#endif
+#if (defined GLC_NEC_10 || defined GLC_NEC_5 )
+        x2s%frac(g,4)  = x2s_s%rAttr(index_x2s_Sg_frac04,i)
+        x2s%topo(g,4)  = x2s_s%rAttr(index_x2s_Sg_topo04,i)
+        x2s%hflx(g,4)  = x2s_s%rAttr(index_x2s_Fsgg_hflx04,i)
+        x2s%rofi(g,4)  = x2s_s%rAttr(index_x2s_Fsgg_roff04,i)
+        x2s%rofl(g,4)  = x2s_s%rAttr(index_x2s_Fsgg_roff04,i)
+        x2s%frac(g,5)  = x2s_s%rAttr(index_x2s_Sg_frac05,i)
+        x2s%topo(g,5)  = x2s_s%rAttr(index_x2s_Sg_topo05,i)
+        x2s%hflx(g,5)  = x2s_s%rAttr(index_x2s_Fsgg_hflx05,i)
+        x2s%rofi(g,5)  = x2s_s%rAttr(index_x2s_Fsgg_roff05,i)
+        x2s%rofl(g,5)  = x2s_s%rAttr(index_x2s_Fsgg_roff05,i)
+#endif
+#if (defined GLC_NEC_10 )
+        x2s%frac(g,6)  = x2s_s%rAttr(index_x2s_Sg_frac06,i)
+        x2s%topo(g,6)  = x2s_s%rAttr(index_x2s_Sg_topo06,i)
+        x2s%hflx(g,6)  = x2s_s%rAttr(index_x2s_Fsgg_hflx06,i)
+        x2s%rofi(g,6)  = x2s_s%rAttr(index_x2s_Fsgg_roff06,i)
+        x2s%rofi(g,6)  = x2s_s%rAttr(index_x2s_Fsgg_roff06,i)
+        x2s%frac(g,7)  = x2s_s%rAttr(index_x2s_Sg_frac07,i)
+        x2s%topo(g,7)  = x2s_s%rAttr(index_x2s_Sg_topo07,i)
+        x2s%hflx(g,7)  = x2s_s%rAttr(index_x2s_Fsgg_hflx07,i)
+        x2s%rofi(g,7)  = x2s_s%rAttr(index_x2s_Fsgg_roff07,i)
+        x2s%rofi(g,7)  = x2s_s%rAttr(index_x2s_Fsgg_roff07,i)
+        x2s%frac(g,8)  = x2s_s%rAttr(index_x2s_Sg_frac08,i)
+        x2s%topo(g,8)  = x2s_s%rAttr(index_x2s_Sg_topo08,i)
+        x2s%hflx(g,8)  = x2s_s%rAttr(index_x2s_Fsgg_hflx08,i)
+        x2s%rofi(g,8)  = x2s_s%rAttr(index_x2s_Fsgg_roff08,i)
+        x2s%rofl(g,8)  = x2s_s%rAttr(index_x2s_Fsgg_roff08,i)
+        x2s%frac(g,9)  = x2s_s%rAttr(index_x2s_Sg_frac09,i)
+        x2s%topo(g,9)  = x2s_s%rAttr(index_x2s_Sg_topo09,i)
+        x2s%hflx(g,9)  = x2s_s%rAttr(index_x2s_Fsgg_hflx09,i)
+        x2s%rofi(g,9)  = x2s_s%rAttr(index_x2s_Fsgg_roff09,i)
+        x2s%rofl(g,9)  = x2s_s%rAttr(index_x2s_Fsgg_roff09,i)
+        x2s%frac(g,10) = x2s_s%rAttr(index_x2s_Sg_frac10,i)
+        x2s%topo(g,10) = x2s_s%rAttr(index_x2s_Sg_topo10,i)
+        x2s%hflx(g,10) = x2s_s%rAttr(index_x2s_Fsgg_hflx10,i)
+        x2s%rofi(g,10) = x2s_s%rAttr(index_x2s_Fsgg_roff10,i)
+        x2s%rofl(g,10) = x2s_s%rAttr(index_x2s_Fsgg_roff10,i)
+#endif
+         
+     end do    ! g
+
+   end subroutine sno_import_mct
 
 !====================================================================================
 

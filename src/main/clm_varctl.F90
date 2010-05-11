@@ -13,6 +13,7 @@ module clm_varctl
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varpar, only: maxpatch_glcmec
 !
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -81,6 +82,7 @@ module clm_varctl
   character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
+  character(len=256), public :: fglcmask     = ' '      ! glacier mask file name
   character(len=8),   public :: fget_archdev = 'null:'  ! archive device to read input files from if not on local disk
   
 !
@@ -99,6 +101,15 @@ module clm_varctl
   logical,  public :: wrtdia       = .false.            ! true => write global average diagnostics to std out
   real(r8), public :: co2_ppmv     = 355._r8            ! atmospheric CO2 molar ratio (by volume) (umol/mol)
 
+! glacier_mec control variables: default values (may be overwritten by namelist)
+! NOTE: glc_nec and glc_smb must have the same values for CLM and GLC
+
+  logical, public :: create_glacier_mec_landunit = .false.  ! glacier_mec landunit is not created
+  logical, public :: glc_dyntopo = .false.                  ! true => CLM glacier topography changes dynamically
+  logical, public :: glc_smb = .false.                      ! if true, pass surface mass balance info to GLC
+                                                            ! if false, pass positive-degree-day info to GLC
+  integer, public :: glc_nec = 0                            ! number of elevation classes for glacier_mec landunits
+  real(r8), public :: glc_topomax(0:maxpatch_glcmec)        ! upper limit of each class (m)
 !
 ! single column control variables
 !
@@ -245,6 +256,7 @@ contains
           write(iulog,*)'co2_type = ',co2_type,' is not supported'
           call shr_sys_abort( subname//' ERROR:: choices are constant, prognostic or diagnostic' )
        end if
+
        ! Consistency settings for dynamic land use, etc.
 
        if (fpftdyn /= ' ' .and. create_crop_landunit) &
@@ -258,6 +270,36 @@ contains
           call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CASA option' )
 #endif
        end if
+
+       if (create_glacier_mec_landunit) then
+
+#if (defined GLC_NEC_1)
+          glc_nec = 1
+#elif (defined GLC_NEC_3)
+          glc_nec = 3
+#elif (defined GLC_NEC_5)
+          glc_nec = 5
+#elif (defined GLC_NEC_10)
+          glc_nec = 10
+#else
+          call shr_sys_abort( subname//' ERROR:: glc_nec must be 1, 3, 5, or 10 to create glacier_mec landunit')
+#endif
+
+       else  ! no glacier_mec landunit
+
+          if (glc_nec /= 0) then
+             write(iulog,*) 'glc_nec =', glc_nec
+             call shr_sys_abort( subname//' ERROR:: no glacier_mec landunit; must have glc_nec = 0')
+          endif
+          if (glc_smb ) then
+             call shr_sys_abort( subname//' ERROR:: glc_smb true, but create_glacier_mec NOT true')
+          endif
+          if (glc_dyntopo) then
+             call shr_sys_abort( subname//' ERROR:: glc_dyntopo true, but create_glacier_mec NOT true')
+          endif
+
+       endif ! create_glacier_mec_landunit
+
 #if (defined RTM)
        ! If rtm_nsteps was not entered in the namelist, give it the following default value
 

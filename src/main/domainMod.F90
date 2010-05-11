@@ -41,8 +41,10 @@ module domainMod
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
      real(r8),pointer :: asca(:)    ! area scaling from CCSM driver
      character*16     :: set        ! flag to check if domain is set
+     integer ,pointer :: glcmask(:) ! glc mask: 1=sfc mass balance required by GLC component
+                                    !           0=SMB not required (default)
      !--- following are valid only for land domain ---
-     integer ,pointer :: pftm(:)    ! pft  mask: 1=real, 0=fake, -1=notset
+     integer ,pointer :: pftm(:)    ! pft mask: 1=real, 0=fake, -1=notset
      real(r8),pointer :: nara(:)    ! normalized area in upscaling (km**2),
      real(r8),pointer :: ntop(:)    ! normalized topo for downscaling (m)
   end type domain_type
@@ -72,7 +74,6 @@ module domainMod
   integer ,pointer,public     :: gatm(:)   ! gatm pulled out of domain
   integer ,pointer,public     :: amask(:)  ! global atm mask
   integer, pointer,public     :: pftm(:)   ! pft mask for lnd grid
-
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
@@ -145,7 +146,7 @@ contains
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
-             domain%asca(nb:ne),stat=ier)
+             domain%asca(nb:ne),domain%glcmask(nb:ne),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
@@ -177,6 +178,7 @@ contains
     endif
 
     domain%pftm     = -9999
+    domain%glcmask  = 0  
     domain%nara     = 0._r8
     domain%ntop     = -1.0e36
     domain%asca     = 1._r8
@@ -215,7 +217,7 @@ end subroutine domain_init
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
-                  domain%asca,stat=ier)
+                  domain%asca,domain%glcmask,stat=ier)
        if (ier /= 0) then
           write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           call endrun()
@@ -292,6 +294,7 @@ end subroutine domain_clean
     domain2%regional = domain1%regional
     domain2%areaset  = domain1%areaset 
     domain2%decomped = domain1%decomped
+   domain2%glcmask   = domain1%glcmask
 
 end subroutine domain_setsame
 !------------------------------------------------------------------------------
@@ -301,8 +304,8 @@ end subroutine domain_setsame
 !
 ! !INTERFACE:
   subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped,regional, &
-     mask,pftm,clmlevel, &
-     frac,topo,latc,lonc,area,nara,ntop,asca)
+                            mask,pftm,glcmask,clmlevel, &
+                            frac,topo,latc,lonc,area,nara,ntop,asca)
 !
 ! !DESCRIPTION:
 ! This subroutine sets external pointer arrays to arrays in domain
@@ -318,6 +321,7 @@ end subroutine domain_setsame
     logical, optional :: regional              ! regional or global
     integer ,optional,pointer  :: mask(:)  
     integer ,optional,pointer  :: pftm(:)  
+    integer ,optional,pointer  :: glcmask(:)  
     real(r8),optional,pointer  :: frac(:)  
     real(r8),optional,pointer  :: topo(:)  
     real(r8),optional,pointer  :: latc(:)  
@@ -364,6 +368,9 @@ end subroutine domain_setsame
     endif
     if (present(pftm)) then
       pftm => domain%pftm
+    endif
+    if (present(glcmask)) then
+      glcmask => domain%glcmask
     endif
     if (present(frac)) then
       frac => domain%frac
@@ -436,6 +443,7 @@ end subroutine domain_setptrs
     write(iulog,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
     write(iulog,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
     write(iulog,*) '  domain_check asca = ',minval(domain%asca),maxval(domain%asca)
+    write(iulog,*) '  domain_check glcmask = ',minval(domain%glcmask),maxval(domain%glcmask)
     write(iulog,*) ' '
   endif
 

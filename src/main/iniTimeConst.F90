@@ -24,7 +24,7 @@ subroutine iniTimeConst
   use decompMod   , only : gsMap_lnd_gdc2glo
   use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevgrnd, nlevlak, lsmlon, lsmlat, numpft, numrad, nlevurb
-  use clm_varcon  , only : istice, istdlak, istwet, isturb, &
+  use clm_varcon  , only : istice, istdlak, istwet, isturb, istice_mec,  &
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry
@@ -633,7 +633,7 @@ subroutine iniTimeConst
         ! value because thermal conductivity and heat capacity for urban 
         ! roof, sunwall and shadewall are prescribed in SoilThermProp.F90 in 
         ! SoilTemperatureMod.F90
-      if (ltype(l)==istdlak .or. ltype(l)==istwet .or. ltype(l)==istice) then
+      if (ltype(l)==istdlak .or. ltype(l)==istwet .or. ltype(l)==istice .or. ltype(l)==istice_mec) then
          do lev = 1,nlevgrnd
             bsw(c,lev)    = spval
             bsw2(c,lev)   = spval

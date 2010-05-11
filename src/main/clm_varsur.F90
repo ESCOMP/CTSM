@@ -26,6 +26,8 @@ module clm_varsur
   real(r8), allocatable,target :: wtxy(:,:)  ! subgrid weights
 
   real(r8),allocatable :: pctspec(:)         ! percent of spec lunits wrt gcell
+
+  real(r8), allocatable,target :: topoxy(:,:)  ! subgrid glacier_mec sfc elevation
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein

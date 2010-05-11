@@ -28,11 +28,13 @@ contains
                               denice, denh2o, spval, sb, icol_road_perv, &
                               icol_road_imperv, icol_roof, icol_sunwall, &
                               icol_shadewall
+    use clm_varcon   , only : istice_mec, h2osno_max
     use clm_varctl   , only : iulog, pertlim
     use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
     use shr_sys_mod  , only : shr_sys_flush
     use SNICARMod    , only : snw_rds_min
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -235,8 +237,15 @@ contains
        ! snow water
 
        l = clandunit(c)
-       if (ltype(l) == istice) then
-          h2osno(c) = 1000._r8
+
+       ! Note: Glacier_mec columns are initialized with half the maximum snow cover.
+       ! This gives more realistic values of qflx_glcice sooner in the simulation
+       !  for columns with net ablation, at the cost of delaying ice formation
+       !  in columns with net accumulation.
+       if (ltype(l)==istice) then
+          h2osno(c) = h2osno_max
+       elseif (ltype(l)==istice_mec) then
+          h2osno(c) = 0.5_r8 * h2osno_max   ! 50 cm if h2osno_max = 1 m
        else
           h2osno(c) = 0._r8
        endif
@@ -271,9 +280,10 @@ contains
                 t_soisno(c,j) = 250._r8
              enddo
           endif
-          if (ltype(l) == istice) then
+          if (ltype(l)==istice .or. ltype(l)==istice_mec) then
              do j = 1, nlevgrnd
                 t_soisno(c,j) = 250._r8
+
              end do
           else if (ltype(l) == istwet) then
              do j = 1, nlevgrnd
@@ -513,7 +523,7 @@ contains
                    h2osoi_vol(c,j) = 1.0_r8
                 endif
              end do
-          else if (ltype(l) == istice) then
+          else if (ltype(l) == istice .or. ltype(l) == istice_mec) then
              nlevs = nlevgrnd 
              do j = 1, nlevs
                 h2osoi_vol(c,j) = 1.0_r8
@@ -554,8 +564,6 @@ contains
     ! Set snow
 
     do j = -nlevsno+1, 0
-!dir$ concurrent
-!cdir nodep
        do c = begc,endc
           l = clandunit(c)
           if (.not. lakpoi(l)) then  !not lake

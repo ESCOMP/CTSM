@@ -24,7 +24,8 @@ module clmtype
 !   3  => (istdlak) deep lake
 !   4  => (istslak) shall lake (not currently implemented)
 !   5  => (istwet)  wetland
-!   6  => (isturb)  urban 
+!   6  => (isturb)  urban
+!   7  => (istice_mec) land ice (multiple elevation classes) 
 ! -------------------------------------------------------- 
 ! column types can have values of
 ! -------------------------------------------------------- 
@@ -33,6 +34,7 @@ module clmtype
 !   3  => (istdlak)          deep lake
 !   4  => (istslak)          shallow lake 
 !   5  => (istwet)           wetland
+!   7  => (istice_mec)   land ice (multiple elevation classes)   
 !   61 => (icol_roof)        urban roof
 !   62 => (icol_sunwall)     urban sunwall
 !   63 => (icol_shadewall)   urban shadewall
@@ -1136,6 +1138,10 @@ type, public :: column_pstate_type
    real(r8), pointer :: albgri_dst(:,:)       ! ground diffuse albedo without dust (numrad)
    real(r8), pointer :: dTdz_top(:)           ! temperature gradient in top layer  [K m-1]
    real(r8), pointer :: snot_top(:)           ! temperature of top snow layer [K]
+   real(r8), pointer :: forc_pbot(:)          ! surface atm pressure, downscaled to column (Pa)
+   real(r8), pointer :: forc_rho(:)           ! surface air density, downscaled to column (kg/m^3)
+   real(r8), pointer :: glc_frac(:)           ! ice fractional area
+   real(r8), pointer :: glc_topo(:)           ! surface elevation (m)
 end type column_pstate_type
 
 !----------------------------------------------------
@@ -1154,6 +1160,8 @@ type, public :: column_estate_type
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
    real(r8), pointer :: hc_soi(:)             !soil heat content (MJ/m2)
    real(r8), pointer :: hc_soisno(:)          !soil plus snow heat content (MJ/m2)
+   real(r8), pointer :: forc_t(:)             !atm temperature, downscaled to column (Kelvin)
+   real(r8), pointer :: forc_th(:)            !atm potl temperature, downscaled to column (Kelvin)
 end type column_estate_type
 
 !----------------------------------------------------
@@ -1182,6 +1190,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: smp_l(:,:)            !soil matric potential (mm)
    real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
    real(r8), pointer :: fsat(:)               !fractional area with water table at surface
+   real(r8), pointer :: forc_q(:)             !atm specific humidity, downscaled to column (kg/kg)
 end type column_wstate_type
 
 !----------------------------------------------------
@@ -1212,7 +1221,6 @@ type, public :: column_cstate_type
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
-   
 end type column_cstate_type
 
 !----------------------------------------------------
@@ -1280,6 +1288,8 @@ type, public :: column_eflux_type
    real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to urban walls, roof (W/m**2)
    real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
    real(r8), pointer :: eflx_urban_heat(:)    ! urban heating flux (W/m**2)
+   real(r8), pointer :: eflx_bot(:)           ! heat flux from beneath the soil or ice column (W/m**2)
+                                              ! positive upward; usually eflx_bot >= 0
 end type column_eflux_type
 
 !----------------------------------------------------
@@ -1326,6 +1336,9 @@ type, public :: column_wflux_type
    real(r8), pointer :: flx_dst_dep_wet4(:) ! dust species 4 wet deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: flx_dst_dep(:)      ! total (dry+wet) dust deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: qflx_snofrz_lyr(:,:)! snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+   real(r8), pointer :: qflx_glcice(:)      ! flux of new glacial ice (mm H2O/s), passed to GLC
+   real(r8), pointer :: glc_rofi(:)         ! ice runoff passed from GLC to CLM (mm H2O /s)
+   real(r8), pointer :: glc_rofl(:)         ! liquid runoff passed from GLC to CLM (mm H2O /s)
 end type column_wflux_type
 
 !----------------------------------------------------
@@ -2157,6 +2170,7 @@ type, public :: landunit_type
    logical , pointer :: ifspecial(:)    !BOOL: true=>landunit is not vegetated
    logical , pointer :: lakpoi(:)       !BOOL: true=>lake point
    logical , pointer :: urbpoi(:)       !BOOL: true=>urban point
+   logical , pointer :: glcmecpoi(:)    !BOOL: true=>glacier_mec point
 
    ! conservation check structures for the landunit level
    type(energy_balance_type)   :: lebal !energy balance structure
@@ -2214,6 +2228,11 @@ type, public :: gridcell_type
    real(r8), pointer :: lon_a(:)        !"atm" longitude (radians) for albedo
    real(r8), pointer :: latdeg_a(:)     !"atm" latitude (degrees) for albedo
    real(r8), pointer :: londeg_a(:)     !"atm" longitude (degrees) for albedo
+
+   real(r8), pointer :: gris_mask(:)    !Greenland ice sheet mask 
+   real(r8), pointer :: gris_area(:)    !Greenland ice-covered area per gridcell (km^2)
+   real(r8), pointer :: aais_mask(:)    !Antarctic ice sheet mask 
+   real(r8), pointer :: aais_area(:)    !Antarctic ice-covered area per gridcell (km^2)
 
    ! conservation check structures for the gridcell level
    type(energy_balance_type)   :: gebal !energy balance structure

@@ -670,7 +670,7 @@ brL54 TBR.sh _sc_ds clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS 72+72  arb_i
 blL54 TBL.sh _sc_ds clm_std^nl_urb    20020115:NONE:1800 10x15 USGS 48     arb_ic
 
 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 96     arb_ic
-erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 12+84  arb_ic
+erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 72+72  arb_ic
 brL58 TBR.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 72+72  arb_ic
 blL58 TBL.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 48     arb_ic
 
@@ -683,6 +683,53 @@ smL62 TSM.sh _sc_m clm_std^nl_urb    20020101:NONE:1800 1.9x2.5 gx1v6 -10     st
 erL62 TER.sh _sc_m clm_std^nl_urb    20020101:NONE:1800 1.9x2.5 gx1v6 -5+-5   startup
 brL62 TBR.sh _sc_m clm_std^nl_urb_br 20020101:NONE:1800 1.9x2.5 gx1v6 -10+-10 startup
 blL62 TBL.sh _sc_m clm_std^nl_urb    20020101:NONE:1800 1.9x2.5 gx1v6 -10     startup
+
+smV21 TSM.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 48x96 gx3v7 96     arb_ic
+erV21 TER.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 48x96 gx3v7 10+38  arb_ic
+blV21 TBL.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 48x96 gx3v7 48     arb_ic
+brV21 TBR.sh _mec10sc_dh clm_std    19980115:NONE:1800 48x96 gx3v7 72+72  arb_ic
+
+smV25 TSM.sh _mec10sc_h  clm_glcmec 19980115:NONE:1800 48x96 gx3v7 730    arb_ic
+
+smV22 TSM.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 48x96 gx3v7 96     arb_ic
+erV22 TER.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 48x96 gx3v7 10+38  arb_ic
+blV22 TBL.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 48x96 gx3v7 48     arb_ic
+brV22 TBR.sh _mec10sc_dm clm_std    19980115:NONE:1800 48x96 gx3v7 72+72  arb_ic
+
+smV23 TSM.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 48x96 gx3v7 96     arb_ic
+erV23 TER.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 48x96 gx3v7 10+38  arb_ic
+blV23 TBL.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 48x96 gx3v7 48     arb_ic
+brV23 TBR.sh _mec10sc_do clm_std    19980115:NONE:1800 48x96 gx3v7 72+72  arb_ic
+
+smVJ1 TSM.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 96     arb_ic
+erVJ1 TER.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 10+38  arb_ic
+blVJ1 TBL.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 48     arb_ic
+brVJ1 TBR.sh _mec10sc_dh clm_std    19980115:NONE:1800 0.9x1.25 gx1v6 72+72  arb_ic
+
+smVJ2 TSM.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 96     arb_ic
+erVJ2 TER.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 10+38  arb_ic
+blVJ2 TBL.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 48     arb_ic
+brVJ2 TBR.sh _mec10sc_dm clm_std    19980115:NONE:1800 0.9x1.25 gx1v6 72+72  arb_ic
+
+smVJ3 TSM.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 96     arb_ic
+erVJ3 TER.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 10+38  arb_ic
+blVJ3 TBL.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 0.9x1.25 gx1v6 48     arb_ic
+brVJ3 TBR.sh _mec10sc_do clm_std    19980115:NONE:1800 0.9x1.25 gx1v6 72+72  arb_ic
+
+smV61 TSM.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 96     arb_ic
+erV61 TER.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 10+38  arb_ic
+blV61 TBL.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 48     arb_ic
+brV61 TBR.sh _mec10sc_dh clm_std    19980115:NONE:1800 1.9x2.5 gx1v6 72+72  arb_ic
+
+smV62 TSM.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 96     arb_ic
+erV62 TER.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 10+38  arb_ic
+blV62 TBL.sh _mec10sc_dm clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 48     arb_ic
+brV62 TBR.sh _mec10sc_dm clm_std    19980115:NONE:1800 1.9x2.5 gx1v6 72+72  arb_ic
+
+smV63 TSM.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 96     arb_ic
+erV63 TER.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 10+38  arb_ic
+blV63 TBL.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 48     arb_ic
+brV63 TBR.sh _mec10sc_do clm_std    19980115:NONE:1800 1.9x2.5 gx1v6 72+72  arb_ic
 
 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10      arb_ic
 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5    arb_ic

@@ -1,4 +1,216 @@
 ===============================================================
+Tag name:  clm4_0_01
+Originator(s):  erik (erik)
+Date: Tue May 11 14:39:25 MDT 2010
+One-line Summary: Move glacier multiple elevation class branch to the trunk so that we can work with the active glacier model
+
+Purpose of changes:
+
+Add ability to handle glacier multiple elevation classes (glc_mec) in clm, so that we 
+can interact with the active glacier component (glc). Adds glacier elevation classes 
+to the surface datasets and requires they be read in when glacier multiple elevation 
+classes are active.  New namelist options for glc_mec include glc_smb and glc_dyntopo.
+At build-time the number of glc_mec classes is set (can be 0, 1, 3, 5, or 10). The
+model also interacts with the mask of valid glacier points that the active glacier
+model determined (input with the fglcmask file), and set by glc_grid (which can be
+gland5,gland10, or gland20 for 5-20km resolution over Greenland). glc_grid is set at
+build time, but should be moved to the build-namelist.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: standard
+
+Describe any changes made to build system: Add glc_nec and glc_grid options to configure
+   glc_nec can be 1,3,5, or 10 and MUST match the number on the input surface dataset
+           the elevation classes themselves are read from the surface dataset
+   glc_grid can be gland5, gland10, gland20 for greenland 5, 10, or 20km resolution
+            it is merely passed on to build-namelist to pick the glcmask file
+
+Describe any changes made to the namelist:
+
+- create_glacier_mec_landunit (= T when these landunits are created; F by default)
+- glc_smb (= T if passing surface mass balance to GLC; else pass PDD info; T by default)
+- glc_dyntopo (= T if CLM topography changes dynamically; currently F)
+              (NOT fully implemented yet)
+
+  New history fields:
+             QICE      ice growth/melt    (mm/s)
+             QICEYR    ice growth/melt    (mm/s)
+             gris_mask Greenland mask     (unitless)
+             gris_area Greenland ice area (km^2)
+             aais_mask Antarctic mask     (unitless)
+             aais_area Antarctic ice area (km^2)
+
+Changes to build-namelist:
+
+  finidat file and possibly the fsurdat files include glc_nec values
+    Currently only support glc_nec=0 or glc_nec=10
+
+List any changes to the defaults for the boundary datasets: Update datm domain file for T31
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, jwolfe, lipscomb, dlawren
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, csm_share
+     Also add in active glacier model
+   scripts   to scripts4_100510a
+   csm_share to share3_100423
+   gglc      to glc4_100507
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>> Add mec tests
+    A    models/lnd/clm/test/system/config_files/_mec10sc_dh
+    A    models/lnd/clm/test/system/config_files/_mec10sc_dm
+    A    models/lnd/clm/test/system/config_files/_mec10sc_do
+    A    models/lnd/clm/test/system/config_files/_mec10sc_ds
+    A    models/lnd/clm/test/system/config_files/_mec10sc_h
+    A    models/lnd/clm/test/system/config_files/_mec10sc_m
+    A    models/lnd/clm/test/system/config_files/_mec10sc_o
+    A    models/lnd/clm/test/system/nl_files/clm_glcmec
+    A    models/lnd/clm/test/system/nl_files/nl_glcsmb
+
+>>>>>>>>>> Handle passing of data from clm to the active glacier model
+    A    models/lnd/clm/src/main/clm_glclnd.F90 -- handle passing data to glc model
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>> Add mec tests
+    M    models/lnd/clm/test/system/tests_pretag_jaguar
+    M    models/lnd/clm/test/system/input_tests_master
+    M    models/lnd/clm/test/system/tests_posttag_purempi_regression
+    M    models/lnd/clm/test/system/tests_posttag_hybrid_regression
+    M    models/lnd/clm/test/system/tests_pretag_bluefire
+    M    models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+    M    models/lnd/clm/test/system/config_files/README
+    M    models/lnd/clm/test/system/README.testnames
+
+>>>>>>>>>>>> Add GLC_MEC to mksurfdata, add ability to set glc_nec on namelist
+    M    models/lnd/clm/tools/mksurfdata/mkglcmec.F90
+    M    models/lnd/clm/tools/mksurfdata/mkvarctl.F90
+    M    models/lnd/clm/tools/mksurfdata/mkfileMod.F90
+    M    models/lnd/clm/tools/mksurfdata/Makefile ------ Add gfortran remove xlf90 for Darwin
+    M    models/lnd/clm/tools/mksurfdata/mkvarpar.F90
+    M    models/lnd/clm/tools/mksurfdata/README
+    M    models/lnd/clm/tools/mksurfdata/mksrfdat.F90
+
+>>>>>>>>>>>> Add some more checking for glc settings
+    M    models/lnd/clm/bld/listDefaultNamelist.pl - Try to make faster, add loop over
+                                                     glc_nec and glc_grid
+    M    models/lnd/clm/bld/build-namelist --------- Get default glc_smb when
+                                                     create_glacier_mec_landunits is on
+    M    models/lnd/clm/bld/clm.cpl7.template ------ Add glc_ settings
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Add glc_nec to 
+             finidat files, add glc_nec="10" fsurdat files for T31, 1-deg, 2-deg
+    M    models/lnd/clm/bld/configure
+    M    models/lnd/clm/bld/config_files/Makefile.in - Add gfortran to Darwin and remove
+xlf90
+    M    models/lnd/clm/bld/config_files/config_definition.xsl - Add glacier types
+    M    models/lnd/clm/bld/config_files/config_definition.xml
+
+>>>>>>>>>>>> Read in glacier elevation classes from surfdata file as GLC_MEC
+>>>>>>>>>>>> require it when create_glacier_mec_landunits is .true. and use it
+>>>>>>>>>>>> to set value of glc_topomax. Add checking for glc options.
+>>>>>>>>>>>> Also remove concurrent directives
+    M    models/lnd/clm/src/main/clm_varcon.F90 -------- Add h2osno_max, lapse_glcmec 
+                  and istice_mec, change albice when GLC_NEC>0
+    M    models/lnd/clm/src/main/clm_varpar.F90 -------- Add npatch_glacier_mec
+    M    models/lnd/clm/src/main/dynlandMod.F90 -------- Add checking for istice_mec
+    M    models/lnd/clm/src/main/decompInitMod.F90 ----- Pass glcmask in
+    M    models/lnd/clm/src/main/clm_initializeMod.F90 - Handle create_glacier_mec_landunit
+    M    models/lnd/clm/src/main/ncdio.F90 ------------- Add 2D module procedures to ncd_iolocal interface
+    M    models/lnd/clm/src/main/subgridMod.F90 -------- Handle create_glacier_mec_landunit if true
+    M    models/lnd/clm/src/main/clmtypeInitMod.F90 ---- Add glcmecpoi and greenland and antarctic mask/area
+                       add forc_pbot, forc_rho, glc_topo, forc_t, forc_th to ces, forc_q to cws, eflx_bot to cef
+                       add qflx_glcice, glc_rofi, glc_rofl
+    M    models/lnd/clm/src/main/pftdynMod.F90 --------- Change comments
+    M    models/lnd/clm/src/main/iniTimeConst.F90 ------ Handle istice_mec
+    M    models/lnd/clm/src/main/clm_atmlnd.F90 -------- Fix comment
+    M    models/lnd/clm/src/main/clm_varsur.F90 -------- Add topoxy
+    M    models/lnd/clm/src/main/controlMod.F90 -------- Add create_glacier_mec_landunit, glc_dyntopo, glc_smb, fglcmask to namelist
+    M    models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 - Add sno_export/import
+    M    models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 Add sno_export/import
+    M    models/lnd/clm/src/main/filterMod.F90 --------- Add istice_mec
+    M    models/lnd/clm/src/main/clm_varctl.F90 -------- Add fglcmask, create_glacier_mec_landunit,
+                glc_dyntopo, glc_smb, glc_nec, and glc_topomax add some error checking for them
+    M    models/lnd/clm/src/main/initGridCellsMod.F90 -- Make ice sheet masks and deal with glcmask
+    M    models/lnd/clm/src/main/surfrdMod.F90 --------- Read GLCMASK, GLC_MEC, PCT_GLC_MEC and TOPO_GLC_MEC when create_glacier_mec_landunit
+    M    models/lnd/clm/src/main/domainMod.F90 --------- Add glcmask
+    M    models/lnd/clm/src/main/clmtype.F90 ----------- Add forc_pbot, forc_rho, glc_frac, glc_topo add
+                forc_t, forc_q, eflx_bot, qflx_glcice, glc_rofi, glc_rofl, glcmecpoi, gris and assis mask/area
+    M    models/lnd/clm/src/main/histFldsMod.F90 ------- Add new fields when create_glacier_mec_landunit
+    M    models/lnd/clm/src/main/histFileMod.F90 ------- Add glacier_mec to notes, set_noglcmec to hist_addfld1d
+    M    models/lnd/clm/src/main/mkarbinitMod.F90 ------ Set mask sno to h2osno_max, use istice_mec
+    M    models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ----- Assess if istice_mec and add qflx_glcice for glc_dyntopo
+P
+    M    models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90 - Assess if istice_mec
+    M    models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 -- Assess if istice_mec and add eflx_bot
+    M    models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 ---- Assess if istice_mec
+    M    models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 --- Move forc_pbot/forc_q/forc_t/forc_th from g to c, assess istice_mec
+    M    models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 ---- Assess if isice_mec
+    M    models/lnd/clm/src/biogeophys/Hydrology1Mod.F90 ------- Assess if isice_mec move force_t from g to c
+    M    models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 ------- Assess if istice_mec and add qflx_glcice
+    M    models/lnd/clm/src/biogeophys/clm_driverInitMod.F90 --- Downscale forc_t, forc_th, forc_q, forc_pbot from gridcell to columns
+                  based on surface eleveation for glc_mec landunits
+    M    models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 - Change forcing from g to c
+
+Summary of testing:
+
+  bluefire interactive testing: All PASS up to..
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  bluefire/CCSM testing:
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm3_7_15
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm3_7_15
+FAIL  ERS.f19_g16.I1850.bluefire.compare_hist.clm3_7_15
+FAIL  ERS.f19_g16.I1850.bluefire.compare.clm3_7_15
+FAIL  ERI.T31_g37.IG.bluefire
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm3_7_15
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_01
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_15
+FAIL  PST.f10_f10.I8520CN.bluefire.compare.clm3_7_15
+FAIL  PET_PT.f10_f10.I8520CN.bluefire.compare.clm3_7_15
+
+PASS  SMS_D.f19_g16.IG.bluefire
+PASS  ERS.f19_g16.IG.bluefire
+FAIL  SMS.T31_g37.IG.bluefire
+FAIL  SMS.f09_g16.IG.bluefire
+
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_15
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_00
 Originator(s):  erik (erik)
 Date: Tue May  4 23:02:18 MDT 2010

@@ -64,6 +64,8 @@ OPTIONS
                          are system dependent will be ignored.
      -dust <name>        Turn on DUST [on | off] (default is on).
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
+     -glc_grid <name>    Glacier grid name and resolution
+     -glc_nec <name>     Glacier number of elevation classes [0 | 3 | 5 | 10] (default is 0)
      -help [or -h]       Print usage to STDOUT.
      -mach <name>        Machine name to use for CCSM build.
      -maxpft <n>         Value of maxpatch_pft (default is numpft+1) 
@@ -150,6 +152,8 @@ my $commandline = "$cfgdir/configure @ARGV";
 my %opts = (
 	    cache       => "config_cache.xml",
             nofire      => undef,
+            glc_grid    => undef,
+            glc_nec     => undef,
             clm_root    => undef,
 	    );
 GetOptions(
@@ -170,6 +174,8 @@ GetOptions(
     "dust=s"                    => \$opts{'dust'}, 
     "exit_spinup=s"             => \$opts{'exit_spinup'}, 
     "esmf_libdir=s"             => \$opts{'esmf_libdir'},
+    "glc_grid=s"                => \$opts{'glc_grid'},
+    "glc_nec=i"                 => \$opts{'glc_nec'},
     "fc=s"                      => \$opts{'fc'},
     "fflags=s"                  => \$opts{'fflags'},
     "fopt=s"                    => \$opts{'fopt'},
@@ -398,6 +404,24 @@ EOF
 
 if ($print>=2) { print "The configuration cache file will be created in $config_cache_file$eol"; }
 
+
+#-----------------------------------------------------------------------------------------------
+# glacier grid option
+
+if( defined($opts{'glc_grid'}) ) {
+  $cfg_ref->set('glc_grid', $opts{'glc_grid'});
+}
+my $glc_grid = $cfg_ref->get('glc_grid');
+if ($print>=2) { print "Using $glc_grid for glacier grid.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# glacier multiple elevation classes
+
+if( defined($opts{'glc_nec'}) ) {
+  $cfg_ref->set('glc_nec', $opts{'glc_nec'});
+}
+my $glc_nec = $cfg_ref->get('glc_nec');
+if ($print>=2) { print "Using $glc_nec for number of elevation classes over glacier.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # BGC option
@@ -823,6 +847,9 @@ if ( $snicar_frc eq 'on' ) {
 # Always built with PIO
 $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
 if ( ($clm_mode eq "ccsm_seq") && ($spmd eq "off") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
+if ($glc_nec > 0 ) { 
+    $cfg_cppdefs .= " -DGLC_NEC_" . $glc_nec;
+}
 
 # -DSPMD only added for CCSM build.  The CLM Makefile has a separate SPMD macro.
 if ( ($clm_mode eq "ext_ccsm_seq") && $spmd eq "on" ) { $cfg_cppdefs .= " -DSPMD";}
@@ -1305,10 +1332,10 @@ sub write_filepath
 	}
     }
     
-    # Driver, stub ocean, stub glacier, and stub sea-ice
+    # Driver, stub ocean, and stub sea-ice
     if ($mode eq "ccsm_seq") {
 	my @dirs = ( "drv/driver", "drv/shr", "atm/datm", "ocn/socn", 
-                     "ice/sice", "glc/sglc" );
+                     "ice/sice" );
         if ( $comp_intf eq "MCT" ) { 
 	    push( @dirs, "atm/datm/cpl_mct" );
 	    #push( @dirs, "drv/shr_mct" );
@@ -1333,6 +1360,14 @@ sub write_filepath
 		die "** source directory does not exist: $srcdir/../../../$dir\n";
 	    }
 	}
+        my $cdir;
+        if ( $comp_intf eq "MCT" ) { 
+           $cdir .= "/cpl_mct";
+        } else {
+           $cdir .= "/cpl_esmf";
+        }
+        my $glc_model = "sglc";
+	print $fh absolute_path( "$srcdir/../../../glc/$glc_model/$cdir" ) . "\n";
 	print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
     }
     

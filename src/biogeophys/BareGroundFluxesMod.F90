@@ -50,6 +50,7 @@ contains
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use QSatMod            , only : QSat
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -187,13 +188,8 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    forc_th    => clm_a2l%forc_th
-    forc_pbot  => clm_a2l%forc_pbot
-    forc_t     => clm_a2l%forc_t
     forc_u     => clm_a2l%forc_u
     forc_v     => clm_a2l%forc_v
-    forc_rho   => clm_a2l%forc_rho
-    forc_q     => clm_a2l%forc_q
 
     ! Assign local pointers to derived type members (landunit-level)
 
@@ -201,25 +197,30 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
-    pcolumn => clm3%g%l%c%p%column
-    pgridcell => clm3%g%l%c%p%gridcell
+    forc_th    => clm3%g%l%c%ces%forc_th
+    forc_t     => clm3%g%l%c%ces%forc_t
+    forc_pbot  => clm3%g%l%c%cps%forc_pbot
+    forc_rho   => clm3%g%l%c%cps%forc_rho
+    forc_q     => clm3%g%l%c%cws%forc_q
+    pcolumn    => clm3%g%l%c%p%column
+    pgridcell  => clm3%g%l%c%p%gridcell
     frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
-    dlrad => clm3%g%l%c%p%pef%dlrad
-    ulrad => clm3%g%l%c%p%pef%ulrad
+    dlrad  => clm3%g%l%c%p%pef%dlrad
+    ulrad  => clm3%g%l%c%p%pef%ulrad
     t_grnd => clm3%g%l%c%ces%t_grnd
-    qg => clm3%g%l%c%cws%qg
+    qg     => clm3%g%l%c%cws%qg
     z0mg_col => clm3%g%l%c%cps%z0mg
     z0hg_col => clm3%g%l%c%cps%z0hg
     z0qg_col => clm3%g%l%c%cps%z0qg
-    thv => clm3%g%l%c%ces%thv
-    beta => clm3%g%l%c%cps%beta
-    zii => clm3%g%l%c%cps%zii
-    ram1 => clm3%g%l%c%p%pps%ram1
+    thv    => clm3%g%l%c%ces%thv
+    beta   => clm3%g%l%c%cps%beta
+    zii    => clm3%g%l%c%cps%zii
+    ram1   => clm3%g%l%c%p%pps%ram1
     cgrnds => clm3%g%l%c%p%pef%cgrnds
     cgrndl => clm3%g%l%c%p%pef%cgrndl
-    cgrnd => clm3%g%l%c%p%pef%cgrnd
-    dqgdT => clm3%g%l%c%cws%dqgdT
-    htvp => clm3%g%l%c%cps%htvp
+    cgrnd  => clm3%g%l%c%p%pef%cgrnd
+    dqgdT  => clm3%g%l%c%cws%dqgdT
+    htvp   => clm3%g%l%c%cps%htvp
     watsat         => clm3%g%l%c%cps%watsat
     h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
     dz             => clm3%g%l%c%cps%dz
@@ -267,8 +268,6 @@ contains
     ! Compute sensible and latent fluxes and their derivatives with respect
     ! to ground temperature using ground temperatures from previous time step
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, fn
        p = filterp(f)
        c = pcolumn(p)
@@ -282,8 +281,8 @@ contains
 
        ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
        dth(p) = thm(p)-t_grnd(c)
-       dqh(p) = forc_q(g)-qg(c)
-       dthv = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
+       dqh(p) = forc_q(c) - qg(c)
+       dthv = dth(p)*(1._r8+0.61_r8*forc_q(c))+0.61_r8*forc_th(c)*dqh(p)
        zldis(p) = forc_hgt_u_pft(p)
 
        ! Copy column roughness to local pft-level arrays
@@ -309,8 +308,6 @@ contains
                              obu, iter, ur, um, ustar, &
                              temp1, temp2, temp12m, temp22m, fm)
 
-!dir$ concurrent
-!cdir nodep
        do f = 1, fn
           p = filterp(f)
           c = pcolumn(p)
@@ -320,8 +317,7 @@ contains
           qstar = temp2(p)*dqh(p)
           z0hg_pft(p) = z0mg_pft(p)/exp(0.13_r8 * (ustar(p)*z0mg_pft(p)/1.5e-5_r8)**0.45_r8)
           z0qg_pft(p) = z0hg_pft(p)
-
-          thvstar = tstar*(1._r8+0.61_r8*forc_q(g)) + 0.61_r8*forc_th(g)*qstar
+          thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
           zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
           if (zeta >= 0._r8) then                   !stable
@@ -338,8 +334,6 @@ contains
     end do ! end stability iteration
 
      do j = 1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do f = 1, fn
           p = filterp(f)
           rootr(p,j) = 0._r8
@@ -347,9 +341,6 @@ contains
         end do
      end do
 
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
     do f = 1, fn
        p = filterp(f)
        c = pcolumn(p)
@@ -361,7 +352,7 @@ contains
        ram     = 1._r8/(ustar(p)*ustar(p)/um(p))
        rah     = 1._r8/(temp1(p)*ustar(p))
        raw     = 1._r8/(temp2(p)*ustar(p))
-       raih    = forc_rho(g)*cpair/rah
+       raih    = forc_rho(c)*cpair/rah
 
        ! Soil evaporation resistance
        www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
@@ -369,10 +360,10 @@ contains
 
        !changed by K.Sakaguchi. Soilbeta is used for evaporation
        if (dqh(p) .gt. 0._r8) then   !dew  (beta is not applied, just like rsoil used to be)
-          raiw    = forc_rho(g)/(raw)
+          raiw    = forc_rho(c)/(raw)
        else
        ! Lee and Pielke 1992 beta is applied
-          raiw    = soilbeta(c)*forc_rho(g)/(raw)
+          raiw    = soilbeta(c)*forc_rho(c)/(raw)
        end if
 
        ram1(p) = ram  !pass value to global variable
@@ -387,8 +378,8 @@ contains
        ! Surface fluxes of momentum, sensible and latent heat
        ! using ground temperatures from previous time step
 
-       taux(p)          = -forc_rho(g)*forc_u(g)/ram
-       tauy(p)          = -forc_rho(g)*forc_v(g)/ram
+       taux(p)          = -forc_rho(c)*forc_u(g)/ram
+       tauy(p)          = -forc_rho(c)*forc_v(g)/ram
        eflx_sh_grnd(p)  = -raih*dth(p)
        eflx_sh_tot(p)   = eflx_sh_grnd(p)
        qflx_evap_soi(p) = -raiw*dqh(p)
@@ -400,11 +391,12 @@ contains
 
        ! 2 m height specific humidity
 
-       q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
+       q_ref2m(p) = forc_q(c) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
 
        ! 2 m height relative humidity
                                                                                 
-       call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+       call QSat(t_ref2m(p), forc_pbot(c), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+
        rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
 
        if (ltype(l) == istsoil) then
@@ -414,9 +406,9 @@ contains
 
        ! Variables needed by history tape
 
-       t_veg(p) = forc_t(g)
+       t_veg(p) = forc_t(c)
        btran(p) = 0._r8
-       cf = forc_pbot(g)/(SHR_CONST_RGAS*0.001_r8*thm(p))*1.e06_r8
+       cf = forc_pbot(c)/(SHR_CONST_RGAS*0.001_r8*thm(p))*1.e06_r8
        rssun(p) = 1._r8/1.e15_r8 * cf
        rssha(p) = 1._r8/1.e15_r8 * cf
 

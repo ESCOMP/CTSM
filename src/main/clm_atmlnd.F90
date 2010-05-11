@@ -402,6 +402,7 @@ end subroutine init_lnd2atm_type
   real(r8),allocatable :: qsum(:)
   integer  :: ier
   logical  :: first_call = .true.
+
 !------------------------------------------------------------------------------
 
   if (first_call .and. masterproc) then
@@ -465,7 +466,7 @@ end subroutine init_lnd2atm_type
      ix=ix+1; asrc(:,ix) = a2l_src%forc_solai(:,n)  
   enddo
 
-  ! atmopshere aerosol deposition coupling
+  ! atmosphere aerosol deposition coupling
   ! This if will be removed so always on...
   if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
      do n = 1,14

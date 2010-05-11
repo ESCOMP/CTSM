@@ -51,6 +51,15 @@
       <xsl:apply-templates select="entry[@category='mach_options']"/>
     </table>
 
+    <h3>Glacier model Options</h3>
+    <table BORDER="1" CELLPADDING="10">
+      <th>Name</th>
+      <th>Value</th>
+      <th>Valid Value</th>
+      <th>Description</th>
+      <xsl:apply-templates select="entry[@category='glc']"/>
+    </table>
+
     <h3>Standalone CLM Testing Options (NOT used by normal CCSM scripts)</h3>
     <table BORDER="1" CELLPADDING="10">
       <th>Name</th>

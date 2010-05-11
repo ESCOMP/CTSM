@@ -14,7 +14,7 @@ module SurfaceRadiationMod
 ! !USES:
    use shr_kind_mod, only: r8 => shr_kind_r8
    use clm_varctl  , only: iulog
-!
+
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -64,6 +64,7 @@ contains
      use clm_atmlnd      , only : clm_a2l
      use clm_varpar      , only : numrad
      use clm_varcon      , only : spval, istsoil
+     use clm_varcon      , only : istice_mec
      use clm_time_manager, only : get_curr_date, get_step_size
      use clm_varpar      , only : nlevsno
      use SNICARMod       , only : DO_SNO_OC
@@ -264,7 +265,7 @@ contains
 
      ! Assign local pointers to multi-level derived type members (landunit level)
 
-     ityplun => clm3%g%l%itype
+     ityplun       => clm3%g%l%itype
 
      ! Assign local pointers to multi-level derived type members (column level)
 
@@ -379,11 +380,13 @@ contains
 
      ! Determine fluxes
 
-!dir$ concurrent
-!cdir nodep
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then ! was redundant b/c filter already included wt>0; not redundant anymore with chg in filter definition
+        ! was redundant b/c filter already included wt>0; 
+        ! not redundant anymore with chg in filter definition
+        l = plandunit(p)
+        !Note: Some glacier_mec pfts may have zero weight
+        if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
            sabg(p)       = 0._r8
            sabv(p)       = 0._r8
            fsa(p)        = 0._r8
@@ -400,11 +403,10 @@ contains
      end do 
 
      ! Loop over pfts to calculate fsun, etc
-!dir$ concurrent
-!cdir nodep
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then ! see comment with this line above
+        l = plandunit(p)
+        if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
            c = pcolumn(p)
            g = pgridcell(p)
         
@@ -455,11 +457,10 @@ contains
         
      ! Loop over nband wavebands
      do ib = 1, nband
-!dir$ concurrent
-!cdir nodep
         do fp = 1,num_nourbanp
            p = filter_nourbanp(fp)
-           if (pwtgcell(p)>0._r8) then ! see comment with this line above
+           l = plandunit(p)
+           if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
               c = pcolumn(p)
               g = pgridcell(p)
               
@@ -608,7 +609,8 @@ contains
      !   based on flux factors computed in the radiative transfer portion of SNICAR.
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then
+           l = plandunit(p)
+           if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
            c = pcolumn(p)
            sabg_snl_sum = 0._r8
 
@@ -724,11 +726,10 @@ contains
      enddo
 
 
-!dir$ concurrent
-!cdir nodep
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then ! see comment with this line above
+        l = plandunit(p)
+        if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
            g = pgridcell(p)
         
            ! Final step of new sunlit/shaded canopy algorithm

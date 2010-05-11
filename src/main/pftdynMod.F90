@@ -75,8 +75,8 @@ contains
   subroutine pftdyn_init()
 !
 ! !DESCRIPTION:
-! Initialize dynamic landuse dataset (position it to the right time samples to 
-! that bound the initial model date
+! Initialize dynamic landuse dataset (position it to the right time samples
+! that bound the initial model date)
 !
 ! !USES:
     use clm_time_manager, only : get_curr_date

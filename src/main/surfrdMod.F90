@@ -27,7 +27,10 @@ module surfrdMod
                            maxpatch_pft, numcft, maxpatch, &
                            npatch_urban, npatch_lake, npatch_wet, npatch_glacier, &
                            maxpatch_urb
+  use clm_varpar  , only : npatch_glacier_mec
+  use clm_varctl  , only : create_glacier_mec_landunit
   use clm_varsur  , only : wtxy, vegxy
+  use clm_varsur  , only : topoxy
   use clm_varsur  , only : pctspec
   use clm_varctl  , only : iulog
   use ncdio
@@ -35,6 +38,7 @@ module surfrdMod
   use spmdMod                         
   use clm_varctl,   only : scmlat, scmlon, single_column
   use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,ldecomp
+
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -75,8 +79,8 @@ contains
 !
 ! !DESCRIPTION:
 ! Read the surface dataset and create subgrid weights.
-! The model's surface dataset recognizes 5 basic land cover types within
-! a grid cell: lake, wetland, urban, glacier, and vegetated. The vegetated
+! The model's surface dataset recognizes 6 basic land cover types within a grid
+! cell: lake, wetland, urban, glacier, glacier_mec and vegetated. The vegetated
 ! portion of the grid cell is comprised of up to [maxpatch_pft] PFTs. These
 ! subgrid patches are read in explicitly for each grid cell. This is in
 ! contrast to LSMv1, where the PFTs were built implicitly from biome types.
@@ -92,6 +96,7 @@ contains
 !    o real % of cell covered by wetland for use as subgrid patch
 !    o real % of cell that is urban      for use as subgrid patch
 !    o real % of cell that is glacier    for use as subgrid patch
+!    o real % of cell that is glacier_mec for use as subgrid patch
 !    o integer PFTs
 !    o real % abundance PFTs (as a percent of vegetated area)
 !
@@ -133,6 +138,7 @@ contains
     vegxy(:,:) = noveg
     wtxy(:,:)  = 0._r8
     pctspec(:) = 0._r8
+    if (allocated(topoxy)) topoxy(:,:) = 0._r8
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read surface boundary data .....'
@@ -502,8 +508,7 @@ contains
        endif
 
        deallocate(rdata)
-
-          
+        
 !tcx fix, this or a test/abort should be added so overlaps can be computed
 !tcx fix, this is demonstrated not bfb in cam bl311 test.
 !tcx fix, see also lat_o_local in areaMod.F90
@@ -530,7 +535,7 @@ contains
     call mpi_bcast (latlon%lone , size(latlon%lone) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (latlon%edges, size(latlon%edges), MPI_REAL8  , 0, mpicom, ier)
     if (present(mask)) then
-       call mpi_bcast(mask       , size(mask)         , MPI_INTEGER, 0, mpicom, ier)
+       call mpi_bcast(mask      , size(mask)        , MPI_INTEGER, 0, mpicom, ier)
     endif
 
   end subroutine surfrd_get_latlon
@@ -541,7 +546,7 @@ contains
 ! !IROUTINE: surfrd_get_frac
 !
 ! !INTERFACE:
-  subroutine surfrd_get_frac(domain,filename)
+  subroutine surfrd_get_frac(domain,filename,glcfilename)
 !
 ! !DESCRIPTION:
 ! Read the landfrac dataset grid related information:
@@ -556,6 +561,7 @@ contains
     include 'netcdf.inc'
     type(domain_type),intent(inout) :: domain   ! domain to init
     character(len=*) ,intent(in)    :: filename ! grid filename
+    character(len=*) ,optional, intent(in) :: glcfilename ! glc mask filename
 !
 ! !CALLED FROM:
 ! subroutine initialize
@@ -569,6 +575,7 @@ contains
     integer :: n                   ! indices
     integer :: ni,nj,ns            ! size of grid on file
     integer :: ncid,dimid,varid    ! netCDF id's
+    integer :: ncidg               ! netCDF id for glcmask
     integer :: ier                 ! error status
     real(r8):: eps = 1.0e-12_r8    ! lat/lon error tolerance
     integer :: beg,end             ! local beg,end indices
@@ -637,6 +644,28 @@ contains
     deallocate(latc,lonc)
 
     if (masterproc) call check_ret(nf_close(ncid), subname)
+
+    if (present(glcfilename)) then
+
+       if (masterproc) then
+
+          if (glcfilename == ' ') then
+             write(iulog,*) trim(subname),' ERROR: glc filename must be specified '
+             call endrun()
+          endif
+
+          call getfil( glcfilename, locfn, 0 )
+          call check_ret( nf_open(locfn, 0, ncidg), subname )
+
+       endif   ! masterproc
+
+       domain%glcmask = 0
+       call ncd_iolocal(ncid, 'GLCMASK', 'read', domain%glcmask, clmlevel, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: GLCMASK NOT in file' )
+
+       if (masterproc) call check_ret(nf_close(ncidg), subname)
+
+    endif   ! present(glcfilename)
 
   end subroutine surfrd_get_frac
 
@@ -759,7 +788,9 @@ contains
 ! !USES:
     use pftvarcon     , only : noveg
     use UrbanInputMod , only : urbinp
-    use domainMod   , only : domain_type
+    use domainMod     , only : domain_type
+    use clm_varctl    , only : glc_nec, glc_topomax
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -788,10 +819,15 @@ contains
     integer  :: nindx                      ! temporary for error check
     integer  :: ier                        ! error status
     integer  :: nlev                       ! level
+    integer  :: npatch
     real(r8),pointer :: pctgla(:)      ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)      ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
     real(r8),pointer :: pcturb(:)      ! percent of grid cell is urbanized
+    real(r8),pointer :: pctglc_mec(:,:)   ! percent of grid cell is glacier_mec (in each elev class)
+    real(r8),pointer :: pctglc_mec_tot(:) ! percent of grid cell is glacier (sum over classes)
+    real(r8),pointer :: topoglc_mec(:,:)  ! surface elevation in each elev class
+    logical :: readv                      ! read variable in or not
     character(len=32) :: subname = 'surfrd_wtxy_special'  ! subroutine name
     real(r8) closelat,closelon
 !!-----------------------------------------------------------------------
@@ -801,6 +837,11 @@ contains
 
     allocate(pctgla(begg:endg),pctlak(begg:endg))
     allocate(pctwet(begg:endg),pcturb(begg:endg))
+    if (create_glacier_mec_landunit) then
+       allocate(pctglc_mec(begg:endg,glc_nec))
+       allocate(pctglc_mec_tot(begg:endg))
+       allocate(topoglc_mec(begg:endg,glc_nec))
+    endif
 
     if (masterproc) then
        call check_dim(ncid, 'nlevsoi', nlevsoi)
@@ -816,7 +857,57 @@ contains
     if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on surfdata file' )
     call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd, status=ret)
     if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on surfdata file' )
-    pctspec = pctwet + pctlak + pctgla + pcturb
+
+    if (create_glacier_mec_landunit) then          ! call ncd_iolocal_gs_int2d
+
+       call check_dim(ncid, 'nglcec',   glc_nec   )
+       call check_dim(ncid, 'nglcecp1', glc_nec+1 )
+       call ncd_ioglobal('GLC_MEC', glc_topomax, 'read', ncid, readvar=readv, bcast=.true.)
+       if ( .not. readv) call endrun( trim(subname)//'ERROR: GLC_MEC was NOT on the input surfdata file' )
+       call ncd_iolocal(ncid, 'PCT_GLC_MEC', 'read', pctglc_mec, grlnd, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_GLC_MEC NOT on surfdata file' )
+       call ncd_iolocal(ncid, 'TOPO_GLC_MEC',  'read', topoglc_mec, grlnd, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TOPO_GLC_MEC NOT on surfdata file' )
+
+       pctglc_mec_tot(:) = 0._r8
+       do n = 1, glc_nec
+          do nl = begg,endg
+             pctglc_mec_tot(nl) = pctglc_mec_tot(nl) + pctglc_mec(nl,n)
+          enddo
+       enddo
+
+       ! Make sure sum of pctglc_mec = pctgla, then zero out pctgla
+       ! (assumes glc_mec values are double precision)
+
+       do nl = begg,endg
+          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-11) then
+             write(iulog,*) ' '
+             write(iulog,*) 'surfrd error: pctgla not equal to sum of pctglc_mec for nl=', nl
+             write(iulog,*) 'pctgla =', pctgla(nl)
+             write(iulog,*) 'pctglc_mec_tot =', pctglc_mec_tot(nl)
+             call endrun()
+          endif
+          pctgla(nl) = 0._r8
+       enddo
+
+       ! If pctglc_mec_tot is very close to 100%, round to 100%
+
+       do nl = begg,endg
+          if (abs(pctglc_mec_tot(nl) - 100._r8) < 1.0e-8) then
+             pctglc_mec(nl,:) = pctglc_mec(nl,:) * 100._r8 / pctglc_mec_tot(nl)
+             pctglc_mec_tot(nl) = 100._r8
+          endif
+       enddo
+
+       pctspec = pctwet + pctlak + pcturb + pctglc_mec_tot
+
+       if ( masterproc ) write(iulog,*) '   elevation limits = ', glc_topomax
+
+    else
+
+       pctspec = pctwet + pctlak + pcturb + pctgla
+ 
+    endif
 
     ! Error check: glacier, lake, wetland, urban sum must be less than 100
 
@@ -944,6 +1035,25 @@ contains
        end if
        call endrun()
     end if
+
+    ! Initialize glacier_mec weights
+
+    if (create_glacier_mec_landunit) then
+
+       do n = 1, glc_nec
+          npatch = npatch_glacier_mec - glc_nec + n
+
+          do nl = begg, endg
+             vegxy (nl,npatch) = noveg
+             wtxy  (nl,npatch) = pctglc_mec(nl,n)/100._r8
+             topoxy(nl,npatch) = topoglc_mec(nl,n)
+
+          enddo   ! nl
+       enddo      ! glc_nec
+
+       deallocate(pctglc_mec, pctglc_mec_tot, topoglc_mec)
+
+   endif    ! create_glacier_mec_landunit
 
    deallocate(pctgla,pctlak,pctwet,pcturb)
 
@@ -1078,6 +1188,7 @@ contains
                 pctpft(nl,m) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
              end if
           end do
+
 
        else if (pctspec(nl) == 100._r8) then
 
@@ -1255,9 +1366,9 @@ contains
 
           if (create_crop_landunit) then
              do m = 1,numcft
-                vegxy(nl,npatch_glacier+m) = cft(nl,m)
-                wtxy(nl,npatch_glacier+m) = pctcft_lunit(nl,m) * (100._r8-pctspec(nl))/10000._r8
-             end do
+                vegxy(nl,npatch_glacier_mec+m) = cft(nl,m)
+                wtxy(nl,npatch_glacier_mec+m) = pctcft_lunit(nl,m) * (100._r8-pctspec(nl))/10000._r8
+            end do
           end if
 
        end if

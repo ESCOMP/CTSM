@@ -443,7 +443,6 @@ my $mode = $cfg->get('mode');
 if ($print>=2) { print "CLM mode is $mode $eol"; }
 
 # Get BGC mode
-
 my $bgc = $cfg->get('bgc');
 
 # Get max number of Plant function types
@@ -837,6 +836,43 @@ add_default($nl, 'fsnowaging' );
 if ($res ne $lnd_res) {
     add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
     add_default($nl, 'fatmtopo'  , 'hgrid'=>$res,     'mask'=>$mask );
+}
+
+#
+# Glacier multiple elevation class options
+#
+my $glc_nec  = $cfg->get( "glc_nec" );
+if ( $glc_nec > 0 ) {
+  my $glc_grid = $cfg->get( "glc_grid" );
+  add_default($nl, 'create_glacier_mec_landunit');
+  add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
+  add_default($nl, 'fglcmask'  , 'hgrid'=>$lnd_res, 'glc_grid'=>$glc_grid );
+  add_default($nl, 'glc_smb'   , 'glc_nec'=>$glc_nec );
+} else {
+  # Error checking for glacier multiple elevation class options when glc_nec off
+  # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask is NOT set
+  my $create_glcmec = $nl->get_value('create_glacier_mec_landunit');
+  if ( defined($create_glcmec) ) {
+     if ( $create_glcmec =~ /$TRUE/i ) {
+        die "$ProgName ERROR:: create_glacer_mec_landunit is true, but glc_nec is equal to zero\n";
+     }
+  }
+  my $glc_smb = $nl->get_value('glc_smb');
+  if ( defined($glc_smb) ) {
+     if ( $glc_smb =~ /$TRUE/i ) {
+        die "$ProgName ERROR:: glc_smb is true, but glc_nec is equal to zero\n";
+     }
+  }
+  my $glc_dyntopo= $nl->get_value('glc_dyntopo');
+  if ( defined($glc_dyntopo) ) {
+     if ( $glc_dyntopo =~ /$TRUE/i ) {
+        die "$ProgName ERROR:: glc_dyntopo is true, but glc_nec is equal to zero\n";
+     }
+  }
+  my $fglcmask = $nl->get_value('fglcmask');
+  if ( defined($fglcmask) ) {
+      die "$ProgName ERROR:: fglcmask is set, but glc_nec is equal to zero\n";
+  }
 }
 
 add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );

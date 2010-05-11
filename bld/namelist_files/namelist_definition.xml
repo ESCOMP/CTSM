@@ -28,6 +28,28 @@ Type of CO2 feedback.
 Flag to separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
+<entry id="create_glacier_mec_landunit" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Set to true to turn on multiple elevation classes over glacier points.
+Normally this is ONLY used when running CCSM with the active glacier model.
+Only works when GLC_NEC is greater than zero.
+</entry>
+
+<entry id="glc_smb" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Set to true to calculate surface mass balance for glacier multi-elevation class points.
+Set to false to use growing degree day information for glaciers multi-elevation class points.
+Only works when create_glacier_mec_landunit is true.
+(Only tested with glc_smb=.true. when create_glacier_mec_landunit is .true., setting it to .false. is NOT tested)
+</entry>
+
+<entry id="glc_dyntopo" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Set to true to dynamically change topographic height over glacier points.
+Only works when create_glacier_mec_landunit is true.
+(EXPERIMENTAL AND NOT FUNCTIONAL!)
+</entry>
+
 <entry id="outnc_large_files" type="logical" category="history"
        group="clm_inparm" valid_values="" >
 Flag to output NetCDF files in 64-bit large-file format
@@ -62,6 +84,11 @@ Full pathname of landfrac data file (on atm grid).
 <entry id="fatmtopo" type="char*256" input_pathname="abs" category="datasets"
        group="clm_inparm" valid_values="" >
 Full pathname of atmosphere topography data file (on atm grid).
+</entry>
+
+<entry id="fglcmask" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of land-ice mask data file (on lnd grid).
 </entry>
 
 <entry id="finidat" type="char*256" input_pathname="abs" category="datasets"
@@ -782,6 +809,14 @@ Controls phasing of the coupling with the land model. (seconds)
 <entry id="ocn_cpl_offset" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Controls phasing of the coupling with the ocean model. (seconds)
+</entry>
+
+<entry id="glc_cpl_dt" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+</entry>
+
+<entry id="glc_cpl_offset" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
 </entry>
 
 <entry id="ref_tod" type="integer"  category="time_mgr"

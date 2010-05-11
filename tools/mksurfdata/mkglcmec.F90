@@ -5,7 +5,7 @@
 !
 ! !INTERFACE:
 subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pctglcmec_o, &
-                    topoglcmec_o, thckglcmec_o)
+                    topoglcmec_o, thckglcmec_o, elevclass)
 !
 ! !DESCRIPTION:
 ! make percent glacier on multiple elevation classes and mean elevation for each elevation class
@@ -16,7 +16,6 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
-  use mkvarpar	  , only : nglcec
   use mkvarsur    , only : ldomain
   use mkvarctl    
   use areaMod     , only : gridmap_type,gridmap_clean,gridmap_setptrs
@@ -34,6 +33,7 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   real(r8), intent(out) :: pctglcmec_o(lsmlon,lsmlat,nglcec)  ! 
   real(r8), intent(out) :: topoglcmec_o(lsmlon,lsmlat,nglcec) ! 
   real(r8), intent(out) :: thckglcmec_o(lsmlon,lsmlat,nglcec) ! 
+  real(r8), intent(out) :: elevclass(nglcec+1)                ! elevation classes
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -48,7 +48,6 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   integer  :: nlatg_i                        ! input grid glacier: lat points
   integer  :: nlont_i                        ! input grid topography: lon points
   integer  :: nlatt_i                        ! input grid topography: lat points
-  real(r8) :: elevclass(nglcec+1)            ! elevation classes
 
   type(domain_type)     :: tdomain1          ! local domain: topo_ice , topo_bedrock
   type(domain_type)     :: tdomain2          ! local domain: fracdata
@@ -99,17 +98,37 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   ! Define elevation classes, represents lower boundary of each class
   ! -----------------------------------------------------------------
 
-  elevclass(1) = 0.
-  elevclass(2) = 200.
-  elevclass(3) = 400.
-  elevclass(4) = 700.
-  elevclass(5) = 1000.
-  elevclass(6) = 1300.
-  elevclass(7) = 1600.
-  elevclass(8) = 2000.
-  elevclass(9) = 2500.
-  elevclass(10) = 3000.
-  elevclass(11) = 5000.
+  if (      nglcec == 10 )then
+     elevclass(1)  =     0.
+     elevclass(2)  =   200.
+     elevclass(3)  =   400.
+     elevclass(4)  =   700.
+     elevclass(5)  =  1000.
+     elevclass(6)  =  1300.
+     elevclass(7)  =  1600.
+     elevclass(8)  =  2000.
+     elevclass(9)  =  2500.
+     elevclass(10) =  3000.
+     elevclass(11) = 10000.
+  else if ( nglcec == 5  )then
+     elevclass(1)  =     0.
+     elevclass(2)  =   500.
+     elevclass(3)  =  1000.
+     elevclass(4)  =  1500.
+     elevclass(5)  =  2000.
+     elevclass(6)  = 10000.
+  else if ( nglcec == 3  )then
+     elevclass(1)  =     0.
+     elevclass(2)  =  1000.
+     elevclass(3)  =  2000.
+     elevclass(4)  = 10000.
+  else if ( nglcec == 1  )then
+     elevclass(1)  =     0.
+     elevclass(2)  = 10000.
+  else
+     write(6,*) "ERROR:: nglcec must be 1, 3, 5, or 10 to work with CLM: "
+     call abort()
+  end if
 
   ! -----------------------------------------------------------------
   ! Read input file

@@ -100,6 +100,10 @@ module clm_varcon
   real(r8) :: ac_wasteheat_factor = 1.0_r8/ac_efficiency_factor  !wasteheat factor for urban air conditioning (-)
   real(r8) :: wasteheat_limit = 100._r8  !limit on wasteheat (W/m2)
   
+  real(r8), parameter :: h2osno_max = 1000._r8    ! max allowed snow thickness (mm H2O)
+  real(r8), parameter :: lapse_glcmec = 0.006_r8  ! surface temperature lapse rate (deg m-1)
+                                                  ! Pritchard et al. (GRL, 35, 2008) use 0.006  
+
   !------------------------------------------------------------------
   ! Initialize water type constants
   !------------------------------------------------------------------
@@ -111,6 +115,7 @@ module clm_varcon
   !   4     shallow lake
   !   5     wetland (swamp, marsh, etc.)
   !   6     urban
+  !   7     land ice (glacier) with multiple elevation classes
 
   integer :: istsoil = 1  !soil         landunit type
   integer :: istice  = 2  !land ice     landunit type
@@ -118,6 +123,7 @@ module clm_varcon
   integer :: istslak = 4  !shallow lake landunit type
   integer :: istwet  = 5  !wetland      landunit type
   integer :: isturb  = 6  !urban        landunit type
+  integer :: istice_mec = 7 !land ice (multiple elevation classes) landunit type
 
   ! urban column types
 
@@ -136,8 +142,17 @@ module clm_varcon
   real(r8), allocatable :: albsat(:,:) ! wet soil albedo by color class and waveband (1=vis,2=nir)
   real(r8), allocatable :: albdry(:,:) ! dry soil albedo by color class and waveband (1=vis,2=nir)
 
+! The CLM default albice values are too high.
+! Full-spectral albedo for land ice is ~0.5 (Paterson, Physics of Glaciers, 1994, p. 59)
+! This is the value used in CAM3 by Pritchard et al., GRL, 35, 2008.
+
   real(r8) :: albice(numrad)           ! albedo land ice by waveband (1=vis, 2=nir)
+
+#if (defined GLC_NEC_1) || (defined GLC_NEC_3) || (defined GLC_NEC_5) || (defined GLC_NEC_10)
+  data (albice(i),i=1,numrad) /0.50_r8, 0.50_r8/
+#else
   data (albice(i),i=1,numrad) /0.80_r8, 0.55_r8/
+#endif
 
   real(r8) :: alblak(numrad)           ! albedo frozen lakes by waveband (1=vis, 2=nir)
   data (alblak(i),i=1,numrad) /0.60_r8, 0.40_r8/

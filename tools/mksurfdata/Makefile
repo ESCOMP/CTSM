@@ -158,20 +158,16 @@ ifeq ($(FC),g95)
 
 endif
 
-ifeq ($(FC),xlf90)
+ifeq ($(FC),gfortran)
 
-    CPPDEF += -DAIX
-    cpre = $(null)-WF,-D$(null)
-    FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
-    CFLAGS  := -I/usr/include -I/usr/include/malloc -g -O2 $(CPPDEF)
-    FC      = xlf90
-    FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
-	      -WF,-DAIX -g -qfullpath -qhalt=e $(FPPFLAGS) -I.
-    ifneq ($(OPT),TRUE)
-       FFLAGS  += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
-    else
-       FFLAGS  += -qmaxmem=5000
-    endif
+   CPPDEF   += -DG95
+   FFLAGS   := -c -fno-second-underscore $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF) \
+               -fno-range-check
+   ifeq ($(OPT),TRUE)
+     FFLAGS += -O2
+   else
+     FFLAGS += -g -fbounds-check
+   endif
 
 endif
 

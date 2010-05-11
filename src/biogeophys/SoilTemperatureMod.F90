@@ -64,11 +64,12 @@ contains
     use clm_atmlnd    , only : clm_a2l
     use clm_time_manager  , only : get_step_size
     use clm_varctl    , only : iulog
-    use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
+    use clm_varcon    , only : sb, capr, cnfac, hvap, istice_mec, isturb, &
                                icol_roof, icol_sunwall, icol_shadewall, &
                                icol_road_perv, icol_road_imperv, istwet
     use clm_varpar    , only : nlevsno, nlevgrnd, max_pft_per_col, nlevurb
     use TridiagonalMod, only : Tridiagonal
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -139,6 +140,7 @@ contains
     real(r8), pointer :: eflx_anthro(:)         ! total anthropogenic heat flux (W/m**2)
     real(r8), pointer :: canyon_hwr(:)      ! urban canyon height to width ratio
     real(r8), pointer :: wtlunit_roof(:)    ! weight of roof with respect to landunit
+    real(r8), pointer :: eflx_bot(:)        ! heat flux from beneath column (W/m**2) [+ = upward]
 ! 
 ! local pointers to  original implicit inout arguments
 !
@@ -229,6 +231,7 @@ contains
     tssbef             => clm3%g%l%c%ces%tssbef
     eflx_urban_ac      => clm3%g%l%c%cef%eflx_urban_ac
     eflx_urban_heat    => clm3%g%l%c%cef%eflx_urban_heat
+    eflx_bot           => clm3%g%l%c%cef%eflx_bot
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -270,8 +273,6 @@ contains
     ! Added a pfts loop here to get the average of hs and dhsdT over 
     ! all PFTs on the column. Precalculate the terms that do not depend on PFT.
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        lwrad_emit(c)  =    emg(c) * sb * t_grnd(c)**4
@@ -281,15 +282,15 @@ contains
     hs(lbc:ubc) = 0._r8
     dhsdT(lbc:ubc) = 0._r8
     do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
              l = plandunit(p)
              g = pgridcell(p)
-             if (pwtgcell(p)>0._r8) then
+
+             ! Note: Some glacier_mec pfts may have zero weight
+             if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
                 if (ltype(l) /= isturb) then
                    eflx_gnet(p) = sabg(p) + dlrad(p) &
                                   + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) - lwrad_emit(c) &
@@ -308,7 +309,7 @@ contains
                       eflx_heat_from_ac_pft(p) = 0._r8
                       eflx_traffic_pft(p) = 0._r8
                    end if
-                   ! Include transpiration term because needed for pervious road
+                   ! Include transpiration term because needed for previous road
                    ! and include wasteheat and traffic flux
                    eflx_gnet(p) = sabg(p) + dlrad(p)  &
                                   - eflx_lwrad_net(p) &
@@ -320,6 +321,7 @@ contains
                 hs(c) = hs(c) + eflx_gnet(p) * pwtcol(p)
                 dhsdT(c) = dhsdT(c) + dgnetdT(p) * pwtcol(p)
              end if
+
           end if
        end do
     end do
@@ -338,15 +340,13 @@ contains
     hs_top(lbc:ubc) = 0._r8
 
     do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           lyr_top = snl(c) + 1
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
              l = plandunit(p)
-             if (pwtgcell(p)>0._r8) then
+             if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
                 g = pgridcell(p)
                 if (ltype(l) /= isturb )then
 
@@ -395,8 +395,6 @@ contains
     ! matrix and solve system
 
     do j = -nlevsno+1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -421,7 +419,7 @@ contains
                 if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall .or. ctype(c)==icol_roof) then
                    fn(c,j) = tk(c,j) * (t_building(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
                 else
-                   fn(c,j) = 0._r8
+                   fn(c,j) = eflx_bot(c)
                 end if
              end if
           end if
@@ -429,8 +427,6 @@ contains
     end do
 
     do j = -nlevsno+1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -474,7 +470,7 @@ contains
                    at(c,j) =   - (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
                    bt(c,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
                    ct(c,j) = 0._r8
-                   rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1)
+                   rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1) + fact(c,j)*fn(c,j)
                 end if
              end if
 
@@ -482,8 +478,6 @@ contains
        enddo
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        jtop(c) = snl(c) + 1
@@ -494,8 +488,6 @@ contains
     ! Melting or Freezing
 
     do j = -nlevsno+1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -538,9 +530,6 @@ contains
     end do
 
     do j = -nlevsno+1,nlevgrnd
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -556,8 +545,6 @@ contains
 
     call PhaseChange (lbc, ubc, num_nolakec, filter_nolakec, fact, brr, hs, dhsdT, xmf, hs_top, sabg_lyr_col)
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        t_grnd(c) = t_soisno(c,snl(c)+1)
@@ -565,8 +552,6 @@ contains
 
 
 ! Initialize soil heat content
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
@@ -579,9 +564,6 @@ contains
 
 ! Calculate soil heat content and soil plus snow heat content
     do j = -nlevsno+1,nlevgrnd
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -625,11 +607,10 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
     use clm_varcon  , only : denh2o, denice, tfrz, tkwat, tkice, tkair, &
-                             cpice,  cpliq,  istice, istwet, &
+                             cpice,  cpliq,  istice, istice_mec, istwet, &
                              icol_roof, icol_sunwall, icol_shadewall, &
                              icol_road_perv, icol_road_imperv
     use clm_varpar  , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
-    use clm_varctl  , only : iulog
 !
 ! !ARGUMENTS:
     implicit none
@@ -731,8 +712,6 @@ contains
     ! 41, 1011-1026.
 
     do j = -nlevsno+1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
 
@@ -745,7 +724,8 @@ contains
                 thk(c,j) = tk_roof(l,j)
              else if (ctype(c) == icol_road_imperv .and. j >= 1 .and. j <= nlev_improad(l)) then
                 thk(c,j) = tk_improad(l,j)
-             else if (ltype(l) /= istwet .AND. ltype(l) /= istice) then
+             elseif (ltype(l) /= istwet .AND. ltype(l) /= istice  &
+                                        .AND. ltype(l) /= istice_mec) then
                 satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
                 satw = min(1._r8, satw)
                 if (satw > .1e-6_r8) then
@@ -762,7 +742,7 @@ contains
                    thk(c,j) = tkdry(c,j)
                 endif
                 if (j > nlevsoi) thk(c,j) = thk_bedrock
-             else if (ltype(l) == istice) then
+             else if (ltype(l) == istice .OR. ltype(l) == istice_mec) then
                 thk(c,j) = tkwat
                 if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
              else if (ltype(l) == istwet) then                         
@@ -788,8 +768,6 @@ contains
     ! Thermal conductivity at the layer interface
 
     do j = -nlevsno+1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           if (j >= snl(c)+1 .AND. j <= nlevgrnd-1) then
@@ -815,8 +793,6 @@ contains
     ! 41, 1011-1026.
 
     do j = 1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -826,12 +802,13 @@ contains
              cv(c,j) = cv_roof(l,j) * dz(c,j)
           else if (ctype(c) == icol_road_imperv .and. j >= 1 .and. j <= nlev_improad(l)) then
              cv(c,j) = cv_improad(l,j) * dz(c,j)
-          else if (ltype(l) /= istwet .AND. ltype(l) /= istice) then
+          elseif (ltype(l) /= istwet .AND. ltype(l) /= istice  &
+                                     .AND. ltype(l) /= istice_mec) then
              cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
           else if (ltype(l) == istwet) then 
              cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
              if (j > nlevsoi) cv(c,j) = csol(c,j)*dz(c,j)
-          else if (ltype(l) == istice) then 
+          else if (ltype(l) == istice .OR. ltype(l) == istice_mec) then 
              cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
           endif
           if (j == 1) then
@@ -845,8 +822,6 @@ contains
     ! Snow heat capacity
 
     do j = -nlevsno+1,0
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           if (snl(c)+1 < 1 .and. j >= snl(c)+1) then
@@ -882,8 +857,9 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : tfrz, hfus, grav, istsoil, isturb, icol_road_perv
+    use clm_varcon  , only : tfrz, hfus, grav, istsoil, istice_mec, isturb, icol_road_perv
     use clm_varpar  , only : nlevsno, nlevgrnd
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -931,6 +907,7 @@ contains
     real(r8), pointer :: eflx_snomelt_u(:)!urban snow melt heat flux (W/m**2)
     real(r8), pointer :: eflx_snomelt_r(:)!rural snow melt heat flux (W/m**2)
     real(r8), pointer :: qflx_snofrz_lyr(:,:)  !snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+    real(r8), pointer :: qflx_glcice(:)   !flux of new glacier ice (mm H2O/s) [+ = ice grows]
 !
 ! local pointers to original implicit in arrays
 !
@@ -992,6 +969,7 @@ contains
     clandunit    => clm3%g%l%c%landunit
     ltype        => clm3%g%l%itype
     qflx_snofrz_lyr => clm3%g%l%c%cwf%qflx_snofrz_lyr
+    qflx_glcice  => clm3%g%l%c%cwf%qflx_glcice
 
     ! Get step size
 
@@ -999,8 +977,6 @@ contains
 
     ! Initialization
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        qflx_snomelt(c) = 0._r8
@@ -1009,8 +985,6 @@ contains
     end do
 
     do j = -nlevsno+1,nlevgrnd       ! all layers
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           if (j >= snl(c)+1) then
@@ -1027,8 +1001,6 @@ contains
     enddo   ! end of level-loop
 
     do j = -nlevsno+1,0             ! snow layers 
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           if (j >= snl(c)+1) then
@@ -1051,8 +1023,6 @@ contains
     enddo   ! end of level-loop
 
     do j = 1,nlevgrnd             ! soil layers 
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
@@ -1087,8 +1057,6 @@ contains
     enddo
 
     do j = -nlevsno+1,nlevgrnd       ! all layers
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
 
@@ -1193,15 +1161,31 @@ contains
                 endif
 
              endif
-
           endif   ! end of snow layer if-block
+
+       ! For glacier_mec columns, compute negative ice flux from melted ice.
+       ! Note that qflx_glcice can also include a positive component from excess snow,
+       !  as computed in Hydrology2Mod.F90.
+
+          l = clandunit(c)
+          if (ltype(l)==istice_mec) then
+
+             if (j>=1 .and. h2osoi_liq(c,j) > 0._r8) then   ! ice layer with meltwater
+                ! melting corresponds to a negative ice flux
+                qflx_glcice(c) = qflx_glcice(c) - h2osoi_liq(c,j)/dtime
+
+                ! convert layer back to pure ice by "borrowing" ice from below the column
+                h2osoi_ice(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)
+                h2osoi_liq(c,j) = 0._r8
+
+             endif  ! liquid water is present
+          endif     ! istice_mec
+
        end do   ! end of column-loop
     enddo   ! end of level-loop
 
     ! Needed for history file output
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        eflx_snomelt(c) = qflx_snomelt(c) * hfus
