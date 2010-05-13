@@ -59,7 +59,17 @@ module clm_varpar
   integer, parameter :: numveg         = numpft ! number of veg types (without specific crop)
   integer, parameter :: maxpatch_urb   = 5
   integer            :: maxpatch_pft
+#if defined(GLC_NEC_10)
   integer, parameter :: maxpatch_glcmec = 10
+#elif defined(GLC_NEC_5)
+  integer, parameter :: maxpatch_glcmec = 5
+#elif defined(GLC_NEC_3)
+  integer, parameter :: maxpatch_glcmec = 3
+#elif defined(GLC_NEC_1)
+  integer, parameter :: maxpatch_glcmec = 1
+#else
+  integer, parameter :: maxpatch_glcmec = 0
+#endif
   integer            :: npatch_urban
   integer            :: npatch_lake 
   integer            :: npatch_wet  

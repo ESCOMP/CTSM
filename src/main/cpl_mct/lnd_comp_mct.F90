@@ -121,14 +121,14 @@ contains
     implicit none
 !
 ! !ARGUMENTS:
-    type(ESMF_Clock),             intent(in)    :: EClock           ! Input synchronization clock
-    type(seq_cdata),              intent(inout) :: cdata_l          ! Input land-model driver data
-    type(mct_aVect),              intent(inout) :: x2l_l, l2x_l     ! land model import and export states
-    type(seq_cdata),              intent(inout) :: cdata_r          ! Input runoff-model driver data
-    type(mct_aVect),              intent(inout) :: r2x_r            ! River export state
-    type(seq_cdata),  optional,   intent(inout) :: cdata_s          ! Input snow-model (land-ice) driver data
-    type(mct_aVect),  optional,   intent(inout) :: x2s_s, s2x_s     ! Snow-model import and export states
-    character(len=*), optional,   intent(in)    :: NLFilename       ! Namelist filename to read
+    type(ESMF_Clock),           intent(in)    :: EClock           ! Input synchronization clock
+    type(seq_cdata),            intent(inout) :: cdata_l          ! Input land-model driver data
+    type(mct_aVect),            intent(inout) :: x2l_l, l2x_l     ! land model import and export states
+    type(seq_cdata),            intent(inout) :: cdata_r          ! Input runoff-model driver data
+    type(mct_aVect),            intent(inout) :: r2x_r            ! River export state
+    type(seq_cdata),            intent(inout) :: cdata_s          ! Input snow-model (land-ice) driver data
+    type(mct_aVect),            intent(inout) :: x2s_s, s2x_s     ! Snow-model import and export states
+    character(len=*), optional, intent(in)    :: NLFilename       ! Namelist filename to read
 !
 ! !LOCAL VARIABLES:
     integer                          :: LNDID	     ! Land identifyer
@@ -182,8 +182,6 @@ contains
 
     call seq_cdata_setptrs(cdata_r, &
          gsMap=gsMap_rof, dom=dom_r) 
-
-    call seq_cdata_setptrs(cdata_s, gsMap=gsMap_sno, dom=dom_s)
 
     ! Initialize clm MPI communicator 
 
@@ -337,6 +335,7 @@ contains
 #endif
 
     if (create_glacier_mec_landunit) then
+       call seq_cdata_setptrs(cdata_s, gsMap=gsMap_sno, dom=dom_s)
 
        ! Initialize sno gsMap (same as gsMap_lnd)
 
@@ -465,16 +464,16 @@ contains
     implicit none
 !
 ! !ARGUMENTS:
-    type(ESMF_Clock)            , intent(in)    :: EClock    ! Input synchronization clock from driver
-    type(seq_cdata)             , intent(in)    :: cdata_l   ! Input driver data for land model
-    type(mct_aVect)             , intent(inout) :: x2l_l     ! Import state to land model
-    type(mct_aVect)             , intent(inout) :: l2x_l     ! Export state from land model
-    type(seq_cdata)             , intent(in)    :: cdata_r   ! Input driver data for runoff model
-    type(mct_aVect)             , intent(inout) :: r2x_r     ! Export state from runoff model
-    type(seq_cdata),  optional,   intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
-    type(mct_aVect),  optional,   intent(inout) :: x2s_s     ! Import state for snow model
-    type(mct_aVect),  optional,   intent(inout) :: s2x_s     ! Export state for snow model
-!
+    type(ESMF_Clock) , intent(in)    :: EClock    ! Input synchronization clock from driver
+    type(seq_cdata)  , intent(in)    :: cdata_l   ! Input driver data for land model
+    type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
+    type(mct_aVect)  , intent(inout) :: l2x_l     ! Export state from land model
+    type(seq_cdata)  , intent(in)    :: cdata_r   ! Input driver data for runoff model
+    type(mct_aVect)  , intent(inout) :: r2x_r     ! Export state from runoff model
+    type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
+    type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
+    type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
+
 ! !LOCAL VARIABLES:
     integer :: ymd_sync                   ! Sync date (YYYYMMDD)
     integer :: yr_sync                    ! Sync current year
@@ -537,6 +536,7 @@ contains
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
     call set_nextsw_cday( nextsw_cday )
+    dtime = get_step_size()
 
     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
@@ -555,7 +555,7 @@ contains
 
        call lnd_chkAerDep_mct( infodata )
 
-       call aerdepini( )   ! Will be removed...  jw????
+       call aerdepini( )
 
     endif
     
@@ -664,7 +664,6 @@ contains
        endif
        
        if (create_glacier_mec_landunit) then
-
        ! Map sno data type to MCT
 
           call create_clm_s2x(clm_s2x)
@@ -722,7 +721,6 @@ contains
 #endif
        
     ! Check that internal clock is in sync with master clock
-    dtime = get_step_size()
     call get_curr_date( yr, mon, day, tod, offset=-dtime )
     ymd = yr*10000 + mon*100 + day
     tod = tod

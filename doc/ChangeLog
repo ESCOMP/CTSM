@@ -1,4 +1,94 @@
 ===============================================================
+Tag name:  clm4_0_02
+Originator(s):  erik (erik)
+Date: Thu May 13 00:47:40 MDT 2010
+One-line Summary: Make sure dtime is initialized, so that answers are consistently the same as clm4_0_00
+
+Purpose of changes:
+
+Make sure dtime is initialized before it is used in lnd_run_mct/lnd_run_esmf so
+that results are consistent. This bug has been around since clm3_6_36 where doalb
+logic was changed. However, until clm4_0_01 results seemed to have been consistent,
+but with clm4_0_01 results were inconsistent, and usually incorrect for nstep=1 (in
+calculating calday1 and hence doalb).
+
+Bugs fixed (include bugzilla ID):
+                                 1156 (Reproducability problem with clm4_0_01)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1156 (Reproducability problem with clm4_0_01)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>> Add a reproducability test
+   A   models/lnd/clm/test/system/TRP.sh
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>> Add reproducability test
+   M   models/lnd/clm/test/system/input_tests_master
+
+>>>>>>>>> Set glcmec by GLC_NEC_ $ifdefs
+   M   models/lnd/clm/src/main/clm_varpar.F90
+
+>>>>>>>>> Make sno fields NOT optional, and set dtime before use in _run
+   M   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90
+   M   models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90
+
+Summary of testing:
+
+  bluefire interactive testing:
+001 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........PASS
+  bluefire/CCSM testing:
+PASS  PST.f45_g37.I1850.bluefire.compare.clm4_0_0+upext 
+PASS  PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_0+upext 
+PASS  ERS.f19_g16.I1850.bluefire.compare_hist.clm4_0_0+upext 
+PASS  ERS.f19_g16.I1850.bluefire.compare.clm4_0_0+upext 
+PASS  PST.f10_f10.I8520CN.bluefire.compare.clm4_0_0+upext 
+PASS  PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_0+upext 
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_00
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_01
 Originator(s):  erik (erik)
 Date: Tue May 11 14:39:25 MDT 2010
@@ -38,6 +128,7 @@ Known bugs (include bugzilla ID):
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1155 (Problem with ndeplintInterp for historical case)
+                                 1156 (Reproducability problem with clm4_0_01)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: standard

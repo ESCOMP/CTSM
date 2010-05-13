@@ -582,6 +582,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     call set_nextsw_cday( nextsw_cday )
+    dtime = get_step_size()
 
     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
@@ -808,7 +809,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
 
     ! Check that internal clock is in sync with master clock
 
-    dtime = get_step_size()
     call get_curr_date( yr, mon, day, tod, offset=-dtime )
     ymd = yr*10000 + mon*100 + day
     tod = tod
