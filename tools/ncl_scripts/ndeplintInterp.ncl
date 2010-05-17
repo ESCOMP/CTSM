@@ -57,7 +57,11 @@ begin
    ;
    ; Set the simulation years to get data for...
    ;
-   sim_years = (/ 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2005, 2015, 2025, 2035, 2045, 2055, 2065, 2075, 2085, 2095, 2105 /);
+   if ( rcp .eq. -999.9 )then
+      sim_years = (/ 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2005 /);
+   else
+      sim_years = (/ 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2005, 2015, 2025, 2035, 2045, 2055, 2065, 2075, 2085, 2095, 2105 /);
+   end if
    if ( copyLastHist )then
       ;
       ; Add in an extra year that's a copy of the last year, but labeled as the next year
@@ -168,7 +172,11 @@ begin
    sdate     = systemfunc( "date +%y%m%d" );
    ldate     = systemfunc( "date" );
 
-   outfilename = "fndep_clm_rcp"+rcp+"_simyr"+sim_year_range+"_"+res+"_c"+sdate+".nc";
+   if ( rcp .eq. -999.9 )then
+      outfilename = "fndep_clm_hist_simyr"+sim_year_range+"_"+res+"_c"+sdate+".nc";
+   else
+      outfilename = "fndep_clm_rcp"+rcp+"_simyr"+sim_year_range+"_"+res+"_c"+sdate+".nc";
+   end if
    system( "/bin/rm -f "+outfilename );
    print( "output file: "+outfilename );
    nco = addfile( outfilename, "c" );

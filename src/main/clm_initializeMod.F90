@@ -389,7 +389,7 @@ contains
                                  clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
                                  init_adiag_type
     use initGridCellsMod, only : initGridCells
-    use clm_varctl      , only : finidat, fpftdyn, fndepdyn
+    use clm_varctl      , only : finidat, fpftdyn
     use clmtypeInitMod  , only : initClmtype
     use domainMod       , only : gatm
     use domainMod       , only : ldomain, adomain
@@ -406,14 +406,16 @@ contains
                                  restFile_read, restFile_read_binary
     use accFldsMod      , only : initAccFlds, initAccClmtype
     use mkarbinitMod    , only : mkarbinit
-    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
+#ifdef CN
+    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
+    use clm_varctl      , only : fndepdyn
+#endif
 #if (defined CNDV)
     use pftdynMod             , only : pftwt_init, pftwt_interp
     use CNDVEcosystemDyniniMod, only : CNDVEcosystemDynini
-#elif (!defined CN)
-    use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
 #endif
+    use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
 #if (defined DUST) 
     use DustMod         , only : Dustini
 #endif
@@ -435,6 +437,7 @@ contains
     use UrbanInputMod   , only : UrbanInput
     use clm_glclnd      , only : init_glc2lnd_type, init_lnd2glc_type, &
                                  clm_x2s, clm_s2x, atm_x2s, atm_s2x
+    use seq_drydep_mod,       only : n_drydep, drydep_method, DD_XLND
 
 !
 !
@@ -513,13 +516,23 @@ contains
 
     ! Initialize Ecosystem Dynamics 
 
+    call t_startf('init_ecosys')
 #if (defined CNDV)
     call CNDVEcosystemDynini()
 #elif (!defined CN)
-    call t_startf('init_ecosys')
     call EcosystemDynini()
-    call t_stopf('init_ecosys')
 #endif
+#if (defined CN) || (defined CNDV)
+
+    !
+    ! Initialize CLMSP ecosystem dynamics when drydeposition is used
+    ! so that estimates of monthly differences in LAI can be computed
+    !
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+       call EcosystemDynini()
+    end if
+#endif
+    call t_stopf('init_ecosys')
 
     ! Initialize dust emissions model 
 
@@ -656,12 +669,14 @@ contains
     ! Initialize dynamic nitrogen deposition
     ! ------------------------------------------------------------------------
 
+#ifdef CN
     if (fndepdyn /= ' ') then
        call t_startf('init_ndepdyn')
        call ndepdyn_init()
        call ndepdyn_interp()
        call t_stopf('init_ndepdyn')
     end if
+#endif
 
     ! ------------------------------------------------------------------------
     ! Initialization of model parameterizations that are needed after
@@ -728,9 +743,13 @@ contains
     
     call UrbanInput(mode='finalize')
 
-#if (!defined CN) && (!defined CNDV)
-    call readAnnualVegetation()
-#endif
+    !
+    ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation to get estimates of monthly LAI
+    !
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
+       call readAnnualVegetation()
+    end if
+
     ! End initialization
 
     call t_startf('init_wlog')

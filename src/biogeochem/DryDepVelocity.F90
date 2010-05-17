@@ -77,11 +77,20 @@ CONTAINS
   ! computes the dry deposition velocity of tracers
   !----------------------------------------------------------------------- 
   subroutine depvel_compute( lbp , ubp ) 
-    use clm_varcon    , only :  istice 
-    use shr_const_mod , only :  tmelt => shr_const_tkfrz
-    use seq_drydep_mod, only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
-                                rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
-                                rgss, rgso
+    use shr_const_mod     , only :  tmelt => shr_const_tkfrz
+    use seq_drydep_mod    , only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
+                                    rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
+                                    rgss, rgso
+    use STATICEcosysDynMod, only : interpMonthlyVeg
+    use clm_varcon        , only : istsoil, spval
+    use clm_varctl        , only : iulog
+    use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
+                                   ndllf_dcd_brl_tree,        nbrdlf_evr_trp_tree,  &
+                                   nbrdlf_evr_tmp_tree,       nbrdlf_dcd_trp_tree,  &
+                                   nbrdlf_dcd_tmp_tree,       nbrdlf_dcd_brl_tree,  &
+                                   nbrdlf_evr_shrub,          nbrdlf_dcd_tmp_shrub, &
+                                   nbrdlf_dcd_brl_shrub,      nc3_arctic_grass,     &
+                                   nc3_nonarctic_grass,       nc4_grass, ncorn, nwheat
 
     implicit none 
 
@@ -94,14 +103,15 @@ CONTAINS
     integer , pointer :: plandunit(:)     !pft's landunit index
     integer , pointer :: ivt(:)           !landunit type
     integer , pointer :: itypveg(:)       !vegetation type for current pft  
+    integer , pointer :: ltype(:)         !landunit type
     integer , pointer :: pgridcell(:)     !pft's gridcell index
     real(r8), pointer :: pwtgcell(:)      !weight of pft relative to corresponding gridcell
     real(r8), pointer :: elai(:)          !one-sided leaf area index with burying by snow 
     real(r8), pointer :: forc_t(:)        !atmospheric temperature (Kelvin) 
     real(r8), pointer :: forc_q(:)        !atmospheric specific humidity (kg/kg) 
     real(r8), pointer :: forc_psrf(:)     !surface pressure (Pa) 
-    real(r8), pointer :: latdeg(:)	!latitude (degrees) 
-    real(r8), pointer :: londeg(:) 	!longitude (degrees) 
+    real(r8), pointer :: latdeg(:)        !latitude (degrees) 
+    real(r8), pointer :: londeg(:)        !longitude (degrees) 
     real(r8), pointer :: forc_rain(:)     !rain rate [mm/s] 
     real(r8), pointer :: forc_snow(:)     !snow rate [mm/s]   
     real(r8), pointer :: forc_lwrad(:)    !direct beam radiation (visible only) 
@@ -116,6 +126,7 @@ CONTAINS
     real(r8), pointer :: annlai(:,:)      !12 months of monthly lai from input data set 
     real(r8), pointer :: mlaidiff(:)      !difference in lai between month one and month two 
     real(r8), pointer :: velocity(:,:)
+    real(r8), pointer :: snowdp(:)        ! snow height (m)
 
     integer, pointer :: pcolumn(:)        ! column index associated with each pft
     integer :: c
@@ -173,6 +184,9 @@ CONTAINS
 
     ! constants 
     real(r8), parameter :: slope = 0._r8      ! Used to calculate  rdc in (lower canopy resistance) 
+    integer, parameter :: wveg_unset = -1     ! Unset Wesley vegetation type
+
+    character(len=32), parameter :: subname = "depvel_compute"
 
     !-------------------------------------------------------------------------------------
     ! jfl : mods for PAN
@@ -185,10 +199,9 @@ CONTAINS
     !----------------------------------------------------------------------- 
     if ( n_drydep == 0 .or. drydep_method /= DD_XLND ) return
 
-    ! Check if running with CN or CNDV model -- if so abort as mlaidiff is NOT set in this case
-#if (defined CNDV) || (defined CN)
-    call endrun('DryDepVelocity: drydep can NOT compute the season with CN or CNDV since mlaidiff is NOT defined')
-#endif
+    ! Always call CLMSP whether CN is on or not to get estimate of differences in monthly LAI
+    call interpMonthlyVeg()
+
     ! local pointers to original implicit out arrays 
 
     ! Assign local pointers to derived subtypes components (column-level) 
@@ -199,6 +212,7 @@ CONTAINS
 
     latdeg     => clm3%g%latdeg
     londeg     => clm3%g%londeg
+    ltype      => clm3%g%l%itype
     ivt        => clm3%g%l%c%p%itype
     elai       => clm3%g%l%c%p%pps%elai 
     ram1       => clm3%g%l%c%p%pps%ram1 
@@ -223,6 +237,8 @@ CONTAINS
     h2osoi_vol => clm3%g%l%c%cws%h2osoi_vol
 
     velocity   => clm3%g%l%c%p%pdd%drydepvel ! cm/sec
+
+    snowdp        => clm3%g%l%c%cps%snowdp
 
     ! Assign local pointers to original implicit out arrays 
     !_________________________________________________________________ 
@@ -249,23 +265,28 @@ CONTAINS
 
           !  print *,'bb',pi,cps%npfts,lat,lon,clmveg 
           !map CLM veg type into Wesely veg type  
-          if (clmveg == 0) wesveg = 8 
-          if (clmveg == 1) wesveg = 5 
-          if (clmveg == 2) wesveg = 5 
-          if (clmveg == 3) wesveg = 5 
-          if (clmveg == 4) wesveg = 4 
-          if (clmveg == 5) wesveg = 4 
-          if (clmveg == 6) wesveg = 4 
-          if (clmveg == 7) wesveg = 4 
-          if (clmveg == 8) wesveg = 4 
-          if (clmveg == 9) wesveg = 11 
-          if (clmveg == 10) wesveg = 11 
-          if (clmveg == 11) wesveg = 11 
-          if (clmveg == 12) wesveg = 3 
-          if (clmveg == 13) wesveg = 3 
-          if (clmveg == 14) wesveg = 3 
-          if (clmveg == 15) wesveg = 2 
-          if (clmveg == 16) wesveg = 2 
+          wesveg = wveg_unset 
+          if (clmveg == noveg               ) wesveg = 8 
+          if (clmveg == ndllf_evr_tmp_tree  ) wesveg = 5 
+          if (clmveg == ndllf_evr_brl_tree  ) wesveg = 5 
+          if (clmveg == ndllf_dcd_brl_tree  ) wesveg = 5 
+          if (clmveg == nbrdlf_evr_trp_tree ) wesveg = 4 
+          if (clmveg == nbrdlf_evr_tmp_tree ) wesveg = 4 
+          if (clmveg == nbrdlf_dcd_trp_tree ) wesveg = 4 
+          if (clmveg == nbrdlf_dcd_tmp_tree ) wesveg = 4 
+          if (clmveg == nbrdlf_dcd_brl_tree ) wesveg = 4 
+          if (clmveg == nbrdlf_evr_shrub    ) wesveg = 11 
+          if (clmveg == nbrdlf_dcd_tmp_shrub) wesveg = 11 
+          if (clmveg == nbrdlf_dcd_brl_shrub) wesveg = 11 
+          if (clmveg == nc3_arctic_grass    ) wesveg = 3 
+          if (clmveg == nc3_nonarctic_grass ) wesveg = 3 
+          if (clmveg == nc4_grass           ) wesveg = 3 
+          if (clmveg == ncorn               ) wesveg = 2 
+          if (clmveg == nwheat              ) wesveg = 2 
+          if (wesveg == wveg_unset )then
+             write(iulog,*) 'clmveg = ', clmveg, 'ltype = ', ltype(l)
+             call endrun( subname//': Not able to determine Wesley vegetation type')
+          end if
 
           ! creat seasonality index used to index wesely data tables from LAI,  Bascially 
           !if elai is between max lai from input data and half that max the index_season=1 
@@ -291,7 +312,10 @@ CONTAINS
 
           index_season = -1
 
-          if ( itypelun(l) == istice ) then
+          if ( ltype(l) /= istsoil )then
+             wesveg       = 8
+             index_season = 4
+          else if ( snowdp(c) > 0 ) then
              index_season = 4
           else if(elai(pi).gt.0.5_r8*maxlai) then  
              index_season = 1  
@@ -314,7 +338,7 @@ CONTAINS
           endif
 
           if (index_season<0) then 
-             call endrun('DryDepVelocity: not able to determine season')
+             call endrun( subname//': not able to determine season')
           endif
 
           ! saturation specific humidity 
@@ -382,6 +406,7 @@ CONTAINS
              ! special case for H2 and CO;; CH4 is set ot a fraction of dv(H2)
              !-------------------------------------------------------------------------------------
              if( ispec == index_h2 .or. ispec == index_co .or. ispec == index_ch4 ) then
+
                 if( ispec == index_co ) then
                    fact_h2 = 1.0_r8
                 elseif ( ispec == index_h2 ) then

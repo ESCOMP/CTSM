@@ -22,14 +22,14 @@ D -- ccsm_seq Pergro
 E -- ccsm_seq numpft=4, VOC, DUST, RTM
 F -- ccsm_seq numpft=17, VOC, DUST, RTM
 G -- ccsm_seq numpft=17
-H -- ccsm_seq numpft=17, CN
+H -- ccsm_seq numpft=17, CN and SUPLN
 J -- ccsm_seq numpft=4, CASA
 K -- ccsm_seq numpft=10, CNDV
 L -- ccsm_seq Standard default
 M -- ndepregrid
 N -- ccsm_seq MEXICOCITY
 O -- ccsm_seq VANCOUVER
-P -- unused
+P -- ccsm_seq numpft=17, CN
 Q -- generate_urban_input
 R -- ccsm_seq numpft=17, CN, C13
 S -- unused

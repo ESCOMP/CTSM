@@ -65,6 +65,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="94x192"      mask="T62"  >atm/datm7/domain.lnd.T62_T62.090129.nc</domainfile>
 
 <domainfile hgrid="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
+<domainfile hgrid="0.23x0.31"   mask="gx1v6"  >atm/datm7/domain.lnd.fv0.23x0.31_gx1v6.100517.nc</domainfile>
 <domainfile hgrid="0.23x0.31"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.23x0.31_USGS.090106.nc</domainfile>
 <domainfile hgrid="0.47x0.63"   mask="gx1v6"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v6.090407.nc</domainfile>
 <domainfile hgrid="0.47x0.63"   mask="USGS"  >atm/datm7/domain.clm/domain.lnd.fv0.47x0.63_USGS.090106.nc</domainfile>

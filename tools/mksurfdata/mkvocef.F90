@@ -7,7 +7,7 @@
 subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef_shr_o,ef_grs_o,ef_crp_o)
 !
 ! !DESCRIPTION:
-! make percent urban
+! make volatile organic coumpunds (VOC) emission factors.
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -56,12 +56,6 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
   real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
   real(r8) :: sum_fldo                        ! global sum of dummy input fld
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
-  real(r8) :: gef1_o, gef2_o, gef3_o          ! output grid: global area VOC EF
-  real(r8) :: gef4_o, gef5_o, gef6_o          ! output grid: global area VOC EF
-  real(r8) :: garea_o                         ! output grid: global area
-  real(r8) :: gef1_i, gef2_i, gef3_i          ! input grid: global area VOC EF
-  real(r8) :: gef4_i, gef5_i, gef6_i          ! input grid: global area VOC EF
-  real(r8) :: garea_i                         ! input grid: global area
 
   integer, allocatable  :: temp_i(:,:)        ! input grid: EFs for broadleaf trees
   real(r8), allocatable :: ef_btr_i(:,:)      ! input grid: EFs for broadleaf trees
@@ -283,89 +277,7 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
      end if
   end if
 
-  ! -----------------------------------------------------------------
-  ! Error check2
-  ! Compare global areas on input and output grids
-  ! -----------------------------------------------------------------
-
-  ! Input grid
-
-  gef1_i = 0._r8
-  gef2_i = 0._r8
-  gef3_i = 0._r8
-  gef4_i = 0._r8
-  gef5_i = 0._r8
-  gef6_i = 0._r8
-  garea_i = 0._r8
-
-  do ji = 1, nlat_i
-  do ii = 1, nlon_i
-     garea_i = garea_i + tdomain%area(ii,ji)
-     gef1_i = gef1_i + ef_btr_i(ii,ji)*(tdomain%area(ii,ji)/100._r8)*tdomain%frac(ii,ji)
-     gef2_i = gef2_i + ef_fet_i(ii,ji)*(tdomain%area(ii,ji)/100._r8)*tdomain%frac(ii,ji)
-     gef3_i = gef3_i + ef_fdt_i(ii,ji)*(tdomain%area(ii,ji)/100._r8)*tdomain%frac(ii,ji)
-     gef4_i = gef4_i + ef_shr_i(ii,ji)*(tdomain%area(ii,ji)/100._r8)*tdomain%frac(ii,ji)
-     gef5_i = gef5_i + ef_grs_i(ii,ji)*(tdomain%area(ii,ji)/100._r8)*tdomain%frac(ii,ji)
-     gef6_i = gef6_i + ef_crp_i(ii,ji)*(tdomain%area(ii,ji)/100._r8)*tdomain%frac(ii,ji)
-  end do
-  end do
-
-  ! Output grid
-
-  gef1_o = 0._r8
-  gef2_o = 0._r8
-  gef3_o = 0._r8
-  gef4_o = 0._r8
-  gef5_o = 0._r8
-  gef6_o = 0._r8
-  garea_o = 0._r8
-
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
-     garea_o = garea_o + ldomain%area(io,jo)
-     gef1_o = gef1_o + ef_btr_o(io,jo)*(ldomain%area(io,jo)/100._r8)*tdomain%frac(io,jo)
-     gef2_o = gef2_o + ef_fet_o(io,jo)*(ldomain%area(io,jo)/100._r8)*tdomain%frac(io,jo)
-     gef3_o = gef3_o + ef_fdt_o(io,jo)*(ldomain%area(io,jo)/100._r8)*tdomain%frac(io,jo)
-     gef4_o = gef4_o + ef_shr_o(io,jo)*(ldomain%area(io,jo)/100._r8)*tdomain%frac(io,jo)
-     gef5_o = gef5_o + ef_grs_o(io,jo)*(ldomain%area(io,jo)/100._r8)*tdomain%frac(io,jo)
-     gef6_o = gef6_o + ef_crp_o(io,jo)*(ldomain%area(io,jo)/100._r8)*tdomain%frac(io,jo)
-  end do
-  end do
-
-  ! Diagnostic output
-
-  write (ndiag,*)
-  write (ndiag,'(1x,70a1)') ('=',k=1,70)
-  write (ndiag,*) 'VOC EF Output'
-  write (ndiag,'(1x,70a1)') ('=',k=1,70)
-
-  write (ndiag,*)
-  write (ndiag,'(1x,70a1)') ('.',k=1,70)
-  write (ndiag,2001)
-2001 format (1x,'surface type   input grid area  output grid area'/ &
-             1x,'                 10**6 km**2      10**6 km**2   ')
-  write (ndiag,'(1x,70a1)') ('.',k=1,70)
-  write (ndiag,*)
-  write (ndiag,2002) 1, gef1_i*1.e-06_r8,gef1_o*1.e-06_r8
-  write (ndiag,2002) 2, gef2_i*1.e-06_r8,gef2_o*1.e-06_r8
-  write (ndiag,2002) 3, gef3_i*1.e-06_r8,gef3_o*1.e-06_r8
-  write (ndiag,2002) 4, gef4_i*1.e-06_r8,gef4_o*1.e-06_r8
-  write (ndiag,2002) 5, gef5_i*1.e-06_r8,gef5_o*1.e-06_r8
-  write (ndiag,2002) 6, gef6_i*1.e-06_r8,gef6_o*1.e-06_r8
-  write (ndiag,2004) garea_i*1.e-06_r8,garea_o*1.e-06_r8
-2002 format (1x,'EF       ',i1,f14.3,f17.3)
-2004 format (1x,'all surface ',f14.3,f17.3)
-
-  if (lsmlat > 1) then
-     k = lsmlat/2
-     write (ndiag,*)
-     write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
-     write (ndiag,'(f10.3,a14)')ldomain%area(1,k)*1.e-06_r8,' x 10**6 km**2'
-     write (ndiag,*)
-  endif
-  call shr_sys_flush(ndiag)
-
-  write (6,*) 'Successfully made %urban'
+  write (6,*) 'Successfully made VOC Emission Factors'
   write (6,*)
   call shr_sys_flush(6)
 

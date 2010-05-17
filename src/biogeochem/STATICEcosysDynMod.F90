@@ -2,15 +2,15 @@
 #include <preproc.h>
 module STATICEcosysdynMOD
 
-#if (!defined CN) && (!defined CNDV)
-
 !-----------------------------------------------------------------------
 !BOP
 !
 ! !MODULE: STATICEcosysDynMod
 !
 ! !DESCRIPTION:
-! Static Ecosystem dynamics: phenology, vegetation.
+! Static Ecosystem dynamics: phenology, vegetation. This is for the CLM Satelitte Phenology 
+! model (CLMSP). Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
+! so that DryDeposition code can get estimates of LAI differences between months.
 !
 ! !USES:
   use shr_kind_mod,    only : r8 => shr_kind_r8
@@ -25,10 +25,12 @@ module STATICEcosysdynMOD
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: EcosystemDyn       ! Ecosystem dynamics: phenology, vegetation
-  public :: EcosystemDynini    ! Dynamically allocate memory
-  public :: interpMonthlyVeg   ! interpolate monthly vegetation data
-  public :: readAnnualVegetation
+#if (!defined CN) && (!defined CNDV)
+  public :: EcosystemDyn         ! CLMSP Ecosystem dynamics: phenology, vegetation
+#endif
+  public :: EcosystemDynini      ! Dynamically allocate memory
+  public :: interpMonthlyVeg     ! interpolate monthly vegetation data
+  public :: readAnnualVegetation ! Read in annual vegetation (needed for Dry-deposition)
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -38,8 +40,8 @@ module STATICEcosysdynMOD
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
 !
 ! !PRIVATE TYPES:
-  integer , private :: InterpMonths1         ! saved month index
-  real(r8), private :: timwt(2)              ! time weights for month 1 and month 2
+  integer , private :: InterpMonths1            ! saved month index
+  real(r8), private :: timwt(2)                 ! time weights for month 1 and month 2
   real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
   real(r8), private, allocatable :: msai2t(:,:) ! sai for interpolation (2 months)
   real(r8), private, allocatable :: mhvt2t(:,:) ! top vegetation height for interpolation (2 months)
@@ -96,6 +98,7 @@ contains
 
   end subroutine EcosystemDynini
 
+#if (!defined CN) && (!defined CNDV)
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -246,6 +249,8 @@ contains
     end if  !end of if-doalb block
 
   end subroutine EcosystemDyn
+
+#endif
 
 !-----------------------------------------------------------------------
 !BOP
@@ -698,7 +703,5 @@ contains
     enddo
 
   end subroutine readMonthlyVegetation
-
-#endif
 
 end module STATICEcosysDynMod

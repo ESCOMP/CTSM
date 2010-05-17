@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_03         erik 05/17/2010 Changes from Francis for VOC and drydep
    clm4_0_02         erik 05/13/2010 Make sure dtime is initialized, so that answers are consistently the same as clm4_0_00
    clm4_0_01         erik 05/11/2010 Move glacier multiple elevation class branch to the trunk so that we can work with the active glacier model
    clm4_0_00         erik 05/04/2010  Update to datm8, redirect aquifer overflow 

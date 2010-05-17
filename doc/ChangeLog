@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm4_0_03
+Originator(s):  erik (erik)
+Date: Mon May 17 14:06:50 MDT 2010
+One-line Summary: Changes from Francis for VOC and drydep
+
+Purpose of changes:
+
+Changes from Francis Vitt and Jean-Francois Lamarque for VOC and drydep. Add a scaling
+factor for VOC isoprene. Get annual LAI and differences from CLMSP even when CLMCN is
+on when sending drydep to atm, as need LAI monthly differences to estimate season index.
+Get these changes to work with CN on and off and also get it to work with DEBUG mode
+on. Use clm veg indicies in pftvarcon and abort drydep if don't find a wesley veg type
+index. Fix ndeplintInterp.ncl script for rcp=-999.9 historical (bug 1153). Add in quarter
+degree gx1v6 fraction dataset. 
+
+Bugs fixed (include bugzilla ID):
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: qtr-degree, gx1v6 frac/domain datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, dlawren, fvitt
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+
+    scripts to scripts4_100513
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+   A    models/lnd/clm/test/system/config_files/_nrcnsc_ds --- cn test without rtm or supln
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>> Add in qtr-degree fraction and domain file datasets
+>>>>>>>>>>> Make gx1v6 default mask for qtr-degree
+   M    models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml
+   M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+
+>>>>>>>>>>> Separate out CN+SUPLN tests as H and CN only as P
+   M    models/lnd/clm/test/system/tests_pretag_bluefire
+   M    models/lnd/clm/test/system/README.testnames
+   M    models/lnd/clm/test/system/tests_posttag_purempi_regression
+   M    models/lnd/clm/test/system/tests_posttag_hybrid_regression
+   M    models/lnd/clm/test/system/nl_files/clm_drydep ---- correct build-nml options
+   M    models/lnd/clm/test/system/input_tests_master ----- Remove 360x720 tests, add
+                          drydep tests with CN and without, have start dates for drydep
+                          tests span the year
+
+>>>>>>>>>>> A few small fixes to tools
+   M    models/lnd/clm/tools/mksurfdata/mkvocef.F90 --------- Remove diagnostics as nonsensical
+                                     (also was incorrect, see bug 1157)
+   M    models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl - Fix so can work with historical case
+
+>>>>>>>>>>> Allow some CLMSP subroutines to be called even with CLMCN so that LAI can help set 
+>>>>>>>>>>> the season index when dry-deposition is active (and only when dry-dep is active)
+   M    models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 - Change #ifdefs so that
+               some can be called from drydep even when CN is on. Don't allow 
+               EcosystemDyn to be called if CN on though.
+   M    models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 ----- Add a scaling factor
+               for isoprene
+   M    models/lnd/clm/src/biogeochem/DryDepVelocity.F90 ----- Make winter season on
+               anytime you have snow. Use pftvarcon indices to set wesveg type from
+               clmveg type. Add landuse type and set to desert winter if not veg type.
+               (so won't abort on DEBUG mode)
+   M    models/lnd/clm/src/main/clm_initializeMod.F90 -------- Also call
+	  EcosystemDynini and readAnnualVegetation even if CN is on when drydep is on.
+
+Summary of testing:
+
+  bluefire: Ran 100 days of 1850CN, compared to Francis's mods and the two results were identical
+  bluefire interactive testing:
+001 smCO3 TSM.sh _sc_do clm_drydep^nl_urb 20021001:NONE:3600 10x15 USGS -10 cold ................PASS
+002 erCO3 TER.sh _sc_do clm_drydep^nl_urb 20021001:NONE:3600 10x15 USGS -3+-7 cold ..............PASS
+003 brCO3 TBR.sh _sc_do clm_drydep^nl_urb_br 20021001:NONE:3600 10x15 USGS -5+-5 cold ...........PASS
+004 blCO3 TBL.sh _sc_do clm_drydep^nl_urb 20021001:NONE:3600 10x15 USGS -30 cold ................PASS
+005 smCP3 TSM.sh _sc_do clm_drydep^nl_urb 20020317:NONE:1800 1.9x2.5 gx1v6 -15 startup ..........PASS
+006 erCP3 TER.sh _sc_do clm_drydep^nl_urb 20020317:NONE:1800 1.9x2.5 gx1v6 -3+-7 startup ........PASS
+007 brCP3 TBR.sh _sc_do clm_drydep^nl_urb_br 20020317:NONE:1800 1.9x2.5 gx1v6 -5+-5 startup .....PASS
+008 blCP3 TBL.sh _sc_do clm_drydep^nl_urb 20020317:NONE:1800 1.9x2.5 gx1v6 -15 startup ..........PASS
+001 sm654 TSMtools.sh mkgriddata tools__ds namelist .............................................PASS
+002 sm674 TSMtools.sh mkgriddata tools__ds singlept .............................................PASS
+003 sm774 TSMtools.sh mksurfdata tools__ds singlept .............................................PASS
+004 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................SKIPPED*
+005 sm853 TSMtools.sh interpinic tools__o runoptions ............................................PASS
+  bluefire/CCSM testing: All PASS except...
+BFAIL SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_0+upext
+BFAIL SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_0+upext
+BFAIL SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_0+upext
+FAIL  ERI.T31_g37.IG.bluefire
+BFAIL ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_0+upext
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_03
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_0+upext
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_02
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_02
 Originator(s):  erik (erik)
 Date: Thu May 13 00:47:40 MDT 2010
@@ -34,8 +166,8 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
-                                 1156 (Reproducability problem with clm4_0_01)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -127,8 +259,9 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
                                  1156 (Reproducability problem with clm4_0_01)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: standard
@@ -443,7 +576,8 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
 Describe any changes made to build system:
 
    Change directory structure to match CCSM.
@@ -788,7 +922,8 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: doc
@@ -1000,7 +1135,8 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: std-test
@@ -1195,7 +1331,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1256,7 +1393,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1323,7 +1461,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1417,7 +1556,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1587,7 +1727,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1687,7 +1828,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1911,7 +2053,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -2063,7 +2206,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
@@ -2404,7 +2548,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -2712,7 +2857,8 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
+                                 1157 (Problem with VOC interpolation in mksurfdata)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -2919,7 +3065,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3075,7 +3221,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Some changes to configure
@@ -3278,7 +3424,7 @@ Known bugs (include bugzilla ID):
                                  1104 (Restart problem with pftdyn mode)
                                  1118 (Restarts with SNICAR_FRC fail)
                                  1121 (history variable attribute cell_methods misnamed)
-                                 1155 (Problem with ndeplintInterp for historical case)
+                                 1153 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

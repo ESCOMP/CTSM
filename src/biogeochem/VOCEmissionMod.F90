@@ -193,37 +193,39 @@ contains
 !
 ! Constants
 !
-    real(r8), parameter :: R   = SHR_CONST_RGAS*0.001_r8 ! univ. gas constant [J K-1 mol-1]
-    real(r8), parameter :: scale_mw =0.882_r8            ! conversion factor for isoprene -> carbon
-    real(r8), parameter :: alpha_fix = 0.001_r8          ! empirical coefficient
-    real(r8), parameter :: cp_fix = 1.21_r8              ! empirical coefficient
-    real(r8), parameter :: ct1 = 95.0_r8                 ! empirical coefficient (70 in User's Guide)
-    real(r8), parameter :: ct2 = 230.0_r8                ! empirical coefficient  (200 in User's Guide)
-    real(r8), parameter :: ct3 = 0.00831_r8              ! empirical coefficient (0.0083 in User's Guide)
-    real(r8), parameter :: topt_fix = 317._r8            ! std temperature [K]
-    real(r8), parameter :: Eopt_fix = 2.26_r8            ! empirical coefficient
-    real(r8), parameter :: tstd = 303.15_r8              ! std temperature [K]
-    real(r8), parameter :: bet = 0.09_r8                 ! beta empirical coefficient [K-1]
-    real(r8), parameter :: clai1 = 0.49_r8               ! empirical coefficient
-    real(r8), parameter :: clai2 = 0.2_r8                ! empirical coefficient
-    real(r8), parameter :: clai3 = 5.0_r8                ! empirical coefficient
-    real(r8), parameter :: Anew = 0.01_r8                ! relative emission factor for new plants
-    real(r8), parameter :: Agro = 0.5_r8                 ! relative emission factor for new plants
-    real(r8), parameter :: Amat = 1.0_r8                 ! relative emission factor for new plants
-    real(r8), parameter :: Asen = 0.33_r8                ! relative emission factor for new plants
-    real(r8), parameter :: cce = 0.40_r8                 ! factor to set emissions to unity @ std
-    real(r8), parameter :: cce1 = 0.47_r8                ! same as Cce but for non-accumulated vars
-    real(r8), parameter :: ca1 = 0.004_r8                ! empirical coefficent for alpha
-    real(r8), parameter :: ca2 = 0.0005_r8               ! empirical coefficent for alpha
-    real(r8), parameter :: ca3 = 0.0468_r8               ! empirical coefficent for cp
-    real(r8), parameter :: par0_sun = 200._r8            ! std conditions for past 24 hrs [umol/m2/s]
-    real(r8), parameter :: par0_shade = 50._r8           ! std conditions for past 24 hrs [umol/m2/s]
-    real(r8), parameter :: co1 = 313._r8                 ! empirical coefficient
-    real(r8), parameter :: co2 = 0.6_r8                  ! empirical coefficient
-    real(r8), parameter :: co3 = 2.034_r8                ! empirical coefficient
-    real(r8), parameter :: co4 = 0.05_r8                 ! empirical coefficient
-    real(r8), parameter :: tstd0 = 297_r8                ! std temperature [K]
-    real(r8), parameter :: deltheta1=0.06_r8             ! empirical coefficient
+    real(r8), parameter :: R   = SHR_CONST_RGAS*0.001_r8   ! univ. gas constant [J K-1 mol-1]
+    real(r8), parameter :: scale_mw =0.882_r8              ! conversion factor for isoprene -> carbon
+    real(r8), parameter :: alpha_fix = 0.001_r8            ! empirical coefficient
+    real(r8), parameter :: cp_fix = 1.21_r8                ! empirical coefficient
+    real(r8), parameter :: ct1 = 95.0_r8                   ! empirical coefficient (70 in User's Guide)
+    real(r8), parameter :: ct2 = 230.0_r8                  ! empirical coefficient  (200 in User's Guide)
+    real(r8), parameter :: ct3 = 0.00831_r8                ! empirical coefficient (0.0083 in User's Guide)
+    real(r8), parameter :: topt_fix = 317._r8              ! std temperature [K]
+    real(r8), parameter :: Eopt_fix = 2.26_r8              ! empirical coefficient
+    real(r8), parameter :: tstd = 303.15_r8                ! std temperature [K]
+    real(r8), parameter :: bet = 0.09_r8                   ! beta empirical coefficient [K-1]
+    real(r8), parameter :: clai1 = 0.49_r8                 ! empirical coefficient
+    real(r8), parameter :: clai2 = 0.2_r8                  ! empirical coefficient
+    real(r8), parameter :: clai3 = 5.0_r8                  ! empirical coefficient
+    real(r8), parameter :: Anew = 0.01_r8                  ! relative emission factor for new plants
+    real(r8), parameter :: Agro = 0.5_r8                   ! relative emission factor for new plants
+    real(r8), parameter :: Amat = 1.0_r8                   ! relative emission factor for new plants
+    real(r8), parameter :: Asen = 0.33_r8                  ! relative emission factor for new plants
+    real(r8), parameter :: cce = 0.40_r8                   ! factor to set emissions to unity @ std
+    real(r8), parameter :: cce1 = 0.47_r8                  ! same as Cce but for non-accumulated vars
+    real(r8), parameter :: ca1 = 0.004_r8                  ! empirical coefficent for alpha
+    real(r8), parameter :: ca2 = 0.0005_r8                 ! empirical coefficent for alpha
+    real(r8), parameter :: ca3 = 0.0468_r8                 ! empirical coefficent for cp
+    real(r8), parameter :: par0_sun = 200._r8              ! std conditions for past 24 hrs [umol/m2/s]
+    real(r8), parameter :: par0_shade = 50._r8             ! std conditions for past 24 hrs [umol/m2/s]
+    real(r8), parameter :: co1 = 313._r8                   ! empirical coefficient
+    real(r8), parameter :: co2 = 0.6_r8                    ! empirical coefficient
+    real(r8), parameter :: co3 = 2.034_r8                  ! empirical coefficient
+    real(r8), parameter :: co4 = 0.05_r8                   ! empirical coefficient
+    real(r8), parameter :: tstd0 = 297_r8                  ! std temperature [K]
+    real(r8), parameter :: deltheta1=0.06_r8               ! empirical coefficient
+    real(r8), parameter :: scaling_to_500_Tg = 5._r8/7._r8 ! J-F Larmaque's empirical scaling factor
+
 !
 ! These are the values from version of genesis-ibis / 1000.
 ! CN calculates its own sla [m2 leaf g-1 C]
@@ -656,9 +658,11 @@ contains
 	  select case (n)
 
           case(1)
-              vocflx(p,n) = epsilon(p) * gamma(p) 
+
+              vocflx(p,n) = epsilon(p) * gamma(p) * scaling_to_500_Tg
 
           case(2,3,4,5)
+
               vocflx(p,n) = epsilon(p) * gamma(p) * density
 
           end select
