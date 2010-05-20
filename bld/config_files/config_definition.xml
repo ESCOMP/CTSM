@@ -151,9 +151,6 @@ Toggle to turn on prognostic sea salt
 <entry id="rtm" valid_values="on,off" value="on" category="physics">
 Toggle to turn on river transport module, to run global river routing model to ocean
 </entry>
-<entry id="supln" valid_values="on,off" value="off" category="bgc">
-Toggle to turn on CN supplemental nitrogen (Carbon only model)
-</entry>
 <entry id="nofire" valid_values="on,off" value="off" category="bgc">
 Toggle to make wild-fires inactive for biogeochemistry=CN mode
 </entry>

@@ -1,7 +1,0 @@
--mode ccsm_seq
--spmd -smp
--debug
--maxpft numpft+1
--bgc cn
--supln on 
--s

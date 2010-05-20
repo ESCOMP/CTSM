@@ -366,7 +366,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! total plant uptake from mineral N
       sminn(c) = sminn(c) - sminn_to_plant(c)*dt
 
-      ! flux that prevents N limitation (when SUPLN is set)
+      ! flux that prevents N limitation (when Carbon_only is set)
       sminn(c) = sminn(c) + supplement_to_sminn(c)*dt
 
    end do ! end of column loop

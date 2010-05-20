@@ -22,15 +22,21 @@ module controlMod
   use clm_varpar   , only : maxpatch_pft
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, model_version=>version,    &
                             iulog, hist_crtinic, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
-                            fatmtopo, flndtopo, fndepdat, fndepdyn, fpftdyn, fpftcon, nrevsn, frivinp_rtm,      &
+                            fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn,                   &
                             create_crop_landunit, allocate_all_vegpfts, fget_archdev, &
-                            co2_type, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
+                            co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
                             ncd_pio_num_iotasks, fsnowaging, fsnowoptics, fglcmask, &
                             faerdep
+#ifdef RTM
+  use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
+#endif
+#ifdef CN
+  use clm_varctl     , only : scaled_harvest, fndepdat, fndepdyn
+  use CNAllocationMod, only : Carbon_only
+#endif
   use clm_varctl   , only : create_glacier_mec_landunit, glc_nec, glc_dyntopo, glc_smb, glc_topomax
-
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
@@ -163,8 +169,7 @@ contains
 
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
-         fpftcon, frivinp_rtm,  &
-         fpftdyn, fndepdat, fndepdyn, nrevsn, &
+         fpftcon, fpftdyn, nrevsn, &
          fsnowoptics, fsnowaging, fglcmask
 
     namelist /clm_inparm/ faerdep
@@ -191,8 +196,18 @@ contains
          lnpp, lalloc, q10, spunup, fcpool
 #endif
 
+#ifdef CN
+    namelist /clm_inparm/  &
+         scaled_harvest, fndepdat, fndepdyn, Carbon_only
+#endif
+
     namelist /clm_inparm / &
          co2_type
+
+    ! River runoff
+#ifdef RTM
+    namelist /clm_inparm / ice_runoff, frivinp_rtm, rtm_nsteps
+#endif
 
      ! clm glacier_mec info
     namelist /clm_inparm / &    
@@ -202,7 +217,7 @@ contains
 
     integer :: override_nsrest   ! If want to override the startup type sent from driver
     namelist /clm_inparm/  &
-         clump_pproc, wrtdia, rtm_nsteps, pertlim, &
+         clump_pproc, wrtdia, pertlim, &
          create_crop_landunit, nsegspc, co2_ppmv, override_nsrest
     ! clm urban options
 
@@ -378,18 +393,24 @@ contains
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
+#ifdef CN
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
+#endif
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
-#if (defined RTM)
-    call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
-#endif
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fglcmask,     len(fglcmask),     MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
+
+    ! River runoff dataset and control flag
+#if (defined RTM)
+    call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (ice_runoff,  1,                MPI_LOGICAL,   0, mpicom, ier)
+    call mpi_bcast (rtm_nsteps,  1,                MPI_INTEGER,   0, mpicom, ier)
+#endif
 
     ! Landunit generation
 
@@ -399,12 +420,15 @@ contains
     ! BGC
 
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
+#ifdef CN
+    call mpi_bcast (scaled_harvest, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (Carbon_only,    1, MPI_LOGICAL, 0, mpicom, ier)
+#endif
 
     ! physics variables
 
     call mpi_bcast (urban_hac     , len(urban_hac), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (urban_traffic , 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (rtm_nsteps  , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nsegspc     , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia      , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
@@ -486,7 +510,14 @@ contains
 !
 ! !USES:
 !
-    use clm_varctl, only : source, rpntdir, rpntfil
+    use clm_varctl,      only : source, rpntdir, rpntfil
+#ifdef CN
+    use clm_varctl,      only : scaled_harvest
+    use CNAllocationMod, only : Carbon_only
+#endif
+#ifdef RTM
+    use clm_varctl,      only : ice_runoff
+#endif
 ! !ARGUMENTS:
     implicit none
 !
@@ -537,6 +568,7 @@ contains
     else
        write(iulog,*) '   atm topographic data = ',trim(fatmtopo)
     end if
+#ifdef CN
     if (fndepdat == ' ') then
         write(iulog,*) '   NOT using input data for nitrogen deposition'
     else
@@ -546,7 +578,16 @@ contains
         write(iulog,*) '   NOT using dynamic input data for nitrogen deposition'
     else
         write(iulog,*) '   dynamic nitrogen deposition data = ',trim(fndepdyn)
-    endif
+    end if
+    if (scaled_harvest)then
+        write(iulog,*) '   harvesting will be scaled by coefficients from Johann Feddema'
+    else
+        write(iulog,*) '   harvesting will NOT be scaled'
+    end if
+    if (Carbon_only)then
+        write(iulog,*) '   prognostic Nitrogen model will be turned off'
+    end if
+#endif
     if (fsnowoptics == ' ') then
        write(iulog,*) '   snow optical properties file NOT set'
     else
@@ -623,6 +664,11 @@ contains
        write(iulog,*)'river runoff calculation performed only every ',rtm_nsteps,' nsteps'
     else
        write(iulog,*)'river runoff calculation performed every time step'
+    endif
+    if ( ice_runoff ) then
+       write(iulog,*)'Snow capping will flow out in frozen river runoff'
+    else
+       write(iulog,*)'Snow capping will flow out in liquid river runoff'
     endif
 #endif
     if (nsrest == 1) then

@@ -1,4 +1,200 @@
 ===============================================================
+Tag name:  clm4_0_04
+Originator(s):  erik (erik)
+Date: Thu May 20 10:57:54 MDT 2010
+One-line Summary: New namelist items: ice_runoff, scaled_harvest, carbon_only, new 
+    RTM hist vars, new finidat files, update esmf interface, turn off aerosol read quicker
+
+Purpose of changes:
+
+Redo all fndepdyn datasets for f19. Add namelist option to turn off ice-flow and send it
+to liquid runoff: ice_runoff (by default .true.).  Add new coefficients for harvest from
+Johann, and add ability to trigger it on and off for backwards compatibility
+(scaled_harvest, by default .false.). Change SUPLN from CPP token to carbon_only namelist
+item. Add in new RTM variable to history files from Sean. Add in T31 1850/2000 CN/non-CN
+and 2-deg 2000 CNDV finidat files.  Turn off reading of aerosol/dust at initialization
+rather than run time, so files aren't even opened if CAM is passing data to clm. Update
+lnd_comp_esmf to same as mct interface.
+
+New history fields are incorrect. This is bug 1161. Since, time-lines are critical
+and testing was completed, these changes will go in, but will be removed next week.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1161 (New history fields added that should NOT be)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system: Remove SUPLN #ifdef change to namelist option
+
+Describe any changes made to the namelist: Add namelist items
+
+    ice_runoff     = If true, river runoff will be split up into liquid and ice streams,
+               otherwise ice runoff will be zero and all runoff directed to liquid stream
+    scaled_harvest = If true, harvesting will be scaled according to coeffecients
+                     determined by Johann Feddema, 2009
+    carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen will be
+                     prescribed rather than prognosed
+
+List any changes to the defaults for the boundary datasets:
+    New fndepdyn files with correct time coordinate
+    New finidat files for T31 1850/2000 and f19 2000 for CNDV
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):  None
+
+List all files eliminated:
+
+>>>>>>>>>>>>>> Remove SUPLN build tests
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_h
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_m
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_o
+    D    models/lnd/clm/test/system/config_files/_cnnsc_h
+    D    models/lnd/clm/test/system/config_files/_cnnsc_m
+    D    models/lnd/clm/test/system/config_files/_cnnsc_o
+    D    models/lnd/clm/test/system/config_files/17p_nrcnnsc_ds
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_dh
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_dm
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_do
+    D    models/lnd/clm/test/system/config_files/_cnnsc_dh
+    D    models/lnd/clm/test/system/config_files/17p_cnnsc_ds
+    D    models/lnd/clm/test/system/config_files/_cnnsc_dm
+    D    models/lnd/clm/test/system/config_files/_cnnsc_do
+    D    models/lnd/clm/test/system/config_files/_cnnsc_ds
+
+>>>>>>>>>>>>>> Remove namelist files no longer used
+    D    models/lnd/clm/test/system/nl_files/scam
+    D    models/lnd/clm/test/system/nl_files/ext_ccsm_seq_cam
+    D    models/lnd/clm/test/system/nl_files/nl_glcsmb
+    D    models/lnd/clm/test/system/nl_files/scam_prep
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>> Add ice_runoff=.false., scaled_harvest=.true., and carbon_only tests
+    A    models/lnd/clm/test/system/nl_files/nl_noicertm_sclharv
+    A    models/lnd/clm/test/system/nl_files/nl_cn_conly
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Switch SUPLN tests for carbon_only
+>>>>>>>>>>>>>> Add ice_runoff=.false., scaled_harvest=.true tests
+    M    models/lnd/clm/test/system/tests_pretag_bluefire
+    M    models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+    M    models/lnd/clm/test/system/config_files/README
+    M    models/lnd/clm/test/system/tests_pretag_edinburgh
+    M    models/lnd/clm/test/system/tests_pretag_jaguar
+    M    models/lnd/clm/test/system/tests_posttag_breeze
+    M    models/lnd/clm/test/system/README.testnames
+    M    models/lnd/clm/test/system/tests_pretag_jaguar_nompi
+    M    models/lnd/clm/test/system/tests_posttag_purempi_regression
+    M    models/lnd/clm/test/system/tests_posttag_hybrid_regression
+    M    models/lnd/clm/test/system/input_tests_master
+    M    models/lnd/clm/test/system/tests_posttag_nompi_regression
+
+>>>>>>>>>>>>>> Remove setting of supln to off
+    M    models/lnd/clm/test/system/config_files/17p_cnsc_dh
+    M    models/lnd/clm/test/system/config_files/17p_cnsc_dm
+    M    models/lnd/clm/test/system/config_files/17p_cnc13sc_dh
+    M    models/lnd/clm/test/system/config_files/17p_cnsc_do
+    M    models/lnd/clm/test/system/config_files/17p_cnc13sc_dm
+    M    models/lnd/clm/test/system/config_files/17p_cnc13sc_do
+
+>>>>>>>>>>>>>> Remove SUPLN from configure
+    M    models/lnd/clm/bld/configure
+    M    models/lnd/clm/bld/config_files/config_definition.xml
+
+>>>>>>>>>>>>>> Add carbon_only, scaled_harvest and ice_runoff options
+>>>>>>>>>>>>>> T31 1850/2000 finidat files, f19 CNDV 2000 finidat file
+>>>>>>>>>>>>>> Add error checking, change fndepdyn files for ones with
+>>>>>>>>>>>>>> corrected time axis.
+    M    models/lnd/clm/bld/build-namelist
+    M    models/lnd/clm/bld/namelist_files/namelist_definition.xml
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+
+>>>>>>>>>>>>>> Remove SUPLN #ifdef for carbon_only namelist
+    M    models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90 - Correct comment
+    M    models/lnd/clm/src/biogeochem/CNAllocationMod.F90 ---- Switch SUPLN for carbon_only
+    M    models/lnd/clm/src/biogeochem/DryDepVelocity.F90 ----- Remove ltype as duplicated
+
+>>>>>>>>>>>>>> Add carbon_only, scaled_harvest, and ice_runoff options
+>>>>>>>>>>>>>> Add new RTM history variables
+    M    models/lnd/clm/src/main/clmtypeInitMod.F90 ----------- Add res_sno, topo_ndx,
+                topo_slope, var_track, var_track2, frost_table, zwt_perched,
+                qflx_top_soil, qflx_snow_out, qflx_drain_perched
+    M    models/lnd/clm/src/main/pftdynMod.F90 ---------------- Add CN ifdef's for harvest
+             add if for scaled_harvest or not
+    M    models/lnd/clm/src/main/iniTimeConst.F90 ------------- Add CN ifdef's for ndep
+    M    models/lnd/clm/src/main/histFileMod.F90 -------------- Add RTM ifdef's for frivinp_rtm
+    M    models/lnd/clm/src/main/controlMod.F90 --------------- Put options in appropriate
+                RTM and CN #ifdef blocks. Add ice_runoff, scaled_harvest and carbon_only to namelist
+    M    models/lnd/clm/src/main/clm_varctl.F90 --------------- Add CN/RTM #ifdefs, add
+               scaled_harvest and ice_runoff
+    M    models/lnd/clm/src/main/clm_driver.F90 --------------- Add CN #ifdef for ndepdyn
+    M    models/lnd/clm/src/main/ndepFileMod.F90 -------------- Add CN #ifdef
+    M    models/lnd/clm/src/main/clmtype.F90 ------------------ Add res_sno, topo_ndx,
+                topo_slope, var_track, var_track2, frost_table, zwt_perched,
+                qflx_top_soil, qflx_snow_out, qflx_drain_perched
+    M    models/lnd/clm/src/main/histFldsMod.F90 -------------- Add
+	  FROST_TABLE, ZWT_PERCH, QDRAI_PERCH, QTOPSOIL
+
+    M    models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ----- Move lnd_chkAerDep_mct to init
+            add ice_runoff option to output rtm streams
+    M    models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 --- Move lnd_chkAerDep_mct to
+            add ice_runoff option to output rtm streams. And sync up with lnd_comp_mct
+init
+
+
+Summary of testing:
+
+  bluefire interactive extra checking:
+001 smH43 TSM.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96 cold PASS
+002 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 coPASS
+003 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 coPASS
+005 smH93 TSM.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 96 cold PASS
+006 erH93 TER.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 coPASS
+007 brH93 TBR.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 coPASS
+  bluefire/CCSM testing: All PASS except...
+FAIL  ERI.T31_g37.IG.bluefire 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_04 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_03 
+  jaguar/CCSM testing: All FAIL
+FAIL  ERS_D.f09_g16.I1850.jaguar 
+FAIL  PST.f10_f10.I8520CN.jaguar 
+FAIL  PET_PT.f10_f10.I8520CN.jaguar 
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_03
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_03
 Originator(s):  erik (erik)
 Date: Mon May 17 14:06:50 MDT 2010

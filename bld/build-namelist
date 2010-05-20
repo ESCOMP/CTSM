@@ -898,6 +898,18 @@ if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
 }
 
+if ( $rtm eq "off" ) {
+   if (defined $nl->get_value('frivinp_rtm')) {
+      die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
+   }
+   if (defined $nl->get_value('ice_runoff')) {
+      die "$ProgName ERROR:: when RTM is off you can NOT set ice_runoff.\n";
+   }
+   if (defined $nl->get_value('rtm_nsteps')) {
+      die "$ProgName ERROR:: when RTM is off you can NOT set rtm_nsteps.\n";
+   }
+}
+
 # Get aerosol deposition rates from datasets
 add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
             'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
@@ -988,6 +1000,34 @@ if ( ($bgc eq "cndv") && not defined $nl->get_value('fndepdyn') ) {
 if ( defined($nl->get_value('fndepdat')) && defined($nl->get_value('fndepdyn')) ) {
    die "$ProgName ERROR:: Both fndepdat AND fndepdyn are set, must only set one!\n";
 }
+if ( ($bgc ne "cn") && ($bgc ne "cndv") && (defined $nl->get_value('fndepdyn') || defined($nl->get_value('fndepdat'))) ) {
+   die "$ProgName ERROR:: fndepdat or fndepdyn are set, but neither CN nor CNDV is active!\n";
+}
+if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl->get_value('scaled_harvest') ) {
+   die "$ProgName ERROR:: scaled_harvest is set, but neither CN nor CNDV is active!\n";
+}
+# 
+# Error checking for Carbon_only mode
+#
+my $carbon_only = $nl->get_value('carbon_only');
+if ( defined($carbon_only) ) {
+   if ( $bgc !~ /^cn/ ) {
+      die "$ProgName ERROR:: carbon_only is set, but neither CN nor CNDV is active!\n";
+   }
+   my $ad_spinup   = $cfg->get('ad_spinup');
+   my $exit_spinup = $cfg->get('exit_spinup');
+
+
+   if ( $carbon_only =~ /^\.[tT]+[rR]*[uU]*[eE]*\./ ) {
+      if ( $ad_spinup eq "on" ) {
+        die "$ProgName ERROR:: when ad_spinup is on you can NOT set Carbon_only to true\n";
+      }
+      if ( $exit_spinup eq "on" ) {
+        die "$ProgName ERROR:: when exit_spinup is on you can NOT set Carbon_only to true\n";
+      }
+   }
+}
+
  
 ###############################
 # namelist group: prof_inparm #

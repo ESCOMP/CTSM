@@ -1,6 +1,0 @@
--mode ccsm_seq
--spmd 
--maxpft numpft+1
--bgc cn
--supln on 
--s

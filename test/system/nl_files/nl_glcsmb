@@ -1,7 +1,0 @@
-&drv_in
- brnch_retain_casename=.true.
-/
-&clm_inparm
- glc_smb = .true.
- hist_ndens=1,1
-/

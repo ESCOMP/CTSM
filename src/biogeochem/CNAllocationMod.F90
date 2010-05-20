@@ -20,6 +20,10 @@ module CNAllocationMod
   private
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNAllocation
+
+! !PUBLIC DATA MEMBERS:
+  logical, public :: Carbon_only = .false. ! Carbon only mode 
+                                           ! (Nitrogen is prescribed NOT prognostic)
 !
 ! !REVISION HISTORY:
 ! 8/5/03: Created by Peter Thornton
@@ -462,14 +466,13 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          actual_immob(c) = potential_immob(c)
          sminn_to_plant(c) = col_plant_ndemand(c)
 
-         ! under conditions of excess N, some proportion is asusmed to
+         ! under conditions of excess N, some proportion is assumed to
          ! be lost to denitrification, in addition to the constant
          ! proportion lost in the decomposition pathways
 
          sminn_to_denit_excess(c) = bdnr*((sminn(c)/dt) - sum_ndemand)
-      else
+      else if ( .not. Carbon_only )then
 
-#if (!defined SUPLN)
          ! N availability can not satisfy the sum of immobilization and
          ! plant growth demands, so these two demands compete for available
          ! soil mineral N resource.
@@ -488,9 +491,9 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          end if
 
          sminn_to_plant(c) = (sminn(c)/dt) - actual_immob(c)
-#else
+      else
          ! this code block controls the addition of N to sminn pool
-         ! to eliminate any N limitation, when SUPLN is set.  This lets the
+         ! to eliminate any N limitation, when Carbon_Only is set.  This lets the
          ! model behave essentially as a carbon-only model, but with the
          ! benefit of keeping trrack of the N additions needed to
          ! eliminate N limitations, so there is still a diagnostic quantity
@@ -501,7 +504,6 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          actual_immob(c) = potential_immob(c)
          sminn_to_plant(c) = col_plant_ndemand(c)
          supplement_to_sminn(c) = sum_ndemand - (sminn(c)/dt)
-#endif
       end if
 
       ! calculate the fraction of potential growth that can be

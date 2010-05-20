@@ -43,7 +43,9 @@ subroutine iniTimeConst
   use clm_time_manager, only : get_step_size
   use abortutils      , only : endrun
   use fileutils       , only : getfil
+#ifdef CN
   use ndepFileMod     , only : ndeprd
+#endif
   use organicFileMod  , only : organicrd 
   use ncdio           , only : ncd_iolocal, nf_close, nf_get_var_int, NF_NOERR, nf_inq_varid, nf_open, check_ret
   use spmdMod         , only : mpicom, MPI_INTEGER, masterproc
@@ -399,8 +401,9 @@ subroutine iniTimeConst
   ! If a nitrogen deposition dataset has been specified, read it
   ! --------------------------------------------------------------------
   
+#ifdef CN
   call ndeprd(ndep)
-
+#endif
 
   ! --------------------------------------------------------------------
   ! If a organic matter dataset has been specified, read it

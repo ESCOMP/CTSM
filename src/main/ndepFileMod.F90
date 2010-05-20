@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module ndepFileMod
+#ifdef CN
 
 !----------------------------------------------------------------------- 
 !BOP
@@ -412,5 +413,6 @@ contains
     if (ret /= 0) call endrun( trim(subname)//' ERROR: NDEP_year NOT on ndepdyn file' )
 
   end subroutine ndepdyn_getdata
+#endif
 
 end module ndepFileMod

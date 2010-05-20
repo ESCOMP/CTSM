@@ -1,8 +1,0 @@
--mode ccsm_seq
--nospmd -nosmp
--debug
--maxpft 17
--rtm off
--bgc cn
--supln on 
--s

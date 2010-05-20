@@ -82,7 +82,7 @@ CONTAINS
                                     rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
                                     rgss, rgso
     use STATICEcosysDynMod, only : interpMonthlyVeg
-    use clm_varcon        , only : istsoil, spval
+    use clm_varcon        , only : istsoil
     use clm_varctl        , only : iulog
     use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
                                    ndllf_dcd_brl_tree,        nbrdlf_evr_trp_tree,  &
@@ -103,7 +103,6 @@ CONTAINS
     integer , pointer :: plandunit(:)     !pft's landunit index
     integer , pointer :: ivt(:)           !landunit type
     integer , pointer :: itypveg(:)       !vegetation type for current pft  
-    integer , pointer :: ltype(:)         !landunit type
     integer , pointer :: pgridcell(:)     !pft's gridcell index
     real(r8), pointer :: pwtgcell(:)      !weight of pft relative to corresponding gridcell
     real(r8), pointer :: elai(:)          !one-sided leaf area index with burying by snow 
@@ -212,7 +211,6 @@ CONTAINS
 
     latdeg     => clm3%g%latdeg
     londeg     => clm3%g%londeg
-    ltype      => clm3%g%l%itype
     ivt        => clm3%g%l%c%p%itype
     elai       => clm3%g%l%c%p%pps%elai 
     ram1       => clm3%g%l%c%p%pps%ram1 
@@ -284,7 +282,7 @@ CONTAINS
           if (clmveg == ncorn               ) wesveg = 2 
           if (clmveg == nwheat              ) wesveg = 2 
           if (wesveg == wveg_unset )then
-             write(iulog,*) 'clmveg = ', clmveg, 'ltype = ', ltype(l)
+             write(iulog,*) 'clmveg = ', clmveg, 'itypelun = ', itypelun(l)
              call endrun( subname//': Not able to determine Wesley vegetation type')
           end if
 
@@ -312,7 +310,7 @@ CONTAINS
 
           index_season = -1
 
-          if ( ltype(l) /= istsoil )then
+          if ( itypelun(l) /= istsoil )then
              wesveg       = 8
              index_season = 4
           else if ( snowdp(c) > 0 ) then

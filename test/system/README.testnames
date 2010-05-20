@@ -22,14 +22,14 @@ D -- ccsm_seq Pergro
 E -- ccsm_seq numpft=4, VOC, DUST, RTM
 F -- ccsm_seq numpft=17, VOC, DUST, RTM
 G -- ccsm_seq numpft=17
-H -- ccsm_seq numpft=17, CN and SUPLN
+H -- ccsm_seq numpft=17, CN
 J -- ccsm_seq numpft=4, CASA
 K -- ccsm_seq numpft=10, CNDV
 L -- ccsm_seq Standard default
 M -- ndepregrid
 N -- ccsm_seq MEXICOCITY
 O -- ccsm_seq VANCOUVER
-P -- ccsm_seq numpft=17, CN
+P -- unused
 Q -- generate_urban_input
 R -- ccsm_seq numpft=17, CN, C13
 S -- unused
@@ -40,7 +40,7 @@ m is the resolution
 1 -- 48x96
 2 -- 48x96 debug mode
 3 -- 64x128 with 360x720 fine mesh
-4 -- (unused)
+4 -- 10x15 with ice_runoff and scaled_harvest
 5 -- 10x15
 6 -- 1.9x2.5
 7 -- 1x1 brazil
@@ -64,6 +64,7 @@ N -- 1.9x2.5 with transient 1850-2100 for rcp=8.5
 O -- 10x15 with drydep
 P -- 1.9x2.5 with drydep
 Q -- 1x1 brazil with drydep
+R -- 1.9x2.5 with ice_runoff and scaled_harvest
 
 i is the specific test (usually this implies...)
 

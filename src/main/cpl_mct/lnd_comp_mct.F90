@@ -142,7 +142,7 @@ contains
     type(seq_infodata_type), pointer :: infodata     ! CCSM driver level info data
     integer  :: lsize                                ! size of attribute vector
     integer  :: i,j                                  ! indices
-    integer  :: dtime_sync                           ! coupling time-step from the input synchronization clode
+    integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
     logical  :: exists                               ! true if file exists
     real(r8) :: scmlat                               ! single-column latitude
@@ -267,6 +267,10 @@ contains
        call seq_infodata_PutData( infodata, rof_present   =.false.)
        return
     end if
+
+    ! Determine if aerosol and dust deposition come from atmosphere component
+
+    call lnd_chkAerDep_mct( infodata )
 
     call clm_init1( )
     call clm_init2()
@@ -456,7 +460,6 @@ contains
     use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
                                 mct_aVect_zero
     use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
-    use aerdepMod      , only : aerdepini
     use clm_varctl      ,only : create_glacier_mec_landunit
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
@@ -552,10 +555,6 @@ contains
            adomain%asca(g) = data(i)
        end do
        deallocate(data)
-
-       call lnd_chkAerDep_mct( infodata )
-
-       call aerdepini( )
 
     endif
     
@@ -800,20 +799,18 @@ contains
     integer        , intent(in)  :: LNDID         ! Land model identifyer number
     type(mct_gsMap), intent(out) :: gsMap_lnd     ! Resulting MCT GS map for the land model
 !
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-!
-! Local Variables
-!
+! !LOCAL VARIABLES:
     integer,allocatable :: gindex(:)  ! Number the local grid points
     integer :: i, j, n, gi            ! Indices
     integer :: lsize,gsize            ! GS Map size
     integer :: ier                    ! Error code
     integer :: begg, endg             ! Beginning/Ending grid cell index
-    !-------------------------------------------------------------------
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
 
     ! Build the land grid numbering for MCT
     ! NOTE:  Numbering scheme is: West to East and South to North
@@ -868,23 +865,23 @@ contains
                                   index_x2l_Faxa_dstwet3, index_x2l_Faxa_dstwet4
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData
     use spmdMod          , only : masterproc
+    use aerdepMod        , only : aerdepini
     implicit none
 !
 ! !ARGUMENTS:
 
     type(seq_infodata_type),pointer :: infodata ! CCSM information from the driver
 !
+! !LOCAL VARIABLES:
+    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
+    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
+    logical :: atm_aero                    ! Flag if aerosol data sent from atm model
+!
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
 !EOP
 !---------------------------------------------------------------------------
-    !
-    ! Local Variables
-    !
-    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
-    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
-    logical :: atm_aero                    ! Flag if aerosol data sent from atm model
 
     call seq_infodata_GetData(infodata, atm_aero=atm_aero )
     if ( .not. atm_aero )then
@@ -914,6 +911,10 @@ contains
 
     set_caerdep_from_file = .not. caerdep_filled
     set_dustdep_from_file = .not. dustdep_filled
+
+    if ( .not. atm_aero )then
+       call aerdepini( )
+    end if
 
   end subroutine lnd_chkAerDep_mct
 
@@ -946,14 +947,15 @@ contains
     type(lnd2atm_type), intent(inout) :: l2a     ! clm land to atmosphere exchange data type
     type(mct_aVect)   , intent(inout) :: l2x_l   ! Land to coupler export state on land grid
 !
+! !LOCAL VARIABLES:
+    integer :: g,i           ! Indices
+    integer :: begg, endg    ! beginning and ending gridcell indices
+!
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
 !EOP
 !---------------------------------------------------------------------------
-! Local variables:
-    integer :: g,i           ! Indices
-    integer :: begg, endg    ! beginning and ending gridcell indices
     
     call get_proc_bounds_atm(begg, endg)
 
@@ -1045,15 +1047,7 @@ contains
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
     type(atm2lnd_type), intent(inout) :: a2l     ! clm internal input data type
 !
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-! 27 February 2008: Keith Oleson; Forcing height change
-!
-!EOP
-!---------------------------------------------------------------------------
-!
-! Local Variables
-!
+! !LOCAL VARIABLES:
     integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
     real(r8) :: e                    ! vapor pressure (Pa)
@@ -1089,8 +1083,13 @@ contains
     tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
     esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
     esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
-
-    !-----------------------------------------------------
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+! 27 February 2008: Keith Oleson; Forcing height change
+!
+!EOP
+!---------------------------------------------------------------------------
 
     call get_proc_bounds_atm(begg, endg)
 
@@ -1560,7 +1559,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
     use abortutils  , only : endrun
-    use clm_varctl  , only : iulog
+    use clm_varctl  , only : iulog, ice_runoff
     use mct_mod     , only : mct_aVect
     use seq_flds_indices
     implicit none
@@ -1595,17 +1594,34 @@ contains
     endif
 
     ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-          r2x_r%rAttr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-          if (ni > runoff%lnumro) then
-             write(iulog,*) sub, ' : ERROR runoff count',n,ni
-             call endrun( sub//' : ERROR runoff > expected' )
+    if ( ice_runoff )then
+       do n = runoff%begr,runoff%endr
+          if (runoff%mask(n) == 2) then
+             ni = ni + 1
+             ! liquid and ice runoff are treated separately
+             r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+             r2x_r%rAttr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+             if (ni > runoff%lnumro) then
+                write(iulog,*) sub, ' : ERROR runoff count',n,ni
+                call endrun( sub//' : ERROR runoff > expected' )
+             endif
           endif
-       endif
-    end do
+       end do
+    else
+       do n = runoff%begr,runoff%endr
+          if (runoff%mask(n) == 2) then
+             ni = ni + 1
+             ! liquid and ice runoff are bundled together to liquid runoff, and then ice runoff set to zero
+             r2x_r%rAttr(index_r2x_Forr_roff,ni) =   &
+               (runoff%runoff(n,nfrz)+runoff%runoff(n,nliq))/(runoff%area(n)*1.0e-6_r8*1000._r8)
+             r2x_r%rAttr(index_r2x_Forr_ioff,ni) = 0._r8
+             if (ni > runoff%lnumro) then
+                write(iulog,*) sub, ' : ERROR runoff count',n,ni
+                call endrun( sub//' : ERROR runoff > expected' )
+             endif
+          endif
+       end do
+    end if
     if (ni /= runoff%lnumro) then
        write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
        call endrun( sub//' : ERROR runoff not equal to expected' )

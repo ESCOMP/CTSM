@@ -8,6 +8,11 @@ module lnd_comp_esmf
 !
 ! !MODULE: lnd_comp_esmf
 !
+!  Interface of the active land model component of CCSM the CLM (Community Land Model)
+!  with the main CCSM driver. This is a thin interface taking CCSM driver information
+!  in MCT (Model Coupling Toolkit) format and converting it to use by CLM and outputing
+!  if in ESMF (Earth System Modelling Framework) format.
+!
 ! !DESCRIPTION:
 !
 ! !USES:
@@ -18,59 +23,81 @@ module lnd_comp_esmf
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
-  public :: lnd_register_esmf
-  public :: lnd_init_esmf
-  public :: lnd_run_esmf
-  public :: lnd_final_esmf
   SAVE
   private                              ! By default make data private
 !
-! ! PUBLIC DATA:
+! !PUBLIC MEMBER FUNCTIONS:
+!
+  public :: lnd_register_esmf          ! register clm initial, run, final methods
+  public :: lnd_init_esmf              ! clm initialization
+  public :: lnd_run_esmf               ! clm run phase
+  public :: lnd_final_esmf             ! clm finalization/cleanup
+!
+! ! PUBLIC DATA MEMBERS: None
 !
 ! !REVISION HISTORY:
-! Author: Mariana Vertenstein, Fei Liu
+!             Author:                                      Mariana Vertenstein, Fei Liu
+! Apr/27/2010 Update to lnd_comp_mct version and add documentation Erik Kluzek
 !
-!EOP
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: lnd_DistGrid_esmf
-  private :: lnd_chkAerDep_esmf
-  private :: lnd_domain_esmf
-  private :: lnd_export_esmf
-  private :: lnd_import_esmf
+  private :: lnd_DistGrid_esmf        ! Distribute clm grid
+  private :: lnd_chkAerDep_esmf       ! Check if aerosol deposition data is input or not
+  private :: lnd_domain_esmf          ! Set the land model domain information
+  private :: lnd_export_esmf          ! export land data to CCSM coupler
+  private :: lnd_import_esmf          ! import data from the CCSM coupler to the land model
 #ifdef RTM
-  private :: rof_DistGrid_esmf
-  private :: rof_domain_esmf
-  private :: rof_export_esmf
+  private :: rof_DistGrid_esmf        ! Distribute river runoff grid
+  private :: rof_domain_esmf          ! Set the river runoff model domain information
+  private :: rof_export_esmf          ! Export the river runoff model data to the CCSM coupler
 #endif
   private :: sno_export_esmf
   private :: sno_import_esmf
 !
-! !PRIVATE VARIABLES
+! !PRIVATE DATA MEMBERS:
 !
 ! Time averaged flux fields
 !  
-  type(ESMF_Array)  :: l2x_SNAP, l2x_SUM
+  type(ESMF_Array)  :: l2x_SNAP       ! Snapshot of land to coupler data on the land grid
+  type(ESMF_Array)  :: l2x_SUM        ! Summation of land to coupler data on the land grid
   type(ESMF_Array)  :: s2x_s_SNAP
   type(ESMF_Array)  :: s2x_s_SUM
 !
 ! Time averaged counter for flux fields
 !
-  integer :: avg_count
+  integer :: avg_count                ! Number of times snapshots of above flux data summed together
   integer :: avg_count_sno
 !
 ! Atmospheric mode  
 !
-  logical :: atm_prognostic
+  logical :: atm_prognostic           ! Flag if active atmosphere component or not
 
+!EOP
 !===============================================================
 contains
 !===============================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_register_esmf
+!
+! !INTERFACE:
 subroutine lnd_register_esmf(comp, rc)
+! !DESCRIPTION:
+! Register the clm initial, run, and final phase methods with ESMF.
+!
+! !USES:
     implicit none
-    type(ESMF_GridComp)  :: comp
-    integer, intent(out) :: rc
-
+!
+! !ARGUMENTS:
+    type(ESMF_GridComp)  :: comp  ! CLM grid component
+    integer, intent(out) :: rc    ! return status
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!-----------------------------------------------------------------------
     rc = ESMF_SUCCESS
     ! Register the callback routines.
 
@@ -126,48 +153,47 @@ end subroutine
     implicit none
 !
 ! !ARGUMENTS:
-   type(ESMF_GridComp)          :: comp
-   type(ESMF_State)             :: import_state
-   type(ESMF_State)             :: export_state
-   type(ESMF_Clock)             :: EClock
-   integer, intent(out)         :: rc
+   type(ESMF_GridComp)          :: comp            ! CLM gridded component
+   type(ESMF_State)             :: import_state    ! CLM import state
+   type(ESMF_State)             :: export_state    ! CLM export state
+   type(ESMF_Clock)             :: EClock          ! ESMF synchronization clock
+   integer, intent(out)         :: rc              ! Return code
    
-   !----- local -----
 !
 ! !LOCAL VARIABLES:
-    integer                               :: mpicom_lnd, mpicom_vm, gsize
+    integer              :: mpicom_lnd, mpicom_vm, gsize
 
-    type(ESMF_DistGrid)                   :: distgrid_l, distgrid_r, distgrid_s
-    type(ESMF_Array)                      :: dom_l, dom_r, dom_s, l2x, x2l, r2x, s2x, x2s
-    type(ESMF_VM)                         :: vm
-    integer, allocatable                  :: gindex(:)
-    integer  :: lsize           ! size of attribute vector
-    integer  :: i,j             ! indices
-    integer  :: dtime_sync
-    integer  :: dtime_clm
-    logical  :: exists               ! true if file exists
-    real(r8) :: scmlat
-    real(r8) :: scmlon
-    real(r8) :: nextsw_cday     ! calday from clock of next radiation computation
-    character(len=SHR_KIND_CL) :: caseid
-    character(len=SHR_KIND_CL) :: ctitle
-    character(len=SHR_KIND_CL) :: starttype
-    character(len=SHR_KIND_CL) :: calendar
-    character(len=SHR_KIND_CL) :: hostname     ! hostname of machine running on
-    character(len=SHR_KIND_CL) :: version      ! Model version
-    character(len=SHR_KIND_CL) :: username     ! user running the model
-    integer  :: nsrest
-    integer :: perpetual_ymd
-    integer :: ref_ymd
-    integer :: ref_tod
-    integer :: start_ymd
-    integer :: start_tod
-    integer :: stop_ymd
-    integer :: stop_tod
-    logical :: brnch_retain_casename
-    logical :: perpetual_run
-    integer :: lbnum
-    integer  :: shrlogunit,shrloglev ! old values
+    type(ESMF_DistGrid)  :: distgrid_l, distgrid_r, distgrid_s
+    type(ESMF_Array)     :: dom_l, dom_r, dom_s, l2x, x2l, r2x, s2x, x2s
+    type(ESMF_VM)        :: vm
+    integer, allocatable :: gindex(:)
+    integer  :: lsize                                ! size of attribute vector
+    integer  :: i,j                                  ! indices
+    integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
+    integer  :: dtime_clm                            ! clm time-step
+    logical  :: exists                               ! true if file exists
+    real(r8) :: scmlat                               ! single-column latitude
+    real(r8) :: scmlon                               ! single-column longitude
+    real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
+    character(len=SHR_KIND_CL) :: caseid             ! case identifier name
+    character(len=SHR_KIND_CL) :: ctitle             ! case description title
+    character(len=SHR_KIND_CL) :: starttype          ! start-type (startup, continue, branch, hybrid)
+    character(len=SHR_KIND_CL) :: calendar           ! calendar type name
+    character(len=SHR_KIND_CL) :: hostname           ! hostname of machine running on
+    character(len=SHR_KIND_CL) :: version            ! Model version
+    character(len=SHR_KIND_CL) :: username           ! user running the model
+    integer :: nsrest                                ! clm restart type
+    integer :: perpetual_ymd                         ! perpetual date
+    integer :: ref_ymd                               ! reference date (YYYYMMDD)
+    integer :: ref_tod                               ! reference time of day (sec)
+    integer :: start_ymd                             ! start date (YYYYMMDD)
+    integer :: start_tod                             ! start time of day (sec)
+    integer :: stop_ymd                              ! stop date (YYYYMMDD)
+    integer :: stop_tod                              ! stop time of day (sec)
+    logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
+    logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
+    integer :: lbnum                                 ! input to memory diagnostic
+    integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
     character(len=32), parameter :: sub = 'lnd_init_esmf'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
 !
@@ -186,6 +212,8 @@ end subroutine
     if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call MPI_Comm_dup(mpicom_vm, mpicom_lnd, rc)
     if(rc /= 0) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    ! Initialize clm MPI communicator
 
     call spmd_init( mpicom_lnd )
 
@@ -282,6 +310,8 @@ end subroutine
                            scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
                            hostname_in=hostname, username_in=username )
 
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
     call clm_init0( )
 
     ! If no land then exit out of initialization
@@ -294,6 +324,10 @@ end subroutine
        call ESMF_AttributeSet(export_state, name="rof_present", value=.false., rc=rc)
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     end if
+
+    ! Determine if aerosol and dust deposition come from atmosphere component
+
+    call lnd_chkAerDep_esmf(export_state, rc=rc )
 
     call clm_init1( )
     call clm_init2()
@@ -308,7 +342,7 @@ end subroutine
        call endrun( sub//' ERROR: time out of sync' )
     end if
 
-    ! Initialize lnd gsMap
+    ! Initialize lnd distributed grid
 
     distgrid_l = lnd_DistGrid_esmf(gsize, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
@@ -341,7 +375,7 @@ end subroutine
     call lnd_domain_esmf( dom_s, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    ! Initialize lnd attribute vectors
+    ! Initialize lnd import and export states
 
     l2x = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fields, name="l2x", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
@@ -393,6 +427,8 @@ end subroutine
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
 #ifdef RTM
+    ! Initialize rof export state
+
     call rof_export_esmf( r2x , rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 #endif
@@ -505,46 +541,45 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use aerdepMod      , only : aerdepini
     use clm_varctl      ,only : create_glacier_mec_landunit
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     implicit none
 !
 ! !ARGUMENTS:
-   type(ESMF_GridComp)          :: comp
-   type(ESMF_State)             :: import_state
-   type(ESMF_State)             :: export_state
-   type(ESMF_Clock)             :: EClock
-   integer, intent(out)         :: rc
+   type(ESMF_GridComp)          :: comp            ! CLM gridded component
+   type(ESMF_State)             :: import_state    ! CLM import state
+   type(ESMF_State)             :: export_state    ! CLM export state
+   type(ESMF_Clock)             :: EClock          ! ESMF synchronization clock
+   integer, intent(out)         :: rc              ! Return code
 !
 ! !LOCAL VARIABLES:
-    type(ESMF_Array)                            :: l2x, r2x, s2x, x2l, x2s, dom_l
-    real(R8), pointer                           :: fptr(:, :)
-    integer :: ymd_sync        ! Sync date (YYYYMMDD)
-    integer :: yr_sync         ! Sync current year
-    integer :: mon_sync        ! Sync current month
-    integer :: day_sync        ! Sync current day
-    integer :: tod_sync        ! Sync current time of day (sec)
-    integer :: ymd             ! CLM current date (YYYYMMDD)
-    integer :: yr              ! CLM current year
-    integer :: mon             ! CLM current month
-    integer :: day             ! CLM current day
-    integer :: tod             ! CLM current time of day (sec)
-    integer :: dtime           ! time step increment (sec)
-    integer :: nstep           ! time step index
-    logical :: rstwr_sync      ! .true. ==> write restart file before returning
-    logical :: rstwr           ! .true. ==> write restart file before returning
-    logical :: nlend_sync      ! Flag signaling last time-step
-    logical :: nlend           ! .true. ==> last time-step
-    logical :: dosend          ! true => send data back to driver
-    logical :: doalb           ! .true. ==> do albedo calculation on this time step
-    real(r8):: nextsw_cday     ! calday from clock of next radiation computation
-    real(r8):: caldayp1        ! clm calday plus dtime offset
+    type(ESMF_Array)  :: l2x, r2x, s2x, x2l, x2s, dom_l
+    real(R8), pointer :: fptr(:, :)
+    integer :: ymd_sync                   ! Sync date (YYYYMMDD)
+    integer :: yr_sync                    ! Sync current year
+    integer :: mon_sync                   ! Sync current month
+    integer :: day_sync                   ! Sync current day
+    integer :: tod_sync                   ! Sync current time of day (sec)
+    integer :: ymd                        ! CLM current date (YYYYMMDD)
+    integer :: yr                         ! CLM current year
+    integer :: mon                        ! CLM current month
+    integer :: day                        ! CLM current day
+    integer :: tod                        ! CLM current time of day (sec)
+    integer :: dtime                      ! time step increment (sec)
+    integer :: nstep                      ! time step index
+    logical :: rstwr_sync                 ! .true. ==> write restart file before returning
+    logical :: rstwr                      ! .true. ==> write restart file before returning
+    logical :: nlend_sync                 ! Flag signaling last time-step
+    logical :: nlend                      ! .true. ==> last time-step
+    logical :: dosend                     ! true => send data back to driver
+    logical :: doalb                      ! .true. ==> do albedo calculation on this time step
+    real(r8):: nextsw_cday                ! calday from clock of next radiation computation
+    real(r8):: caldayp1                   ! clm calday plus dtime offset
     integer :: shrlogunit,shrloglev       ! old values
-    integer :: begg, endg    
-    integer :: lbnum
-    integer :: g,i,ka          ! counters
+    integer :: begg, endg                 ! Beginning and ending gridcell index numbers
+    integer :: lbnum                      ! input to memory diagnostic
+    integer :: g,i,ka                     ! counters
     logical,save :: first_call = .true.   ! first call work
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_esmf"
@@ -606,11 +641,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
           adomain%asca(g) = fptr(ka, i)
        end do
 
-       call lnd_chkAerDep_esmf(x2l, rc=rc )
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
-       call aerdepini( )   ! Will be removed...
-
     endif
 
     call t_stopf ('lc_lnd_run1')
@@ -658,17 +688,16 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     dosend      = .false.
     do while(.not. dosend)
 
-       ! Determine doalb based on nextsw_cday sent from atm model
+       ! Determine if dosend
+       ! When time is not updated at the beginning of the loop - then return only if
+       ! are in sync with clock before time is updated
 
        call get_curr_date( yr, mon, day, tod )
        ymd = yr*10000 + mon*100 + day
        tod = tod
        dosend = (seq_timemgr_EClockDateInSync( EClock, ymd, tod))
 
-       ! Determine doalb
-       ! If not prognostic atm, then will always use internal albedo calculation
-       ! logic and not trigger off of nextsw_cday - not that clm namelist irad will now
-       ! ONLY be used with a datm model - not with cam
+       ! Determine doalb based on nextsw_cday sent from atm model
 
        nstep = get_nstep()
        caldayp1 = get_curr_calday(offset=dtime)
@@ -806,7 +835,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call t_stopf ('lc_rof_export')
 #endif
-
+       
     ! Check that internal clock is in sync with master clock
 
     call get_curr_date( yr, mon, day, tod, offset=-dtime )
@@ -855,11 +884,11 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 ! !ARGUMENTS:
 !
    implicit none
-   type(ESMF_GridComp)          :: comp
-   type(ESMF_State)             :: import_state
-   type(ESMF_State)             :: export_state
-   type(ESMF_Clock)             :: EClock
-   integer, intent(out)         :: rc
+   type(ESMF_GridComp)          :: comp            ! CLM gridded component
+   type(ESMF_State)             :: import_state    ! CLM import state
+   type(ESMF_State)             :: export_state    ! CLM export state
+   type(ESMF_Clock)             :: EClock          ! ESMF synchronization clock
+   integer, intent(out)         :: rc              ! Return code
 
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein, Fei Liu
@@ -893,34 +922,41 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
 !=================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_DistGrid_esmf
+!
+! !INTERFACE:
   function lnd_DistGrid_esmf(gsize, rc)
-
-    !-------------------------------------------------------------------
-    !
-    ! Uses
-    !
+!
+! !DESCRIPTION:
+! Setup distributed grid for CLM
+!
+! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use decompMod    , only : get_proc_bounds_atm, adecomp
     use domainMod    , only : adomain
-    !
-    ! Arguments
-    !
-    integer, intent(out)                :: gsize
-    integer, intent(out)                :: rc
-    !
-    ! Return
-    !
-    type(ESMF_DistGrid)     :: lnd_DistGrid_esmf
-    !
-    ! Local Variables
-    !
-    integer,allocatable :: gindex(:)
-    integer :: i, j, n, gi
-    integer :: lsize
-    integer :: ier
-    integer :: begg, endg
-    !-------------------------------------------------------------------
-
+!
+! !ARGUMENTS:
+    integer, intent(out) :: gsize   ! grid size
+    integer, intent(out) :: rc      ! return code
+!
+! RETURN:
+    type(ESMF_DistGrid) :: lnd_DistGrid_esmf  ! Resulting distributed grid
+!
+! !LOCAL VARIABLES:
+    integer,allocatable :: gindex(:)  ! grid indices
+    integer :: i, j, n, gi            ! indices
+    integer :: ier                    ! error code
+    integer :: begg, endg             ! grid begining and ending indices
+    integer :: lsize                  ! span of grid for this task
+!
+! !REVISION HISTORY:
+! Author: Fei Liu
+!
+!EOP
+!---------------------------------------------------------------------------
     ! Build the land grid numbering
     ! NOTE:  Numbering scheme is: West to East and South to North
     ! starting at south pole.  Should be the same as what's used in SCRIP
@@ -954,13 +990,11 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 ! !IROUTINE: lnd_chkAerDep_esmf
 !
 ! !INTERFACE:
-  subroutine lnd_chkAerDep_esmf(x2l_array, rc )
+  subroutine lnd_chkAerDep_esmf(export_state, rc )
 !
 ! !DESCRIPTION:
-! Check aerosol deposition values sent from atmosphere to make sure data is filled.
-! If any data is set to special-value or if all data is equal to zero than mark
-! data as NOT filled. Model will abort if the data sent from the atmosphere is NOT
-! filled.
+! Check infodata to see if aerosol deposition data is sent to the land model.
+! If data is NOT sent, read in CLM version of datasets that have this information.
 !
 !------------------------------------------------------------------------------
 !BOP
@@ -968,138 +1002,106 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use shr_const_mod    , only : spval => SHR_CONST_SPVAL
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varctl       , only : iulog
-    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file  ! This will be removed
-    use abortutils       , only : endrun
-    use seq_flds_indices , only : index_x2l_Faxa_bcphidry, index_x2l_Faxa_bcphodry, &
-                                  index_x2l_Faxa_bcphiwet,                          &
-                                  index_x2l_Faxa_ocphidry, index_x2l_Faxa_ocphodry, &
-                                  index_x2l_Faxa_ocphiwet,                          &
-                                  index_x2l_Faxa_dstdry1, index_x2l_Faxa_dstdry2,   &
-                                  index_x2l_Faxa_dstdry3, index_x2l_Faxa_dstdry4,   &
-                                  index_x2l_Faxa_dstwet1, index_x2l_Faxa_dstwet2,   &
-                                  index_x2l_Faxa_dstwet3, index_x2l_Faxa_dstwet4
+    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file
     use spmdMod          , only : masterproc
+    use aerdepMod        , only : aerdepini
 !
 ! !ARGUMENTS:
     implicit none
 
-    type(ESMF_Array), intent(inout) :: x2l_array
-    integer, intent(out)            :: rc
+    type(ESMF_State)     :: export_state    ! CLM export state
+    integer, intent(out) :: rc              ! return code
+!
+! !LOCAL VARIABLES:
+    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
+    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
+    logical :: atm_aero                    ! Flag if aerosol data sent from atm model
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek, Fei Liu
 !
 !EOP
 !---------------------------------------------------------------------------
-    !
-    ! Local Variables
-    !
-    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
-    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
-    real(R8), pointer                           :: fptr(:, :)
 
     rc = ESMF_SUCCESS
 
-    call ESMF_ArrayGet(x2l_array, localDe=0, farrayPtr=fptr, rc=rc)
+    call ESMF_AttributeGet(export_state, name="atm_aero", value=atm_aero, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    ! If ANY values set to special value -- then mark data as NOT filled
-    if ( any(abs(fptr(index_x2l_Faxa_bcphidry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_bcphodry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_bcphiwet,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_ocphidry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_ocphodry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_ocphiwet,:) - spval)/spval < 1._r8 ) &
-    )then
+    if ( .not. atm_aero )then
         caerdep_filled = .false.
-    end if
-
-    ! If ANY values set to special value -- then mark dust data as NOT filled
-    if ( any(abs(fptr(index_x2l_Faxa_dstdry1,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstdry2,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstdry3,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstdry4,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstwet1,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstwet2,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstwet3,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(fptr(index_x2l_Faxa_dstwet4,:) - spval)/spval < 1._r8) &
-    )then
-        dustdep_filled = .false.
-    end if
-
-    ! If ALL values are set to zero -- then mark carbon aerosol dep. as NOT filled
-    if (  all(fptr(index_x2l_Faxa_bcphidry,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_bcphodry,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_bcphiwet,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_ocphidry,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_ocphodry,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_ocphiwet,:) == 0.0_r8) &
-    )then
-        caerdep_filled = .false.
-    end if
-
-    ! If ALL values are set to zero -- then mark dust dep. as NOT filled
-    if (  all(fptr(index_x2l_Faxa_dstdry1,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstdry2,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstdry3,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstdry4,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstwet1,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstwet2,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstwet3,:) == 0.0_r8) &
-    .and. all(fptr(index_x2l_Faxa_dstwet4,:) == 0.0_r8) &
-    )then
         dustdep_filled = .false.
     end if
 
     if ( caerdep_filled )then
        if ( masterproc ) &
-       write(iulog,*) "Using aerosol deposition sent from atmosphere model"
+          write(iulog,*) "Using aerosol deposition sent from atmosphere model"
     else
-       if ( masterproc )then
+       if ( masterproc ) then
+          write(iulog,*) "WARNING: carbon aerosol deposition data NOT sent in from atmosphere model"
           write(iulog,*) "WARNING: Reading carbon aerosol deposition from CLM input file"
-          write(iulog,*) "WARNING: aerosol deposition from atm is either spval or all zero"
        end if
-       !call endrun( "Aerosol deposition data is sent but NOT filled from the atmosphere model" )
     end if
     if ( dustdep_filled )then
        if ( masterproc ) &
-       write(iulog,*) "Using dust deposition sent from atmosphere model"
+          write(iulog,*) "Using dust deposition sent from atmosphere model"
     else
-       if ( masterproc )then
+       if ( masterproc ) then
+          write(iulog,*) "WARNING: dust deposition data NOT sent in from atmosphere model"
           write(iulog,*) "WARNING: Reading dust deposition from CLM input file"
-          write(iulog,*) "WARNING: Dust deposition from atm is either spval or all zero"
        end if
-       !call endrun( "Dust deposition data is sent but NOT filled from the atmosphere model" )
     end if
     call shr_sys_flush( iulog )
 
     set_caerdep_from_file = .not. caerdep_filled
     set_dustdep_from_file = .not. dustdep_filled
 
+    if ( .not. atm_aero )then
+       call aerdepini( )
+    end if
+
   end subroutine lnd_chkAerDep_esmf
 
 !====================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_export_esmf
+!
+! !INTERFACE:
   subroutine lnd_export_esmf( l2a, l2x_array, rc )   
-
-    !-----------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Convert the data to be sent from the clm model to the coupler from clm data types
+! to ESMF data types.
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd      , only : lnd2atm_type
     use domainMod       , only : adomain
     use decompMod       , only : get_proc_bounds_atm, adecomp
+    use seq_drydep_mod     , only : n_drydep
     use seq_flds_indices
     implicit none
-
-    type(lnd2atm_type), intent(inout) :: l2a
-    type(ESMF_Array)  , intent(inout) :: l2x_array
-    integer, intent(out)              :: rc
-
-    integer :: g,i
+! !ARGUMENTS:
+    type(lnd2atm_type), intent(inout) :: l2a         ! clm land to atmosphere exchange data type
+    type(ESMF_Array)  , intent(inout) :: l2x_array   ! Land to coupler export state on land grid
+    integer, intent(out)              :: rc          ! return code
+!
+! !LOCAL VARIABLES:
+    integer :: g,i           ! indices
     integer :: begg, endg    ! beginning and ending gridcell indices
     real(R8), pointer :: fptr(:, :)
-    !-----------------------------------------------------
-
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     rc = ESMF_SUCCESS
 
     call get_proc_bounds_atm(begg, endg)
@@ -1111,7 +1113,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
     ! ccsm sign convention is that fluxes are positive downward
 
-!dir$ concurrent
     do g = begg,endg
        i = 1 + (g-begg)
        fptr(index_l2x_Sl_landfrac,i) =  adomain%frac(g)
@@ -1147,15 +1148,35 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        if (index_l2x_Fall_flxdst3 /= 0 )  fptr(index_l2x_Fall_flxdst3,i)= -l2a%flxdst(g,3)
        if (index_l2x_Fall_flxdst4 /= 0 )  fptr(index_l2x_Fall_flxdst4,i)= -l2a%flxdst(g,4)
 #endif
+       if ( index_l2x_Sl_ddvel /= 0 ) fptr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = l2a%ddvel(g,:n_drydep)
+#ifdef VOC
+       if (index_l2x_Fall_flxvoc1 /= 0 )  fptr(index_l2x_Fall_flxvoc1,i)= -l2a%flxvoc(g,1)
+       if (index_l2x_Fall_flxvoc2 /= 0 )  fptr(index_l2x_Fall_flxvoc2,i)= -l2a%flxvoc(g,2)
+       if (index_l2x_Fall_flxvoc3 /= 0 )  fptr(index_l2x_Fall_flxvoc3,i)= -l2a%flxvoc(g,3)
+       if (index_l2x_Fall_flxvoc4 /= 0 )  fptr(index_l2x_Fall_flxvoc4,i)= -l2a%flxvoc(g,4)
+       if (index_l2x_Fall_flxvoc5 /= 0 )  fptr(index_l2x_Fall_flxvoc5,i)= -l2a%flxvoc(g,5)
+#endif
     end do
 
   end subroutine lnd_export_esmf
 
 !====================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_import_esmf
+!
+! !INTERFACE:
   subroutine lnd_import_esmf( x2l_array, a2l, rc)
-
-    !-----------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Convert the input data from the coupler to the land model from ESMF import state
+! into internal clm data types.
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
@@ -1170,19 +1191,16 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use clm_varctl      , only: iulog
     use seq_flds_indices
     implicit none
-    !
-    ! Arguments
-    !
-    type(ESMF_Array)  , intent(inout) :: x2l_array
-    type(atm2lnd_type), intent(inout) :: a2l
-    integer, intent(out)              :: rc
-    !
-    ! Local Variables
-    !
-    integer  :: g,i,nstep,ier
+! !ARGUMENTS:
+    type(ESMF_Array)  , intent(inout) :: x2l_array    ! Driver ESMF import state to land model
+    type(atm2lnd_type), intent(inout) :: a2l          ! clm internal input data type
+    integer, intent(out)              :: rc           ! return code
+!
+! !LOCAL VARIABLES:
+    integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
-    real(r8) :: e                    !vapor pressure (Pa)
-    real(r8) :: qsat                 !saturation specific humidity (kg/kg)
+    real(r8) :: e                    ! vapor pressure (Pa)
+    real(r8) :: qsat                 ! saturation specific humidity (kg/kg)
     real(r8) :: forc_rainl           ! rainxy Atm flux mm/s
     real(r8) :: forc_snowc           ! snowfxy Atm flux  mm/s
     real(r8) :: forc_snowl           ! snowfxl Atm flux  mm/s
@@ -1191,14 +1209,15 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     real(r8) :: co2_ppmv_val         ! temporary
     integer  :: begg, endg           ! beginning and ending gridcell indices
     integer  :: co2_type_idx         ! integer flag for co2_type options
-    real(r8) :: esatw                !saturation vapor pressure over water (Pa)
-    real(r8) :: esati                !saturation vapor pressure over ice (Pa)
-    real(r8) :: a0,a1,a2,a3,a4,a5,a6 !coefficients for esat over water
-    real(r8) :: b0,b1,b2,b3,b4,b5,b6 !coefficients for esat over ice
-    real(r8) :: tdc, t               !Kelvins to Celcius function and its input
+    real(r8) :: esatw                ! saturation vapor pressure over water (Pa)
+    real(r8) :: esati                ! saturation vapor pressure over ice (Pa)
+    real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
+    real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
+    real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
     real(R8), pointer :: fptr(:, :)
     character(len=32), parameter :: sub = 'lnd_import_esmf'
 
+    ! Constants to compute vapor pressure
     parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
                a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
                a4=3.031240396e-06_r8, a5=2.034080948e-08_r8, &
@@ -1208,15 +1227,18 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
                b2=1.886013408e-02_r8, b3=4.176223716e-04_r8, &
                b4=5.824720280e-06_r8, b5=4.838803174e-08_r8, &
                b6=1.838826904e-10_r8)
-!
-! function declarations
-!
+    !
+    ! function declarations
+    !
     tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
     esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
     esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
-
-    !-----------------------------------------------------
-
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     rc = ESMF_SUCCESS
 
     call ESMF_ArrayGet(x2l_array, localDe=0, farrayPtr=fptr, rc=rc)
@@ -1242,7 +1264,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     ! by 1000 mm/m resulting in an overall factor of unity.
     ! Below the units are therefore given in mm/s.
     
-!dir$ concurrent
     do g = begg,endg
         i = 1 + (g - begg)
        
@@ -1266,7 +1287,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
         a2l%forc_solai(g,1) = fptr(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
         ! atmosphere coupling, if using prognostic aerosols
-        ! This if will be removed so always on....
         if ( .not. set_caerdep_from_file ) then
            a2l%forc_aer(g,1) =  fptr(index_x2l_Faxa_bcphidry,i)
            a2l%forc_aer(g,2) =  fptr(index_x2l_Faxa_bcphodry,i)
@@ -1275,7 +1295,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
            a2l%forc_aer(g,5) =  fptr(index_x2l_Faxa_ocphodry,i)
            a2l%forc_aer(g,6) =  fptr(index_x2l_Faxa_ocphiwet,i)
         endif
-        ! This if will be removed so always on....
         if ( .not. set_dustdep_from_file ) then
            a2l%forc_aer(g,7)  =  fptr(index_x2l_Faxa_dstwet1,i)
            a2l%forc_aer(g,8)  =  fptr(index_x2l_Faxa_dstdry1,i)
@@ -1350,27 +1369,40 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
 !===============================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_domain_esmf
+!
+! !INTERFACE:
   subroutine lnd_domain_esmf( dom, rc )
-
-    !-------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Send the land model domain information to the coupler
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
     use domainMod   , only : adomain
     use decompMod   , only : get_proc_bounds_atm, adecomp
     implicit none
-    !
-    ! Arguments
-    !
-    type(ESMF_Array), intent(inout)     :: dom
-    integer, intent(out)                :: rc
-    !
-    ! Local Variables
-    !
+! !ARGUMENTS:
+    type(ESMF_Array), intent(inout)     :: dom         ! CLM domain data
+    integer, intent(out)                :: rc          ! return code
+!
+! !LOCAL VARIABLES:
     integer :: g,i                ! index
     integer :: begg, endg         ! beginning and ending gridcell indices
     integer :: klon,klat,karea,kmask,kfrac ! domain fields
     real(R8), pointer :: fptr (:,:)
-    !-------------------------------------------------------------------
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Initialize domain type
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
@@ -1416,29 +1448,45 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 !===============================================================================
     
 #ifdef RTM
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rof_SetgsMap_esmf
+!
+! !INTERFACE:
   function rof_DistGrid_esmf(gsize, rc)
+!
+! !DESCRIPTION:
+!
+! Set the ESMF distributed grid for the runoff model
+!
+!---------------------------------------------------------------------------
 
-    !-------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varpar  , only : rtmlon, rtmlat
     use RunoffMod   , only : runoff
     use abortutils  , only : endrun
     use clm_varctl  , only : iulog
     implicit none
-
-    type(ESMF_DistGrid)                 :: rof_DistGrid_esmf
-    !
-    ! Arguments
-    !
-    integer, intent(out)                :: gsize
-    integer, intent(out)                :: rc
+! !RETURN:
+    type(ESMF_DistGrid)                 :: rof_DistGrid_esmf   
+! !ARGUMENTS:
+    integer, intent(out)                :: gsize   ! Grid size
+    integer, intent(out)                :: rc      ! Return code
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local Variables
     !
-    integer,allocatable :: gindex(:)
-    integer :: n, ni
-    integer :: lsize
-    integer :: ier
+    integer,allocatable :: gindex(:)         ! indexing for runoff grid cells
+    integer :: n, ni                         ! indices
+    integer :: lsize,gsize                   ! size of runoff data and number of grid cells
+    integer :: ier                           ! error code
     character(len=32), parameter :: sub = 'rof_DistGrid_esmf'
     !-------------------------------------------------------------------
 
@@ -1477,9 +1525,21 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
 !===============================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rof_domain_esmf
+!
+! !INTERFACE:
   subroutine rof_domain_esmf( dom, rc )
+!
+! !DESCRIPTION:
+!
+! Send the runoff model domain information to the coupler
+!
+!---------------------------------------------------------------------------
 
-    !-------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
     use RunoffMod   , only : runoff
@@ -1487,11 +1547,15 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use clm_varctl  , only : iulog
     use spmdMod     , only : iam
     implicit none
-    !
-    ! Arguments
-    !
-    type(ESMF_Array), intent(inout)     :: dom
-    integer, intent(out)                :: rc
+! !ARGUMENTS:
+    type(ESMF_Array), intent(inout)     :: dom   ! Domain information
+    integer, intent(out)                :: rc    ! Return code
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local Variables
     !
@@ -1563,20 +1627,35 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
 !====================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rof_export_esmf
+!
+! !INTERFACE:
   subroutine rof_export_esmf( r2x_array, rc)
-
+!
+! !DESCRIPTION:
+!
+! Send the runoff model export state to the CCSM coupler
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
     use abortutils  , only : endrun
     use clm_varctl  , only : iulog
     use seq_flds_indices
     implicit none
-    !-----------------------------------------------------
-    !
-    ! Arguments
-    ! 
+! !ARGUMENTS:
     type(ESMF_Array), intent(inout)            :: r2x_array
     integer, intent(out)                       :: rc
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local variables
     !
@@ -1605,21 +1684,35 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        call endrun()
     endif
 
-    !write(iulog, *) index_r2x_Forr_roff, index_r2x_Forr_ioff, runoff%begr, runoff%endr
-    !write(iulog, *) 'mask', runoff%mask
-    !call shr_sys_flush(iulog)
     ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          fptr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-          fptr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-          if (ni > runoff%lnumro) then
-             write(iulog,*) sub, ' : ERROR runoff count',n,ni
-             call endrun( sub//' : ERROR runoff > expected' )
+    if ( ice_runoff )then
+       do n = runoff%begr,runoff%endr
+          if (runoff%mask(n) == 2) then
+             ni = ni + 1
+             ! liquid and ice runoff are treated separately
+             fptr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+             fptr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+             if (ni > runoff%lnumro) then
+                write(iulog,*) sub, ' : ERROR runoff count',n,ni
+                call endrun( sub//' : ERROR runoff > expected' )
+             endif
           endif
-       endif
-    end do
+       end do
+    else
+       do n = runoff%begr,runoff%endr
+          if (runoff%mask(n) == 2) then
+             ni = ni + 1
+             ! liquid and ice runoff are bundled together to liquid runoff, and then ice runoff set to zero
+             fptr(index_r2x_Forr_roff,ni) =   &
+               (runoff%runoff(n,nfrz)+runoff%runoff(n,nliq))/(runoff%area(n)*1.0e-6_r8*1000._r8)
+             fptr(index_r2x_Forr_ioff,ni) = 0.0_r8
+             if (ni > runoff%lnumro) then
+                write(iulog,*) sub, ' : ERROR runoff count',n,ni
+                call endrun( sub//' : ERROR runoff > expected' )
+             endif
+          endif
+       end do
+    end if
     if (ni /= runoff%lnumro) then
        write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
        call endrun( sub//' : ERROR runoff not equal to expected' )

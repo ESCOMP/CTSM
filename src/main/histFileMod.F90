@@ -1667,8 +1667,11 @@ contains
 ! !USES:
     use clmtype
     use clm_varpar  , only : lsmlon, lsmlat, nlevgrnd, nlevlak, numrad, rtmlon, rtmlat
-    use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon, &
+    use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, fpftcon, &
                              version, hostname, username, conventions, source
+#ifdef RTM
+    use clm_varctl  , only : frivinp_rtm
+#endif
     use domainMod   , only : llatlon,alatlon
     use fileutils   , only : get_filename
 #if (defined CASA)
@@ -1772,10 +1775,12 @@ contains
     str = get_filename(fpftcon)
     call ncd_putatt(nfid(t), ncd_global, 'PFT_physiological_constants_dataset', trim(str), subname, usepio=pioflag)
 
+#if (defined RTM)
     if (frivinp_rtm /= ' ') then
        str = get_filename(frivinp_rtm)
        call ncd_putatt(nfid(t), ncd_global, 'RTM_input_dataset', trim(str), subname, usepio=pioflag)
     endif
+#endif
 
     ! Define dimensions.
     ! Time is an unlimited dimension. Character string is treated as an array of characters.

@@ -78,7 +78,7 @@ module clm_driver
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
-  use clm_varctl          , only : wrtdia, fpftdyn, fndepdyn
+  use clm_varctl          , only : wrtdia, fpftdyn
   use clm_varctl          , only : iulog
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds
@@ -90,6 +90,7 @@ module clm_driver
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal
 #ifdef CN
   use pftdynMod           , only : pftdyn_cnbal
+  use clm_varctl          , only : fndepdyn
 #endif
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb

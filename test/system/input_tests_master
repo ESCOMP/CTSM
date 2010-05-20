@@ -350,14 +350,13 @@ blG74 TBL.sh 17p_nrsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1
 smG78 TSM.sh 17p_nrsc_ds clm_pftdyn 18501230:NONE:3600 1x1_tropicAtl test@1850-2000 -1100 arb_ic
 blG78 TBL.sh 17p_nrsc_ds clm_pftdyn 18501230:NONE:3600 1x1_tropicAtl test@1850-2000 -100  arb_ic
 
-smH74 TSM.sh 17p_nrcnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 cold
-blH74 TBL.sh 17p_nrcnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100  cold
+smH74 TSM.sh _nrcnsc_ds clm_pftdyn^nl_cn_conly 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 cold
+blH74 TBL.sh _nrcnsc_ds clm_pftdyn^nl_cn_conly 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100  cold
 
 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic
 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic
 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
-
 
 smC46 TSM.sh 17p_sc_o clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
 erC46 TER.sh 17p_sc_o clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic
@@ -371,122 +370,147 @@ blC47 TBL.sh 17p_sc_s clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   a
 
 rpC47 TRP.sh 17p_sc_o 20 clm_pftdyn 18501230:NONE:1800 10x15 USGS@1850-2000 3   cold
 
-smPQ4 TSM.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -150  cold
-erPQ4 TER.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -3+-7 cold
-brPQ4 TBR.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -5+-5 cold
-blPQ4 TBL.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -150  cold
+smH65 TSM.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+erH65 TER.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
+brH65 TBR.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
+blH65 TBL.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
-smPO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
-erPO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold
-brPO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold
-blPO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+smHQ4 TSM.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -150  cold
+erHQ4 TER.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -3+-7 cold
+brHQ4 TBR.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -5+-5 cold
+blHQ4 TBL.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -150  cold
+
+smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold
+brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold
+blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
 
 smH65 TSM.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 erH65 TER.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
 brH65 TBR.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
 blH65 TBL.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
-smH66 TSM.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
-erH66 TER.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
-brH66 TBR.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
-blH66 TBL.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+smH66 TSM.sh 17p_cnsc_dm clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+erH66 TER.sh 17p_cnsc_dm clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
+brH66 TBR.sh 17p_cnsc_dm clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
+blH66 TBL.sh 17p_cnsc_dm clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
-smH67 TSM.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
-erH67 TER.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
-brH67 TBR.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
-blH67 TBL.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+smH67 TSM.sh 17p_cnsc_do clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+erH67 TER.sh 17p_cnsc_do clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
+brH67 TBR.sh 17p_cnsc_do clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
+blH67 TBL.sh 17p_cnsc_do clm_pftdyn^nl_cn_conly 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
-smPN1 TSM.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
-erPN1 TER.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cold
-brPN1 TBR.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cold
-blPN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
+smHN1 TSM.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
+erHN1 TER.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cold
+brHN1 TBR.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cold
+blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
 
-smHM1 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
-erHM1 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -3+-7 arb_ic
-brHM1 TBR.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -5+-5 arb_ic
-blHM1 TBL.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
+smHM1 TSM.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
+erHM1 TER.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -3+-7 arb_ic
+brHM1 TBR.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -5+-5 arb_ic
+blHM1 TBL.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
 
-smH11 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
-erH11 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
-brH11 TBR.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold
-blH11 TBL.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48    cold
+smH11 TSM.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
+erH11 TER.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
+brH11 TBR.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold
+blH11 TBL.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 48    cold
 
-cbH12 TCB.sh 17p_cnnsc_dm
+cbH12 TCB.sh 17p_cnsc_dm
 
-smH12 TSM.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
-erH12 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
-brH12 TBR.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold
-blH12 TBL.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48    cold
+smH12 TSM.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
+erH12 TER.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
+brH12 TBR.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold
+blH12 TBL.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 48    cold
 
-smH13 TSM.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
-erH13 TER.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
-brH13 TBR.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold
-blH13 TBL.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48    cold
+smH13 TSM.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
+erH13 TER.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
+brH13 TBR.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold
+blH13 TBL.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 48    cold
 
-smH15 TSM.sh 17p_cnnsc_h clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
-smH16 TSM.sh 17p_cnnsc_m clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
-smH17 TSM.sh 17p_cnnsc_o clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
+smH15 TSM.sh 17p_cnsc_h clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
+smH16 TSM.sh 17p_cnsc_m clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
+smH17 TSM.sh 17p_cnsc_o clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
 
-smH91 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
-erH91 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
-brH91 TBR.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
-blH91 TBL.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
+smH91 TSM.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
+erH91 TER.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
+brH91 TBR.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
+blH91 TBL.sh 17p_cnsc_dh clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
 
-cbH92 TCB.sh 17p_cnnsc_dm
+cbH92 TCB.sh 17p_cnsc_dm
 
-smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
-erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
-brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
-blH92 TBL.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
+smH92 TSM.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
+erH92 TER.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
+brH92 TBR.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
+blH92 TBL.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
 
-smH93 TSM.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
-erH93 TER.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
-brH93 TBR.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
-blH93 TBL.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
+smH93 TSM.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
+erH93 TER.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
+brH93 TBR.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
+blH93 TBL.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
 
-smH95 TSM.sh 17p_cnnsc_h clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
-smH96 TSM.sh 17p_cnnsc_m clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
-smH97 TSM.sh 17p_cnnsc_o clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
+smH95 TSM.sh 17p_cnsc_h clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
+smH96 TSM.sh 17p_cnsc_m clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
+smH97 TSM.sh 17p_cnsc_o clm_ndepdyn^nl_cn_conly 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
 
-smH51 TSM.sh 17p_cnnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
-erH51 TER.sh 17p_cnnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
-brH51 TBR.sh 17p_cnnsc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold
-blH51 TBL.sh 17p_cnnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 48    cold
+smH51 TSM.sh 17p_cnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
+erH51 TER.sh 17p_cnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
+brH51 TBR.sh 17p_cnsc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold
+blH51 TBL.sh 17p_cnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 48    cold
 
-smH52 TSM.sh 17p_cnnsc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
-erH52 TER.sh 17p_cnnsc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
-brH52 TBR.sh 17p_cnnsc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold
-blH52 TBL.sh 17p_cnnsc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 48    cold
+smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
+erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
+brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold
+blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 48    cold
 
-smH53 TSM.sh 17p_cnnsc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
-erH53 TER.sh 17p_cnnsc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
-brH53 TBR.sh 17p_cnnsc_do clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold
-blH53 TBL.sh 17p_cnnsc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 48    cold
+smH53 TSM.sh 17p_cnsc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
+erH53 TER.sh 17p_cnsc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
+brH53 TBR.sh 17p_cnsc_do clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold
+blH53 TBL.sh 17p_cnsc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 48    cold
 
-smH61 TSM.sh 17p_cnnsc_dm clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10     cold
-erH61 TER.sh 17p_cnnsc_dm clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -5+-5   cold
-brH61 TBR.sh 17p_cnnsc_dm clm_std^nl_urb_br 20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10+-10 cold
-blH61 TBL.sh 17p_cnnsc_dm clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10     cold
+smH41 TSM.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96    cold
+erH41 TER.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 cold
+brH41 TBR.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 cold
+blH41 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48    cold
 
-smPJ1 TSM.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
-erPJ1 TER.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
-brPJ1 TBR.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
-blPJ1 TBL.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+smH42 TSM.sh 17p_cnsc_dm clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96    cold
+erH42 TER.sh 17p_cnsc_dm clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 cold
+brH42 TBR.sh 17p_cnsc_dm clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 cold
+blH42 TBL.sh 17p_cnsc_dm clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48    cold
 
-smPJ2 TSM.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
-erPJ2 TER.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
-brPJ2 TBR.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
-blPJ2 TBL.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+smH43 TSM.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96    cold
+erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 cold
+brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 cold
+blH43 TBL.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48    cold
 
-smPJ3 TSM.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
-erPJ3 TER.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
-brPJ3 TBR.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
-blPJ3 TBL.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+smH61 TSM.sh 17p_cnsc_dh clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10     cold
+erH61 TER.sh 17p_cnsc_dh clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -5+-5   cold
+brH61 TBR.sh 17p_cnsc_dh clm_std^nl_urb_br 20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10+-10 cold
+blH61 TBL.sh 17p_cnsc_dh clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10     cold
 
-smPJ4 TSM.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
-erPJ4 TER.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
-brPJ4 TBR.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
-blPJ4 TBL.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+smHR1 TSM.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:3600 1.9x2.5 gx1v6@1850 -10     arb_ic
+erHR1 TER.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:3600 1.9x2.5 gx1v6@1850 -5+-5   arb_ic
+brHR1 TBR.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:3600 1.9x2.5 gx1v6@1850 -10+-10 arb_ic
+blHR1 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:3600 1.9x2.5 gx1v6@1850 -10     arb_ic
+
+smHJ1 TSM.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ1 TER.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ1 TBR.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ1 TBL.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+
+smHJ2 TSM.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ2 TER.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ2 TBR.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ2 TBL.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+
+smHJ3 TSM.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ3 TER.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ3 TBR.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ3 TBL.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+
+smHJ4 TSM.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ4 TER.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ4 TBR.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ4 TBL.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
 
 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30
 smI59 TSMcnspinup.sh 17p_cnadspinupsc_dm 17p_cnexitspinupsc_dm 17p_cnsc_dm clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30

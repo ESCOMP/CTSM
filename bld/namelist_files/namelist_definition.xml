@@ -23,6 +23,21 @@ Atmospheric CO2 molar ratio (by volume) (umol/mol)
 Type of CO2 feedback.
 </entry>
 
+<entry id="ice_runoff" type="logical" category="clm_physics"
+       group="clm_inparm">
+If true, river runoff will be split up into liquid and ice streams, otherwise ice runoff will be zero and all runoff directed to liquid stream
+</entry>
+
+<entry id="carbon_only" type="logical" category="clm_physics"
+       group="clm_inparm">
+If true, and CLMCN carbon-nitrogen model is on, Nitrogen will be prescribed rather than prognosed
+</entry>
+
+<entry id="scaled_harvest" type="logical" category="clm_physics"
+       group="clm_inparm">
+If true, harvesting will be scaled according to coeffecients determined by Johann Feddema, 2009
+</entry>
+
 <entry id="create_crop_landunit" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Flag to separate the vegetated landunit into a crop landunit and a natural vegetation landunit

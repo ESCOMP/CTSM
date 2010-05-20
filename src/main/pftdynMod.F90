@@ -252,8 +252,10 @@ contains
     call pftdyn_getdata(nt1, wtpft1, begg,endg,0,numpft)
     call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
     
+#ifdef CN
     ! Get harvest rate at the nt1 time
     call pftdyn_getharvest(nt1,begg,endg)
+#endif
 
     ! convert weights from percent to proportion
     do m = 0,numpft
@@ -372,7 +374,9 @@ contains
        end do
 
        call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
+#ifdef CN
        call pftdyn_getharvest(nt1,begg,endg)
+#endif
 
        do m = 0,numpft
           do g = begg,endg
@@ -502,6 +506,7 @@ contains
     
   end subroutine pftdyn_getdata
 
+#ifdef CN
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -515,6 +520,7 @@ contains
 !
 ! !USES:
     use clm_varpar  , only : lsmlon, lsmlat
+    use clm_varctl  , only : scaled_harvest
 !
 ! !ARGUMENTS:
     implicit none
@@ -546,23 +552,40 @@ contains
     
     call ncd_iolocal(ncid, 'HARVEST_VH2', 'read', arrayl, grlnd, start, count, status=ret)
     if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    if ( scaled_harvest )then
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.05_r8
+    else
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    end if
     
     call ncd_iolocal(ncid, 'HARVEST_SH1', 'read', arrayl, grlnd, start, count, status=ret)
     if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    if ( scaled_harvest )then
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.60_r8
+    else
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    endif
     
     call ncd_iolocal(ncid, 'HARVEST_SH2', 'read', arrayl, grlnd, start, count, status=ret)
     if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    if ( scaled_harvest )then
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.60_r8
+    else
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    endif
     
     call ncd_iolocal(ncid, 'HARVEST_SH3', 'read', arrayl, grlnd, start, count, status=ret)
     if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on pftdyn file' )
-    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    if ( scaled_harvest )then
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.05_r8
+    else
+       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
+    endif
 
     deallocate(arrayl)
 
   end subroutine pftdyn_getharvest
+#endif
 
 !-----------------------------------------------------------------------
 !BOP
@@ -2568,6 +2591,7 @@ end subroutine pftdyn_cnbal
   end subroutine pftwt_interp
 #endif
 
+#ifdef CN
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -3263,5 +3287,6 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
 
 end subroutine CNHarvestPftToColumn
 !-----------------------------------------------------------------------
+#endif
 
 end module pftdynMod

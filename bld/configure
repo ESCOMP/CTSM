@@ -200,7 +200,6 @@ GetOptions(
     "s|silent"                  => \$opts{'silent'},
     "smp!"                      => \$opts{'smp'},
     "spmd!"                     => \$opts{'spmd'},
-    "supln=s"                   => \$opts{'supln'}, 
     "target_os=s"               => \$opts{'target_os'},
     "test!"                     => \$opts{'test'},
     "usr_src=s"                 => \$opts{'usr_src'},
@@ -486,31 +485,6 @@ if ( ($exit_spinup eq "on") && ($ad_spinup eq "on") ) {
 EOF
 }
 if ($print>=2) { print "Using $exit_spinup for exit_spinup for cn mode.$eol"; }
-
-# SUPLN option for BGC/CN mode only
-if (defined $opts{'supln'}) {
-    $cfg_ref->set('supln', $opts{'supln'});
-}
-my $supln = $cfg_ref->get('supln');
-if ( ($supln eq "on") && ($bgc_mode ne "cn") && ($bgc_mode ne "cndv") ) {
-   die <<"EOF";
-** Cannot turn supln mode on -- without cn or cndv for bgc mode
-** 
-** Set the bgc mode by the following means from highest to lowest precedence:
-** * by the command-line option -bgc cn
-** * by a default configuration file, specified by -defaults 
-EOF
-}
-if ( ($supln eq "on") && (($exit_spinup eq "on") || ($ad_spinup eq "on")) ) {
-   die <<"EOF";
-** Cannot turn supln mode on -- when exit_spinup or ad_spinup mode is on.
-** 
-** Set the supln and spinup modes by the following means from highest to lowest precedence:
-** * by the command-line option -bgc cn
-** * by a default configuration file, specified by -defaults 
-EOF
-}
-if ($print>=2) { print "Using $supln for supplemental nitrogen for cn mode.$eol"; }
 
 # C13 option for BGC/CN mode only
 if (defined $opts{'c13'}) {
@@ -822,9 +796,6 @@ if ($bgc_mode eq 'cndv') {
 }
 if ($bgc_mode eq 'casa') { 
     $cfg_cppdefs .= " -DCASA -DCLAMP";
-}
-if ($supln eq 'on') { 
-    $cfg_cppdefs .= " -DSUPLN";
 }
 if ($nofire eq 'on') {
     $cfg_cppdefs .= " -DNOFIRE";

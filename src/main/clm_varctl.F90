@@ -39,20 +39,15 @@ module clm_varctl
   logical, public :: noland = .false.                                    ! true => no valid land points -- do NOT run
   character(len=256), public :: hostname = ' '                           ! Hostname of machine running on
   character(len=256), public :: username = ' '                           ! username of user running program
-  character(len=256), public :: source   = "Community Land Model CLM3.6" ! description of this source
+  character(len=256), public :: source   = "Community Land Model CLM4.0" ! description of this source
   character(len=256), public :: version  = " "                           ! version of program
   character(len=256), public :: conventions = "CF-1.0"                   ! dataset conventions
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Following will be removed..........................
 !
 ! Aerosol deposition file read (will be removed)
 !
   logical,            public :: set_caerdep_from_file = .false.  ! if reading in carbon aerosol deposition from file
   logical,            public :: set_dustdep_from_file = .false.  ! if reading in dust aerosol deposition from file
   character(len=256), public :: faerdep      = ' '               ! aerosol deposition file name
-! to here............................................
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 !
 ! Unit Numbers
 !
@@ -64,7 +59,7 @@ module clm_varctl
 !
 ! Output NetCDF files
 !
-  logical, public :: outnc_large_files = .false.        ! large file support for output NetCDF files
+  logical, public :: outnc_large_files = .true.         ! large file support for output NetCDF files
 !
 ! Run input files
 !
@@ -74,12 +69,9 @@ module clm_varctl
   character(len=256), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
   character(len=256), public :: fatmtopo   = ' '        ! topography on atm grid
   character(len=256), public :: flndtopo   = ' '        ! topography on lnd grid
-  character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name
-  character(len=256), public :: fndepdyn   = ' '        ! dynamic nitrogen deposition data file name
   character(len=256), public :: fpftdyn    = ' '        ! dynamic landuse dataset
   character(len=256), public :: fpftcon    = ' '        ! ASCII data file with PFT physiological constants
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
-  character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
   character(len=256), public :: fglcmask     = ' '      ! glacier mask file name
@@ -92,9 +84,15 @@ module clm_varctl
   logical, public :: allocate_all_vegpfts = .false.     ! true => allocate memory for all possible vegetated pfts on
                                                         ! vegetated landunit if at least one pft has nonzero weight
 !
-! BGC logic
+! BGC logic and datasets
 !
   character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
+#ifdef CN
+  logical,           public :: scaled_harvest = .false. ! true => scale CN harvesting according to coefficients determined 
+                                                        ! by Johann Feddema, circa 2009
+  character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name
+  character(len=256), public :: fndepdyn   = ' '        ! dynamic nitrogen deposition data file name
+#endif
 !
 ! Physics
 !
@@ -116,10 +114,14 @@ module clm_varctl
   logical,  public :: single_column = .false.           ! true => single column mode
   real(r8), public:: scmlat         = rundef            ! single column lat
   real(r8), public:: scmlon         = rundef            ! single column lon
+#ifdef RTM
 !
 ! Rtm control variables
 !
-  integer, public :: rtm_nsteps = iundef                ! if > 1, average rtm over rtm_nsteps time steps
+  character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
+  integer,            public :: rtm_nsteps = iundef     ! if > 1, average rtm over rtm_nsteps time steps
+  logical,            public :: ice_runoff = .true.     ! true => runoff should be split into liquid and ice otherwise just liquid
+#endif
 !
 ! Decomp control variables
 !
@@ -314,8 +316,10 @@ contains
 
        ! Check on nitrogen deposition dataset
 
+#ifdef CN
        if (fndepdat /= ' ' .and. fndepdyn /= ' ') &
           call shr_sys_abort( subname//' ERROR: only one of fndepdat or fndepdyn can be defined' )
+#endif
 
        ! Model physics
 
