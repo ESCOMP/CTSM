@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module histFldsMod
 
 !-----------------------------------------------------------------------
@@ -655,15 +652,15 @@ contains
     call hist_addfld1d (fname='ZWT',  units='m',  &
          avgflag='A', long_name='water table depth', &
          ptr_col=clm3%g%l%c%cws%zwt, c2l_scale_type='urbanh')
-    call hist_addfld1d (fname='FROST_TABLE',  units='m',  &
-         avgflag='A', long_name='frost table depth', &
-         ptr_col=clm3%g%l%c%cws%frost_table, c2l_scale_type='urbanh')
-    call hist_addfld1d (fname='ZWT_PERCH',  units='m',  &
-         avgflag='A', long_name='perched water table depth', &
-         ptr_col=clm3%g%l%c%cws%zwt_perched, c2l_scale_type='urbanh')
-    call hist_addfld1d (fname='QDRAI_PERCH',  units='mm/s',  &
-         avgflag='A', long_name='perched wt drainage', &
-         ptr_col=clm3%g%l%c%cwf%qflx_drain_perched, c2l_scale_type='urbanf')
+    !call hist_addfld1d (fname='FROST_TABLE',  units='m',  &
+    !     avgflag='A', long_name='frost table depth', &
+    !     ptr_col=clm3%g%l%c%cws%frost_table, c2l_scale_type='urbanh')
+    !call hist_addfld1d (fname='ZWT_PERCH',  units='m',  &
+    !     avgflag='A', long_name='perched water table depth', &
+    !     ptr_col=clm3%g%l%c%cws%zwt_perched, c2l_scale_type='urbanh')
+    !call hist_addfld1d (fname='QDRAI_PERCH',  units='mm/s',  &
+    !     avgflag='A', long_name='perched wt drainage', &
+    !     ptr_col=clm3%g%l%c%cwf%qflx_drain_perched, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='WA',  units='mm',  &
          avgflag='A', long_name='water in the unconfined aquifer', &
@@ -719,7 +716,7 @@ contains
 
     call hist_addfld1d (fname='QTOPSOIL',  units='mm/s',  &
          avgflag='A', long_name='water input to surface', &
-         ptr_col=clm3%g%l%c%cwf%qflx_top_soil, c2l_scale_type='urbanf')
+         ptr_col=clm3%g%l%c%cwf%qflx_top_soil, c2l_scale_type='urbanf', default='inactive')
 
     call hist_addfld1d (fname='QINFL',  units='mm/s',  &
          avgflag='A', long_name='infiltration', &

@@ -1050,11 +1050,11 @@ type, public :: column_pstate_type
    logical , pointer :: do_capsnow(:)         !true => do snow capping
    real(r8), pointer :: snowdp(:)             !snow height (m)
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
-   real(r8), pointer :: res_sno(:) 	      !residual snow when snl -> 0
-   real(r8), pointer :: topo_ndx(:)           !gridcell topographic index
-   real(r8), pointer :: topo_slope(:)         !gridcell topographic slope
-   real(r8), pointer :: var_track(:)          !generic variable to track...
-   real(r8), pointer :: var_track2(:)         !generic variable to track...
+   !real(r8), pointer :: res_sno(:) 	      !residual snow when snl -> 0
+   !real(r8), pointer :: topo_ndx(:)           !gridcell topographic index
+   !real(r8), pointer :: topo_slope(:)         !gridcell topographic slope
+   !real(r8), pointer :: var_track(:)          !generic variable to track...
+   !real(r8), pointer :: var_track2(:)         !generic variable to track...
    real(r8), pointer :: zi(:,:)               !interface level below a "z" level (m) (-nlevsno+0:nlevgrnd) 
    real(r8), pointer :: dz(:,:)               !layer thickness (m)  (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: z(:,:)                !layer depth (m) (-nlevsno+1:nlevgrnd) 
@@ -1188,8 +1188,8 @@ type, public :: column_wstate_type
    real(r8), pointer :: soilbeta(:)           !factor that reduces ground evaporation L&P1992(-)
    real(r8) ,pointer :: soilalpha_u(:)        !urban factor that reduces ground saturated specific humidity (-)
    real(r8), pointer :: zwt(:)                !water table depth
-   real(r8), pointer :: frost_table(:)                !frost table depth
-   real(r8), pointer :: zwt_perched(:)                !perched water table depth
+   !real(r8), pointer :: frost_table(:)                !frost table depth
+   !real(r8), pointer :: zwt_perched(:)                !perched water table depth
    real(r8), pointer :: fcov(:)               !fractional impermeable area
    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (mm)
    real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
@@ -1315,8 +1315,8 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_surf(:)	! surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_drain(:) 	! sub-surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_top_soil(:)! net water input into soil from top (mm/s)
-   real(r8), pointer :: qflx_snow_out(:)   !net water output from snow column
-   real(r8), pointer :: qflx_drain_perched(:) 	! sub-surface runoff from perched wt (mm H2O /s)
+   !real(r8), pointer :: qflx_snow_out(:)   !net water output from snow column
+   !real(r8), pointer :: qflx_drain_perched(:) 	! sub-surface runoff from perched wt (mm H2O /s)
    real(r8), pointer :: qflx_snomelt(:) ! snow melt (mm H2O /s)
    real(r8), pointer :: qflx_qrgwl(:) 	! qflx_surf at glaciers, wetlands, lakes
    real(r8), pointer :: qflx_runoff(:) 	! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)

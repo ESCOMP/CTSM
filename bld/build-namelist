@@ -17,6 +17,7 @@
 # Date        Contributor      Modification
 # -------------------------------------------------------------------------------------------
 # 2009-01-20  Vertenstein      Original version
+# 2010-04-27  Kluzek           Add ndep streams capability
 #--------------------------------------------------------------------------------------------
 
 use strict;
@@ -62,6 +63,8 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
+     -ndepsrc "value"         If bgc=cn or bgc=cndv, Nitrogen deposition will be from streams or data
+                              (i.e. default, none, stream, data)
      -rcp "value"             Representative concentration pathway (rcp) to use for future scenarios.
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
@@ -151,6 +154,7 @@ my %opts = ( config                => $cfg_cache,
 	     silent                => 0,
              datm_source           => "default",
              mask                  => "default",
+             ndepsrc               => "default",
 	     test                  => 0,
 	    );
 
@@ -166,6 +170,7 @@ GetOptions(
     "datm_data_dir=s"           => \$opts{'datm_data_dir'},
     "datm_domain=s"             => \$opts{'datm_domain'},
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
+    "ndepsrc=s"                 => \$opts{'ndepsrc'},
     "drydep"                    => \$opts{'drydep'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
@@ -366,6 +371,171 @@ if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; 
 my $TRUE  = '\.true\.';
 my $FALSE = '\.false\.';
 
+# Determine mode from config file
+
+my $mode = $cfg->get('mode');
+if ($print>=2) { print "CLM mode is $mode $eol"; }
+
+# Get BGC mode
+my $bgc = $cfg->get('bgc');
+
+# Get max number of Plant function types
+my $maxpft = $cfg->get('maxpft');
+
+#-----------------------------------------------------------------------------------------------
+
+# Process the user input in order of precedence.  At each point we'll only add new
+# values to the namelist and not overwrite previously specified specified values which
+# have higher precedence.
+
+#
+# First get the command-line specified overall values or their defaults
+# Obtain default values for the following build-namelist input arguments
+# : res, mask, rcp, lnd_res, sim_year, sim_year_range, and ndepsrc
+#
+
+
+my $val;
+my $res;
+my $group;
+my $var;
+
+# resolution
+$var = "res";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val= $defaults->get_value($var);
+}
+$res = $val;
+if ($print>=2) { print "CLM atm resolution is $res $eol"; }
+$opts{$var} = $val;
+$val = &quote_string( $res );
+$group = $definition->get_group_name($var);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   }
+}
+
+# mask
+$var = "mask";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    my %opts = ( 'hgrid'=>$res );
+    $val = $defaults->get_value($var, \%opts );
+}
+my $mask = $val;
+$opts{'mask'} = $mask;
+$val = &quote_string( $val );
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "CLM land mask is $mask $eol"; }
+
+# representative concentration pathway
+$var = "rcp";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val = $defaults->get_value($var);
+}
+my $rcp = $val;
+$opts{'rcp'} = $rcp;
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "CLM future scenario representative concentration is $rcp $eol"; }
+
+# simulation year and simulation year range
+my $var = "sim_year";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val = $defaults->get_value($var);
+} 
+my $sim_year_range = $defaults->get_value("sim_year_range");
+my $sim_year       = $val;
+if ( $val =~ /([0-9]+)-([0-9]+)/ ) { 
+   $sim_year       = $1; 
+   $sim_year_range = $val;
+}
+$val = $sim_year;
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val );
+if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
+}
+$nl->set_variable_value($group, $var, $val );
+if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
+
+my $var = "sim_year_range";
+$val = $sim_year_range;
+if ( $val ne "constant" ) {
+   $opts{$var}   = $val;
+   $group = $definition->get_group_name($var);
+   $nl->set_variable_value($group, $var, $val );
+   if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
+   }
+   $val = "'".$defaults->get_value($var)."'";
+   $nl->set_variable_value($group, $var, $val );
+   if ($print>=2) { print "CLM sim_year_range is $sim_year_range $eol"; }
+}
+
+# land resolution
+my $lnd_res;
+if ($opts{'lnd_res'} eq "default") { 
+    $lnd_res = $res;
+} else {
+    $lnd_res = $opts{'lnd_res'};
+}
+if ($print>=2) { print "CLM land resolution is $lnd_res $eol"; }
+$opts{'lnd_res'} = $lnd_res;
+my $var = "res";
+my $val = &quote_string( $res );
+my $group = $definition->get_group_name($var);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+
+# Nitrogen Deposition source
+$var = "ndepsrc";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    my %opts = ( 'hgrid'=>$lnd_res );
+    $val = $defaults->get_value($var, \%opts );
+}
+my $ndepsrc = $val;
+if ($print>=2) { print "CLM Nitrogen Deposition source is $ndepsrc $eol"; }
+$opts{$var} = $val;
+$val = &quote_string( $val );
+$group = $definition->get_group_name($var);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+#
+# If bgc=CN/CNDV and NOT stream or data somethings wrong
+#
+if ( $bgc =~ /^cn/ && $ndepsrc ne "stream" && $ndepsrc ne "data" ) {
+   die "$ProgName ERROR:: ndepsrc MUST be stream or data when bgc is cn or cndv!\n";
+} elsif ( $bgc !~ /^cn/ && $ndepsrc ne "none" ) {
+   die "$ProgName ERROR:: ndepsrc MUST be none when bgc is NOT equal to cn or cndv!\n";
+}
+
 #-----------------------------------------------------------------------------------------------
 
 # Process the user input in order of precedence.  At each point we'll only add new
@@ -380,11 +550,18 @@ if (defined $opts{'use_case'}) {
     # Create a new NamelistDefaults object.
     my $uc_defaults = Build::NamelistDefaults->new("$opts{'use_case_dir'}/$opts{'use_case'}.xml", $cfg);
 
+    my %settings;
+    $settings{'res'}            = $res;
+    $settings{'rcp'}            = $rcp;
+    $settings{'ndepsrc'}        = $ndepsrc;
+    $settings{'mask'}           = $mask;
+    $settings{'sim_year'}       = $sim_year;
+    $settings{'sim_year_range'} = $sim_year_range;
     # Loop over the variables specified in the use case.
     # Add each one to the namelist.
     my @vars = $uc_defaults->get_variable_names();
     foreach my $var (@vars) {
-	my $val = $uc_defaults->get_value($var);
+	my $val = $uc_defaults->get_value($var, \%settings );
 
 	if ( defined($val) ) {
             print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
@@ -432,137 +609,7 @@ if (defined $opts{'infile'}) {
     $nl->merge_nl($nl_infile_valid);
 }
 
-
 #-----------------------------------------------------------------------------------------------
-
-my $val;
-
-# Determine mode from config file
-
-my $mode = $cfg->get('mode');
-if ($print>=2) { print "CLM mode is $mode $eol"; }
-
-# Get BGC mode
-my $bgc = $cfg->get('bgc');
-
-# Get max number of Plant function types
-my $maxpft = $cfg->get('maxpft');
-
-# Obtain default values for the following build-namelist input arguments
-
-my $val;
-my $res;
-my $group;
-my $var;
-
-$var = "res";
-if ( $opts{$var} ne "default" ) {
-    $val = $opts{$var};
-} else {
-    $val= $defaults->get_value($var);
-}
-$res = $val;
-if ($print>=2) { print "CLM atm resolution is $res $eol"; }
-$opts{$var} = $val;
-$val = &quote_string( $res );
-$group = $definition->get_group_name($var);
-#$nl->set_variable_value($group, $var, $val);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
-      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-   }
-}
-
-$var = "mask";
-if ( $opts{$var} ne "default" ) {
-    $val = $opts{$var};
-} else {
-    my %opts = ( 'hgrid'=>$res );
-    $val = $defaults->get_value($var, \%opts );
-}
-my $mask = $val;
-$opts{'mask'} = $mask;
-$val = &quote_string( $val );
-$group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-}
-if ($print>=2) { print "CLM land mask is $mask $eol"; }
-
-$var = "rcp";
-if ( $opts{$var} ne "default" ) {
-    $val = $opts{$var};
-} else {
-    $val = $defaults->get_value($var);
-}
-my $rcp = $val;
-$opts{'rcp'} = $rcp;
-$group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-}
-if ($print>=2) { print "CLM future scenario representative concentration is $rcp $eol"; }
-
-my $var = "sim_year";
-if ( $opts{$var} ne "default" ) {
-    $val = $opts{$var};
-} else {
-    $val = $defaults->get_value($var);
-} 
-my $sim_year_range = $defaults->get_value("sim_year_range");
-my $sim_year       = $val;
-if ( $val =~ /([0-9]+)-([0-9]+)/ ) { 
-   $sim_year       = $1; 
-   $sim_year_range = $val;
-}
-$val = $sim_year;
-$group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val );
-if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
-}
-$nl->set_variable_value($group, $var, $val );
-if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
-
-my $var = "sim_year_range";
-$val = $sim_year_range;
-if ( $val ne "constant" ) {
-   $opts{$var}   = $val;
-   $group = $definition->get_group_name($var);
-   $nl->set_variable_value($group, $var, $val );
-   if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
-   }
-   $val = "'".$defaults->get_value($var)."'";
-   $nl->set_variable_value($group, $var, $val );
-   if ($print>=2) { print "CLM sim_year_range is $sim_year_range $eol"; }
-}
-
-my $lnd_res;
-if ($opts{'lnd_res'} eq "default") { 
-    $lnd_res = $res;
-} else {
-    $lnd_res = $opts{'lnd_res'};
-}
-if ($print>=2) { print "CLM land resolution is $lnd_res $eol"; }
-$opts{'lnd_res'} = $lnd_res;
-my $var = "res";
-my $val = &quote_string( $res );
-my $group = $definition->get_group_name($var);
-#$nl->set_variable_value($group, $var, $val);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
-      die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-   }
-}
 
 # Process the -clm_usr_name argument
 if (defined $opts{'clm_usr_name'}) {
@@ -898,6 +945,23 @@ if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
 }
 
+# If should use ndep streams or not, make sure agrees with ndepsrc value
+if ( $bgc =~ /^cn/ ) {
+   my $use_ndep = $nl->get_value('use_ndepstream');
+   if ( defined($use_ndep) ) {
+      if ( $use_ndep =~ /$TRUE/i ) {
+         if ( $ndepsrc ne "stream" ) {
+            die "$ProgName ERROR:: use_ndepstream is incompatible with ndepsrc value from command line.\n";
+         }
+      } else {
+         if ( $ndepsrc ne "data" ) {
+            die "$ProgName ERROR:: use_ndepstream is incompatible with ndepsrc value from command line.\n";
+         }
+      }
+   }
+   add_default($nl, 'use_ndepstream', 'hgrid'=>$lnd_res, 'ndepsrc'=>$ndepsrc );
+}
+
 if ( $rtm eq "off" ) {
    if (defined $nl->get_value('frivinp_rtm')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
@@ -917,19 +981,20 @@ add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
 #
 # Deal with options that the user has said are required...
 #
-my $demand           = $nl->get_value('clm_demand');
-$demand              =~ s/\'//g;   # Remove quotes
-if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
-my $demand           = $defaults->get_value('clm_demand');
-$demand              =~ s/\'//g;   # Remove quotes
-if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
-my @demandlist       = split( ",", $opts{'clm_demand'} );
-my %settings         = {};
+my %settings                = {};
 $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
+$settings{'ndepsrc'}        = $ndepsrc;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
 $settings{'rcp'}            = $rcp;
+my $demand           = $nl->get_value('clm_demand');
+$demand              =~ s/\'//g;   # Remove quotes
+if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
+my $demand           = $defaults->get_value('clm_demand', \%settings);
+$demand              =~ s/\'//g;   # Remove quotes
+if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
+my @demandlist       = split( ",", $opts{'clm_demand'} );
 foreach my $item ( @demandlist ) {
    if ( $item eq "null" ) { next; }
    add_default($nl, $item, %settings );
@@ -942,11 +1007,6 @@ $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/'//;
 $fpftdyn =~ s/"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
-my $fndepdyn = $nl->get_value('fndepdyn');
-$fndepdyn =~ s!(.*)/!!;
-$fndepdyn =~ s/'//;
-$fndepdyn =~ s/"//;
-if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
 add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year );
 my $fsurdat = $nl->get_value( 'fsurdat' );
 
@@ -969,16 +1029,16 @@ if (not defined $nl->get_value('finidat')) {
     if ( $clm_start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'fndepdyn'=>$fndepdyn, 
+                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
@@ -987,18 +1047,78 @@ if (not defined $nl->get_value('finidat')) {
     }
 }
 
-
 #
-# If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
+# Nitrogen deposition for bgc=CN
 #
-if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
-   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
-}
-if ( ($bgc eq "cndv") && not defined $nl->get_value('fndepdyn') ) {
-   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
-}
-if ( defined($nl->get_value('fndepdat')) && defined($nl->get_value('fndepdyn')) ) {
-   die "$ProgName ERROR:: Both fndepdat AND fndepdyn are set, must only set one!\n";
+if ( $bgc =~ /^cn/ ) {
+   ###############################
+   # namelist group: ndepdyn_nml #
+   ###############################
+   if ( $ndepsrc eq "stream" ) {
+      add_default($nl, 'stream_year_first_ndep',   'sim_year'=>$sim_year,
+                  'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'stream_year_last_ndep',    'sim_year'=>$sim_year,
+                  'sim_year_range'=>$sim_year_range);
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
+         add_default($nl, 'model_year_align_ndep',    'sim_year'=>$sim_year,
+                     'sim_year_range'=>$sim_year_range);
+      }
+      add_default($nl, 'stream_fldfilename_ndep',  'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
+      #
+      # Make sure that neither ndepdat nor fndepdyn are set
+      #
+      if ( defined($nl->get_value('fndepdat')) || defined($nl->get_value('fndepdyn')) ) {
+         die "$ProgName ERROR:: When ndepsrc is stream neither fndepdat nor fndepdyn can be set!\n";
+      }
+   #
+   # fndepdat and fndepdyn
+   #
+   } elsif ( $ndepsrc eq "data" ) {
+      #
+      # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
+      #
+      if ( not defined $nl->get_value('fndepdyn') ) {
+         add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
+      }
+      #
+      # Check that both fndepdat and fndepdyn are NOT set
+      #
+      if ( defined($nl->get_value('fndepdat')) && defined($nl->get_value('fndepdyn')) ) {
+         die "$ProgName ERROR:: Both fndepdat AND fndepdyn are set, must only set one!\n";
+      }
+      #
+      # Make sure that ndepdyn_nml settings are NOT set
+      #
+      if ( defined($nl->get_value('stream_year_first_ndep')) ||
+           defined($nl->get_value('stream_year_last_ndep'))  ||
+           defined($nl->get_value('model_year_align_ndep'))  ||
+           defined($nl->get_value('stream_fldfilename_ndep'))
+      ) {
+         die "$ProgName ERROR:: When ndepsrc is data none of: stream_year_first_ndep," .
+              "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" . 
+              " can be set!\n";
+      }
+   }
+#
+# If bgc is NOT CN/CNDV then make sure none of the ndep settings are set
+#
+} else {
+  if ( defined($nl->get_value('stream_year_first_ndep')) ||
+       defined($nl->get_value('stream_year_last_ndep'))  ||
+       defined($nl->get_value('model_year_align_ndep'))  ||
+       defined($nl->get_value('stream_fldfilename_ndep'))
+  ) {
+     die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
+          "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" . 
+          " can be set!\n";
+  }
+  #
+  # Make sure that neither ndepdat nor fndepdyn are set
+  #
+  if ( defined($nl->get_value('fndepdat')) || defined($nl->get_value('fndepdyn')) ) {
+     die "$ProgName ERROR:: When bgc is NOT CN or CNDV neither fndepdat nor fndepdyn can be set!\n";
+  }
 }
 if ( ($bgc ne "cn") && ($bgc ne "cndv") && (defined $nl->get_value('fndepdyn') || defined($nl->get_value('fndepdat'))) ) {
    die "$ProgName ERROR:: fndepdat or fndepdyn are set, but neither CN nor CNDV is active!\n";
@@ -1340,6 +1460,14 @@ if ($opts{'drydep'} ) {
     $outfile = "$opts{'dir'}/drv_flds_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing drydep_inparm namelist to $outfile $eol"; }
+}
+
+#ndepdyn_nml namelist
+if ( $ndepsrc eq "stream" ) {
+    @groups = qw(ndepdyn_nml);
+    $outfile = "$opts{'dir'}/lnd_in";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note", append=>1 );
+    if ($print>=2) { print "Appending ndepdyn_nml namelist to $outfile $eol"; }
 }
 
 #-----------------------------------------------------------------------------------------------

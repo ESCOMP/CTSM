@@ -61,8 +61,8 @@ following should be filled in:
    climate in enough detail that it(they) could be reproduced, i.e.,
    - source tag (all code used must be in the repository):
    - platform/compilers:
-   - configuration (CPP ifdefs):
-   - build-namelist command (or complete namelist):
+   - compset (and additional configure options):
+   - build-namelist options (or complete namelist):
    - MSS location of output:
 
    MSS location of control simulations used to validate new climate:

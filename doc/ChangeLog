@@ -1,4 +1,189 @@
 ===============================================================
+Tag name:  clm4_0_05
+Originator(s):  erik (erik)
+Date: Tue May 25 15:13:30 MDT 2010
+One-line Summary: Move Nitrogen deposition stream branch to trunk
+
+Purpose of changes:
+
+Move branch that treats ndepdyn files as streams to trunk. Change csm_share to have a
+simpler normalization for coszen scaling (from dlawren/kauff in datm/csm_share). Fix
+fragile code in clm_atmlnd, from Mariana. Update to datm8 that can set streams for
+aerosols. Fix template so that CLM_BLDNML_OPTS is active.
+
+Bugs fixed (include bugzilla ID):
+                                 1161 (New history fields added that should NOT be)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1162 (OpenMP bug with dry-deposition code in clm)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Add -ndepsrc option to build-namelist
+
+List any changes to the defaults for the boundary datasets: 
+   Add new datasets for Nitrogen deposition streams files (same as fndepdyn files)
+   Remove fndepdat/fndepdyn files for resolutions other than f09 and f19
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm, csm_share
+   scripts   to scripts4_100524b
+   drv       to drvseq3_1_23
+   datm      to datm8_100420
+   csm_share to share3_100423
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>>>> Handle Nitrogen deposition streams
+A    models/lnd/clm/src/main/ndepStreamMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>> Add some CN drydep tests for hybrid/open-MP
+M    models/lnd/clm/test/system/tests_pretag_jaguar
+M    models/lnd/clm/test/system/input_tests_master
+
+>>>>>>>>>>>> Add ability to handle ndep streams namelists
+>>>>>>>>>>>> Add ability to set CLM_BLDNML_OPTS
+M    models/lnd/clm/bld/build-namelist
+M    models/lnd/clm/bld/clm.cpl7.template
+M    models/lnd/clm/bld/namelist_files/namelist_definition.xml
+M    models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+>>>>>>>>>>>> Set ndepstreams variables if ndepsrc=stream, otherwise set fndep files
+M    models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+M    models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+
+>>>>>>>>>>>> Handle new ndep streams namelist and namelist variables
+>>>>>>>>>>>> Remove misc.h and preproc.h #includes
+M    models/lnd/clm/src/main/clm_comp.F90 ---------- Renumber starting at 1 not 0
+M    models/lnd/clm/src/main/clm_initializeMod.F90 - Handle initialization both
+            for ndep streams and old ndep handling
+M    models/lnd/clm/src/main/aerdepMod.F90 --------- Check if allocated before allocate
+M    models/lnd/clm/src/main/iniTimeConst.F90 ------ Move setting of ndep out of here
+M    models/lnd/clm/src/main/clm_atmlnd.F90 -------- Remove fragile code
+M    models/lnd/clm/src/main/controlMod.F90 -------- Handle use_ndepstream
+M    models/lnd/clm/src/main/clm_varctl.F90 -------- Add use_ndepstream
+M    models/lnd/clm/src/main/clm_driver.F90 -------- Add ndep_interp if use_ndepstream
+             and first and last years are different
+M    models/lnd/clm/src/main/ndepFileMod.F90 ------- Make fndepdat optional input so
+             can do this way (old way) or ndep streams (new way).
+M    models/lnd/clm/src/main/clm_glclnd.F90 -------- Change order of vars from Bill Lipscomb
+
+M    models/lnd/clm/src/main/areaMod.F90 - Add interfaces for MCT datatypes
+
+M    models/lnd/clm/src/main/clmtypeInitMod.F90 - Remove unfilled history vars
+M    models/lnd/clm/src/main/clmtype.F90 -------- Remove unfilled history vars
+M    models/lnd/clm/src/main/histFldsMod.F90 ---- Remove unfilled history vars, add QTOPSOIL
+         as an optional history variable.
+M    models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 - Handle fragile code mapping with MCT
+M    models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 --- Handle fragile code mapping with MCT
+
+Summary of testing:
+
+  bluefire: All PASS except...
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+032 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+037 blH41 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48 cold FAIL! rc= 7
+049 blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold ..........FAIL! rc= 7
+055 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+056 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+057 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+058 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+040 blK74 TBL.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670 arb_ic ............FAIL! rc= 7
+048 blHQ4 TBL.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -150 cold ........FAIL! rc= 7
+  bluefire/CCSM testing: All PASS except...
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_04
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_04
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_04
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_04
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare_hist.clm4_0_04
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_04
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_04
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_04
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm4_0_04
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_04
+BFAIL ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_04
+FAIL  ERI.f19_g16.IG.bluefire
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_04
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_05
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_04
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_04
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_04
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_04
+FAIL  PST.f10_f10.I8520CN.bluefire.compare.clm4_0_04
+FAIL  PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_04
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 10+38 cold ....FAIL! rc= 13
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_04
+
+Changes answers relative to baseline: Yes!
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+        ndepaer01_clm3_7_15 + SnowHydrology changes
+   - platform/compilers: IBM
+   - compset (and additional configure options): I1850CN
+   - build-namelist options (or complete namelist): -ndepsrc stream
+
+   MSS location of control simulations used to validate new climate:
+
+  /OLESON/csm/ccsm4_0_beta52_ndepaer
+  /OLESON/csm/ccsm4_0_beta52_ndepaertrans
+   
+===============================================================
+===============================================================
 Tag name:  clm4_0_04
 Originator(s):  erik (erik)
 Date: Thu May 20 10:57:54 MDT 2010

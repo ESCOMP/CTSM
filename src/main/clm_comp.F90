@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_comp
 !---------------------------------------------------------------------------
 !BOP
@@ -28,9 +25,9 @@ module clm_comp
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
-  public clm_init0   ! Phase 1 initialization, namelist, setup grid etc.
-  public clm_init1   ! Phase 2 initialization, initialize parameterizations
-  public clm_init2   ! Phase 3 initialization, initialize albedos
+  public clm_init1   ! Phase 1 initialization, namelist, setup grid etc.
+  public clm_init2   ! Phase 2 initialization, initialize parameterizations
+  public clm_init3   ! Phase 3 initialization, initialize albedos
   public clm_run1    ! Phase 1 run
   public clm_run2    ! Phase 2 run
 !EOP
@@ -41,10 +38,10 @@ contains
 !---------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: clm_init0
+! !IROUTINE: clm_init1
 !
 ! !INTERFACE:
-  subroutine clm_init0( )
+  subroutine clm_init1( )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -63,41 +60,9 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    call t_startf('clm_init0')
+    call t_startf('clm_init1')
     call initialize1( )
-    call t_stopf('clm_init0')
-
-  end subroutine clm_init0
-
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_init1
-!
-! !INTERFACE:
-  subroutine clm_init1( )
-!
-! !DESCRIPTION:
-! Initialize land surface model and obtain relevant atmospheric model arrays
-! back from (i.e. albedos, surface temperature and snow cover over land).
-!
-! !USES:
-    use clm_initializeMod,   only : initialize2
-!
-! !ARGUMENTS:
-!
-! !LOCAL VARIABLES:
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
-
-   call t_startf('clm_init1')
-   call initialize2()
-   call t_stopf('clm_init1')
+    call t_stopf('clm_init1')
 
   end subroutine clm_init1
 
@@ -108,6 +73,39 @@ contains
 !
 ! !INTERFACE:
   subroutine clm_init2( )
+!
+! !DESCRIPTION:
+! Initialize land surface model and obtain relevant atmospheric model arrays
+! back from (i.e. albedos, surface temperature and snow cover over land).
+!
+! !USES:
+    use clm_initializeMod, only : initialize2
+    use mct_mod
+!
+! !ARGUMENTS    
+    implicit none
+!
+! !LOCAL VARIABLES:
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!-----------------------------------------------------------------------
+
+   call t_startf('clm_init2')
+   call initialize2( )
+   call t_stopf('clm_init2')
+
+  end subroutine clm_init2
+
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: clm_init3
+!
+! !INTERFACE:
+  subroutine clm_init3( )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -143,7 +141,7 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    call t_startf('clm_init2')
+    call t_startf('clm_init3')
     if (get_nstep() == 0 .or. nsrest == 0) then
 
        ! Initialize albedos (correct pft filters are needed)
@@ -182,9 +180,9 @@ contains
        call t_stopf('init_map2gc')
 
     end if
-    call t_stopf('clm_init2')
+    call t_stopf('clm_init3')
 
-  end subroutine clm_init2
+  end subroutine clm_init3
 
 !---------------------------------------------------------------------------
 !BOP

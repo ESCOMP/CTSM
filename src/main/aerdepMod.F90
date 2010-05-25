@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 module aerdepMOD
 
 !-----------------------------------------------------------------------
@@ -154,14 +152,16 @@ contains
 
     if ( set_dustdep_from_file )then
 
-       allocate(dstx01wd2t(begg:endg,2))
-       allocate(dstx01dd2t(begg:endg,2))
-       allocate(dstx02wd2t(begg:endg,2))
-       allocate(dstx02dd2t(begg:endg,2))
-       allocate(dstx03wd2t(begg:endg,2))
-       allocate(dstx03dd2t(begg:endg,2))
-       allocate(dstx04wd2t(begg:endg,2))
-       allocate(dstx04dd2t(begg:endg,2))
+       if(.not.allocated(dstx01wd2t)) then
+          allocate(dstx01wd2t(begg:endg,2))
+          allocate(dstx01dd2t(begg:endg,2))
+          allocate(dstx02wd2t(begg:endg,2))
+          allocate(dstx02dd2t(begg:endg,2))
+          allocate(dstx03wd2t(begg:endg,2))
+          allocate(dstx03dd2t(begg:endg,2))
+          allocate(dstx04wd2t(begg:endg,2))
+          allocate(dstx04dd2t(begg:endg,2))
+       endif
 
        if (ier /= 0) call endrun( 'aerdepini allocation error' )
 

@@ -31,4 +31,14 @@ determine default values for namelists.
 <!-- Default representative concentration pathway for future scenarios -->
 <rcp>-999.9</rcp>
 
+<!-- Default Nitrogen deposition source type -->
+<ndepsrc bgc="none"                  >none</ndepsrc>
+<ndepsrc bgc="casa"                  >none</ndepsrc>
+<ndepsrc bgc="cn"   hgrid="1.9x2.5"  >data</ndepsrc>
+<ndepsrc bgc="cndv" hgrid="1.9x2.5"  >data</ndepsrc>
+<ndepsrc bgc="cn"   hgrid="0.9x1.25" >data</ndepsrc>
+<ndepsrc bgc="cndv" hgrid="0.9x1.25" >data</ndepsrc>
+<ndepsrc bgc="cn"                    >stream</ndepsrc>
+<ndepsrc bgc="cndv"                  >stream</ndepsrc>
+
 </namelist_defaults>

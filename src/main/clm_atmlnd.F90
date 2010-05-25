@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_atmlnd
 
 !-----------------------------------------------------------------------
@@ -29,71 +26,63 @@ module clm_atmlnd
 !----------------------------------------------------
 ! atmosphere -> land variables structure
 !----------------------------------------------------
-type atm2lnd_type
-  real(r8), pointer :: forc_t(:)       !atmospheric temperature (Kelvin)
-  real(r8), pointer :: forc_u(:)       !atm wind speed, east direction (m/s)
-  real(r8), pointer :: forc_v(:)       !atm wind speed, north direction (m/s)
-  real(r8), pointer :: forc_wind(:)    !atmospheric wind speed   
-  real(r8), pointer :: forc_q(:)       !atmospheric specific humidity (kg/kg)
-  real(r8), pointer :: forc_hgt(:)     !atmospheric reference height (m)
-  real(r8), pointer :: forc_hgt_u(:)   !obs height of wind [m] (new)
-  real(r8), pointer :: forc_hgt_t(:)   !obs height of temperature [m] (new)
-  real(r8), pointer :: forc_hgt_q(:)   !obs height of humidity [m] (new)
-  real(r8), pointer :: forc_pbot(:)    !atmospheric pressure (Pa)
-  real(r8), pointer :: forc_th(:)      !atm potential temperature (Kelvin)
-  real(r8), pointer :: forc_vp(:)      !atmospheric vapor pressure (Pa)
-  real(r8), pointer :: forc_rho(:)     !density (kg/m**3)
-  real(r8), pointer :: forc_rh(:)      !atmospheric relative humidity (%)
-  real(r8), pointer :: forc_psrf(:)    !surface pressure (Pa)
-  real(r8), pointer :: forc_pco2(:)    !CO2 partial pressure (Pa)
-  real(r8), pointer :: forc_lwrad(:)   !downwrd IR longwave radiation (W/m**2)
-  real(r8), pointer :: forc_solad(:,:) !direct beam radiation (numrad)
-                                       !(vis=forc_sols , nir=forc_soll )
-  real(r8), pointer :: forc_solai(:,:) !diffuse radiation (numrad)
-                                       !(vis=forc_solsd, nir=forc_solld)
-  real(r8), pointer :: forc_solar(:)   !incident solar radiation
-  real(r8), pointer :: forc_rain(:)    !rain rate [mm/s]
-  real(r8), pointer :: forc_snow(:)    !snow rate [mm/s]
-  real(r8), pointer :: forc_ndep(:)    !nitrogen deposition rate (gN/m2/s)
-  real(r8), pointer :: rainf(:)        !ALMA rain+snow [mm/s]
-#if (defined C13)
-  ! 4/14/05: PET
-  ! Adding isotope code
-  real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
+  type atm2lnd_type
+     real(r8), pointer :: forc_t(:)       !atmospheric temperature (Kelvin)
+     real(r8), pointer :: forc_u(:)       !atm wind speed, east direction (m/s)
+     real(r8), pointer :: forc_v(:)       !atm wind speed, north direction (m/s)
+     real(r8), pointer :: forc_wind(:)    !atmospheric wind speed   
+     real(r8), pointer :: forc_q(:)       !atmospheric specific humidity (kg/kg)
+     real(r8), pointer :: forc_hgt(:)     !atmospheric reference height (m)
+     real(r8), pointer :: forc_hgt_u(:)   !obs height of wind [m] (new)
+     real(r8), pointer :: forc_hgt_t(:)   !obs height of temperature [m] (new)
+     real(r8), pointer :: forc_hgt_q(:)   !obs height of humidity [m] (new)
+     real(r8), pointer :: forc_pbot(:)    !atmospheric pressure (Pa)
+     real(r8), pointer :: forc_th(:)      !atm potential temperature (Kelvin)
+     real(r8), pointer :: forc_vp(:)      !atmospheric vapor pressure (Pa) 
+     real(r8), pointer :: forc_rho(:)     !density (kg/m**3)
+     real(r8), pointer :: forc_rh(:)      !atmospheric relative humidity (%)
+     real(r8), pointer :: forc_psrf(:)    !surface pressure (Pa)
+     real(r8), pointer :: forc_pco2(:)    !CO2 partial pressure (Pa)
+     real(r8), pointer :: forc_lwrad(:)   !downwrd IR longwave radiation (W/m**2)
+     real(r8), pointer :: forc_solad(:,:) !direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
+     real(r8), pointer :: forc_solai(:,:) !diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
+     real(r8), pointer :: forc_solar(:)   !incident solar radiation
+     real(r8), pointer :: forc_rain(:)    !rain rate [mm/s]
+     real(r8), pointer :: forc_snow(:)    !snow rate [mm/s]
+     real(r8), pointer :: forc_ndep(:)    !nitrogen deposition rate (gN/m2/s)
+     real(r8), pointer :: rainf(:)        !ALMA rain+snow [mm/s]
+#ifdef C13
+     real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
 #endif
-  real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
-  real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
-end type atm2lnd_type
+     real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
+     real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
+  end type atm2lnd_type
 
 !----------------------------------------------------
 ! land -> atmosphere variables structure
 !----------------------------------------------------
-type lnd2atm_type
-  real(r8), pointer :: t_rad(:)        !radiative temperature (Kelvin)
-  real(r8), pointer :: t_ref2m(:)      !2m surface air temperature (Kelvin)
-  real(r8), pointer :: q_ref2m(:)      !2m surface specific humidity (kg/kg)
-  real(r8), pointer :: h2osno(:)       !snow water (mm H2O)
-  real(r8), pointer :: albd(:,:)       !(numrad) surface albedo (direct)
-  real(r8), pointer :: albi(:,:)       !(numrad) surface albedo (diffuse)
-  real(r8), pointer :: taux(:)         !wind stress: e-w (kg/m/s**2)
-  real(r8), pointer :: tauy(:)         !wind stress: n-s (kg/m/s**2)
-  real(r8), pointer :: eflx_lh_tot(:)  !total latent HF (W/m**2)  [+ to atm]
-  real(r8), pointer :: eflx_sh_tot(:)  !total sensible HF (W/m**2) [+ to atm]
-  real(r8), pointer :: eflx_lwrad_out(:) !IR (longwave) radiation (W/m**2)
-  real(r8), pointer :: qflx_evap_tot(:)!qflx_evap(_soi + _veg) + qflx_tran_veg
-  real(r8), pointer :: fsa(:)          !solar rad absorbed (total) (W/m**2)
-  real(r8), pointer :: nee(:)          !net CO2 flux (kg CO2/m**2/s) [+ to atm]
-#if (defined DUST || defined  PROGSSLT )
-  real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)
-  real(r8), pointer :: fv(:)           !friction velocity (m/s) (for dust model)
-#endif
-#if (defined DUST  )
-  real(r8), pointer :: flxdst(:,:)       !dust flux (size bins)
-#endif
-  real(r8), pointer :: ddvel(:,:)        !dry deposition velocities
-  real(r8), pointer :: flxvoc(:,:)       ! VOC flux (size bins)
-end type lnd2atm_type
-
+  type lnd2atm_type
+     real(r8), pointer :: t_rad(:)        !radiative temperature (Kelvin)
+     real(r8), pointer :: t_ref2m(:)      !2m surface air temperature (Kelvin)
+     real(r8), pointer :: q_ref2m(:)      !2m surface specific humidity (kg/kg)
+     real(r8), pointer :: h2osno(:)       !snow water (mm H2O)
+     real(r8), pointer :: albd(:,:)       !(numrad) surface albedo (direct)
+     real(r8), pointer :: albi(:,:)       !(numrad) surface albedo (diffuse)
+     real(r8), pointer :: taux(:)         !wind stress: e-w (kg/m/s**2)
+     real(r8), pointer :: tauy(:)         !wind stress: n-s (kg/m/s**2)
+     real(r8), pointer :: eflx_lh_tot(:)  !total latent HF (W/m**2)  [+ to atm]
+     real(r8), pointer :: eflx_sh_tot(:)  !total sensible HF (W/m**2) [+ to atm]
+     real(r8), pointer :: eflx_lwrad_out(:) !IR (longwave) radiation (W/m**2)
+     real(r8), pointer :: qflx_evap_tot(:)!qflx_evap(_soi + _veg) + qflx_tran_veg
+     real(r8), pointer :: fsa(:)          !solar rad absorbed (total) (W/m**2)
+     real(r8), pointer :: nee(:)          !net CO2 flux (kg CO2/m**2/s) [+ to atm]
+     real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)
+     real(r8), pointer :: fv(:)           !friction velocity (m/s) (for dust model)
+     real(r8), pointer :: flxdst(:,:)       !dust flux (size bins)
+     real(r8), pointer :: ddvel(:,:)        !dry deposition velocities
+     real(r8), pointer :: flxvoc(:,:)       ! VOC flux (size bins)
+  end type lnd2atm_type
+  
   type(atm2lnd_type),public,target :: atm_a2l      ! a2l fields on atm grid
   type(lnd2atm_type),public,target :: atm_l2a      ! l2a fields on atm grid
 
@@ -110,7 +99,6 @@ end type lnd2atm_type
   public :: init_atm2lnd_type
   public :: init_lnd2atm_type
   public :: clm_mapa2l
-  public :: clm_mapl2a
   public :: clm_map2gcell
 !
 ! !REVISION HISTORY:
@@ -122,7 +110,6 @@ end type lnd2atm_type
 !----------------------------------------------------
 
 contains
-
 
 !------------------------------------------------------------------------
 !BOP
@@ -148,7 +135,7 @@ contains
   integer :: beg,end
 !------------------------------------------------------------------------
 
-  call get_proc_bounds    (beg, end)
+  call get_proc_bounds(beg, end)
   allocate(adiag_lflux(beg:end))
   adiag_lflux = 0.0_r8
 
@@ -186,7 +173,6 @@ end subroutine init_adiag_type
 ! !LOCAL VARIABLES:
 !EOP
   real(r8) :: ival   ! initial value
-  integer  :: beg_atm, end_atm
 !------------------------------------------------------------------------
 
   allocate(a2l%forc_t(beg:end))
@@ -214,14 +200,12 @@ end subroutine init_adiag_type
   allocate(a2l%forc_ndep(beg:end))
   allocate(a2l%rainf(beg:end))
 #if (defined C13)
-  ! 4/14/05: PET
-  ! Adding isotope code
   allocate(a2l%forc_pc13o2(beg:end))
 #endif
   allocate(a2l%forc_po2(beg:end))
   allocate(a2l%forc_aer(beg:end,14))
 
-! ival = nan      ! causes core dump in map_maparray, tcx fix
+  ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
   a2l%forc_t(beg:end) = ival
@@ -248,9 +232,7 @@ end subroutine init_adiag_type
   a2l%forc_snow(beg:end) = ival
   a2l%forc_ndep(beg:end) = ival
   a2l%rainf(beg:end) = nan
-#if (defined C13)
-  ! 4/14/05: PET
-  ! Adding isotope code
+#ifdef C13
   a2l%forc_pc13o2(beg:end) = ival
 #endif
   a2l%forc_po2(beg:end) = ival
@@ -298,19 +280,15 @@ end subroutine init_atm2lnd_type
   allocate(l2a%qflx_evap_tot(beg:end))
   allocate(l2a%fsa(beg:end))
   allocate(l2a%nee(beg:end))
-#if (defined DUST || defined  PROGSSLT )
   allocate(l2a%ram1(beg:end))
   allocate(l2a%fv(beg:end))
-#endif
-#if (defined DUST )
   allocate(l2a%flxdst(beg:end,1:ndst))
-#endif
   allocate(l2a%flxvoc(beg:end,1:nvoc))
   if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
      allocate(l2a%ddvel(beg:end,1:n_drydep))
   end if
 
-! ival = nan      ! causes core dump in map_maparray, tcx fix
+  ! ival = nan   ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
   l2a%t_rad(beg:end) = ival
@@ -327,17 +305,14 @@ end subroutine init_atm2lnd_type
   l2a%qflx_evap_tot(beg:end) = ival
   l2a%fsa(beg:end) = ival
   l2a%nee(beg:end) = ival
-#if (defined DUST || defined  PROGSSLT )
   l2a%ram1(beg:end) = ival
   l2a%fv(beg:end) = ival
-#endif
-#if (defined DUST )
   l2a%flxdst(beg:end,1:ndst) = ival
-#endif
+  l2a%flxvoc(beg:end,1:nvoc) = ival
   if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
      l2a%ddvel(beg:end, : ) = ival
   end if
-  l2a%flxvoc(beg:end,1:nvoc) = ival
+
 end subroutine init_lnd2atm_type
 
 !------------------------------------------------------------------------------
@@ -352,7 +327,7 @@ end subroutine init_lnd2atm_type
 ! Maps atm2lnd fields from external grid to clm grid
 !
 ! !USES:
-  use areaMod  , only : map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
+  use areaMod  , only : map1dl_a2l, map1dl_l2a, map_setptrs
   use decompMod, only : ldecomp,adecomp
   use domainMod, only : ldomain,adomain
   use QSatMod,   only : QSat
@@ -377,8 +352,6 @@ end subroutine init_lnd2atm_type
   integer :: nradflds              ! size of 2nd dim in arrays
   integer :: begg_s,endg_s         ! beg,end of input grid
   integer :: begg_d,endg_d         ! beg,end of output grid
-  real(r8),pointer :: asrc(:,:)    ! temporary source data
-  real(r8),pointer :: adst(:,:)    ! temporary dest data
   integer          :: nmap         ! size of map
   integer          :: mo           ! size of map
   integer, pointer :: src(:)       ! map src index
@@ -415,588 +388,283 @@ end subroutine init_lnd2atm_type
     call endrun()
   endif
 
-  !--- allocate temporaries
   call get_proc_bounds_atm(begg_s, endg_s)
   call get_proc_bounds    (begg_d, endg_d)
 
-  nflds = 22+2*numrad
-#if (defined C13)
-  nflds = nflds + 1
-#endif
+  !-topographic downscaling
+  !-only call this if there is more than 1 land cell / atm cell somewhere
 
-  ! change nflds based on prognostic aerosol configuration
-  ! This if will be removed (so always add 14 fields).....
-  if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
-     nflds = nflds+14
-  endif
-
-  allocate(asrc(begg_s:endg_s,nflds))
-  allocate(adst(begg_d:endg_d,nflds))
-
-  !
-  ! Begin -- fragile code
-  ! Do NOT change anything here unless you are an expert!
-  !
-  ! NOTE: Following code is fragile -- order MUST match order for adst below!
-  ix = 0
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_t(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_u(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_v(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_wind(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_q(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_rh(:)
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_u(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_t(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_q(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_pbot(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_th(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_vp(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_rho(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_psrf(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_pco2(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_lwrad(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_solar(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_rain(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_snow(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%rainf(:)  
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_po2(:)  
-  do n = 1,numrad
-     ix=ix+1; asrc(:,ix) = a2l_src%forc_solad(:,n)  
-     ix=ix+1; asrc(:,ix) = a2l_src%forc_solai(:,n)  
-  enddo
-
-  ! atmosphere aerosol deposition coupling
-  ! This if will be removed so always on...
-  if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
-     do n = 1,14
-        ix=ix+1; asrc(:,ix) = a2l_src%forc_aer(:,n)
-     enddo
-  endif
-
-#if (defined C13)
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
-#endif
-
-  if ( ix /= nflds )then
-     call endrun( ' clm_mapa2l ERROR: number of atm-grid forcing fields NOT equal to nflds' )
-  end if
-  !
-  ! End-- fragile code
-  !
-
-!-forc_ndep is not recd from atm,don't know why it's in a2l (TCFIX) ---
-!-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
-!  asrc(:,xx) = a2l_src%forc_ndep(:)  
-
-  call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
-
-  !
-  ! Begin -- fragile code
-  ! Do NOT change anything here unless you are an expert!
-  !
-  ! NOTE: Following code is fragile -- order MUST match order for asrc above!
-  ix = 0
-  ix=ix+1; a2l_dst%forc_t(:)     =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_u(:)     =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_v(:)     =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_wind(:)  =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_q(:)     =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_rh(:)    =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_hgt(:)   =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_hgt_u(:) =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_hgt_t(:) =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_hgt_q(:) =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_pbot(:)  =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_th(:)    =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_vp(:)    =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_rho(:)   =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_psrf(:)  =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_pco2(:)  =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_lwrad(:) =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_solar(:) =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_rain(:)  =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_snow(:)  =   adst(:,ix)
-  ix=ix+1; a2l_dst%rainf(:)      =   adst(:,ix)
-  ix=ix+1; a2l_dst%forc_po2(:)   =   adst(:,ix)
-  do n = 1,numrad
-     ix=ix+1; a2l_dst%forc_solad(:,n)  = adst(:,ix)
-     ix=ix+1; a2l_dst%forc_solai(:,n)  = adst(:,ix)
-  enddo
-  
-  !  atmospheric aerosol deposition coupling
-  !  only overwrite the appropriate indices of forc_aer based on the prognostic aerosol scheme, 
-  !  so that forc_aer, as set from the external forcing file, remains intact. 
-  !  This is somewhat kludgy...
-  ! This if will be removed so always on....
-  if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
-     do n = 1,14
-        ix=ix+1
-        if ( (.not. set_caerdep_from_file) .and. (n <= 6) ) then
-           a2l_dst%forc_aer(:,n)  = adst(:,ix)
-        elseif ( (.not. set_dustdep_from_file) .and. (n > 6) )then
-           a2l_dst%forc_aer(:,n)  = adst(:,ix)
-        endif
-     enddo
-  endif
-
-#if (defined C13)
-  ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
-#endif
-
-  if ( ix /= nflds )then
-     call endrun( ' clm_mapa2l ERROR: number of forcing fields NOT equal to nflds' )
-  end if
-  !
-  ! End-- fragile code
-  !
-  
-  deallocate(asrc)
-  deallocate(adst)
-
-  if (first_call.and.masterproc) then
-    write(iulog,*) 'clm_mapa2l mapping complete'
-  endif
-
-!-topographic downscaling
-!-only call this if there is more than 1 land cell / atm cell somewhere
-  call map_setptrs(map1dl_l2a,dstmo=mo)
+  call map_setptrs(map1dl_l2a, dstmo=mo)
   if (mo > 1) then
 
-  if (first_call.and.masterproc) then
-    write(iulog,*) 'clm_mapa2l downscaling ON'
-  endif
-
-  call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst,dstmo=mo)
-  if (mo /= 1) then
-     write(iulog,*)' clm_mapa2l ERROR: map1dl_a2l mo not 1 ',mo
-     call endrun()
-  endif
-
-  lapse   = 0.0065_r8     ! hardwired in multiple places in cam
-  mu = 0.20               ! chance of precip coverage [0.,1.]
-  precip_max = 10.0_r8    ! mm/hr
-  allocate(pchance(begg_d:endg_d),pamount(begg_d:endg_d))
-
-  do n = 1,nmap
-    ns = src(n)
-    nd = dst(n)
-
-    hsurf_a = adomain%topo(ns)        ! atm elevation
-    hsurf_l = ldomain%ntop(nd)        ! lnd elevation
-!tcx DOWNSCALING turns off topo downscaling
-!    hsurf_l = hsurf_a
-
-    if (abs(hsurf_a - hsurf_l) .gt. 0.1_r8) then
-
-!tcx DOWNSCALING if atm lapse rate is available
-!       lapse  = a2l_src%lapse(ns)         ! atm lapse rate
-       tbot_a = a2l_src%forc_t(ns)        ! atm temp at bot
-       thbot_a= a2l_src%forc_th(ns)       ! atm pot temp at bot
-       pbot_a = a2l_src%forc_pbot(ns)     ! atm press at bot
-       qbot_a = a2l_src%forc_q(ns)        ! atm sp humidity at bot
-       zbot_a = a2l_src%forc_hgt(ns)      ! atm ref height
-
-       zbot_l = zbot_a
-       tbot_l = tbot_a-lapse*(hsurf_l-hsurf_a)          ! lnd temp for topo
-
-       Hbot   = rair*0.5_r8*(tbot_a+tbot_l)/grav        ! scale ht at avg temp
-       pbot_l = pbot_a*exp(-(hsurf_l-hsurf_a)/Hbot)     ! lnd press for topo
-       thbot_l= tbot_l*exp((zbot_l/Hbot)*(rair/cpair))  ! pot temp calc
-
-       tsrf_l = tbot_l-lapse*(-zbot_l)                  ! lnd temp at surface
-       Hsrf   = rair*0.5_r8*(tbot_l+tsrf_l)/grav        ! scale ht at avg temp
-       psrf_l = pbot_l*exp(-(zbot_l)/Hsrf)              ! lnd press for topo
-
-       call Qsat(tbot_a,pbot_a,es_a,dum1,qs_a,dum2)
-       call Qsat(tbot_l,pbot_l,es_l,dum1,qs_l,dum2)
-       qbot_l = qbot_a*(qs_l/qs_a)
-
-       a2l_dst%forc_hgt(nd)  = zbot_l
-       a2l_dst%forc_t(nd)    = tbot_l
-       a2l_dst%forc_pbot(nd) = pbot_l
-       a2l_dst%forc_th(nd)   = thbot_l
-       a2l_dst%forc_q(nd)    = qbot_l
-       a2l_dst%forc_vp(nd)   = es_l
-       a2l_dst%forc_psrf(nd) = psrf_l
-
-    endif
-
-! DOWNSCALING set random numbers (must be "reproducible") for downscaling
-
-    rand_num(1) = mod(abs(a2l_dst%forc_t(nd))            *1.0e3_r8,1.0_r8)
-    rand_num(2) = 0.5_r8
-    rand_num(3) = mod(abs(sin(ldecomp%gdc2glo(nd)*1._r8))*1.0e3_r8,1.0_r8)
-    rand_num(4) = mod(abs(a2l_dst%forc_psrf(nd))         *1.0e1_r8,1.0_r8)
-    rand_num(5) = 0.5_r8
-    rand_num(6) = mod(abs(cos(ldecomp%gdc2glo(nd)*1._r8))*1.0e3_r8,1.0_r8)
-
-    pchance(nd) = mod(rand_num(1)+rand_num(2)+rand_num(3),1.0_r8)
-    pamount(nd) = -log(max(1.0_r8-(mod(rand_num(4)+rand_num(5)+rand_num(6),1.0_r8)),1.0e-20_r8))
-
-!tcx DOWNSCALING this will remove random aspects, turn on either or both
-!    pchance(nd) = 0._r8    ! sets all fine gridcells to precip true
-!    pamount(nd) = 1._r8    ! sets all precip gridcells to equal amount
-
-  enddo
-
-!tcx diagnostics
-!  write(iulog,*) 'tcx mm1 ',minval(a2l_dst%forc_t),maxval(a2l_dst%forc_t)
-!  write(iulog,*) 'tcx mm2 ',minval(a2l_dst%forc_psrf),maxval(a2l_dst%forc_psrf)
-!  write(iulog,*) 'tcx mm3 ',minval(a2l_dst%forc_q),maxval(a2l_dst%forc_q)
-!  write(iulog,*) 'tcx mm4 ',minval(a2l_dst%forc_th),maxval(a2l_dst%forc_th)
-!  write(iulog,*) 'tcx mm5 ',minval(pchance),maxval(pchance)
-!  write(iulog,*) 'tcx mm6 ',minval(pamount),maxval(pamount)
-
-  call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
-
-  ! compute precipitation disaggregation
-  !--- find min pchance in finemesh cells of coarse mesh, set that cell's
-  !--- pchance to 0. to force it to be below mu and take precip
-  allocate(pchance_min(begg_s:endg_s))
-  pchance_min = -999
-  do n = 1,nmap
-     ns = dst(n)
-     nd = src(n)
-     if (pchance_min(ns) < 1) pchance_min(ns) = nd
-     if (pchance(nd) < pchance(pchance_min(ns))) pchance_min(ns) = nd
-  enddo
-  do n = begg_s,endg_s
-     if (pchance_min(n) > 0) pchance(pchance_min(n)) = 0._r8
-  enddo
-  deallocate(pchance_min)
-
-  !--- set rain/snow amounts and compute sums for normalization
-  allocate(rain_l(begg_s:endg_s),snow_l(begg_s:endg_s))
-  rain_l = 0.0_r8
-  snow_l = 0.0_r8
-  do n = 1,nmap
-     ns = dst(n)
-     nd = src(n)
-!tcx DOWNSCALING turn off precip disaggr completely
-#if (1 == 1)
-     if (pchance(nd) < mu) then
-        !--- rain/snow refractionation
-        !--- set to 100% snow < -5C and 100% rain > 0C
-        dum2 = (a2l_dst%forc_t(nd)-tfrz + 5.0_r8)/(5.0_r8)
-        dum2 = max(dum2,0.0_r8)
-        dum2 = min(dum2,1.0_r8)
-
-!tcx DOWNSCALING turn on refractionation and spatial variability
-        a2l_dst%forc_rain(nd) = (         dum2) * pamount(nd)
-        a2l_dst%forc_snow(nd) = (1.0_r8 - dum2) * pamount(nd)
-!tcx DOWNSCALING turn on just spatial variability but not refractionation
-! comment out lines above and comment in the two lines below
-!        a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd)* pamount(nd)
-!        a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd)* pamount(nd)
-!
-     else
-        a2l_dst%forc_rain(nd) = 0._r8
-        a2l_dst%forc_snow(nd) = 0._r8
+     if (first_call.and.masterproc) then
+        write(iulog,*) 'clm_mapa2l downscaling ON'
      endif
-#endif
-     rain_l(ns) = rain_l(ns) + a2l_dst%forc_rain(nd) * wts(n)
-     snow_l(ns) = snow_l(ns) + a2l_dst%forc_snow(nd) * wts(n)
-  enddo
-  deallocate(pchance,pamount)
 
-  !--- compute normalization of disaggregation amounts
-  allocate(pnorm(begg_s:endg_s))
-  pnorm = 0.0_r8
-  do ns = begg_s, endg_s
-     if (rain_l(ns) + snow_l(ns) == 0._r8) then
-        if (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns) /= 0._r8) then
-           write(iulog,*)' clm_mapa2l ERROR: rain/snow normalization',rain_l(ns),snow_l(ns), &
-              a2l_src%forc_rain(ns),a2l_src%forc_snow(ns)
+     call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst,dstmo=mo)
+     if (mo /= 1) then
+        write(iulog,*)' clm_mapa2l ERROR: map1dl_a2l mo not 1 ',mo
+        call endrun()
+     endif
+
+     lapse   = 0.0065_r8     ! hardwired in multiple places in cam
+     mu = 0.20               ! chance of precip coverage [0.,1.]
+     precip_max = 10.0_r8    ! mm/hr
+     allocate(pchance(begg_d:endg_d),pamount(begg_d:endg_d))
+
+     do n = 1,nmap
+        ns = src(n)
+        nd = dst(n)
+        
+        hsurf_a = adomain%topo(ns)        ! atm elevation
+        hsurf_l = ldomain%ntop(nd)        ! lnd elevation
+        !tcx DOWNSCALING turns off topo downscaling
+        !    hsurf_l = hsurf_a
+
+        if (abs(hsurf_a - hsurf_l) .gt. 0.1_r8) then
+
+           !tcx DOWNSCALING if atm lapse rate is available
+           !       lapse  = a2l_src%lapse(ns)         ! atm lapse rate
+           tbot_a = a2l_src%forc_t(ns)        ! atm temp at bot
+           thbot_a= a2l_src%forc_th(ns)       ! atm pot temp at bot
+           pbot_a = a2l_src%forc_pbot(ns)     ! atm press at bot
+           qbot_a = a2l_src%forc_q(ns)        ! atm sp humidity at bot
+           zbot_a = a2l_src%forc_hgt(ns)      ! atm ref height
+           
+           zbot_l = zbot_a
+           tbot_l = tbot_a-lapse*(hsurf_l-hsurf_a)          ! lnd temp for topo
+           
+           Hbot   = rair*0.5_r8*(tbot_a+tbot_l)/grav        ! scale ht at avg temp
+           pbot_l = pbot_a*exp(-(hsurf_l-hsurf_a)/Hbot)     ! lnd press for topo
+           thbot_l= tbot_l*exp((zbot_l/Hbot)*(rair/cpair))  ! pot temp calc
+           
+           tsrf_l = tbot_l-lapse*(-zbot_l)                  ! lnd temp at surface
+           Hsrf   = rair*0.5_r8*(tbot_l+tsrf_l)/grav        ! scale ht at avg temp
+           psrf_l = pbot_l*exp(-(zbot_l)/Hsrf)              ! lnd press for topo
+           
+           call Qsat(tbot_a,pbot_a,es_a,dum1,qs_a,dum2)
+           call Qsat(tbot_l,pbot_l,es_l,dum1,qs_l,dum2)
+           qbot_l = qbot_a*(qs_l/qs_a)
+           
+           a2l_dst%forc_hgt(nd)  = zbot_l
+           a2l_dst%forc_t(nd)    = tbot_l
+           a2l_dst%forc_pbot(nd) = pbot_l
+           a2l_dst%forc_th(nd)   = thbot_l
+           a2l_dst%forc_q(nd)    = qbot_l
+           a2l_dst%forc_vp(nd)   = es_l
+           a2l_dst%forc_psrf(nd) = psrf_l
+           
+        endif
+        
+        ! DOWNSCALING set random numbers (must be "reproducible") for downscaling
+        
+        rand_num(1) = mod(abs(a2l_dst%forc_t(nd))            *1.0e3_r8,1.0_r8)
+        rand_num(2) = 0.5_r8
+        rand_num(3) = mod(abs(sin(ldecomp%gdc2glo(nd)*1._r8))*1.0e3_r8,1.0_r8)
+        rand_num(4) = mod(abs(a2l_dst%forc_psrf(nd))         *1.0e1_r8,1.0_r8)
+        rand_num(5) = 0.5_r8
+        rand_num(6) = mod(abs(cos(ldecomp%gdc2glo(nd)*1._r8))*1.0e3_r8,1.0_r8)
+        
+        pchance(nd) = mod(rand_num(1)+rand_num(2)+rand_num(3),1.0_r8)
+        pamount(nd) = -log(max(1.0_r8-(mod(rand_num(4)+rand_num(5)+rand_num(6),1.0_r8)),1.0e-20_r8))
+        
+        !tcx DOWNSCALING this will remove random aspects, turn on either or both
+        !    pchance(nd) = 0._r8    ! sets all fine gridcells to precip true
+        !    pamount(nd) = 1._r8    ! sets all precip gridcells to equal amount
+        
+     enddo
+
+     !tcx diagnostics
+     !  write(iulog,*) 'tcx mm1 ',minval(a2l_dst%forc_t),maxval(a2l_dst%forc_t)
+     !  write(iulog,*) 'tcx mm2 ',minval(a2l_dst%forc_psrf),maxval(a2l_dst%forc_psrf)
+     !  write(iulog,*) 'tcx mm3 ',minval(a2l_dst%forc_q),maxval(a2l_dst%forc_q)
+     !  write(iulog,*) 'tcx mm4 ',minval(a2l_dst%forc_th),maxval(a2l_dst%forc_th)
+     !  write(iulog,*) 'tcx mm5 ',minval(pchance),maxval(pchance)
+     !  write(iulog,*) 'tcx mm6 ',minval(pamount),maxval(pamount)
+     
+     call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
+     
+     ! compute precipitation disaggregation
+     !--- find min pchance in finemesh cells of coarse mesh, set that cell's
+     !--- pchance to 0. to force it to be below mu and take precip
+     allocate(pchance_min(begg_s:endg_s))
+     pchance_min = -999
+     do n = 1,nmap
+        ns = dst(n)
+        nd = src(n)
+        if (pchance_min(ns) < 1) pchance_min(ns) = nd
+        if (pchance(nd) < pchance(pchance_min(ns))) pchance_min(ns) = nd
+     enddo
+     do n = begg_s,endg_s
+        if (pchance_min(n) > 0) pchance(pchance_min(n)) = 0._r8
+     enddo
+     deallocate(pchance_min)
+     
+     !--- set rain/snow amounts and compute sums for normalization
+     allocate(rain_l(begg_s:endg_s),snow_l(begg_s:endg_s))
+     rain_l = 0.0_r8
+     snow_l = 0.0_r8
+     do n = 1,nmap
+        ns = dst(n)
+        nd = src(n)
+        !tcx DOWNSCALING turn off precip disaggr completely
+#if (1 == 1)
+        if (pchance(nd) < mu) then
+           !--- rain/snow refractionation
+           !--- set to 100% snow < -5C and 100% rain > 0C
+           dum2 = (a2l_dst%forc_t(nd)-tfrz + 5.0_r8)/(5.0_r8)
+           dum2 = max(dum2,0.0_r8)
+           dum2 = min(dum2,1.0_r8)
+           
+           !tcx DOWNSCALING turn on refractionation and spatial variability
+           a2l_dst%forc_rain(nd) = (         dum2) * pamount(nd)
+           a2l_dst%forc_snow(nd) = (1.0_r8 - dum2) * pamount(nd)
+           !tcx DOWNSCALING turn on just spatial variability but not refractionation
+           ! comment out lines above and comment in the two lines below
+           !        a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd)* pamount(nd)
+           !        a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd)* pamount(nd)
+           !
+        else
+           a2l_dst%forc_rain(nd) = 0._r8
+           a2l_dst%forc_snow(nd) = 0._r8
+        endif
+#endif
+        rain_l(ns) = rain_l(ns) + a2l_dst%forc_rain(nd) * wts(n)
+        snow_l(ns) = snow_l(ns) + a2l_dst%forc_snow(nd) * wts(n)
+     enddo
+     deallocate(pchance,pamount)
+     
+     !--- compute normalization of disaggregation amounts
+     allocate(pnorm(begg_s:endg_s))
+     pnorm = 0.0_r8
+     do ns = begg_s, endg_s
+        if (rain_l(ns) + snow_l(ns) == 0._r8) then
+           if (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns) /= 0._r8) then
+              write(iulog,*)' clm_mapa2l ERROR: rain/snow normalization',rain_l(ns),snow_l(ns), &
+                   a2l_src%forc_rain(ns),a2l_src%forc_snow(ns)
+              call endrun()
+           endif
+        else
+           pnorm(ns) = (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns)) / (rain_l(ns)+snow_l(ns))
+        endif
+        !--- set pnorm=1 if close, for bfb consitency when coarse=finemesh cases
+        if (abs(pnorm(ns) - 1.0_r8) < 1.0e-12) pnorm(ns) = 1.0_r8
+     enddo
+     deallocate(rain_l,snow_l)
+     
+     !--- apply normalization
+     do n = 1,nmap
+        ns = dst(n)
+        nd = src(n)
+        a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd) * pnorm(ns)
+        a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd) * pnorm(ns)
+     enddo
+     deallocate(pnorm)
+     
+     !--- compute q normalization amounts
+     call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
+     allocate(qsum(begg_s:endg_s))
+     qsum = 0.0_r8
+     do n = 1,nmap
+        ns = dst(n)
+        nd = src(n)
+        qsum(ns) = qsum(ns) + wts(n)* a2l_dst%forc_q(nd)
+     enddo
+     
+     call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst)
+     do n = 1,nmap
+        ns = src(n)
+        nd = dst(n)
+        
+        qbot_a = a2l_src%forc_q(ns)        ! atm specific humidity
+        qbot_l = a2l_dst%forc_q(nd)        ! lnd specific humidity
+        pbot_l = a2l_dst%forc_pbot(nd)  
+        tbot_l = a2l_dst%forc_t(nd)  
+        
+        qbot_l = qbot_l - (qsum(ns) - qbot_a)        ! normalize
+        egcm_l = qbot_l*pbot_l/(0.622+0.378*qbot_l)
+        rhos_l = (pbot_l-0.378*egcm_l) / (rair*tbot_l)
+        
+        a2l_dst%forc_q(nd)    = qbot_l
+        a2l_dst%forc_rho(nd)  = rhos_l
+        
+     enddo
+     
+     deallocate(qsum)
+     
+     ! --- check ---
+     call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
+     adiag_arain = 0.0_r8
+     adiag_asnow = 0.0_r8
+     adiag_aflux = 0.0_r8
+     adiag_lflux = 0.0_r8
+     do ns = begg_s,endg_s
+        sum1 = 0.0_r8
+        sum2 = 0.0_r8
+        sum3 = 0.0_r8
+        sum4 = 0.0_r8
+        sum5 = 0.0_r8
+        sum6 = 0.0_r8
+        sum7 = 0.0_r8
+        sum8 = 0.0_r8
+        do n = 1,nmap
+           if (dst(n) == ns) then
+              nd = src(n)
+              sum1 = sum1 + ldomain%ntop(nd)      * wts(n)
+              sum2 = sum2 + a2l_dst%forc_t(nd)    * wts(n)
+              sum3 = sum3 + a2l_dst%forc_q(nd)    * wts(n)
+              sum4 = sum4 + a2l_dst%forc_hgt(nd)  * wts(n)
+              sum5 = sum5 + a2l_dst%forc_pbot(nd) * wts(n)
+              sum6 = sum6 + a2l_dst%forc_th(nd)   * wts(n)
+              sum7 = sum7 + a2l_dst%forc_rain(nd) * wts(n)
+              sum8 = sum8 + a2l_dst%forc_snow(nd) * wts(n)
+              adiag_lflux(nd) = (a2l_dst%forc_snow(nd) - a2l_src%forc_snow(ns))*wts(n)*hfus
+           endif
+        enddo
+        adiag_arain(ns) = sum7
+        adiag_asnow(ns) = sum8
+        adiag_aflux(ns) = (sum8 - a2l_src%forc_snow(ns))*hfus
+        
+        !--- add up rain and snow, compute relative diff vs source
+        dum1 = (sum7 + sum8 - a2l_src%forc_rain(ns) - a2l_src%forc_snow(ns))
+        if ((sum7+sum8) == 0.0_r8 .and. &
+             (a2l_src%forc_rain(ns)+a2l_src%forc_snow(ns)) == 0.0_r8) then
+           dum1 = 0.0_r8
+        else
+           dum1 = dum1 / (max(sum7+sum8,a2l_src%forc_rain(ns)+a2l_src%forc_snow(ns)))
+        endif
+        
+        if   ((abs(sum1 - adomain%topo(ns))      > 1.0e-8) &
+             .or.(abs(sum2 - a2l_src%forc_t(ns))    > 1.0e-3) &
+             .or.(abs(sum3 - a2l_src%forc_q(ns))    > 1.0e-8) &
+             .or.(abs(sum4 - a2l_src%forc_hgt(ns))  > 1.0e-6) &
+             !      .or.(abs(sum5 - a2l_src%forc_pbot(ns)) > 1.0e-6) &
+             !      .or.(abs(sum6 - a2l_src%forc_th(ns))   > 1.0e-6) &
+             .or.(abs(dum1)                         > 1.0e-8) &
+             ) then
+           write(iulog,*) 'clm_map2l check ERROR topo ',ns,sum1,adomain%topo(ns)
+           write(iulog,*) 'clm_map2l check ERROR t    ',ns,sum2,a2l_src%forc_t(ns)
+           write(iulog,*) 'clm_map2l check ERROR q    ',ns,sum3,a2l_src%forc_q(ns)
+           write(iulog,*) 'clm_map2l check ERROR hgt  ',ns,sum4,a2l_src%forc_hgt(ns)
+           write(iulog,*) 'clm_map2l check ERROR pbot ',ns,sum5,a2l_src%forc_pbot(ns)
+           write(iulog,*) 'clm_map2l check ERROR th   ',ns,sum6,a2l_src%forc_th(ns)
+           write(iulog,*) 'clm_map2l check ERROR rain ',ns,sum7,a2l_src%forc_rain(ns)
+           write(iulog,*) 'clm_map2l check ERROR snow ',ns,sum8,a2l_src%forc_snow(ns)
+           write(iulog,*) 'clm_map2l check ERROR adiag',ns,adiag_arain(ns),adiag_asnow(ns)
            call endrun()
         endif
-     else
-        pnorm(ns) = (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns)) / (rain_l(ns)+snow_l(ns))
-     endif
-     !--- set pnorm=1 if close, for bfb consitency when coarse=finemesh cases
-     if (abs(pnorm(ns) - 1.0_r8) < 1.0e-12) pnorm(ns) = 1.0_r8
-  enddo
-  deallocate(rain_l,snow_l)
-
-  !--- apply normalization
-  do n = 1,nmap
-    ns = dst(n)
-    nd = src(n)
-    a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd) * pnorm(ns)
-    a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd) * pnorm(ns)
-  enddo
-  deallocate(pnorm)
-
-  !--- compute q normalization amounts
-  call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
-  allocate(qsum(begg_s:endg_s))
-  qsum = 0.0_r8
-  do n = 1,nmap
-    ns = dst(n)
-    nd = src(n)
-    qsum(ns) = qsum(ns) + wts(n)* a2l_dst%forc_q(nd)
-  enddo
-
-  call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst)
-  do n = 1,nmap
-    ns = src(n)
-    nd = dst(n)
-
-    qbot_a = a2l_src%forc_q(ns)        ! atm specific humidity
-    qbot_l = a2l_dst%forc_q(nd)        ! lnd specific humidity
-    pbot_l = a2l_dst%forc_pbot(nd)  
-    tbot_l = a2l_dst%forc_t(nd)  
-
-    qbot_l = qbot_l - (qsum(ns) - qbot_a)        ! normalize
-    egcm_l = qbot_l*pbot_l/(0.622+0.378*qbot_l)
-    rhos_l = (pbot_l-0.378*egcm_l) / (rair*tbot_l)
-
-    a2l_dst%forc_q(nd)    = qbot_l
-    a2l_dst%forc_rho(nd)  = rhos_l
-
-  enddo
-
-  deallocate(qsum)
-
-! --- check ---
-  call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
-  adiag_arain = 0.0_r8
-  adiag_asnow = 0.0_r8
-  adiag_aflux = 0.0_r8
-  adiag_lflux = 0.0_r8
-  do ns = begg_s,endg_s
-    sum1 = 0.0_r8
-    sum2 = 0.0_r8
-    sum3 = 0.0_r8
-    sum4 = 0.0_r8
-    sum5 = 0.0_r8
-    sum6 = 0.0_r8
-    sum7 = 0.0_r8
-    sum8 = 0.0_r8
-    do n = 1,nmap
-      if (dst(n) == ns) then
-        nd = src(n)
-        sum1 = sum1 + ldomain%ntop(nd)      * wts(n)
-        sum2 = sum2 + a2l_dst%forc_t(nd)    * wts(n)
-        sum3 = sum3 + a2l_dst%forc_q(nd)    * wts(n)
-        sum4 = sum4 + a2l_dst%forc_hgt(nd)  * wts(n)
-        sum5 = sum5 + a2l_dst%forc_pbot(nd) * wts(n)
-        sum6 = sum6 + a2l_dst%forc_th(nd)   * wts(n)
-        sum7 = sum7 + a2l_dst%forc_rain(nd) * wts(n)
-        sum8 = sum8 + a2l_dst%forc_snow(nd) * wts(n)
-        adiag_lflux(nd) = (a2l_dst%forc_snow(nd) - a2l_src%forc_snow(ns))*wts(n)*hfus
-      endif
-    enddo
-    adiag_arain(ns) = sum7
-    adiag_asnow(ns) = sum8
-    adiag_aflux(ns) = (sum8 - a2l_src%forc_snow(ns))*hfus
-
-    !--- add up rain and snow, compute relative diff vs source
-    dum1 = (sum7 + sum8 - a2l_src%forc_rain(ns) - a2l_src%forc_snow(ns))
-    if ((sum7+sum8) == 0.0_r8 .and. &
-        (a2l_src%forc_rain(ns)+a2l_src%forc_snow(ns)) == 0.0_r8) then
-       dum1 = 0.0_r8
-    else
-       dum1 = dum1 / (max(sum7+sum8,a2l_src%forc_rain(ns)+a2l_src%forc_snow(ns)))
-    endif
-
-    if   ((abs(sum1 - adomain%topo(ns))      > 1.0e-8) &
-      .or.(abs(sum2 - a2l_src%forc_t(ns))    > 1.0e-3) &
-      .or.(abs(sum3 - a2l_src%forc_q(ns))    > 1.0e-8) &
-      .or.(abs(sum4 - a2l_src%forc_hgt(ns))  > 1.0e-6) &
-!      .or.(abs(sum5 - a2l_src%forc_pbot(ns)) > 1.0e-6) &
-!      .or.(abs(sum6 - a2l_src%forc_th(ns))   > 1.0e-6) &
-      .or.(abs(dum1)                         > 1.0e-8) &
-       ) then
-      write(iulog,*) 'clm_map2l check ERROR topo ',ns,sum1,adomain%topo(ns)
-      write(iulog,*) 'clm_map2l check ERROR t    ',ns,sum2,a2l_src%forc_t(ns)
-      write(iulog,*) 'clm_map2l check ERROR q    ',ns,sum3,a2l_src%forc_q(ns)
-      write(iulog,*) 'clm_map2l check ERROR hgt  ',ns,sum4,a2l_src%forc_hgt(ns)
-      write(iulog,*) 'clm_map2l check ERROR pbot ',ns,sum5,a2l_src%forc_pbot(ns)
-      write(iulog,*) 'clm_map2l check ERROR th   ',ns,sum6,a2l_src%forc_th(ns)
-      write(iulog,*) 'clm_map2l check ERROR rain ',ns,sum7,a2l_src%forc_rain(ns)
-      write(iulog,*) 'clm_map2l check ERROR snow ',ns,sum8,a2l_src%forc_snow(ns)
-      write(iulog,*) 'clm_map2l check ERROR adiag',ns,adiag_arain(ns),adiag_asnow(ns)
-      call endrun()
-    endif
-  enddo
-
+     enddo
+     
   else    ! mx_ovr > 1
-
+     
      ! adomain and ldomain same, copy asca from adomain
      ldomain%asca = adomain%asca
-
+     
   endif   ! mx_ovr > 1
 
   first_call = .false.
 
 end subroutine clm_mapa2l
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_mapl2a
-!
-! !INTERFACE:
-  subroutine clm_mapl2a(l2a_src, l2a_dst)
-!
-! !DESCRIPTION:
-! Maps lnd2atm fields from clm grid to external grid
-!
-! !USES:
-  use areaMod  , only : map_maparrayl, map1dl_l2a
-!
-! !ARGUMENTS:
-  implicit none
-  type(lnd2atm_type), intent(in)  :: l2a_src
-  type(lnd2atm_type), intent(out) :: l2a_dst
-!
-! !REVISION HISTORY:
-! 2005.11.15  T Craig  Creation.
-! 2006.3.30   P Worley Restructuring for improved vector performance
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-  integer :: n                     ! loop counter
-  integer :: ix                    ! field index
-  integer :: nflds                 ! number of fields to be mapped
-  integer :: nradflds              ! size of 2nd dim in arrays
-  integer :: begg_s,endg_s         ! beg,end of input grid
-  integer :: begg_d,endg_d         ! beg,end of output grid
-  real(r8),pointer :: asrc(:,:)    ! temporary source data
-  real(r8),pointer :: adst(:,:)    ! temporary dest data
-!------------------------------------------------------------------------------
-
-  nradflds = size(l2a_src%albd,dim=2)
-  if (nradflds /= numrad) then
-    write(iulog,*) 'clm_mapl2a ERROR: nradflds ne numrad ',nradflds,numrad
-    call endrun()
-  endif
-
-  !--- allocate temporaries
-  call get_proc_bounds    (begg_s, endg_s)
-  call get_proc_bounds_atm(begg_d, endg_d)
-
-  nflds = 12+2*numrad
-
-#if (defined DUST || defined  PROGSSLT )  
-  ! add on fv, ram1 
-  nflds = nflds + 2 
-#endif
-
-#if (defined DUST  ) 
-  ! add on the number of dust bins (for flxdust)
-  nflds = nflds + ndst
-#endif
-
-  ! add on the number of dry dep bins
-  if ( n_drydep > 0 .and. drydep_method == DD_XLND ) nflds = nflds + n_drydep
-  ! add on the number of voc bins
-  nflds = nflds + nvoc
-
-  allocate(asrc(begg_s:endg_s,nflds))
-  allocate(adst(begg_d:endg_d,nflds))
-
-  !
-  ! Begin -- fragile code
-  ! Do NOT change anything here unless you are an expert!
-  !
-  ! NOTE: Following code is fragile -- order MUST match order for adst below!
-  ix = 0
-  ix=ix+1; asrc(:,ix) = l2a_src%t_rad(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%t_ref2m(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%q_ref2m(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%h2osno(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%taux(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%tauy(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%eflx_lh_tot(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%eflx_sh_tot(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%eflx_lwrad_out(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%qflx_evap_tot(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%fsa(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%nee(:)  
-  do n = 1,numrad
-     ix=ix+1; asrc(:,ix) = l2a_src%albd(:,n)  
-     ix=ix+1; asrc(:,ix) = l2a_src%albi(:,n)  
-  enddo
-#if (defined DUST || defined  PROGSSLT )
-  ix=ix+1; asrc(:,ix) = l2a_src%ram1(:)  
-  ix=ix+1; asrc(:,ix) = l2a_src%fv(:)
-#endif
-#if (defined DUST )
-  do n = 1,ndst  ! dust bins
-     ix=ix+1; asrc(:,ix) = l2a_src%flxdst(:,n)  
-  end do !m
-#endif
-  do n = 1,nvoc 
-     ix=ix+1; asrc(:,ix) = l2a_src%flxvoc(:,n)  
-  end do
-  if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-     do n = 1,n_drydep
-       ix=ix+1; asrc(:,ix) = l2a_src%ddvel(:,n)  
-     enddo
-  end if
-  if ( ix /= nflds )then
-     call endrun( ' clm_mapa2l ERROR: number of atm-grid l2a forcing fields NOT equal to nflds' )
-  end if
-  !
-  ! End -- fragile code
-  !
-
-  call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_l2a)
-
-  !
-  ! Begin -- fragile code
-  ! Do NOT change anything here unless you are an expert!
-  !
-  ! NOTE: Following code is fragile -- order MUST match order for asrc above!
-  ix = 0
-  ix=ix+1; l2a_dst%t_rad(:)          = adst(:,ix)
-  ix=ix+1; l2a_dst%t_ref2m(:)        = adst(:,ix)
-  ix=ix+1; l2a_dst%q_ref2m(:)        = adst(:,ix)
-  ix=ix+1; l2a_dst%h2osno(:)         = adst(:,ix)
-  ix=ix+1; l2a_dst%taux(:)           = adst(:,ix)
-  ix=ix+1; l2a_dst%tauy(:)           = adst(:,ix)
-  ix=ix+1; l2a_dst%eflx_lh_tot(:)    = adst(:,ix)
-  ix=ix+1; l2a_dst%eflx_sh_tot(:)    = adst(:,ix)
-  ix=ix+1; l2a_dst%eflx_lwrad_out(:) = adst(:,ix)
-  ix=ix+1; l2a_dst%qflx_evap_tot(:)  = adst(:,ix)
-  ix=ix+1; l2a_dst%fsa(:)            = adst(:,ix)
-  ix=ix+1; l2a_dst%nee(:)            = adst(:,ix)
-  do n = 1,numrad
-     ix=ix+1; l2a_dst%albd(:,n)      = adst(:,ix)
-     ix=ix+1; l2a_dst%albi(:,n)      = adst(:,ix)
-  enddo
-
-#if (defined DUST || defined  PROGSSLT )
-  ix=ix+1; l2a_dst%ram1(:)           = adst(:,ix)
-  ix=ix+1; l2a_dst%fv(:)             = adst(:,ix)
-#endif
-#if (defined DUST  )
-  do n = 1,ndst  ! dust bins
-     ix=ix+1; l2a_dst%flxdst(:,n)    = adst(:,ix)
-  end do
-#endif
-  do n = 1,nvoc  ! voc bins
-     ix=ix+1; l2a_dst%flxvoc(:,n)    = adst(:,ix)
-  end do
-  if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-     do n = 1,n_drydep
-       ix=ix+1; l2a_dst%ddvel(:,n)   = adst(:,ix)
-     enddo
-  end if
-  if ( ix /= nflds )then
-     call endrun( ' clm_mapa2l ERROR: number of l2a forcing fields NOT equal to nflds' )
-  end if
-  !
-  ! End -- fragile code
-  !
-
-  deallocate(asrc)
-  deallocate(adst)
-
-end subroutine clm_mapl2a
 
 !------------------------------------------------------------------------
 !BOP

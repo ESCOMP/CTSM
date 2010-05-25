@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_glclnd
 
 !-----------------------------------------------------------------------
@@ -41,9 +38,9 @@ module clm_glclnd
   type glc2lnd_type
      real(r8), pointer :: frac(:,:) 
      real(r8), pointer :: topo(:,:) 
-     real(r8), pointer :: hflx(:,:) 
      real(r8), pointer :: rofi(:,:) 
      real(r8), pointer :: rofl(:,:) 
+     real(r8), pointer :: hflx(:,:) 
   end type glc2lnd_type
 
 !----------------------------------------------------
@@ -101,18 +98,18 @@ contains
 
   allocate(x2s%frac(beg:end,glc_nec))
   allocate(x2s%topo(beg:end,glc_nec))
-  allocate(x2s%hflx(beg:end,glc_nec))
   allocate(x2s%rofi(beg:end,glc_nec))
   allocate(x2s%rofl(beg:end,glc_nec))
+  allocate(x2s%hflx(beg:end,glc_nec))
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
   x2s%frac(beg:end,:) = ival
   x2s%topo(beg:end,:) = ival
-  x2s%hflx(beg:end,:) = ival
   x2s%rofi(beg:end,:) = ival
   x2s%rofl(beg:end,:) = ival
+  x2s%hflx(beg:end,:) = ival
 
 end subroutine init_glc2lnd_type
 
@@ -273,18 +270,18 @@ end subroutine clm_maps2x
      ix = 0
      ix=ix+1; asrc(:,ix) = x2s_src%frac(:,n)  
      ix=ix+1; asrc(:,ix) = x2s_src%topo(:,n)  
-     ix=ix+1; asrc(:,ix) = x2s_src%hflx(:,n)  
      ix=ix+1; asrc(:,ix) = x2s_src%rofi(:,n)  
      ix=ix+1; asrc(:,ix) = x2s_src%rofl(:,n)  
+     ix=ix+1; asrc(:,ix) = x2s_src%hflx(:,n)  
  
      call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
  
      ix = 0
      ix=ix+1; x2s_dst%frac(:,n)  =   adst(:,ix)
      ix=ix+1; x2s_dst%topo(:,n)  =   adst(:,ix)
-     ix=ix+1; x2s_dst%hflx(:,n)  =   adst(:,ix)
      ix=ix+1; x2s_dst%rofi(:,n)  =   adst(:,ix)
      ix=ix+1; x2s_dst%rofl(:,n)  =   adst(:,ix)
+     ix=ix+1; x2s_dst%hflx(:,n)  =   adst(:,ix)
 
   enddo
 
@@ -451,10 +448,9 @@ end subroutine create_clm_s2x
              n = c - clm3%g%l%coli(l) + 1    ! elevation class index
              clm3%g%l%c%cps%glc_frac(c) = clm_x2s%frac(g,n)
              clm3%g%l%c%cps%glc_topo(c) = clm_x2s%topo(g,n)
-             clm3%g%l%c%cef%eflx_bot(c) = clm_x2s%hflx(g,n)
              clm3%g%l%c%cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
              clm3%g%l%c%cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
-
+             clm3%g%l%c%cef%eflx_bot(c) = clm_x2s%hflx(g,n)
 
           endif
        enddo

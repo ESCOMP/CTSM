@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_varctl
 
 !-----------------------------------------------------------------------
@@ -88,6 +85,7 @@ module clm_varctl
 !
   character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
 #ifdef CN
+  logical, public :: use_ndepstream = .false.           ! Use Nitrogen depostion streams rather than fixed files
   logical,           public :: scaled_harvest = .false. ! true => scale CN harvesting according to coefficients determined 
                                                         ! by Johann Feddema, circa 2009
   character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clmtypeInitMod
 
 !-----------------------------------------------------------------------
@@ -2645,9 +2642,6 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(cps%res_sno(beg:end))
-    allocate(cps%topo_ndx(beg:end))
-    allocate(cps%topo_slope(beg:end))
     allocate(cps%snl(beg:end))      !* cannot be averaged up
     allocate(cps%isoicol(beg:end))  !* cannot be averaged up
     allocate(cps%bsw(beg:end,nlevgrnd))
@@ -2759,9 +2753,6 @@ contains
     allocate(cps%forc_pbot(beg:end))
     allocate(cps%forc_rho(beg:end))
     allocate(cps%glc_topo(beg:end))
-    cps%res_sno(beg:end) = spval
-    cps%topo_ndx(beg:end) = spval
-    cps%topo_slope(beg:end) = spval
     cps%isoicol(beg:end) = bigint
     cps%bsw(beg:end,1:nlevgrnd) = nan
     cps%watsat(beg:end,1:nlevgrnd) = nan
@@ -2868,10 +2859,6 @@ contains
     cps%albgri_dst(beg:end,:numrad) = nan
     cps%dTdz_top(beg:end) = nan
     cps%snot_top(beg:end) = nan
-    allocate(cps%var_track(beg:end))
-    cps%var_track(beg:end) = spval
-    allocate(cps%var_track2(beg:end))
-    cps%var_track2(beg:end) = spval
     cps%forc_pbot(beg:end) = nan
     cps%forc_rho(beg:end) = nan
     cps%glc_topo(beg:end) = nan
@@ -3000,11 +2987,6 @@ contains
     cws%smp_l(beg:end,1:nlevgrnd) = spval
     cws%hk_l(beg:end,1:nlevgrnd) = spval
     cws%forc_q(beg:end) = nan
-
-    allocate(cws%frost_table(beg:end))
-    allocate(cws%zwt_perched(beg:end))
-    cws%frost_table(beg:end) = spval
-    cws%zwt_perched(beg:end) = spval
 
   end subroutine init_column_wstate_type
 
@@ -3272,10 +3254,6 @@ contains
     cwf%glc_rofi(beg:end) = nan
     cwf%glc_rofl(beg:end) = nan
 
-    allocate(cwf%qflx_snow_out(beg:end))
-    cwf%qflx_snow_out(beg:end) = spval
-    allocate(cwf%qflx_drain_perched(beg:end))
-    cwf%qflx_drain_perched(beg:end) = spval
   end subroutine init_column_wflux_type
 
 !------------------------------------------------------------------------

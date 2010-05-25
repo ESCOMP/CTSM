@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module controlMod
 
 !-----------------------------------------------------------------------
@@ -33,7 +30,7 @@ module controlMod
   use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
 #endif
 #ifdef CN
-  use clm_varctl     , only : scaled_harvest, fndepdat, fndepdyn
+  use clm_varctl     , only : scaled_harvest, fndepdat, fndepdyn, use_ndepstream
   use CNAllocationMod, only : Carbon_only
 #endif
   use clm_varctl   , only : create_glacier_mec_landunit, glc_nec, glc_dyntopo, glc_smb, glc_topomax
@@ -198,7 +195,7 @@ contains
 
 #ifdef CN
     namelist /clm_inparm/  &
-         scaled_harvest, fndepdat, fndepdyn, Carbon_only
+         scaled_harvest, fndepdat, fndepdyn, Carbon_only, use_ndepstream
 #endif
 
     namelist /clm_inparm / &
@@ -394,6 +391,7 @@ contains
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
 #ifdef CN
+    call mpi_bcast (use_ndepstream, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
 #endif

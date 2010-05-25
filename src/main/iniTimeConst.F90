@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -43,9 +40,6 @@ subroutine iniTimeConst
   use clm_time_manager, only : get_step_size
   use abortutils      , only : endrun
   use fileutils       , only : getfil
-#ifdef CN
-  use ndepFileMod     , only : ndeprd
-#endif
   use organicFileMod  , only : organicrd 
   use ncdio           , only : ncd_iolocal, nf_close, nf_get_var_int, NF_NOERR, nf_inq_varid, nf_open, check_ret
   use spmdMod         , only : mpicom, MPI_INTEGER, masterproc
@@ -116,7 +110,6 @@ subroutine iniTimeConst
   integer , pointer :: isoicol(:)         ! soil color class
   real(r8), pointer :: gwc_thr(:)         ! threshold soil moisture based on clay content
   real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
-  real(r8), pointer :: forc_ndep(:)       ! nitrogen deposition rate (gN/m2/s)
   real(r8), pointer :: efisop(:,:)        ! emission factors for isoprene (ug isoprene m-2 h-1)
   real(r8), pointer :: max_dayl(:)        ! maximum daylength (s)
   real(r8), pointer :: sandfrac(:)
@@ -154,7 +147,6 @@ subroutine iniTimeConst
   real(r8),pointer :: sand3d(:,:)    ! read in - soil texture: percent sand
   real(r8),pointer :: clay3d(:,:)    ! read in - soil texture: percent clay
   real(r8),pointer :: organic3d(:,:) ! read in - organic matter: kg/m3
-  real(r8),pointer :: ndep(:)        ! read in - annual nitrogen deposition rate (gN/m2/yr)
   real(r8),pointer :: gti(:)         ! read in - fmax
   real(r8) :: om_frac                ! organic matter fraction
   real(r8) :: om_watsat    = 0.9_r8  ! porosity of organic soil
@@ -199,7 +191,7 @@ subroutine iniTimeConst
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
   call get_proc_global(numg, numl, numc, nump)
 
-  allocate(soic2d(begg:endg),ndep(begg:endg), gti(begg:endg))
+  allocate(soic2d(begg:endg), gti(begg:endg))
   allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
   allocate(organic3d(begg:endg,nlevsoi))
 
@@ -246,8 +238,6 @@ subroutine iniTimeConst
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
   max_dayl        => clm3%g%l%c%cps%max_dayl
-  forc_ndep       => clm_a2l%forc_ndep
-
 
   ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -397,13 +387,6 @@ subroutine iniTimeConst
      sandfrac(p) = sand3d(g,1)/100.0_r8
      clayfrac(p) = clay3d(g,1)/100.0_r8
   end do
-
-  ! If a nitrogen deposition dataset has been specified, read it
-  ! --------------------------------------------------------------------
-  
-#ifdef CN
-  call ndeprd(ndep)
-#endif
 
   ! --------------------------------------------------------------------
   ! If a organic matter dataset has been specified, read it
@@ -585,11 +568,6 @@ subroutine iniTimeConst
    ! Grid level initialization
    do g = begg, endg
 
-      ! nitrogen deposition (forcing flux from atmosphere)
-      ! convert rate from 1/yr -> 1/s
-      
-      forc_ndep(g) = ndep(g)/(86400._r8 * 365._r8)
-      
       ! VOC emission factors
       ! Set gridcell and landunit indices
       efisop(:,g)=efisop2d(:,g)
@@ -867,7 +845,7 @@ subroutine iniTimeConst
    call CNiniSpecial()
 #endif
 
-   deallocate(soic2d,ndep,sand3d,clay3d,gti,organic3d)
+   deallocate(soic2d,sand3d,clay3d,gti,organic3d)
    deallocate(temp_ef,efisop2d)
 
 

@@ -19,11 +19,21 @@
 
 <orb_iyear_ad mode="seq_ccsm"  >1990</orb_iyear_ad>
 
-<clm_demand bgc="none" >fpftdyn</clm_demand>
-<clm_demand bgc="cn"   >fpftdyn,fndepdyn</clm_demand>
-<clm_demand bgc="cndv" >fpftdyn,fndepdyn</clm_demand>
-<clm_demand bgc="casa" >fpftdyn</clm_demand>
+<clm_demand bgc="none"                   >fpftdyn</clm_demand>
+<clm_demand bgc="cn"   ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
+<clm_demand bgc="cndv" ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
+<clm_demand bgc="cn"   ndepsrc="stream"  >fpftdyn</clm_demand>
+<clm_demand bgc="cndv" ndepsrc="stream"  >fpftdyn</clm_demand>
+<clm_demand bgc="casa"                   >fpftdyn</clm_demand>
 
 <clm_start_type>startup</clm_start_type>
+
+<stream_year_first_ndep bgc="cn"   ndepsrc="stream" >2000</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cn"   ndepsrc="stream" >2100</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cn"   ndepsrc="stream" >2000</model_year_align_ndep>
+
+<stream_year_first_ndep bgc="cndv" ndepsrc="stream" >2000</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2100</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cndv" ndepsrc="stream" >2000</model_year_align_ndep>
 
 </namelist_defaults>

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module areaMod
 
 !-----------------------------------------------------------------------
@@ -55,6 +52,11 @@ module areaMod
   public :: map_setptrs
   public :: map_setmapsFM
   public :: map_setmapsAR
+  interface map_maparrayl
+     module procedure map_maparrayl_arr
+     module procedure map_maparrayl_rev
+     module procedure map_maparrayl_av
+  end interface
   public :: map_maparrayl
   public :: map_maparrayg
   public :: map_setgatm
@@ -211,11 +213,11 @@ end subroutine map_setptrs
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: map_maparrayl
+! !IROUTINE: map_maparrayl_arr
 !
 ! !INTERFACE:
-  subroutine map_maparrayl(begg_i, endg_i, begg_o, endg_o, nflds, &
-                              fld_i, fld_o, map)
+  subroutine map_maparrayl_arr(begg_i, endg_i, begg_o, endg_o, nflds, &
+                               fld_i, fld_o, map)
 !
 ! !DESCRIPTION:
 ! This subroutine maps arrays, local 1d with 1d map type
@@ -246,20 +248,20 @@ end subroutine map_setptrs
 !------------------------------------------------------------------------------
 
     if (trim(map%type) /= trim(map_typelocal)) then
-       write(iulog,*) 'map_maparrayl WARNING: map type not correct, ', &
+       write(iulog,*) 'map_maparrayl_arr WARNING: map type not correct, ', &
                    map%name,map%type
     endif
 
     ! check for errors in overlap
 
     if (minval(map%src) < begg_i .or. maxval(map%src) > endg_i) then
-       write(iulog,*) 'map_maparrayl ERROR: src out of bounds:', &
+       write(iulog,*) 'map_maparrayl_arr ERROR: src out of bounds:', &
                    minval(map%src),maxval(map%src),begg_i,endg_i
        call endrun()
     endif
 
     if (minval(map%dst) < begg_o .or. maxval(map%dst) > endg_o) then
-       write(iulog,*) 'map_maparrayl ERROR: dst out of bounds:', &
+       write(iulog,*) 'map_maparrayl_arr ERROR: dst out of bounds:', &
                    minval(map%dst),maxval(map%dst),begg_o,endg_o
        call endrun()
     endif
@@ -279,7 +281,155 @@ end subroutine map_setptrs
     enddo
     enddo
 
-end subroutine map_maparrayl
+end subroutine map_maparrayl_arr
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_maparrayl_rev
+!
+! !INTERFACE:
+  subroutine map_maparrayl_rev(begg_i, endg_i, begg_o, endg_o, nflds, &
+                              fld_i, fld_o, map, reverse_order)
+!
+! !DESCRIPTION:
+! This subroutine maps arrays, local 1d with 1d map type
+!
+! !USES:
+  use mct_mod
+!
+! !ARGUMENTS:
+  implicit none
+  integer                         :: begg_i,endg_i         !beg,end of input grid
+  integer                         :: begg_o,endg_o         !beg,end of output grid
+  integer                         :: nflds                 !number of fields being mapped
+  real(r8), intent(in)            :: fld_i(nflds,endg_i-begg_i+1)
+  real(r8), intent(out)           :: fld_o(nflds,endg_o-begg_o+1)
+  type(map_type), intent(in)      :: map
+  logical, intent(in)             :: reverse_order
+!
+! !REVISION HISTORY:
+! 2005.11.15  T Craig  Creation.
+! 2006.3.30   P Worley Restructuring for improved vector performance
+! 2010.5.1    M Vertenstein Added new interfaces
+!
+
+! !LOCAL VARIABLES:
+!EOP
+  integer :: g_o ,g_i              ! gridcell indices
+  integer :: n,ifld                ! loop counters
+  real(r8):: wtx                   ! wt for map
+!
+!------------------------------------------------------------------------------
+
+    if (trim(map%type) /= trim(map_typelocal)) then
+       write(iulog,*) 'map_maparrayl_rev WARNING: map type not correct, ', &
+                   map%name,map%type
+    endif
+
+    ! check for errors in overlap
+
+    if (minval(map%src) < begg_i .or. maxval(map%src) > endg_i) then
+       write(iulog,*) 'map_maparrayl_rev ERROR: src out of bounds:', &
+                   minval(map%src),maxval(map%src),begg_i,endg_i
+       call endrun()
+    endif
+
+    if (minval(map%dst) < begg_o .or. maxval(map%dst) > endg_o) then
+       write(iulog,*) 'map_maparrayl_rev ERROR: dst out of bounds:', &
+                   minval(map%dst),maxval(map%dst),begg_o,endg_o
+       call endrun()
+    endif
+
+    ! initialize field on output grid to zero everywhere
+
+    fld_o(:,:) = 0._r8
+
+    ! map flds
+
+    do n = 1,map%nwts
+       g_i = map%src(n) - begg_i + 1
+       g_o = map%dst(n) - begg_o + 1
+       wtx = map%S(n)
+       do ifld = 1,nflds
+          fld_o(ifld,g_o) = fld_o(ifld,g_o) + wtx * fld_i(ifld,g_i)
+       enddo
+    enddo
+
+end subroutine map_maparrayl_rev
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_maparrayl_av
+!
+! !INTERFACE:
+  subroutine map_maparrayl_av(begg_i, endg_i, begg_o, endg_o, nflds, &
+                              fld_i, fld_o, map)
+!
+! !DESCRIPTION:
+! This subroutine maps arrays, local 1d with 1d map type
+!
+! !USES:
+  use mct_mod
+!
+! !ARGUMENTS:
+  implicit none
+  integer                         :: begg_i,endg_i         !beg,end of input grid
+  integer                         :: begg_o,endg_o         !beg,end of output grid
+  integer                         :: nflds                 !number of fields being mapped
+  type(mct_aVect), intent(inout)  :: fld_i                 !land model import and export states
+  type(mct_aVect), intent(inout)  :: fld_o                 !land model import and export states
+  type(map_type), intent(in)      :: map
+!
+! !REVISION HISTORY:
+! 2005.11.15  T Craig  Creation.
+! 2006.3.30   P Worley Restructuring for improved vector performance
+!
+
+! !LOCAL VARIABLES:
+!EOP
+  integer :: g_o ,g_i              ! gridcell indices
+  integer :: n,ifld                ! loop counters
+  real(r8):: wtx                   ! wt for map
+!
+!------------------------------------------------------------------------------
+
+    if (trim(map%type) /= trim(map_typelocal)) then
+       write(iulog,*) 'map_maparrayl_av WARNING: map type not correct, ', &
+                   map%name,map%type
+    endif
+
+    ! check for errors in overlap
+
+    if (minval(map%src) < begg_i .or. maxval(map%src) > endg_i) then
+       write(iulog,*) 'map_maparrayl_av ERROR: src out of bounds:', &
+                   minval(map%src),maxval(map%src),begg_i,endg_i
+       call endrun()
+    endif
+
+    if (minval(map%dst) < begg_o .or. maxval(map%dst) > endg_o) then
+       write(iulog,*) 'map_maparrayl_av ERROR: dst out of bounds:', &
+                   minval(map%dst),maxval(map%dst),begg_o,endg_o
+       call endrun()
+    endif
+
+    ! initialize field on output grid to zero everywhere
+
+    call mct_aVect_zero(fld_o)
+
+    ! map flds
+
+    do n = 1,map%nwts
+       g_i = map%src(n) - begg_i + 1
+       g_o = map%dst(n) - begg_o + 1
+       wtx = map%S(n)
+       do ifld = 1,nflds
+          fld_o%rAttr(ifld,g_o) = fld_o%rAttr(ifld,g_o) + wtx * fld_i%rAttr(ifld,g_i)
+       enddo
+    enddo
+
+end subroutine map_maparrayl_av
 
 !------------------------------------------------------------------------------
 !BOP
@@ -599,7 +749,6 @@ end subroutine map_maparrayg
           endif
        enddo
        if (found) then        ! if so, keep only real land points
-!dir$ concurrent
           do noidx = 0,nocnt(na)-1
              nl = nomap(nooff(na)+noidx)
              if (pftm(nl) <= 0 ) then

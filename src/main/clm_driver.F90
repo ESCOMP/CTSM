@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_driver
 
 !-----------------------------------------------------------------------
@@ -90,7 +87,7 @@ module clm_driver
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal
 #ifdef CN
   use pftdynMod           , only : pftdyn_cnbal
-  use clm_varctl          , only : fndepdyn
+  use clm_varctl          , only : fndepdyn, use_ndepstream
 #endif
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb
@@ -120,6 +117,8 @@ module clm_driver
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
                                    CBalanceCheck, NBalanceCheck
   use ndepFileMod         , only : ndepdyn_interp
+  use ndepStreamMod       , only : ndep_interp, &
+	                           stream_year_first_ndep, stream_year_last_ndep 
 #else
   use STATICEcosysDynMod  , only : EcosystemDyn, interpMonthlyVeg
 #endif
@@ -374,13 +373,18 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
   ! currently being done outside clumps loop, but no reason why it couldn't be
   ! re-written to go inside.
   ! ============================================================================
-! PET: switching CN timestep
-  if (fndepdyn /= ' ') then
-     call ndepdyn_interp()
+  ! PET: switching CN timestep
+  if (use_ndepstream) then
+     if (stream_year_first_ndep /= stream_year_last_ndep) then
+        call ndep_interp()
+     end if
+  else 
+     if (fndepdyn /= ' ') then
+        call ndepdyn_interp()
+     end if
   end if
 #endif       
   call t_stopf('pftdynwts')
-
 
 !$OMP PARALLEL DO PRIVATE (nc,l,c,begg,endg,begl,endl,begc,endc,begp,endp)
   do nc = 1,nclumps

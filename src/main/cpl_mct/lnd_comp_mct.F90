@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module lnd_comp_mct
   
 !---------------------------------------------------------------------------
@@ -58,6 +55,9 @@ module lnd_comp_mct
   type(mct_aVect)   :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
   type(mct_aVect)   :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
 
+  type(mct_aVect)   :: l2x_l_clm      ! Internal clm grid
+  type(mct_aVect)   :: x2l_l_clm      ! Internal clm grid
+
   type(mct_aVect)   :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
   type(mct_aVect)   :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid 
 !
@@ -91,28 +91,29 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use shr_kind_mod     , only : r8 => shr_kind_r8
+    use abortutils       , only : endrun
+    use areaMod          , only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
-    use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
-    use clm_comp         , only : clm_init0, clm_init1, clm_init2
-    use clm_varctl       , only : finidat,single_column, set_clmvarctl
-    use controlMod       , only : control_setNL
-    use domainMod        , only : adomain
+    use clm_atmlnd       , only : clm_l2a, clm_mapa2l
+    use clm_comp         , only : clm_init1, clm_init2, clm_init3
+    use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
-    use abortutils       , only : endrun
-    use clm_varctl       , only : iulog, noland
+    use controlMod       , only : control_setNL
+    use decompMod        , only : get_proc_bounds, get_proc_bounds_atm
+    use domainMod        , only : adomain
+    use shr_kind_mod     , only : r8 => shr_kind_r8
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                   shr_file_getLogUnit, shr_file_getLogLevel, &
                                   shr_file_getUnit, shr_file_setIO
     use seq_cdata_mod    , only : seq_cdata, seq_cdata_setptrs
-    use spmdMod          , only : masterproc, spmd_init
     use seq_timemgr_mod  , only : seq_timemgr_EClockGetData
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData, seq_infodata_PutData, &
                                   seq_infodata_start_type_start, seq_infodata_start_type_cont,   &
                                   seq_infodata_start_type_brnch
     use mct_mod          , only : mct_aVect, mct_gsMap, mct_gGrid, mct_aVect_init, mct_aVect_zero
+    use spmdMod          , only : masterproc, spmd_init
     use seq_flds_mod
     use seq_flds_indices
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
@@ -141,7 +142,7 @@ contains
     type(mct_gGrid),         pointer :: dom_s
     type(seq_infodata_type), pointer :: infodata     ! CCSM driver level info data
     integer  :: lsize                                ! size of attribute vector
-    integer  :: i,j                                  ! indices
+    integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
     logical  :: exists                               ! true if file exists
@@ -167,6 +168,7 @@ contains
     logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
+    integer :: begg_l, endg_l, begg_a, endg_a
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
 !
@@ -221,8 +223,9 @@ contains
     call control_setNL( 'lnd_in' )
 
     ! Initialize clm
-    ! clm_init0 reads namelist, grid and surface data
-    ! clm_init1 and clm_init2 performs rest of initialization	
+    ! clm_init1 reads namelist, grid and surface data
+    ! clm_init2 and clm_init3 performs rest of initialization	
+
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
                                    start_tod=start_tod, ref_ymd=ref_ymd, &
@@ -257,7 +260,9 @@ contains
                            scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
                            hostname_in=hostname, username_in=username )
 
-    call clm_init0( )
+    ! Read namelist, grid and surface data
+
+    call clm_init1( )
 
     ! If no land then exit out of initialization
 
@@ -272,29 +277,13 @@ contains
 
     call lnd_chkAerDep_mct( infodata )
 
-    call clm_init1( )
-    call clm_init2()
-
-    ! Check that clm internal dtime aligns with clm coupling interval
-
-    call seq_timemgr_EClockGetData(EClock, dtime=dtime_sync )
-    dtime_clm = get_step_size()
-    if(masterproc) write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
-    if (mod(dtime_sync,dtime_clm) /= 0) then
-       write(iulog,*)'clm dtime ',dtime_clm,' and Eclock dtime ',dtime_sync,' never align'
-       call endrun( sub//' ERROR: time out of sync' )
-    end if
-
-    ! Initialize lnd gsMap
+    ! Initialize lnd gsMap and domain
 
     call lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd ) 	
     lsize = mct_gsMap_lsize(gsMap_lnd, mpicom_lnd)
-
-    ! Initialize lnd domain
-
     call lnd_domain_mct( lsize, gsMap_lnd, dom_l )
 
-    ! Initialize lnd attribute vectors
+    ! Initialize lnd attribute vectors coming from driver
 
     call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields, lsize=lsize)
     call mct_aVect_zero(x2l_l)
@@ -313,10 +302,44 @@ contains
        write(iulog,format) trim(seq_flds_l2x_fluxes)
     end if
 
-    ! Create mct land export state
+    ! Finish initializing clm
 
-    call clm_mapl2a(clm_l2a, atm_l2a)
-    call lnd_export_mct( atm_l2a, l2x_l )
+    call clm_init2()
+    call clm_init3()
+
+    ! Check that clm internal dtime aligns with clm coupling interval
+
+    call seq_timemgr_EClockGetData(EClock, dtime=dtime_sync )
+    dtime_clm = get_step_size()
+    if (masterproc) write(iulog,*)'dtime_sync= ',dtime_sync,&
+         ' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
+    if (mod(dtime_sync,dtime_clm) /= 0) then
+       write(iulog,*)'clm dtime ',dtime_clm,' and Eclock dtime ',&
+            dtime_sync,' never align'
+       call endrun( sub//' ERROR: time out of sync' )
+    end if
+
+    ! Create new attribute vectors for the clm internal grid (dst)
+
+    call get_proc_bounds_atm(begg_a, endg_a) ! clm grid - driver (src)
+    call get_proc_bounds    (begg_l, endg_l) ! clm grid - internal (dst)
+
+    call mct_aVect_init(x2l_l_clm, rList=seq_flds_x2l_fields, lsize=endg_l-begg_l+1)
+    call mct_aVect_zero(x2l_l_clm)
+
+    call mct_aVect_init(l2x_l_clm, rList=seq_flds_l2x_fields, lsize=endg_l-begg_l+1)
+    call mct_aVect_zero(l2x_l_clm)
+    
+    ! Create land export state then map this from the 
+    ! clm internal grid (dst) to the clm driver grid (src)
+
+    call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
+    call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
+        	       l2x_l_clm, l2x_l, map1dl_l2a)
+    ! Reset landfrac on atmosphere grid to have the right domain
+    do g = begg_a,endg_a
+       l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
+    end do
 
 #ifdef RTM
     ! Initialize rof gsMap
@@ -440,13 +463,13 @@ contains
 !
 ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
-    use clm_atmlnd      ,only : clm_mapl2a, clm_mapa2l
-    use clm_atmlnd      ,only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
+    use areaMod         ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
+    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_mapa2l
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
     use domainMod       ,only : adomain
-    use decompMod       ,only : get_proc_bounds_atm
+    use decompMod       ,only : get_proc_bounds_atm, get_proc_bounds
     use abortutils      ,only : endrun
     use clm_varctl      ,only : iulog
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
@@ -463,6 +486,8 @@ contains
     use clm_varctl      ,only : create_glacier_mec_landunit
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
+    use seq_flds_indices
+
     use ESMF_mod
     implicit none
 !
@@ -505,6 +530,7 @@ contains
     type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
     real(r8),               pointer :: data(:)  ! temporary
     integer :: g,i,lsize                        ! counters
+    integer :: begg_l, endg_l, begg_a, endg_a   ! bounds
     logical,save :: first_call = .true.         ! first call work
     character(len=32)            :: rdate       ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
@@ -545,14 +571,19 @@ contains
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
 
-    lsize = mct_gGrid_lsize(dom_l)
-    call get_proc_bounds_atm(begg, endg)
+    write(6,*)'at point 2'
+    call shr_sys_flush(6)
+
+    call get_proc_bounds_atm(begg_a, endg_a)
+    call get_proc_bounds    (begg_l, endg_l)
+
     if (first_call) then
+       lsize = mct_gGrid_lsize(dom_l)
        allocate(data(lsize))
        call mct_gGrid_exportRattr(dom_l,"ascale",data,lsize) 
-       do g = begg,endg
-          i = 1 + (g - begg)
-           adomain%asca(g) = data(i)
+       do g = begg_a,endg_a
+          i = 1 + (g - begg_a)
+          adomain%asca(g) = data(i)
        end do
        deallocate(data)
 
@@ -561,8 +592,17 @@ contains
     ! Map MCT to land data type
 
     call t_startf ('lc_lnd_import')
-    call lnd_import_mct( x2l_l, atm_a2l )
+    call lnd_import_mct( x2l_l, atm_a2l, begg_a, endg_a )
     call t_stopf ('lc_lnd_import')
+
+    call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
+	               x2l_l, x2l_l_clm, map1dl_a2l)
+
+    call t_startf ('lc_lnd_import')
+    call lnd_import_mct( x2l_l_clm, clm_a2l, begg_l, endg_l )
+    call t_stopf ('lc_lnd_import')
+
+    ! Perform downscaling if appropriate
 
     call t_startf ('lc_clm_mapa2l')
     call clm_mapa2l(atm_a2l, clm_a2l)
@@ -640,14 +680,17 @@ contains
 
        ! Map land data type to MCT
        
-       call t_startf ('lc_clm_mapl2a')
-       call clm_mapl2a(clm_l2a, atm_l2a)
-       call t_stopf ('lc_clm_mapl2a')
-       
        call t_startf ('lc_lnd_export')
-       call lnd_export_mct( atm_l2a, l2x_l )
+       call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
+       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
+           	          l2x_l_clm, l2x_l, map1dl_l2a)
+
+       ! Reset landfrac on atmosphere grid to have the right domain
+       do g = begg_a,endg_a
+          l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
+       end do
        call t_stopf ('lc_lnd_export')
-       
+
        ! Compute snapshot attribute vector for accumulation
        
        ! don't accumulate on first coupling freq ts0 and ts1
@@ -918,7 +961,7 @@ contains
 
   end subroutine lnd_chkAerDep_mct
 
-!====================================================================================
+!=================================================================================
 
 !---------------------------------------------------------------------------
 !BOP
@@ -926,7 +969,7 @@ contains
 ! !IROUTINE: lnd_export_mct
 !
 ! !INTERFACE:
-  subroutine lnd_export_mct( l2a, l2x_l )   
+  subroutine lnd_export_mct( l2a, l2x_l, begg, endg )   
 !
 ! !DESCRIPTION:
 !
@@ -939,17 +982,17 @@ contains
     use clm_time_manager   , only : get_nstep  
     use clm_atmlnd         , only : lnd2atm_type
     use domainMod          , only : adomain
-    use decompMod          , only : get_proc_bounds_atm, adecomp
     use seq_drydep_mod     , only : n_drydep
     use seq_flds_indices
     implicit none
 ! !ARGUMENTS:
     type(lnd2atm_type), intent(inout) :: l2a     ! clm land to atmosphere exchange data type
     type(mct_aVect)   , intent(inout) :: l2x_l   ! Land to coupler export state on land grid
+    integer           , intent(in)    :: begg    ! beginning grid cell index
+    integer           , intent(in)    :: endg    ! ending grid cell index
 !
 ! !LOCAL VARIABLES:
     integer :: g,i           ! Indices
-    integer :: begg, endg    ! beginning and ending gridcell indices
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -957,15 +1000,13 @@ contains
 !EOP
 !---------------------------------------------------------------------------
     
-    call get_proc_bounds_atm(begg, endg)
-
     l2x_l%rAttr(:,:) = 0.0_r8
 
     ! ccsm sign convention is that fluxes are positive downward
 
     do g = begg,endg
        i = 1 + (g-begg)
-       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  adomain%frac(g)
+       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  0._r8 ! Will be filled in later
        l2x_l%rAttr(index_l2x_Sl_t,i)        =  l2a%t_rad(g)
        l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
        l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
@@ -1019,7 +1060,7 @@ contains
 ! !IROUTINE: lnd_import_mct
 !
 ! !INTERFACE:
-  subroutine lnd_import_mct( x2l_l, a2l )
+  subroutine lnd_import_mct( x2l_l, a2l, begg, endg )
 !
 ! !DESCRIPTION:
 !
@@ -1036,9 +1077,8 @@ contains
     use clm_varcon      , only: c13ratio
 #endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
-    use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
-    use clm_varctl      , only : set_caerdep_from_file, set_dustdep_from_file
+    use clm_varctl      , only: set_caerdep_from_file, set_dustdep_from_file
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
     use seq_flds_indices
@@ -1046,6 +1086,8 @@ contains
 ! !ARGUMENTS:
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
     type(atm2lnd_type), intent(inout) :: a2l     ! clm internal input data type
+    integer           , intent(in)    :: begg	
+    integer           , intent(in)    :: endg
 !
 ! !LOCAL VARIABLES:
     integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
@@ -1058,7 +1100,6 @@ contains
     real(r8) :: co2_ppmv_diag        ! temporary
     real(r8) :: co2_ppmv_prog        ! temporary
     real(r8) :: co2_ppmv_val         ! temporary
-    integer  :: begg, endg           ! beginning and ending gridcell indices
     integer  :: co2_type_idx         ! integer flag for co2_type options
     real(r8) :: esatw                ! saturation vapor pressure over water (Pa)
     real(r8) :: esati                ! saturation vapor pressure over ice (Pa)
@@ -1090,8 +1131,6 @@ contains
 !
 !EOP
 !---------------------------------------------------------------------------
-
-    call get_proc_bounds_atm(begg, endg)
 
     co2_type_idx = 0
     if (co2_type == 'prognostic') then
@@ -1209,8 +1248,7 @@ contains
         a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
 #if (defined C13)
         a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
-#endif
-	 
+#endif	 
      end do
 
    end subroutine lnd_import_mct
@@ -1330,7 +1368,7 @@ contains
   end subroutine lnd_domain_mct
     
 !===============================================================================
-    
+
 #ifdef RTM
 !---------------------------------------------------------------------------
 !BOP

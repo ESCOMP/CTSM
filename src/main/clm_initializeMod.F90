@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_initializeMod
 
 !-----------------------------------------------------------------------
@@ -23,6 +20,8 @@ module clm_initializeMod
   use clm_varsur      , only : topoxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use perf_mod        , only : t_startf, t_stopf
+  use mct_mod
+
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -408,8 +407,9 @@ contains
     use mkarbinitMod    , only : mkarbinit
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
 #ifdef CN
-    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
-    use clm_varctl      , only : fndepdyn
+    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp, ndeprd
+    use ndepStreamMod   , only : ndep_init, ndep_interp
+    use clm_varctl      , only : fndepdyn, fndepdat, use_ndepstream
 #endif
 #if (defined CNDV)
     use pftdynMod             , only : pftwt_init, pftwt_interp
@@ -439,7 +439,8 @@ contains
                                  clm_x2s, clm_s2x, atm_x2s, atm_s2x
     use seq_drydep_mod,       only : n_drydep, drydep_method, DD_XLND
 
-!
+! !Arguments    
+    implicit none
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -666,18 +667,29 @@ contains
     call t_stopf('init_io2')
 
     ! ------------------------------------------------------------------------
-    ! Initialize dynamic nitrogen deposition
+    ! Initialize nitrogen deposition
     ! ------------------------------------------------------------------------
 
 #ifdef CN
-    if (fndepdyn /= ' ') then
-       call t_startf('init_ndepdyn')
-       call ndepdyn_init()
-       call ndepdyn_interp()
-       call t_stopf('init_ndepdyn')
-    end if
+    call t_startf('init_ndep')
+    if (use_ndepstream) then
+       call ndep_init()
+       call ndep_interp()
+    else
+       if (fndepdyn /= ' ') then
+          call t_startf('init_ndepdyn')
+          call ndepdyn_init()
+          call ndepdyn_interp()
+          call t_stopf('init_ndepdyn')
+       else if (fndepdat /= ' ') then
+          call ndeprd(fndepdat)
+       else
+          call ndeprd()
+       end if
+    endif
+    call t_stopf('init_ndep')
 #endif
-
+    
     ! ------------------------------------------------------------------------
     ! Initialization of model parameterizations that are needed after
     ! restart file is read in

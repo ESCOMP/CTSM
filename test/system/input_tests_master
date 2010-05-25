@@ -380,10 +380,20 @@ erHQ4 TER.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -3+-7
 brHQ4 TBR.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -5+-5 cold
 blHQ4 TBL.sh _nrcnsc_ds clm_drydep 20000214:NONE:1800 1x1_brazil navy@2000 -150  cold
 
+smHO1 TSM.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+erHO1 TER.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold
+brHO1 TBR.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold
+blHO1 TBL.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+
 smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold
 brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold
 blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+
+smHO3 TSM.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+erHO3 TER.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold
+brHO3 TBR.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold
+blHO3 TBL.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
 
 smH65 TSM.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 erH65 TER.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup

@@ -80,6 +80,13 @@ Time step (seconds)
 Override the start type from the driver: 3: branch
 </entry>
 
+<entry id="use_ndepstream" type="logical" category="datasets"
+       group="clm_inparm">
+Flag to use Nitrogen Deposition files from streams or not
+	If .true. will use Nitrogen Deposition files from streams and interpolate to output resolution
+        If .false. will use fndepdat and fndepdyn files, which MUST be on the output resolution
+</entry>
+
 <entry id="fatmgrid" type="char*256" input_pathname="abs" category="datasets"
        group="clm_inparm" valid_values="" >
 Full pathname of atmosphere grid data file.
@@ -403,6 +410,31 @@ CASA flag if input file spunup or not: 0=no, 1=yes (CASA is EXPERIMENTAL NOT SUP
 CASA Carbon Pool initial state filename (CASA is EXPERIMENTAL NOT SUPPORTED!)
 <default>Default: blank</default>
 </entry>
+
+<!-- ========================================================================================  -->
+<!-- ndepdyn streams Namelist (only used when bgc=cn/cndv and when use_ndepstream is .true.)   -->
+<!-- ========================================================================================  -->
+
+<entry id="stream_year_first_ndep" type="integer" category="datasets"
+       group="ndepdyn_nml" valid_values="" >
+First year to loop over for Nitrogen Deposition data
+</entry>
+
+<entry id="stream_year_last_ndep" type="integer" category="datasets"
+       group="ndepdyn_nml" valid_values="" >
+Last year to loop over for Nitrogen Deposition data
+</entry>
+
+<entry id="model_year_align_ndep" type="integer" category="datasets"
+       group="ndepdyn_nml" valid_values="" >
+Simulation year that aligns with stream_year_first_ndep value
+</entry>
+
+<entry id="stream_fldfilename_ndep" type="char*256" input_pathname="abs" category="datasets"
+       group="ndepdyn_nml" valid_values="" >
+Filename of input stream data for Nitrogen Deposition
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- CPL7 Driver Namelist -->
 <!-- ========================================================================================  -->
@@ -1128,6 +1160,12 @@ CLM run type.
        valid_values=
 "128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
+</entry> 
+
+<entry id="ndepsrc" type="char*7" category="default_settings"
+       group="default_settings"  
+       valid_values="none,stream,data">
+Source type of Nitrogen deposition data, when bgc=cn or bgc=cndv
 </entry> 
 
 <entry id="rcp" type="real" category="default_settings"

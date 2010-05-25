@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module ndepFileMod
 #ifdef CN
 
@@ -57,21 +54,22 @@ contains
 ! !IROUTINE: ndeprd
 !
 ! !INTERFACE:
-  subroutine ndeprd(ndep)
+  subroutine ndeprd(fndepdat)
 !
 ! !DESCRIPTION: 
 ! Read the nitrogen deposition dataset.
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varctl  , only : fndepdat, single_column
+    use clm_varctl  , only : single_column
     use fileutils   , only : getfil
     use decompMod   , only : get_proc_bounds
+    use clm_atmlnd  , only : clm_a2l
 !
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
-    real(r8), pointer :: ndep(:)         ! annual nitrogen deposition rate (gN/m2/yr)
+    character(len=*), intent(in), optional :: fndepdat	
 !
 ! !CALLED FROM:
 ! subroutine initialize in module initializeMod
@@ -82,30 +80,26 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    character(len=256) :: locfn                          ! local file name
-    character(len=256) :: units = ' '                    ! units of ndep_year variable
-    integer  :: ncid,dimid,varid                         ! netCDF id's
-    integer  :: begg,endg                                ! start/stop gridcells
-    integer  :: ier, ret                                 ! error status 
-    character(len=32) :: subname = 'ndeprd'              ! subroutine name
+    character(len=256) :: locfn              ! local file name
+    character(len=256) :: units = ' '        ! units of ndep_year variable
+    integer  :: ncid,dimid,varid             ! netCDF id's
+    integer  :: g,begg,endg                  ! start/stop gridcells
+    integer  :: ier, ret                     ! error status 
+    real(r8), pointer :: ndep(:)             ! annual nitrogen deposition rate (gN/m2/yr)
+    character(len=32) :: subname = 'ndeprd'  ! subroutine name
 !-----------------------------------------------------------------------
 
+   ! Initialize data to zero - no nitrogen deposition
+
     call get_proc_bounds(begg,endg)
+    allocate(ndep(begg:endg))
+    ndep(:) = 0._r8
 
-    ! Initialize data to zero - no nitrogen deposition
-
-    ndep(:)   = 0._r8
-       
-    ! read data if file was specified in namelist
-       
-    if (fndepdat /= ' ') then
-
-       ! Obtain netcdf file and read surface data
-
+    ! Obtain netcdf file and read surface data if appropriate
+    if (present(fndepdat)) then	
        if (masterproc) then
 
           write(iulog,*) 'Attempting to read nitrogen deposition data .....'
-
           call getfil (fndepdat, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
 
@@ -116,25 +110,24 @@ contains
              lsmlon = 1
              lsmlat = 1
           end if
-          !
+          
           ! Check that units are correct on NDEP_year variable
-          !
           call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname)
           call check_ret(nf_get_att_text(ncid, varid, 'units', units), subname)
           if ( trim(units) .ne. "g(N)/m2/yr" .and. trim(units) .ne. "gN/m2/yr" )then
              call endrun( 'ERROR: units are NOT what is expected on ndepdat file = '//trim(units) )
           end if
-       endif 
+       endif
 
-       call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd, status=ret)
+       call ncd_iolocal(ncid,'NDEP_year','read', ndep, grlnd, status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: NDEP_year NOT on ndepdat file' )
-
-    endif
-
-    if ( masterproc )then
        write(iulog,*) 'Successfully read nitrogen deposition data'
        write(iulog,*)
     end if
+
+    do g = begg,endg
+       clm_a2l%forc_ndep(g) = ndep(g)/(86400._r8 * 365._r8)
+    end do
 
   end subroutine ndeprd
 
@@ -347,8 +340,6 @@ contains
           write(iulog,*)subname,' error - current year is past input data boundary'
        end if
        
-!dir$ concurrent
-!cdir nodep
        do g = begg,endg
           ndepdyn1(g) = ndepdyn2(g)
        end do
@@ -366,8 +357,6 @@ contains
     ! assign interpolated flux field to forc_ndep
     ! convert units from gN/yr -> gN/s
     
-!dir$ concurrent
-!cdir nodep
     do g = begg,endg
 !      --- recoded for roundoff error, tcraig 3/07 from k.lindsay
 !      clm_a2l%forc_ndep(g) = (ndepdyn1(g)*wt1 + ndepdyn2(g)* wt2)/(86400._r8 * 365._r8)
