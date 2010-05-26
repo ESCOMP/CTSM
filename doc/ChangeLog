@@ -1,4 +1,98 @@
 ===============================================================
+Tag name:  clm4_0_06
+Originator(s):  erik (erik)
+Date: Wed May 26 10:35:26 MDT 2010
+One-line Summary: Update gglc to cism
+
+Purpose of changes:
+
+Changes from jwolfe to lnd_comp* subroutines to exchange cism fields. Requires an update
+to the driver for the index of the fieldnames passed. Change paths of gglc glc_grid files
+from gglc to cism. Make stream the default for all resolutions for ndepsrc.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1162 (OpenMP bug with dry-deposition code in clm)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system:
+    Change name of ice model from gglc to cism
+    Change list of fields exchanged with cism
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+     Change pathnames for gglc fglcmask datasets to cism
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, jwolfe, lipscomb
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, cism
+    scripts  to scripts4_100525
+    drv      to drvseq3_1_26
+    cism     to cism1_100525b
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+    M   models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Change default
+           of ndepsrc for f19 and f09 to stream
+    M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- Change pathnames
+           for fglcmask files to pathame with cism instead of gglc
+
+    M   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ---------------- Pass a different
+           set of fields for sno (needed for update to cism)
+
+    M   models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 -------------- Pass a different
+           set of fields for sno (needed for update to cism)
+
+Summary of testing:
+
+  bluefire/CCSM testing:
+FAIL  ERI.f19_g16.IG.bluefire
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_06
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_05
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_05
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_05
+  bluefire/CCSM extra testing:
+PASS  SMS.f19_g16.IG.bluefire
+PASS  ERS.f19_g16.IG.bluefire
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_05
+
+Changes answers relative to baseline: Only when glc is active
+      Or for f19 and f09 with CN as now ndepsrc streams is the default for all resolutions
+      (previously ndepsrc data was the default for f19 and f09)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_05
 Originator(s):  erik (erik)
 Date: Tue May 25 15:13:30 MDT 2010
@@ -9,7 +103,8 @@ Purpose of changes:
 Move branch that treats ndepdyn files as streams to trunk. Change csm_share to have a
 simpler normalization for coszen scaling (from dlawren/kauff in datm/csm_share). Fix
 fragile code in clm_atmlnd, from Mariana. Update to datm8 that can set streams for
-aerosols. Fix template so that CLM_BLDNML_OPTS is active.
+aerosols. Fix template so that CLM_BLDNML_OPTS is active. Update scripts and get in 
+other new finidat files, change clm test list, include _E test and IG f19 test.
 
 Bugs fixed (include bugzilla ID):
                                  1161 (New history fields added that should NOT be)

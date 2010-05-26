@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_06         erik 05/26/2010 Update gglc to cism
    clm4_0_05         erik 05/25/2010 Move Nitrogen deposition stream branch to trunk
    clm4_0_04         erik 05/20/2010 New namelist items: ice_runoff, scaled_harvest, carbon_only, 
                      new RTM hist vars, new finidat files, update esmf interface, turn off aerosol read quicker

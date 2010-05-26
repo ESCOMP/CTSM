@@ -327,15 +327,15 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmgrid hgrid="1x1_asphaltjungleNJ">lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
 
 <!-- GLC mask datasets (relative to {csmdata}) -->
-<fglcmask hgrid="48x96"    glc_grid="gland20" >glc/gglc/griddata/glcmaskdata_48x96_Gland20km.nc</fglcmask>
-<fglcmask hgrid="48x96"    glc_grid="gland10" >glc/gglc/griddata/glcmaskdata_48x96_Gland10km.nc</fglcmask>
-<fglcmask hgrid="48x96"    glc_grid="gland5"  >glc/gglc/griddata/glcmaskdata_48x96_Gland5km.nc</fglcmask>
-<fglcmask hgrid="0.9x1.25" glc_grid="gland20" >glc/gglc/griddata/glcmaskdata_0.9x1.25_Gland20km.nc</fglcmask>
-<fglcmask hgrid="0.9x1.25" glc_grid="gland10" >glc/gglc/griddata/glcmaskdata_0.9x1.25_Gland10km.nc</fglcmask>
-<fglcmask hgrid="0.9x1.25" glc_grid="gland5"  >glc/gglc/griddata/glcmaskdata_0.9x1.25_Gland5km.nc</fglcmask>
-<fglcmask hgrid="1.9x2.5"  glc_grid="gland20" >glc/gglc/griddata/glcmaskdata_1.9x2.5_Gland20km.nc</fglcmask>
-<fglcmask hgrid="1.9x2.5"  glc_grid="gland10" >glc/gglc/griddata/glcmaskdata_1.9x2.5_Gland10km.nc</fglcmask>
-<fglcmask hgrid="1.9x2.5"  glc_grid="gland5"  >glc/gglc/griddata/glcmaskdata_1.9x2.5_Gland5km.nc</fglcmask>
+<fglcmask hgrid="48x96"    glc_grid="gland20" >glc/cism/griddata/glcmaskdata_48x96_Gland20km.nc</fglcmask>
+<fglcmask hgrid="48x96"    glc_grid="gland10" >glc/cism/griddata/glcmaskdata_48x96_Gland10km.nc</fglcmask>
+<fglcmask hgrid="48x96"    glc_grid="gland5"  >glc/cism/griddata/glcmaskdata_48x96_Gland5km.nc</fglcmask>
+<fglcmask hgrid="0.9x1.25" glc_grid="gland20" >glc/cism/griddata/glcmaskdata_0.9x1.25_Gland20km.nc</fglcmask>
+<fglcmask hgrid="0.9x1.25" glc_grid="gland10" >glc/cism/griddata/glcmaskdata_0.9x1.25_Gland10km.nc</fglcmask>
+<fglcmask hgrid="0.9x1.25" glc_grid="gland5"  >glc/cism/griddata/glcmaskdata_0.9x1.25_Gland5km.nc</fglcmask>
+<fglcmask hgrid="1.9x2.5"  glc_grid="gland20" >glc/cism/griddata/glcmaskdata_1.9x2.5_Gland20km.nc</fglcmask>
+<fglcmask hgrid="1.9x2.5"  glc_grid="gland10" >glc/cism/griddata/glcmaskdata_1.9x2.5_Gland10km.nc</fglcmask>
+<fglcmask hgrid="1.9x2.5"  glc_grid="gland5"  >glc/cism/griddata/glcmaskdata_1.9x2.5_Gland5km.nc</fglcmask>
 
 <!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
 <flndtopo hgrid="128x256"   >lnd/clm2/griddata/topodata_128x256_060829.nc</flndtopo>
