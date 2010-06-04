@@ -564,6 +564,24 @@ if ( $bgc =~ /^cn/ && $ndepsrc ne "stream" && $ndepsrc ne "data" ) {
    die "$ProgName ERROR:: ndepsrc MUST be none when bgc is NOT equal to cn or cndv!\n";
 }
 
+# prescribed aerosol options
+my $datm_presaero;
+if ( $opts{'datm_presaero'} eq "default" ) {
+   my %settings = ('hgrid'=>$res, 'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp);
+   $datm_presaero  = $defaults->get_value( 'datm_presaero', \%settings );
+} else {
+   $datm_presaero  = $opts{'datm_presaero'};
+}
+my $var = "datm_presaero";
+my $val = &quote_string( $datm_presaero );
+my $group = $definition->get_group_name( $var );
+$nl->set_variable_value($group, $var, $val );
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are:
+@valid_values\n";
+}
+
 #-----------------------------------------------------------------------------------------------
 
 # Process the user input in order of precedence.  At each point we'll only add new
@@ -1010,9 +1028,13 @@ if ( $rtm eq "off" ) {
    }
 }
 
-# Get aerosol deposition rates from datasets
-add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
-            'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
+#
+# Get aerosol deposition rates from datasets, if NOT coming from atmosphere model
+#
+if ( $datm_presaero eq "none" ) {
+   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
+               'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
+}
 
 #
 # Deal with options that the user has said are required...
@@ -1286,7 +1308,7 @@ if ($mode eq "ccsm_seq") {
                         " -datm_cycle_beg_year "  . $opts{'datm_cycle_beg_year'} .
                         " -datm_cycle_end_year "  . $opts{'datm_cycle_end_year'} .
                         " -datm_cycle_init_year " . $opts{'datm_cycle_init_year'} .
-                        " -datm_presaero "        . $opts{'datm_presaero'} .
+                        " -datm_presaero "        . $datm_presaero .
                         " -datm_source "          . $opts{'datm_source'};
    if ( $opts{'test'} ) {
       $datmbldnmlopts .= " -test";

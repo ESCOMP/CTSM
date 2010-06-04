@@ -638,7 +638,8 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 # prescribed aerosol options
 my $datm_presaero;
 if ( $opts{'datm_presaero'} eq "default" ) {
-   $datm_presaero  = $defaults->get_value( 'datm_presaero' );
+   my %settings = ('hgrid'=>$res, 'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp);
+   $datm_presaero  = $defaults->get_value( 'datm_presaero', \%settings );
 } else {
    $datm_presaero  = $opts{'datm_presaero'};
 }

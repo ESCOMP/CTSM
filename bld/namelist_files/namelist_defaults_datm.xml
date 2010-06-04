@@ -112,8 +112,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <io_root    >0</io_root>
 <num_agg    >0</num_agg>
 
-<datm_presaero>none</datm_presaero>
-
 <!-- Aerosol deposition datasets -->
 
 <!-- single point resolution files for 2000 climate -->

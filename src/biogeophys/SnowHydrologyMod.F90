@@ -136,7 +136,6 @@ contains
     real(r8), pointer :: flx_dst_dep_wet4(:) ! wet dust (species 4) deposition (col) [kg m-2 s-1]
     real(r8), pointer :: flx_dst_dep(:)      ! total dust deposition (col) [kg m-2 s-1]
     real(r8), pointer :: forc_aer(:,:)       ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
-
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -400,6 +399,21 @@ contains
        end do
     end do
 
+    ! Adjust layer thickness for any water+ice content changes in excess of previous 
+    ! layer thickness. Strictly speaking, only necessary for top snow layer, but doing
+    ! it for all snow layers will catch problems with older initial files.
+    ! Layer interfaces (zi) and node depths (z) do not need adjustment here because they
+    ! are adjusted in CombineSnowLayers and are not used up to that point.
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (j >= snl(c)+1) then
+              dz(c,j) = max(dz(c,j),h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)
+          end if
+       end do
+    end do
+ 
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        ! Qout from snow bottom
@@ -616,8 +630,11 @@ contains
                 pdzdtc = ddz1 + ddz2 + ddz3
 
                 ! The change in dz due to compaction
+                ! Limit compaction to no less than fully saturated layer thickness
 
-                dz(c,j) = dz(c,j) * (1._r8+pdzdtc*dtime)
+                dz(c,j) = max(dz(c,j) * (1._r8+pdzdtc*dtime),h2osoi_ice(c,j)/denice &
+                                         + h2osoi_liq(c,j)/denh2o)
+
              end if
 
              ! Pressure of overlying snow
@@ -756,6 +773,8 @@ contains
              if (ltype(l) == istsoil .or. ltype(l)==isturb) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+
+                if (j /= 0) dz(c,j+1) = dz(c,j+1) + dz(c,j)
                 
                 ! NOTE: Temperature, and similarly snw_rds, of the
                 ! underlying snow layer are NOT adjusted in this case. 
@@ -776,6 +795,7 @@ contains
              else if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. j /= 0) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+                dz(c,j+1) = dz(c,j+1) + dz(c,j)
                 
                 mss_bcphi(c,j+1) = mss_bcphi(c,j+1) + mss_bcphi(c,j)
                 mss_bcpho(c,j+1) = mss_bcpho(c,j+1) + mss_bcpho(c,j)

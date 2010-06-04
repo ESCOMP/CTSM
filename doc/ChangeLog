@@ -1,4 +1,147 @@
 ===============================================================
+Tag name:  clm4_0_08
+Originator(s):  erik (erik)
+Date: Fri Jun  4 01:25:39 MDT 2010
+One-line Summary: Snow hydrology bug fix from Keith and Dave
+
+Purpose of changes:
+
+SnowHydrology bug fix from Keith Oleson. For test-suite, make default to send aerosol
+data through datm. Update version of cism, scripts and datm. Remove some of the old aerdep
+stuff from the XML database as we now are using presaero from datm (leave 1-deg and
+2-deg).
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: Move datm_presaero to overall defaults
+
+List any changes to the defaults for the boundary datasets:
+    Remove all faerdep files except f09 and f19
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+    code changes come from Keith Oleson and Dave Lawrence
+
+List any svn externals directories updated (csm_share, mct, etc.):  scripts, cism and drv
+   scripts to scripts4_100603a
+   drv     to drvseq3_1_29
+   cism    to cism1_100603
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+   A   models/lnd/clm/test/system/config_files/17p_cnsc_m
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/test/system/nl_files/clm_ndepdyn - Switch demand for ndepdyn for
+          ndepsrc stream
+
+   M   models/lnd/clm/bld/build-namelist ----- Get datm_presaero if not null
+            do NOT set faerdep
+   M   models/lnd/clm/bld/clm.cpl7.template -- Set datm_presaero by DATM_PRESAERO
+            if datm or to prognostic if not (so aerosol dep require from atm)
+
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Set
+            datm_presaero by resolution, sim_year, sim_year_range and rcp
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ---- Remove datm_presaero
+   M   models/lnd/clm/bld/namelist_files/datm-build-namelist ----------- Set
+            datm_presaero by resolution, sim_year, sim_year_range and rcp
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- Remove
+            all faerdep files except for f09 and 19
+
+   M   models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 - Snow hydrology fix
+
+Summary of testing:
+
+  bluefire interactive testing: All PASS up to...
+014 smJ74 TSM.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test
+-1100 arb_ic FAIL! rc= 10
+  bluefire/CCSM testing: All PASS except..
+FAIL  SMS_RLB.f45_f45.I.bluefire 
+BFAIL SMS_RLB.f45_f45.I.bluefire.generate.clm4_0_08 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_06 
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_06 
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_06 
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm4_0_06 
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_06 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare_hist.clm4_0_06 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_06 
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_06 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_08 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_06 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_06 
+FAIL  PST.f10_f10.I8520CN.bluefire.compare.clm4_0_06 
+FAIL  PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_06 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_06 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_06 
+   Extra testing:
+PASS  ERI.f19_g16.IG.bluefire
+Make sure answers agree with /OLESON/csm/ccsm4_0_beta52_ndepaer other than VOC fields
+Test that F case will configure..
+create_newcase -compset F -case testF -res f19_g16 -mach bluefire -skip_rundb
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_07
+
+Changes answers relative to baseline: YES
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: larger than roundoff/same climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+       
+   - platform/compilers: IBM
+   - compset (and additional configure options): I1850CN
+   - build-namelist options (or complete namelist): -ndepsrc stream
+
+   MSS location of control simulations used to validate new climate:
+
+  /OLESON/csm/ccsm4_0_beta52_ndepaer
+  /OLESON/csm/ccsm4_0_beta52_ndepaertrans
+
+   The above is identical to this tag (other than the two VOC fields that changed)
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_07
 Originator(s):  erik (erik)
 Date: Thu Jun  3 21:22:46 MDT 2010
@@ -217,6 +360,7 @@ BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_06
 
   bluefire/extra CCSM testing:
 Make sure answers agree with /OLESON/csm/ccsm4_0_beta52_ndepaer other than VOC fields
+  (when snowhydrology changes are put in)
 
   breeze,gale,hail,gust/ifort interactive testing: All PASS except...
 017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 10+38 cold ....FAIL! rc= 13

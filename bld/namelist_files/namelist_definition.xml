@@ -1150,12 +1150,6 @@ Stream restart file name for datm model, needed for branch simulations
 Description of data source for datm input data.
 </entry>
 
-<entry id="datm_presaero" type="char*80" category="datm_internal"
-       group="datm_internal" 
-       valid_values="none,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6,rcp8.5">
-Prescribed aerosol mode
-</entry>
-
 <entry id="datm_file_aero" type="char*80" category="datm_internal"
        group="datm_internal"  input_pathname="abs"
        valid_values="">
@@ -1276,6 +1270,21 @@ Namelist entries to demand be provided on the namelist.
 Description of the use case selected.
 </entry>
 
+<entry id="datm_presaero" type="char*80" category="default_settings"
+       group="default_settings" 
+       valid_values="none,prognostic,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6,rcp8.5">
+Prescribed aerosol mode for the atmosphere model 
+   none = Don't pass aerosol from atmosphere, read it from inside of CLM (using faerdep) 
+   prognostic = Pass aerosol from a prognostic atmosphere model -- such as CAM. (may still be read in from a dataset in that model) 
+   pt1_pt1 = For datm use a single point dataset 
+   clim_1850 = For datm use constant 1850 conditions 
+   clim_2000 = For datm use constant 2000 conditions 
+   trans_1850-2000 = For datm use transient 1850 to 2000 conditions 
+   rcp2.6 = For datm use rcp=2.6 future scenario 
+   rcp4.5 = For datm use rcp=4.5 future scenario 
+   rcp6.0 = For datm use rcp=6.0 future scenario 
+   rcp8.5 = For datm use rcp=8.5 future scenario
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- drydep Namelists                                                                           -->

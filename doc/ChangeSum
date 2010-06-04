@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_08         erik 06/04/2010 Snow hydrology bug fix from Keith and Dave
    clm4_0_07         erik 06/03/2010 Some cleanup/fix bugs, add RTM var, add albice to namelist, allow last-millenium in mksurfdata, allow setting of datm_presaero in clm test-suite
    clm4_0_06         erik 05/26/2010 Update gglc to cism
    clm4_0_05         erik 05/25/2010 Move Nitrogen deposition stream branch to trunk

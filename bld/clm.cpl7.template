@@ -113,6 +113,11 @@ if ( "$CLM_USRDAT_NAME" != "UNSET" )then
 endif
 set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
 set options = "$options -infile ccsm_namelist -clm_start_type $START_TYPE $CLM_BLDNML_OPTS"
+if ("$COMP_ATM" == "datm" )then
+   set options = "$options  -datm_presaero $DATM_PRESAERO"
+else
+   set options = "$options  -datm_presaero prognostic"
+endif
 if ("$COMP_GLC" != "sglc" )then
     set options = "$options -glc_grid $GLC_GRID"
 endif
