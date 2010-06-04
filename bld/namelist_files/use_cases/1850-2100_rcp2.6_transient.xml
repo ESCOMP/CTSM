@@ -17,8 +17,6 @@
 
 <rcp>2.6</rcp>
 
-<orb_iyear_ad mode="seq_ccsm" >1990</orb_iyear_ad>
-
 <clm_demand bgc="none"                   >fpftdyn</clm_demand>
 <clm_demand bgc="cn"   ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
 <clm_demand bgc="cndv" ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
@@ -35,5 +33,12 @@
 <stream_year_first_ndep bgc="cndv" ndepsrc="stream" >1850</stream_year_first_ndep>
 <stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2100</stream_year_last_ndep>
 <model_year_align_ndep  bgc="cndv" ndepsrc="stream" >1850</model_year_align_ndep>
+
+<!-- Settings for datm and driver -- for stand-alone testing -->
+<datm_presaero       mode="ccsm_seq" >rcp2.6</datm_presaero>
+<orb_iyear_ad        mode="ccsm_seq" >1990</orb_iyear_ad>
+<datm_cycle_beg_year mode="ccsm_seq" >1972</datm_cycle_beg_year>
+<datm_cycle_end_year mode="ccsm_seq" >2004</datm_cycle_end_year>
+
 
 </namelist_defaults>

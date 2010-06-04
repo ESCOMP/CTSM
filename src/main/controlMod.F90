@@ -26,6 +26,7 @@ module controlMod
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
                             ncd_pio_num_iotasks, fsnowaging, fsnowoptics, fglcmask, &
                             faerdep
+  use SurfaceAlbedoMod, only : albice
 #ifdef RTM
   use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
 #endif
@@ -215,7 +216,8 @@ contains
     integer :: override_nsrest   ! If want to override the startup type sent from driver
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, pertlim, &
-         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest
+         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
+         albice
     ! clm urban options
 
     namelist /clm_inparm/  &
@@ -433,6 +435,7 @@ contains
     call mpi_bcast (scmlat,       1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (scmlon,       1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (co2_ppmv    , 1, MPI_REAL8,   0, mpicom, ier)
+    call mpi_bcast (albice      , 2, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (hist_pioflag, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (ncd_lowmem2d, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (ncd_pio_def , 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -655,6 +658,7 @@ contains
     write(iulog,*) '   flag for random perturbation test is not set'
 #endif
     write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
+    write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
     write(iulog,*) '   urban traffic flux   = ', urban_traffic
 #if (defined RTM)

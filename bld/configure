@@ -64,7 +64,6 @@ OPTIONS
                          are system dependent will be ignored.
      -dust <name>        Turn on DUST [on | off] (default is on).
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
-     -glc_grid <name>    Glacier grid name and resolution
      -glc_nec <name>     Glacier number of elevation classes [0 | 3 | 5 | 10] (default is 0)
      -help [or -h]       Print usage to STDOUT.
      -mach <name>        Machine name to use for CCSM build.
@@ -100,7 +99,6 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq
      -cflags <string>    A string of user specified C compiler options.  Appended to
                          Makefile defaults.
      -debug              Switch to turn on building CLM with debugging compiler options.
-     -esmf_libdir <dir>  Directory containing ESMF library and esmf.mk file.
      -fc <name>          User specified Fortran compiler.  Overrides Makefile default.
      -fflags <string>    A string of user specified Fortran compiler flags.  Appended to
                          Makefile defaults.  See -fopt to override optimization flags.
@@ -152,7 +150,6 @@ my $commandline = "$cfgdir/configure @ARGV";
 my %opts = (
 	    cache       => "config_cache.xml",
             nofire      => undef,
-            glc_grid    => undef,
             glc_nec     => undef,
             clm_root    => undef,
 	    );
@@ -173,8 +170,6 @@ GetOptions(
     "defaults=s"                => \$opts{'defaults'},
     "dust=s"                    => \$opts{'dust'}, 
     "exit_spinup=s"             => \$opts{'exit_spinup'}, 
-    "esmf_libdir=s"             => \$opts{'esmf_libdir'},
-    "glc_grid=s"                => \$opts{'glc_grid'},
     "glc_nec=i"                 => \$opts{'glc_nec'},
     "fc=s"                      => \$opts{'fc'},
     "fflags=s"                  => \$opts{'fflags'},
@@ -403,15 +398,6 @@ EOF
 
 if ($print>=2) { print "The configuration cache file will be created in $config_cache_file$eol"; }
 
-
-#-----------------------------------------------------------------------------------------------
-# glacier grid option
-
-if( defined($opts{'glc_grid'}) ) {
-  $cfg_ref->set('glc_grid', $opts{'glc_grid'});
-}
-my $glc_grid = $cfg_ref->get('glc_grid');
-if ($print>=2) { print "Using $glc_grid for glacier grid.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # glacier multiple elevation classes
@@ -1012,38 +998,6 @@ EOF
 }
 
 #-----------------------------------------------------------------------------------------------
-# ESMF library.
-# Check to see whether use of the external library is requested.  The default is to 
-# use the WRF ESMF timemanager implementation.
-my $esmf_libdir = '';
-if (defined $opts{'esmf_libdir'}) {
-    $esmf_libdir = $opts{'esmf_libdir'};
-}
-elsif (defined $ENV{ESMF_LIBDIR}) {
-    $esmf_libdir = $ENV{ESMF_LIBDIR};
-}
-
-if ($clm_build and $esmf_libdir) {
-
-    # Check that both the library and the esmf.mk file are found.  Makefile macros
-    # defined in esmf.mk are referenced by the Makefile.
-    if ( (-f "$esmf_libdir/libesmf.a" or -f "$esmf_libdir/libesmf.so") and -f "$esmf_libdir/esmf.mk" ) {
-	$cfg_ref->set('esmf_libdir', $esmf_libdir);
-	if ($print>=2 ) { print "Found ESMF library in $esmf_libdir$eol"; }
-    }
-    else {
-	die <<"EOF";
-** Cannot find libesmf.a, libesmf.so, or esmf.mk in specified directory: $esmf_libdir
-** 
-** The ESMF library directory is determined from the following set of options listed
-** from highest to lowest precedence:
-** * by the command-line option -esmf_libdir
-** * by the environment variable ESMF_LIBDIR
-EOF
-    }
-}
-
-#-----------------------------------------------------------------------------------------------
 # Write configuration files ####################################################################
 #-----------------------------------------------------------------------------------------------
 
@@ -1234,12 +1188,6 @@ if ($spmd eq 'on') {
     if (check_mpi($gmake, "$clm_bld/Makefile")==0) { if ($print) { print "ok$eol"; } }
 }
 
-# Test ESMF library
-if ($esmf_libdir) {
-    if ($print) { print "Test linking to ESMF library... "; }
-    if (check_esmf($gmake, "$clm_bld/Makefile")==0) { if ($print) { print "ok$eol"; } }
-}
-
 #-----------------------------------------------------------------------------------------------
 # Done testing.
 chdir( $cwd ) || die <<"EOF";
@@ -1264,7 +1212,6 @@ sub write_filepath
     my $usr_src     = $cfg_ref->get('usr_src');
     my $clm_root    = $cfg_ref->get('clm_root');
     my $spmd        = $cfg_ref->get('spmd');
-    my $esmf_libdir = $cfg_ref->get('esmf_libdir');
     my $rtm         = $cfg_ref->get('rtm');
     my $comp_intf   = $cfg_ref->get('comp_interface');
     my $mode        = $cfg_ref->get('mode');
@@ -1289,9 +1236,7 @@ sub write_filepath
     if ( ! $spmd ) {
 	push( @dirs, "utils/mct/mpi-serial" );
     }
-    unless ($esmf_libdir) { 
-	push( @dirs, "utils/esmf_wrf_timemgr" );
-    }
+    push( @dirs, "utils/esmf_wrf_timemgr" );
 
     foreach my $dir ( @dirs ) {
 	if ( -d "$srcdir/$dir" ) {
@@ -1376,7 +1321,6 @@ sub write_filepath_ccsmbld
     my $usr_src     = $cfg_ref->get('usr_src');
     my $clm_root    = $cfg_ref->get('clm_root');
     my $spmd        = $cfg_ref->get('spmd');
-    my $esmf_libdir = $cfg_ref->get('esmf_libdir');
     my $rtm         = $cfg_ref->get('rtm');
     my $mode        = $cfg_ref->get('mode');
     my $comp_intf   = $cfg_ref->get('comp_interface');
@@ -1394,9 +1338,7 @@ sub write_filepath_ccsmbld
        if ( ! $spmd ) {
 	   push( @dirs, "utils/mct/mpi-serial" );
        }
-       unless ($esmf_libdir) { 
-	   push( @dirs, "utils/esmf_wrf_timemgr" );
-       }
+       push( @dirs, "utils/esmf_wrf_timemgr" );
 
        print $fh "../SourceMods/src.ccsm\n";
 
@@ -1524,8 +1466,17 @@ sub write_macros
     my $fflags       = $cfg_ref->get('fflags');
     my $fopt         = $cfg_ref->get('fopt');
     my $ldflags      = $cfg_ref->get('ldflags');
-    my $esmf_libdir  = $cfg_ref->get('esmf_libdir');
     my $clm_root     = $cfg_ref->get('clm_root');
+    my $voc;
+    if ( $cfg_ref->get('voc') eq "on" ) {
+       $voc = "TRUE";
+    } else {
+       $voc = "FALSE";
+    }
+    my $compile_threaded = "false";
+    if ( $smp eq "TRUE" ) {
+       $compile_threaded = "true";
+    }
 
     my $casetools = absolute_path( "$clm_root/../../../scripts/ccsm_utils/Build" );
 
@@ -1549,6 +1500,7 @@ CASETOOLS               := $casetools
 LIBROOT                 := \$(BLDROOT)/lib
 INCROOT                 := \$(BLDROOT)/include
 SMP                     := $smp
+compile_threaded        := $compile_threaded
 SPMD                    := $spmd
 DEBUG                   := $debug
 BUILD_THREADED          := $smp
@@ -1556,6 +1508,7 @@ USEPIO                  := false
 HIRES                   := false
 FRAMEWORK               := MCT
 CCSM_BGC                := none
+CCSM_VOC                := $voc
 GLC_NEC                 := 0
 USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CCSM_cppdefs)
 USER_LINKER             := $linker
@@ -1564,13 +1517,14 @@ USER_INC_NETCDF         := $nc_inc
 USER_INC_MPI            := $mpi_inc
 USER_LIB_MPI            := $mpi_lib
 USER_MPI_LIB_NAME       := $mpi_lib_name
-USER_ESMF_LIBDIR        := $esmf_libdir
+USER_ESMF_LIBDIR        := 
 USER_FC                 := $fc
 USER_CC                 := $cc
 USER_CFLAGS             := $cflags
 USER_FFLAGS             := $fflags
 USER_LDFLAGS            := $ldflags
 USE_MPISERIAL           := $mpiserial
+USE_ESMF_LIB            := FALSE
 F_OPTIMIZATION_OVERRIDE := $fopt
 
 EOF
@@ -1686,7 +1640,7 @@ MOD_NETCDF   := $nc_mod
 INC_MPI      := $mpi_inc
 LIB_MPI      := $mpi_lib
 MPI_LIB_NAME := $mpi_lib_name
-ESMF_LIBDIR  := $esmf_libdir
+ESMF_LIBDIR  := 
 DEBUG        := $debug
 SPMD         := $spmd
 SMP          := $smp

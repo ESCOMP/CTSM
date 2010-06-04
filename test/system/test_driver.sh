@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on breeze, edinburgh, bluefire, kraken, intrepid: 
+# usage on breeze, edinburgh, bluefire, intrepid: 
 # ./test_driver.sh
 #
 # usage on jaguar:
@@ -134,8 +134,7 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
-export DIN_LOC_ROOT="/fs/cgd/csm/inputdata"
-dataroot="/fs/cgd/csm"
+dataroot="/fis/cgd/cseg/csm"
 
 
 echo_arg=""
@@ -396,116 +395,6 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##kraken
-    kraken* ) 
-    submit_script="test_driver_kraken_${cur_time}.sh"
-
-    if [ -z "$CLM_CCSMBLD" ]; then
-	export CLM_CCSMBLD="TRUE"
-    fi
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-# Name of the queue (CHANGE THIS if needed)
-### #PBS -q debug
-# #PBS -q small
-# Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:00:00,size=200
-# output file base name
-#PBS -N test_dr
-# Put standard error and standard out in same file
-#PBS -j oe
-# Use sh
-#PBS -S /bin/sh
-# Export all Environment variables
-#PBS -V
-#PBS -A UT-NTNL0001
-# End of options
-
-if [ -n "\$PBS_JOBID" ]; then    #batch job
-    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
-    initdir=\${PBS_O_WORKDIR}
-fi
-
-echo_arg="-e"
-if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
-    interactive="NO"
-else
-    interactive="YES"
-fi
-
-input_file="tests_posttag_kraken"
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=1
-fi
-export CLM_RESTART_THREADS=4
-
-##mpi tasks
-export CLM_TASKS=200
-export CLM_RESTART_TASKS=48
-
-export CLM_COMPSET="I"
-
-export PATH="/usr/bin/X11"
-export PATH="\${PATH}:/usr/bin:/bin:/sbin:/usr/sbin"
-
-if [ -e /opt/modules/default/init/sh ]; then
-  source /opt/modules/default/init/sh
-  module load xtpe-quadcore
-  module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
-  module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
-  module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
-  module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
-  module load p-netcdf
-  module load   ncl
-fi
-export PATH="\${PATH}:\${MPICH_DIR}/bin"
-export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
-export PATH="\${PATH}:\${PGI}/linux86-64/default/bin"
-export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
-export PATH="\${PATH}:\${C_DIR}/amd64/bin"
-export PATH="\${PATH}:\${PRGENV_DIR}/bin"
-export PATH="\${PATH}:\${MPT_DIR}/bin"
-
-export MPICH_MAX_SHORT_MSG_SIZE=8000  # default is 128000 bytes
-export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)
-export MPICH_UNEX_BUFFER_SIZE=1000M   # default is    60M (unexpected short msgs buff size)
-export MPICH_MSGS_PER_PROC=160000     # default is  32768
-export MPICH_PTL_SEND_CREDITS=-1
-export MPICH_PTL_OTHER_EVENTS=4096    # default is 2048
-
-export MPICH_ENV_DISPLAY=1
-export MPICH_VERSION_DISPLAY=1
-
-# These environment variables were suggested by Helen He to help get around compiler issues
-# with pgi9
-export MALLOC_MMAP_MAX_=0
-export MALLOC_TRIM_THRESHOLD_=536870912
-
-# The environment variables below produce corefiles and maybe (?) should be
-# moved to DEBUG mode at some point
-export MPICH_DBMASK=0x200
-
-export LIB_NETCDF=\${NETCDF_DIR}/lib
-export INC_NETCDF=\${NETCDF_DIR}/include
-export MOD_NETCDF=\${NETCDF_DIR}/include
-export CCSM_MACH="kraken"
-export CFG_STRING="-fc ftn "
-export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
-export MAKE_CMD="gmake -j 9 "
-export MACH_WORKSPACE="/lustre/scratch"
-export CPRNC_EXE="/lustre/scratch/proj/ccsm/bin/newcprnc"
-export DATM_QIAN_DATA_DIR="/lustre/scratch/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-dataroot="/lustre/scratch/proj/ccsm"
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-
     ##yong
     yong* )
     submit_script="test_driver_yong_${cur_time}.sh"
@@ -596,7 +485,7 @@ export LIB_NETCDF=\$NETCDF/lib
 export MAKE_CMD="make -j 5"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
-export MACH_WORKSPACE="$HOME/exe"
+export MACH_WORKSPACE="/intrepid-fs0/users/$USER/scratch"
 dataroot="/gpfs/home/projects/ccsm"
 CPRNC_EXE="\$dataroot/tools/cprnc/cprnc"
 newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
@@ -897,7 +786,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluefire, edinburgh, breeze, kraken, intrepid: "
+    echo "usage on bluefire, edinburgh, breeze, intrepid: "
     echo "./test_driver.sh"
     echo ""
     echo "usage on jaguar: (compile interactively before submitting)"
@@ -929,9 +818,6 @@ case $hostname in
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;
-
-    ##kraken
-    kraken* )  qsub ${submit_script};;
 
     #intrepid
     login* )  qsub -n 256 -t 60 -q prod-devel --mode script ${submit_script};;

@@ -1,4 +1,241 @@
 ===============================================================
+Tag name:  clm4_0_07
+Originator(s):  erik (erik)
+Date: Thu Jun  3 21:22:46 MDT 2010
+One-line Summary: Some cleanup/fix bugs, add RTM var, add albice to namelist, allow last-millenium in mksurfdata, allow setting of datm_presaero in clm test-suite
+
+Purpose of changes:
+
+Fix mksurfdata.pl, to correctly create 1000-1004 test datasets. Fix drydep for OpenMP.
+Update 1x1_tropicAtl_1000-1004 test fsurdat file. Move glc_grid from configure to
+build-namelist. Add in alb_ice to namelist. Start adding in the capability to handle
+mksurfdata from 0850-1850AD, put all mksrf_fvegtyp files in XML database (remove some of
+the sample pftdyn text files). New RTM field on history output from Sean (VOLR and
+VOLR_ICE, only VOLR output by default). Allow use of aerosol data from datm for I cases
+in the clm test suite. Split out datm-build-namelist from clm build-namelist (put in
+bld/namelist_files).
+
+Bugs fixed (include bugzilla ID):
+                                 1162 (OpenMP bug with dry-deposition code in clm)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: standard
+
+Describe any changes made to build system: Move glc_grid to build-namelist
+     remove esmf_libdir, fix ccsm_bld so will build threaded properly
+
+Describe any changes made to the namelist: Add albice to namelist
+   Add new history fields VOLR and VOLR_ICE
+
+      VOLR     RTM storage: LIQ  (m3)
+      VOLR_ICE RTM storage: ICE  (m3)
+
+List any changes to the defaults for the boundary datasets:
+  New datasets for 1x1_tropicAtl 1000 tests
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, VOLR changes come from Sean Swenson
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, pio
+    scripts to scripts4_100601
+    drv     to drvseq3_1_28
+    pio     to pio1_1_1
+
+List all files eliminated:
+
+>>>>>>>>>>>>>>> Remove mksurdata pftdyn text files, let XML database create them
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr2000.txt
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr1850.txt
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_rcp6.0_simyr1850-2100.txt
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_rcp2.6_simyr1850-2100.txt
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_rcp4.5_simyr1850-2100.txt
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_rcp8.5_simyr1850-2100.txt
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>> Split out datm part of build-namelist into it's own script
+   A  models/lnd/clm/bld/namelist_files/datm-build-namelist
+
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr2000-2000.txt -- Same as
+         old file with 2000.txt name rather than 2000-2000.txt name.
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>> Move glc_grid to build-namelist, remove kraken
+   M  models/lnd/clm/test/system/config_files/_mec10sc_dh
+   M  models/lnd/clm/test/system/config_files/_mec10sc_dm
+   M  models/lnd/clm/test/system/config_files/_mec10sc_do
+   M  models/lnd/clm/test/system/config_files/_mec10sc_ds
+   M  models/lnd/clm/test/system/config_files/_mec10sc_h
+   M  models/lnd/clm/test/system/config_files/_mec10sc_m
+   M  models/lnd/clm/test/system/config_files/_mec10sc_o
+   M  models/lnd/clm/test/system/test_driver.sh --------- Remove kraken, update dataroot
+            for bluefire, and tempworkspacefor intrepid
+   M  models/lnd/clm/test/system/CLM_runcmnd.sh --------- Remove kraken
+   M  models/lnd/clm/test/system/nl_files/clm_drydep ---- Change drydep to drv_drydep
+
+>>>>>>>>>>>>>>> Use XML database for pftdyn files, have mksrfdata.pl write out pftdyn files 
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig - change pftdyn file name
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.regional ---- change pftdyn file name
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn ------ start at 1850
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.singlept ---- change pftdyn file name
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.namelist ---- change pftdyn file name
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.pl ---------- Get mksrf_vegtyp filenames
+            from XML database for all files, and write out pftdyn files with them
+            also get working for 1000-1004 test cases (specifically for 1x12_tropicAtl 
+            test case)
+   M  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr1850-2005.txt - Use CSMDATA versions
+         of 1850 and 2000 files
+
+>>>>>>>>>>>>>>> Move glc_grid to namelist, fix ccsm_bld=on, add datm_presaero
+>>>>>>>>>>>>>>> Only do COLD start for startup type
+   M  models/lnd/clm/bld/configure --------------- Remove glc_grid and esmf_libdir
+               add in control of CCSM_VOC, set compile_threaded for ccsm_bld on,
+   M  models/lnd/clm/bld/queryDefaultNamelist.pl - Remove double reading of namelist_defaults_overall.xml
+   M  models/lnd/clm/bld/queryDefaultXML.pm ------ Add csmdata to beginning of file, only
+              if it's a relative pathname (to handle instances of /cgd/tss for mksrf_vegtyp files)
+   M  models/lnd/clm/bld/config_files/config_definition.xml - Remove glc_grid/esmf_libdir
+   M  models/lnd/clm/bld/listDefaultNamelist.pl --- Move glc_grid to namelist vars
+   M  models/lnd/clm/bld/build-namelist ----------- Add in glc_grid, and datm_presaero
+             change -drydep to -drv_drydep option, set glc_nthreads, outnc_large_files
+             and albice if glc_nec>0, move datm settings to own datm-build-namelist.
+   M  models/lnd/clm/bld/clm.cpl7.template -------- Move glc_grid to build-namelist,
+             remove outnc_large_files setting (now in build-namelist), only do
+             COLD start for startup type (NOT for hybrid or branch).
+
+>>>>>>>>>>>>>>> Add albice/glc_grid/datm_presaero/outnc_large_files
+>>>>>>>>>>>>>>> New datasets for 1x1_tropicAtl 1000 tests
+>>>>>>>>>>>>>>> Add in all mksrf_fvegtyp files and include last-millenium
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml ------ Add in albice, 
+             and glc_* settings for drv (glc_nthreads, glc_ntasks etc.), add presaero
+             datam_presaero, datm_file_aero, datm_year_first_aero, datm_year_last_aero,
+             datm_year_align_aero, and glc_grid. Add 0.5x0.5 resolution (for mksurfdata)
+             and some premillenial years (850,1100,1350,1600) and sim-year ranges
+             (850-1100,1100-1350,1350-1600,1600-1850)
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Set default
+             masks here, and add in glc_grid default
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ---- Add in some 
+             new domain files that are in datm template, and add in datm_presaero
+             settings needed: datm_file_aero, datm_aero_streams, datm_year_first_aero
+             datm_year_last_aero, and datm_year_align_aero
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults.xsl --------- Show
+             datm_presaero setting if set.
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- Add
+             outnc_large_files, albice, and move mask to overall, update
+             1x1_tropicAtl files for 1000, 1000-1004, add in all mksrf_fvegtyp
+             files for all scenarios and last-millenium. Add in diri and diro.
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml ----- Get URL
+             svn keyword set properly.
+
+>>>>>>>>>>>>>>> Put datm/drv settings on bottom (only for mode=ccsm_seq)
+>>>>>>>>>>>>>>> set datm_presaero and data_cycle_beg/end years
+   M  models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml -- default
+                datm_presaero is clim_2000
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml - default
+                datm_presaero is rcp8.5, beg/end year 1972-2004
+   M  models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml - default
+                datm_presaero is rcp8.5, beg/end year 1972-2004
+   M  models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml ------------ default
+                datm_presaero is trans_1850-2000, beg/end year 1948-1972, co2=386.9
+   M  models/lnd/clm/bld/namelist_files/use_cases/glacier_mec.xml ---------------- default
+                datm_presaero is clim_2000
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml --------------- default
+                datm_presaero is clim_1850, beg/end year 1948/1972
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml - default
+                datm_presaero is rcp2.6, beg/end year 1972-2004
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml --- default
+                datm_presaero is rcp6.0, beg/end year 1972-2004
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml - default
+                datm_presaero is rcp4.5, beg/end year 1972-2004
+
+>>>>>>>>>>>>>>> Add in albice to namelist, add VOLR and VOLR_ICE to history files
+>>>>>>>>>>>>>>> always call interpMonthlyVeg for drydep
+   M  models/lnd/clm/src/biogeochem/DryDepVelocity.F90 - Remove interpMonthlyVeg
+             call as coming from a threaded region
+   M  models/lnd/clm/src/main/clm_comp.F90 ------------- Call interpMonthlyVeg 
+             for drydep even if CN is on
+   M  models/lnd/clm/src/main/controlMod.F90 ----------- Add albice
+   M  models/lnd/clm/src/main/clm_varcon.F90 ----------- Remove albice
+   M  models/lnd/clm/src/main/clm_driver.F90 ----------- Always call interpMonthlyVeg
+             if drydep is on (even when NOT doalb)
+   M  models/lnd/clm/src/main/histFldsMod.F90 ---------- Add VOLR and VOLR_ICE
+             (VOLR_ICE is an optional field)
+   M  models/lnd/clm/src/riverroute/RtmMod.F90 --------- Handle volr under runoff
+             type, rather than as local variable
+   M  models/lnd/clm/src/riverroute/RunoffMod.F90 ------ Add volr, volrlnd, volr_nt1/2
+   M  models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 Add albice as public var
+             that can be set in controlMod on namelist
+
+Summary of testing:
+
+  bluefire: All PASS except (up to test 061 nl_crcrop)
+061 brL58 TBR.sh _sc_dh clm_std^nl_crcrop
+004 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -6 arb_ic ...................FAIL! rc= 7
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 7
+011 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 arb_ic ............FAIL! rc= 7
+020 blEH1 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 7
+024 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 7
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+032 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+037 blH41 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48 cold FAIL! rc= 7
+045 blC61 TBL.sh _scnv_dh clm_std^nl_urb 20020101:NONE:1800 1.9x2.5 gx1v6 48 startup ............FAIL! rc= 7
+  bluefire interactive testing: All PASS up to...
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  bluefire/CCSM testing: All PASS except..
+FAIL  ERI.f19_g16.IG.bluefire 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_06
+
+
+  bluefire/extra CCSM testing:
+Make sure answers agree with /OLESON/csm/ccsm4_0_beta52_ndepaer other than VOC fields
+
+  breeze,gale,hail,gust/ifort interactive testing: All PASS except...
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 10+38 cold ....FAIL! rc= 13
+018 brR53 TBR.sh 17p_cnc13sc_do clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@1850 72+72 cold .FAIL! rc= 11
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+023 blG53 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+025 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 coFAIL! rc= 13
+026 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 coFAIL! rc= 11
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_06
+
+Changes answers relative to baseline: no bit-for-bit (except omp active stand-alone tests)
+   The standalone tests with OpenMP on are different because the previous tag
+   wasn't building with OpenMP
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_06
 Originator(s):  erik (erik)
 Date: Wed May 26 10:35:26 MDT 2010
@@ -33,6 +270,7 @@ Known bugs (include bugzilla ID):
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
                                  1162 (OpenMP bug with dry-deposition code in clm)
+                                 1163 (finidat file has a bunch of NaN's in it)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -130,6 +368,7 @@ Known bugs (include bugzilla ID):
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
                                  1162 (OpenMP bug with dry-deposition code in clm)
+                                 1163 (finidat file has a bunch of NaN's in it)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical

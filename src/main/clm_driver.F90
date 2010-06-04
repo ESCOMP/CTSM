@@ -120,12 +120,14 @@ module clm_driver
   use ndepStreamMod       , only : ndep_interp, &
 	                           stream_year_first_ndep, stream_year_last_ndep 
 #else
-  use STATICEcosysDynMod  , only : EcosystemDyn, interpMonthlyVeg
+  use STATICEcosysDynMod  , only : EcosystemDyn
 #endif
 #if (defined DUST)
   use DUSTMod             , only : DustDryDep, DustEmission
 #endif
   use VOCEmissionMod      , only : VOCEmission
+  use seq_drydep_mod      , only : n_drydep, drydep_method, DD_XLND
+  use STATICEcosysDynMod  , only : interpMonthlyVeg
   use DryDepVelocity      , only : depvel_compute
 #if (defined CASA)
   use CASAMod             , only : casa_ecosystemDyn
@@ -223,7 +225,14 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
 
   cptr => clm3%g%l%c
 
-#if (!defined CN)
+#ifdef CN
+  ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
+  if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+     call t_startf('interpMonthlyVeg')
+     call interpMonthlyVeg()
+     call t_stopf('interpMonthlyVeg')
+  endif
+#else
   ! ============================================================================
   ! Determine weights for time interpolation of monthly vegetation data.
   ! This also determines whether it is time to read new monthly vegetation and
@@ -232,12 +241,11 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
   ! weights obtained here are used in subroutine ecosystemdyn to obtain time
   ! interpolated values.
   ! ============================================================================
-
-  if (doalb) then
+  if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND )) then
      call t_startf('interpMonthlyVeg')
      call interpMonthlyVeg()
      call t_stopf('interpMonthlyVeg')
-  endif
+  end if
 #endif
 
 

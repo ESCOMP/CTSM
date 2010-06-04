@@ -81,7 +81,6 @@ CONTAINS
     use seq_drydep_mod    , only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
                                     rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
                                     rgss, rgso
-    use STATICEcosysDynMod, only : interpMonthlyVeg
     use clm_varcon        , only : istsoil
     use clm_varctl        , only : iulog
     use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
@@ -197,9 +196,6 @@ CONTAINS
                                 0.005_r8, 0.000_r8, 0.000_r8, 0.000_r8, 0.075_r8, 0.002_r8 /)
     !----------------------------------------------------------------------- 
     if ( n_drydep == 0 .or. drydep_method /= DD_XLND ) return
-
-    ! Always call CLMSP whether CN is on or not to get estimate of differences in monthly LAI
-    call interpMonthlyVeg()
 
     ! local pointers to original implicit out arrays 
 

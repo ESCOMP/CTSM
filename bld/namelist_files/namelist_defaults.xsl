@@ -64,6 +64,9 @@
         <xsl:if test="string-length(@glc_grid)>0">
         glc_grid=<xsl:value-of select="@glc_grid"/>
         </xsl:if>
+        <xsl:if test="string-length(@datm_presaero)>0">
+        datm_presaero=<xsl:value-of select="@datm_presaero"/>
+        </xsl:if>
         </td>
       </tr>
       <tr>

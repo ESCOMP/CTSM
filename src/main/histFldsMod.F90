@@ -857,6 +857,14 @@ contains
       avgflag='A', long_name='RTM river discharge into ocean: '//trim(rtm_tracers(2)), &
       ptr_rof=runoff%runoffocn_nt2)
 
+    call hist_addfld1d (fname='VOLR', units='m3',  &
+         avgflag='A', long_name='RTM storage: '//trim(rtm_tracers(1)), &
+         ptr_rof=runoff%volr_nt1)
+
+    call hist_addfld1d (fname='VOLR'//'_'//trim(rtm_tracers(2)), units='m3',  &
+         avgflag='A', long_name='RTM storage: '//trim(rtm_tracers(2)), &
+         ptr_rof=runoff%volr_nt2, default='inactive')
+
     call hist_addfld1d (fname='DVOLRDT_LND', units='mm/s',  &
       avgflag='A', long_name='RTM land change in storage: '//trim(rtm_tracers(1)), &
       ptr_rof=runoff%dvolrdtlnd_nt1, default='inactive')

@@ -35,6 +35,8 @@ module RunoffMod
      real(r8), pointer :: dvolrdt(:,:)     ! RTM change in storage (m**3/s)
      real(r8), pointer :: dvolrdtlnd(:,:)  ! dvolrdt masked for land (m**3/s)
      real(r8), pointer :: dvolrdtocn(:,:)  ! dvolrdt masked for ocn  (m**3/s)
+     real(r8), pointer :: volr(:,:)        ! RTM storage (m**3)
+     real(r8), pointer :: volrlnd(:,:)     ! RTM storage masked for land (m**3)
      real(r8), pointer :: lonc(:)        ! lon of cell
      real(r8), pointer :: latc(:)        ! lat of cell
      real(r8), pointer :: area(:)        ! area of cell
@@ -64,6 +66,8 @@ module RunoffMod
      real(r8), pointer :: dvolrdtlnd_nt2(:)
      real(r8), pointer :: dvolrdtocn_nt1(:)
      real(r8), pointer :: dvolrdtocn_nt2(:)
+     real(r8), pointer :: volr_nt1(:)
+     real(r8), pointer :: volr_nt2(:)
   end type runoff_flow
 !
   type (runoff_flow)         ,public :: runoff

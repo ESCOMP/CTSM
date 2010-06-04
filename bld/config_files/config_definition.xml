@@ -19,10 +19,6 @@ CLM Biogeochemistry mode
    casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
 (CASA is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
-<entry id="glc_grid" valid_values="gland20,gland10,gland5,none" value="none"
-category="glc">
-Glacier model grid
-</entry>
 <entry id="glc_nec" valid_values="0,1,3,5,10" value="0" category="glc">
 Glacier model number of elevation classes
 (Setting glc_nec to anything other than 0 or 10 is EXPERIMENTAL NOT SUPPORTED!)
@@ -108,10 +104,6 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scr
 </entry>
 <entry id="nc_mod" value="" category="standalone_test">
 Directory containing NetCDF module files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
-</entry>
-<entry id="esmf_libdir" value="" category="standalone_test">
-Directory containing ESMF library (for linking to external ESMF).
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
 

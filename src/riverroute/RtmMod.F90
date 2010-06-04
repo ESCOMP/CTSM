@@ -68,7 +68,6 @@ module RtmMod
 
 !gdc
   real(r8), pointer :: ddist(:)        ! downstream dist (m)
-  real(r8), pointer :: volr(:,:)       ! cell tracer volume (m^3)
   real(r8), pointer :: evel(:,:)       ! effective tracer velocity (m/s)
   real(r8), pointer :: sfluxin(:,:)    ! cell tracer influx (m3/s)
   real(r8), pointer :: fluxout(:,:)    ! cell tracer outlflux (m3/s)
@@ -251,6 +250,7 @@ contains
        close(1)
     endif
     deallocate(tempg)
+
     call mpi_bcast(glatc,size(glatc),MPI_REAL8,0,mpicom,ier)
     call mpi_bcast(glonc,size(glonc),MPI_REAL8,0,mpicom,ier)
     call mpi_bcast(rdirc,size(rdirc),MPI_INTEGER,0,mpicom,ier)
@@ -744,6 +744,7 @@ contains
              runoff%runofflnd(begr:endr,nt_rtm),runoff%dvolrdtlnd(begr:endr,nt_rtm), &
              runoff%runoffocn(begr:endr,nt_rtm),runoff%dvolrdtocn(begr:endr,nt_rtm), &
              runoff%area(begr:endr), &
+             runoff%volr(begr:endr,nt_rtm), runoff%volrlnd(begr:endr,nt_rtm), &
              runoff%lonc(begr:endr),  runoff%latc(begr:endr),  &
              runoff%dsi(begr:endr), stat=ier)
     if (ier /= 0) then
@@ -753,6 +754,7 @@ contains
 
     allocate(runoff%runofflnd_nt1(begr:endr),runoff%runofflnd_nt2(begr:endr), &
              runoff%runoffocn_nt1(begr:endr),runoff%runoffocn_nt2(begr:endr), &
+             runoff%volr_nt1(begr:endr), runoff%volr_nt2(begr:endr), &
              runoff%dvolrdtlnd_nt1(begr:endr),runoff%dvolrdtlnd_nt2(begr:endr), &
              runoff%dvolrdtocn_nt1(begr:endr),runoff%dvolrdtocn_nt2(begr:endr), &
              stat=ier)
@@ -769,8 +771,7 @@ contains
 
     !--- Allocate rtm flux variables
 
-    allocate (volr    (begr:endr,nt_rtm), &
-              fluxout (begr:endr,nt_rtm), &
+    allocate (fluxout (begr:endr,nt_rtm), &
               ddist   (begr:endr), &
               totrunin(begr:endr,nt_rtm), &
               evel    (begr:endr,nt_rtm), &
@@ -780,7 +781,6 @@ contains
             'volr, fluxout, ddist'
        call endrun
     end if
-    volr = 0._r8
     fluxout = 0._r8
     ddist = 0._r8
     sfluxin = 0._r8
@@ -816,6 +816,8 @@ contains
     runoff%dvolrdt = 0._r8
     runoff%dvolrdtlnd = spval
     runoff%dvolrdtocn = spval
+    runoff%volr = 0._r8
+    runoff%volrlnd = spval
 
     do nr = begr,endr
        n = rgdc2glo(nr)
@@ -832,6 +834,7 @@ contains
           do nt = 1,nt_rtm
              runoff%runofflnd(nr,nt) = runoff%runoff(nr,nt)
              runoff%dvolrdtlnd(nr,nt)= runoff%dvolrdt(nr,nt)
+             runoff%volrlnd(nr,nt)= runoff%volr(nr,nt)
           enddo
        elseif (runoff%mask(nr) == 2) then
           do nt = 1,nt_rtm
@@ -1333,8 +1336,8 @@ contains
           endif
 
           if (abs(runoff%mask(n)) == 1) then         ! land points
-             volr(n,nt)     = volr(n,nt) + dvolrdt*delt
-             fluxout(n,nt)  = volr(n,nt) * evel(n,nt)/ddist(n)
+             runoff%volr(n,nt)     = runoff%volr(n,nt) + dvolrdt*delt
+             fluxout(n,nt)  = runoff%volr(n,nt) * evel(n,nt)/ddist(n)
 !            --- old cfl constraint.  now use subcycling.  for reference only
 !            fluxout(n)  = min(fluxout(n), volr(n)/delt)
 !            --- this would stop upstream flow if volr/fluxout < 0
@@ -1345,7 +1348,7 @@ contains
 !            --- also, want to allow negative flow so it doesn't build up
 !            fluxout(n) = max(fluxout(n),0._r8)
           else
-             volr(n,nt) = 0._r8
+             runoff%volr(n,nt)     = 0._r8
              fluxout(n,nt) = 0._r8
           endif
 
@@ -1368,6 +1371,7 @@ contains
     do n = runoff%begr,runoff%endr
        if (runoff%mask(n) == 1) then
           do nt = 1,nt_rtm
+             runoff%volrlnd(n,nt)= runoff%volr(n,nt)
              runoff%runofflnd(n,nt) = runoff%runoff(n,nt)
              runoff%dvolrdtlnd(n,nt)= runoff%dvolrdt(n,nt)
           enddo
@@ -1442,7 +1446,7 @@ contains
           vname = 'RTM_VOLR_'//trim(rtm_tracers(nt))
           lname = 'water volume in cell (volr)'
           uname = 'm3'
-          dfld  => volr(:,nt)
+          dfld  => runoff%volr(:,nt)
        elseif (nv == 2) then
           vname = 'RTM_FLUXOUT_'//trim(rtm_tracers(nt))
           lname = 'water fluxout in cell (fluxout)'
@@ -1536,6 +1540,7 @@ contains
              do nt = 1,nt_rtm
                 runoff%runofflnd(n,nt) = runoff%runoff(n,nt)
                 runoff%dvolrdtlnd(n,nt)= runoff%dvolrdt(n,nt)
+                runoff%volrlnd(n,nt)= runoff%volr(n,nt)
              enddo
           elseif (runoff%mask(n) == 2) then
              do nt = 1,nt_rtm
@@ -1580,6 +1585,8 @@ contains
     runoff%dvolrdtlnd_nt2(:) = runoff%dvolrdtlnd(:,2)
     runoff%dvolrdtocn_nt1(:) = runoff%dvolrdtocn(:,1)
     runoff%dvolrdtocn_nt2(:) = runoff%dvolrdtocn(:,2)
+    runoff%volr_nt1(:) = runoff%volrlnd(:,1)
+    runoff%volr_nt2(:) = runoff%volrlnd(:,2)
 
   end subroutine rtm_sethist
 !-----------------------------------------------------------------------

@@ -23,9 +23,6 @@ if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
 if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
 set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -rtm $rtm -glc_nec $GLC_NEC"
-if ("$COMP_GLC" != "sglc" )then
-    set config_opts = "$config_opts -glc_grid $GLC_GRID"
-endif
 $CODEROOT/lnd/clm*/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
@@ -62,7 +59,6 @@ $finidat
 $nrevsn
  hist_mfilt       =  1
  hist_nhtfrq      =  0
- outnc_large_files = .true.
 /
 EOF1
 
@@ -79,12 +75,10 @@ endif
 #
 if ($RUN_TYPE == startup ) then
    set START_TYPE = "default"
+   if ($CLM_FORCE_COLDSTART == on) set START_TYPE = "cold"
 else
    set START_TYPE = $RUN_TYPE
    if ($RUN_TYPE == hybrid ) set START_TYPE = "startup"
-endif
-if ($CLM_FORCE_COLDSTART == on) then
-   set START_TYPE = "cold"
 endif
 
 set mask = " "
@@ -119,6 +113,9 @@ if ( "$CLM_USRDAT_NAME" != "UNSET" )then
 endif
 set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
 set options = "$options -infile ccsm_namelist -clm_start_type $START_TYPE $CLM_BLDNML_OPTS"
+if ("$COMP_GLC" != "sglc" )then
+    set options = "$options -glc_grid $GLC_GRID"
+endif
 $CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT \-inputdata $CASEBUILD/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------

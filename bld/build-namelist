@@ -46,6 +46,8 @@ OPTIONS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
+     -glc_grid "grid"         Glacier model grid and resolution when glacier model is active
+                              (i.e. gland20, gland10 etcetera)
      -help [or -h]            Print usage to STDOUT.
      -ignore_ic_date          Ignore the date on the initial condition files (ic_ymd and ic_tod) 
                               when determining what input initial condition file to use.
@@ -95,6 +97,11 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq
      -datm_domain "file"      File name of domain file for datm data matching 
                               resolution data resolution.
      -datm_dom_dir "path"     Directory path to the datm_domain file.
+     -datm_presaero "type"    Prescribed aerosol type:
+                              Can be default, none, or any of the list of valid options
+                                  default = use default for this scenario
+                                  none    = read in aerosols from clm rather than datm
+                              (other options include: clim_1850, clim_2000, trans_1850-2000)
      -datm_source "source"    Source data to use for datm (for ccsm_seq mode)
                               "-datm_source list" to list valid datm_source types.
      -drv_runlength "length"  Length of simulation (e.g. default, 10d, 5s, 2y)
@@ -145,14 +152,16 @@ my %opts = ( config                => $cfg_cache,
              datm_cycle_init_year  => "default",
              clm_demand            => "null",
 	     help                  => 0,
+             glc_grid              => "default",
 	     dir                   => $outdirname,
 	     rcp                   => "default",
              sim_year              => "default",
-	     drydep                => 0,
+	     drv_drydep            => 0,
 	     res                   => "default",
 	     lnd_res               => "default",
 	     silent                => 0,
              datm_source           => "default",
+             datm_presaero         => "default",
              mask                  => "default",
              ndepsrc               => "default",
 	     test                  => 0,
@@ -170,8 +179,10 @@ GetOptions(
     "datm_data_dir=s"           => \$opts{'datm_data_dir'},
     "datm_domain=s"             => \$opts{'datm_domain'},
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
+    "datm_presaero=s"           => \$opts{'datm_presaero'},
     "ndepsrc=s"                 => \$opts{'ndepsrc'},
-    "drydep"                    => \$opts{'drydep'},
+    "drv_drydep"                => \$opts{'drv_drydep'},
+    "glc_grid=s"                => \$opts{'glc_grid'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
     "lnd_res=s"                 => \$opts{'lnd_res'},
@@ -269,8 +280,7 @@ EOF
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_drv.xml",
-                          "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
-                          "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+                          "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
 if (defined $opts{'use_case'}) {
    if ( $opts{'use_case'} ne "list" ) {
@@ -437,6 +447,24 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
 }
 if ($print>=2) { print "CLM land mask is $mask $eol"; }
+
+# glc_grid
+$var = "glc_grid";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val = $defaults->get_value($var);
+}
+my $glc_grid = $val;
+$opts{'glc_grid'} = $glc_grid;
+$val = &quote_string( $val );
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
 
 # representative concentration pathway
 $var = "rcp";
@@ -790,6 +818,7 @@ if ($mode eq "ccsm_seq") {
 	   add_default($nl, 'lnd_nthreads', 'val'=>$nthreads);
 	   add_default($nl, 'ice_nthreads', 'val'=>1        );
 	   add_default($nl, 'ocn_nthreads', 'val'=>1        );
+	   add_default($nl, 'glc_nthreads', 'val'=>1        );
        }
    }
 }
@@ -877,6 +906,7 @@ if ( $my_start_type =~ /branch/ ) {
 }
 
 add_default($nl, 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
+add_default($nl, 'outnc_large_files' );
 add_default($nl, 'fsnowoptics' );
 add_default($nl, 'fsnowaging' );
 
@@ -890,12 +920,18 @@ if ($res ne $lnd_res) {
 #
 my $glc_nec  = $cfg->get( "glc_nec" );
 if ( $glc_nec > 0 ) {
-  my $glc_grid = $cfg->get( "glc_grid" );
+  if ( $glc_grid eq "none" ) {
+     die "$ProgName ERROR:: glc_grid is equal to none, but glc_nec is positive\n";
+  }
   add_default($nl, 'create_glacier_mec_landunit');
   add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
   add_default($nl, 'fglcmask'  , 'hgrid'=>$lnd_res, 'glc_grid'=>$glc_grid );
   add_default($nl, 'glc_smb'   , 'glc_nec'=>$glc_nec );
+  add_default($nl, 'albice'    , 'glc_nec'=>$glc_nec );
 } else {
+  if ( $glc_grid ne "none" ) {
+     die "$ProgName ERROR:: glc_grid is set, but glc_nec is zero\n";
+  }
   # Error checking for glacier multiple elevation class options when glc_nec off
   # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask is NOT set
   my $create_glcmec = $nl->get_value('create_glacier_mec_landunit');
@@ -1160,234 +1196,11 @@ if ($mode eq "ccsm_seq") {
   add_default($nl, 'profile_depth_limit');
   add_default($nl, 'profile_detail_limit');
 }
- 
-####################################
-# namelist group: shr_strdata_nml  #
-####################################
-
-my $atm_in;
-if ($mode eq "ccsm_seq") {
-
-    add_default($nl, 'io_type');
-    add_default($nl, 'num_iotasks');
-    add_default($nl, 'io_root');
-    add_default($nl, 'io_stride');
-    add_default($nl, 'num_agg');
-
-    #
-    # Set streams text file
-    #
-    
-    my %cycleopts = ('mask'=>$mask,'hgrid'=>$lnd_res);
-    my $init_year;
-    my $beg_year;
-    my $end_year;
-    
-    # Note that init_year is the model start year from the driver namelist
-    if ( $opts{'datm_cycle_init_year'} eq "default" ) {
-	my $start_ymd = $nl->get_value('start_ymd');
-	$init_year = int( $start_ymd / 10000 );
-    } else {
-	$init_year = $opts{'datm_cycle_init_year'}; 
-    }
-    if ( $opts{'datm_cycle_beg_year'} eq "default" ) {
-	$beg_year= $defaults->get_value('datm_cycle_beg_year', \%cycleopts);
-    } else {
-	$beg_year = $opts{'datm_cycle_beg_year'}; 
-    }
-    if ( $opts{'datm_cycle_end_year'} eq "default" ) {
-	$end_year= $defaults->get_value('datm_cycle_end_year', \%cycleopts);
-    } else {
-	$end_year = $opts{'datm_cycle_end_year'}; 
-    }
-    if ( $beg_year > $end_year ) {
-	print "\n\ndatm_cycle_beg_year=$beg_year datm_cycle_end_year=$end_year\n";
-	die "$ProgName ERROR:: datm_cycle_beg_year greater than datm_cycle_end_year\n";
-    }
-    
-    # Get defaults for data manipulation options associated with each stream (mapping, filling, time-interp etc.)
-
-    # Determine options for reading the stream template file (datm.streams.template.xml)
-    my %inputopts;
-    if ( $opts{'silent'} ) {
-	$inputopts{'printing'} = 0;
-    } else {
-	$inputopts{'printing'} = 1;
-    }
-    $inputopts{'test'} = $opts{'test'};
-    if ( $opts{'datm_source'} eq "default" ) {
-	$inputopts{'datasource'}  = $defaults->get_value( 'datm_source' );
-    } else {
-	$inputopts{'datasource'}  = $opts{'datm_source'};
-    }
-
-    # Determine options for reading the stream template file (datm.streams.template.xml)
-    my %inputopts;
-    if ( $opts{'silent'} ) {
-	$inputopts{'printing'} = 0;
-    } else {
-	$inputopts{'printing'} = 1;
-    }
-    $inputopts{'test'} = $opts{'test'};
-    if ( $opts{'datm_source'} eq "default" ) {
-	$inputopts{'datasource'}  = $defaults->get_value( 'datm_source' );
-    } else {
-	$inputopts{'datasource'}  = $opts{'datm_source'};
-    }
-    my $var = "datm_source";
-    my $datm_source = $inputopts{'datasource'};
-    my $val = &quote_string( $datm_source );
-    my $group = $definition->get_group_name( $var );
-    $nl->set_variable_value($group, $var, $val );
-    if (  ! $definition->is_valid_value( $var, $val ) ) {
-       my @valid_values   = $definition->get_valid_values( $var );
-       die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-    }
-
-    $inputopts{'ProgName'} = $ProgName;
-    $inputopts{'ProgDir'}  = "$cfgdir";
-    if ( $datm_source ne "CLM1PT" ) {
-	$inputopts{'res'}     = "";
-    } else {
-	$inputopts{'res'} = $opts{'res'};
-    }
-    $inputopts{'yearfirst'}  = $beg_year;
-    $inputopts{'yearlast'}   = $end_year;
-    if ( defined($opts{'datm_data_dir'}) ) {
-	$inputopts{'filepath'} = $opts{'datm_data_dir'};
-    } else {
-        if ( $datm_source ne "CAMHIST.eul64x128_datm6.01" && $datm_source ne "CLM1PT" ) {
-	    die "$ProgName ERROR:: Need to specify datm_data_dir directory of where " .
-		" datm data is for datasource=$datm_source.\n";
-	}
-	$inputopts{'filepath'}   = "";
-    }
-    if ( ! defined($opts{'datm_dom_dir'} ) ) {
-	$inputopts{'domainpath'} = "";
-	if ( $datm_source =~ /CAMHIST.GENERIC/ ) {
-	    die "$ProgName ERROR:: Need to specify datm_dom_dir directory of where " .
-		" datm domain data is for datasource=$datm_source.\n";
-	}
-    } else {
-	$inputopts{'domainpath'} = $opts{'datm_dom_dir'};
-    }
-    if ( ! defined($opts{'datm_domain'}) ) {
-	$inputopts{'domain'} = "";
-	if ( $datm_source =~ /CAMHIST.GENERIC/ ) {
-	    die "$ProgName ERROR:: Need to specify datm_domain name of domain file " .
-		" for datasource=$datm_source.\n";
-	}
-    } else {
-	$inputopts{'domain'} = $opts{'datm_domain'};
-    }
-    $inputopts{'cmdline'}   = $cmdline;
-    $inputopts{'csmdata'}   = $inputdata_rootdir;
-    $inputopts{'filenames'} = "";
-    $inputopts{'case'}      = "";
-    $inputopts{'chng_din_lc'} = 1;
-    
-    if ( $datm_source ne "CLM_QIAN" ) {
-       my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
-       add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
-       add_default($nl, 'mapalgo');
-       add_default($nl, 'mapmask');
-       add_default($nl, 'tintalgo');
-       add_default($nl, 'fillalgo');
-       add_default($nl, 'fillmask');
-    
-       # Read the streams template file
-       my $streams = Streams::Template->new( \%inputopts );
-       my $template = $defaults->get_value( 'streamstemplate' );
-       $streams->Read( "$cfgdir/../../../$template" );
-       
-       if ( $opts{'test'} ) {
-	   $streams->TestFilesExist( "data" );
-	   $streams->TestFilesExist( "domain" );
-       }
-       $streams->Write( $outstreams );
-    } else {
-       my $ostreams  = undef;
-       my $omapalgo  = undef;
-       my $omapmask  = undef;
-       my $otintalgo = undef;
-       my $ofillalgo = undef;
-       my $ofillmask = undef;
-       my $filepath  = $inputopts{'filepath'};
-       foreach my $src ( "Precip", "Solar", "TPQW" ) {
-	  $inputopts{'datasource'}  = "$datm_source.$src";
-	  $inputopts{'filepath'} = "$filepath/" . $defaults->get_value( "CLM_QIAN_dir.$src" );
-
-          my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' ) . ".$src";
-          my $mapalgo    = $defaults->get_value( 'mapalgo' );
-          my $mapmask    = $defaults->get_value( 'mapmask' );
-          my $tintalgo   = $defaults->get_value( "tintalgo.$src" );
-          my $fillalgo   = $defaults->get_value( 'fillalgo' );
-          my $fillmask   = $defaults->get_value( 'fillmask' );
-    
-          # Read the streams template file
-          my $streams = Streams::Template->new( \%inputopts );
-          my $template = $defaults->get_value( 'streamstemplate' );
-          $streams->Read( "$cfgdir/../../../$template" );
-       
-          if ( $opts{'test'} ) {
-	      $streams->TestFilesExist( "data" );
-	      $streams->TestFilesExist( "domain" );
-          }
-          $streams->Write( $outstreams );
-          if ( ! defined($ostreams) ) {
-             $ostreams  = "\"$outstreams $init_year $beg_year $end_year\"";
-             $omapalgo  = "\'$mapalgo\'";
-             $omapmask  = "\'$mapmask\'";
-             $otintalgo = "\'$tintalgo\'";
-             $ofillalgo = "\'$fillalgo\'";
-             $ofillmask = "\'$fillmask\'";
-          } else {
-             $ostreams  = "$ostreams,\"$outstreams $init_year $beg_year $end_year\"";
-             $omapalgo  .= ",\'$mapalgo\'";
-             $omapmask  .= ",\'$mapmask\'";
-             $otintalgo .= ",\'$tintalgo\'";
-             $ofillalgo .= ",\'$fillalgo\'";
-             $ofillmask .= ",\'$fillmask\'";
-          }
-      }
-      add_default($nl, 'streams',  'val' => "$ostreams"  );
-      add_default($nl, 'mapalgo',  'val' => "$omapalgo"  );
-      add_default($nl, 'mapmask',  'val' => "$omapmask"  );
-      add_default($nl, 'tintalgo', 'val' => "$otintalgo" );
-      add_default($nl, 'fillalgo', 'val' => "$ofillalgo" );
-      add_default($nl, 'fillmask', 'val' => "$ofillmask" );
-   }
-}
-
-##############################
-# namelist group: datm_in    #
-##############################
-
-if ($mode eq "ccsm_seq") {
-    add_default($nl, 'datamode', 'val'=>'CLMNCEP' );
-    add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask); 
-    add_default($nl, 'factorfn');
-    add_default($nl, 'iradsw');
-    add_default($nl, 'vectors');
-    add_default($nl, 'decomp');
-    add_default($nl, 'atm_in');
-    $atm_in = $nl->get_value('atm_in');
-    $atm_in =~ s/"|'//g;
-    if ( $clm_start_type =~ /branch/ ) {
-       # The datm master restart file is currently unused
-       #if (not defined $nl->get_value('restfilm')) {
-       #   die "$ProgName ERROR:: restfilm is required for a branch type.\n";
-       #}
-       if (not defined $nl->get_value('restfils')) {
-          die "$ProgName ERROR:: restfils is required for a branch type.\n";
-       }
-    }
-}
 
 #################################
 # namelist group: drydep_inparm #
 #################################
-if ($opts{'drydep'} ) {
+if ($opts{'drv_drydep'} ) {
     add_default($nl, 'drydep_list');
     add_default($nl, 'drydep_method');
 }
@@ -1428,24 +1241,6 @@ if ($mode eq "ccsm_seq") {
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
 
-    # DATM7 component
-    @groups = qw(shr_strdata_nml);
-    $outfile = "$opts{'dir'}/$atm_in";
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing datm_dshr namelist to $outfile $eol"; }
-
-    @groups = qw(datm_nml);
-    $outfile = "$opts{'dir'}/datm_in";
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing datm_in namelist to $outfile $eol"; }
-
-    # atm_modelio
-    @groups = qw(modelio);
-    $outfile = "$opts{'dir'}/atm_modelio.nml";
-    $nl->set_variable_value( "modelio", "logfile", "'atm.log'" );
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing atm_modelio.nml namelist to $outfile $eol"; }
-
     # lnd_modelio
     @groups = qw(modelio);
     $outfile = "$opts{'dir'}/lnd_modelio.nml";
@@ -1455,7 +1250,7 @@ if ($mode eq "ccsm_seq") {
 }
 
 # Drydep namelist
-if ($opts{'drydep'} ) {
+if ($opts{'drv_drydep'} ) {
     @groups = qw(drydep_inparm);
     $outfile = "$opts{'dir'}/drv_flds_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
@@ -1475,6 +1270,53 @@ if ( $ndepsrc eq "stream" ) {
 # Output input dataset list.
 if ($opts{'inputdata'}) {
     check_input_files($nl,$inputdata_rootdir,$opts{'inputdata'});
+}
+
+####################################
+# datm7 model namelist             #
+####################################
+
+if ($mode eq "ccsm_seq") {
+   my $datmbldnml     = "$cfgdir/namelist_files/datm-build-namelist";
+   my $datmbldnmlopts = "-mask $mask -res $res -rcp $rcp -sim_year $sim_year" . 
+                        " -sim_year_range $sim_year_range -print $print" . 
+                        " -drv_start_type $drv_start_type" .
+                        " -csmdata $inputdata_rootdir -d $outdirname" .
+                        " -config "               . $opts{'config'} .
+                        " -datm_cycle_beg_year "  . $opts{'datm_cycle_beg_year'} .
+                        " -datm_cycle_end_year "  . $opts{'datm_cycle_end_year'} .
+                        " -datm_cycle_init_year " . $opts{'datm_cycle_init_year'} .
+                        " -datm_presaero "        . $opts{'datm_presaero'} .
+                        " -datm_source "          . $opts{'datm_source'};
+   if ( $opts{'test'} ) {
+      $datmbldnmlopts .= " -test";
+   }
+   if ( defined($opts{'clm_usr_name'}) ) {
+      $datmbldnmlopts .= " -clm_usr_name ".$opts{'clm_usr_name'};
+   }
+   if ( defined($opts{'use_case'}) ) {
+      $datmbldnmlopts .= " -use_case ".$opts{'use_case'};
+   }
+   if ( defined($opts{'infile'}) ) {
+      $datmbldnmlopts .= " -infile ".$opts{'infile'};
+   }
+   if ( defined($opts{'namelist'}) ) {
+      $datmbldnmlopts .= ' -namelist "'.$opts{'namelist'} . '"';
+   }
+   if ( defined($opts{'datm_domain'}) ) {
+      $datmbldnmlopts .= " -datm_domain ".$opts{'datm_domain'};
+   }
+   if ( defined($opts{'datm_dom_dir'}) ) {
+      $datmbldnmlopts .= " -datm_dom_dir ".$opts{'datm_dom_dir'};
+   }
+   if ( defined($opts{'datm_data_dir'}) ) {
+      $datmbldnmlopts .= " -datm_data_dir ".$opts{'datm_data_dir'};
+   }
+   print(  "$datmbldnml $datmbldnmlopts\n" ) if $print >= 2;
+   my $rc = system( "$datmbldnml $datmbldnmlopts" );
+   if ( $rc != 0 ) {
+	die "$ProgName - ERROR: running $datmbldnml script.\n";
+   }
 }
 
 # END OF MAIN SCRIPT

@@ -63,6 +63,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.090106.nc</domainfile>
 <domainfile hgrid="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.090106.nc</domainfile>
 <domainfile hgrid="94x192"      mask="T62"  >atm/datm7/domain.lnd.T62_T62.090129.nc</domainfile>
+<domainfile hgrid="94x192"      mask="gx1v6">atm/datm7/domain.lnd.T62_gx1v6.090320.nc</domainfile>
+<domainfile hgrid="94x192"      mask="gx3v7">atm/datm7/domain.lnd.T62_gx3v7.090928.nc</domainfile>
+
+<domainfile hgrid="wr50a"       mask="wr50a">atm/datm7/domain.lnd.wr50a_wr50a.090310.nc</domainfile>
+<domainfile hgrid="ar9v1"       mask="ar9v1">atm/datm7/domain.lnd.ar9v1_ar9v1.090521.nc</domainfile>
+<domainfile hgrid="ar9v2"       mask="ar9v2">atm/datm7/domain.lnd.ar9v2_ar9v2.090521.nc</domainfile>
+<domainfile hgrid="wr50a"       mask="ar9v2">atm/datm7/domain.lnd.wr50a_ar9v2.090614.nc</domainfile>
 
 <domainfile hgrid="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
 <domainfile hgrid="0.23x0.31"   mask="gx1v6"  >atm/datm7/domain.lnd.fv0.23x0.31_gx1v6.100517.nc</domainfile>
@@ -104,6 +111,86 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <io_stride  >4</io_stride>
 <io_root    >0</io_root>
 <num_agg    >0</num_agg>
+
+<datm_presaero>none</datm_presaero>
+
+<!-- Aerosol deposition datasets -->
+
+<!-- single point resolution files for 2000 climate -->
+<datm_file_aero hgrid="1x1_brazil"          datm_presaero="pt1_pt1" >lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_brazil_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_camdenNJ"        datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_camdenNJ_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_tropicAtl"       datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_tropicAtl_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_asphaltjungleNJ" datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_asphaltjungleNJ_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_vancouverCAN"    datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_vancouverCAN_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_mexicocityMEX"   datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_mexicocityMEX_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_urbanc_alpha"    datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_urbanc_alpha_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="5x5_amazon"          datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_5x5_amazon_c090716.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="pt1_pt1" >clm1pt_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="pt1_pt1">1</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="pt1_pt1">1</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="pt1_pt1">1</datm_year_align_aero>
+
+<!-- 1850 climate files -->
+<datm_file_aero       datm_presaero="clim_1850" hgrid="1x1_tropicAtl" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_1x1_tropicAtl_c091026.nc
+</datm_file_aero>
+<datm_file_aero       datm_presaero="clim_1850" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="clim_1850" >clim_1850_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="clim_1850">1</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="clim_1850">1</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="clim_1850">1</datm_year_align_aero>
+
+<!-- 2000 climate files -->
+<datm_file_aero       datm_presaero="clim_2000" hgrid="1x1_tropicAtl" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_1x1_tropicAtl_c091026.nc
+</datm_file_aero>
+<datm_file_aero       datm_presaero="clim_2000" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="clim_2000" >clim_2000_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="clim_2000">1</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="clim_2000">1</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="clim_2000">1</datm_year_align_aero>
+
+<!-- 20th Century transient files -->
+<datm_file_aero       datm_presaero="trans_1850-2000" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_1.9x2.5_c090803.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="trans_1850-2000" >trans_1850-2000_presaero_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="trans_1850-2000">1849</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="trans_1850-2000">2006</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="trans_1850-2000">1849</datm_year_align_aero>
+
+<!-- Future scenarios for different representative concentration pathways -->
+
+<!-- rcp2.6 future scenario transient files -->
+<datm_file_aero       datm_presaero="rcp2.6" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp2.6_monthly_1849-2104_1.9x2.5_c100402.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="rcp2.6" >rcp2.6_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="rcp2.6">1849</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="rcp2.6">2104</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="rcp2.6">1849</datm_year_align_aero>
+
+<!-- rcp4.5 future scenario transient files -->
+<datm_file_aero       datm_presaero="rcp4.5" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_1.9x2.5_c100402.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="rcp4.5" >rcp4.5_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="rcp4.5">1849</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="rcp4.5">2104</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="rcp4.5">1849</datm_year_align_aero>
+
+<!-- rcp8.5 future scenario transient files -->
+<datm_file_aero       datm_presaero="rcp8.5" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp8.5_monthly_1849-2104_1.9x2.5_c100201.nc
+</datm_file_aero>
+<datm_aero_streams    datm_presaero="rcp8.5" >rcp8.5_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="rcp8.5">1849</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="rcp8.5">2104</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="rcp8.5">1849</datm_year_align_aero>
 
 <!-- =========================================  -->
 <!-- Defaults for modelio namelist              -->

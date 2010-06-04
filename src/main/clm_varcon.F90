@@ -142,18 +142,6 @@ module clm_varcon
   real(r8), allocatable :: albsat(:,:) ! wet soil albedo by color class and waveband (1=vis,2=nir)
   real(r8), allocatable :: albdry(:,:) ! dry soil albedo by color class and waveband (1=vis,2=nir)
 
-! The CLM default albice values are too high.
-! Full-spectral albedo for land ice is ~0.5 (Paterson, Physics of Glaciers, 1994, p. 59)
-! This is the value used in CAM3 by Pritchard et al., GRL, 35, 2008.
-
-  real(r8) :: albice(numrad)           ! albedo land ice by waveband (1=vis, 2=nir)
-
-#if (defined GLC_NEC_1) || (defined GLC_NEC_3) || (defined GLC_NEC_5) || (defined GLC_NEC_10)
-  data (albice(i),i=1,numrad) /0.50_r8, 0.50_r8/
-#else
-  data (albice(i),i=1,numrad) /0.80_r8, 0.55_r8/
-#endif
-
   real(r8) :: alblak(numrad)           ! albedo frozen lakes by waveband (1=vis, 2=nir)
   data (alblak(i),i=1,numrad) /0.60_r8, 0.40_r8/
 

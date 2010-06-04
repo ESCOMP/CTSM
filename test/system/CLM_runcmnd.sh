@@ -113,33 +113,6 @@ case $hostname in
         fi
     fi ;;
 
-    ##kraken
-    kraken* | aprun* )
-    ##search config options file for parallelization info; default on XT4 is mpi
-    if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""
-	elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	else
-            ##serial
-	    cmnd=""
-	fi
-    else
-        if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="aprun -n ${CLM_TASKS} "
-        elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} aprun -n ${CLM_TASKS} -d ${CLM_THREADS}"
-        else
-            ##mpi only
-	    cmnd="aprun -n ${CLM_TASKS} "
-        fi
-    fi ;;
-
     ##yong
     yong* )
     cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "

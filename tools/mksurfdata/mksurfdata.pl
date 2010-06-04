@@ -182,7 +182,8 @@ EOF
       #
       # Query the XML default file database to get the appropriate griddata file
       #
-      my $griddata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -var fatmgrid`;
+      my $queryopts = "-res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue";
+      my $griddata = `../../bld/queryDefaultNamelist.pl $queryopts -var fatmgrid`;
       if ( $? != 0 ) {
          die "ERROR:: fatmgrid file NOT found\n";
       }
@@ -259,7 +260,7 @@ EOF
                #
                # Query the XML default file database to get the appropriate furbinp file
                #
-               my $urbdata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -filenameonly -var fsurdat`;
+               my $urbdata = `../../bld/queryDefaultNamelist.pl $queryopts -var fsurdat -filenameonly`;
                if ( $? != 0 ) {
                   die "ERROR:: furbinp file NOT found\n";
                }
@@ -268,33 +269,45 @@ EOF
  mksrf_furban       = '$CSMDATA/lnd/clm2/surfdata/$urbdata'
 EOF
             }
+            my $resol = "";
             if ( $res =~ /[1-9]x[1-9]_[a-zA-Z0-9]/ ) {
                print $fh <<"EOF";
  mksrf_gridtype     = 'regional'
 EOF
             }
+            if ( $res ne "1x1_tropicAtl" ) {
+               $resol = "-res 0.5x0.5";
+            }
             my $sim_yr0 = $sim_year;
+            my $sim_yrn = $sim_year;
             if ( $sim_year =~ /([0-9]+)-([0-9]+)/ ) {
                $sim_yr0 = $1;
+               $sim_yrn = $2;
             }
-            my $vegtyp;
-            if ( $sim_year < 1850 ) {
-               $vegtyp = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -filenameonly -var mksrf_fvegtyp`;
-            } else {
-               $vegtyp = "$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/" . 
-                         "mksrf_landuse_rc${sim_yr0}_c090630.nc";
-            }
+            my $vegtyp = `../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$sim_yr0 -var mksrf_fvegtyp -namelist clmexp`;
+            chomp( $vegtyp );
             if ( $rcp == -999.9 ) {
-               $desc     = "hist_simyr$sim_year";
-               $desc_yr0 = "simyr$sim_yr0";
+               $desc     = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
+               $desc_yr0 = sprintf( "simyr%4.4d",            $sim_yr0  );
             } else {
-               $desc     = sprintf( "%s%2.1f_simyr%s", "rcp", $rcp, $sim_year );
-               $desc_yr0 = sprintf( "%s%2.1f_simyr%s", "rcp", $rcp, $sim_yr0  );
+               $desc     = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
+               $desc_yr0 = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr0  );
             }
             my $pftdyntext_file = "pftdyn_$desc.txt";
-            if ( ! -f "$pftdyntext_file" ) {
-               die "ERROR:: $pftdyntext_file file NOT found\n";
+            my $fhpftdyn = IO::File->new;
+            $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
+            print "Writing out pftdyn text file: $pftdyntext_file\n";
+            for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
+              my $vegtypyr = `../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=$rcp -var mksrf_fvegtyp -namelist clmexp`;
+              chomp( $vegtypyr );
+              printf $fhpftdyn "%-125.125s %4.4d\n", $vegtypyr, $yr;
+              if ( $yr % 100 == 0 ) {
+                 print "year: $yr\n";
+              }
             }
+            $fhpftdyn->close;
+            print "Done writing file\n";
+
             print $fh <<"EOF";
  mksrf_fvegtyp      = '$vegtyp'
  mksrf_fsoicol      = '$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
@@ -348,7 +361,7 @@ EOF
                my $cmd = "ncks -A $griddata $ncfiles[0]";
                print "$cmd\n";
                if ( ! $opts{'debug'} ) { system( $cmd ); }
-               my $fracdata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -var fatmlndfrc`;
+               my $fracdata = `../../bld/queryDefaultNamelist.pl $queryopts -var fatmlndfrc`;
                if ( $? != 0 ) {
                   die "ERROR:: fatmlndfrc file NOT found\n";
                }

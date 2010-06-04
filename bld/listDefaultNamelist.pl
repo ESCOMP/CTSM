@@ -235,7 +235,7 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            }
            my @bgcsettings   = $cfg->get_valid_values( "bgc" );
            my @glc_meclasses = $cfg->get_valid_values( "glc_nec" );
-           my @glc_grids     = $cfg->get_valid_values( "glc_grid" );
+           my @glc_grids     = $definition->get_valid_values( "glc_grid", 'noquotes'=>1 );
            #
            # Loop over all possible rcp's
            #

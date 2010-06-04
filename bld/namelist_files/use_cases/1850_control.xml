@@ -8,12 +8,16 @@
 
 <sim_year_range>constant</sim_year_range>
 
-<orb_iyear_ad mode="ccsm_seq" >1850</orb_iyear_ad>
-
 <stream_year_first_ndep bgc="cn"   ndepsrc="stream" >1850</stream_year_first_ndep>
 <stream_year_last_ndep  bgc="cn"   ndepsrc="stream" >1850</stream_year_last_ndep>
 
 <stream_year_first_ndep bgc="cndv" ndepsrc="stream" >1850</stream_year_first_ndep>
 <stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >1850</stream_year_last_ndep>
+
+<!-- Settings for datm and driver -- for stand-alone testing -->
+<datm_presaero mode="ccsm_seq" >clim_1850</datm_presaero>
+<orb_iyear_ad        mode="ccsm_seq" >1850</orb_iyear_ad>
+<datm_cycle_beg_year mode="ccsm_seq" >1948</datm_cycle_beg_year>
+<datm_cycle_end_year mode="ccsm_seq" >1972</datm_cycle_end_year>
 
 </namelist_defaults>

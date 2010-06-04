@@ -23,6 +23,11 @@ Atmospheric CO2 molar ratio (by volume) (umol/mol)
 Type of CO2 feedback.
 </entry>
 
+<entry id="albice" type="real(2)" category="clm_physics"
+       group="clm_inparm" >
+Visible and Near-infrared albedo's for glacier ice
+</entry>
+
 <entry id="ice_runoff" type="logical" category="clm_physics"
        group="clm_inparm">
 If true, river runoff will be split up into liquid and ice streams, otherwise ice runoff will be zero and all runoff directed to liquid stream
@@ -784,6 +789,26 @@ Number of ocn tasks.
 Number of threads in each ocn task.
 </entry>
 
+<entry id="glc_pestride" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Stride used in selecting the processes in the glc communicator group.
+</entry>
+
+<entry id="glc_rootpe" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Root process of the glc communicator group.
+</entry>
+
+<entry id="glc_ntasks" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of glc tasks.
+</entry>
+
+<entry id="glc_nthreads" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of threads in each glc task.
+</entry>
+
 <entry id="cpl_pestride" type="integer"  catagory="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the cpl communicator group.
@@ -1089,6 +1114,11 @@ Character array of vector description file names
 File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 </entry>
 
+<entry id="presaero" type="logical" category="datm"
+       group="datm_nml">
+If prescribed aerosols are coming from the data atmosphere model (datm)
+</entry>
+
 <entry id="atm_in" type="char*256" category="datm"
        group="datm_nml" valid_values="">
 Namelist filename for data model share stream data namelist
@@ -1118,6 +1148,36 @@ Stream restart file name for datm model, needed for branch simulations
        group="datm_internal" 
        valid_values="CLM_QIAN,CPLHIST3HrWxHfHrSol,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
 Description of data source for datm input data.
+</entry>
+
+<entry id="datm_presaero" type="char*80" category="datm_internal"
+       group="datm_internal" 
+       valid_values="none,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6,rcp8.5">
+Prescribed aerosol mode
+</entry>
+
+<entry id="datm_file_aero" type="char*80" category="datm_internal"
+       group="datm_internal"  input_pathname="abs"
+       valid_values="">
+Prescribed aerosol file name, full path
+</entry>
+
+<entry id="datm_year_first_aero" type="integer" category="datm_internal"
+       group="datm_internal" 
+       valid_values="">
+Prescribed aerosol initial year
+</entry>
+
+<entry id="datm_year_last_aero" type="integer" category="datm_internal"
+       group="datm_internal" 
+       valid_values="">
+Prescribed aerosol last year
+</entry>
+
+<entry id="datm_year_align_aero" type="integer" category="datm_internal"
+       group="datm_internal" 
+       valid_values="">
+Prescribed aerosol model year to align to first year
 </entry>
 
 <entry id="datm_cycle_beg_year" type="integer" category="datm_internal"
@@ -1155,10 +1215,19 @@ CLM run type.
    'branch' is a restart run in which properties of the output history files may be changed.
 </entry>
 
+<entry id="glc_grid" type="char*10" category="default_settings"
+        group="default_settings" valid_values="gland20,gland10,gland5,none" >
+Glacier model grid
+    gland20 = Greenland at 20km resolution
+    gland10 = Greenland at 10km resolution
+    gland5  = Greenland at  5km resolution
+    none    = no glacier model grid
+</entry>
+
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
+"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5">
 Horizontal resolutions
 </entry> 
 
@@ -1183,17 +1252,17 @@ Land mask description
 
 <entry id="sim_year" type="integer" category="default_settings"
        group="default_settings" valid_values=
-"1000,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
+"1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
 Year to simulate datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 </entry> 
 
 <entry id="sim_year_range" type="char*9" category="default_settings"
        group="default_settings" valid_values=
-"constant,1000-1002,1000-1004,1850-2000,1850-2100,2000-2100">
+"constant,1000-1002,1000-1004,850-1100,1100-1350,1350-1600,1600-1850,1850-2000,1850-2100,2000-2100">
 Range of years to simulate transitory datasets for (such as dynamic: land-use datasets, aerosol-deposition, Nitrogen deposition rates etc.)
 Constant means simulation will be held at a constant year given in sim_year.
-A sim_year_range near 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
+A sim_year_range of 1000-1002 or 1000-1004 corresponds to data used for testing only, NOT corresponding to any real datasets.
 A sim_year_range that goes beyond 2005 corresponds to historical data until 2005 and then scenario data beyond that point.
 </entry> 
 

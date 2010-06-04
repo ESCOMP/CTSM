@@ -1,6 +1,5 @@
 -mode ccsm_seq
 -glc_nec 10
--glc_grid gland20
 -spmd -smp
 -debug
 -s

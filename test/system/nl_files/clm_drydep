@@ -2,4 +2,4 @@
 -silent 
 -drv_case clmrun 
 -datm_source CLM_QIAN
--drydep
+-drv_drydep

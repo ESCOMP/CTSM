@@ -119,9 +119,7 @@ contains
     use clm_atmlnd         , only : clm_map2gcell
     use clm_varorb         , only : eccen, mvelpp, lambm0, obliqr
     use seq_drydep_mod     , only : n_drydep, drydep_method, DD_XLND
-#if (!defined CN) && (!defined CNDV)
     use STATICEcosysDynMod , only : interpMonthlyVeg
-#endif
 !
 ! !ARGUMENTS:
 !
@@ -164,13 +162,9 @@ contains
           call t_stopf('init_orbSA')
           call t_stopf('init_orb')
        else if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
-#if (defined CNDV)
-          ! no call
-#elif (defined CN)
-          ! no call
-#else
+          ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
+          ! This needs to be done even if CN or CNDV is on!
           call interpMonthlyVeg()
-#endif
        end if
 
        ! Determine gridcell averaged properties to send to atm

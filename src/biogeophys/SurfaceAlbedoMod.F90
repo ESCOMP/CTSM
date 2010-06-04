@@ -12,7 +12,8 @@ module SurfaceAlbedoMod
 ! Performs surface albedo calculations
 !
 ! !PUBLIC TYPES:
-  use clm_varcon , only : istsoil
+  use clm_varcon  , only : istsoil
+  use clm_varpar  , only : numrad
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar  , only : nlevsno
   use SNICARMod   , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
@@ -23,9 +24,18 @@ module SurfaceAlbedoMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: SurfaceAlbedo  ! Surface albedo and two-stream fluxes
 !
+! !PUBLIC DATA MEMBERS:
+! The CLM default albice values are too high.
+! Full-spectral albedo for land ice is ~0.5 (Paterson, Physics of Glaciers, 1994, p. 59)
+! This is the value used in CAM3 by Pritchard et al., GRL, 35, 2008.
+
+  real(r8), public  :: albice(numrad) = &       ! albedo land ice by waveband (1=vis, 2=nir)
+                       (/ 0.80_r8, 0.55_r8 /)
+!
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: SoilAlbedo    ! Determine ground surface albedo
   private :: TwoStream     ! Two-stream fluxes for canopy radiative transfer
+
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -61,7 +71,6 @@ contains
 
 ! !USES:
     use clmtype
-    use clm_varpar      , only : numrad
     use shr_orb_mod
     use clm_time_manager, only : get_nstep
 
@@ -636,7 +645,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varpar, only : numrad
-    use clm_varcon, only : albsat, albdry, alblak, albice, tfrz, istice, istice_mec
+    use clm_varcon, only : albsat, albdry, alblak, tfrz, istice, istice_mec
 !
 ! !ARGUMENTS:
     implicit none

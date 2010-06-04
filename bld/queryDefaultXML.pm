@@ -151,7 +151,7 @@ sub ReadDefaultXMLFile {
 
        if ( defined($$settings_ref{'clm_usr_name'}) ) {
           $value   = $nldefaults->get_usr_file( $name, $definition, \%nlopts );
-       } elsif ( $value ) {
+       } elsif ( $value && ($value !~ /^\/.+$/) ) {
           $value   = $$opts_ref{'csmdata'} . "/" . $value;
        }
        $isafile = 1;

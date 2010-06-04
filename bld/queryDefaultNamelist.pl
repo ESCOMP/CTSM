@@ -204,8 +204,7 @@ EOF
      $settings{'notest'}       = ! $opts{'test'};
      $settings{'csmdata'}      = $inputopts{csmdata};
   } else {
-     my @files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
-                   "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
+     my @files = ( "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_datm.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
