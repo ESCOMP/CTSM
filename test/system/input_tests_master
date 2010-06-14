@@ -817,6 +817,11 @@ erLM3 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -5+-5 ar
 smLM4 TSM.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -10   arb_ic
 erLM4 TER.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -5+-5 arb_ic
 
+smHS3 TSM.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -6    arb_ic
+erHS3 TER.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -3+-3 arb_ic
+brHS3 TBR.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -3+-3 arb_ic
+blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -6    arb_ic
+
 sm654 TSMtools.sh mkgriddata   tools__ds namelist
 sm674 TSMtools.sh mkgriddata   tools__ds singlept
 sm694 TSMtools.sh mkgriddata   tools__ds ccsm_dom
@@ -838,4 +843,4 @@ smZ94 TSMtools.sh mkdatadomain tools__ds namelist
 sm854 TSMtools.sh interpinic   tools__ds runoptions
 sm853 TSMtools.sh interpinic   tools__o  runoptions
 
-smM94 TSMncl_tools.sh ndepregrid
+sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional

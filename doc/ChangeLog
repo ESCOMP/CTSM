@@ -1,4 +1,250 @@
 ===============================================================
+Tag name:  clm4_0_09
+Originator(s):  erik (erik)
+Date: Mon Jun 14 00:02:12 MDT 2010
+One-line Summary: Fix some small issues, update documentation, and externals
+
+Purpose of changes:
+
+Work on documentation for CESM1.0 release, with glcec changes, and namelist changes. Run
+testing and fix bugs. Move documentation changes from release branch to trunk. Fix
+getregional script for transient. Remove "At point 2" from lnd log files. Update
+csm_share, and scripts version so can now run testing with lahey compiler. Get CO2 patch
+file working.
+
+Bugs fixed (include bugzilla ID):
+                                 1092 (Problems running on dublin with datm8 with debug)
+                                 1159 (date in fco2 file is not used)
+                                 1160 (Fix mksurfdata.pl script to work with 1000-1004)
+                                 1167 (doc. about running single point reduce pes)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: std-test
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm,
+cism, csm_share
+    scripts   to scripts4_100612
+    drv       to drvseq3_1_31
+    datm      to datm8_100612
+    cism      to cism1_100608
+    csm_share to share3_100607
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+>>>>>>>>>>>> Add testing configure file
+   A   models/lnd/clm/test/system/config_files/_nrcnsc_do
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>> Add CLM_USRDAT_NAME and getregional.pl tests
+   M   models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M   models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+   M   models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M   models/lnd/clm/test/system/README.testnames
+   M   models/lnd/clm/test/system/TSMscript_tools.sh
+   M   models/lnd/clm/test/system/nl_files/clm_usrdat
+   M   models/lnd/clm/test/system/nl_files/getregional
+   M   models/lnd/clm/test/system/input_tests_master
+   M   models/lnd/clm/test/system/README
+
+>>>>>>>>>>>> 
+   M   models/lnd/clm/tools/ncl_scripts/getco2_historical.ncl ---- Add comment that 
+                 date variable is NOT used
+   M   models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl -- Add path to scripts
+                 so can run from a different directory
+   M   models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl - Fix warnings and
+                 allow some files to not be converted if not needed
+   M   models/lnd/clm/tools/ncl_scripts/pftdyntest2raw.ncl ------- Re-order longitudes
+                 so from -180-180 rather than 0-360
+
+>>>>>>>>>>>> 
+   M   models/lnd/clm/bld/queryDefaultXML.pm ----- Get working for usrdat better
+   M   models/lnd/clm/bld/listDefaultNamelist.pl - Get working for usrdat files
+   M   models/lnd/clm/bld/build-namelist --------- Allow lnd_res to be usrdat name
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - Set year first/last
+                 for datm_presaero for clim_2000
+   M   models/lnd/clm/bld/namelist_files/datm-build-namelist -------- Don't allow 
+                 prognostic for datm_presaero
+
+>>>>>>>>>>>> Update documentation, add cprnc README to document
+   M   models/lnd/clm/doc/UsersGuide/tools.xml
+   M   models/lnd/clm/doc/UsersGuide/preface.xml
+   M   models/lnd/clm/doc/UsersGuide/clm_ug.xml
+   M   models/lnd/clm/doc/UsersGuide/adding_files.xml
+   M   models/lnd/clm/doc/UsersGuide/appendix.xml
+   M   models/lnd/clm/doc/UsersGuide/custom.xml
+   M   models/lnd/clm/doc/UsersGuide/single_point.xml
+   M   models/lnd/clm/doc/UsersGuide/Makefile
+   M   models/lnd/clm/doc/UsersGuide/special_cases.xml
+   M   models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff - Update patch to
+          work with the latest datm with DATM_PRESAERO
+
+>>>>>>>>>>>> Remove "at point 2" and fix esmf duplication from fix by Mariana
+   M   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90
+   M   models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90
+
+>>>>>>>>>>>> Update README files and use CESM in place of CCSM
+   M   models/lnd/clm/doc/Quickstart.userdatasets
+   M   models/lnd/clm/doc/IMPORTANT_NOTES
+   M   models/lnd/clm/doc/KnownBugs
+   M   models/lnd/clm/doc/README
+   M   models/lnd/clm/doc/index.shtml
+   M   Copyright
+   M   README
+
+Summary of testing:
+
+  bluefire: All PASS except...
+016 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 cold .............FAIL! rc= 5
+017 smEH1 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 10
+018 erEH1 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 5
+019 brEH1 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 5
+020 blEH1 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 4
+021 smHN1 TSM.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 8
+022 erHN1 TER.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cFAIL! rc= 3
+023 brHN1 TBR.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cFAIL! rc= 3
+024 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 3
+025 smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90 cold .............FAIL! rc= 3
+026 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold ...........FAIL! rc= 3
+027 brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold ...........FAIL! rc= 3
+028 blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90 cold .............FAIL! rc= 3
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 3
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 3
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 3
+032 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 3
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 3
+034 smH41 TSM.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96 cold FAIL! rc= 3
+035 erH41 TER.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 coFAIL! rc= 3
+036 brH41 TBR.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 coFAIL! rc= 3
+037 blH41 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48 cold FAIL! rc= 3
+038 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 3
+039 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic .......FAIL! rc= 3
+040 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic .......FAIL! rc= 3
+041 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 3
+042 smC61 TSM.sh _scnv_dh clm_std^nl_urb 20020101:NONE:1800 1.9x2.5 gx1v6 -6 startup ............FAIL! rc= 3
+043 erC61 TER.sh _scnv_dh clm_std^nl_urb 20020101:NONE:1800 1.9x2.5 gx1v6 10+38 startup .........FAIL! rc= 3
+044 brC61 TBR.sh _scnv_dh clm_std^nl_urb_br 20020101:NONE:1800 1.9x2.5 gx1v6 -3+-3 startup ......FAIL! rc= 3
+045 blC61 TBL.sh _scnv_dh clm_std^nl_urb 20020101:NONE:1800 1.9x2.5 gx1v6 48 startup ............FAIL! rc= 3
+046 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 96 cold ..........FAIL! rc= 3
+047 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 10+38 cold .......FAIL! rc= 3
+048 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold ....FAIL! rc= 3
+049 blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold ..........FAIL! rc= 3
+050 smV61 TSM.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 96 arb_ic ..............FAIL! rc= 3
+051 erV61 TER.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 10+38 arb_ic ...........FAIL! rc= 3
+052 brV61 TBR.sh _mec10sc_dh clm_std 19980115:NONE:1800 1.9x2.5 gx1v6 72+72 arb_ic ..............FAIL! rc= 3
+053 blV61 TBL.sh _mec10sc_dh clm_glcmec 19980115:NONE:1800 1.9x2.5 gx1v6 48 arb_ic ..............FAIL! rc= 3
+054 smI59 TSMcnspinup.sh 17p_cnadspinupsc_dm 17p_cnexitspinupsc_dm 17p_cnsc_dm clm_std 20020115:NONEFAIL! rc= 3
+055 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 3
+056 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 3
+057 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 3
+058 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 3
+059 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 96 arb_ic ...............FAIL! rc= 3
+060 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 3
+061 brL58 TBR.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 3
+062 blL58 TBL.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 48 arb_ic ...............FAIL! rc= 3
+063 smJ61 TSM.sh 4p_casasc_dh clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 3
+064 erJ61 TER.sh 4p_casasc_dh clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 3
+065 brJ61 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 3
+066 blJ61 TBL.sh 4p_casasc_dh clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 48 cold ...........FAIL! rc= 3
+067 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v6 48 arb_ic .....FAIL! rc= 3
+  bluefire interactive testing: All PASS except...
+009 blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic .FAIL! rc= 5
+021 blJ74 TBL.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic FAIL! rc= 5
+025 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+026 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+030 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+062 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 3
+063 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 3
+064 smZ94 TSMtools.sh mkdatadomain tools__ds namelist ...........................................FAIL! rc= 3
+065 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................FAIL! rc= 3
+  bluefire/CESM testing: All PASS except...
+BFAIL SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_08 
+BFAIL ERI.f19_g16.IG.bluefire.compare.clm4_0_08 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_09 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_08 
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 smV23 TSM.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 48x96 gx3v7 96 arb_ic ................FAIL! rc= 8
+026 erV23 TER.sh _mec10sc_do clm_glcmec 19980115:NONE:1800 48x96 gx3v7 10+38 arb_ic .............FAIL! rc= 5
+027 brV23 TBR.sh _mec10sc_do clm_std 19980115:NONE:1800 48x96 gx3v7 72+72 arb_ic ................FAIL! rc= 5
+  jaguar/CESM testing: All PASS
+  edinburgh/lf95 interactive testing: All PASS except...
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........FAIL! rc= 5
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+008 blAL4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -10 cold ...............FAIL! rc= 5
+012 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 5
+  edinburgh/lf95: All PASS except...
+005 smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 10
+006 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 72+72 cold ...............FAIL! rc= 5
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 4
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG56 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+013 smE91 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 96 arb_ic ............FAIL! rc= 10
+014 erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 10+38 arb_ic .........FAIL! rc= 5
+015 brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 arb_ic ......FAIL! rc= 5
+016 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 arb_ic ............FAIL! rc= 4
+018 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 10+38 cold .......FAIL! rc= 13
+019 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold ....FAIL! rc= 11
+025 smL51 TSM.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+026 erL51 TER.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+027 brL51 TBR.sh _sc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+028 blL51 TBL.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 4
+029 smH41 TSM.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96 cold FAIL! rc= 10
+030 erH41 TER.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 coFAIL! rc= 5
+031 brH41 TBR.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 coFAIL! rc= 5
+032 blH41 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48 cold FAIL! rc= 4
+033 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 96 arb_ic ...............FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_08
+
+Changes answers relative to baseline: bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_08
 Originator(s):  erik (erik)
 Date: Fri Jun  4 01:25:39 MDT 2010

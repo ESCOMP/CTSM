@@ -535,7 +535,9 @@ my $val = &quote_string( $res );
 my $group = $definition->get_group_name($var);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
+      die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   }
 }
 
 # Nitrogen Deposition source

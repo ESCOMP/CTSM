@@ -1,9 +1,14 @@
-clm/README                                          1/13/2010
+clm/README                                          6/08/2010
 
 Community Land Surface Model (CLM) version 4.0 -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
-to run CLM in sequential CCSM mode with datm8 to provide NCEP 
+to run CLM as a part of CESM with datm8 to provide NCEP 
 forcing data in place of a modeled atmosphere.
+
+What is new in this version of CLM (compared to the CCSM4.0 release)?
+
+See the Users-Guide for a description of the changes since the 
+CCSM4.0 release.
 
 What is new in CLM4.0 (compared to CLM3.5.00)?
 
@@ -20,14 +25,15 @@ models/lnd/clm/tools -- CLM Offline tools to prepare input datasets.
 
 scripts --------------- CPL7 scripts
 
-models/drv/driver ----- CCSM top level driver source code.
-models/drv/shr -------- CCSM top level driver shared code.
-models/drv/shr_esmf --- CCSM top level driver shared code for ESMF.
-models/atm/datm ------- CCSM Data model version 8 source code.
-models/ice/sice ------- CCSM stub sea-ice model source code.
-models/ocn/socn ------- CCSM stub ocean model source code.
-models/glc/sglc ------- CCSM stub glacier model source code.
-models/utils ---------- CCSM utility codes 
+models/drv/driver ----- CESM top level driver source code.
+models/drv/shr -------- CESM top level driver shared code.
+models/drv/shr_esmf --- CESM top level driver shared code for ESMF.
+models/atm/datm ------- CESM Data model version 8 source code.
+models/glc/cism ------- CESM Community land Ice Sheet Model.
+models/ice/sice ------- CESM stub sea-ice model source code.
+models/ocn/socn ------- CESM stub ocean model source code.
+models/glc/sglc ------- CESM stub glacier model source code.
+models/utils ---------- CESM utility codes 
                         (Model Coupling Toolkit (MCT)
                         (Earth System Model Framework)
                         (timing -- code timing utility)

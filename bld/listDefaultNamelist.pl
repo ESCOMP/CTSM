@@ -69,6 +69,7 @@ OPTIONS
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
                                           (At least one resolution is required)
                                           (If res is "all" will run over all resolutions)
+     -usrdat "name"                       Allow resolution to be the given clm user-data name
      -silent [or -s]                      Don't do any extra printing.
 EXAMPLES
 
@@ -146,6 +147,7 @@ sub GetListofNeededFiles {
                silent     => undef,
                csmdata    => "default",
                list       => $list,
+               usrdat     => undef,
                help       => undef,
              );
 
@@ -154,6 +156,7 @@ sub GetListofNeededFiles {
         "d|csmdata=s"  => \$opts{'csmdata'},
         "r|res=s"      => \$opts{'res'},
         "s|silent"     => \$opts{'silent'},
+        "u|usrdat=s"   => \$opts{'usrdat'},
         "h|elp"        => \$opts{'help'},
   ) or usage();
 
@@ -195,6 +198,9 @@ sub GetListofNeededFiles {
   }
 
   # Input options
+  if ( defined($opts{'usrdat'}) ) {
+      push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
+  }
   $inputopts{'files'}     = \@nl_defaults_files;
   $inputopts{'printing'}  = $printing;
   $inputopts{'ProgName'}  = $ProgName;
@@ -207,12 +213,17 @@ sub GetListofNeededFiles {
   # Loop over all resolutions asked for: 1.9x2.5, 10x15, 64x128 etc.
   #
   foreach my $res ( @resolutions ) {
-     if ( ! $definition->is_valid_value( "res", "'$res'" )  ) {
+     if ( ! $definition->is_valid_value( "res", "'$res'" ) && $res ne $opts{'usrdat'} ) {
         die "ERROR: Input resolution: $res is NOT a valid resolution\n";
      }
      $inputopts{'hgrid'} = $res;
      print "Resolution = $res\n" if $printing;
      my %settings;
+     if ( $res eq $opts{'usrdat'} ) {
+        $settings{'clm_usr_name'} = $opts{'usrdat'};
+        $settings{'csmdata'}      = $opts{'csmdata'};
+        $settings{'notest'}       = 1;
+     }
      #
      # Loop for all possible land masks: USGS, gx1v6, gx3v5 etc.
      #
@@ -222,6 +233,7 @@ sub GetListofNeededFiles {
         #
         # Loop over all possible simulation year: 1890, 2000, 2100 etc.
         #
+        $settings{'sim_year_range'} = "constant";
 YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
            print "sim_year = $sim_year\n" if $printing;
            $settings{'sim_year'} = $sim_year;   
@@ -243,17 +255,17 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            foreach my $rcp ( @rcps ) {
               $settings{'rcp'} = $rcp;
               #
-              # Loop over all possible BGC seetings
+              # Loop over all possible BGC settings
               #
               foreach my $bgc ( @bgcsettings ) {
                  $settings{'bgc'} = $bgc;
                  #
-                 # Loop over all possible glc_nec seetings
+                 # Loop over all possible glc_nec settings
                  #
                  foreach my $glc_nec ( @glc_meclasses ) {
                     $settings{'glc_nec'} = $glc_nec;
                     #
-                    # Loop over all possible glc_grid seetings
+                    # Loop over all possible glc_grid settings
                     #
                     foreach my $glc_grid ( @glc_grids ) {
                        $settings{'glc_grid'} = $glc_grid;

@@ -2,12 +2,14 @@
 # Makefile to convert DocBook CLM Users-Guide into html and/or pdf
 # (rtf, txt, ps, tex, man, dvi, and texi are also valid docbook formats)
 #
-VPATH := . .. ../../bld ../../tools/ncl_scripts ../../tools/mksurfdata ../../test/system
+VPATH := ../../tools/cprnc . .. ../../bld ../../tools/ncl_scripts \
+	../../tools/mksurfdata ../../test/system
 
 PDFUG     := clm_ug.pdf
 HTMLUG    := book1.html
 DOCBKUG   := clm_ug.xml
 CFGLOG    := config_help
+CPRLOG    := cprnc_readme
 BNMLOG    := buildnml_help
 RESLOG    := buildnml_resolutions
 USCLOG    := buildnml_usecases
@@ -17,12 +19,13 @@ USRLOG    := quickstart_usrdat
 TDRLOG    := test_driver.sh
 GETREG    := getregional_datasets
 CO2DIF    := addco2_datm.buildnml
+DATLOG    := build_date
 COMPLIST  := compsets_list_ofIcases.xml
 SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
              $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml \
              $(USRLOG).xml $(GETREG).xml preface.xml custom.xml special_cases.xml \
              tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml \
-             $(MKSLOG).xml $(TDRLOG).xml
+             $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml $(CPRLOG).xml
 
 CONVAMP    := sed 's/\&/\&amp;/g'
 CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
@@ -40,7 +43,9 @@ $(QCKLOG).xml: $(QCKLOG).tlog
 $(USRLOG).xml: $(USRLOG).tlog
 $(GETREG).xml: $(GETREG).tlog
 $(MKSLOG).xml: $(MKSLOG).tlog
+$(CPRLOG).xml: $(CPRLOG).tlog
 $(CO2DIF).xml: $(CO2DIF).diff
+$(DATLOG).xml: $(DATLOG).tlog
 
 .tlog.xml:
 	$(CONVAMP) $< | $(CONVSIGNS) > $@
@@ -66,6 +71,10 @@ $(BNMLOG).tlog: build-namelist
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
 	@echo "Check that the output $@ is good and redo your make"
 	../../bld/build-namelist -help >& $@
+
+$(DATLOG).tlog:
+	@echo "Get current build date"
+	date  +%b-%d-%Y >& $@
 
 $(RESLOG).tlog: build-namelist
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
@@ -95,6 +104,9 @@ $(TDRLOG).tlog: test_driver.sh
 $(QCKLOG).tlog: Quickstart.GUIDE
 	cp $<  $@
 
+$(CPRLOG).tlog: README
+	cp $<  $@
+
 $(USRLOG).tlog: Quickstart.userdatasets
 	cp $<  $@
 
@@ -109,4 +121,4 @@ clean:
 realclean: clean
 	rm -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
 	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml \
-	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml
+	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml

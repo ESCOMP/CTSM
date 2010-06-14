@@ -40,7 +40,7 @@ to Boulder Colorado.
 <screen width="99">
 > cd scripts
 > create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
--skip_rundb -pts_lat 40.0 -pts_lon -105
+-pts_lat 40.0 -pts_lon -105 -skip_rundb
 </screen>
 Then configure, build and run as normal.
 </para>
@@ -62,6 +62,15 @@ is it able to startup from global initial condition files.
 <para>
 You can change the point you are simulating for at run-time by changing the values of
 <envar>PTS_LAT</envar> and <envar>PTS_LON</envar> in the <filename>env_run.xml</filename> file.
+</para>
+</note>
+<note>
+<para>
+Note, that when running with <envar>PTS_MODE</envar> the number of processors
+is automatically set to one. When running a single grid point you can only use a single
+processor. You might also want to set the "env_conf" variable: <envar>USE_MPISERIAL</envar> to
+<literal>TRUE</literal> so that you can also run interactively without having to use
+mpi to start up your job.
 </para>
 </note>
 </sect1>
@@ -104,12 +113,15 @@ which allows you to run the model interactively. On some machines this mode is N
 supported and you may need to change it to FALSE before you are able to build.
 </para>
 </important>
-<warning>
+<note>
 <para>
-Currently the urban locations are NOT functional, because the surface datasets need
-to be updated.
+Note, that when running a <literal>pt1_pt1</literal> resolution the number of processors
+is automatically set to one. When running a single grid point you can only use a single
+processor. You might also want to set the "env_conf" variable: <envar>USE_MPISERIAL</envar> to
+<literal>TRUE</literal> so that you can also run interactively without having to use
+mpi to start up your job.
 </para>
-</warning>
+</note>
 </sect1>
 
 <sect1 id="own_single_point_datasets">
@@ -131,6 +143,9 @@ surface datasets from global ones</title>
 Use the regional extraction script to get regional datasets from the global ones
 The getregional_datasets.pl script to extract out regional datasets of interest.
 Note, the script works on all files other than the "finidat" file as it's a 1D vector file.
+Also, note that it works on the deposition files without streams, so
+<envar>DATM_PRESAERO</envar> MUST be "none", and you must set "-ndepsrc" to "data" in
+build-namelist.
 The script will extract out a block of gridpoints from all the input global datasets,
 and create the full suite of input datasets to run over that block. The input datasets
 will be named according to the input "id" you give them and the id can then be used
@@ -200,13 +215,43 @@ can more easily see what the script is doing.
 <para>
 For example, Run the extraction for data from 52-73 North latitude, 190-220 longitude
 that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over Alaska.
+<example id="example_getregional_datasets">
+<title>Example of running <command>getregional_datasets.pl</command> to get
+datasets for a specific region over Alaska</title>
 <screen width="99">
-> cd models/lnd/clm/tools/ncl_scripts
-> getregional_datasets.pl -sw 52,190 -ne 73,220 -id 13x12pt_f19_alaskaUSA -mycsmdata $CSMDATA
+> cd scripts
+# First make sure you have a inputdata location that you can write to 
+# You only need to do this step once, so you won't need to do this in the future
+> setenv MYCSMDATA "directory to put your inputdata files"
+> link_dirtree $CSMDATA $MYCSMDATA
+> cd ../models/lnd/clm/tools/ncl_scripts
+> getregional_datasets.pl -sw 52,190 -ne 73,220 -id 13x12pt_f19_alaskaUSA -mycsmdata $MYCSMDATA
 </screen>
+</example>
 Repeat this process if you need files for multiple sim_year, resolutions, land-masks, 
 and sim_year_range values.
 </para>
+<para>
+Now to run a simulation with the datasets created above, you create a single-point
+case, and set &CLMUSRDAT; to the identifier used above. Note that in the example below
+we set the number of processors to use to one (-pecount 1). For a single point, you
+should only use a single processor, but for a regional grid, such as the example below
+you could use up to the number of grid points (12x13=156 processors.
+</para>
+<example id="example_using_clmusrdat">
+<title>Example of using &CLMUSRDAT; to run a simulation using user datasets for a
+specific region over Alaska</title>
+<screen width="99">
+> cd scripts
+# Create the case and set it to only use one processor
+> create_newcase -case my_userdataset_test -res f19_g16 -compset I1850 \
+-mach bluefire -skip_rundb -pecount 1
+> cd my_userdataset_test/
+> xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+> xmlchange -file env_conf.xml -id &CLMUSRDAT; -val 13x12pt_f19_alaskaUSA
+> configure -case
+</screen>
+</example>
 </sect2>
 
 </sect1>

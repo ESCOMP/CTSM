@@ -8,6 +8,7 @@
 ;
 begin
 
+   load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl";
 
    ; ===========================================================================================================
 
@@ -41,7 +42,7 @@ begin
      sim_yrs  = "1000-1002";
    end if
    filename = systemfunc( querynml+" -res "+res+" -options sim_year_range="+sim_yrs+" -var "+filetype );
-   print( "Use file: "+filename );
+   print( "Use input pftdyn file: "+filename );
    if ( systemfunc("test -f "+filename+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+filename );
       exit
@@ -52,7 +53,7 @@ begin
    ;
    filetype = "fatmlndfrc";
    gridfile = systemfunc( querynml+" -res "+res+" -var "+filetype );
-   print( "Use file: "+gridfile );
+   print( "Use frac file: "+gridfile );
    if ( systemfunc("test -f "+gridfile+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+gridfile );
       exit
@@ -64,12 +65,96 @@ begin
    filetype = "fpftdyn";
    dsim_yrs  = "1850-2000";
    dynfile = systemfunc( querynml+" -res "+res+" -options sim_year_range="+dsim_yrs+" -var "+filetype );
-   print( "Use file: "+dynfile );
+   print( "Use harvest pftdyn file: "+dynfile );
    if ( systemfunc("test -f "+dynfile+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+dynfile );
       exit
    end if
    ncd = addfile( dynfile, "r" );
+
+   function ReOrder360LONToNeg180( longitudes [*]:numeric )
+   ;
+   ; Reorder longitudes from 0 to 360 to -180 to 180
+   ; and return indices to swap other arrays as well
+   ;
+   local swapIndex;
+   begin
+
+      nlons     = dimsizes(longitudes);
+      swapIndex = ispan( 0, nlons-1, 1 );
+      swapsum   = sum( swapIndex );
+      midpt     = minind( abs(longitudes-180.0d00) );
+      j         = nlons - midpt - 1;
+      do i = 0, dimsizes(longitudes)-1
+         j = j + 1;
+         if ( i .eq. midpt )then
+            j = 0;
+         end if
+         swapIndex(i) = j;
+      end do
+      if ( sum( swapIndex ) .ne. swapsum )then
+         print( "swapIndex is NOT correct: "+swapIndex );
+         exit
+      end if
+
+      newlongs = (/ longitudes /);
+      do i = 0, dimsizes(longitudes)-1
+         newlongs(i) = (/ longitudes( swapIndex(i) ) /);
+         if ( newlongs(i) .ge. 180.0 )then
+            newlongs(i) = newlongs(i) - 360.0;
+         end if
+      end do
+
+      longitudes = (/ newlongs /);
+
+      return( swapIndex );
+
+   end
+
+   function ReOrder2D( swapIndex, array[*][*]:numeric )
+   ; 
+   ; Reorder longitude dimension of input 2D array by input swapIndex
+   ;
+   local newarray;
+   begin
+
+      if ( dimsizes(swapIndex) .ne. dimsizes(array(0,:)) )then
+         print( "ERROR: swapIndex and 2nd dim do NOT match" );
+         exit
+      end if
+      if ( array!1 .ne. "lsmlon" )then
+         print( "ERROR: 2nd dim is NOT lsmlon as expected" );
+         exit
+      end if
+      newarray = (/ array /);
+      do i = 0, dimsizes(swapIndex)-1
+         newarray(:,i) = (/ array( :, swapIndex(i) ) /);
+      end do
+
+      return( newarray );
+   end
+
+   function ReOrder3D( swapIndex, array[*][*][*]:numeric )
+   ; 
+   ; Reorder longitude dimension of input 3D array by input swapIndex
+   ;
+   local newarray;
+   begin
+      if ( dimsizes(swapIndex) .ne. dimsizes(array(0,0,:)) )then
+         print( "ERROR: swapIndex and 3rd dim do NOT match" );
+         exit
+      end if
+      if ( array!2 .ne. "lsmlon" )then
+         print( "ERROR: 3rd dim is NOT lsmlon as expected" );
+         exit
+      end if
+      newarray = (/ array /);
+      do i = 0, dimsizes(swapIndex)-1
+         newarray(:,:,i) = (/ array( :, :, swapIndex(i) ) /);
+      end do
+
+      return( newarray );
+   end
 
    function getmyfile( filedesc:string )
    ;
@@ -118,11 +203,16 @@ begin
    ; Get variable info.
    ;
    vars = (/ "EDGEE", "EDGEN", "EDGES", "EDGEW", "LANDMASK", "LAT", "LATIXY", "LON", "LONGXY", "PCT_PFT", "GRAZING", "HARVEST_VH1", "HARVEST_VH2", "HARVEST_SH1", "HARVEST_SH2", "HARVEST_SH3" /);
-   files= (/    "nc",    "nc",    "nc",    "nc",      "ncg", "ncg",     "nc", "ncg",     "nc",      "nc",     "ncd",         "ncd",         "ncd",        "ncd",         "ncd",         "ncd" /);
-   ftype= (/  "file",  "file",  "file",  "file",     "file", "var",   "file", "var",  "file",   "notime",  "notime",      "notime",      "notime",       "notime",     "notime",      "notime" /);
-   LAT      = nc->LATIXY( :, 0 );
-   LON      = nc->LONGXY( 0, : );
+   files= (/    "nc", "nc",    "nc",    "nc",    "ncg",      "ncg", "nc",      "ncg", "nc",    "nc",      "ncd",     "ncd",         "ncd",        "ncd",         "ncd",          "ncd" /);
+   ftype= (/  "file1D","file1D","file1D","file1D","file", "var",   "file",    "var", "file",   "notime",  "notime",   "notime",      "notime",       "notime",     "notime",      "notime" /);
+   LAT       = nc->LATIXY( :, 0 );
+   LON       = nc->LONGXY( 0, : );
+   swapIndex = ReOrder360LONToNeg180( (/ LON /) );
    print( "vars on file:"+vars );
+   LONE = nc->LONE( 0, : );
+   LONW = nc->LONW( 0, : );
+   s = ReOrder360LONToNeg180( (/LONE/)  );
+   s = ReOrder360LONToNeg180( (/LONW/)  );
    ;
    ; Now loop over each year and output files for each year
    ;
@@ -150,7 +240,7 @@ begin
             else
                dimlist = dimnames(1:);
             end if
-            var     = ncf->$vars(i)$;
+            var = ncf->$vars(i)$;
          else
             if ( ftype(i) .eq. "var" )then
                 if ( vars(i) .eq. "LAT" ) then
@@ -188,9 +278,9 @@ begin
          ncf = getmyfile( files(i) );
          if ( ftype(i) .eq. "notime" ) then
             if ( vars(i) .eq. "PCT_PFT" ) then
-               nco->$vars(i)$ = (/ ncf->$vars(i)$(t,:,:,:) /);
+               nco->$vars(i)$ = ReOrder3D( swapIndex, ncf->$vars(i)$(t,:,:,:) );
             else
-               nco->$vars(i)$ = (/ ncf->$vars(i)$(t,:,:) /);
+               nco->$vars(i)$ = ReOrder2D( swapIndex, ncf->$vars(i)$(t,:,:) );
             end if
          else
             if ( ftype(i) .eq. "var" )then
@@ -202,10 +292,21 @@ begin
                end if
                end if
             else
-               nco->$vars(i)$ = (/ ncf->$vars(i)$ /);
+               if ( ftype(i) .eq. "file1D" )then
+                  nco->$vars(i)$ = (/ ncf->$vars(i)$ /);
+               else
+                  nco->$vars(i)$= ReOrder2D( swapIndex, ncf->$vars(i)$ );
+                  if ( vars(i) .eq. "LONGXY" )then
+                     var = where ( nco->$vars(i)$ .ge. 180.0, nco->$vars(i)$ - 360.0, nco->$vars(i)$ )
+                     nco->$vars(i)$ = var;
+                     delete(var);
+                  end if
+               end if
             end if
          end if
       end do
+      nco->EDGEE = -LONE(nlon-1);
+      nco->EDGEW = LONW(0)-360.0;
 
    end do
 

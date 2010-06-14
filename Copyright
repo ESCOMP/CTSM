@@ -1,88 +1,50 @@
-CCSM Version 3.5
-Copyright Notice and Disclaimer
+--------------------------------------------------------------------------------
+                                  cesm1.0
+--------------------------------------------------------------------------------
+The Community Earth System Model (CESM) was developed in cooperation with the
+National Science Foundation, the Department of Energy, the National Aeronautics
+and Space Administration, and the University Corporation for Atmospheric
+Research National Center for Atmospheric Research.
 
-The Community Climate System Model (CCSM) was developed in cooperation with 
-the National Science Foundation, the Department of Energy, the National 
-Aeronautics and Space Administration, and the University Corporation for 
-Atmospheric Research's National Center for Atmospheric Research.
+Except for the segregable components listed below, CESM is public domain software.
+There may be other third party tools and libraries that are embedded, and they may
+have their own copyright notices and terms.
 
-Except for the segregable components listed below, CCSM is public domain 
-software.  There may be other third party tools and libraries that are 
-embedded, and they may have their own copyright notices and terms.
-
-The following components are copyrighted and may only be used, modified, or 
+The following components are copyrighted and may only be used, modified, or
 redistributed under the terms indicated below.
 
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-ESMF            UCAR and others   Copyright 2002-2008, University Corporation 
-                                  for Atmospheric Research, Massachusetts 
-                                  Institute of Technology, Geophysical Fluid 
-                                  Dynamics Laboratory, University of Michigan,
-                                  National Centers for Environmental 
-                                  Prediction, Los Alamos National Laboratory, 
-                                  Argonne National Laboratory, NASA Goddard 
-                                  Space Center
-Terms of Use/Disclaimer:  
-http://www.gnu.org/copyleft/gpl.html
+Code            ESMF
+Institution     University of Illinois/NCSA
+Copyright       Copyright 2002-2009, University of Illinois/NCSA Open Source License
+Terms of Use    http://www.gnu.org/copyleft/gpl.html
 
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-POP,            Los Alamos        Copyright 2002, 2007, The Regents of the 
-SCRIP,          National          University of California.  All Rights 
-CICE            Laboratory        Reserved.
-Terms of Use/Disclaimer:  
-http://www.ccsm.ucar.edu/management/UofCAcopyright.ccsm3.html
+Code            POP, SCRIP, CICE
+Institution     Los Alamos National Laboratory
+Copyright       Copyright 2008 Los Alamos National Security, LLC
+Terms of Use    http://oceans11.lanl.gov/trac/CICE/wiki/CopyRight
 
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-MPH             Lawrence          Copyright 2002,2007, The Regents of the 
-                Berkeley          University of California.  All Rights 
-                National          Reserved.  Authors:  Yun (Helen) He, 
-                Laboratory        Lawrence Berkeley National Laboratory, 
-                                  yhe@lbl.gov, and Chris H.Q. Ding, Lawrence 
-                                  Berkeley National Laboratory, 
-                                  chqding@lbl.gov.
-Terms of Use/Disclaimer:  
-http://old-www.nersc.gov/research/SCG/acpi/MPH/MPH4/copyright
+Code            MCT
+Institution     Argonne National Laboratory
+Copyright       Copyright 2000, 2010, University of Chicago.
+Terms of Use    http://www.cesm.ucar.edu/models/cesm1.0/copyright_MCT.html
 
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-MCT             Argonne National  Copyright 2000, 2008, University of Chicago.  
-                Laboratory        
-Terms of Use/Disclaimer:  
-http://www.ccsm.ucar.edu/management/MCTcopyright.html
+Code            ICSSP
+Institution     N/A
+Copyright       Copyright 2003, 2010, Steve Klein and Mark Webb
+Terms of Use    http://gcss-dime.giss.nasa.gov/simulator.html
 
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-install.sh      M.I.T.            1991, 2003, 2008, M.I.T.
-Terms of Use/Disclaimer:  
-http://stuff.mit.edu/afs/sipb/project/xmt/src/COPYRIGHT
+Code            XML/Lite
+Institution     Wadsack-Allen Digital Group
+Copyright       Copyright 2001,2010 Wadsack-Allen Digital Group
+Terms of Use    http://aspn.activestate.com/ASPN/CodeDoc/XML-Lite/Lite.html
 
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-autconf         Free Software     2003, 2008
-                Foundation, Inc.
-Terms of Use/Disclaimer:  
-http://www.gnu.org/licenses/info/GPLv2orLater.html
+Code            Inf_NaN_Detection module
+Institution     Lahey Computer Systems, Inc.
+Copyright       Copyright(c) 2003, Lahey Computer Systems, Inc.
+Terms of Use    Copies of this source code, or standalone compiled files derived from
+                this source may not be sold without permission from Lahey Computers Systems.
+                All or part of this module may be freely incorporated into executable
+                programs which are offered for sale. Otherwise, distribution of all or
+                part of this file is permitted, provided this copyright notice and header
+                are included.
 
-
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-ICSSP           N/A               Copyright 2003, 2008 Steve Klein and Mark Webb
-Terms of Use/Disclaimer:  
-http://gcss-dime.giss.nasa.gov/simulator.html
-
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-QT Free         Trolltech (r)     Copyright 2003, 2008 Trolltech. 
-Editions
-Terms of Use/Disclaimer:  
-http://www.trolltech.com/licenses/qpl-annotated.html
-
-Code            Institution(s)    Copyright    
-------------------------------------------------------------------------------
-XML/Lite        Wadsack-Allen     Copyright 2001-2003, 2008
-                Digital Group
-Terms of Use/Disclaimer:  
-http://aspn.activestate.com/ASPN/CodeDoc/XML-Lite/Lite.html

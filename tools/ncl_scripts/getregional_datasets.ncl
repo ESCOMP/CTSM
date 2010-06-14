@@ -166,7 +166,15 @@ begin
      if ( debug .eq. True )then
         print( "Process file: "+globalfile );
      end if
-     regfile = systemfunc( querynml+queryopt+" -usrname "+id+" -var "+files(i) );
+     qry     = querynml+queryopt+" -usrname "+id+" -var "+files(i);
+     regfile = systemfunc( qry );
+     if ( ismissing(regfile) )then
+        print( "Output regional filename was NOT found: "+regfile );
+        if ( printn .eq. True )then
+           print( "qry was"+qry );
+        end if
+        continue;
+     end if
      ;
      ; Run ncks on it over the region of interest
      ;
@@ -192,7 +200,7 @@ begin
               print( "add "+var );
            end if
            nco@history = nco@history + " add "+var;
-           nco->$var$  = nco->LATIXY(:,0);
+           nco->$var$  = (/ nco->LATIXY(:,0) /);
         end if
         var = filelonnm(i);
         if ( .not. isfilevar( nco, var ) .and. var .ne. "ni" )then
@@ -200,7 +208,7 @@ begin
               print( "add "+var );
            end if
            nco@history = nco@history + " add "+var;
-           nco->$var$  = nco->LONGXY(0,:);
+           nco->$var$  = (/ nco->LONGXY(0,:) /);
         end if
         ;
         ; Now check that internal variables are consistent

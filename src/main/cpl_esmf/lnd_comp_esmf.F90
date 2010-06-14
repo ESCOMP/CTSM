@@ -454,14 +454,6 @@ end subroutine
     call ESMF_ArrayGet(l2x, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-        	       fptr_l2x_clm, fptr, map1dl_l2a, reverse_order=.true. )
-
-    ! Reset landfrac on atmosphere grid to have the right domain
-    do g = begg_a,endg_a
-       fptr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
-    end do
-
 #ifdef RTM
     ! Initialize rof export state
 

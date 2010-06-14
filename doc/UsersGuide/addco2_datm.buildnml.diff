@@ -1,65 +1,59 @@
-*** datm.buildnml.csh	Tue Mar 23 15:35:39 2010
---- datm.buildnml.csh	Tue Mar 23 15:30:04 2010
+*** datm.buildnml.csh.orig	2010-06-11 10:59:29.246523532 -0600
+--- datm.buildnml.csh	2010-06-11 11:06:30.710784206 -0600
 ***************
-*** 18,23 ****
---- 18,24 ----
-  set STREAM1TXT = "clm_qian.T62.stream.Solar.txt"
-  set STREAM2TXT = "clm_qian.T62.stream.Precip.txt"
-  set STREAM3TXT = "clm_qian.T62.stream.TPQW.txt"
-+ set STREAMCO2  = "datm.global1val.stream.CO2.txt"
-  
-  # Only change these in env_conf -- so that the streams file will be generated consistently
-  # Rerun configure if you want to change these values (doing configure -cleanall first)
-***************
-*** 36,49 ****
-     domainFile     = '$DOMAINFILE'
-     streams        = '$STREAM1TXT $year_align $year_start $year_end ',
-                      '$STREAM2TXT $year_align $year_start $year_end ',
-!                     '$STREAM3TXT $year_align $year_start $year_end '
+*** 34,48 ****
+     streams        = 'clm_qian.T62.stream.Solar.txt 1895 1948 1972 ',
+                      'clm_qian.T62.stream.Precip.txt 1895 1948 1972 ',
+                      'clm_qian.T62.stream.TPQW.txt 1895 1948 1972 ',
+!                     'presaero.stream.txt 1849 1849 2006'
      vectors        = 'null'
      mapmask        = 'nomask',
+                      'nomask',
                       'nomask',
                       'nomask'
      tintalgo       = 'coszen',
                       'nearest',
-!                     'linear'
+                      'linear',
+                      'linear'
     /
   EOF1
-  
---- 37,57 ----
-     domainFile     = '$DOMAINFILE'
-     streams        = '$STREAM1TXT $year_align $year_start $year_end ',
-                      '$STREAM2TXT $year_align $year_start $year_end ',
-!                     '$STREAM3TXT $year_align $year_start $year_end ',
-!                     '$STREAMCO2 1766 1766 2005 '
+--- 34,56 ----
+     streams        = 'clm_qian.T62.stream.Solar.txt 1895 1948 1972 ',
+                      'clm_qian.T62.stream.Precip.txt 1895 1948 1972 ',
+                      'clm_qian.T62.stream.TPQW.txt 1895 1948 1972 ',
+!                     'presaero.stream.txt 1849 1849 2006',
+!                     'datm.global1val.stream.CO2.txt 1766 1766 2005 '
      vectors        = 'null'
      mapmask        = 'nomask',
+                      'nomask',
                       'nomask',
 +                     'nomask',
                       'nomask'
 +    mapalgo        = 'bilinear',
 +                     'bilinear',
 +                     'bilinear',
++                     'bilinear',
 +                     'copy'
      tintalgo       = 'coszen',
                       'nearest',
-!                     'linear',
-!                     'nearest'
+                      'linear',
++                     'linear',
+                      'linear'
     /
   EOF1
-  
 ***************
 *** 1112,1121 ****
---- 1124,1135 ----
+--- 1120,1132 ----
   </streamstemplate>
   EOF1
   
-+ cp $CASEBUILD/co2_streams.txt $STREAMCO2
++ cp $CASEBUILD/co2_streams.txt datm.global1val.stream.CO2.txt
++ 
   
-  $CASETOOLS/listfilesin_streams -input_data_list -t $STREAM1TXT >> $CASEBUILD/datm.input_data_list
-  $CASETOOLS/listfilesin_streams -input_data_list -t $STREAM2TXT >> $CASEBUILD/datm.input_data_list
-  $CASETOOLS/listfilesin_streams -input_data_list -t $STREAM3TXT >> $CASEBUILD/datm.input_data_list
-+ $CASETOOLS/listfilesin_streams -input_data_list -t $STREAMCO2  >> $CASEBUILD/datm.input_data_list
+  $CASETOOLS/listfilesin_streams -input_data_list -t clm_qian.T62.stream.Solar.txt >> $CASEBUILD/datm.input_data_list
+  $CASETOOLS/listfilesin_streams -input_data_list -t clm_qian.T62.stream.Precip.txt >> $CASEBUILD/datm.input_data_list
+  $CASETOOLS/listfilesin_streams -input_data_list -t clm_qian.T62.stream.TPQW.txt >> $CASEBUILD/datm.input_data_list
++ $CASETOOLS/listfilesin_streams -input_data_list -t datm.global1val.stream.CO2.txt  >> $CASEBUILD/datm.input_data_list
   
-  cat >! datm_in << EOF1
-    &datm_nml
+  cat >! presaero.stream.txt << EOF1
+  <streamstemplate>

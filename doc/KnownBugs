@@ -1,5 +1,77 @@
-Known Bugs in CLM4.0    		                          Apr/23/2010
+Known Bugs in CLM4.0    		                          Jun/08/2010
 
+
+====================================================================================
+Bug Number: 1166
+get_regional script needs to be updated for the ndepstreams and aerosol changes...
+
+The get_regional.pl script needs to be updated so that ndepstrams and
+datm_presaero can be accommodated.
+
+====================================================================================
+Bug Number: 1165
+Restart trouble for scaled-harvest with INTEL, PGI and LAHEY compilers
+
+025 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:NONE:1800
+10x15 USGS@200
+0 10+38 coFAIL! rc= 13
+
+answers differ and slowly diverge.
+
+====================================================================================
+Bug Number: 1164
+Restart trouble for CNC13 with INTEL, PGI and LAHEY compilers
+
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15
+USGS@1850 10+38 cold ....FAIL! rc= 13
+
+Answers differ and gradually diverge in time.
+
+====================================================================================
+Bug Number: 1163
+CN finidat files have a bunch of fields with NaN's on it.
+
+For example on:
+
+$CSMDATA/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01/I2000CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc
+
+the fields: mlaidiff, flx_absdv, flx_absdn, flx_absiv, flx_absin, and
+qflx_snofrz_lyr all have NaN's, with mlaidiff being completely full of NaN's
+(since mlaidiff is only defined for CLMSP or if drydep is on).
+
+====================================================================================
+Bug Number: 1147
+mkgriddata regional grids can't straddle over Greenich
+
+mkgriddata is not able to run for any domain that has Eastern edge > Western
+edge, because it straddles across the 0 degree longitude line.
+
+====================================================================================
+Bug Number: 1127
+interpinic not tested for CNDV, yet; expected not to work 
+
+Interpinic has not worked for the old dgvm since probably before clm3.5.
+Interpinic has not been tested, yet, for CNDV. Therefore, we assume that it
+====================================================================================
+Bug Number: 1164
+Restart trouble for CNC13 with INTEL, PGI and LAHEY compilers
+
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15
+USGS@1850 10+38 cold ....FAIL! rc= 13
+
+Answers differ and gradually diverge in time.
+
+====================================================================================
+Bug Number: 1163
+CN finidat files have a bunch of fields with NaN's on it.
+
+For example on:
+
+$CSMDATA/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01/I2000CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc
+
+the fields: mlaidiff, flx_absdv, flx_absdn, flx_absiv, flx_absin, and
+qflx_snofrz_lyr all have NaN's, with mlaidiff being completely full of NaN's
+(since mlaidiff is only defined for CLMSP or if drydep is on).
 
 ====================================================================================
 Bug Number: 1147

@@ -571,9 +571,6 @@ contains
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
 
-    write(6,*)'at point 2'
-    call shr_sys_flush(6)
-
     call get_proc_bounds_atm(begg_a, endg_a)
     call get_proc_bounds    (begg_l, endg_l)
 

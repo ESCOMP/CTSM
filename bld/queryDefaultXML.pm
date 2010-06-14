@@ -41,7 +41,7 @@ sub read_cfg_file
     #
     if ( $config{'mode'} eq "ccsm_seq_cam" ) {
        print "CAM configuration file\n" if $printing;
-       my @deflist = ("dust", "voc", "ad_spinup", "exit_spinup", "supln" );
+       my @deflist = ("ad_spinup", "exit_spinup" );
        foreach my $item ( @deflist ) {
           if ( ! defined($config{$item}) ) { $config{$item} = "off"; }
        }
@@ -123,7 +123,9 @@ sub ReadDefaultXMLFile {
   #
   my %nlopts;
   foreach my $var ( keys( %$settings_ref) ) {
-     $nlopts{$var} = $$settings_ref{$var};
+     if ( $var ne "csmdata" ) {
+        $nlopts{$var} = $$settings_ref{$var};
+     }
   }
   if ( $$opts_ref{'hgrid'} ne "any" ) {
      $nlopts{'hgrid'} = $$opts_ref{'hgrid'};
@@ -142,6 +144,7 @@ sub ReadDefaultXMLFile {
   if ( $$opts_ref{'csmdata'} eq "default" ) {
     $$opts_ref{'csmdata'} = $nldefaults->get_value( "csmdata", \%nlopts );
   } 
+  $nlopts{'csmdata'} = $$opts_ref{'csmdata'};
   foreach my $name ( $nldefaults->get_variable_names() ) {
     my $value   = $nldefaults->get_value( $name, \%nlopts );
     if ( $value eq "null" ) { next; }
@@ -151,7 +154,8 @@ sub ReadDefaultXMLFile {
 
        if ( defined($$settings_ref{'clm_usr_name'}) ) {
           $value   = $nldefaults->get_usr_file( $name, $definition, \%nlopts );
-       } elsif ( $value && ($value !~ /^\/.+$/) ) {
+       } 
+       if ( $value && ($value !~ /^\/.+$/) ) {
           $value   = $$opts_ref{'csmdata'} . "/" . $value;
        }
        $isafile = 1;

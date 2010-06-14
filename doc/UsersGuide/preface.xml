@@ -23,7 +23,7 @@ and allowing us to use that data in this document.
 
 <para>
 The Community Land Model (&clm;) is the latest in a series of
-global land models developed by the &ccsm; Land Model Working Group
+global land models developed by the &cesm; Land Model Working Group
 (<acronym>LMWG</acronym>) and maintained at the National Center for
 Atmospheric Research (<acronym>NCAR</acronym>). This guide is intended to instruct both
 the novice and experienced user on running &clm;. 
@@ -72,7 +72,7 @@ required to use &clm40; and is important if you are running on non-NCAR machines
 local machines, or machines NOT as well tested by us at <acronym>NCAR</acronym>. Next we
 have <xref linkend="best_practice"></xref> to detail some of the best practices for using
 &clm4; for science. The last introductory chapter is <xref linkend="help"></xref> which lists
-different resources for getting help with &ccsm4; and &clm4;.
+different resources for getting help with &cesm1; and &clm4;.
 </para>
 
 <para>
@@ -235,9 +235,9 @@ aerosol deposition will exhibit unreasonably high snow albedos.
 <subtitle>Conventions used in the document for code and commands</subtitle>
 
 <para>
-This section provides the details in using &clm; with the &ccsm; modeling
+This section provides the details in using &clm; with the &cesm; modeling
 system. Links to descriptions and definitions have been provided in the code below.
-We use the same conventions used in the &ccsm; documentation as outlined below.
+We use the same conventions used in the &cesm; documentation as outlined below.
 </para>
 
 <screen width="99">
@@ -251,7 +251,7 @@ text editor of your choice. $EDITOR is a standard UNIX environment
 variable and should be set on most UNIX systems. Comment lines are 
 signaled with a "#" sign, which is the standard UNIX comment sign as well.
 $CSMDATA is used to denote the path to the inputdata directory for
-your &ccsm; data. 
+your &cesm; data. 
 
 > This is a shell prompt with commands \
 that continues to the following line.
@@ -271,24 +271,142 @@ that continues to the following line.
    <indexterm zone="science" id="clmsp"><primary>&clmsp;</primary></indexterm>
 </itermset>
 </prefaceinfo>
+<title>What is new with &clm4; since previous public releases?</title>
+<para>
+In this section we list the updates that have occured to &clm4; since previous
+public releases. In the first section we describe changes since the &ccsm4; release,
+and in the second one we describe changes from &clm35; to &clm40; release. Note, that
+the changes in the second section do NOT include the more recent changes given in the 
+first section, but only list the changes from &clm35; to the &clm40; release that
+was part of the &ccsm4; public release. We will describe both the
+changes in the science in the model as the software engineering changes. Software
+engineering changes includes the configure and namelist changes, as well as the new
+history fields.
+</para>
+<sect1 id="since_ccsm4">
+<title>What is new with &clm4; since the April 1st, 2010 &ccsm4; release?</title>
+<para>
+Since, &clm40; in the &ccsm4; release there have been several developments made
+to &clm4;. A glacier multiple elevation class option was added that allows the
+use of &clm4; with a glacier land ice model the Community Ice Sheet Model (CISM).
+A bug-fix for the snow hydrology was added. Several new namelist items were added
+a few new history fields. Also the capability of reading aerosol and nitrogen
+deposition from stream files at one resolution and regridded on the fly rather than
+with datasets at the model resolution was added in. This was important for higher
+resolutions so that large datasets do not have to be created before running the model,
+nor are datasets for every resolution required.
+</para>
+<sect2 id="science_since_ccsm4">
+<title>What is new with &clm4; Science since &ccsm4;?</title>
+<para>
+In general, snow layers should not be thinner than
+<screen>
+dzmin = wice/rhoice + wliq/rholiq
+</screen>
+If dz &lt; dzmin, then the value of "void" computed in subroutine
+SnowCompaction is negative, which is unphysical. This doesn't cause
+problems with the compaction itself, but results in unrealistic values
+of vol_ice, vol_liq, and eff_porosity in subroutine SnowWater. We can
+have vol_ice = 1 and vol_liq = 0 even when liquid is present, which cuts
+off the runoff (qout) from the lowest snow layer. Liquid water then
+accumulates in the snow column without draining, which leads to further
+problems and eventually a code crash.
+</para>
+<para>
+The solution to this problem was to adjust layer thickness dz for any water+ice content
+changes in excess of previous layer thickness, e.g.,
+<screen>
+dz(c,j) = max(dz(c,j),h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)
+</screen>
+at appropriate steps in the snow hydrology subroutines.
+</para>
+<para>
+<simplelist>
+<member>Snow hydrology bug fix.</member>
+<member>Add multiple elevation class option for glaciers so can interact with
+the land ice sheet model..</member>
+</simplelist>
+</para>
+</sect2>
+<sect2 id="software_since_ccsm4">
+<title>What is new with &clm4; Software  since &ccsm4;?</title>
+<para>
+New configuration options
+<simplelist>
+<member>glc_nec</member>
+</simplelist>
+glc_nec can be 1,3,5, or 10 and MUST match the number on the input surface dataset
+the elevation classes themselves are read from the surface dataset
+</para>
+<para>
+New namelist items:
+<simplelist>
+<member>carbon_only</member>
+<member>create_glacier_mec_landunit</member>
+<member>glc_dyntopo</member>
+<member>glc_smb</member>
+<member>ice_runoff</member>
+<member>scaled_harvest</member>
+</simplelist>
+</para>
+<para>
+ice_runoff     = If true, river runoff will be split up into liquid and ice streams,
+               otherwise ice runoff will be zero and all runoff directed to liquid stream
+</para>
+<para>
+scaled_harvest = If true, harvesting will be scaled according to coefficients
+                     determined by Johann Feddema, 2009
+</para>
+<para>
+carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen will be
+                     prescribed rather than prognosed
+</para>
+<para>
+ create_glacier_mec_landunit (= T when these landunits are created; F by default)
+</para>
+<para>
+ glc_smb (= T if passing surface mass balance to GLC; else pass PDD info; T by default)
+</para>
+<para>
+ glc_dyntopo (= T if CLM topography changes dynamically; currently F)
+              (NOT fully implemented yet)
+</para>
+<para>
+New history fields:
+<simplelist>
+<member>aais_area Antarctic ice area (km^2)</member>
+<member>aais_mask Antarctic mask     (unitless)</member>
+<member>gris_area Greenland ice area (km^2)</member>
+<member>gris_mask Greenland mask     (unitless)</member>
+<member>QICE      ice growth/melt    (mm/s)</member>
+<member>QICEYR    ice growth/melt    (mm/s)</member>
+<member>QTOPSOIL water input to surface      (mm/s)</member>
+<member>VOLR     RTM storage: LIQ  (m3)</member>
+<member>VOLR_ICE RTM storage: ICE  (m3)</member>
+</simplelist>
+</para>
+</sect2>
 
-<title>What is new with &clm4; since &clm35;?</title>
+</sect1>
+
+<sect1 id="since_clm35">
+<title>What was new with &clm40; since &clm35;?</title>
 
 <para>
-Since &clm35; there have been advances in both the science and the software infrastructure.
-There are also new configure and namelist options as well as new history fields. In this
+From &clm35; to &clm40; there were advances in both the science and the software infrastructure.
+There were also new configure and namelist options as well as new history fields. In this
 section we will describe each of these changes in turn.
 </para>
 
-<sect1 id="science">
-<title>What is new with &clm4; Science?</title>
+<sect2 id="science">
+<title>What was new with &clm40; Science?</title>
 <para>
-The following aspects are changes to the science in &clm; since &clm35;.
+The following aspects are changes to the science in &clm40; since &clm35;.
 </para>
-<sect2 id="hydrology">
+<sect3 id="hydrology">
 <title>Biogeophysics and Hydrology</title>
 <para>
-Changes to &clm4; beyond &clm35; (Oleson et al., 2008a; Stockli et al., 2008) include
+Changes to &clm40; beyond &clm35; (Oleson et al., 2008a; Stockli et al., 2008) include
 updates throughout the model. The hydrology scheme has been modified with a revised
 numerical solution of the Richards equation (Zeng and Decker, 2009; Decker and Zeng,
 2009); a revised soil evaporation parameterization that removes the soil resistance term
@@ -302,16 +420,16 @@ layers and 5 bedrock layers; Lawrence et al., 2008). An urban landunit and assoc
 urban canyon model (&clmu;) has been added which permits the study of urban climate 
 and urban heat island effects (Oleson et al., 2008b). 
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="snow">
+<sect3 id="snow">
 <title>Snow Model</title>
 <para>
 The snow model is significantly modified via incorporation of SNICAR (SNow and Ice Aerosol Radiation) which represents the effect of aerosol deposition (e.g. black and organic carbon and dust) on albedo, introduces a grain-size dependent snow aging parameterization, and permits vertically resolved snowpack heating (Flanner and Zender, 2005; Flanner and Zender, 2006; Flanner et al., 2007). The new snow model also includes a new density-dependent snow cover fraction parameterization (Niu and Yang, 2007), a revised snow burial fraction over short vegetation (Wang and Zeng, 2009) and corrections to snow compaction (Lawrence and Slater, 2009).
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="surface">
+<sect3 id="surface">
 <title>Surface Datasets</title>
 <para>
 The PFT distribution is as in Lawrence and 
@@ -322,9 +440,9 @@ Grass and crop PFT optical properties have been adjusted according to values pre
 in Asner et al. (1998), resulting in significantly reduced albedo biases. Soil colors 
 have been re-derived according to the new PFT distribution.
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="bgc">
+<sect3 id="bgc">
 <title>Biogeochemistry</title>
 <para>
 The model is extended with a carbon-nitrogen biogeochemical model (Thornton et al., 2007;
@@ -334,7 +452,7 @@ nitrogen cycle (Thornton et al., 2002; Thornton and Rosenbloom, 2005). &clmcn; i
 prognostic with respect to carbon and nitrogen state variables in the vegetation, litter,
 and soil organic matter. Vegetation phenology and canopy heights are also prognostic. A
 detailed description of the biogeochemical component can be found in Thornton et al.
-(2007). Note that &clm4; can be run with either prescribed satellite phenology
+(2007). Note that &clm40; can be run with either prescribed satellite phenology
 (&clmsp;) or with prognostic phenology provided by the carbon- nitrogen cycle model 
 (&clmcn;).  Additionally, a transient land cover and land use change, including wood harvest,
 capability has been introduced that enables the evaluation of the impact of historic and
@@ -346,9 +464,9 @@ allocation, etc.) are controlled by CN and only the dynamic vegetation biogeogra
 The biogenic volatile organic compounds model (BVOC) that was available in &clm3; has 
 been replaced with the MEGAN BVOC model (Heald et al. 2008).
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="misc">
+<sect3 id="misc">
 <title>Miscellaneous Changes</title>
 <para>
 Several other minor changes have been incorporated including a change to the atmospheric reference height so that it is the height above zo+d for all surface types. The convergence of
@@ -364,9 +482,9 @@ global energy conservation in fully coupled simulations, runoff is split into se
 liquid and ice water streams that are passed separately to the ocean. Input to the ice
 water comes from excess snowfall in snow-capped regions. 
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="science_sum">
+<sect3 id="science_sum">
 <title>Summary of Science Changes</title>
 <para>
 Taken together, these augmentations to &clm35; result in improved soil moisture dynamics
@@ -377,13 +495,13 @@ cooler soil temperatures in organic-rich soils, greater global river discharge, 
 albedos over forests and grasslands, and higher transition-season albedos in snow covered
 regions, all of which are improvements compared to &clm35;.
 </para>
-</sect2>
+</sect3>
 
-</sect1>
-<sect1 id="software">
-<title>What is new with &clm4; Software Infrastructure?</title>
+</sect2>
+<sect2 id="software">
+<title>What is new with &clm40; Software Infrastructure?</title>
 <para>
-The following aspects are changes to the software infrastructure in &clm; since &clm35;.
+The following aspects are changes to the software infrastructure in &clm40; since &clm35;.
 </para>
 <para>
 <simplelist>
@@ -417,10 +535,10 @@ in &clm; yet).</member>
 grid.</member>
 </simplelist>
 </para>
-</sect1>
+</sect2>
 
-<sect1 id="new_config">
-<title>What are The New Configuration Options?</title>
+<sect2 id="new_config">
+<title>What are The New Configuration Options in &clm40;?</title>
 <para>
 Describe any changes made to build system:
 </para>
@@ -446,7 +564,7 @@ More information on options to clm &configure; are given in <xref linkend="clm_c
 <segmentedlist>
 <?dbhtml list-presentation="table"?>
 <segtitle>Option</segtitle><segtitle>Description</segtitle>
-<seglistitem><seg>-comp_intf &lt;name&gt;></seg><seg>Component interface to use (ESMF or MCT) (default
+<seglistitem><seg>-comp_intf &lt;name&gt;</seg><seg>Component interface to use (ESMF or MCT) (default
 MCT)</seg></seglistitem>
 <seglistitem><seg>-nofire</seg><seg>Turn off wildfires for bgc setting of CN (default includes
 fire for CN)</seg></seglistitem>
@@ -457,15 +575,15 @@ off] (default is off)</seg></seglistitem>
 </segmentedlist>
 More information on options to clm &configure; are given in <xref linkend="clm_configure_script"></xref>.
 </para>
-</sect1>
+</sect2>
 
-<sect1 id="new_namelist">
-<title>What are The New Namelist Options?</title>
+<sect2 id="new_namelist">
+<title>What are The New Namelist Options in &clm40;?</title>
 <para>
 &buildnml; now checks the validity of your namelist you generate by looking at data in 
 the namelist_definition.xml file. In order to add new namelist items you need to 
 change the code and also edit this file (e.g. a namelist option required for your
-research project that is not currently an option in &clm;). To view information 
+research project that is not currently an option in &clm40;). To view information 
 on the namelist view the 
 file: <filename>models/lnd/clm/bld/namelist_files/namelist_definition.xml</filename>
 in a browser and you'll see the names, type, description and valid_values for all 
@@ -530,17 +648,15 @@ New use-cases for &buildnml;:
 </screen>
 More information on the &buildnml; options are given in
 <xref linkend="nl_def"></xref>.
-<!--
 and in
 <link linkend="CLMBLDNML">&CLMBLDNML;</link>.
--->
 </para>
 <para>
 More information on the &buildnml; options are given in in <xref linkend="nl_def"></xref>.
 </para>
-</sect1>
+</sect2>
 
-<sect1 id="new_history">
+<sect2 id="new_history">
 <title>What are The New History Fields?</title>
 <para>
 New history variables: (note watt vs. W in units, 26 vs. 76)
@@ -731,6 +847,8 @@ We are missing the Rural soil-alpha variable: SoilAlpha_R
 </para>
 </note>
 
+</sect2>
+
 </sect1>
 
 </preface>
@@ -740,9 +858,9 @@ We are missing the Rural soil-alpha variable: SoilAlpha_R
 <title>Quickstart to using &clm4;</title>
 <para>
 Before working with &clm4; read the QuickStart Guide in the
-<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">&ccsm4;
+<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm/">&cesm1;
 Scripts User's Guide</ulink>. Once you are familiar with how to setup cases for 
-any type of simulation with &ccsm; you will want to direct your attention to the specifics
+any type of simulation with &cesm; you will want to direct your attention to the specifics
 of using &clm;.
 </para>
 <para>
@@ -829,14 +947,6 @@ recommended for use.
 </listitem>
 <listitem>
    <para>
-   <varname>SUPLN</varname><screen>(-bgc cn -supln on)</screen>
-       The supplemental Nitrogen mode of the CN Biogeochemistry model supplies
-unlimited nitrogen and therefore vegetation is over-productive in this mode.
-   </para>
-
-</listitem>
-<listitem>
-   <para>
    <varname>BUILDPIO</varname><screen>(-pio)</screen>
        This mode is NOT tested and is not functional and hence should NOT be used. PIO WILL be provided
        in future versions however.
@@ -897,6 +1007,14 @@ only used for &clm; stand-alone testing.</para>
 <listitem><para><emphasis>fine-mesh namelist options:</emphasis> flndtopo, and fatmtopo.
         These options are functional but experimental. See the -lnd_res option above.</para>
 </listitem>
+<listitem>
+   <para>
+   <emphasis>carbon_only</emphasis>
+       The carbon_only namelist option to the CN Biogeochemistry model supplies
+unlimited nitrogen and therefore vegetation is over-productive in this mode.
+   </para>
+
+</listitem>
 <listitem><para><emphasis>pio namelist options:</emphasis>  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
                          ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
         These options are NOT currently tested or functional. See the pio &configure; mode above.</para>
@@ -943,48 +1061,48 @@ datasets see <xref linkend="tools"></xref> for more information on &ncl;)</membe
 <preface id="help">
 <prefaceinfo>
 <itermset>
-  <indexterm zone="CCSM_BB"><primary>&ccsm; Online Bulletin Board</primary></indexterm>
-  <indexterm zone="CCSM_UG"><primary>&ccsm4; Scripts User's Guide</primary></indexterm>
+  <indexterm zone="CESM_BB"><primary>&cesm; Online Bulletin Board</primary></indexterm>
+  <indexterm zone="CESM_UG"><primary>&cesm1; Scripts User's Guide</primary></indexterm>
 </itermset>
 </prefaceinfo>
 <title>Other resources to get help from</title>
 
 <para>
 In addition to this users-guide there are several other resources that are available
-to help you use CLM. The first one is the &ccsm; User's-Guide, which documents the entire
-process of creating cases with &ccsm;. The next is the &ccsm; bulletin board which is 
-a web-site for exchanging information between users of &ccsm;. There are also &clm;
+to help you use CLM. The first one is the &cesm; User's-Guide, which documents the entire
+process of creating cases with &cesm;. The next is the &cesm; bulletin board which is 
+a web-site for exchanging information between users of &cesm;. There are also &clm;
 web-pages specific for &clm;, and finally there is an email address to report bugs that
-you find in &ccsm4;.
+you find in &cesm1;.
 </para>
 
-<sect1 id="CCSM_UG">
-<title>The &ccsm; User's-Guide</title>
+<sect1 id="CESM_UG">
+<title>The &cesm; User's-Guide</title>
 <para>
-&clm4; is always run from within the standard &ccsm4; build and run scripts. Therefore, the
+&clm4; is always run from within the standard &cesm1; build and run scripts. Therefore, the
 user of &clm4;
-should familiarize themselves with the &ccsm4; scripts and understand how to work with them.
-User's-Guide documentation on the &ccsm4; scripts are available from the following web-page. The purpose
+should familiarize themselves with the &cesm1; scripts and understand how to work with them.
+User's-Guide documentation on the &cesm1; scripts are available from the following web-page. The purpose
 of this &clm4; User's Guide is to give the &clm4; user more complete details on how to work
 with &clm; and the set of tools that support &clm;, as well as to give examples that are unique to the use
-of &clm;. However, the &ccsm4; Scripts User's-Guide remains the primary source to get detailed
-information on how to build and run the &ccsm; system.
+of &clm;. However, the &cesm1; Scripts User's-Guide remains the primary source to get detailed
+information on how to build and run the &cesm; system.
 <simplelist>
-<member><ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">&ccsm4; Scripts
+<member><ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm/">&cesm1; Scripts
 User's-Guide</ulink></member>
 </simplelist>
 </para>
 </sect1>
 
-<sect1 id="CCSM_BB">
-<title>The &ccsm; Bulletin Board</title>
+<sect1 id="CESM_BB">
+<title>The &cesm; Bulletin Board</title>
 <para>
-There is a rich and diverse set of people that use the &ccsm;, and often it is useful to be in contact with
+There is a rich and diverse set of people that use the &cesm;, and often it is useful to be in contact with
 others to get help in solving problems or trying something new. To facilitate this we have an online
-Bulletin Board for questions on the &ccsm;. There are also different sections in the Bulletin Board for
+Bulletin Board for questions on the &cesm;. There are also different sections in the Bulletin Board for
 the different component models or for different topics.
 <simplelist>
-<member><ulink url="http://bb.cgd.ucar.edu/">&ccsm; Online Bulletin Board</ulink></member>
+<member><ulink url="http://bb.cgd.ucar.edu/">&cesm; Online Bulletin Board</ulink></member>
 </simplelist>
 </para>
 </sect1>

@@ -1,0 +1,7 @@
+-ignore_ic_date 
+-silent 
+-drv_case clmrun 
+-datm_source CLM_QIAN
+-clm_usr_name 13x12pt_f19_alaskaUSA
+-datm_presaero none
+-ndepsrc data

@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-nospmd -smp
+-debug
+-rtm off
+-bgc cn
+-s

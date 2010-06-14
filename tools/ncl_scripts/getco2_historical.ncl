@@ -120,6 +120,7 @@ begin
    ;
    nco->time = ncg->time;
    nco->date = ncg->date;
+   nco->date@comment = "This variable is NOT used when read by datm, the time coordinate is used";
    ;
    ; CO2
    ;

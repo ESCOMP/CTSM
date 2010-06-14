@@ -144,14 +144,22 @@ Process:
 
        		xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
 
-       6.) Edit the env_conf.xml in the case to point to your user dataset identifier name
+       6.) Edit the env_conf.xml in the case to point to your user dataset identifier name and set DATM_PRESAERO to none
 
        Edit CLM_USRDAT_NAME  to point to $MYDATAID
 
        		xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val $MYDATAID
 
+       Edit DATM_PRESAERO to be none
+
+       		xmlchange -file env_conf.xml -id DATM_PRESAERO -val none
+
+           6.5) If you are running with CN set ndepsrc to "data"
+
+       		xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-ndepsrc data"
+
        7.) Configure the case as normal
 
        		configure -case
 
-       8.) Run your case as normal
+       8.) Run your case as norm

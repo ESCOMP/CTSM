@@ -152,6 +152,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <datm_file_aero       datm_presaero="clim_2000" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc
 </datm_file_aero>
 <datm_aero_streams    datm_presaero="clim_2000" >clim_2000_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="clim_2000" hgrid="1x1_tropicAtl" >2000</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="clim_2000" hgrid="1x1_tropicAtl" >2000</datm_year_last_aero>
 <datm_year_first_aero datm_presaero="clim_2000">1</datm_year_first_aero>
 <datm_year_last_aero  datm_presaero="clim_2000">1</datm_year_last_aero>
 <datm_year_align_aero datm_presaero="clim_2000">1</datm_year_align_aero>

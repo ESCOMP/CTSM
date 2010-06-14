@@ -89,7 +89,7 @@ useful to have automated tests though to test that restarts give exactly the sam
 results as without a restart. It's also useful to have automated tests to run over a
 wide variety of configurations, resolutions, and namelist options. To do that we have
 several different types of scripts set up to make running comprehensive testing of
-&clm; easy. There are two types of testing scripts for &clm;. The first are the &ccsm;
+&clm; easy. There are two types of testing scripts for &clm;. The first are the &cesm;
 test scripts, which utilize the <command>create_newcase</command> scripts that we
 shown how to use in this User's Guide. The second are a set of stand-alone scripts that
 use the &clm; &configure; and &buildnml; scripts to build and test the model as well as
@@ -97,8 +97,8 @@ testing the &clm; tools as well. Below we will go into further details of how to
 both methods.
 </para>
 
-<sect1 id="ccsm_testing">
-<title>Testing &clm; Using the &ccsm; Test Scripts</title>
+<sect1 id="cesm_testing">
+<title>Testing &clm; Using the &cesm; Test Scripts</title>
 
 <para>
 We first introduce the test scripts that work for all CCSM components. We will
@@ -134,8 +134,8 @@ following:
 > cs.status.$id
 # The above will give a PASS or FAIL message for each test.
 </screen>
-For more information on doing testing with the &ccsm; scripts see the
-<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">&ccsm4;
+For more information on doing testing with the &cesm; scripts see the
+<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm/">&cesm1;
 User's Guide</ulink> on testing.
 </para>
 </sect1>
@@ -146,7 +146,7 @@ User's Guide</ulink> on testing.
 <para>
 In the <filename>models/lnd/clm/test/system</filename> directory there is
 a set of test scripts that is specific to stand-alone &clm;. It does testing
-on configurations harder to test for in the &ccsm; test scripts, and also allows
+on configurations harder to test for in the &cesm; test scripts, and also allows
 you to test the &clm; tools such as <command>mkgriddata</command> and 
 <command>mksurfdata</command>. The main driver script is called
 <filename>test_driver.sh</filename> and it can run both interactively as well as being

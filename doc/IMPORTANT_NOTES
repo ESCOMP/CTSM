@@ -1,4 +1,4 @@
-IMPORTANT_NOTES							Mar/10/2010
+IMPORTANT_NOTES							Jun/08/2010
 								Erik Kluzek
 
 Configure Modes NOT scientifically validated, documented, supported or even advised to be used:
@@ -8,11 +8,6 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
 
    CASA 	(-bgc casa)
        The bgc=casa mode is NOT scientifically validated or documented and NOT recommended to be used.
-
-   SUPLN	(-supln on with -bgc cn)
-       The supplemental Nitrogen mode (Carbon only mode of CN model) is known to be
-       too productive, and requires some modifications that will be on the CESM1.0
-       release.
 
    BUILDPIO  	(-pio)
        This mode is NOT tested and not even functional and hence should NOT be used. PIO WILL be provided
@@ -40,6 +35,9 @@ for general use. You turn this on by
 Namelist items that should NOT be exercised:
 
   create_crop_landunit:  Functional, but experimental
+  carbon_only:           (carbon_only=.true. with -bgc cn)
+                         The Carbon only mode of CN model is known to be too productive, and requires some modifications 
+                         that will be on an update to the CESM1.0 release.
   urban_traffic:         Not currently functional
   pio namelist options:  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
                          ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks

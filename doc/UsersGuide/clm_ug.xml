@@ -26,6 +26,8 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY appendix            SYSTEM "appendix.xml">
   <!ENTITY mksurfdatapl        SYSTEM "mksurfdata.pl.xml">
   <!ENTITY clmtestdriver       SYSTEM "test_driver.sh.xml">
+  <!ENTITY build_date          SYSTEM "build_date.xml">
+  <!ENTITY cprnc_readme        SYSTEM "cprnc_readme.xml">
 
   <!-- Aliases to use -->
   <!ENTITY buildnml          "<command>build-namelist</command>">
@@ -37,9 +39,11 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY clm3              "<acronym>CLM3.0</acronym>">
   <!ENTITY clm35             "<acronym>CLM3.5</acronym>">
   <!ENTITY clm4              "<acronym>CLM4</acronym>">
-  <!ENTITY clm40             "<acronym>CLM4.0</acronym>">
+  <!ENTITY clm40             "<acronym>CLM4.0.00</acronym>">
   <!ENTITY ccsm              "<acronym>CCSM</acronym>">
   <!ENTITY ccsm4             "<acronym>CCSM4.0</acronym>">
+  <!ENTITY cesm              "<acronym>CESM</acronym>">
+  <!ENTITY cesm1             "<acronym>CESM1.0</acronym>">
   <!ENTITY netcdf            "<acronym>NetCDF</acronym>">
   <!ENTITY FORTRAN           "<acronym>FORTRAN</acronym>">
   <!ENTITY FORTRAN90         "<acronym>FORTRAN-90</acronym>">
@@ -62,9 +66,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY CSMDATA           "<envar>CSMDATA</envar>">
   <!ENTITY CLMFORCECOLD      "<envar>CLM_FORCE_COLDSTART</envar>">
   <!ENTITY CLMCONFIG         "<envar>CLM_CONFIG_OPTS</envar>">
-  <!--
   <!ENTITY CLMBLDNML         "<envar>CLM_BLDNML_OPTS</envar>">
-  -->
   <!ENTITY CLMUSECASE        "<envar>CLM_NML_USE_CASE</envar>">
   <!ENTITY CLMNAMELIST       "<envar>CLM_NAMELIST_OPTS</envar>">
   <!ENTITY CLM1PT            "<envar>CLM_1PT_NAME</envar>">
@@ -93,14 +95,15 @@ Top level docbook User's-Guide for CLM4
 <book label="CLM4_UsersGuide" status="draft">
 
 <bookinfo>
-<title>&ccsm; Research Tools: &clm40; User's Guide Documentation</title>
+<title>&cesm; Research Tools: &clm40; User's Guide Documentation</title>
 
 <keywordset>
-    <keyword>CCSM</keyword>
+    <keyword>CESM</keyword>
     <keyword>CLM</keyword>
-    <keyword>community climate system model</keyword>
+    <keyword>community earth system model</keyword>
     <keyword>climate</keyword>
     <keyword>climate model</keyword>
+    <keyword>earth system model</keyword>
     <keyword>land surface model</keyword>
     <keyword>hydrology</keyword>
     <keyword>biogeochemistry</keyword>
@@ -122,7 +125,7 @@ Top level docbook User's-Guide for CLM4
 
 <abstract>
 <para>
-The user's guide to &clm40; which is the active land surface model component of &ccsm4;. 
+The user's guide to &clm40; which is the active land surface model component of &cesm1;. 
 The purpose of this guide is to instruct both the novice and experienced user, as well as
 &clm; developers in the use of &clm4; for land-surface climate modeling.
 </para>
@@ -130,7 +133,7 @@ The purpose of this guide is to instruct both the novice and experienced user, a
 
 <releaseinfo>$URL$</releaseinfo>
 
-<date>2010-04-17</date>
+<date>&build_date;</date>
                      
 </bookinfo>
 

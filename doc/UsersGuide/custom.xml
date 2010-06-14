@@ -22,12 +22,12 @@
 <title>How to customize the configuration for a case with &clm;</title>
 
 <para>
-The <ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">
-&ccsm; User's Guide</ulink> gives you the details on how to setup, &configure;, build, and run
-a case. That is the document to give you the details on using the &ccsm; scripts. The purpose 
-of this document is to give you the details when using &ccsm; with &clm; on how to customize
-and use advanced features in &clm;. You should be familiar with the &ccsm; User's Guide and
-how to setup cases with &ccsm4; before referring to this document.
+The <ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm/">
+&cesm; User's Guide</ulink> gives you the details on how to setup, &configure;, build, and run
+a case. That is the document to give you the details on using the &cesm; scripts. The purpose 
+of this document is to give you the details when using &cesm; with &clm; on how to customize
+and use advanced features in &clm;. You should be familiar with the &cesm; User's Guide and
+how to setup cases with &cesm1; before referring to this document.
 </para>
 <para>
 In this chapter we deal with three different ways of customizing a case: Choosing a compset,
@@ -105,7 +105,7 @@ for compsets using &clm;.
 <title>Customizing the &clm; configuration</title>
 <para>
 The "Creating a Case" section of the 
-<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">&ccsm4; Scripts
+<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm_doc/">&cesm1; Scripts
 User's-Guide</ulink>
 gives instructions on creating a case. What is of interest here is how to customize your
 use of &clm;
@@ -132,8 +132,8 @@ types of options you can give either of them.
 </para>
 <para>
 There are five different types of customization for the configuration that we will 
-discuss: &ccsm4;  &clm; configuration items, Configure time User Namelist,
-other noteworthy &ccsm;  configuration items, the &clm; &configure; script options, and 
+discuss: &cesm1;  &clm; configuration items, Configure time User Namelist,
+other noteworthy &cesm;  configuration items, the &clm; &configure; script options, and 
 the &clm; &buildnml; script options.
 </para>
 <para>
@@ -147,12 +147,13 @@ in the
 <sect2 id="clm_script">
 <title>&clm; Script configuration items</title>
 <para>
-Below we list each of the &ccsm; configuration items that are specific to &clm;. All
+Below we list each of the &cesm; configuration items that are specific to &clm;. All
 of these are available in your: &envconf; file.
 </para>
 <para>
 <simplelist>
     <member>&CLMCONFIG;</member>
+    <member>&CLMBLDNML;</member>
     <member>&CLMNAMELIST;</member>
     <member>&CLMFORCECOLD;</member>
     <member>&CLMUSECASE;</member>
@@ -205,7 +206,6 @@ The output of the above command is:
 </listitem>
 </varlistentry>
 
-<!--
 <varlistentry>
 <term>&CLMBLDNML;</term><listitem> 
 <para>
@@ -307,7 +307,6 @@ datasets. To list the valid options do the following:
 </caution>
 </listitem>
 </varlistentry>
--->
 
 <varlistentry>
 <term>&CLMNAMELIST;</term><listitem> 
@@ -417,6 +416,8 @@ the following will list what your filenames should be:
 > queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options \
 mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 </screen>
+An example of using &CLMUSRDAT; for a simulation is given in
+<xref linkend="example_using_clmusrdat"></xref>.
 </para>
 </listitem>
 </varlistentry>
@@ -494,7 +495,9 @@ or F case that doesn't use the DATM obviously the DATM_* settings will not be us
 All of the settings below are in your &envconf; file
     <simplelist>
     <member><envar>CCSM_CO2_PPMV</envar></member>
+    <member><envar>CCSM_VOC</envar></member>
     <member><envar>DATM_MODE</envar></member>
+    <member><envar>DATM_PRESAERO</envar></member>
     <member><envar>DATM_CLMNCEP_YR_ALIGN</envar></member>
     <member><envar>DATM_CLMNCEP_YR_START</envar></member>
     <member><envar>DATM_CLMNCEP_YR_END</envar></member>
@@ -508,7 +511,7 @@ All of the settings below are in your &envconf; file
 <term>CCSM_CO2_PPMV</term> <listitem> 
 <para>
 <envar>CCSM_CO2_PPMV</envar> sets the mixing ratio of &CO2; in 
-parts per million by volume for ALL &ccsm; components to use. Note that most compsets
+parts per million by volume for ALL &cesm; components to use. Note that most compsets
 already set this value to something reasonable. Also note that some compsets may
 tell the atmosphere model to override this value with either historic or ramped 
 values. If the <envar>CCSM_BGC</envar> variable is set to something other than "none"
@@ -516,6 +519,15 @@ the atmosphere model will determine &CO2;, and &clm; will listen
 and use what the atmosphere sends it. On the &clm; side the namelist item <varname>
 co2_type</varname> tells &clm; to use the value sent from the atmosphere rather than
 a value set on it's own namelist.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>CCSM_VOC</term> <listitem> 
+<para>
+<envar>CCSM_VOC</envar> enables passing of the Volatile Organic Compounds (VOC) from
+&clm; to the atmospheric model. This of course is only important if the atmosphere
+model is a fully active model that can use these fields in it's chemistry calculations.
 </para>
 </listitem>
 </varlistentry>
@@ -529,10 +541,8 @@ that are designed for use by &clm; are:
 <simplelist>
 <member>&CLMQIAN;</member>
 <member>&CLM1PT;</member>
-<!--
 <member>CPLHIST3HrWx</member>
 <member>CPLHIST3HrWxHfHrSol</member>
--->
 </simplelist>
 </para>
 <para>
@@ -549,6 +559,30 @@ Currently the urban locations are NOT functional, because the surface datasets n
 to be updated.
 </para>
 </warning>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_PRESAERO</term> <listitem> 
+<para>
+<envar>DATM_PRESAERO</envar> sets the prescribed aerosol mode for the data atmosphere
+model. The list of valid options include:
+<simplelist>
+<member><literal>none</literal> = do NOT send aerosols from datm read them in &clm;</member>
+<member><literal>clim_1850</literal> = constant year 1850 conditions</member>
+<member><literal>clim_2000</literal> = constant year 2000 conditions</member>
+<member><literal>trans_1850-2000</literal> = transient 1850 to year 2000 conditions</member>
+<member><literal>rcp2.6</literal> = transient conditions for the rcp=2.6
+W/m<superscript>2</superscript> future
+scenario</member>
+<member><literal>rcp4.5</literal> = transient conditions for the rcp=4.5
+W/m<superscript>2</superscript> future
+scenario</member>
+<member><literal>rcp8.5</literal> = transient conditions for the rcp=8.5
+W/m<superscript>2</superscript> future
+scenario</member>
+<member><literal>pt1_pt1</literal> = read in single-point or regional datasets</member>
+</simplelist>
+</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -700,34 +734,33 @@ appear in your clm namelist.
 <title>Default &clm; Namelist</title>
 <screen width="99">
 &amp;clm_inparm
- co2_ppmv               = 284.7
- co2_type               = 'constant'
- dtime                  = 1800
- faerdep                =
-'$DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_0.9x1.25_c090828.nc'
- fatmgrid               = 
-'$DIN_LOC_ROOT/lnd/clm2/griddata/griddata_0.9x1.25_070212.nc'
- fatmlndfrc             =
+ co2_ppmv   = 284.7
+ co2_type   = 'constant'
+ dtime	  = 1800
+ fatmgrid   = '$DIN_LOC_ROOT/lnd/clm2/griddata/griddata_0.9x1.25_070212.nc'
+ fatmlndfrc   =
 '$DIN_LOC_ROOT/lnd/clm2/griddata/fracdata_0.9x1.25_gx1v6_c090317.nc'
- finidat                = 'I1850CN_f09_c100305.clm2.r.0001-01-01-00000.nc'
- fndepdat               =
-'$DIN_LOC_ROOT/lnd/clm2/ndepdata/ndep_clm_simyr1850_0.9x1.25_c091106.nc'
- fpftcon                = 
-'$DIN_LOC_ROOT/lnd/clm2/pftdata/pft-physiology.c100226'
- frivinp_rtm            = '$DIN_LOC_ROOT/lnd/clm2/rtmdata/rdirc.05.061026'
- fsnowaging             =
+ finidat    =
+'$DIN_LOC_ROOT/ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc'
+ fpftcon    = '$DIN_LOC_ROOT/lnd/clm2/pftdata/pft-physiology.c100226'
+ frivinp_rtm	= '$DIN_LOC_ROOT/lnd/clm2/rtmdata/rdirc.05.061026'
+ fsnowaging   =
 '$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
- fsnowoptics            =
+ fsnowoptics	=
 '$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'
- fsurdat                =
+ fsurdat    =
 '$DIN_LOC_ROOT/lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c091006.nc'
- hist_crtinic           = 'NONE'
- hist_mfilt             = 1
- hist_nhtfrq            = 0
- outnc_large_files      = .true.
- rtm_nsteps             = 6
- urban_hac              = 'ON_WASTEHEAT'
- urban_traffic          = .false.
+ hist_crtinic	= 'NONE'
+ outnc_large_files    = .true.
+ urban_hac    = 'ON_WASTEHEAT'
+ urban_traffic	  = .false.
+ use_ndepstream	  = .true.
+/
+&amp;ndepdyn_nml
+ stream_fldfilename_ndep    =
+'$DIN_LOC_ROOTa/lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
+ stream_year_first_ndep	  = 1850
+ stream_year_last_ndep	  = 1850
 /
 </screen>
 </example>
@@ -961,7 +994,7 @@ and no averaging over auxiliary tapes output daily for a single field
 <warning>
 <para>
 LAND and COLS are also options to the pertape averaging, but currently there is a bug
-with them and they fail to work. We expect to fix this problem by the CESM1.0 release.
+with them and they fail to work.
 </para>
 </warning>
 </para>

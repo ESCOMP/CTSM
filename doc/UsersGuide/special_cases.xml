@@ -187,6 +187,8 @@ Then you take the CN initial state file you created for the spinup with just CN,
 run CNDV for 200 more years. 
 We've provided such spunup files for two resolutions (f09 and f19) and two time-periods 
 (1850 and 2000), so in this example we will use the files provided to start from.
+We've also provided a spinup file at f19 resolution for CNDV, hence the following is
+NOT required when running at f19.
 If you were to start from your own &clmcn; spunup files -- the procedure would require
 some modification.
 There are no compsets using CNDV, so in
@@ -196,7 +198,7 @@ There are no compsets using CNDV, so in
 <title>Example CNDV Spinup Simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case CNDV_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> create_newcase -case CNDV_spinup -res f09_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CNDV_spinup
 # Set run type to startup and do a cold start
 > xmlchange -file env_conf.xml -id RUN_TYPE -val startup
@@ -239,6 +241,12 @@ information on visualizing and analyzing 1D vector fields.
 <para>
 CNDV also writes out two vector fields to "hv" auxiliary files, on an annual basis by
 default.
+</para>
+</note>
+<note>
+<para>
+We've provided a spinup file for CNDV at f19 resolution, you could also use
+<command>interpinic</command> to interpolate this file to other resolutions.
 </para>
 </note>
 </sect1>
@@ -367,7 +375,7 @@ we will demonstrate using the machine intrepid.
 <screen width="99">
 > cd scripts
 > create_newcase -case newMachinePergro0 -compset ICN -res f19_g16 \
--mach intrepid  -skip_rundb
+-mach intrepid -skip_rundb
 > cd newMachinePergro0
 # Set the non-perturbed PERGRO use-case
 > xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
@@ -454,7 +462,7 @@ and our example will make use of this file.
 Most everything here has to do with changing datm rather than &clm;
 to allow this to happen. As such the user that wishes to do this should
 first become more familiar with datm and read the 
-<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/data8/book1.html">&ccsm; Data
+<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/data8/">&cesm; Data
 Model User's Guide</ulink> especially as it pertains to the datm. Note, also
 that in this example we show how to edit the datm "buildnml" file for your
 case, but you could do something similar by editing the datm template.
@@ -503,7 +511,8 @@ that includes file with a &CO2; time-series from 1765 to 2007.
 <title>Example Transient Simulation with Historical &CO2;</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN -mach bluefire -skip_rundb
+> create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN \
+-mach bluefire -skip_rundb
 > cd DATM_CO2_TSERIES
 # Set CCSM_BGC to CO2A so that CO2 will be passed from atmosphere to land
 > xmlchange -file env_conf.xml -id CCSM_BGC -val CO2A

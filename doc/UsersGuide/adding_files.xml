@@ -186,23 +186,27 @@ creating the file.</para></entry>
 <row>
    <entry morerows="1" valign="middle">faerdep</entry>
    <entry>ALL</entry>
-   <entry>Constant and transient scenarios</entry>
+   <entry>Constant and transient scenarios when <envar>DATM_PRESAERO</envar>=none</entry>
    <entry>Yes</entry>
-   <entry><para>simulation-year,simulation-year range, and possibly representative 
+   <entry><para>simulation-year,simulation-year range, and representative 
           concentration pathway (rcp)</para></entry>
 </row>
 <row>
    <entry spanname="notes_span"><para>You may customize this file to get the aerosol deposition characteristics 
 of your site if available. Or use a higher resolution dataset when you use 
 <command>aerdepregrid.ncl</command> to create this file. Note, both constant and transient files have
-the same namelist entry name.</para></entry>
+the same namelist entry name.</para>
+<para>
+Normally use the aerosol sent from the atmosphere instead of this file.
+</para>
+</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fndepdat</entry>
    <entry>bgc=cn/cndv</entry>
    <entry><para>Constant scenarios</para></entry>
    <entry>Yes</entry>
-   <entry><para>simulation-year and possibly representative concentration pathway (rcp)</para></entry>
+   <entry><para>simulation-year and representative concentration pathway (rcp)</para></entry>
 </row>
 <row>
    <entry spanname="notes_span"><para>You may customize this file to get the Nitrogen deposition characteristics 
@@ -214,7 +218,7 @@ of your site if available. Or use a higher resolution dataset when you use
    <entry>ALL</entry>
    <entry><para>transient land-use land-cover change</para></entry>
    <entry>Yes</entry>
-   <entry><para>Simulation year range, and possibly representative concentration pathway (rcp)</para></entry>
+   <entry><para>Simulation year range, and representative concentration pathway (rcp)</para></entry>
 </row>
 <row>
    <entry spanname="notes_span">See notes on fsurdat files.</entry>
@@ -261,27 +265,64 @@ input a higher resolution orography file when you create it using
 <row>
    <entry morerows="1" valign="middle">fndepdyn</entry>
    <entry>bgc=cn/cndv</entry>
-   <entry><para>transient simulations</para></entry>
+   <entry><para>transient simulations when ndepsrc=data</para></entry>
    <entry>Yes</entry>
    <entry><para>Simulation year range</para></entry>
 </row>
 <row>
-   <entry spanname="notes_span"><para>You may customize this file to get the Nitrogen deposition characteristics 
+   <entry spanname="notes_span"><para>
+You may customize this file to get the Nitrogen deposition characteristics 
 of your site if available. Or use a higher resolution dataset when you use 
-<command>ndepregrid.ncl</command> to create this file.</para></entry>
+<command>ndepregrid.ncl</command> to create this file.
+</para>
+<note>
+<para>
+Normally use the <filename>stream_fldfilename_ndep</filename> below instead of
+this file.
+</para>
+</note>
+</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">finidat</entry>
    <entry>ALL</entry>
    <entry><para>RUN_TYPE="startup", CLM_FORCE_COLDSTART="off"</para></entry>
    <entry>Yes</entry>
-   <entry><para>mask, maxpft, bgc, sim_year, start-date</para></entry>
+   <entry><para>mask, maxpft, bgc, simulation-year, start-date</para></entry>
 </row>
 <row>
    <entry spanname="notes_span"><para>Used for starting the model from a spun-up state.
 Create these files by running the model
 for multiple years and saving the restart file from the end of a spin-up 
 simulation.</para>
+</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fglcmask</entry>
+   <entry>glc_nec &gt; 0</entry>
+   <entry><para>Used for simulations with the active glacier ice sheet model "cism"</para></entry>
+   <entry>Yes</entry>
+   <entry><para>glacier-grid</para></entry>
+</row>
+<row>
+   <entry spanname="notes_span"><para>Needs to match the file used by "cism" and
+be for the same glacier grid. Only customized as coupled with the glacier model.
+</para>
+</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">stream_fldfilename_ndep</entry>
+   <entry>bgc=cn/cndv</entry>
+   <entry><para>Only when ndepsrc is stream</para></entry>
+   <entry>No</entry>
+   <entry><para>simulation-year</para></entry>
+</row>
+<row>
+   <entry spanname="notes_span"><para>
+You may customize this file to get the Nitrogen deposition characteristics 
+of your site if available. This file will be interpolated while the model is
+running from it's resolution to the resolution that &clm; is running at.
+</para>
 </entry>
 </row>
 </tbody>

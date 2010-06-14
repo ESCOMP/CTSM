@@ -235,7 +235,7 @@ is activated.
 </varlistentry>
 
 <varlistentry>
-<term><envar>OMP</envar></term><listitem> 
+<term><envar>OPT</envar></term><listitem> 
 <para>
 This variable flags if compiler optimization should be used when 
 compiling the tool.  It can be set to either <literal>TRUE</literal> or 
@@ -244,7 +244,7 @@ compiler optimization is NOT used. Turning this on should make the tool run much
 </para>
 <caution>
 <para>
-Note, you should expect that answers will be different when <envar>OMP</envar>
+Note, you should expect that answers will be different when <envar>OPT</envar>
 is activated.
 </para>
 </caution>
@@ -255,7 +255,7 @@ is activated.
 <term><filename>Filepath</filename></term><listitem> 
 <para>
 <command>cprnc</command> unlike the other &clm; tools doesn't need any outside code to operate. The
-other tools are use some code outside their directory that is in the &ccsm;
+other tools are use some code outside their directory that is in the &cesm;
 distribution (either csm_share code or &clm; source code). They all have a 
 <filename>Filepath</filename> file to set the location of the source code
 directories that will be used.
@@ -337,7 +337,7 @@ See <xref linkend="mksurfdata"></xref> for more information on this.
 </para>
 </step>
 
-<step>
+<step performance="optional">
 <title>Create aerosol deposition datasets</title>
 <para>
 Next use <command>aerdepregrid.ncl</command> to regrid aerosol deposition datasets to 
@@ -347,7 +347,7 @@ See <xref linkend="aerdepregrid"></xref> for more information on this.
 </step>
 
 <step performance="optional">
-<title>Create Nitrogen deposition datasets (if running &clmcn;)</title>
+<title>Create Nitrogen deposition datasets (if running &clmcn; and ndepsrc=data)</title>
 <para>
 Next use <command>ndepregrid.ncl</command> to regrid Nitrogen deposition datasets to 
 your new resolution using the grid dataset as input. This is required if you are using
@@ -443,7 +443,11 @@ Options:
 <member>-kpr</member>
 </simplelist>
 See the <command>cprnc</command>
-<ulink url="../../tools/cprnc/README">README</ulink> file for more details.
+<ulink url="../../tools/cprnc/README">README</ulink> file for more details which is
+repeated here:
+<screen>
+&cprnc_readme;
+</screen>
 </para>
 </sect1>
 
@@ -479,7 +483,8 @@ to use.
 <command>interpinic</command> to interpolate to</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case cr_f10_TmpltI1850CN -res f10_f10 -compset I1850CN -mach bluefire
+> create_newcase -case cr_f10_TmpltI1850CN -res f10_f10 -compset I1850CN \
+-mach bluefire -skip_rundb
 > cd cr_f10_TmpltI1850CN
 # Set starting date to end of year
 > xmlchange -file env_conf.xml -id RUN_STARTDATE -val 1948-12-31
@@ -522,7 +527,7 @@ cut down the run time as much as possible.
 </para>
 </tip>
 <warning>
-<para>>
+<para>
 <command>interpinic</command> does NOT work for CNDV (bgc=cndv).
 </para>
 </warning>
@@ -571,7 +576,7 @@ heights.</member>
 <member><varname>mksrf_fcamfile</varname> -- <acronym>CAM</acronym> initial conditions file with
 land-fractions and topography</member>
 <member><varname>mksrf_fclmgrid</varname> -- &clm; grid file</member>
-<member><varname>mksrf_fccsmdom</varname> -- &ccsm; domain file</member>
+<member><varname>mksrf_fccsmdom</varname> -- &cesm; domain file</member>
 <member><varname>mksrf_fcamtopo</varname> -- <acronym>CAM</acronym> topography file</member>
 <member><varname>mksrf_lsmlon</varname> -- number of longitude for regional grid</member>
 <member><varname>mksrf_lsmlat</varname>number of latitudes for regional grid</member>
@@ -598,7 +603,7 @@ or
 </screen>
 or 
 <screen width="99">
-   mksrf_fccsmdom    - ccsm domain file (both grid, and fraction data)
+   mksrf_fccsmdom    - cesm domain file (both grid, and fraction data)
 </screen>
 or
 <screen width="99">
@@ -614,7 +619,7 @@ The order of precedence for data is as follows:
 <listitem><para><filename>mksrf_fccsmdom</filename></para></listitem>
 </orderedlist>
 Grid data then will be established by the file with the highest precedence. 
-&ccsm; domain files sometimes have latitudes and longitudes that are "off" from
+&cesm; domain files sometimes have latitudes and longitudes that are "off" from
 the standard by a small amount. By establishing an order of precedence you can ensure
 that grid locations exactly match a given standard file, even if the values in the domain
 file are off from that.
@@ -631,7 +636,7 @@ heights.</member>
 <member><varname>mksrf_fcamfile</varname> -- <acronym>CAM</acronym> initial conditions file with
 land-fractions and topography</member>
 <member><varname>mksrf_fclmgrid</varname> -- &clm; grid file</member>
-<member><varname>mksrf_fccsmdom</varname> -- &ccsm; domain file</member>
+<member><varname>mksrf_fccsmdom</varname> -- &cesm; domain file</member>
 <member><varname>mksrf_fcamtopo</varname> -- <acronym>CAM</acronym> topography file</member>
 <member><varname>mksrf_lsmlon</varname> -- number of longitude for regional grid</member>
 <member><varname>mksrf_lsmlat</varname>number of latitudes for regional grid</member>
@@ -658,7 +663,7 @@ or
 </screen>
 or 
 <screen width="99">
-   mksrf_fccsmdom    - ccsm domain file (both grid, and fraction data)
+   mksrf_fccsmdom    - cesm domain file (both grid, and fraction data)
 </screen>
 or
 <screen width="99">
@@ -674,7 +679,7 @@ The order of precedence for data is as follows:
 <listitem><para><filename>mksrf_fccsmdom</filename></para></listitem>
 </orderedlist>
 Grid data then will be established by the file with the highest precedence. 
-&ccsm; domain files sometimes have latitudes and longitudes that are "off" from
+&cesm; domain files sometimes have latitudes and longitudes that are "off" from
 the standard by a small amount. By establishing an order of precedence you can ensure
 that grid locations exactly match a given standard file, even if the values in the domain
 file are off from that.
@@ -684,7 +689,7 @@ file are off from that.
 There are three different major modes for using <command>mkgriddata</command> to 
 create grid files for &clm;:
 <simplelist>
-<member>Convert &ccsm; domain files to &clm; grid files</member>
+<member>Convert &cesm; domain files to &clm; grid files</member>
 <member>Create single point or regional area grid files</member>
 <member>Convert <acronym>CAM</acronym> files to &clm; grid files</member>
 </simplelist>
@@ -692,12 +697,12 @@ create grid files for &clm;:
 </sect2>
 
 <sect2 id="mkgriddata_from_domainfile">
-<title>Convert &ccsm; domain files to &clm; grid files</title>
+<title>Convert &cesm; domain files to &clm; grid files</title>
 <para>
-&ccsm; domain files such as used for datm, include all the information
+&cesm; domain files such as used for datm, include all the information
 needed to create &clm; grid and fraction files.
 <example>
-<title>Example <command>mkgriddata</command> namelist to convert &ccsm; 4x5 domain files to &clm; grid files</title>
+<title>Example <command>mkgriddata</command> namelist to convert &cesm; 4x5 domain files to &clm; grid files</title>
 <screen width="99">
 &amp;clmexp
  mksrf_fccsmdom=
@@ -826,7 +831,9 @@ simulation year ranges. It will create the needed namelists for you and move the
 over to your inputdata directory location (and create a list of the files created, and
 for developers this file is also a script to import the files into the svn inputdata
 repository. It will also use the &buildnml; XML database
-to determine the correct input files to use. And in the case of urban single-point 
+to determine the correct input files to use, and for transient cases it will create
+the appropriate <filename>pftdyn</filename> file with the list of files for each
+year needed for this case. And in the case of urban single-point 
 datasets (where surface datasets are actually input into <command>mksurfdata</command>)
 it will do the additional processing required so that the output dataset
 can be used once again by <command>mksurfdata</command>. Because, it figures out
@@ -931,6 +938,10 @@ normally always used)</para></listitem>
 <listitem><para><varname>mksrf_gridnm</varname> Name of output grid resolution (if not
 set the files will be named according to the number of longitudes by latitudes)</para></listitem>
 <listitem><para><varname>mksrf_gridtype</varname> Type of grid (default is 'global')</para></listitem>
+<listitem><para><varname>nglcec</varname> number of glacier multiple elevation classes.
+Can be 1, 3, 5, or 10. When using the resulting dataset with &clm; you can then run
+with <varname>glc_nec</varname> of either 0 or this value.
+ (default is 10)</para></listitem>
 <listitem><para><varname>outnc_large_files</varname> If output should be in NetCDF large file
 format</para></listitem>
 <listitem><para><varname>outnc_double</varname> If output should be in double
@@ -971,7 +982,8 @@ This option is experimental and not even enabled for use with &clm40;.
 <sect3 id="mksurfdata_sop">
 <title>Standard Practices when using <command>mksurfdata</command></title>
 <para>
-In this section we give the recommendations 
+In this section we give the recommendations for how to use <command>mksurfdata</command>
+to give similar results to the files that we created when using it.
 </para>
 <para>
 If you look at the standard surface datasets that we have created and provided for use,
@@ -1063,7 +1075,7 @@ The list of environment variables that can be set are:
 1850-2100)</member>
 <member><envar>GRDFIL</envar> -- full pathname of grid file to use 
 (in place of getting the default grid file based on the <envar>RES</envar> value)</member>
-<member><envar>CSMDATA</envar> -- &ccsm; inputdata directory</member>
+<member><envar>CSMDATA</envar> -- &cesm; inputdata directory</member>
 <member><envar>CLM_ROOT</envar> -- root directory for clm (models/lnd/clm directory)</member>
 </simplelist>
 </para>
@@ -1102,7 +1114,7 @@ to specify both <envar>SIM_YR</envar> and <envar>SIM_YR_RNG</envar>, where
 </para>
 <para>
 The default for <envar>CSMDATA</envar> works for NCAR computers, but will need to
-be set to the top level directory location of your &ccsm; input data on other computers.
+be set to the top level directory location of your &cesm; input data on other computers.
 If you set this as a default for your shell when you login (for example with your
 <filename>$HOME/.cshrc</filename> if you use csh) you won't have to set it each time
 you run the script. <envar>CLM_ROOT</envar> will default to the proper location
@@ -1117,6 +1129,16 @@ directory.
 to another.  It can be used to interpolate either constant datasets
 (<varname>fndepdat</varname> files) or transient datasets (<varname>fndepdyn</varname> files).
 </para>
+<note>
+<para>
+Interpolating Nitrogen deposition files is no longer needed, because the model can
+read Nitrogen deposition files at one resolution and interpolate to the resolution the
+model is running at on the fly (when using -ndepsrc="stream"). Interpolating to another
+resolution is only useful for very course resolutions, if you want to save some computing
+resources in reading larger datasets. For example, this may be useful in obtaining 
+single-point datasets.
+</para>
+</note>
 <para>
 For example, to interpolate to an output resolution of 0.9x1.25, for a constant
 simulation-year of 1850, you would do the following:
@@ -1137,6 +1159,17 @@ Nitrogen deposition datasets, are named the same <varname>faerdep</varname> whet
 they contain one time-sample or a time-series of data. But, in any case, this script
 can be used to interpolate either kind of file.
 </para>
+<note>
+<para>
+Interpolating aerosol deposition files is no longer needed, because the datm model can
+read aerosol deposition files at one resolution and interpolate to the resolution the
+model is running at on the fly (when using <envar>DATM_PRESAERO</envar> set to 
+something besides "none"). Interpolating to another
+resolution is only useful for very course resolutions, if you want to save some computing
+resources in reading larger datasets. For example, this may be useful in obtaining 
+single-point datasets.
+</para>
+</note>
 <para>
 For example, to interpolate to an output resolution of 4x5, for a transient
 simulation-year range of 1850 to 2100 and the rcp of 8.5, you would do the following:
