@@ -43,7 +43,24 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$3 | sed -e "s|HOME|$HOME|g"`
+optfile=${3%^*}
+cfgfile=${3#*^}
+
+if [ "$optfile" != "$3" ]; then
+  echo "TSMscript_tools.sh: calling TCBtools.sh to prepare $1 executable"
+  ${CLM_SCRIPTDIR}/TCBtools.sh $1 $cfgfile
+  rc=$?
+  if [ $rc -ne 0 ]; then
+      echo "TSMscript_tools.sh: error from TCBtools.sh= $rc"
+      echo "FAIL.job${JOBID}" > TestStatus
+      exit 4
+  fi 
+  tcbtools=${CLM_TESTDIR}/TCBtools.$1.$cfgfile
+else
+  tcbtools="."
+fi
+
+scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|HOME|$HOME|g" | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|PFTDATA|$PFTDATA|g"`
 
 echo "TSMscript_tools.sh: running ${cfgdir}/$2 with $scopts; output in ${rundir}/test.log" 
 
@@ -54,7 +71,7 @@ if [ ! -f "${cfgdir}/$2" ]; then
 fi
 
 if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
-   ${cfgdir}/$2 $scopts >> test.log 2>&1
+   env PATH="${tcbtools}:${PATH}" ${cfgdir}/$2 $scopts >> test.log 2>&1
    status="PASS"
    rc=$?
 else

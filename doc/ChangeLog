@@ -1,4 +1,233 @@
 ===============================================================
+Tag name:  clm4_0_10
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Aug  4 14:37:59 MDT 2010
+One-line Summary: Update doc to cesm_rel05, bug-fixes, fix issues for single-point, mksurfdata/getregional scripts
+
+Purpose of changes:
+
+Use nn instead of copy for CO2 patch file. Update documentation to latest cesm version
+05. Update externals. Some changes to build-namelist for generic single-point
+simulations. Move tools XML files to clm_tools namelist_default file. Add 4x5 drydep
+test, work with testing a bit. Add tests for getregional.pl and mksurfdata.pl scripts.
+Add: usrname, nomv and pftdata options to mksurfdata.pl. Get RCP's working in getregional
+script. Update getregional to handle ndep and aerdep streams, also get it to run in a
+different directory. XML query wont test variables that don't match when -var option is
+specified. Convert test table to xhtml. Move glc_nec to physics. Add option for
+ndepmapalgo. Get faerdep and fndep streams files working right in
+namelist_defaults_usrdat.xml file.
+
+Bugs fixed (include bugzilla ID):
+                                 1166 (get_regional script needs to be updated)
+                                 1190 (add ndepmapalgo to ndep streams)
+                                 1192 (Y1K problem for mksurfdata.pl)
+                                 1193 (bug in reading GLCMASK)
+
+Update of datm also fixes several issues with datm for single pt simulations: 1173, 1175, 1176, 1181
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: standard
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist:
+   Add ndepmapalgo
+   Move datasets just for clm tools to clm_tools namelist_defaults XML file
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm, csm_share
+   scripts    to scripts4_100730
+   drv        to drvseq3_1_33
+   datm       to datm8_100728
+   csm_share  to share3_100802
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>>>> Add configure test file for serial
+   A  models/lnd/clm/test/system/config_files/4p_vodsnrsc_ds
+
+>>>>>>>>>>>> Add some files to test mksurfdata.pl script
+   A  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850
+   A  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850-2000
+
+>>>>>>>>>>>> Put all files for clm-tools in seperate file
+   A  models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml
+
+>>>>>>>>>>>> Add new chapter on trouble shooting, add a script to limit
+>>>>>>>>>>>> the line lengths, add style sheet to convert HTML XSL table
+>>>>>>>>>>>> to docbook. Add file to fix vancouver problem.
+   A  models/lnd/clm/doc/UsersGuide/trouble_shooting.xml
+   A  models/lnd/clm/doc/UsersGuide/limitLineLen.pl
+   A  models/lnd/clm/doc/UsersGuide/addxhtmlhead.pl
+   A  models/lnd/clm/doc/UsersGuide/stylesheethtml2docbook.xsl
+   A  models/lnd/clm/doc/UsersGuide/fixvan_datm.buildnml.diff
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>> Change some of the tests around
+   M  models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M  models/lnd/clm/test/system/tests_pretag_edinburgh
+   M  models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+   M  models/lnd/clm/test/system/tests_pretag_jaguar
+   M  models/lnd/clm/test/system/tests_pretag_jaguar_nompi
+   M  models/lnd/clm/test/system/tests_posttag_purempi_regression
+   M  models/lnd/clm/test/system/tests_posttag_hybrid_regression
+   M  models/lnd/clm/test/system/tests_posttag_nompi_regression
+
+>>>>>>>>>>>> Work with testing a bit, add mksurfdata.pl and drydep tests
+   M  models/lnd/clm/test/system/README.testnames ---- Add "V" drydep test
+   M  models/lnd/clm/test/system/test_driver.sh ------ Add pftdata, change multi-processing a bit
+   M  models/lnd/clm/test/system/TSMscript_tools.sh -- Fix some glitches
+   M  models/lnd/clm/test/system/gen_test_table.sh --- Convert to xhtml
+   M  models/lnd/clm/test/system/nl_files/clm_usrdat - Remove non-streams mode for ndep and aerdep
+   M  models/lnd/clm/test/system/input_tests_master -- Add mksurfdata.pl and drydep tests
+             make scsnf 4x5 rather than 10x15
+
+>>>>>>>>>>>> Add -nomv, usrname, and pftdyn options, add ability to run in 
+>>>>>>>>>>>> a different directory, check for vegtyp files before running.
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.pl
+
+>>>>>>>>>>>> Handle rcp's correctly, and handle datm streams for presaero files
+>>>>>>>>>>>> and ndep streams files
+   M  models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl -- default rcp=hist, set
+             RCP to ncl script
+   M  models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl - add ability to handle
+             usrname files, and handle ndep and aerdep streams files correctly
+
+>>>>>>>>>>>> Move tools files into clm_tools default file, add ndepmapalgo
+>>>>>>>>>>>> Work on the formatting of the files, do better with clm_usrdat_name
+   M  models/lnd/clm/bld/queryDefaultNamelist.pl - Add clm_tools default file.
+                  Don't limit list to -var, as now done in .pm file below.
+   M  models/lnd/clm/bld/queryDefaultXML.pm ------ If -var set, don't process variables
+                  that don't match
+   M  models/lnd/clm/bld/config_files/config_definition.xsl - Change to lowercase
+                  for xhtml standard, remove glacier list
+   M  models/lnd/clm/bld/config_files/config_definition.xml - Put glc_nec in physics list
+   M  models/lnd/clm/bld/build-namelist --------------------- Fix minor doc issues
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Add ndepmapalgo,
+                  change formatting for GPTL options
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults.xsl ----- Improve formatting,
+                  put note in table if All: res, masks, yrs, or sim_yr_rng
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xsl --- Improve formatting
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Remove mksrf_fvegtyp
+                  files and fndepdat files for single-years only used for processing tools
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml - Add in handling
+                  of rcp's, and stream_fldfilename_ndep, remove fndepdat/dyn
+
+>>>>>>>>>>>> Update to documentation from update to cesm1_0_rel_05
+   M  models/lnd/clm/doc/UsersGuide/single_point.xml
+   M  models/lnd/clm/doc/UsersGuide/get_Icaselist.pl
+   M  models/lnd/clm/doc/UsersGuide/special_cases.xml
+   M  models/lnd/clm/doc/UsersGuide/co2_streams.txt
+   M  models/lnd/clm/doc/UsersGuide/tools.xml
+   M  models/lnd/clm/doc/UsersGuide/preface.xml
+   M  models/lnd/clm/doc/UsersGuide/clm_ug.xml
+   M  models/lnd/clm/doc/UsersGuide/appendix.xml
+   M  models/lnd/clm/doc/UsersGuide/adding_files.xml
+   M  models/lnd/clm/doc/UsersGuide/custom.xml
+   M  models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
+   M  models/lnd/clm/doc/UsersGuide/Makefile
+   M  models/lnd/clm/doc/Quickstart.userdatasets
+   M  models/lnd/clm/doc/KnownBugs
+   M  models/lnd/clm/doc/README
+   M  models/lnd/clm/src/main/ndepStreamMod.F90
+   M  models/lnd/clm/src/main/surfrdMod.F90
+
+>>>>>>>>>>>> Update to documentation from update to cesm1_0_rel_05
+   M  Copyright
+   M  README
+
+Summary of testing:
+
+  bluefire: All PASS except...
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+032 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+055 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+056 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+057 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+058 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+009 blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic .FAIL! rc= 4
+025 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+026 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+030 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+  bluefire/CESM testing: All PASS except...
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_10
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_09
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  edinburgh/lf95 interactive testing: All PASS except...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+  edinburgh/lf95: All PASS except...
+005 smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 10
+006 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 72+72 cold ...............FAIL! rc= 5
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 4
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG56 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+013 smE91 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 96 arb_ic ............FAIL! rc= 10
+014 erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 10+38 arb_ic .........FAIL! rc= 5
+015 brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 arb_ic ......FAIL! rc= 5
+016 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 arb_ic ............FAIL! rc= 4
+018 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 10+38 cold .......FAIL! rc= 13
+019 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72 cold ....FAIL! rc= 11
+025 smL51 TSM.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+026 erL51 TER.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+027 brL51 TBR.sh _sc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+028 blL51 TBL.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 4
+029 smH41 TSM.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 96 cold FAIL! rc= 10
+030 erH41 TER.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 10+38 coFAIL! rc= 5
+031 brH41 TBR.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 72+72 coFAIL! rc= 5
+032 blH41 TBL.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:NONE:1800 10x15 USGS@2000 48 cold FAIL! rc= 4
+033 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 96 arb_ic ...............FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_09
+
+Changes answers relative to baseline: bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_09
 Originator(s):  erik (erik)
 Date: Mon Jun 14 00:02:12 MDT 2010
@@ -24,7 +253,6 @@ Known bugs (include bugzilla ID):
                                   722 (threading slow)
                                   789 (1pt sims 2.5X slow)
                                   794 (hist avg strange)
-                                  883 (aerosol deposition not from atm)
                                   896 (T62 mode does not work)
                                   920 (glacier_mec problems in mksurfdata)
                                   935 (RTM warning NOT an error)
@@ -40,6 +268,9 @@ Known bugs (include bugzilla ID):
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on gust...)
                                  1165 (Restart trouble for scaled harvest test on gust)
+                                 1166 (get_regional script needs to be updated)
+                                 1192 (Y1K problem for mksurfdata.pl)
+                                 1193 (bug in reading GLCMASK)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: std-test
@@ -265,7 +496,6 @@ Known bugs (include bugzilla ID):
                                   722 (threading slow)
                                   789 (1pt sims 2.5X slow)
                                   794 (hist avg strange)
-                                  883 (aerosol deposition not from atm)
                                   896 (T62 mode does not work)
                                   920 (glacier_mec problems in mksurfdata)
                                   935 (RTM warning NOT an error)
@@ -282,6 +512,9 @@ Known bugs (include bugzilla ID):
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on gust...)
                                  1165 (Restart trouble for scaled harvest test on gust)
+                                 1166 (get_regional script needs to be updated)
+                                 1192 (Y1K problem for mksurfdata.pl)
+                                 1193 (bug in reading GLCMASK)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -406,6 +639,7 @@ bld/namelist_files).
 
 Bugs fixed (include bugzilla ID):
                                  1162 (OpenMP bug with dry-deposition code in clm)
+                                  883 (aerosol deposition not from atm)
 
 Known bugs (include bugzilla ID):
                                   701 (svn keyword)
@@ -413,7 +647,6 @@ Known bugs (include bugzilla ID):
                                   722 (threading slow)
                                   789 (1pt sims 2.5X slow)
                                   794 (hist avg strange)
-                                  883 (aerosol deposition not from atm)
                                   896 (T62 mode does not work)
                                   920 (glacier_mec problems in mksurfdata)
                                   935 (RTM warning NOT an error)
@@ -430,6 +663,9 @@ Known bugs (include bugzilla ID):
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on gust...)
                                  1165 (Restart trouble for scaled harvest test on gust)
+                                 1166 (get_regional script needs to be updated)
+                                 1192 (Y1K problem for mksurfdata.pl)
+                                 1193 (bug in reading GLCMASK)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: standard

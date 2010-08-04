@@ -43,7 +43,7 @@ if ($ProgDir) {
 # Default resolution
 
 my $res        = "1.9x2.5";
-my $rcp        = "8.5";
+my $rcp        = "-999.9";
 my $mask       = "gx1v6";
 my $sim_year   = "2000";
 my $sim_yr_rng = "constant";
@@ -209,7 +209,7 @@ if ( $opts{'verbose'} ) {
 
 my $cmd = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
           "SIM_YR=$opts{'sim_year'} SIM_YR_RNG=$opts{'sim_yr_rng'} MASK=$opts{'mask'} " .
-          "ID=$opts{'mydataid'} MYCSMDATA=$inputdata_rootdir " .
+          "ID=$opts{'mydataid'} RCP=$opts{'rcp'} MYCSMDATA=$inputdata_rootdir " .
           "$debug $print ncl $scrdir/getregional_datasets.ncl";
 
 print "Execute: $cmd\n";

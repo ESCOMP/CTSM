@@ -205,25 +205,18 @@ EOF
      $settings{'csmdata'}      = $inputopts{csmdata};
   } else {
      my @files = ( "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
+                   "$cfgdir/namelist_files/namelist_defaults_clm_tools.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_datm.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
      push( @nl_defaults_files, @files );
   }
-  $inputopts{files}          = \@nl_defaults_files;
+  $settings{'var'}  = $opts{'var'};
+  $inputopts{files} = \@nl_defaults_files;
 
   my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
   my %defaults = %$defaults_ref;
   my @keys = keys(%defaults);
-  if ( defined($opts{'var'}) ) {
-     my @newkeys;
-     foreach my $var ( @keys ) {
-        if ( $var eq $opts{'var'} ) {
-            @newkeys = ( $opts{var} );
-        }
-     }
-     @keys = @newkeys;
-  }
   if ( defined($opts{'demand'}) && ($#keys == -1) ) {
      die "($ProgName $cmdline) ERROR:: demand option is set and nothing was found.\n";
   }

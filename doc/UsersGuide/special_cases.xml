@@ -442,9 +442,6 @@ for intrepid.
 <title>Running stand-alone &clm; with transient historical &CO2;
 concentration</title>
 <para>
-...
-</para>
-<para>
 In this case you want to run a simulation with stand-alone &clm; responding
 to changes in &CO2; for a historical period.
 For this example, we will start with the "I_1850-2000_CN" compset that
@@ -454,7 +451,7 @@ In order to get &CO2; to be transient we need to edit the
 datm template so that we add an extra streams file to describe how
 &CO2; varies over the historical period. You also need
 a &netcdf; datafile that datm can read that gives the variation. You could
-supply your own file, but we have a standard file that is used by CAM for this
+supply your own file, but we have a standard file that is used by <acronym>CAM</acronym> for this
 and our example will make use of this file.
 </para>
 <note>
@@ -462,7 +459,7 @@ and our example will make use of this file.
 Most everything here has to do with changing datm rather than &clm;
 to allow this to happen. As such the user that wishes to do this should
 first become more familiar with datm and read the 
-<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/data8/">&cesm; Data
+<ulink url="&cesmwebmodelrel;data8">&cesm; Data
 Model User's Guide</ulink> especially as it pertains to the datm. Note, also
 that in this example we show how to edit the datm "buildnml" file for your
 case, but you could do something similar by editing the datm template.
@@ -538,12 +535,22 @@ So to apply the patch you do this...
 </screen>
 Once, you've done that you can build and run your case normally.
 </para>
+<warning>
+<para>
+The patch assumes you are using a <literal>I_1850-2000_CN</literal> compset out of the box, with
+<envar>DATM_PRESAERO</envar> equal to <literal>trans_1850-2000</literal>. So it assumes standard
+Qian atmosphere forcing, and transient prescribed aerosols from streams files. If your case changes
+anything here the patch will fail, and you will need to put the changes in by hand.
+</para>
+</warning>
 
 <note>
 <para>
 If the patch fails, you will have to add the changes to the
 <filename>datm.buildnml.csh</filename> found in the above
-patch file by hand.
+patch file by hand. Basically, it adds an extra streams file for &CO2; to the end of the streams variable,
+and other arrays associated with streams (adding mapalgo as a new array with bilinear for everything, but
+the &CO2; file which should be copy).
 </para>
 </note>
 

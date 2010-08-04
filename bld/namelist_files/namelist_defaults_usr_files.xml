@@ -26,9 +26,11 @@ provided they are in the valid list expressed above.
 <fsurdat >lnd/clm2/surfdata/surfdata_${clm_usr_name}_simyr${sim_year}.nc</fsurdat>
 
 <!-- Dynamic PFT surface dataset (relative to ${csmdata}) -->
-<fpftdyn sim_year_range="constant"  >null</fpftdyn>
-<fpftdyn                            >lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr${sim_year_range}.nc</fpftdyn>
-<fpftdyn sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr1849-2006.nc</fpftdyn>
+<fpftdyn sim_year_range="constant"  rcp="-999.9">null</fpftdyn>
+<fpftdyn                            rcp="-999.9">lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr${sim_year_range}.nc</fpftdyn>
+<fpftdyn sim_year_range="1850-2000" rcp="-999.9">lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr1849-2006.nc</fpftdyn>
+<fpftdyn                                        >lnd/clm2/surfdata/surfdata.pftdyn_rcp${rcp}_${clm_usr_name}_simyr${sim_year_range}.nc</fpftdyn>
+<fpftdyn sim_year_range="1850-2000"             >lnd/clm2/surfdata/surfdata.pftdyn_rcp${rcp}_${clm_usr_name}_simyr1849-2006.nc</fpftdyn>
 
 <!-- Grid dataset (relative to ${csmdata}) -->
 <fatmgrid >lnd/clm2/griddata/griddata_${clm_usr_name}.nc</fatmgrid>
@@ -43,22 +45,28 @@ provided they are in the valid list expressed above.
 
 <fatmlndfrc >lnd/clm2/griddata/fracdata_${clm_usr_name}_${mask}.nc</fatmlndfrc>
 
-<!-- Aerosol deposition fluxes - if NOT coupled to CAM or NOT running CAM with dust and aerosols -->
-<faerdep sim_year_range="constant" >lnd/clm2/snicardata/aerosoldep_monthly_${sim_year}_${clm_usr_name}.nc</faerdep>
-<faerdep                           >lnd/clm2/snicardata/aerosoldep_monthly_${sim_year_range}_${clm_usr_name}.nc</faerdep>
-<faerdep sim_year_range="1850-2000">lnd/clm2/snicardata/aerosoldep_monthly_1849-2006_${clm_usr_name}.nc</faerdep>
-
-<!--CN Nitrogen deposition dataset for a fixed year (relative to ${csmdata})  -->
-
-<fndepdat bgc="cn" sim_year_range="constant">lnd/clm2/ndepdata/ndep_clm_simyr${sim_year}_${clm_usr_name}.nc</fndepdat>
-
-<!--CN Nitrogen deposition dataset for a series of years (relative to ${csmdata})  -->
-
-<fndepdyn bgc="cn" sim_year_range="constant" >null</fndepdyn>
-<fndepdyn bgc="cn"                           >lnd/clm2/ndepdata/fndep_clm_simyr${sim_year_range}_${clm_usr_name}.nc</fndepdyn>
-<fndepdyn bgc="cn" sim_year_range="1850-2000">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</fndepdyn>
+<!-- Aerosol deposition fluxes - if NOT running CAM or DATM with dust and aerosols -->
+<faerdep sim_year_range="constant"  rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year}_${clm_usr_name}.nc</faerdep>
+<faerdep                            rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year_range}_${clm_usr_name}.nc</faerdep>
+<faerdep sim_year_range="1850-2000" rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_${clm_usr_name}.nc</faerdep>
+<faerdep                                        >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp${rcp}_monthly_${sim_year_range}_${clm_usr_name}.nc</faerdep>
+<faerdep sim_year_range="1850-2000"             >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp${rcp}_monthly_1849-2006_${clm_usr_name}.nc</faerdep>
 
 <!-- Domain files for datm (relative to ${csmdata}) -->
 <domainfile >atm/datm7/domain.clm/domain.lnd.${clm_usr_name}_${mask}.nc</domainfile>
+
+<!--CN Nitrogen deposition stream dataset for a series of years (relative to ${csmdata})  -->
+
+<stream_fldfilename_ndep bgc="cn"   sim_year_range="constant"  rcp="-999.9">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cn"                              rcp="-999.9">lnd/clm2/ndepdata/fndep_clm_simyr${sim_year_range}_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cn"   sim_year_range="1850-2000" rcp="-999.9">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cn"                                          >lnd/clm2/ndepdata/fndep_clm_rcp${rcp}_simyr${sim_year_range}_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cn"   sim_year_range="1850-2000"             >lnd/clm2/ndepdata/fndep_clm_rcp${rcp}_simyr1849-2006_${clm_usr_name}.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep bgc="cndv" sim_year_range="constant"  rcp="-999.9">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cndv"                            rcp="-999.9">lnd/clm2/ndepdata/fndep_clm_simyr${sim_year_range}_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cndv" sim_year_range="1850-2000" rcp="-999.9">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cndv"                                        >lnd/clm2/ndepdata/fndep_clm_rcp${rcp}_simyr${sim_year_range}_${clm_usr_name}.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep bgc="cndv" sim_year_range="1850-2000"             >lnd/clm2/ndepdata/fndep_clm_rcp${rcp}_simyr1849-2006_${clm_usr_name}.nc</stream_fldfilename_ndep>
 
 </namelist_defaults>

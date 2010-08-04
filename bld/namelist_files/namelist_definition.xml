@@ -440,6 +440,11 @@ Simulation year that aligns with stream_year_first_ndep value
 Filename of input stream data for Nitrogen Deposition
 </entry>
 
+<entry id="ndepmapalgo" type="char*256" category="datasets"
+       group="ndepdyn_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from Nitrogen deposition input file to the model resolution
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- CPL7 Driver Namelist -->
 <!-- ========================================================================================  -->
@@ -1002,14 +1007,14 @@ integer indicating maximum detail level to profile.
 <entry id="profile_timer" type="integer"  category="performance"
        group="prof_inparm" valid_values="6,7,8,9,10,11" >
 integer indicating which timer to use. As defined in gptl.inc.
-<unlist>
-<listelm>GPTLgettimeofday   = 6</listelm>
-<listelm>GPTLnanotime       = 7</listelm>
-<listelm>GPTLrtc            = 8</listelm>
-<listelm>GPTLmpiwtime       = 9</listelm>
-<listelm>GPTLclockgettime   = 10</listelm>
-<listelm>GPTLpapitime       = 11</listelm>
-</unlist>
+<ul>
+<li>GPTLgettimeofday   = 6</li>
+<li>GPTLnanotime       = 7</li>
+<li>GPTLrtc            = 8</li>
+<li>GPTLmpiwtime       = 9</li>
+<li>GPTLclockgettime   = 10</li>
+<li>GPTLpapitime       = 11</li>
+</ul>
 </entry>
 
 <!-- PIO namelist -->

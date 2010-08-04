@@ -135,7 +135,7 @@ following:
 # The above will give a PASS or FAIL message for each test.
 </screen>
 For more information on doing testing with the &cesm; scripts see the
-<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm/">&cesm1;
+<ulink url="&cesmwebmodelrel;cesm">&cesm1;
 User's Guide</ulink> on testing.
 </para>
 </sect1>
@@ -175,5 +175,50 @@ A table of the list of tests and the machines they are run on is available from:
 <ulink url="../../test/system/test_table.html">test_table.html</ulink>
 </para>
 </sect1>
+
+</appendix>
+<appendix id="doc_build">
+<title>Building the Users-Guide Documentation for &clm;</title>
+<para>
+All of the documentation for &clm; can be built using GNU Makefiles that are
+available in the appropriate directories. The Makefiles require the following 
+utilities: <command>docbook2html</command>, <command>docbook2pdf</command>, 
+<command>protex</command>, and <command>latex2html</command>.
+</para>
+<para>
+To build the Users Guide for &clm; (requires docbook).
+<screen width="99">
+> cd models/lnd/clm/doc/UsersGuide
+> gmake
+</screen>
+Note, that when the Users-Guide is built it will get output from other &clm;
+utilities that by nature abort, and hence stop the make from continuing. However,
+this is expected so you should simply run <command>gmake</command> again until
+it either completes or comes upon a legitimate issue. Here is what a sample
+warning looks like when <command>gmake</command> is run.
+<screen width="99">
+The following line will fail in the make as it calls die -- but that is expected
+Check that the output config_help.tlog is good and redo your make
+../../bld/configure -help >& config_help.tlog
+make: *** [config_help.tlog] Error 255
+</screen>
+To build the Code Reference Guide for &clm; (requires <command>protex</command> and
+<command>latex2html</command>). The make here uses a <filename>Filepath</filename>
+file that points to the list of directories that you want <command>protex</command>
+to run over. You should examine this file and make sure it is appropriate for what
+you need to do, before running the make.
+<screen width="99">
+> cd models/lnd/clm/doc/CodeReference
+> gmake
+</screen>
+To build the table of tests for the &clm; test suite. The make here runs a UNIX
+shell script to create a html table of the list of tests run on the different machines
+from the &clm; test suite.
+<screen width="99">
+> cd models/lnd/clm/test/system
+> gmake
+</screen>
+
+</para>
 
 </appendix>

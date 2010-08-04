@@ -3,7 +3,8 @@
 # (rtf, txt, ps, tex, man, dvi, and texi are also valid docbook formats)
 #
 VPATH := ../../tools/cprnc . .. ../../bld ../../tools/ncl_scripts \
-	../../tools/mksurfdata ../../test/system
+	../../tools/mksurfdata ../../test/system ../../bld/namelist_files \
+	../../bld/config_files
 
 PDFUG     := clm_ug.pdf
 HTMLUG    := book1.html
@@ -19,13 +20,19 @@ USRLOG    := quickstart_usrdat
 TDRLOG    := test_driver.sh
 GETREG    := getregional_datasets
 CO2DIF    := addco2_datm.buildnml
+VANDIF    := fixvan_datm.buildnml
 DATLOG    := build_date
+NMLDFTBL  := namelist_definition_table
+NMLDLTBL  := namelist_defaults_clm_table
+CFGDFTBL  := config_definition_table
 COMPLIST  := compsets_list_ofIcases.xml
 SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
              $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml \
              $(USRLOG).xml $(GETREG).xml preface.xml custom.xml special_cases.xml \
              tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml \
-             $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml $(CPRLOG).xml
+             appendix.xml trouble_shooting.xml \
+             $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml $(CPRLOG).xml \
+	     $(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(VANDIF).xml
 
 CONVAMP    := sed 's/\&/\&amp;/g'
 CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
@@ -33,7 +40,9 @@ CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
 all: $(HTMLUG) $(PDFUG)
 
 .SUFFIXES:
-.SUFFIXES: .xml .pdf .html .tlog .diff
+.SUFFIXES: .xml .pdf .html .tlog .diff .xhtml .xsl
+
+RM := /bin/rm
 
 $(CFGLOG).xml: $(CFGLOG).tlog
 $(BNMLOG).xml: $(BNMLOG).tlog
@@ -45,10 +54,31 @@ $(GETREG).xml: $(GETREG).tlog
 $(MKSLOG).xml: $(MKSLOG).tlog
 $(CPRLOG).xml: $(CPRLOG).tlog
 $(CO2DIF).xml: $(CO2DIF).diff
+$(VANDIF).xml: $(VANDIF).diff
 $(DATLOG).xml: $(DATLOG).tlog
 
+$(NMLDFTBL).xhtml: namelist_definition.xml namelist_definition.xsl
+	xsltproc ../../bld/namelist_files/namelist_definition.xsl $< > tmpFile.txt
+	addxhtmlhead.pl tmpFile.txt > $@
+	$(RM) tmpFile.txt
+
+$(NMLDLTBL).xhtml: namelist_defaults_clm.xml namelist_defaults.xsl
+	xsltproc ../../bld/namelist_files/namelist_defaults.xsl $< > tmpFile.txt
+	addxhtmlhead.pl tmpFile.txt > $@
+	$(RM) tmpFile.txt
+
+$(CFGDFTBL).xhtml: config_definition.xml config_definition.xsl
+	xsltproc ../../bld/config_files/config_definition.xsl $< > tmpFile.txt
+	addxhtmlhead.pl tmpFile.txt > $@
+	$(RM) tmpFile.txt
+
+.xhtml.xml:
+	xsltproc stylesheethtml2docbook.xsl $< > $@
+
 .tlog.xml:
-	$(CONVAMP) $< | $(CONVSIGNS) > $@
+	$(CONVAMP) $< | $(CONVSIGNS) > tempFile.txt
+	limitLineLen.pl tempFile.txt  > $@
+	$(RM) tempFile.txt
 
 .diff.xml:
 	$(CONVAMP) $< | $(CONVSIGNS) > $@
@@ -59,7 +89,7 @@ debug:
 	@echo "CONVSIGNS: $(CONVSIGNS)"
 
 $(COMPLIST): 
-	get_Icaselist.pl > $@
+	./get_Icaselist.pl > $@
 
 $(HTMLUG): $(SOURCES)
 	docbook2html --dsl clm_stylesheet.dsl#html $<
@@ -116,9 +146,11 @@ $(GETREG).tlog:  getregional_datasets.pl
 	../../tools/ncl_scripts/getregional_datasets.pl -help >& $@
 
 clean:
-	rm -f $(HTMLUG) $(PDFUG) *.tlog
+	$(RM) -f $(HTMLUG) $(PDFUG) *.tlog $(DATLOG).xml *.xhtml
 
 realclean: clean
-	rm -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
+	$(RM) -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
 	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml \
-	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml
+	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml \
+	$(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(VANDIF).xml  \
+	$(CPRLOG).xml

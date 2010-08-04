@@ -1,12 +1,5 @@
-Known Bugs in CLM4.0    		                          Jun/08/2010
+Known Bugs in CLM4.0    		                          Aug/03/2010
 
-
-====================================================================================
-Bug Number: 1166
-get_regional script needs to be updated for the ndepstreams and aerosol changes...
-
-The get_regional.pl script needs to be updated so that ndepstrams and
-datm_presaero can be accommodated.
 
 ====================================================================================
 Bug Number: 1165
@@ -16,7 +9,8 @@ Restart trouble for scaled-harvest with INTEL, PGI and LAHEY compilers
 10x15 USGS@200
 0 10+38 coFAIL! rc= 13
 
-answers differ and slowly diverge.
+answers differ and slowly diverge. This could be a restart issue or a multi-processing
+or threading issue.
 
 ====================================================================================
 Bug Number: 1164
@@ -25,7 +19,8 @@ Restart trouble for CNC13 with INTEL, PGI and LAHEY compilers
 017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15
 USGS@1850 10+38 cold ....FAIL! rc= 13
 
-Answers differ and gradually diverge in time.
+Answers differ and gradually diverge in time. This could be a restart issue or a
+multi-processing or threading issue.
 
 ====================================================================================
 Bug Number: 1163
@@ -33,7 +28,8 @@ CN finidat files have a bunch of fields with NaN's on it.
 
 For example on:
 
-$CSMDATA/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01/I2000CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc
+$CSMDATA/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01/ \
+I2000CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc
 
 the fields: mlaidiff, flx_absdv, flx_absdn, flx_absiv, flx_absin, and
 qflx_snofrz_lyr all have NaN's, with mlaidiff being completely full of NaN's
@@ -41,41 +37,7 @@ qflx_snofrz_lyr all have NaN's, with mlaidiff being completely full of NaN's
 
 ====================================================================================
 Bug Number: 1147
-mkgriddata regional grids can't straddle over Greenich
-
-mkgriddata is not able to run for any domain that has Eastern edge > Western
-edge, because it straddles across the 0 degree longitude line.
-
-====================================================================================
-Bug Number: 1127
-interpinic not tested for CNDV, yet; expected not to work 
-
-Interpinic has not worked for the old dgvm since probably before clm3.5.
-Interpinic has not been tested, yet, for CNDV. Therefore, we assume that it
-====================================================================================
-Bug Number: 1164
-Restart trouble for CNC13 with INTEL, PGI and LAHEY compilers
-
-017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15
-USGS@1850 10+38 cold ....FAIL! rc= 13
-
-Answers differ and gradually diverge in time.
-
-====================================================================================
-Bug Number: 1163
-CN finidat files have a bunch of fields with NaN's on it.
-
-For example on:
-
-$CSMDATA/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01/I2000CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc
-
-the fields: mlaidiff, flx_absdv, flx_absdn, flx_absiv, flx_absin, and
-qflx_snofrz_lyr all have NaN's, with mlaidiff being completely full of NaN's
-(since mlaidiff is only defined for CLMSP or if drydep is on).
-
-====================================================================================
-Bug Number: 1147
-mkgriddata regional grids can't straddle over Greenich
+mkgriddata regional grids can't straddle over Greenwich
 
 mkgriddata is not able to run for any domain that has Eastern edge > Western
 edge, because it straddles across the 0 degree longitude line.
@@ -89,14 +51,6 @@ Interpinic has not been tested, yet, for CNDV. Therefore, we assume that it
 does not work.
 
 ====================================================================================
-Bug Number: 1125
-T85, qtr-degree and urban pt datasets need new surface datasets.
-
-With the new VOC code we need new surface datasets for T85, qtr-degree and the
-urban point resolutions: camdenNJ, asphaltjungleNJ, urbanc_alpha, vancouver,
-mexicocity.
-
-====================================================================================
 Bug Number: 1124
 Reported energy for grid-cell is not quite right for pftdyn
 
@@ -105,11 +59,12 @@ reported quite accurately.
 
 ====================================================================================
 Bug Number: 1101
-Supln mode is over-productive
+Carbon_only mode is over-productive
 
--supln on mode is over-productive. Fixing it requires using fnitr from the pft-physiology
-file, a different pft-physiology file with fnitr scaled appropriately and some code
-modifications to get this all to work. We expect to fix this with the CESM release.
+carbon_only on mode is over-productive. This is because it provides unlimited
+Nitrogen. Fixing it requires using fnitr from the pft-physiology file, a different 
+pft-physiology file with fnitr scaled appropriately and some code modifications 
+to get this all to work.
 
 ====================================================================================
 Bug Number: 1100
@@ -119,29 +74,8 @@ The model does NOT compile using PGI7.2.2. It DOES compile with later versions o
 PGI compiler, such as 9.0.4.
 
 ====================================================================================
-Bug Number: 1092
-Problems running in debug mode on dublin with datm8
-
-Running clm test suite with the latest datm8 I get the following...
-
-(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
-
-
-(seq_mct_drv) : Initialize each component: atm, lnd, ocn, and ice
-(seq_mct_drv) : Initialize atm component
-The variable (sendbuf(18162)) has an undefined value.
- Error occurs at or near line 566 of m_fccomms.fc_gatherv_fp_         
- Called from or near line 536 of m_attrvectcomms.gm_gather__          
- Called from or near line 755 of m_attrvectcomms.gsm_gather__         
- Called from or near line 771 of shr_dmodel_mod.shr_dmodel_ggridcompare_      
- Called from or near line 262 of shr_strdata_mod.shr_strdata_init_      
- Called from or near line 380 of datm_comp_mod.datm_comp_init_        
- Called from or near line 61 of atm_comp_mct.atm_init_mct_           
- Called from or near line 615 of MAIN__  
-
-====================================================================================
 Bug Number: 1063
-Problems restarting for CCSM spinup data mode
+Problems restarting for CESM spinup data mode
 
 Exact restarts for the 1850 CN spinup compset fail on bluefire...
 
@@ -187,8 +121,9 @@ the other files (N to S instead of S to N).
 Bug Number: 1017 and 1025
 PTS_MODE can NOT restart or use a global finidat file
 
-Single column mode (or PTS_MODE turned on using the -pts_lat and -pts_lon options in scripts/create_newcase)
-can NOT read restart files or global finidat initial condition files.
+Single column mode (or PTS_MODE turned on using the -pts_lat and -pts_lon options in 
+scripts/create_newcase) can NOT read restart files or global finidat initial condition 
+files.
 
 Here's the message that happens when you try to run from a restart file.
 
@@ -208,9 +143,9 @@ directory
 Bug Number: 717
 Problem with lt_archiving for too-many files
 
-Keith has been running into a bunch of problems with the lt_archiving when
+We've been running into a bunch of problems with the lt_archiving when
 using CLM. He can get 30 years in a 6 hour wall-clock cycle -- which means
-overa thousand files -- where lt_archive.sh pukes.
+over a thousand files -- where lt_archive.sh pukes.
 
 Making it robust -- regardless of the number of files would be one first step.
 The next problem he has is that running over just 10 years -- the job resubmits
@@ -222,7 +157,7 @@ easier to submit the lt_archive.sh script as well.
 Bug number: 669
 Y10K problem for clm
 
-CCSM can't use negative years or years > 9999. Having dates of Y10K or more
+CESM can't use negative years or years > 9999. Having dates of Y10K or more
 is sometimes useful for paleo simulations.
 For clm to get past the Y10K barrier -- it needs the subroutines
 

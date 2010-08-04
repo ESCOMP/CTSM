@@ -6,29 +6,32 @@
 # lists for pre and post tag testing of clm and create an html file 
 # (test_table.html) with the specifics of each test detailed
 
+outfile="./test_table.html"
 
-echo "<html>" > ./test_table.html
-echo "<head>" >> ./test_table.html
-echo "<TITLE>CLM Testing Information Page</TITLE>" >> ./test_table.html
-echo "</head>" >> ./test_table.html
-echo "<body  BGCOLOR=\"666699\" TEXT=\"black\" LINK=\"white\" VLINK=\"FF9933\">" >> ./test_table.html
+echo '<?xml version="1.0" encoding="UTF-8"?>' > $outfile
+echo '<!DOCTYPE html>' >> $outfile
+echo '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">' >> $outfile
+echo '<head>' >> $outfile
+echo '<title>CLM Testing Information Page</title>' >> $outfile
+echo '</head>' >> $outfile
+echo '<body  bgcolor="666699" text="black" link="white" vlink="FF9933">' >> $outfile
 
 #########################################################################################
 for input_file in `ls tests_*` ; do
-    echo "<TABLE border=2 width=750>" >> ./test_table.html
-    echo "<CAPTION>$input_file</CAPTION>" >> ./test_table.html
-    echo "<TR>" >> ./test_table.html
-    echo "<TH>test# </TH>" >> ./test_table.html
-    echo "<TH>testid </TH>" >> ./test_table.html
-    echo "<TH>test script </TH>" >> ./test_table.html
-    echo "<TH>arg1 </TH>" >> ./test_table.html
-    echo "<TH>arg2 </TH>" >> ./test_table.html
-    echo "<TH>arg3 </TH>" >> ./test_table.html
-    echo "<TH>arg4 </TH>" >> ./test_table.html
-    echo "<TH>arg5 </TH>" >> ./test_table.html
-    echo "<TH>arg6 </TH>" >> ./test_table.html
-    echo "<TH>arg7 </TH>" >> ./test_table.html
-    echo "</TR>" >> ./test_table.html
+    echo '<table border="2" width="750">' >> $outfile
+    echo "<caption>$input_file</caption>" >> $outfile
+    echo "<tr>" >> $outfile
+    echo "<th>test# </th>" >> $outfile
+    echo "<th>testid </th>" >> $outfile
+    echo "<th>test script </th>" >> $outfile
+    echo "<th>arg1 </th>" >> $outfile
+    echo "<th>arg2 </th>" >> $outfile
+    echo "<th>arg3 </th>" >> $outfile
+    echo "<th>arg4 </th>" >> $outfile
+    echo "<th>arg5 </th>" >> $outfile
+    echo "<th>arg6 </th>" >> $outfile
+    echo "<th>arg7 </th>" >> $outfile
+    echo "</tr>" >> $outfile
 
     test_list=""
     while read input_line; do
@@ -38,29 +41,31 @@ for input_file in `ls tests_*` ; do
     count=0
     ##loop through the tests of input file
     for test_id in ${test_list}; do
-	echo "<TR>" >> ./test_table.html
+	echo "<tr>" >> $outfile
 	count=`expr $count + 1`
 	while [ ${#count} -lt 3 ]; do
 		count="0${count}"
 	done
-	echo "<TD> $count </TD>" >> ./test_table.html
+	echo "<td> $count </td>" >> $outfile
 
 	master_line=`grep $test_id ./input_tests_master`
 	for arg in ${master_line}; do
 	    if [ -f ./nl_files/$arg ]; then
-		echo "<TD><A HREF=\"./nl_files/$arg\">$arg </A></TD>" >> ./test_table.html
+		echo "<td><a href=\"./nl_files/$arg\">$arg </a></td>" >> $outfile
 	    elif [ -f ./config_files/$arg ]; then
-		echo "<TD><A HREF=\"./config_files/$arg\">$arg </A></TD>" >> ./test_table.html
+		echo "<td><a href=\"./config_files/$arg\">$arg </a></td>" >> $outfile
 	    else
-		echo "<TD>$arg </TD>" >> ./test_table.html
+		echo "<td>$arg </td>" >> $outfile
 	    fi
 	done
-	echo "</TR>" >> ./test_table.html
+	echo '</tr>' >> $outfile
     done
-    echo "</TABLE>" >> ./test_table.html
-    echo "<pre>" >> ./test_table.html
-    echo " " >> ./test_table.html
-    echo "</pre>" >> ./test_table.html
+    echo '</table>' >> $outfile
+    echo '<pre>' >> $outfile
+    echo ' ' >> $outfile
+    echo '</pre>' >> $outfile
 done
+echo '</body>' >> $outfile
+echo '</html>' >> $outfile
 
 exit 0

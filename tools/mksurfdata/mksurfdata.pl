@@ -53,7 +53,10 @@ my %opts = (
                debug=>0,
                years=>"1850,2000",
                help=>0,
+               nomv=>undef,
+               usrname=>"",
                csmdata=>$CSMDATA,
+               pftdata=>$PFTDATA,
            );
 
 #-----------------------------------------------------------------------------------------------
@@ -69,10 +72,14 @@ OPTIONS
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
+     -pftlc [or -p]                Enter directory location for pft data
+                                   (default $opts{'pftdata'})
+     -nomv                         Don't move the files to inputdata after completion.
      -res   [or -r] "resolution"   Resolution(s) to use for files (by default $opts{'hgrid'} ).
      -rcp   [or -c] "rep-con-path" Representative concentration pathway(s) to use for 
                                    future scenarios 
                                    (by default $opts{'rcp'}, where -999.9 means historical ).
+     -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
 
 NOTE: years, res, and rcp can be comma delimited lists.
 
@@ -86,9 +93,12 @@ EOF
         "r|res=s"      => \$opts{'hgrid'},
         "c|rcp=s"      => \$opts{'rcp'},
         "l|dinlc=s"    => \$opts{'csmdata'},
+        "p|pftlc=s"    => \$opts{'pftdata'},
+        "nomv"         => \$opts{'nomv'},
         "d|debug"      => \$opts{'debug'},
         "y|years=s"    => \$opts{'years'},
         "h|help"       => \$opts{'help'},
+        "usrname=s"    => \$opts{'usrname'},
    ) or usage();
 
    # Check for unparsed arguments
@@ -99,11 +109,11 @@ EOF
    if ( $opts{'help'} ) {
        usage();
    }
-   # If csmdata was changed from the default, change both CSMDATA and PFTDATA
+   # If csmdata was changed from the default
    if ( $CSMDATA ne $opts{'csmdata'} ) {
       $CSMDATA = $opts{'csmdata'};
-      $PFTDATA = "$CSMDATA/lnd/clm2/rawdata";
    }
+   my $pftdata = $opts{'pftdata'};
    #
    # Set disk location to send files to, and list resolutions to operate over, 
    # set filenames, and short-date-name
@@ -117,8 +127,10 @@ EOF
       # Check that resolutions are valid
       foreach my $res ( @hresols ) {
          if ( ! $definition->is_valid_value( "res", "'$res'" ) ) {
-            print "** Invalid resolution: $res\n";
-            usage();
+            if ( $opts{'usrname'} eq ""  || $res ne $opts{'usrname'} ) {
+               print "** Invalid resolution: $res\n";
+               usage();
+            }
          }
       }
    }
@@ -158,7 +170,7 @@ EOF
    my @pfiles;
    my $cfile = "clm.input_data_files";
    if ( -f "$cfile" ) {
-      `mv $cfile ${cfile}.previous`;
+      `/bin/mv -f $cfile ${cfile}.previous`;
    }
    my $cfh = IO::File->new;
    $cfh->open( ">$cfile" ) or die "** can't open file: $cfile\n";
@@ -173,7 +185,7 @@ EOF
    my $svnmesg = "Update fsurdat files with mksurfdata";
    my $surfdir = "lnd/clm2/surfdata";
 
-   system( "/bin/rm surfdata_*.nc surfdata_*.log" );
+   system( "/bin/rm -f surfdata_*.nc surfdata_*.log" );
 
    #
    # Loop over all resolutions listed
@@ -183,11 +195,18 @@ EOF
       # Query the XML default file database to get the appropriate griddata file
       #
       my $queryopts = "-res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue";
-      my $griddata = `../../bld/queryDefaultNamelist.pl $queryopts -var fatmgrid`;
+      my $usrnam    = "";
+      if ( $opts{'usrname'} ne "" && $res eq $opts{'usrname'} ) {
+         $usrnam    = "-usrname ".$opts{'usrname'};
+      }
+      my $griddata  = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $usrnam -var fatmgrid`;
       if ( $? != 0 ) {
-         die "ERROR:: fatmgrid file NOT found\n";
+         die "ERROR:: fatmgrid file NOT found in XML database\n";
       }
       chomp( $griddata );
+      if ( ! -f "$griddata" ) {
+         die "ERROR:: fatmgrid file NOT found: $griddata\n";
+      }
       print "res = $res griddata = $griddata\n";
       my $desc;
       my $desc_yr0;
@@ -260,7 +279,7 @@ EOF
                #
                # Query the XML default file database to get the appropriate furbinp file
                #
-               my $urbdata = `../../bld/queryDefaultNamelist.pl $queryopts -var fsurdat -filenameonly`;
+               my $urbdata = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts -var fsurdat -filenameonly`;
                if ( $? != 0 ) {
                   die "ERROR:: furbinp file NOT found\n";
                }
@@ -270,7 +289,7 @@ EOF
 EOF
             }
             my $resol = "";
-            if ( $res =~ /[1-9]x[1-9]_[a-zA-Z0-9]/ ) {
+            if ( $res =~ /[1-9]x[1-9](pt|)_[a-zA-Z0-9]/ ) {
                print $fh <<"EOF";
  mksrf_gridtype     = 'regional'
 EOF
@@ -284,7 +303,7 @@ EOF
                $sim_yr0 = $1;
                $sim_yrn = $2;
             }
-            my $vegtyp = `../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$sim_yr0 -var mksrf_fvegtyp -namelist clmexp`;
+            my $vegtyp = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$sim_yr0 -var mksrf_fvegtyp -namelist clmexp`;
             chomp( $vegtyp );
             if ( $rcp == -999.9 ) {
                $desc     = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
@@ -298,8 +317,9 @@ EOF
             $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
             print "Writing out pftdyn text file: $pftdyntext_file\n";
             for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-              my $vegtypyr = `../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=$rcp -var mksrf_fvegtyp -namelist clmexp`;
+              my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=$rcp -var mksrf_fvegtyp -namelist clmexp`;
               chomp( $vegtypyr );
+              $vegtypyr =~ s#^$PFTDATA#$pftdata#;
               printf $fhpftdyn "%-125.125s %4.4d\n", $vegtypyr, $yr;
               if ( $yr % 100 == 0 ) {
                  print "year: $yr\n";
@@ -310,8 +330,8 @@ EOF
 
             print $fh <<"EOF";
  mksrf_fvegtyp      = '$vegtyp'
- mksrf_fsoicol      = '$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
- mksrf_flai         = '$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_lai_global_c090506.nc'
+ mksrf_fsoicol      = '$pftdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
+ mksrf_flai         = '$pftdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_lai_global_c090506.nc'
  mksrf_fdynuse      = '$pftdyntext_file'
 /
 EOF
@@ -361,7 +381,7 @@ EOF
                my $cmd = "ncks -A $griddata $ncfiles[0]";
                print "$cmd\n";
                if ( ! $opts{'debug'} ) { system( $cmd ); }
-               my $fracdata = `../../bld/queryDefaultNamelist.pl $queryopts -var fatmlndfrc`;
+               my $fracdata = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts -var fatmlndfrc`;
                if ( $? != 0 ) {
                   die "ERROR:: fatmlndfrc file NOT found\n";
                }
@@ -375,37 +395,45 @@ EOF
             #
             my $lsvnmesg = "'$svnmesg $urbdesc $desc'";
             if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
+               my $outdir = "$CSMDATA/$surfdir";
+               if ( defined($opts{'nomv'}) ) {
+                  $outdir = ".";
+               }
                my $ofile = "surfdata_${res}_${desc_yr0}_${sdate}";
-               my $mvcmd = "/bin/mv -f $ncfiles[0]  $CSMDATA/$surfdir/$ofile.nc";
+               my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
                print "$mvcmd\n";
-               if ( ! $opts{'debug'} ) {
+               if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {
                   system( "$mvcmd" );
-                  chmod( 0444, "$CSMDATA/$surfdir/$ofile.nc" );
+                  chmod( 0444, "$outdir/$ofile.nc" );
                }
-               my $mvcmd = "/bin/mv -f $lfiles[0] $CSMDATA/$surfdir/$ofile.log";
+               my $mvcmd = "/bin/mv -f $lfiles[0] $outdir/$ofile.log";
                print "$mvcmd\n";
-               if ( ! $opts{'debug'} ) {
+               if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {
                   system( "$mvcmd" );
-                  chmod( 0444, "$CSMDATA/$surfdir/$ofile.log" );
+                  chmod( 0444, "$outdir/$ofile.log" );
                }
-               print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
-               print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " . 
-                          "$svnrepo/$surfdir/$ofile.nc\n";
-               print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.log\n";
-               print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.log " .
-                          "$svnrepo/$surfdir/$ofile.log\n";
+               if ( ! defined($opts{'nomv'}) ) {
+                  print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
+                  print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " . 
+                             "$svnrepo/$surfdir/$ofile.nc\n";
+                  print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.log\n";
+                  print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.log " .
+                             "$svnrepo/$surfdir/$ofile.log\n";
+               }
                # If running a transient case
                if ( $sim_year ne $sim_yr0 ) {
                   $ofile = "surfdata.pftdyn_${res}_${desc}_${sdate}";
-                  $mvcmd = "/bin/mv -f $pfiles[0] $CSMDATA/$surfdir/$ofile.nc";
+                  $mvcmd = "/bin/mv -f $pfiles[0] $outdir/$ofile.nc";
                   print "$mvcmd\n";
-                  if ( ! $opts{'debug'} ) {
+                  if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {
                      system( "$mvcmd" );
-                     chmod( 0444, "$CSMDATA/$surfdir/$ofile.nc" );
+                     chmod( 0444, "$outdir/$ofile.nc" );
                   }
-                  print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
-                  print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " .
-                             "$svnrepo/$surfdir/$ofile.nc\n";
+                  if ( ! defined($opts{'nomv'}) ) {
+                     print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
+                     print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " .
+                                "$svnrepo/$surfdir/$ofile.nc\n";
+                  }
                }
    
             } else {
@@ -415,7 +443,7 @@ EOF
               die "ERROR files were NOT moved: nc=$ncfiles[0] log=$lfiles[0]\n";
             }
             if ( ! $opts{'debug'} ) {
-               system( "/bin/rm $filehead.nc $filehead.log $pfilehead.nc" );
+               system( "/bin/rm -f $filehead.nc $filehead.log $pfilehead.nc" );
             }
          } # End of sim_year loop
       }    # End of rcp loop

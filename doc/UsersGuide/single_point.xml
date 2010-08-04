@@ -41,8 +41,12 @@ to Boulder Colorado.
 > cd scripts
 > create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
 -pts_lat 40.0 -pts_lon -105 -skip_rundb
+> cd testPTS_MODE
+# We make sure the model will start up cold rather than using initial conditions
+> xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
 </screen>
-Then configure, build and run as normal.
+Then configure, build and run as normal. We make sure initial conditions are NOT used
+since <envar>PTS_MODE</envar> currently CAN NOT run with initial conditions.
 </para>
 <important>
 <para>
@@ -94,7 +98,7 @@ The resolution names that have an underscore in them ("_") are all single-point 
 regional resolutions.
 To run with the supported single-point and regional datasets, you setup a simulation for the
 "pt1_pt1" resolution and give the short-name for the file to use in the
-<filename>env_conf.xml</filename> file. Then to run for the urban MexicoCity Mexico test site
+<filename>env_conf.xml</filename> file. Then to run for the urban Mexico City Mexico test site
 do the following:
 <screen width="99">
 > cd scripts
@@ -122,6 +126,65 @@ processor. You might also want to set the "env_conf" variable: <envar>USE_MPISER
 mpi to start up your job.
 </para>
 </note>
+<sect2 id="sp_atm_forcing">
+<title>Running Supported Single-point Datasets that have their own Atmospheric Forcing</title>
+<para>
+Of the supported single-point datasets we have three that also have atmospheric forcing data 
+that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and
+urbanc_alpha (test data for an Urban intercomparison project). Mexico city and Vancouver
+also have "#ifdef" in the source code for them to work with modified urban data
+parameters that are particular to these locations. They can be turned on by using
+the &CLMCONFIG; &envconf; variable to set the "-cppdefs" option in the &clm;
+&configure;. To turn on the atmospheric forcing for these datasets, you set the
+&envconf; <envar>DATM_MODE</envar> variable to "CLM1PT", and then the atmospheric
+forcing datasets will be used for the point picked. In the example below we will
+show how to do this for the Vancouver, Canada point.
+</para>
+<example id="vancouver">
+<title>Example of running &clm; over the single-point of Vancouver Canada with 
+supplied atmospheric forcing data for Vancouver
+</title>
+<screen width="99">
+> cd scripts
+# Create a case at the single-point resolutions
+> create_newcase -case testSPDATASETnAtmForcing -res pt1_pt1 -compset I \
+-mach bluefire
+> cd testSPDATASETnAtmForcing
+# NOTE: For Mexico City and Vancouver there are special ifdef's for the urban model 
+# that can be turned on. For a generic, case you would NOT do the following step.
+> xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-cppdefs -DVANCOUVER"
+# Now set the CLM single-point variable to the Vancouver Canada name
+> xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_vancouverCAN
+# Set the aerosols to use the single-point dataset for Vancouver for 2000 conditions
+# You could also use the default global dataset, but running would be a bit slower
+> xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
+> configure -case
+</screen>
+</example>
+<warning>
+<para>
+Note, that because of bug 1173 (shown in the KnownBugs file), there is an error 
+in the datm.buildnml.csh file that is created for the prescribed aerosols. The
+model will NOT run with this error, since it points to the wrong aerosol file.
+</para>
+</warning>
+<para>
+In order to fix the problem you must change the filepaths, and filenames in the
+presaero stream file, and also change the start and end year from 2000 to 1.
+One way to do this is to add the following patch, and then apply the patch as
+follows:
+<screen width="99">
+&fixstreams_diff;
+</screen>
+The following assumes that you created a filename of the above patch with the name:
+<filename>models/lnd/clm/doc/UsersGuide/fixvan_datm.buildnml.diff</filename>.
+<screen width="99">
+> cd scripts/testSPDATASETnAtmForcing/Buildconf
+> patch &lt; ../../../models/lnd/clm/doc/UsersGuide/fixvan_datm.buildnml.diff
+</screen>
+After the patch is applied, you will be able to build and run the case.
+</para>
+</sect2>
 </sect1>
 
 <sect1 id="own_single_point_datasets">
@@ -254,6 +317,132 @@ specific region over Alaska</title>
 </example>
 </sect2>
 
+</sect1>
+
+<sect1 id="own_atm_forcing">
+<title>Running with your own atmosphere forcing</title>
+<para>
+Here we want to run with our own customized datasets for &clm; as well as 
+running with our own supplied atmosphere forcing datasets. Thus we effectively
+combine the information from <xref linkend="sp_atm_forcing"></xref> with 
+<xref linkend="own_single_point_datasets"></xref>. First we need to follow
+the procedures in <xref linkend="sp_atm_forcing"></xref> to come up with &clm;
+datasets that are customized for our point or region in question. This includes
+running <command>link_dirtree</command> to create a directory location where you
+can add your own files to it. Next, set
+<envar>DATM_MODE</envar> to "CLM1PT" and &CLM1PT; and &CLMUSRDAT; to the
+id of the data you created. To see a list of what the filenames need to be
+see the section on setting <link linkend="CLMUSRDAT">&CLMUSRDAT;</link>.
+</para>
+<para>
+Next we need to setup the atmosphere forcing data in &netcdf; format that can be
+read by datm. There is a list of ten variables that are expected to be on the input
+files with the names and units on the following table (in the table TDEW and SHUM
+are optional fields that can be used in place of RH). In the table we also list
+which of the fields are required and if not required what the code will do to
+replace them. If the names of the fields are different or the list is changed
+from the standard list of the ten fields: FLDS, FSDS, FSDSdif, FSDSdir, PRECTmms, 
+PSRF, RH, TBOT, WIND, and ZBOT, the resulting streams file will need to be modified
+to take this into account.
+<table id="atm_forcing_fields" tocentry="1" pgwide="1" frame="all">
+<title>Atmosphere Forcing Fields</title>
+<tgroup cols="4" align="left" colsep="1" rowsep="1">
+<thead>
+<row>
+   <entry><para>Short-name</para></entry>
+   <entry><para>Description</para></entry>
+   <entry><para>Units</para></entry>
+   <entry><para>Required?</para></entry>
+   <entry><para>If NOT required how replaced</para></entry>
+</row>
+</thead>
+<tbody>
+<row>
+   <entry>FLDS</entry><entry>incident longwave
+(FLDS)</entry><entry>W/m2</entry><entry>No</entry>
+<entry>calculates based on Temperature, Pressure and Humidity</entry>
+</row>
+<row>
+   <entry>FSDS</entry><entry>incident solar
+(FSDS)</entry><entry>W/m2</entry><entry>Yes</entry><entry>-</entry>
+</row>
+<row>
+   <entry>FSDSdif</entry><entry>incident solar (FSDS)
+diffuse</entry><entry>W/m2</entry><entry>No</entry><entry>based on FSDS</entry>
+</row>
+<row>
+   <entry>FSDSdir</entry><entry>incident solar (FSDS)
+direct</entry><entry>W/m2</entry><entry>No</entry><entry>based on FSDS</entry>
+</row>
+<row>
+   <entry>PRECTmms</entry><entry>precipitation
+(PRECTmms)</entry><entry>mm/s</entry><entry>Yes</entry><entry>-</entry>
+</row>
+<row>
+   <entry>PSRF</entry><entry>pressure at the lowest atm level
+(PSRF)</entry><entry>Pa</entry><entry>No</entry><entry>assumes standard-pressure</entry>
+</row>
+<row>
+   <entry>RH</entry><entry>relative humidity at the lowest atm level
+(RH)</entry><entry>%</entry><entry>No</entry><entry>can be replaced with SHUM or TDEW</entry>
+</row>
+<row>
+   <entry>SHUM</entry><entry>specific humidity at the lowest atm level
+</entry><entry>kg/kg</entry><entry>Optional in place of RH</entry><entry>can be replaced with RH or TDEW</entry>
+</row>
+<row>
+   <entry>TBOT</entry><entry>temperature at the lowest atm level
+(TBOT)</entry><entry>K (or can be C)</entry><entry>Yes</entry><entry>-</entry>
+</row>
+<row>
+   <entry>TDEW</entry><entry>dew point temperature
+</entry><entry>K (or can be C)</entry><entry>Optional in place of RH</entry><entry>can be replaced with RH or SHUM</entry>
+</row>
+<row>
+   <entry>WIND</entry><entry>wind at the lowest atm level
+(WIND)</entry><entry>m/s</entry><entry>Yes</entry><entry>-</entry>
+</row>
+<row>
+   <entry>ZBOT</entry><entry>observational height</entry><entry>m</entry><entry>No
+</entry><entry>assumes 30 meters</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+All of the variables should be dimensioned: time, lat, lon, with time being the unlimited
+dimension. The coordinate variable "time" is also required with CF-compliant units in
+days, hours, minutes, or seconds. It can also have a calendar attribute that can
+be "noleap" or "gregorian". Normally the files will be placed in the:
+<filename>$CSMDATA/atm/datm7/domain.clm</filename> directory with separate files per
+month called <filename>clm1pt-YYYY-MM.nc</filename> where YYYY-MM corresponds to the four
+digit year and two digit month with a dash inbetween.
+<screen width="99">
+> cd scripts
+# First make sure you have a inputdata location that you can write to 
+# You only need to do this step once, so you won't need to do this in the future
+> setenv MYCSMDATA "directory to put your inputdata files"
+> link_dirtree $CSMDATA $MYCSMDATA
+# Next create and move all your datasets into $MYCSMDATA with id $MYUSRDAT
+# See above for naming conventions
+
+#  Now create a single-point case
+> create_newcase -case my_atmforc_test -res pt1_pt1 -compset I1850 \
+-mach bluefire
+> cd my_atmforc_test
+# Set the data root to your inputdata directory, and set &CLM1PT; and &CLMUSRDAT; 
+# to the user id you created for your datasets above
+> xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+> xmlchange -file env_conf.xml -id &CLM1PT; -val $MYUSRDAT
+> xmlchange -file env_conf.xml -id &CLMUSRDAT; -val $MYUSRDAT
+# Then set DATM_MODE to single-point mode so datm will use your forcing datasets
+# Put your forcing datasets into $MYCSMDATA/atm/datm7/domain.clm
+> xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
+> configure -case
+# If the list of fields, or filenames, filepaths, or fieldnames are different 
+# you'll need to edit the datm namelist streams file to make it consistent
+> $EDITOR Buildconf/datm.buildnml.csh
+</screen>
+</para>
 </sect1>
 
 </chapter>

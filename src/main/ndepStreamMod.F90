@@ -61,6 +61,7 @@ contains
    integer            :: nml_error ! namelist i/o error flag
    type(mct_ggrid)    :: dom_clm   ! domain information 
    character(len=CL)  :: stream_fldFileName_ndep
+   character(len=CL)  :: ndepmapalgo = 'bilinear'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
    character(*), parameter :: subName = "('ndepdyn_init')"
    character(*), parameter :: F00 = "('(ndepdyn_init) ',4a)"
@@ -70,6 +71,7 @@ contains
         stream_year_first_ndep,  &
 	stream_year_last_ndep,   &
         model_year_align_ndep,   &
+        ndepmapalgo,             &
         stream_fldFileName_ndep
 
    ! Default values for namelist
@@ -136,6 +138,7 @@ contains
         fldListFile='NDEP_year',                   &
         fldListModel='NDEP_year',                  &
         fillalgo='none',                           &
+        mapalgo=ndepmapalgo,                       &
 	taxmode='extend'                           )
 
    if (masterproc) then

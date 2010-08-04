@@ -19,7 +19,7 @@ CLM Biogeochemistry mode
    casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
 (CASA is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
-<entry id="glc_nec" valid_values="0,1,3,5,10" value="0" category="glc">
+<entry id="glc_nec" valid_values="0,1,3,5,10" value="0" category="physics">
 Glacier model number of elevation classes
 (Setting glc_nec to anything other than 0 or 10 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>

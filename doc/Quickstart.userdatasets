@@ -7,7 +7,7 @@ Assumptions: You are already familiar with the use of the cpl7 scripts
              the scripts directory for more information on this process.
              We also assume that the env variable $CSMDATA points to the
              location of the standard datasets for your machine 
-             (/fs/cgd/csm/inputdata on bluefire). We also assume that the
+             (/fis/cgd/cseg/csm/inputdata on bluefire). We also assume that the
              following variables are used to point to the appropriate
              values that you want to use for your case. Mask is included
              as part of your resolution for your case, and SIM_YEAR and
@@ -132,7 +132,8 @@ Process:
 
        i.e.
 
-       		create_newcase -case my_userdataset_test -res f19_g16 -compset I1850 -mach bluefire -skip_rundb
+       		create_newcase -case my_userdataset_test -res f19_g16 -compset I1850 \
+                -mach bluefire -skip_rundb
 
        The above example implies that: MASK=gx1v6, SIM_YEAR=1850, and SIM_YEAR_RANGE=constant.
        TODO: Allow resolution to be be $MYDATAID and/or allow a generic "regional" resolution.
@@ -144,7 +145,8 @@ Process:
 
        		xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
 
-       6.) Edit the env_conf.xml in the case to point to your user dataset identifier name and set DATM_PRESAERO to none
+       6.) Edit the env_conf.xml in the case to point to your user dataset identifier 
+       name and set DATM_PRESAERO to none
 
        Edit CLM_USRDAT_NAME  to point to $MYDATAID
 
@@ -162,4 +164,4 @@ Process:
 
        		configure -case
 
-       8.) Run your case as norm
+       8.) Run your case as normal

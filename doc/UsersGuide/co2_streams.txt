@@ -32,7 +32,7 @@
             /fis/cgd/cseg/csm/inputdata/atm/datm7/CO2
          </filePath>
          <fileNames>
-            fco2_datm_1765-2007_c100309.nc
+            fco2_datm_1765-2007_c100614.nc
          </fileNames>
       </domainInfo>
       <fieldInfo>
@@ -43,7 +43,7 @@
             /fis/cgd/cseg/csm/inputdata/atm/datm7/CO2
          </filePath>
          <fileNames>
-            fco2_datm_1765-2007_c100309.nc
+            fco2_datm_1765-2007_c100614.nc
          </fileNames>
       </fieldInfo>
 </stream>

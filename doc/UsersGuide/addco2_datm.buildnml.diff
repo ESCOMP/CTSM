@@ -33,7 +33,7 @@
 +                     'bilinear',
 +                     'bilinear',
 +                     'bilinear',
-+                     'copy'
++                     'nn'
      tintalgo       = 'coszen',
                       'nearest',
                       'linear',

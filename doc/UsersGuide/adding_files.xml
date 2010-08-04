@@ -46,10 +46,10 @@ Here's what the entry for resolutions looks like in the file:
 &lt;entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,
-0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,
-1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,
-1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha"&gt;
+"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,
+0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,
+1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,
+1x1_brazil,1x1_urbanc_alpha,0.5x0.5"&gt;
 Horizontal resolutions
 &lt;/entry&gt;
 </screen>
@@ -204,14 +204,19 @@ Normally use the aerosol sent from the atmosphere instead of this file.
 <row>
    <entry morerows="1" valign="middle">fndepdat</entry>
    <entry>bgc=cn/cndv</entry>
-   <entry><para>Constant scenarios</para></entry>
+   <entry><para>Constant scenarios, when ndepsrc=data</para></entry>
    <entry>Yes</entry>
    <entry><para>simulation-year and representative concentration pathway (rcp)</para></entry>
 </row>
 <row>
    <entry spanname="notes_span"><para>You may customize this file to get the Nitrogen deposition characteristics 
 of your site if available. Or use a higher resolution dataset when you use 
-<command>ndepregrid.ncl</command> to create this file.</para></entry>
+<command>ndepregrid.ncl</command> to create this file.</para>
+<para>
+Normally use the <filename>stream_fldfilename_ndep</filename> below instead of
+this file.
+</para>
+</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fpftdyn</entry>

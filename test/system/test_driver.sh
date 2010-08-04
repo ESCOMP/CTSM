@@ -134,6 +134,7 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+export PFTDATA="/cgd/tss"
 dataroot="/fis/cgd/cseg/csm"
 
 
@@ -178,6 +179,7 @@ export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/fs/home/erik/bin/cprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+export PFTDATA="/cgd/tss"
 dataroot="/fis/cgd/cseg/csm"
 echo_arg="-e"
 input_file="tests_posttag_breeze"
@@ -228,13 +230,13 @@ fi
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=1
+   export CLM_THREADS=2
 fi
-export CLM_RESTART_THREADS=2
+export CLM_RESTART_THREADS=1
 
 ##mpi tasks
 export CLM_TASKS=8
-export CLM_RESTART_TASKS=1
+export CLM_RESTART_TASKS=7
 
 export CLM_COMPSET="I"
 
@@ -278,6 +280,7 @@ export MAKE_CMD="gmake -j 5"   ##using hyper-threading on edinburgh
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
+export PFTDATA="/project/tss"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 
@@ -333,12 +336,12 @@ fi
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=1
+   export CLM_THREADS=2
 fi
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=528
+export CLM_TASKS=264
 export CLM_RESTART_TASKS=129
 
 export CLM_COMPSET="I"
@@ -391,6 +394,7 @@ export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/tmp/proj/ccsm/tools/ccsm_cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/tmp/proj/ccsm"
+export PFTDATA="\$dataroot/inputdata/lnd/clm2/rawdata"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
@@ -428,6 +432,7 @@ export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+export PFTDATA="/cgd/tss";
 dataroot="$HOME"
 echo_arg=""
 input_file="tests_posttag_spot1"
@@ -492,6 +497,7 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="\$dataroot/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
+export PFTDATA="\$dataroot/inputdata/lnd/clm2/rawdata"
 echo_arg=""
 
 EOF

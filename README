@@ -1,13 +1,13 @@
-clm/README                                          6/08/2010
+clm/README                                          6/24/2010
 
 Community Land Surface Model (CLM) version 4.0 -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
-to run CLM as a part of CESM with datm8 to provide NCEP 
-forcing data in place of a modeled atmosphere.
+to run CLM with CESM with datm8 to provide NCEP forcing data in 
+place of a modeled atmosphere.
 
 What is new in this version of CLM (compared to the CCSM4.0 release)?
 
-See the Users-Guide for a description of the changes since the 
+See the Users-Guide for a description of the changes since the
 CCSM4.0 release.
 
 What is new in CLM4.0 (compared to CLM3.5.00)?
@@ -18,7 +18,7 @@ version changes leading up to clm4_0_00.
 General directory structure:
 
 models/lnd/clm/doc ---- Documentation of CLM.
-models/lnd/clm/bld ---- template, configure and build-namelist scripts for clm.
+models/lnd/clm/bld ---- Template, configure and build-namelist scripts for clm.
 models/lnd/clm/src ---- CLM Source code.
 models/lnd/clm/test --- CLM Testing scripts.
 models/lnd/clm/tools -- CLM Offline tools to prepare input datasets.
@@ -38,23 +38,43 @@ models/utils ---------- CESM utility codes
                         (Earth System Model Framework)
                         (timing -- code timing utility)
 
-=============================================================================================
-Important documentation files in main directories:
-=============================================================================================
+Documentation of Namelist Items: (view the following in a web browser)
 
-README ------------------------------------- This file
-ChangeLog ---------------------------------- Detailed list of changes for each model version.
-ChangeSum ---------------------------------- Summary one-line list of changes for each model version.
-UpDateChangeLog.pl ------------------------- Script to update the changelog for a new model version.
+models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Definition of all namelist items
+models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Default values
+
+=============================================================================================
+Important files in main directories:
+=============================================================================================
 
 models/lnd/clm/doc/Quickstart.GUIDE -------- Quick guide to using cpl7 scripts.
 models/lnd/clm/doc/Quickstart.userdatasets - Quick guide to using your own datasets.
-models/lnd/clm/doc/IMPORTANT_NOTES --------- Some important notes about this version of clm, configuration
-                                             modes and namelist items that are not validated or functional.
+models/lnd/clm/doc/IMPORTANT_NOTES --------- Some important notes about this version of 
+                                             clm, configuration modes and namelist items 
+                                             that are not validated or functional.
+models/lnd/clm/doc/KnownBugs --------------- List of known bugs.
+models/lnd/clm/doc/ChangeLog --------------- Detailed list of changes for each model version.
+models/lnd/clm/doc/ChangeSum --------------- Summary one-line list of changes for each 
+                                             model version.
+models/lnd/clm/doc/README ------------------ This file
 models/lnd/clm/doc/UsersGuide -------------- CLM Users Guide
 models/lnd/clm/doc/CodeReference ----------- CLM Code Reference Guide
-models/lnd/clm/doc/KnownBugs --------------- List of known bugs.
-models/lnd/clm/doc/README ------------------ Notes on using CLM
+
+models/lnd/clm/bld/configure --------------- Script to prepare CLM to be built.
+
+models/lnd/clm/test/system/test_driver.sh -- Script for general software testing of 
+                                             standalone CLM.
+
+models/lnd/clm/tools/mkgriddata --- Directory to build program to create grid dataset
+                                    at any resolution.
+models/lnd/clm/tools/mksurfdata --- Directory to build program to create surface dataset 
+                                    at any resolution.
+models/lnd/clm/tools/interpinic --- Directory to build program to interpolate initial 
+                                    conditions to any resolution.
+models/lnd/clm/tools/mkdatadomain - Directory to build program to create datm7 or docn7 
+                                    domain files from clm files.
+models/lnd/clm/bld/README --------- Description of how to use the template, configure and
+                                    build-namelist scripts.
 
 =============================================================================================
     QUICKSTART: using the CPL7 scripts:
@@ -69,5 +89,6 @@ models/lnd/clm/doc/README ------------------ Notes on using CLM
          configure -case             # create scripts
          testI.build                 # build model and create namelists
          bsub < testI.run            # submit script
-                                     # (NOTE: edit env_run.xml to set RESUBMIT to number of times to automatically resubmit)
+                                     # (NOTE: edit env_run.xml to set RESUBMIT to number
+                                     # #  of times to automatically resubmit)
 

@@ -17,17 +17,22 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY quickstart_guide    SYSTEM "quickstart_guide.xml">
   <!ENTITY quickstart_userdata SYSTEM "quickstart_usrdat.xml">
   <!ENTITY co2streams_diff     SYSTEM "addco2_datm.buildnml.xml">
+  <!ENTITY fixstreams_diff     SYSTEM "fixvan_datm.buildnml.xml">
   <!ENTITY preface             SYSTEM "preface.xml">
   <!ENTITY custom              SYSTEM "custom.xml">
   <!ENTITY tools               SYSTEM "tools.xml">
   <!ENTITY special_cases       SYSTEM "special_cases.xml">
   <!ENTITY adding_files        SYSTEM "adding_files.xml">
   <!ENTITY single_point        SYSTEM "single_point.xml">
+  <!ENTITY trouble             SYSTEM "trouble_shooting.xml">
   <!ENTITY appendix            SYSTEM "appendix.xml">
   <!ENTITY mksurfdatapl        SYSTEM "mksurfdata.pl.xml">
   <!ENTITY clmtestdriver       SYSTEM "test_driver.sh.xml">
   <!ENTITY build_date          SYSTEM "build_date.xml">
   <!ENTITY cprnc_readme        SYSTEM "cprnc_readme.xml">
+  <!ENTITY nmldfntbl           SYSTEM "namelist_definition_table.xml">
+  <!ENTITY nmldfltbl           SYSTEM "namelist_defaults_clm_table.xml">
+  <!ENTITY cfgdfntbl           SYSTEM "config_definition_table.xml">
 
   <!-- Aliases to use -->
   <!ENTITY buildnml          "<command>build-namelist</command>">
@@ -40,6 +45,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY clm35             "<acronym>CLM3.5</acronym>">
   <!ENTITY clm4              "<acronym>CLM4</acronym>">
   <!ENTITY clm40             "<acronym>CLM4.0.00</acronym>">
+  <!ENTITY clmrel            "<acronym>CLM4.0.09</acronym>">
   <!ENTITY ccsm              "<acronym>CCSM</acronym>">
   <!ENTITY ccsm4             "<acronym>CCSM4.0</acronym>">
   <!ENTITY cesm              "<acronym>CESM</acronym>">
@@ -54,6 +60,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY xml               "<acronym>XML</acronym>">
   <!ENTITY xmlchange         "<command>xmlchange</command>">
   <!ENTITY CO2               "CO<subscript>2</subscript>">
+  <!ENTITY cesmwebmodelrel   "http://www.cesm.ucar.edu/models/cesm1.0/">
 
   <!-- Aliases of cpl7 scripts files -->
   <!ENTITY envrun            "<filename>env_run.xml</filename>">
@@ -69,7 +76,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY CLMBLDNML         "<envar>CLM_BLDNML_OPTS</envar>">
   <!ENTITY CLMUSECASE        "<envar>CLM_NML_USE_CASE</envar>">
   <!ENTITY CLMNAMELIST       "<envar>CLM_NAMELIST_OPTS</envar>">
-  <!ENTITY CLM1PT            "<envar>CLM_1PT_NAME</envar>">
+  <!ENTITY CLM1PT            "<envar>CLM_PT1_NAME</envar>">
   <!ENTITY CLMQIAN           "<literal>CLM_QIAN</literal>">
   <!ENTITY CLMUSRDAT         "<envar>CLM_USRDAT_NAME</envar>">
   <!ENTITY CLMCO2            "<envar>CLM_CO2_TYPE</envar>">
@@ -95,7 +102,7 @@ Top level docbook User's-Guide for CLM4
 <book label="CLM4_UsersGuide" status="draft">
 
 <bookinfo>
-<title>&cesm; Research Tools: &clm40; User's Guide Documentation</title>
+<title>&cesm; Research Tools: &clmrel; User's Guide Documentation</title>
 
 <keywordset>
     <keyword>CESM</keyword>
@@ -125,7 +132,7 @@ Top level docbook User's-Guide for CLM4
 
 <abstract>
 <para>
-The user's guide to &clm40; which is the active land surface model component of &cesm1;. 
+The user's guide to &clmrel; which is the active land surface model component of &cesm1;. 
 The purpose of this guide is to instruct both the novice and experienced user, as well as
 &clm; developers in the use of &clm4; for land-surface climate modeling.
 </para>
@@ -152,6 +159,7 @@ the science of land surface modeling forward with your diligent and persistent e
 &adding_files;
 &special_cases;
 &single_point;
+&trouble;
 &appendix;
 
 </book>

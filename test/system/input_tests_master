@@ -273,20 +273,20 @@ erG51 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 
 brG51 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
 blG51 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
 
-smB51 TSM.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
-erB51 TER.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
-brB51 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
-blB51 TBL.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+smB91 TSM.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 144    arb_ic
+erB91 TER.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 72+72  arb_ic
+brB91 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 72+72  arb_ic
+blB91 TBL.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 144    arb_ic
 
-smB52 TSM.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
-erB52 TER.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
-brB52 TBR.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
-blB52 TBL.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+smB92 TSM.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 144    arb_ic
+erB92 TER.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 72+72  arb_ic
+brB92 TBR.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 72+72  arb_ic
+blB92 TBL.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 144    arb_ic
 
-smB53 TSM.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
-erB53 TER.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
-brB53 TBR.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
-blB53 TBL.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+smB93 TSM.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 144    arb_ic
+erB93 TER.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 72+72  arb_ic
+brB93 TBR.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 72+72  arb_ic
+blB93 TBL.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 144    arb_ic
 
 smCO1 TSM.sh _sc_dh clm_drydep^nl_urb    20020401:NONE:3600 10x15 USGS  -90   cold
 erCO1 TER.sh _sc_dh clm_drydep^nl_urb    20020401:NONE:3600 10x15 USGS  -3+-7 cold
@@ -394,6 +394,11 @@ smHO3 TSM.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   col
 erHO3 TER.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold
 brHO3 TBR.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -5+-5 cold
 blHO3 TBL.sh 17p_cnsc_do clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -90   cold
+
+smHV1 TSM.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 4x5 gx3v7@2000 -90   cold
+erHV1 TER.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 4x5 gx3v7@2000 -3+-7 cold
+brHV1 TBR.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 4x5 gx3v7@2000 -5+-5 cold
+blHV1 TBL.sh 17p_cnsc_dh clm_drydep 20000704:NONE:1800 4x5 gx3v7@2000 -90   cold
 
 smH65 TSM.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 erH65 TER.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
@@ -842,5 +847,8 @@ smZ94 TSMtools.sh mkdatadomain tools__ds namelist
 
 sm854 TSMtools.sh interpinic   tools__ds runoptions
 sm853 TSMtools.sh interpinic   tools__o  runoptions
+
+sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
+sm978 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
 
 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional

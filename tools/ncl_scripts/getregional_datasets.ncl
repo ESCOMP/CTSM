@@ -1,5 +1,6 @@
 ;
 ; Extract out regional datasets needed to run clm from the global datasets.
+; NOTE: Requires at least NCL version 5.1.0 or later...
 ;
 ;  Erik Kluzek
 ;  Aug/28/2009
@@ -33,7 +34,7 @@ begin
      res = "1.9x2.5";
   end if
   if ( ismissing(rcp) )then
-     rcp = "8.5";
+     rcp = "-999.9";
   end if
   if ( ismissing(lmask) )then
      lmask = "gx1v6";
@@ -100,8 +101,13 @@ begin
   ldate     = systemfunc( "date" );
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
-  querynml = querynml + " -options bgc=cn,mask="+lmask+",sim_year="+sim_year;
-  querynml = querynml + ",sim_year_range="+sim_yr_rng+",rcp="+rcp;
+  queryopts= " -options bgc=cn,mask="+lmask+",rcp="+rcp;
+  querynyr = ",sim_year="+sim_year+",sim_year_range="+sim_yr_rng;      ; Query for standard file years
+  if ( sim_yr_rng .eq. "constant" )then
+     queryyrs = ",sim_year=1850,sim_year_range=1850-2000";             ; Query for files that are always transient
+  else
+     queryyrs = querynyr;
+  end if
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if
@@ -110,7 +116,7 @@ begin
   else
      querynml = clmroot+"/models/lnd/clm/"+querynml;
   end if
-  gridfile  = systemfunc( querynml+" -res "+res+" -var fatmgrid" );
+  gridfile  = systemfunc( querynml+queryopts+querynyr+" -res "+res+" -var fatmgrid" );
   ;
   ; Open file
   ;
@@ -124,7 +130,7 @@ begin
   ncg     = addfile( gridfile,  "r" );
 
   if ( debug .eq. True )then
-    print( "Env:      mycsmdata="+csmdata+" query="+querynml );
+    print( "Env:      mycsmdata="+csmdata+" query="+querynml+queryopts+querynyr );
   end if
   indx = region_ind ( (/ncg->LATIXY/), (/ncg->LONGXY/), latS, latN, lonW, lonE );
 
@@ -138,13 +144,17 @@ begin
      print( "Actual grid span: Latitude="+ncg->LATIXY(indx(2),indx(0))+"-"+ncg->LATIXY(indx(3),indx(1))+" Longitude="+ncg->LONGXY(indx(2),indx(0))+"-"+ncg->LONGXY(indx(3),indx(1)) );
   end if
   ;
-  ; Setup filenames to process and loop over filenames to process
+  ; Setup filenames to process
   ;
 
-  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "fndepdat", "fndepdyn", "domainfile" /)
-  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat",     "lat",      "lat",      "nj" /)
-  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon",     "lon",      "lon",      "ni" /)
+  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "stream_fldfilename_ndep", "domainfile" /)
+  qryopt    = (/ querynyr,   querynyr,     querynyr,  querynyr,  querynyr,   queryyrs,  queryyrs,                  querynyr     /)
+  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat",     "lat",                     "nj"         /)
+  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon",     "lon",                     "ni"         /)
 
+  ;
+  ; Loop over each of the files to process...
+  ;
   do i = 0, dimsizes(files)-1
      ;
      ; Get the filename of the input global file and the output regional filename
@@ -152,9 +162,13 @@ begin
      if ( files(i) .eq. "domainfile" ) then
         queryopt= " -namelist shr_strdata_nml";
      else
-        queryopt= " ";
+        if ( files(i) .eq. "stream_fldfilename_ndep" ) then
+           queryopt= " -namelist ndepdyn_nml";
+        else
+           queryopt= " ";
+        end if
      end if
-     qry = querynml+" -res "+res+queryopt+" -var "+files(i);
+     qry = querynml+queryopts+qryopt(i)+queryopt+" -res "+res+" -var "+files(i);
      globalfile = systemfunc( qry );
      if ( systemfunc("test -f "+globalfile+"; echo $?" ) .ne. 0 )then
         print( "Input global "+files(i)+" file does not exist or not found: "+globalfile );
@@ -166,7 +180,7 @@ begin
      if ( debug .eq. True )then
         print( "Process file: "+globalfile );
      end if
-     qry     = querynml+queryopt+" -usrname "+id+" -var "+files(i);
+     qry     = querynml+queryopts+qryopt(i)+queryopt+" -usrname "+id+" -var "+files(i);
      regfile = systemfunc( qry );
      if ( ismissing(regfile) )then
         print( "Output regional filename was NOT found: "+regfile );

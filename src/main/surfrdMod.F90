@@ -660,7 +660,7 @@ contains
        endif   ! masterproc
 
        domain%glcmask = 0
-       call ncd_iolocal(ncid, 'GLCMASK', 'read', domain%glcmask, clmlevel, status=ret)
+       call ncd_iolocal(ncidg, 'GLCMASK', 'read', domain%glcmask, clmlevel, status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: GLCMASK NOT in file' )
 
        if (masterproc) call check_ret(nf_close(ncidg), subname)

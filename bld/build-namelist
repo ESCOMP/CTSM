@@ -41,7 +41,7 @@ OPTIONS
      -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
-     -config "filepath"       Read the given CICE configuration cache file. Default: "config_cache_cice.xml".
+     -config "filepath"       Read the given CLM configuration cache file. Default: "config_cache.xml".
      -csmdata "dir"           Root directory of CCSM input data.
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
@@ -130,7 +130,7 @@ my $ProgDir = $1;                      # name of directory containing this scrip
 my $cmdline = "@ARGV";                 # Command line arguments to script
 my $cwd = getcwd();                    # current working directory
 my $cfgdir;                            # absolute pathname of directory that contains this script
-my $nm = "ProgName::";                 # name to use if script dies
+my $nm = "$ProgName::";                # name to use if script dies
 if ($ProgDir) { 
     $cfgdir = absolute_path($ProgDir);
 } else {

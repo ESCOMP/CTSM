@@ -338,20 +338,28 @@ See <xref linkend="mksurfdata"></xref> for more information on this.
 </step>
 
 <step performance="optional">
-<title>Create aerosol deposition datasets</title>
+<title>Interpolate  aerosol deposition datasets (if <envar>DATM_PRESAERO</envar>=none)</title>
 <para>
-Next use <command>aerdepregrid.ncl</command> to regrid aerosol deposition datasets to 
-your new resolution using the grid dataset as input.
+If you are reading in aerosol deposition in from &clm; rather than sending it
+from the atmosphere model (which is the default), then you'll need to interpolate
+the aerosol deposition datasets. By default the atmosphere model will interpolate
+these datasets on the fly, so you don't normally need to do this step.
+But, if you do, use <command>aerdepregrid.ncl</command> to regrid aerosol deposition 
+datasets to your new resolution using the grid dataset as input.
 See <xref linkend="aerdepregrid"></xref> for more information on this.
 </para>
 </step>
 
 <step performance="optional">
-<title>Create Nitrogen deposition datasets (if running &clmcn; and ndepsrc=data)</title>
+<title>Interpolate Nitrogen deposition datasets (if running &clmcn; and ndepsrc=data)</title>
 <para>
-Next use <command>ndepregrid.ncl</command> to regrid Nitrogen deposition datasets to 
-your new resolution using the grid dataset as input. This is required if you are using
-&clmcn; and otherwise is NOT.
+If you are running &clmcn; and you are using <option>-ndepsrc</option> as
+<literal>data</literal>, then you'll need to interpolate Nitrogen deposition to
+the resolution you are running at. By default Nitrogen deposition is read in from stream
+files at 2-degree resolution and interpoalted to the resolution you are running at,
+so you don't need to do this step. But, if you do use <command>ndepregrid.ncl</command> 
+to regrid Nitrogen deposition datasets to your new resolution using the grid dataset 
+as input.
 See <xref linkend="ndepregrid"></xref> for more information on this.
 </para>
 </step>
@@ -445,7 +453,7 @@ Options:
 See the <command>cprnc</command>
 <ulink url="../../tools/cprnc/README">README</ulink> file for more details which is
 repeated here:
-<screen>
+<screen width="99">
 &cprnc_readme;
 </screen>
 </para>
@@ -599,11 +607,11 @@ You need to enter one of the following four options:
 </screen>
 or
 <screen width="99">
-   mksrf_fcamfile    - cam topo file (grid and possibly fraction data)
+   mksrf_fcamfile    - <acronym>CAM</acronym> topo file (grid and possibly fraction data)
 </screen>
 or 
 <screen width="99">
-   mksrf_fccsmdom    - cesm domain file (both grid, and fraction data)
+   mksrf_fccsmdom    - &cesm; domain file (both grid, and fraction data)
 </screen>
 or
 <screen width="99">
@@ -659,11 +667,11 @@ You need to enter one of the following four options:
 </screen>
 or
 <screen width="99">
-   mksrf_fcamfile    - cam topo file (grid and possibly fraction data)
+   mksrf_fcamfile    - <acronym>CAM</acronym> topo file (grid and possibly fraction data)
 </screen>
 or 
 <screen width="99">
-   mksrf_fccsmdom    - cesm domain file (both grid, and fraction data)
+   mksrf_fccsmdom    - &cesm; domain file (both grid, and fraction data)
 </screen>
 or
 <screen width="99">
@@ -764,7 +772,7 @@ You should enter longitudes with values from 0 to 360 East.
 </sect2>
 
 <sect2 id="mkgriddata_from_camfile">
-<title>Convert <acronym>CAM</acronym> files to &clm; grid files</title>
+<title>Convert <acronym>CAM</acronym> files to &clm; grid files (deprecated)</title>
 <para>
 Older <acronym>CAM</acronym> initial files included all the information needed to create &clm;
 grid files. Newer <acronym>CAM</acronym> files no longer include land fraction data. Hence you
@@ -972,10 +980,10 @@ machine using the <command>check_input_data</command> script</title>
 </para>
 <para>
 There is one option to <command>mksurfdata</command> that is purely
-experimental, and should NOT be used (changes are NOT implemented in &clm40; to use
+experimental, and should NOT be used (changes are NOT implemented in &clm4; to use
 it yet). This option is: <varname>mksrf_firrig</varname>.
 It separates out crop land-units into irrigated and non-irrigated columns.
-This option is experimental and not even enabled for use with &clm40;.
+This option is experimental and not even enabled for use with &clm4;.
 </para>
 </sect3>
 
@@ -990,7 +998,7 @@ If you look at the standard surface datasets that we have created and provided f
 there are three practices that we have consistently done in each (you also see these in
 the sample namelists and in the <command>mksurfdata.pl</command> script). The first is 
 that we always output data in double precision (hence <varname>outnc_double</varname> 
-is set to <literal>.true.</literal>. The next is that we always use the procedure 
+is set to <literal>.true.</literal>). The next is that we always use the procedure 
 for creating transient datasets (using <varname>mksrf_fdynuse</varname>) even when 
 creating datasets for a fixed simulation year. This is to ensure that the fixed year
 datasets will be consistent with the transient datasets. When this is done a 
@@ -1016,7 +1024,7 @@ urban parameters -- we use a previous version of the surface dataset for the urb
 parameters. However, in order to do this, we need to append onto the previous surface
 dataset the grid and land mask/land fraction information from the grid and fraction
 datasets. This is done in <command>mksurfdata.pl</command> using the <acronym>NCO</acronym>
-program <command>ncks</command>. An example of doing this for the Mexicocity, Mexico
+program <command>ncks</command>. An example of doing this for the Mexico City, Mexico
 urban surface dataset is as follows:
 <screen width="99">
 > ncks -A $CSMDATA/lnd/clm2/griddata/griddata_1x1pt_mexicocityMEX_c090715.nc \
@@ -1059,6 +1067,12 @@ build an executable in order to use them, hence no Makefile is provided. &ncl; i
 for free download as either binaries or source code from:
 <ulink url="http://www.ncl.ucar.edu/">http://www.ncl.ucar.edu/</ulink>. The &ncl;
 web-site also contains documentation on &ncl; and it's use.
+</para>
+<para>
+By default at this point neither of these scripts <emphasis>HAS</emphasis> to be used,
+as the model is now constructed to read aerosol and Nitrogen deposition from 2-degree
+datasets and interpolate to the model resolution on the fly. The main reason you might
+want to do this now, is for better performance for single-point simulations.
 </para>
 <para>
 Both the <command>ndepregrid.ncl</command> and <command>aerdepregrid.ncl</command>
@@ -1189,7 +1203,9 @@ over-write the default data after you've created a given dataset. Depending on t
 it might be easier to do it one way or the other. In <xref
 linkend="table_required_files"></xref> we list the files that are most likely to be
 customized and the way they might be customized. Of those files, the ones you are most
-likely to customize are: fatmlndfrc, fsurdat, faerdep, and fndepdep.
+likely to customize are: fatmlndfrc, fsurdat, faerdep, and fndepdep. For more information
+on this also see <xref linkend="own_single_point_datasets"></xref> and <xref
+linkend="own_atm_forcing"></xref>.
 </para>
 </sect1>
 

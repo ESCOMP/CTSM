@@ -22,7 +22,7 @@
 <title>How to customize the configuration for a case with &clm;</title>
 
 <para>
-The <ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm/">
+The <ulink url="&cesmwebmodelrel;cesm">
 &cesm; User's Guide</ulink> gives you the details on how to setup, &configure;, build, and run
 a case. That is the document to give you the details on using the &cesm; scripts. The purpose 
 of this document is to give you the details when using &cesm; with &clm; on how to customize
@@ -36,12 +36,13 @@ compsets that use &clm; and many are setup to enable special features of &clm; f
 the first thing you want to be familiar with are the different options in the compsets. The 
 next section shows the different options for customizing the configuration options for
 &clm;.
-Here we introduce the &clm; &configure; and &buildnml; scripts and how using the
-&envconf; options you can customize the configuration and the initial
-namelist. The final section tells you about the &clm; namelist and how you could customize the
+Here we introduce the &clm; &configure; and &buildnml; scripts and how using the options in
+&envconf; you can customize the configuration and the initial
+namelist. The final section tells you about the &clm; namelist and how you can customize the
 namelist once you have run "&configure; -case" and have an initial namelist in
-<filename>BuildConf/clm.buildnml.csh</filename> that you can customize by hand. You can also 
-use &envconf; options to change your namelist as well.
+<filename>BuildConf/clm.buildnml.csh</filename>. You can also 
+use &envconf; options to change your namelist as well, before "&configure; -case" is
+run.
 </para>
 <!-- Beg of choosing a compset section -->
 <sect1 id="compset_choice">
@@ -54,7 +55,8 @@ compset refers to which component models are used as well as specific settings f
 types of compsets with a different letter of the alphabet from "A" (for all data model) to "X" (for all dead model).
 The compsets of interest when working with &clm; are the "I" compsets (which contain
 &clm; with a data atmosphere model
-and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain &clm; with the active atmosphere model (CAM),
+and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain &clm;
+with the active atmosphere model (<acronym>CAM</acronym>),
 prescribed sea-ice model, and a data ocean model), and "B" compsets which have all active components. Below we
 go into details on the "I" compsets which emphasize &clm; as the only active model, and just mention the two other categories.
 </para>
@@ -72,8 +74,8 @@ is similar to the coupled modes, but with much lower computational cost and fast
 <sect2 id="EF_compsets">
      <title>Compsets coupled to active atmosphere with data ocean</title>
 <para>
-       CAM compsets are compsets that start with "E" or "F" in the name. They are
-       described more fully in the scripts documentation or the CAM documentation. "E" compsets have
+       <acronym>CAM</acronym> compsets are compsets that start with "E" or "F" in the name. They are
+       described more fully in the scripts documentation or the <acronym>CAM</acronym> documentation. "E" compsets have
 a slab ocean model while "F" compsets have a data ocean model.
 </para>
 </sect2>
@@ -105,7 +107,7 @@ for compsets using &clm;.
 <title>Customizing the &clm; configuration</title>
 <para>
 The "Creating a Case" section of the 
-<ulink url="http://www.cesm.ucar.edu/models/cesm1.0/cesm_doc/">&cesm1; Scripts
+<ulink url="&cesmwebmodelrel;cesm">&cesm1; Scripts
 User's-Guide</ulink>
 gives instructions on creating a case. What is of interest here is how to customize your
 use of &clm;
@@ -174,7 +176,7 @@ all have to do with generating the initial namelist.
 The option &CLMCONFIG; is all about passing command line arguments to the &clm; &configure; script. It is important
 to note that some compsets, may already put a value into the &CLMCONFIG; variable. You can still add more
 options to your &CLMCONFIG; but make sure you add to what is already there rather than replacing it. Hence,
-it may be best to edit the &envconf; file to do this rather than use the xmlchange script. In the 
+it may be best to edit the &envconf; file to do this rather than use the xmlchange script. In
 <xref linkend="clm_configure_script"></xref>
 below we will go into more details on options that can be customized in the &clm; "&configure;" script. It's
 also important to note that the &clm; template may already invoke certain &clm; &configure; options and as such those
@@ -541,24 +543,20 @@ that are designed for use by &clm; are:
 <simplelist>
 <member>&CLMQIAN;</member>
 <member>&CLM1PT;</member>
-<member>CPLHIST3HrWx</member>
-<member>CPLHIST3HrWxHfHrSol</member>
+<!--
+<member><literal>CPLHIST3HrWx</literal></member>
+<member><literal>CPLHIST3HrWxHfHrSol</literal></member>
+-->
 </simplelist>
 </para>
 <para>
 &CLMQIAN; is for the standard mode of using global atmospheric data 
 that was developed by Qian et. al. for &clm; using NCEP data from 1948 to 2004.
-<varname>CLM1PT</varname> is for the special cases where we have single-point tower
+&CLM1PT; is for the special cases where we have single-point tower
 data for particular sites. Right now we only have data for three urban locations:
 MexicoCity Mexico, Vancouver Canada, and the urban-c alpha site. This is non-standard
 functionality and we recommend that users stick with the &CLMQIAN; mode of operation.
 </para>
-<warning>
-<para>
-Currently the urban locations are NOT functional, because the surface datasets need
-to be updated.
-</para>
-</warning>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -650,9 +648,18 @@ The &configure; script defines the details of a clm configuration and summarizes
 will be placed in your case directory under <filename>Buildconf/clmconf</filename>.
 The <ulink url="../../bld/config_files/config_definition.xml">config_definition.xml</ulink>
 in <filename>models/lnd/clm/bld/config_files</filename>
-gives a definition of each clm configuration item. Many of these items are things that you
-would NOT change, but looking through the list gives you the valid options, and a good
-description of each. 
+gives a definition of each clm configuration item, it is viewable in a web-browser.
+Many of these items are things that you would NOT change, but looking through the 
+list gives you the valid options, and a good description of each. Below we repeat 
+the <filename>config_definition.xml</filename> files contents:
+</para>
+<sect3 id="clm_config_definition">
+&cfgdfntbl;
+</sect3>
+
+<sect3 id="clm_configure_help">
+<title>Help on &clm; &configure;</title>
+<para>
 Coupling this with looking at the options to &configure; with
 "-help" as below will enable you to understand how to set the different options.
 <screen width="99">
@@ -673,6 +680,8 @@ understanding of how these scripts work and the options to them. In the next sec
 give further details on the &clm; namelist. You could customize the namelist for these 
 options after "&configure; -case" is run.
 </para>
+</sect3>
+
 </sect2>
 </sect1>
 <!-- End of customizing clm config section -->
@@ -694,7 +703,9 @@ use, and give you example namelists that highlight these features.
 <para>
 Here we point to you where you can find the definition of each namelist item and 
 separately the default values for them. The default values may change depending on 
-the resolution, land-mask, simulation-year and other attributes.
+the resolution, land-mask, simulation-year and other attributes. Both of these 
+files are viewable in your web browser. Below we provide the link for them, and
+then expland each in turn.
 </para>
 <orderedlist>
 <listitem><para>
@@ -705,6 +716,15 @@ the resolution, land-mask, simulation-year and other attributes.
 &clm; Namelist Item</ulink>
 </para></listitem>
 </orderedlist>
+
+<sect3 id="nl_def_table">
+&nmldfntbl;
+</sect3>
+
+<sect3 id="nl_dfl_table">
+&nmldfltbl;
+</sect3>
+
 </sect2>
 <!-- End of nl definition section -->
 
@@ -758,7 +778,7 @@ appear in your clm namelist.
 /
 &amp;ndepdyn_nml
  stream_fldfilename_ndep    =
-'$DIN_LOC_ROOTa/lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
+'$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc'
  stream_year_first_ndep	  = 1850
  stream_year_last_ndep	  = 1850
 /

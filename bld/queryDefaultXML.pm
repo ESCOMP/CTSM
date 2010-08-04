@@ -148,6 +148,9 @@ sub ReadDefaultXMLFile {
   foreach my $name ( $nldefaults->get_variable_names() ) {
     my $value   = $nldefaults->get_value( $name, \%nlopts );
     if ( $value eq "null" ) { next; }
+    if ( defined($$settings_ref{'var'}) ) {
+       if ( $name ne $$settings_ref{'var'} ) { next; }
+    }
     $value =~ s/\n//g;
     my $isafile = 0;
     if ( $definition->is_input_pathname($name) ) {

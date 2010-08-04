@@ -8,14 +8,18 @@
     <title>CLM Namelist Defaults</title>
   </head>
   <body>
-    <h2>Default values for namelist variables</h2>
+    <h2>Default Values for Namelist Variables</h2>
     <p>Included in the table are the following pieces of information:</p>
+    <h3>Table headers include:</h3>
     <ul>
        <li>Name of variable</li>
        <li>Horizontal grid resolution</li>
        <li>Land ocean mask type</li>
        <li>Simulation year</li>
        <li>Simulation year range (for transient datasets)</li>
+    </ul>
+    <h3>Miscellaneous items include:</h3>
+    <ol>
        <li>Biogeochemistry (BGC) type (none, CN, etc.)</li>
        <li>Initial condition date (ymd - year month day)</li>
        <li>Initial condition time of day (tod) (sec)</li>
@@ -23,25 +27,66 @@
        <li>Maximum number of Plant Function Types (maxpft)</li>
        <li>Number of glacier multiple elevation classes (glc_nec)</li>
        <li>Glacier model grid size (glc_grid)</li>
-    </ul>
+    </ol>
 
-    <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
+    <table border="1" cellpadding="10">
+    <tr>
+      <th rowspan="2">Name</th>
       <th>Horz. Grid</th>
       <th>Mask</th>
       <th>Sim year</th>
       <th>Sim year range</th>
       <th>Miscellaneous</th>
+    </tr>
+    <tr>
+      <th colspan="5">Default Value for this Configuration</th>
+    </tr>
       <xsl:for-each select="namelist_defaults/*">
       <xsl:sort select="name()"/>
       <tr>
         <td rowspan="2"><font color="#ff0000">
         <xsl:value-of select="name()"/>
         </font></td>
-        <td><xsl:value-of select="@hgrid"/></td>
-        <td><xsl:value-of select="@mask"/></td>
-        <td><xsl:value-of select="@sim_year"/></td>
-        <td><xsl:value-of select="@sim_year_range"/></td>
+        <td>
+        <xsl:choose>
+        <xsl:when test="string-length(@hgrid)>0">
+             <xsl:value-of select="@hgrid"/>
+        </xsl:when>
+        <xsl:otherwise>
+             All res
+        </xsl:otherwise>
+        </xsl:choose>
+        </td>
+        <td>
+        <xsl:choose>
+        <xsl:when test="string-length(@mask)>0">
+             <xsl:value-of select="@mask"/>
+        </xsl:when>
+        <xsl:otherwise>
+             All masks
+        </xsl:otherwise>
+        </xsl:choose>
+        </td>
+        <td>
+        <xsl:choose>
+        <xsl:when test="string-length(@sim_year)>0">
+             <xsl:value-of select="@sim_year"/>
+        </xsl:when>
+        <xsl:otherwise>
+             All yrs
+        </xsl:otherwise>
+        </xsl:choose>
+        </td>
+        <td>
+        <xsl:choose>
+        <xsl:when test="string-length(@sim_year_range)>0">
+             <xsl:value-of select="@sim_year_range"/>
+        </xsl:when>
+        <xsl:otherwise>
+             All sim-yr-rng
+        </xsl:otherwise>
+        </xsl:choose>
+        </td>
         <td>
         <xsl:if test="string-length(@bgc)>0">
         bgc=<xsl:value-of select="@bgc"/>
@@ -70,7 +115,7 @@
         </td>
       </tr>
       <tr>
-        <td colspan="9"><b>Content: </b><xsl:value-of select="."      /></td>
+        <td colspan="5"><b>Value: </b><xsl:value-of select="."      /></td>
       </tr>
       </xsl:for-each>
     </table>
@@ -79,42 +124,5 @@
 
   </html>
 </xsl:template>
-
-<xsl:template match="name">
-  <tr>
-    <td><font color="#ff0000">----</font></td>
-    <td><xsl:value-of select="@hgrid"/></td>
-    <td><xsl:value-of select="@sim_year"/></td>
-    <td><xsl:value-of select="@sim_year_range"/></td>
-    <td><xsl:value-of select="@maxpft"/></td>
-    <td><xsl:value-of select="@mask"/></td>
-    <td><xsl:value-of select="@bgc"/></td>
-    <td><xsl:value-of select="@glc_nec"/></td>
-    <td><xsl:value-of select="@rtm"/></td>
-    <td><xsl:value-of select="@ic_ymd"/></td>
-    <td><xsl:value-of select="@ic_tod"/></td>
-    <td><xsl:value-of select="@content"/></td>
-    <td><xsl:apply-templates/></td>
-  </tr>
-</xsl:template>
-
-<xsl:template match="name/varname">
-  <font color="#ff0000"><xsl:apply-templates/></font>
-</xsl:template>
-
-<xsl:template match="name/default">
-  <p><xsl:apply-templates/></p>
-</xsl:template>
-
-<xsl:template match="name/listelm">
-  <li><xsl:apply-templates/></li>
-</xsl:template>
-
-<xsl:template match="name/unlist">
-  <ul>
-  <xsl:apply-templates/>
-  </ul>
-</xsl:template>
-
 
 </xsl:stylesheet>

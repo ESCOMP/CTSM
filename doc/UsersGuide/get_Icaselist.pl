@@ -109,20 +109,27 @@ sub print_compsets
     $name eq "config_compset" or die
 	"file $compset_file is not a compset parameters file\n";
 
-    print "<orderedlist>\n";
-    
     # Read the compset parameters from $compset_file.
     my @e = $xml->elements_by_name( "compset" );
     my %a = ();
+    my %data;
     while ( my $e = shift @e ) {
-	%a = $e->get_attributes();
-	if ($a{GRID_MATCH}) {
-	    # do nothing
+	%a        = $e->get_attributes();
+        my $sname = $a{'SHORTNAME'};
+	if ($a{GRID_MATCH} && exists($data{$sname}) && defined($data{$sname}{'DESC'} && defined($a{'DESC'}) )  ) {
+            if ( $data{$sname}{'DESC'} =~ /^INVALID:/ ) {
+                $data{$sname}{'DESC'} = $a{'DESC'};
+            }
 	} elsif ( $a{'SHORTNAME'} =~ /^I/ ) {
-	    print "<listitem><para><varname>$a{'NAME'}</varname>" .
-                      "(<varname>$a{'SHORTNAME'}</varname>)\n";
-	    print "$a{'DESC'}</para></listitem>\n";
+            $data{$sname}{'NAME'} = $a{'NAME'};
+            $data{$sname}{'DESC'} = $a{'DESC'};
 	}
+    }
+    print "<orderedlist>\n";
+    foreach my $sname ( sort(keys(%data)) ) {
+        print "<listitem><para><varname>$data{$sname}{'NAME'}</varname>" .
+              "(<varname>$sname</varname>)\n";
+	print "$data{$sname}{'DESC'}</para></listitem>\n";
     }
     print "</orderedlist>\n";
 }
