@@ -1277,7 +1277,7 @@ Description of the use case selected.
 
 <entry id="datm_presaero" type="char*80" category="default_settings"
        group="default_settings" 
-       valid_values="none,prognostic,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6,rcp8.5">
+       valid_values="none,prognostic,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6.0,rcp8.5">
 Prescribed aerosol mode for the atmosphere model 
    none = Don't pass aerosol from atmosphere, read it from inside of CLM (using faerdep) 
    prognostic = Pass aerosol from a prognostic atmosphere model -- such as CAM. (may still be read in from a dataset in that model) 
@@ -1287,7 +1287,7 @@ Prescribed aerosol mode for the atmosphere model
    trans_1850-2000 = For datm use transient 1850 to 2000 conditions 
    rcp2.6 = For datm use rcp=2.6 future scenario 
    rcp4.5 = For datm use rcp=4.5 future scenario 
-   rcp6.0 = For datm use rcp=6.0 future scenario 
+   rcp6   = For datm use rcp=6.0 future scenario 
    rcp8.5 = For datm use rcp=8.5 future scenario
 </entry>
 

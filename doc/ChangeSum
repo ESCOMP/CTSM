@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_11         erik 08/27/2010 New files for rcp6, fix MPI bug, update externals
    clm4_0_10         erik 08/04/2010 Update doc to cesm_rel05, bug-fixes, fix issues for single-point, mksurfdata/getregional scripts
    clm4_0_09         erik 06/14/2010 Fix some small issues, update documentation, and externals
    clm4_0_08         erik 06/04/2010 Snow hydrology bug fix from Keith and Dave

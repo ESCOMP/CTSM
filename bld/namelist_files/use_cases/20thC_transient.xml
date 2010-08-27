@@ -29,7 +29,7 @@
 <stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2005</stream_year_last_ndep>
 <model_year_align_ndep  bgc="cndv" ndepsrc="stream" >1850</model_year_align_ndep>
 
-<!-- Settings for datm and driver -- for stand-alone testing -->
+<!-- Settings for datm and driver, for stand-alone testing -->
 <datm_presaero       mode="ccsm_seq" >trans_1850-2000</datm_presaero>
 <orb_iyear_ad        mode="ccsm_seq" >1990</orb_iyear_ad>
 <co2_ppmv            mode="ccsm_seq" >368.9</co2_ppmv>

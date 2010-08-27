@@ -184,6 +184,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <datm_year_last_aero  datm_presaero="rcp4.5">2104</datm_year_last_aero>
 <datm_year_align_aero datm_presaero="rcp4.5">1849</datm_year_align_aero>
 
+<!-- rcp6 future scenario transient files -->
+<datm_aero_streams    datm_presaero="rcp6.0">rcp6.0_preseareo_stream.txt</datm_aero_streams>
+<datm_year_first_aero datm_presaero="rcp6.0">1849</datm_year_first_aero>
+<datm_year_last_aero  datm_presaero="rcp6.0">2104</datm_year_last_aero>
+<datm_year_align_aero datm_presaero="rcp6.0">1849</datm_year_align_aero>
+
 <!-- rcp8.5 future scenario transient files -->
 <datm_file_aero       datm_presaero="rcp8.5" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp8.5_monthly_1849-2104_1.9x2.5_c100201.nc
 </datm_file_aero>

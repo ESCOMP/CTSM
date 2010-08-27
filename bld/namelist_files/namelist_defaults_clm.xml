@@ -241,7 +241,7 @@ lnd/clm2/surfdata/surfdata_8x16_simyr1850_c090928.nc</fsurdat>
 <fsurdat hgrid="0.23x0.31" sim_year="1850" >
 lnd/clm2/surfdata/surfdata_0.23x0.31_simyr1850_c100404.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" sim_year="1850" >
-lnd/clm2/surfdata/surfdata_0.47x0.63_simyr1850_c100305.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.47x0.63_simyr1850_c100826.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" >
 lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c091006.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" >
@@ -259,6 +259,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 <fpftdyn hgrid="10x15"         sim_year_range="1000-1002" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
+<fpftdyn hgrid="0.47x0.63"      sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c100826.nc</fpftdyn>
 <fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c091008.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c091108.nc</fpftdyn>
 <fpftdyn hgrid="2.5x3.33"      sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_2.5x3.33_simyr1850-2005_c091109.nc</fpftdyn>
@@ -271,6 +272,11 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100205.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c100322.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp8.5_simyr1850-2100_c100202.nc</fpftdyn>
+
+<fpftdyn hgrid="0.9x1.25"      rcp="6"   sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c100812.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="6"   sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c100812.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       rcp="6"   sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp6.0_simyr1850-2100_c100813.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         rcp="6"   sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp6.0_simyr1850-2100_c100813.nc</fpftdyn>
 
 <fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
 <fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
@@ -556,6 +562,8 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_hist_simyr1849-2006_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cn"   rcp="8.5" ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" rcp="8.5" ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cn"   rcp="6"   ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" rcp="6"   ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp6.0_simyr1849-2106_1.9x2.5_c100810.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cn"   rcp="4.5" ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" rcp="4.5" ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cn"   rcp="2.6" ndepsrc="stream" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>

@@ -80,9 +80,11 @@ determine default values for namelists.
 <datm_presaero hgrid="5x5_amazon"                                   >pt1_pt1</datm_presaero>
 <datm_presaero                 sim_year_range="1850-2100" rcp="2.6" >rcp2.6</datm_presaero>
 <datm_presaero                 sim_year_range="1850-2100" rcp="4.5" >rcp4.5</datm_presaero>
+<datm_presaero                 sim_year_range="1850-2100" rcp="6"   >rcp6.0</datm_presaero>
 <datm_presaero                 sim_year_range="1850-2100" rcp="8.5" >rcp8.5</datm_presaero>
 <datm_presaero                 sim_year_range="2000-2100" rcp="2.6" >rcp2.6</datm_presaero>
 <datm_presaero                 sim_year_range="2000-2100" rcp="4.5" >rcp4.5</datm_presaero>
+<datm_presaero                 sim_year_range="2000-2100" rcp="6"   >rcp6.0</datm_presaero>
 <datm_presaero                 sim_year_range="2000-2100" rcp="8.5" >rcp8.5</datm_presaero>
 <datm_presaero                 sim_year_range="1850-2000"           >trans_1850-2000</datm_presaero>
 <datm_presaero                 sim_year_range="1000-1002"           >clim_2000</datm_presaero>

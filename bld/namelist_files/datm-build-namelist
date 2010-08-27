@@ -56,6 +56,7 @@ OPTIONS
                               (other options include: clim_1850, clim_2000, trans_1850-2000)
      -datm_source "source"    Source data to use for datm
                               "-datm_source list" to list valid datm_source types.
+     -drv_case "name"         Case name to use to describe this case.
      -drv_start_type "type"   Type of simulation (startup, continue, or branch)
      -help [or -h]            Print usage to STDOUT.
      -infile "filepath"       Specify a file containing namelists to read values from.
@@ -777,6 +778,9 @@ if ( $datm_presaero ne "none" ) {
    my $file_aero = $defaults->get_value( "datm_file_aero", \%settings );
    # separate info filename and pathname
    $file_aero   =~ s!(.*)/!!;
+   if ( $file_aero eq "" ) {
+      die "$ProgName ERROR:: did NOT find an aerosol file for this case.\n";
+   }
    my $dir_aero = $1;
    $inputopts{'case'}         = $file_aero;
    $inputopts{'domain'}       = $inputopts{'case'};

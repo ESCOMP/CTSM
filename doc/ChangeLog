@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  clm4_0_11
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Aug 27 14:14:37 MDT 2010
+One-line Summary: New files for rcp6, fix MPI bug, update externals
+
+Purpose of changes:
+
+Add in new pftdyn and stream_ndep files for rcp=6.0. Fix MPI bug where send array was the same as receive array.
+Fix problem with datm template on gust, and syntax errors for pt1_pt1 mode. Add start_tod to drv/scripts.
+
+Bugs fixed (include bugzilla ID):
+                                 1197 (MPI problem sending and receiving data in same array)
+                                 1207 (Problem with datm template on gust)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+                                 1206 (Problem looping over a single year of forcing)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Add rcp6 datasets, add half-deg pftdyn
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): drv, datm, scripts
+
+scripts  to scripts4_100824
+drv      to drvseq3_1_35
+datm     to datm8_100826b
+
+List all files eliminated: None
+
+List all files added and what they do: Add rcp 6 test case
+
+  A   models/lnd/clm/test/system/nl_files/clm_transient_rcp6 --- add test case for rcp=6
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>> Fix bug in mpigather where it was transferring array data, but send and receive buffers
+              can't be the same.
+  M  models/lnd/clm/src/main/spmdMod.F90
+
+>>>>>>>>>>>>> Add rcp=6 test for 10x15
+  M models/lnd/clm/test/system/README.testnames
+  M models/lnd/clm/test/system/input_tests_master
+
+>>>>>>>>>>>>> Add in new rcp6 files for pftdyn and ndep-streams, add 0.47x0.63 surfdata and pftdyn file
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Add rcp=6 ndepdat files
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+  M  models/lnd/clm/bld/namelist_files/namelist_definition.xml
+  M  models/lnd/clm/bld/namelist_files/datm-build-namelist ------------- If file_aero not set abort
+
+>>>>>>>>>>>>> Fix comments in use-case files
+  M  models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/glacier_mec.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+  M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+
+Summary of testing:
+
+  bluefire: All PASS except, up to (042 smC61)
+026 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:NONE:1800 10x15 USGS@2000 -3+-7 cold ...........FAIL! rc= 7
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+032 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+038 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 10
+039 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic .......FAIL! rc= 5
+040 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic .......FAIL! rc= 5
+041 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+006 smHS3 TSM.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic .FAIL! rc= 8
+007 erHS3 TER.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -3+-3 arb_ic FAIL! rc= 5
+008 brHS3 TBR.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -3+-3 arb_ic FAIL! rc= 5
+009 blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic .FAIL! rc= 4
+025 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+026 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+030 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+065 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................FAIL! rc= 6
+066 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds ....FAIL! rc= 6
+  bluefire/CESM testing:
+FAIL  SMS_RLA.f45_f45.I.bluefire
+BFAIL SMS_RLA.f45_f45.I.bluefire.generate.clm4_0_11
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_10
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_10
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_10
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_10
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_10
+FAIL  ERI.f19_g16.IG.bluefire.compare.clm4_0_10
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_10
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_11
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_10
+FAIL  PST.f10_f10.I8520CN.bluefire.compare.clm4_0_10
+FAIL  PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_10
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_10
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_10
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_10
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Aug  4 14:37:59 MDT 2010
@@ -22,6 +159,7 @@ Bugs fixed (include bugzilla ID):
                                  1190 (add ndepmapalgo to ndep streams)
                                  1192 (Y1K problem for mksurfdata.pl)
                                  1193 (bug in reading GLCMASK)
+                                 1207 (Problem with datm template on gust)
 
 Update of datm also fixes several issues with datm for single pt simulations: 1173, 1175, 1176, 1181
 
@@ -46,6 +184,8 @@ Known bugs (include bugzilla ID):
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on gust...)
                                  1165 (Restart trouble for scaled harvest test on gust)
+                                 1197 (MPI problem sending and receiving data in same array)
+                                 1206 (Problem looping over a single year of forcing)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: standard
@@ -271,6 +411,7 @@ Known bugs (include bugzilla ID):
                                  1166 (get_regional script needs to be updated)
                                  1192 (Y1K problem for mksurfdata.pl)
                                  1193 (bug in reading GLCMASK)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: std-test
@@ -515,6 +656,8 @@ Known bugs (include bugzilla ID):
                                  1166 (get_regional script needs to be updated)
                                  1192 (Y1K problem for mksurfdata.pl)
                                  1193 (bug in reading GLCMASK)
+                                 1197 (MPI problem sending and receiving data in same array)
+                                 1206 (Problem looping over a single year of forcing)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -666,6 +809,8 @@ Known bugs (include bugzilla ID):
                                  1166 (get_regional script needs to be updated)
                                  1192 (Y1K problem for mksurfdata.pl)
                                  1193 (bug in reading GLCMASK)
+                                 1197 (MPI problem sending and receiving data in same array)
+                                 1206 (Problem looping over a single year of forcing)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: standard
@@ -897,6 +1042,7 @@ Known bugs (include bugzilla ID):
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
                                  1162 (OpenMP bug with dry-deposition code in clm)
                                  1163 (finidat file has a bunch of NaN's in it)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -995,6 +1141,7 @@ Known bugs (include bugzilla ID):
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
                                  1162 (OpenMP bug with dry-deposition code in clm)
                                  1163 (finidat file has a bunch of NaN's in it)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -1187,6 +1334,7 @@ Known bugs (include bugzilla ID):
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
                                  1161 (New history fields added that should NOT be)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -1379,6 +1527,7 @@ Known bugs (include bugzilla ID):
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -1509,6 +1658,7 @@ Known bugs (include bugzilla ID):
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1153 (Problem with ndeplintInterp for historical case)
                                  1157 (Problem with VOC interpolation in mksurfdata)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: critical
@@ -1603,6 +1753,7 @@ Known bugs (include bugzilla ID):
                                  1153 (Problem with ndeplintInterp for historical case)
                                  1156 (Reproducability problem with clm4_0_01)
                                  1157 (Problem with VOC interpolation in mksurfdata)
+                                 1197 (MPI problem sending and receiving data in same array)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: standard
@@ -1919,6 +2070,7 @@ Known bugs (include bugzilla ID):
                                  1147 (mkgriddata can't straddle over Greenich)
                                  1153 (Problem with ndeplintInterp for historical case)
                                  1157 (Problem with VOC interpolation in mksurfdata)
+                                 1197 (MPI problem sending and receiving data in same array)
 Describe any changes made to build system:
 
    Change directory structure to match CCSM.

@@ -80,10 +80,12 @@ contains
 !EOP
     integer :: i,j         ! indices
     integer :: ier         ! return error status
+    integer :: mylength    ! my processor length
     logical :: mpi_running ! temporary
     integer, allocatable :: length(:)
     integer, allocatable :: displ(:)
     character*(MPI_MAX_PROCESSOR_NAME), allocatable :: procname(:)
+    character*(MPI_MAX_PROCESSOR_NAME)              :: myprocname
 !-----------------------------------------------------------------------
 
     ! Initialize mpi communicator group
@@ -109,12 +111,13 @@ contains
 
     allocate (length(0:npes-1), displ(0:npes-1), procname(0:npes-1))
 
-    call mpi_get_processor_name (procname(iam), length(iam), ier)
-    call mpi_allgather (length(iam),1,MPI_INTEGER,length,1,MPI_INTEGER,mpicom,ier)
+    call mpi_get_processor_name (myprocname, mylength, ier)
+    call mpi_allgather(mylength,1,MPI_INTEGER,length,1,MPI_INTEGER,mpicom,ier)
+
     do i = 0,npes-1
        displ(i)=i*MPI_MAX_PROCESSOR_NAME
     end do
-    call mpi_gatherv (procname(iam),length(iam),MPI_CHARACTER, &
+    call mpi_gatherv (myprocname,mylength,MPI_CHARACTER, &
                       procname,length,displ,MPI_CHARACTER,0,mpicom,ier)
     if (masterproc) then
        write(iulog,100)npes

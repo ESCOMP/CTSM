@@ -1,0 +1,5 @@
+-ignore_ic_date 
+-silent 
+-drv_case clmrun 
+-use_case 1850-2100_rcp6_transient
+-datm_source CLM_QIAN

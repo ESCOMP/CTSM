@@ -34,8 +34,8 @@
 <stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2100</stream_year_last_ndep>
 <model_year_align_ndep  bgc="cndv" ndepsrc="stream" >1850</model_year_align_ndep>
 
-<!-- Settings for datm and driver -- for stand-alone testing -->
-<datm_presaero mode="ccsm_seq" >rcp8.5</datm_presaero>
+<!-- Settings for datm and driver, for stand-alone testing -->
+<datm_presaero       mode="ccsm_seq" >rcp8.5</datm_presaero>
 <orb_iyear_ad        mode="ccsm_seq" >1990</orb_iyear_ad>
 <datm_cycle_beg_year mode="ccsm_seq" >1972</datm_cycle_beg_year>
 <datm_cycle_end_year mode="ccsm_seq" >2004</datm_cycle_end_year>

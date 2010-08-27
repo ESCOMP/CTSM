@@ -14,7 +14,7 @@
 <stream_year_first_ndep bgc="cndv" ndepsrc="stream" >2000</stream_year_first_ndep>
 <stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2000</stream_year_last_ndep>
 
-<!-- Settings for datm and driver -- for stand-alone testing -->
+<!-- Settings for datm and driver, for stand-alone testing -->
 <datm_presaero mode="ccsm_seq" >clim_2000</datm_presaero>
 <orb_iyear_ad  mode="ccsm_seq" >1990</orb_iyear_ad>
 

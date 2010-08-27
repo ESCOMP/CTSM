@@ -11,7 +11,7 @@
 <hist_mfilt                  >1,1</hist_mfilt>
 <hist_nhtfrq                 >0,-8760</hist_nhtfrq>
 
-<!-- Settings for datm and driver -- for stand-alone testing -->
+<!-- Settings for datm and driver for standalone testing -->
 <datm_presaero mode="ccsm_seq">clim_2000</datm_presaero>
 
 </namelist_defaults>
