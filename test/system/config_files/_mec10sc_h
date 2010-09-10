@@ -1,4 +1,4 @@
--mode ccsm_seq
+-mode clm_stndln
 -glc_nec 10
--spmd -smp
+-nouse_mpiserial -smp
 -s

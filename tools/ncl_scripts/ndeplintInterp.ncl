@@ -261,7 +261,7 @@ begin
    do i = 0, nyrsb4
       nco->NDEP_NOy_year(i,:,:) = (/ ncy0->NDEP_year(:,:) /) * Factor / area;
       nco->NDEP_NHx_year(i,:,:) = (/ ncy0->NDEP_AER_year(:,:) /) * Factor / area;
-      nco->YEAR(i)              = beg_sim_year + i;
+      nco->YEAR(i)              = (/ beg_sim_year + i /);
       print( "year="+nco->YEAR(i)+" NOy = "+avg(nco->NDEP_NOy_year(i,:,:)) );
    end do
    ;
@@ -272,7 +272,7 @@ begin
    do i = -2, -1;
       nco->NDEP_NOy_year(nyears+i,:,:) = (/ ncyn->NDEP_year(:,:) /) * Factor / area;
       nco->NDEP_NHx_year(nyears+i,:,:) = (/ ncyn->NDEP_AER_year(:,:) /) * Factor / area;
-      nco->YEAR(nyears+i)              =  end_sim_year+i+1;
+      nco->YEAR(nyears+i)              = (/  end_sim_year+i+1 /);
       print( "year="+nco->YEAR(nyears+i)+" NOy = "+avg(nco->NDEP_NOy_year(nyears+i,:,:)) );
    end do
    ;
@@ -299,7 +299,7 @@ begin
       nco->NDEP_NOy_year(n,:,:) = (/ nco->NDEP_NOy_year(n,:,:) /) * Factor / area;
       nco->NDEP_NHx_year(n,:,:) = (/ t0*ncy0->NDEP_AER_year(:,:) + t1*ncy1->NDEP_AER_year(:,:) /);
       nco->NDEP_NHx_year(n,:,:) = (/ nco->NDEP_NHx_year(n,:,:) /) * Factor / area;
-      nco->YEAR(n)              = year;
+      nco->YEAR(n)              = (/ year /);
       print( "year = "+year+" t0 ="+t0+" t1 = "+t1+" avg(NDEP)="+avg(nco->NDEP_NOy_year(n,:,:)) );
       n  = n  + 1;
 

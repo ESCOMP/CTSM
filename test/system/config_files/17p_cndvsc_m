@@ -1,5 +1,5 @@
--mode ccsm_seq
--spmd 
+-mode clm_stndln
+-nouse_mpiserial 
 -nosmp
 -maxpft numpft+1
 -bgc cndv

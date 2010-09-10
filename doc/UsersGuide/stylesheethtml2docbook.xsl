@@ -15,9 +15,10 @@
 
 Revisions:
 
-  Jun/25 Remove section and require it outside the include  EBK
-  Jun/25 Add ability to handle font simplemindedly	    EBK
-  Jun/25 Add ability to handle HTML code		    EBK
+  Aug/17/2010 Change tables from informaltable to table           EBK
+  Jun/25/2010 Remove section and require it outside the include	  EBK
+  Jun/25/2010 Add ability to handle font simplemindedly		  EBK
+  Jun/25/2010 Add ability to handle HTML code		          EBK
 
 -->
 
@@ -159,7 +160,7 @@ name="graphics_location">file:///epicuser/AISolutions/graphics/AIWorkbench/</xsl
  <xsl:param name="string" select="''"/>
  <xsl:variable name="fixedname">
   <xsl:call-template name="get_filename">
-   <xsl:with-param name="path" select="translate($string,' \()','_/_')"/>
+   <xsl:with-param name="path" select="translate($string,' !,:\()','____\__')"/>
   </xsl:call-template>
  </xsl:variable>
  <xsl:choose>
@@ -337,6 +338,13 @@ name="graphics_location">file:///epicuser/AISolutions/graphics/AIWorkbench/</xsl
   <xsl:apply-templates/>
  </emphasis>
 </xsl:template>
+
+<xsl:template match="html:bold">
+ <emphasis role="bold">
+  <xsl:apply-templates/>
+ </emphasis>
+
+</xsl:template>
 <xsl:template match="html:code">
  <code>
   <xsl:apply-templates/>
@@ -415,7 +423,16 @@ name="graphics_location">file:///epicuser/AISolutions/graphics/AIWorkbench/</xsl
    <xsl:with-param name="table" select="."/>
   </xsl:call-template>
  </xsl:variable>
- <informaltable>
+ <table tocentry="1" pgwide="1" frame="all">
+    <xsl:attribute name="id">
+   <xsl:variable name="caption"  select=".//html:caption"/>
+   <xsl:call-template name="make_id">
+    <xsl:with-param name="string" select="concat($caption,'_table')"/>
+   </xsl:call-template>
+   </xsl:attribute>
+  <title>
+   <xsl:value-of select=".//html:caption"/>
+  </title>
   <tgroup>
    <xsl:attribute name="cols">
     <xsl:value-of select="$column_count"/>
@@ -430,7 +447,7 @@ name="graphics_location">file:///epicuser/AISolutions/graphics/AIWorkbench/</xsl
     <xsl:apply-templates select="html:tr[position() != 1]"/>
    </tbody>
   </tgroup>
- </informaltable>
+ </table>
 </xsl:template>
 
 <xsl:template name="generate-colspecs">

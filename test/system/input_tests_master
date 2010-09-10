@@ -430,6 +430,16 @@ erHW3 TER.sh 17p_cnsc_do clm_transient_rcp6 20051220:NONE:1800 10x15 USGS@1850-2
 brHW3 TBR.sh 17p_cnsc_do clm_transient_rcp6 20051220:NONE:1800 10x15 USGS@1850-2100 -5+-5 cold
 blHW3 TBL.sh 17p_cnsc_do clm_transient_rcp6 20051220:NONE:1800 10x15 USGS@1850-2100 -10   cold
 
+smHX3 TSM.sh 17p_cnsc_do clm_transient_rcp4.5 20051220:NONE:1800 10x15 USGS@1850-2100 -10   cold
+erHX3 TER.sh 17p_cnsc_do clm_transient_rcp4.5 20051220:NONE:1800 10x15 USGS@1850-2100 -3+-7 cold
+brHX3 TBR.sh 17p_cnsc_do clm_transient_rcp4.5 20051220:NONE:1800 10x15 USGS@1850-2100 -5+-5 cold
+blHX3 TBL.sh 17p_cnsc_do clm_transient_rcp4.5 20051220:NONE:1800 10x15 USGS@1850-2100 -10   cold
+
+smHY3 TSM.sh 17p_cnsc_do clm_transient_rcp2.6 20051220:NONE:1800 10x15 USGS@1850-2100 -10   cold
+erHY3 TER.sh 17p_cnsc_do clm_transient_rcp2.6 20051220:NONE:1800 10x15 USGS@1850-2100 -3+-7 cold
+brHY3 TBR.sh 17p_cnsc_do clm_transient_rcp2.6 20051220:NONE:1800 10x15 USGS@1850-2100 -5+-5 cold
+blHY3 TBL.sh 17p_cnsc_do clm_transient_rcp2.6 20051220:NONE:1800 10x15 USGS@1850-2100 -10   cold
+
 smHM1 TSM.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
 erHM1 TER.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -3+-7 arb_ic
 brHM1 TBR.sh 17p_cnsc_dh clm_pftdyn^nl_cn_conly 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -5+-5 arb_ic
@@ -839,7 +849,7 @@ blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:NONE:1800 13x12pt_f19_alaskaUSA gx1v
 
 sm654 TSMtools.sh mkgriddata   tools__ds namelist
 sm674 TSMtools.sh mkgriddata   tools__ds singlept
-sm694 TSMtools.sh mkgriddata   tools__ds ccsm_dom
+sm694 TSMtools.sh mkgriddata   tools__ds cesm_dom
 
 sm754 TSMtools.sh mksurfdata   tools__s  namelist
 bl754 TBLtools.sh mksurfdata   tools__s  namelist

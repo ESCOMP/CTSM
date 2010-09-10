@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module UrbanInitMod
 
 !----------------------------------------------------------------------- 
@@ -271,7 +268,7 @@ contains
              eflx_traffic_factor(l) = 0.0_r8
           end if
 
-#if (defined VANCOUVER || defined MEXICOCITY || defined GRANDVIEW)
+#if (defined VANCOUVER || defined MEXICOCITY)
           ! Freely evolving
           t_building_max(l) = 380.00_r8
           t_building_min(l) = 200.00_r8
@@ -416,11 +413,6 @@ contains
 #elif (defined MEXICOCITY)
           taf(l) = 289.46_r8
           qaf(l) = 0.00248_r8
-#elif (defined GRANDVIEW)
-          ! Set to 19.0C
-          taf(l) = 292.16_r8
-          ! Set to 10 g kg-1
-          qaf(l) = 0.010_r8
 #else
           taf(l) = 283._r8
           ! Arbitrary set since forc_q is not yet available

@@ -1,5 +1,5 @@
--mode ccsm_seq
--smp -spmd
+-mode clm_stndln
+-smp -nouse_mpiserial
 -maxpft 4
 -rtm on
 -dust on

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module DUSTMod
 
 #if (defined DUST)
@@ -412,7 +409,7 @@ contains
 ! through the lowest atmospheric layer. CAM will calculate the settling 
 ! velocity through the whole atmospheric column. The two calculations 
 ! will determine the dust dry deposition flux to the surface.
-! Note: Same process should occur over oceans. For the coupled CCSM,
+! Note: Same process should occur over oceans. For the coupled CESM,
 ! we may find it more efficient to let CAM calculate the turbulent dep
 ! velocity over all surfaces. This would require passing the
 ! aerodynamic resistance, ram(1), and the friction velocity, fv, from

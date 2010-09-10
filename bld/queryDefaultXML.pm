@@ -33,44 +33,8 @@ sub read_cfg_file
     #
     # Make sure certain variables are set (in case this is a non-CLM config file)
     #
-    if ( $cfg->get('spmd') eq "" ) { $config{'spmd'} = 0; }
-    if ( $cfg->get('smp')  eq "" ) { $config{'smp'}  = 0; }
-    if ( $cfg->is_valid_name('cam_bld') ) { $config{'mode'} = "ccsm_seq_cam"; }
-    #
-    # If cam config file -- set CLM specific things unknown by CAM
-    #
-    if ( $config{'mode'} eq "ccsm_seq_cam" ) {
-       print "CAM configuration file\n" if $printing;
-       my @deflist = ("ad_spinup", "exit_spinup" );
-       foreach my $item ( @deflist ) {
-          if ( ! defined($config{$item}) ) { $config{$item} = "off"; }
-       }
-       my $cppdefs = $config{'cppdefs'};
-       my @cpp     = split( " ", $cppdefs );
-       foreach my $cpp ( @cpp ) {
-          if (      $cpp =~ /^[ ]*-D([^ ]+)[ ]*$/ ) {
-            $cpp = $1;
-          } elsif ( $cpp =~ /^[ ]*-U([^ ]+)[ ]*$/ ) {
-            next;
-          } else {
-            die "$cppdefs in configuration cache file: $file is not in a readible format\n";
-          }
-          foreach my $item ( @deflist ) {
-              if ( $cpp eq $item ) {
-                $config{$item} = "on";
-              }
-          }
-          if ( $cpp eq "cn" ) {
-            $config{'bgc'} = $cpp;
-          }
-          if ( $cpp eq "casa" ) {
-            $config{'bgc'} = $cpp;
-          }
-          if ( $cpp eq "cndv" ) {
-            $config{'bgc'} = $cpp;
-          }
-       }
-    }
+    if ( $cfg->get('use_mpiserial') eq "" ) { $config{'use_mpiserial'} = 0; }
+    if ( $cfg->get('smp')           eq "" ) { $config{'smp'}           = 0; }
     foreach my $key ( keys( %config ) ) {
        if ( $cfg->is_valid_name( $key ) ) {
           $cfg->set( $key, $config{$key} );

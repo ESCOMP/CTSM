@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clm_time_manager
 
    use shr_kind_mod, only: r8 => shr_kind_r8
@@ -63,7 +60,7 @@ module clm_time_manager
       dtime_rad      = uninit_int,  &! radiation interval in seconds
       nstep_rad_prev = uninit_int    ! radiation interval in seconds
 
-! Input from CCSM driver
+! Input from CESM driver
    integer, save ::&
       nelapse       = uninit_int,  &! number of timesteps (or days if negative) to extend a run
       start_ymd     = uninit_int,  &! starting date for run in yearmmdd format

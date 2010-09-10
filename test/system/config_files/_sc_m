@@ -1,3 +1,3 @@
--mode ccsm_seq
--spmd -nosmp
+-mode clm_stndln
+-nouse_mpiserial -nosmp
 -s

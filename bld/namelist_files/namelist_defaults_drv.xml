@@ -65,20 +65,25 @@ $URL$
 <!-- Length of run -->
 <stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
 <stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
-<stop_option hgrid="1x1_urbanc_alpha"  mask="navy" >'nsteps'</stop_option>
+<stop_option hgrid="1x1_urbanc_alpha"  mask="navy" >nsteps</stop_option>
+<stop_option   bgc="cn"           ad_spinup="on"   >nyears</stop_option>
+<stop_option   bgc="cn"         exit_spinup="on"   >nyears</stop_option>
+<stop_option                   final_spinup="on"   >nyears</stop_option>
 <stop_option                                       >ndays</stop_option>
 
 <stop_n hgrid="1x1_mexicocityMEX" mask="navy" >159</stop_n>
 <stop_n hgrid="1x1_vancouverCAN"  mask="navy" >330</stop_n>
 <stop_n hgrid="1x1_urbanc_alpha"  mask="navy" >22772</stop_n>
+<stop_n   bgc="cn"           ad_spinup="on"   >600</stop_n>
+<stop_n   bgc="cn"         exit_spinup="on"   >  1</stop_n>
+<stop_n                   final_spinup="on"   > 50</stop_n>
 <stop_n                                       >  1</stop_n>
 
 <!-- Starting date -->
-<start_ymd hgrid="1.9x2.5"           mask="gx1v5" bgc="cn"  >   25101</start_ymd>
-<start_ymd hgrid="1x1_mexicocityMEX" mask="navy"            >19931201</start_ymd>
-<start_ymd hgrid="1x1_vancouverCAN"  mask="navy"            >19920812</start_ymd>
-<start_ymd hgrid="1x1_urbanc_alpha"  mask="navy"            >00010812</start_ymd>
-<start_ymd                                                  >    101</start_ymd>
+<run_startdate hgrid="1x1_mexicocityMEX" mask="navy"        >1993-12-01</run_startdate>
+<run_startdate hgrid="1x1_vancouverCAN"  mask="navy"        >1992-08-12</run_startdate>
+<run_startdate hgrid="1x1_urbanc_alpha"  mask="navy"        >0001-08-12</run_startdate>
+<run_startdate                                              >0001-01-01</run_startdate>
 
 <start_tod hgrid="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
 <start_tod hgrid="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>

@@ -15,25 +15,25 @@ n is the configuration type:
 8 -- interpinic
 9 -- tools scripts
 0 -- unused
-A -- Standard Sequential CCSM mode 
-B -- Standard ccsm_seq with SNICAR_FRC on
-C -- ccsm_seq URBAN
-D -- ccsm_seq Pergro
-E -- ccsm_seq numpft=4, VOC, DUST, RTM
-F -- ccsm_seq numpft=17, VOC, DUST, RTM
-G -- ccsm_seq numpft=17
-H -- ccsm_seq numpft=17, CN
-J -- ccsm_seq numpft=4, CASA
-K -- ccsm_seq numpft=10, CNDV
-L -- ccsm_seq Standard default
+A -- Standard CESM mode 
+B -- Standard CESM mode with SNICAR_FRC on
+C -- clm_stndln URBAN
+D -- clm_stndln Pergro
+E -- clm_stndln numpft=4, VOC, DUST, RTM
+F -- clm_stndln numpft=17, VOC, DUST, RTM
+G -- clm_stndln numpft=17
+H -- clm_stndln numpft=17, CN
+J -- clm_stndln numpft=4, CASA
+K -- clm_stndln numpft=10, CNDV
+L -- clm_stndln Standard default
 M -- ncl scripts (such as ndepregrid)
-N -- ccsm_seq MEXICOCITY
-O -- ccsm_seq VANCOUVER
+N -- clm_stndln MEXICOCITY
+O -- clm_stndln VANCOUVER
 P -- unused
 Q -- generate_urban_input
-R -- ccsm_seq numpft=17, CN, C13
+R -- clm_stndln numpft=17, CN, C13
 S -- unused
-V -- ccsm_seq standard default, with glc_mec=10
+V -- clm_stndln standard default, with glc_mec=10
 
 m is the resolution
 
@@ -68,6 +68,8 @@ R -- 1.9x2.5 with ice_runoff and scaled_harvest
 S -- with CLM_USRDAT_NAME=13x12pt_f19_alaskaUSA 
 V -- 4x5 with drydep
 W -- 10x15 with transient 1850-2100 for rcp=6
+X -- 10x15 with transient 1850-2100 for rcp=4.5
+Y -- 10x15 with transient 1850-2100 for rcp=2.6
 
 i is the specific test (usually this implies...)
 

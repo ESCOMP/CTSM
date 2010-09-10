@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module domainMod
 !-----------------------------------------------------------------------
 !BOP
@@ -39,7 +36,7 @@ module domainMod
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
-     real(r8),pointer :: asca(:)    ! area scaling from CCSM driver
+     real(r8),pointer :: asca(:)    ! area scaling from CESM driver
      character*16     :: set        ! flag to check if domain is set
      integer ,pointer :: glcmask(:) ! glc mask: 1=sfc mass balance required by GLC component
                                     !           0=SMB not required (default)

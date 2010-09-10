@@ -28,7 +28,7 @@ begin
   sim_yr_rng = getenv("SIM_YR_RNG");                ; Get input simulation year range to use
   debug_str  = getenv("DEBUG");                     ; Don't run just -- debug
   print_str  = getenv("PRINT");                     ; Do Extra printing for debugging
-  csmdata    = getenv("MYCSMDATA");                 ; Your personal CCSM inputdata location
+  csmdata    = getenv("MYCSMDATA");                 ; Your personal CESM inputdata location
 
   if ( ismissing(res) )then
      res = "1.9x2.5";
@@ -81,7 +81,7 @@ begin
      id = "13x12pt_f19_alaskaUSA";
   end if
   if ( ismissing(csmdata) )then
-     csmdata    = getenv("CSMDATA");   ; Standard CCSM inputdata location
+     csmdata    = getenv("CSMDATA");   ; Standard CESM inputdata location
      if ( ismissing(csmdata) )then
         csmdata = "/fs/cgd/csm/inputdata";
      end if
@@ -147,10 +147,11 @@ begin
   ; Setup filenames to process
   ;
 
-  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "stream_fldfilename_ndep", "domainfile" /)
-  qryopt    = (/ querynyr,   querynyr,     querynyr,  querynyr,  querynyr,   queryyrs,  queryyrs,                  querynyr     /)
-  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat",     "lat",                     "nj"         /)
-  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon",     "lon",                     "ni"         /)
+  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "stream_fldfilename_ndep", "domainfile"      /)
+  qryopt    = (/ querynyr,   querynyr,     querynyr,  querynyr,  querynyr,   queryyrs,  queryyrs,                  querynyr          /)
+  namelist  = (/ " ",        " ",          " ",       " ",       " ",        "clmexp",  "ndepdyn_nml",             "shr_strdata_nml" /)
+  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat",     "lat",                     "nj"              /)
+  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon",     "lon",                     "ni"              /)
 
   ;
   ; Loop over each of the files to process...
@@ -159,14 +160,10 @@ begin
      ;
      ; Get the filename of the input global file and the output regional filename
      ;
-     if ( files(i) .eq. "domainfile" ) then
-        queryopt= " -namelist shr_strdata_nml";
+     if ( namelist(i) .eq. " " ) then
+        queryopt= " ";
      else
-        if ( files(i) .eq. "stream_fldfilename_ndep" ) then
-           queryopt= " -namelist ndepdyn_nml";
-        else
-           queryopt= " ";
-        end if
+        queryopt= " -namelist "_namelist(i);
      end if
      qry = querynml+queryopts+qryopt(i)+queryopt+" -res "+res+" -var "+files(i);
      globalfile = systemfunc( qry );

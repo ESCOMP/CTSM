@@ -22,7 +22,7 @@ setenv COMP "unknown"
 if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
 if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
-set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -rtm $rtm -glc_nec $GLC_NEC"
+set config_opts = "-mode ext_cesm $CLM_CONFIG_OPTS -rtm $rtm -glc_nec $GLC_NEC"
 $CODEROOT/lnd/clm*/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
@@ -49,7 +49,7 @@ endif
 set co2ppmv = " co2_ppmv         =  $CCSM_CO2_PPMV"
 set co2type = " co2_type         =  '$CLM_CO2_TYPE'"
 
-cat >> $cfgdir/ccsm_namelist << EOF1
+cat >> $cfgdir/cesm_namelist << EOF1
  &clm_inparm
  dtime            =  $clm_dtime
 $rtmnsteps
@@ -67,7 +67,7 @@ EOF1
 # a valid namelist, just like any file that supplies user input to
 # build-namelist via the -infile argument.
 if (-f $CASEROOT/user_nl_clm) then
-   cat $CASEROOT/user_nl_clm >> $cfgdir/ccsm_namelist || exit -1
+   cat $CASEROOT/user_nl_clm >> $cfgdir/cesm_namelist || exit -1
 endif
 
 #
@@ -112,7 +112,7 @@ if ( "$CLM_USRDAT_NAME" != "UNSET" )then
    if ( "$RESOLUTION" == "" || "$RESOLUTION" == "UNSET" ) set RESOLUTION = "$CLM_USRDAT_NAME"
 endif
 set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
-set options = "$options -infile ccsm_namelist -clm_start_type $START_TYPE $CLM_BLDNML_OPTS"
+set options = "$options -infile cesm_namelist -clm_start_type $START_TYPE $CLM_BLDNML_OPTS"
 if ("$COMP_ATM" == "datm" )then
    set options = "$options  -datm_presaero $DATM_PRESAERO"
 else
@@ -151,7 +151,7 @@ EOF1
 # Remove temporary namelist in the clmconf directory
 # (Leave config_cache.xml file as it documents what was done here)
 #
-\rm -f $CASEBUILD/clmconf/lnd_in $CASEBUILD/clmconf/ccsm_namelist
+\rm -f $CASEBUILD/clmconf/lnd_in $CASEBUILD/clmconf/cesm_namelist
 
 #--------------------------------------------------------------------
 # Create clm.buildexe.csh
@@ -170,8 +170,8 @@ cp -f \$CASEBUILD/clmconf/misc.h       .tmp
 cmp -s .tmp misc.h       || mv -f .tmp misc.h
 cp -f \$CASEBUILD/clmconf/preproc.h    .tmp
 cmp -s .tmp preproc.h    || mv -f .tmp preproc.h
-cp -f \$CASEBUILD/clmconf/CCSM_cppdefs .tmp
-cmp -s .tmp CCSM_cppdefs || mv -f .tmp CCSM_cppdefs
+cp -f \$CASEBUILD/clmconf/CESM_cppdefs .tmp
+cmp -s .tmp CESM_cppdefs || mv -f .tmp CESM_cppdefs
 
 setenv COMP "unknown"
 if (\$COMP_INTERFACE == 'MCT' ) setenv COMP mct
@@ -186,13 +186,13 @@ EOF
 #
 # Build the clm library
 #
-set clmdefs = "`cat \$CASEBUILD/clmconf/CCSM_cppdefs`"
+set clmdefs = "`cat \$CASEBUILD/clmconf/CESM_cppdefs`"
 gmake complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$CASETOOLS/Makefile || exit 2
 
 EOF2
 
 #
 # Remove any temporary configure files in the clmconf directory
-# (Some files are still used in clm.buildexe.csh, so leave those around: CCSM_cppdefs and *.h)
+# (Some files are still used in clm.buildexe.csh, so leave those around: CESM_cppdefs and *.h)
 #
 \rm -f $CASEBUILD/clmconf/Filepath

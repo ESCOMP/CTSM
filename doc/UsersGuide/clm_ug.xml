@@ -17,7 +17,6 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY quickstart_guide    SYSTEM "quickstart_guide.xml">
   <!ENTITY quickstart_userdata SYSTEM "quickstart_usrdat.xml">
   <!ENTITY co2streams_diff     SYSTEM "addco2_datm.buildnml.xml">
-  <!ENTITY fixstreams_diff     SYSTEM "fixvan_datm.buildnml.xml">
   <!ENTITY preface             SYSTEM "preface.xml">
   <!ENTITY custom              SYSTEM "custom.xml">
   <!ENTITY tools               SYSTEM "tools.xml">
@@ -45,7 +44,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY clm35             "<acronym>CLM3.5</acronym>">
   <!ENTITY clm4              "<acronym>CLM4</acronym>">
   <!ENTITY clm40             "<acronym>CLM4.0.00</acronym>">
-  <!ENTITY clmrel            "<acronym>CLM4.0.09</acronym>">
+  <!ENTITY clmrel            "<acronym>CLM4.0.10</acronym>">
   <!ENTITY ccsm              "<acronym>CCSM</acronym>">
   <!ENTITY ccsm4             "<acronym>CCSM4.0</acronym>">
   <!ENTITY cesm              "<acronym>CESM</acronym>">
@@ -76,7 +75,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY CLMBLDNML         "<envar>CLM_BLDNML_OPTS</envar>">
   <!ENTITY CLMUSECASE        "<envar>CLM_NML_USE_CASE</envar>">
   <!ENTITY CLMNAMELIST       "<envar>CLM_NAMELIST_OPTS</envar>">
-  <!ENTITY CLM1PT            "<envar>CLM_PT1_NAME</envar>">
+  <!ENTITY CLM1PT            "<literal>CLM_PT1_NAME</literal>">
   <!ENTITY CLMQIAN           "<literal>CLM_QIAN</literal>">
   <!ENTITY CLMUSRDAT         "<envar>CLM_USRDAT_NAME</envar>">
   <!ENTITY CLMCO2            "<envar>CLM_CO2_TYPE</envar>">

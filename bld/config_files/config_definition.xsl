@@ -15,57 +15,78 @@
   <body>
     <h2>Configuration Definition</h2>
 
-    <h3>Physics Configurations</h3>
     <table border="1" cellpadding="10">
+    <caption><font size="larger"><bold>Physics Configurations</bold></font></caption>
     <tr>
-      <th>Name</th>
-      <th>Value</th>
-      <th>Valid Values</th>
+    <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Value</th>
       <th>Description</th>
+    </tr>
+    <tr>
+      <th>Valid Values</th>
+    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='physics']"/>
     </table>
 
-    <h3>Biogeochemistry Configurations</h3>
     <table border="1" cellpadding="10">
+    <caption><font size="larger"><bold>Biogeochemistry Configurations</bold></font></caption>
     <tr>
-      <th>Name</th>
-      <th>Value</th>
-      <th>Valid Value</th>
+    <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Value</th>
       <th>Description</th>
+    </tr>
+    <tr>
+      <th>Valid Value</th>
+    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='bgc']"/>
     </table>
 
-    <h3>Directories</h3>
     <table border="1" cellpadding="10">
+    <caption><font size="larger"><bold>Configuration Directories</bold></font></caption>
     <tr>
-      <th>Name</th>
-      <th>Value</th>
-      <th>Valid Value</th>
+    <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Value</th>
       <th>Description</th>
+    </tr>
+    <tr>
+      <th>Valid Value</th>
+    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='directories']"/>
     </table>
 
-    <h3>Machine Options</h3>
     <table border="1" cellpadding="10">
+    <caption><font size="larger"><bold>Configuration Machine Options</bold></font></caption>
     <tr>
-      <th>Name</th>
-      <th>Value</th>
-      <th>Valid Value</th>
+    <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Value</th>
       <th>Description</th>
+    </tr>
+    <tr>
+      <th>Valid Value</th>
+    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='mach_options']"/>
     </table>
 
-    <h3>Standalone CLM Testing Options (NOT used by normal CCSM scripts)</h3>
     <table border="1" cellpadding="10">
+    <caption><font size="larger">
+<bold>Configuration Standalone CLM Testing Options (NOT used by normal CESM scripts)</bold></font></caption>
     <tr>
-      <th>Name</th>
-      <th>Value</th>
-      <th>Valid Value</th>
+    <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Value</th>
       <th>Description</th>
+    </tr>
+    <tr>
+      <th>Valid Value</th>
+    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='standalone_test']"/>
     </table>
@@ -75,10 +96,12 @@
 
 <xsl:template match="entry">
   <tr>
-    <td><font color="#ff0000"><xsl:value-of select="@id"/></font></td>
-    <td><xsl:value-of select="@value"/></td>
-    <td><xsl:value-of select="@valid_values"/></td>
-    <td><bold>Valid Values:</bold><xsl:apply-templates/></td>
+    <td rowspan="2"><font color="#ff0000"><xsl:value-of select="@id"/></font></td>
+    <td rowspan="2"><xsl:value-of select="@value"/></td>
+    <td><xsl:apply-templates/></td>
+  </tr>
+  <tr>
+    <td><b>Valid values: </b> <xsl:value-of select="@valid_values"/></td>
   </tr>
 </xsl:template>
 

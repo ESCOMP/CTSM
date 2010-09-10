@@ -28,7 +28,7 @@ NOTE: In order to successfully build, some source files are required from
    or
       mksrf_fcamfile    - cam topo file
    or 
-      mksrf_fccsmdom    - ccsm domain file
+      mksrf_fccsmdom    - cesm domain file
    or
       mksrf_fclmgrid    - clm grid or surface dataset file
 
@@ -44,7 +44,7 @@ NOTE: In order to successfully build, some source files are required from
 
 Notes:
 
-1. When using CCSM domain files, sometimes the latitude/longitudes on the domain files
+1. When using CESM domain files, sometimes the latitude/longitudes on the domain files
    are slightly inconsistent with the existing clm grid datasets. To make the grid
    coordinates exactly the same as existing grid files, enter a mksrf_fclmgrid as
    well so that the latitudes/longitudes used will be from the clm grid file.
@@ -70,7 +70,7 @@ Important files:
   Filepath ---------------- Filepath location to source files needed
   misc.h ------------------ CPP preprocess file required by outside source code
   preproc.h --------------- CPP preprocess file required by outside source code
-  mkgriddata.ccsm_dom ----- Sample namelist reading in a CCSM domain file
+  mkgriddata.cesm_dom ----- Sample namelist reading in a CESM domain file
   mkgriddata.namelist ----- Sample namelist for a global grid
   mkgriddata.regional ----- Sample namelist for a regional grid
   mkgriddata.singlept ----- Sample namelist for a single-point grid

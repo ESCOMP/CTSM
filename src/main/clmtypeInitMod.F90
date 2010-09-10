@@ -889,6 +889,8 @@ contains
     allocate(pps%ftid(beg:end,1:numrad))
     allocate(pps%ftii(beg:end,1:numrad))
     allocate(pps%u10(beg:end))
+    allocate(pps%u10_clm(beg:end))
+    allocate(pps%va(beg:end))
     allocate(pps%fv(beg:end))
     allocate(pps%ram1(beg:end))
     allocate(pps%vds(beg:end))
@@ -1038,6 +1040,8 @@ contains
     pps%ftid(beg:end,:numrad) = nan
     pps%ftii(beg:end,:numrad) = nan
     pps%u10(beg:end) = nan
+    pps%u10_clm(beg:end) = nan
+    pps%va(beg:end) = nan
     pps%fv(beg:end) = nan
     pps%ram1(beg:end) = nan
     pps%vds(beg:end) = nan

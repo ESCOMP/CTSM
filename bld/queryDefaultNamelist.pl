@@ -59,7 +59,7 @@ SYNOPSIS
      $ProgName [options]
 OPTIONS
      -config "file"                       CLM build configuration file created by configure.
-     -ccsm                                CCSM mode set csmdata to \$DIN_LOC_ROOT.
+     -cesm                                CESM mode set csmdata to \$DIN_LOC_ROOT.
      -usrname "name"                      Dataset resolution/descriptor for personal datasets.  Default : not used
                                           Example: 1x1pt_boulderCO to describe location,
                                           number of pts
@@ -107,7 +107,7 @@ EOF
                var        => undef,
                hgrid      => undef,
                config     => undef,
-               ccsm       => undef, 
+               cesm       => undef, 
                csmdata    => undef,
                demand     => undef,
                test       => undef,
@@ -126,7 +126,7 @@ EOF
         "v|var=s"      => \$opts{'var'},
         "r|res=s"      => \$opts{'hgrid'},
         "config=s"     => \$opts{'config'},
-        "ccsm"         => \$opts{'ccsm'},
+        "cesm"         => \$opts{'cesm'},
         "csmdata=s"    => \$opts{'csmdata'},
         "demand"       => \$opts{'demand'},
         "options=s"    => \$opts{'options'},
@@ -182,7 +182,7 @@ EOF
   } else {
      $inputopts{csmdata} = $opts{csmdata};
   }
-  if ( defined($opts{ccsm}) ) {
+  if ( defined($opts{cesm}) ) {
      $inputopts{csmdata} = '$DIN_LOC_ROOT';
   }
   if ( ! defined($opts{config}) ) {

@@ -133,6 +133,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fndepdat hgrid="1.9x2.5"   bgc="cndv" sim_year="2095" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2090-2099_1.9x2.5_c100127.nc</fndepdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cndv" sim_year="2105" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2100-2109_1.9x2.5_c100127.nc</fndepdat>
 
+<!-- mksrf_navyoro Orography -->
+<mksrf_fnavyoro hgrid="0.33x0.33" mask="navy" >lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc</mksrf_fnavyoro>
+
 <!-- RCP 6.0 - the AIM scenario -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn"   sim_year="2005" rcp="6">lnd/clm2/ndepdata/ndep_clm_rcp6.0_simyr2000-2009_1.9x2.5_c100806.nc</fndepdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cn"   sim_year="2015" rcp="6">lnd/clm2/ndepdata/ndep_clm_rcp6.0_simyr2010-2019_1.9x2.5_c100806.nc</fndepdat>

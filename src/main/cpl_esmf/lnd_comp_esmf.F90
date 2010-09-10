@@ -5,8 +5,8 @@ module lnd_comp_esmf
 !
 ! !MODULE: lnd_comp_esmf
 !
-!  Interface of the active land model component of CCSM the CLM (Community Land Model)
-!  with the main CCSM driver. This is a thin interface taking CCSM driver information
+!  Interface of the active land model component of CESM the CLM (Community Land Model)
+!  with the main CESM driver. This is a thin interface taking CESM driver information
 !  in MCT (Model Coupling Toolkit) format and converting it to use by CLM and outputing
 !  if in ESMF (Earth System Modelling Framework) format.
 !
@@ -39,12 +39,12 @@ module lnd_comp_esmf
   private :: lnd_DistGrid_esmf        ! Distribute clm grid
   private :: lnd_chkAerDep_esmf       ! Check if aerosol deposition data is input or not
   private :: lnd_domain_esmf          ! Set the land model domain information
-  private :: lnd_export_esmf          ! export land data to CCSM coupler
-  private :: lnd_import_esmf          ! import data from the CCSM coupler to the land model
+  private :: lnd_export_esmf          ! export land data to CESM coupler
+  private :: lnd_import_esmf          ! import data from the CESM coupler to the land model
 #ifdef RTM
   private :: rof_DistGrid_esmf        ! Distribute river runoff grid
   private :: rof_domain_esmf          ! Set the river runoff model domain information
-  private :: rof_export_esmf          ! Export the river runoff model data to the CCSM coupler
+  private :: rof_export_esmf          ! Export the river runoff model data to the CESM coupler
 #endif
   private :: sno_export_esmf
   private :: sno_import_esmf
@@ -1066,12 +1066,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 !------------------------------------------------------------------------------
 !BOP
 ! !USES:
-    use shr_const_mod    , only : spval => SHR_CONST_SPVAL
-    use shr_sys_mod      , only : shr_sys_flush
-    use clm_varctl       , only : iulog
-    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file
-    use spmdMod          , only : masterproc
-    use aerdepMod        , only : aerdepini
 !
 ! !ARGUMENTS:
     implicit none
@@ -1080,9 +1074,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     integer, intent(out) :: rc              ! return code
 !
 ! !LOCAL VARIABLES:
-    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
-    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
     logical :: atm_aero                    ! Flag if aerosol data sent from atm model
+    character(len=32), parameter :: sub = "lnd_chkAerDep_esmf"
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek, Fei Liu
@@ -1096,35 +1089,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
     if ( .not. atm_aero )then
-        caerdep_filled = .false.
-        dustdep_filled = .false.
-    end if
-
-    if ( caerdep_filled )then
-       if ( masterproc ) &
-          write(iulog,*) "Using aerosol deposition sent from atmosphere model"
-    else
-       if ( masterproc ) then
-          write(iulog,*) "WARNING: carbon aerosol deposition data NOT sent in from atmosphere model"
-          write(iulog,*) "WARNING: Reading carbon aerosol deposition from CLM input file"
-       end if
-    end if
-    if ( dustdep_filled )then
-       if ( masterproc ) &
-          write(iulog,*) "Using dust deposition sent from atmosphere model"
-    else
-       if ( masterproc ) then
-          write(iulog,*) "WARNING: dust deposition data NOT sent in from atmosphere model"
-          write(iulog,*) "WARNING: Reading dust deposition from CLM input file"
-       end if
-    end if
-    call shr_sys_flush( iulog )
-
-    set_caerdep_from_file = .not. caerdep_filled
-    set_dustdep_from_file = .not. dustdep_filled
-
-    if ( .not. atm_aero )then
-       call aerdepini( )
+       call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
     end if
 
   end subroutine lnd_chkAerDep_esmf
@@ -1168,7 +1133,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 !EOP
 !---------------------------------------------------------------------------
 
-    ! ccsm sign convention is that fluxes are positive downward
+    ! cesm sign convention is that fluxes are positive downward
 
     fptr(:,:) = 0.0_r8
 
@@ -1248,7 +1213,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
-    use clm_varctl      , only: set_caerdep_from_file, set_dustdep_from_file ! will be removed
     use clm_varctl      , only: iulog
     use seq_flds_indices
     implicit none
@@ -1338,25 +1302,21 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
         a2l%forc_solai(g,2) = fptr(index_x2l_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
         a2l%forc_solai(g,1) = fptr(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
-        ! atmosphere coupling, if using prognostic aerosols
-        if ( .not. set_caerdep_from_file ) then
-           a2l%forc_aer(g,1) =  fptr(index_x2l_Faxa_bcphidry,i)
-           a2l%forc_aer(g,2) =  fptr(index_x2l_Faxa_bcphodry,i)
-           a2l%forc_aer(g,3) =  fptr(index_x2l_Faxa_bcphiwet,i)
-           a2l%forc_aer(g,4) =  fptr(index_x2l_Faxa_ocphidry,i)
-           a2l%forc_aer(g,5) =  fptr(index_x2l_Faxa_ocphodry,i)
-           a2l%forc_aer(g,6) =  fptr(index_x2l_Faxa_ocphiwet,i)
-        endif
-        if ( .not. set_dustdep_from_file ) then
-           a2l%forc_aer(g,7)  =  fptr(index_x2l_Faxa_dstwet1,i)
-           a2l%forc_aer(g,8)  =  fptr(index_x2l_Faxa_dstdry1,i)
-           a2l%forc_aer(g,9)  =  fptr(index_x2l_Faxa_dstwet2,i)
-           a2l%forc_aer(g,10) =  fptr(index_x2l_Faxa_dstdry2,i)
-           a2l%forc_aer(g,11) =  fptr(index_x2l_Faxa_dstwet3,i)
-           a2l%forc_aer(g,12) =  fptr(index_x2l_Faxa_dstdry3,i)
-           a2l%forc_aer(g,13) =  fptr(index_x2l_Faxa_dstwet4,i)
-           a2l%forc_aer(g,14) =  fptr(index_x2l_Faxa_dstdry4,i)
-        endif
+        ! atmosphere coupling, for prognostic/prescribed aerosols
+        a2l%forc_aer(g,1)  =  fptr(index_x2l_Faxa_bcphidry,i)
+        a2l%forc_aer(g,2)  =  fptr(index_x2l_Faxa_bcphodry,i)
+        a2l%forc_aer(g,3)  =  fptr(index_x2l_Faxa_bcphiwet,i)
+        a2l%forc_aer(g,4)  =  fptr(index_x2l_Faxa_ocphidry,i)
+        a2l%forc_aer(g,5)  =  fptr(index_x2l_Faxa_ocphodry,i)
+        a2l%forc_aer(g,6)  =  fptr(index_x2l_Faxa_ocphiwet,i)
+        a2l%forc_aer(g,7)  =  fptr(index_x2l_Faxa_dstwet1,i)
+        a2l%forc_aer(g,8)  =  fptr(index_x2l_Faxa_dstdry1,i)
+        a2l%forc_aer(g,9)  =  fptr(index_x2l_Faxa_dstwet2,i)
+        a2l%forc_aer(g,10) =  fptr(index_x2l_Faxa_dstdry2,i)
+        a2l%forc_aer(g,11) =  fptr(index_x2l_Faxa_dstwet3,i)
+        a2l%forc_aer(g,12) =  fptr(index_x2l_Faxa_dstdry3,i)
+        a2l%forc_aer(g,13) =  fptr(index_x2l_Faxa_dstwet4,i)
+        a2l%forc_aer(g,14) =  fptr(index_x2l_Faxa_dstdry4,i)
 
         ! Determine optional receive fields
 
@@ -1689,7 +1649,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 !
 ! !DESCRIPTION:
 !
-! Send the runoff model export state to the CCSM coupler
+! Send the runoff model export state to the CESM coupler
 !
 !---------------------------------------------------------------------------
 ! !USES:

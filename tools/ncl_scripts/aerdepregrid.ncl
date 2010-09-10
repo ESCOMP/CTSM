@@ -56,7 +56,7 @@ begin
   filetype = "faerdep";      ; File type:  faerdep
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
-  querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
+  querynml = "bld/queryDefaultNamelist.pl -silent -justvalue -namelist clmexp";
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if

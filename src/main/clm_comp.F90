@@ -8,7 +8,7 @@ module clm_comp
 !
 ! High level initial and run phase component module for CLM. This module interfaces
 ! with the generic lnd_comp_<framework> module to send/receive land model information
-! with the interface desired by CCSM for initialization phase and run time stepping
+! with the interface desired by CESM for initialization phase and run time stepping
 ! phases.
 !
 !---------------------------------------------------------------------------

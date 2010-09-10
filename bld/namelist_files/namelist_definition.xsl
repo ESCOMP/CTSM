@@ -35,8 +35,8 @@
     <li>Valid values (if restricted).</li>
     </ul>
 
-    <h3>CLM Physics Options</h3>
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist Physics Options</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -48,8 +48,8 @@
       <xsl:apply-templates select="entry[@category='clm_physics']"/>
     </table>
 
-    <h3>CLM Datasets</h3>
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist Datasets</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -61,8 +61,8 @@
       <xsl:apply-templates select="entry[@category='datasets']"/>
     </table>
 
-    <h3>CLM History output settings</h3>
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist History output settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -74,8 +74,8 @@
       <xsl:apply-templates select="entry[@category='history']"/>
     </table>
 
-    <h3>CLM Restart settings</h3>
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist Restart settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -87,8 +87,8 @@
       <xsl:apply-templates select="entry[@category='clm_restart']"/>
     </table>
 
-    <h3>CLM Performance Tuning</h3>
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist Performance Tuning</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -100,8 +100,8 @@
       <xsl:apply-templates select="entry[@category='clm_performance']"/>
     </table>
 
-    <h3>CASA Namelist items in clm_inparm namelist (EXPERIMENTAL NOT SUPPORTED!)</h3>
     <table border="1" cellpadding="10">
+    <caption>CASA Namelist items in clm_inparm namelist (EXPERIMENTAL NOT SUPPORTED!)</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -114,8 +114,8 @@
     </table>
 
 <!--
-    <h3>PIO Namelist items in clm_inparm namelist (EXPERIMENTAL NOT WORKING!)</h3>
     <table border="1" cellpadding="10">
+    <caption>PIO Namelist items in clm_inparm namelist (EXPERIMENTAL NOT WORKING!)</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -143,8 +143,8 @@
     <li>Variable description.</li>
     </ul>
 
-    <h3>CLM Default Settings</h3>
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist Default Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -177,8 +177,8 @@
     <li>Valid values (if restricted).</li>
     </ul>
 
-    <h3>Driver Solar, orbital and radiation options</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver Namelist Solar, Orbital and Radiation Options</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -190,8 +190,8 @@
       <xsl:apply-templates select="entry[@category='radiation']"/>
     </table>
 
-    <h3>Data atmosphere model settings</h3>
     <table border="1" cellpadding="10">
+    <caption>Data Atmosphere Model Namelist Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -203,8 +203,8 @@
       <xsl:apply-templates select="entry[@category='datm']"/>
     </table>
 
-    <h3>Driver</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver Namelist Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -216,8 +216,8 @@
       <xsl:apply-templates select="entry[@category='driver']"/>
     </table>
 
-    <h3>Driver Time Manager</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver Time Manager Namelist Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -229,8 +229,8 @@
       <xsl:apply-templates select="entry[@category='time_mgr']"/>
     </table>
 
-    <h3>Driver and DATM Restart (Continuation and Branch) Runs</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver and DATM Restart (Continuation and Branch) Run Namelist Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -242,8 +242,8 @@
       <xsl:apply-templates select="entry[@category='restart']"/>
     </table>
 
-    <h3>Driver and DATM History Options</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver and DATM History Namelist Options</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -255,8 +255,8 @@
       <xsl:apply-templates select="entry[@category='drv_history']"/>
     </table>
 
-    <h3>Driver Performance Tuning and Profiling</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver Performance Tuning and Profiling Namelist Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -268,8 +268,8 @@
       <xsl:apply-templates select="entry[@category='performance']"/>
     </table>
 
-    <h3>Driver Single Column Atmosphere Model (part of CAM)</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver Single Column Model Namelist Options  (PTS_MODE)</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -281,8 +281,8 @@
       <xsl:apply-templates select="entry[@category='scam']"/>
     </table>
 
-    <h3>Data atmosphere model internal settings</h3>
     <table border="1" cellpadding="10">
+    <caption>Data Atmosphere Model Internal Namelist Settings</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>
@@ -294,8 +294,8 @@
       <xsl:apply-templates select="entry[@category='datm_internal']"/>
     </table>
 
-    <h3>Driver Dry-Deposition Options</h3>
     <table border="1" cellpadding="10">
+    <caption>Driver Dry-Deposition Namelist Options</caption>
       <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Type</th>

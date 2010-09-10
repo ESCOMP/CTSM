@@ -17,13 +17,6 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
        This mode is tested and functional, but is NOT constantly scientifcally validated, and should be 
        considered experimental.
 
-   PERGRO 	(-pergro)
-       This mode is tested to be functional, but NOT scientifically validated. It's purpose is in an attempt
-       to validate that a port to a new machine is reasonable, or changes that are only roundoff will NOT 
-       affect the climate. The best method for this validation is to run 100 year simulations with both and
-       make sure the climate is similar between each. We hope to validate the method using PERGRO in future
-       versions of the model.
-
 build-namelist items that are NOT recommended:
 
 -lnd_res 
@@ -48,8 +41,11 @@ Namelist items that should NOT be exercised:
         As above CASA is NOT scientifically validated and hence we don't recommend using it, thus we don't
         recommend using the casa namelist options (they are only available when running with CASA).
 
-See KnownBugs file for Known Problems:
+See KnownBugs/KnownLimitations files for Known Problems:
 
-    See the KnownBugs file in this directory for the list of known problmes.
+    See the KnownBugs file in this directory for the list of known problems. We expect
+    that eventually we will fix the bugs in this list. In the KnownLimitations file
+    we list limitations in the code that we have workarounds for that we do NOT expect
+    to fix.
 
 

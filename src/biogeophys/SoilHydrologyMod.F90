@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module SoilHydrologyMod
 
 !-----------------------------------------------------------------------
@@ -148,8 +145,6 @@ contains
     dtime = get_step_size()
 
     do j = 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
 
@@ -168,8 +163,6 @@ contains
 
     ! Saturated fraction
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        fff(c) = 0.5_r8
@@ -177,8 +170,6 @@ contains
        fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
 
@@ -197,8 +188,6 @@ contains
     ! Determine water in excess of ponding limit for urban roof and impervious road.
     ! Excess goes to surface runoff. No surface runoff for sunwall and shadewall.
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_urbanc
        c = filter_urbanc(fc)
        if (ctype(c) == icol_roof .or. ctype(c) == icol_road_imperv) then
@@ -291,8 +280,6 @@ contains
 
     ! Infiltration into surface soil layer (minus the evaporation)
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        if (snl(c) >= 0) then
@@ -304,8 +291,6 @@ contains
 
     ! No infiltration for impervious urban surfaces
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_urbanc
        c = filter_urbanc(fc)
        if (ctype(c) /= icol_road_perv) then
@@ -542,8 +527,6 @@ contains
     ! variable arrays instead of pointers
 
     do j = 1, nlevsoi
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           zmm(c,j) = z(c,j)*1.e3_r8
@@ -568,8 +551,6 @@ contains
     temp(:) = 0._r8
 
     do j = 1, nlevsoi
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           rootr_col(c,j) = 0._r8
@@ -578,8 +559,6 @@ contains
 
     do pi = 1,max_pft_per_col
        do j = 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
           do fc = 1, num_hydrologyc
              c = filter_hydrologyc(fc)
              if (pi <= npfts(c)) then
@@ -590,8 +569,6 @@ contains
              end if
           end do
        end do
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           if (pi <= npfts(c)) then
@@ -604,8 +581,6 @@ contains
     end do
 
     do j = 1, nlevsoi
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           if (temp(c) /= 0._r8) then
@@ -618,8 +593,6 @@ contains
     ! The layer index of the first unsaturated layer, i.e., the layer right above
     ! the water table
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        jwt(c) = nlevsoi
@@ -680,8 +653,6 @@ contains
 
     sdamp = 0._r8
     do j = 1, nlevsoi
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
 
@@ -710,8 +681,6 @@ contains
     end do
 
     ! aquifer (11th) layer
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        zmm(c,nlevsoi+1) = 0.5*(1.e3_r8*zwt(c) + zmm(c,nlevsoi))
@@ -727,8 +696,6 @@ contains
     ! Node j=1 (top)
 
     j = 1
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        qin(c,j)    = qflx_infl(c)
@@ -747,8 +714,6 @@ contains
     ! Nodes j=2 to j=nlevsoi-1
 
     do j = 2, nlevsoi - 1
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           den    = (zmm(c,j) - zmm(c,j-1))
@@ -773,8 +738,6 @@ contains
     ! Node j=nlevsoi (bottom)
 
     j = nlevsoi
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        if(j > jwt(c)) then !water table is in soil column
@@ -858,8 +821,6 @@ contains
     !scs: also compute qcharge from dwat in aquifer layer
     !scs: update in drainage for case jwt < nlevsoi
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_hydrologyc
        c = filter_hydrologyc(fc)
        do j = 1, nlevsoi
@@ -980,10 +941,7 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-!KO    integer  :: c,j,fc                   !indices
-!KO
     integer  :: c,j,fc,i                 !indices
-!KO
     real(r8) :: dtime                    !land model time step (sec)
     real(r8) :: xs(lbc:ubc)              !water needed to bring soil moisture to watmin (mm)
     real(r8) :: dzmm(lbc:ubc,1:nlevsoi)  !layer thickness (mm)
@@ -1006,9 +964,7 @@ contains
     real(r8) :: fracice_rsub(lbc:ubc)    !fractional impermeability of soil layers (-)
     real(r8) :: ka                       !hydraulic conductivity of the aquifer (mm/s)
     real(r8) :: dza                      !fff*(zwt-z(jwt)) (-)
-!KO
     real(r8) :: available_h2osoi_liq     !available soil liquid water in a layer
-!KO
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -1049,8 +1005,6 @@ contains
     ! Convert layer thicknesses from m to mm
 
     do j = 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           dzmm(c,j) = dz(c,j)*1.e3_r8
@@ -1059,8 +1013,6 @@ contains
 
     ! Initial set
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        qflx_drain(c)    = 0._r8 
@@ -1073,8 +1025,6 @@ contains
     ! The layer index of the first unsaturated layer, i.e., the layer right above
     ! the water table
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        jwt(c) = nlevsoi
@@ -1087,8 +1037,6 @@ contains
     end do
 
     ! Topographic runoff
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        fff(c)         = 1._r8/ hkdepth(c)
@@ -1106,8 +1054,6 @@ contains
 
     ! Water table calculation
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
 
@@ -1153,8 +1099,6 @@ contains
     !  if column fully saturated, excess water goes to runoff
 
     do j = nlevsoi,2,-1
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           xsi(c)            = max(h2osoi_liq(c,j)-eff_porosity(c,j)*dzmm(c,j),0._r8)
@@ -1163,8 +1107,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        xs1(c)          = max(max(h2osoi_liq(c,1),0._r8)-max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1))),0._r8)
@@ -1177,14 +1119,9 @@ contains
     ! If insufficient water in soil layers, get from aquifer water
 
     do j = 1, nlevsoi-1
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-!KO          if (h2osoi_liq(c,j) < 0._r8) then
-!KO
           if (h2osoi_liq(c,j) < watmin) then
-!KO
              xs(c) = watmin - h2osoi_liq(c,j)
           else
              xs(c) = 0._r8
@@ -1194,26 +1131,8 @@ contains
        end do
     end do
 
-!KO    j = nlevsoi
-!KO!dir$ concurrent
-!KO!cdir nodep
-!KO    do fc = 1, num_hydrologyc
-!KO       c = filter_hydrologyc(fc)
-!KO       if (h2osoi_liq(c,j) < watmin) then
-!KO          xs(c) = watmin-h2osoi_liq(c,j)
-!KO       else
-!KO          xs(c) = 0._r8
-!KO       end if
-!KO       h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
-!KO       wa(c) = wa(c) - xs(c)
-!KO       wt(c) = wt(c) - xs(c)
-!KO    end do
-
-!KO
 ! Get water for bottom layer from layers above if possible
     j = nlevsoi
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        if (h2osoi_liq(c,j) < watmin) then
@@ -1242,10 +1161,7 @@ contains
 ! drainage
        rsub_top(c) = rsub_top(c) - xs(c)/dtime
     end do
-!KO
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
 
@@ -1277,8 +1193,6 @@ contains
 
     ! No drainage for urban columns (except for pervious road as computed above)
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_urbanc
        c = filter_urbanc(fc)
        if (ctype(c) /= icol_road_perv) then

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module surfrdMod
 
 !-----------------------------------------------------------------------
@@ -221,7 +218,7 @@ contains
 !  (1) Dateline            :        -180 to 180       (negative W of Greenwich)
 !  (2) Greenwich (centered):    0 - dx/2 to 360 - dx/2
 !
-!    Grid 2 is the grid for cam and ccsm mode since the NCAR CAM
+!    Grid 2 is the grid for cam and cesm mode since the NCAR CAM
 !    starts at Greenwich, centered on Greenwich
 !
 ! !USES:

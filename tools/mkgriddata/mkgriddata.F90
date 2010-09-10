@@ -7,7 +7,7 @@ program mkgriddata
 !
 ! !DESCRIPTION:
 ! Creates land model grid dataset from original "raw" topo file
-! or ccsm or cam grid file.
+! or cesm or cam grid file.
 !
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
@@ -115,7 +115,7 @@ program mkgriddata
     end if
 
     if     (mksrf_fccsmdom /= ' ')  then
-       write(6,*) 'Setting grid from ccsm domain file ',trim(mksrf_fccsmdom)
+       write(6,*) 'Setting grid from cesm domain file ',trim(mksrf_fccsmdom)
        area_units = 1
        area_valid = .false.
        call creategrid(mksrf_fccsmdom,'mksrf_fccsmdom','external',grid,ldomain,writeTopo1, writeLFrc1)
@@ -143,7 +143,7 @@ program mkgriddata
        write(6,*) ' first cam files'
        write(6,*) ' second clm files'
        write(6,*) ' third navy oro'
-       write(6,*) ' fourth ccsm-domain'
+       write(6,*) ' fourth cesm-domain'
        write(6,*) ' last rawtopo'
        if ( nfile > nused )then
           write(6,*) 'More files than can be used'

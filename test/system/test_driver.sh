@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on breeze, edinburgh, bluefire, intrepid: 
+# usage on breeze, edinburgh, lynx, bluefire, intrepid: 
 # ./test_driver.sh
 #
 # usage on jaguar:
@@ -40,8 +40,8 @@ case $hostname in
 	    exit 2
 	fi
     fi
-    if [ -z "$CLM_CCSMBLD" ]; then
-	export CLM_CCSMBLD="TRUE"
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -125,7 +125,7 @@ export LAPI_DEBUG_RC_INIT_SETUP=no
 export INC_NETCDF=/contrib/netcdf-3.6.2/include
 export LIB_NETCDF=/contrib/netcdf-3.6.2/lib
 export MAKE_CMD="gmake -j 65"
-export CCSM_MACH="bluefire"
+export CESM_MACH="bluefire"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
@@ -173,7 +173,7 @@ export LIB_NETCDF=\$netcdf/lib
 export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
-export CCSM_MACH="generic_linux_intel"
+export CESM_MACH="generic_linux_intel"
 export CFG_STRING="-fc ifort -cc icc  -cppdefs '-DFORTRANUNDERSCORE' "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
@@ -193,8 +193,8 @@ EOF
     submit_script="test_driver_edinburgh_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
-    if [ -z "$CLM_CCSMBLD" ]; then
-	export CLM_CCSMBLD="TRUE"
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -223,7 +223,7 @@ if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
     input_file="tests_pretag_edinburgh"
 else
-    export CLM_CCSMBLD="FALSE"
+    export CLM_CESMBLD="FALSE"
     interactive="YES"
     input_file="tests_pretag_edinburgh_nompi"
 fi
@@ -251,7 +251,7 @@ if [ "\$CLM_FC" = "PGI" ]; then
     mpich=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
     export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="edinburgh_pgi"
+    export CESM_MACH="edinburgh_pgi"
     export CFG_STRING=""
     export TOOLS_MAKE_STRING=""
 elif [ "\$CLM_FC" = "INTEL" ]; then
@@ -259,7 +259,7 @@ elif [ "\$CLM_FC" = "INTEL" ]; then
     mpich=/usr/local/mpich-1.2.7p1-intel-3.2.02
     export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
     export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="edinburgh_intel"
+    export CESM_MACH="edinburgh_intel"
     export CFG_STRING="-fc ifort "
     export TOOLS_MAKE_STRING="USER_FC=ifort "
     /usr/local/intel-cluster-3.2.02/intel-login-script.sh
@@ -268,7 +268,7 @@ else
     mpich=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
     export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="edinburgh_lahey"
+    export CESM_MACH="edinburgh_lahey"
     export CFG_STRING="-fc lf95 -cc gcc "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
@@ -288,12 +288,121 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ## lynx
+    lynx* | l0*) 
+    submit_script="test_driver_lynx_${cur_time}.sh"
+
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
+    fi
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+#PBS -q regular
+# 
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l mppwidth=24
+#PBS -l walltime=06:00:00
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+# Use bourne shell
+#PBS -S /bin/sh
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_posttag_lynx"
+else
+    interactive="YES"
+    input_file="tests_posttag_lynx_nompi"
+fi
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=6
+fi
+export CLM_RESTART_THREADS=3
+
+##mpi tasks
+export CLM_TASKS=8
+export CLM_RESTART_TASKS=7
+
+export CLM_COMPSET="I"
+
+#-------------------------------------------------------------------------------
+# Runtime environment variables (from scripts4_100830)
+#-------------------------------------------------------------------------------
+
+export MPICH_MAX_SHORT_MSG_SIZE=8000 # default is 128000 bytes
+export MPICH_PTL_UNEX_EVENTS=960000  # default is  90000 (unexpected recv queue size)
+export MPICH_MSGS_PER_PROC=160000    # default is  32768
+export MPICH_PTL_SEND_CREDITS=-1
+
+export MPICH_ENV_DISPLAY=1
+export MPICH_VERSION_DISPLAY=1
+
+# These environment variables were suggested by Helen He to help get around compiler issues
+# with pgi9
+export MALLOC_MMAP_MAX_=0
+export MALLOC_TRIM_THRESHOLD_=536870912
+
+# The environment variables below produce corefiles and maybe (?) should be
+# moved to DEBUG mode at some point
+export MPICH_DBMASK=0x200
+
+# The environment variable below increase the stack size, which is necessary for
+# CICE to run threaded on this machine.  
+export MPSTKZ=64M
+
+#-------------------------------------------------------------------------------
+# Modules
+#-------------------------------------------------------------------------------
+
+module switch pgi       pgi/10.3.0        
+module switch xt-mpt    xt-mpt/4.0.3     
+module switch xt-libsci xt-libsci/10.4.3 
+module load netcdf/4.0.1.3
+
+netcdf=\$CRAY_NETCDF_DIR/netcdf-pgi
+export CESM_MACH="lynx_pgi"
+export CFG_STRING="-fc ftn "
+export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+
+export INC_NETCDF=\${netcdf}/include
+export LIB_NETCDF=\${netcdf}/lib
+export INC_MPI=""
+export LIB_MPI=""
+export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
+export MACH_WORKSPACE="/ptmp/\$USER"
+export CPRNC_EXE=/ptmp/csm/tools/cprnc/cprnc
+export DATM_QIAN_DATA_DIR="/ptmp/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
+export PFTDATA="/ptmp/csm/inputdata/lnd/clm2/rawdata"
+dataroot="/ptmp/csm"
+echo_arg="-e"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
     ##jaguar
     jaguar* ) 
     submit_script="test_driver_jaguar_${cur_time}.sh"
 
-    if [ -z "$CLM_CCSMBLD" ]; then
-	export CLM_CCSMBLD="TRUE"
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -386,7 +495,7 @@ export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
 export INC_PNETCDF=\${PNETCDF_DIR}/include
 export LIB_PNETCDF=\${PNETCDF_DIR}/lib
-export CCSM_MACH="jaguar"
+export CESM_MACH="jaguar"
 export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
@@ -422,7 +531,7 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
-export CCSM_MACH="yong_g95"
+export CESM_MACH="yong_g95"
 export NETCDF=/usr/local/netcdf-3-6-3
 export INC_NETCDF=\$NETCDF/include
 export LIB_NETCDF=\$NETCDF/lib
@@ -445,8 +554,8 @@ EOF
     login* )
     submit_script="test_driver_intrepid_${cur_time}.sh"
 
-    if [ -z "$CLM_CCSMBLD" ]; then
-	export CLM_CCSMBLD="TRUE"
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -476,7 +585,7 @@ export CLM_RESTART_TASKS=120
 
 export CLM_COMPSET="I"
 
-export CCSM_MACH="intrepid"
+export CESM_MACH="intrepid"
 
 export OBJECT_MODE=32
 export OMP_DYNAMIC=FALSE
@@ -792,7 +901,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluefire, edinburgh, breeze, intrepid: "
+    echo "usage on bluefire, edinburgh, lynx, breeze, intrepid: "
     echo "./test_driver.sh"
     echo ""
     echo "usage on jaguar: (compile interactively before submitting)"
@@ -821,6 +930,9 @@ case $hostname in
 
     ##edinburgh
     edinburgh** | e0* )  qsub ${submit_script};;
+
+    ##lynx
+    lynx** | l0* )  qsub ${submit_script};;
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;

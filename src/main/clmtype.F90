@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module clmtype
 
 !----------------------------------------------------------------------- 
@@ -161,6 +158,8 @@ type, public :: pft_pstate_type
    real(r8), pointer :: ftid(:,:)               !down diffuse flux below veg per unit dir flx  (numrad)
    real(r8), pointer :: ftii(:,:)               !down diffuse flux below veg per unit dif flx  (numrad)
    real(r8), pointer :: u10(:)                  !10-m wind (m/s) (for dust model)
+   real(r8), pointer :: u10_clm(:)              !10-m wind (m/s)
+   real(r8), pointer :: va(:)                   !atmospheric wind speed plus convective velocity (m/s)
    real(r8), pointer :: ram1(:)                 !aerodynamical resistance (s/m)
    real(r8), pointer :: fv(:)                   !friction velocity (m/s) (for dust model)
    real(r8), pointer :: forc_hgt_u_pft(:)       !wind forcing height (10m+z0m+d) (m)

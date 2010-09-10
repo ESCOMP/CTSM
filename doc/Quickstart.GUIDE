@@ -13,7 +13,7 @@ Process:
 
    cd scripts
 
-   ./create_newcase -case <testcase> -mach bluevista -res f19_g15 -compset I4804 -skip_rundb
+   ./create_newcase -case <testcase> -mach bluefire -res f19_g15 -compset I4804 -skip_rundb
    (./create_newcase -help -- to get help on the script)
 TRUE
 
@@ -30,11 +30,11 @@ TRUE
 
    # Compile the code
 
-   ./<testcase>.build
+   ./<testcase>.bluefire.build
 
    # Submit the run
 
-   bsub < <testcase>.run
+   ./<testcase>.bluefire.submit
 
 Information on Compsets:
 
@@ -74,8 +74,8 @@ Automatically resubmitting jobs:
 
    After doing a short simulation that you believe is correct
 
-   xmlchange -file env_run.xml -id CONTINUE_RUN -val TRUE
+   ./xmlchange -file env_run.xml -id CONTINUE_RUN -val TRUE
 
    # Change RESUBMIT to number greater than 0, and CONTINUE_RUN to TRUE...
 
-   bsub < <testcase>.run
+   ./<testcase>.bluefire.submit

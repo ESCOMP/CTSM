@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module UrbanMod
 
 !----------------------------------------------------------------------- 
@@ -2720,11 +2717,7 @@ contains
     real(r8) :: fwet_roof                         ! fraction of roof surface that is wet (-)
     real(r8) :: fwet_road_imperv                  ! fraction of impervious road surface that is wet (-)
 
-#if (defined GRANDVIEW)
-    integer, parameter  :: niters = 1  ! maximum number of iterations for surface temperature
-#else
     integer, parameter  :: niters = 3  ! maximum number of iterations for surface temperature
-#endif
     integer  :: local_secp1(lbl:ubl)   ! seconds into current date in local time (sec)
     real(r8) :: dtime                  ! land model time step (sec)
     integer  :: year,month,day,secs    ! calendar info for current time step
@@ -2969,10 +2962,6 @@ contains
          ramu(l) = 1._r8/(ustar(l)*ustar(l)/um(l))
          rahu(l) = 1._r8/(temp1(l)*ustar(l))
          rawu(l) = 1._r8/(temp2(l)*ustar(l))
-#if (defined GRANDVIEW)
-         rahu(l) = 1.e36_r8
-         rawu(l) = 1.e36_r8
-#endif
 
          ! Determine magnitude of canyon wind by using horizontal wind determined
          ! previously and vertical wind from friction velocity (Masson 2000)
@@ -3208,9 +3197,6 @@ contains
       ! This section of code is not required if niters = 1
       ! Determine stability using new taf and qaf
       ! TODO: Some of these constants replicate what is in FrictionVelocity and BareGround fluxes should consildate. EBK
-#if (defined GRANDVIEW)
-      write(6,*)'no iteration'
-#else
       do fl = 1, num_urbanl
          l = filter_urbanl(fl)
          g = lgridcell(l)
@@ -3233,7 +3219,6 @@ contains
 
          obu(l) = zldis(l)/zeta
       end do
-#endif
 
     end do   ! end iteration
 
@@ -3373,9 +3358,7 @@ contains
           write(iulog,*)'eflx_scale    = ',eflx_scale(indexl)
           write(iulog,*)'eflx_sh_grnd_scale: ',eflx_sh_grnd_scale(pfti(indexl):pftf(indexl))
           write(iulog,*)'eflx          = ',eflx(indexl)
-#if (!defined GRANDVIEW)
           call endrun
-#endif
        end if
     end if
 
@@ -3425,12 +3408,8 @@ contains
        l = filter_urbanl(fl)
      
        lngth_roof = (ht_roof(fl)/canyon_hwr(fl))*wtlunit_roof(fl)/(1._r8-wtlunit_roof(fl))
-#if (defined GRANDVIEW)
-       t_building(l) = (t_shadewall_innerl(l) + t_sunwall_innerl(l))/2._r8
-#else
        t_building(l) = (ht_roof(fl)*(t_shadewall_innerl(l) + t_sunwall_innerl(l)) &
                         +lngth_roof*t_roof_innerl(l))/(2._r8*ht_roof(fl)+lngth_roof)
-#endif
     end do
 
     ! No roots for urban except for pervious road

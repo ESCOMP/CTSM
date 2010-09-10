@@ -101,7 +101,7 @@ both methods.
 <title>Testing &clm; Using the &cesm; Test Scripts</title>
 
 <para>
-We first introduce the test scripts that work for all CCSM components. We will
+We first introduce the test scripts that work for all CESM components. We will
 use the <command>create_test</command> and then the <command>create_test_suite</command>
 scripts. The <command>create_test</command> runs a specific type of test, at a given
 resolution, for a given compset using a given machine. There is a list of different
@@ -110,9 +110,9 @@ as doing exact branch and restart tests. So to run "ERI" testing at 2-degree wit
 the I1850CN compset on bluefire you do the following.
 <screen width="99">
 > cd scripts
-> create_test -testname ERI.f19_g16.I1850CN.bluefire
+> ./create_test -testname ERI.f19_g16.I1850CN.bluefire
 > cd ERI.f19_g16.I1850CN.bluefire.$id
-> ERI.f19_g16.I1850CN.bluefire.$id.build
+> ./ERI.f19_g16.I1850CN.bluefire.$id.build
 > bsub &lt; ERI.f19_g16.I1850CN.bluefire.$id.test
 </screen>
 When the test is done it will update the file <filename>TestStatus</filename> with
@@ -127,11 +127,11 @@ to &clm;. To run for the &clm; bluefire test list, on bluefire, you would do the
 following:
 <screen width="99">
 > cd scripts
-> create_test_suite -input_list ccsm_utils/Testlists/bluefire.clm.auxtest
+> ./create_test_suite -input_list ccsm_utils/Testlists/bluefire.clm.auxtest
 # Submit the suite of tests (note $id refers to the integer job number for this job)
-> cs.submit.$id.bluefire
+> ./cs.submit.$id.bluefire
 # Later check the tests with...
-> cs.status.$id
+> ./cs.status.$id
 # The above will give a PASS or FAIL message for each test.
 </screen>
 For more information on doing testing with the &cesm; scripts see the
@@ -160,12 +160,12 @@ file that gives details about environment variables that can be given to
 To submit a suite of stand-alone tests to the batch que:
 <screen width="99">
 > cd models/lnd/clm/test/system
-> test_driver.sh
+> ./test_driver.sh
 </screen>
 You can also run tests interactively:
 <screen width="99">
 > cd models/lnd/clm/test/system
-> test_driver.sh -i
+> ./test_driver.sh -i
 </screen>
 The output of the help option is as follows:
 <screen width="99">

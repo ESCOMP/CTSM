@@ -14,7 +14,7 @@ across one of those errors, please let us know, by following
 <xref linkend="reporting_bugs"></xref>.
 I also want to thank Sheri
 Mickelson, for her work in doing perturbation analysis on bluefire and intrepid,
-and allowing us to use that data in this document.
+which was used in our initial versions of this User's Guide.
 </para>
 </preface>
 
@@ -26,7 +26,11 @@ The Community Land Model (&clm;) is the latest in a series of
 global land models developed by the &cesm; Land Model Working Group
 (<acronym>LMWG</acronym>) and maintained at the National Center for
 Atmospheric Research (<acronym>NCAR</acronym>). This guide is intended to instruct both
-the novice and experienced user on running &clm;. 
+the novice and experienced user on running &clm;. This guide also pertains to the
+latest version of &clmrel; available for download from the public release 
+subversion repository. Documentation may be different if you are using an
+older version, you should either update to the latest version, or use the
+documentation inside your own source tree.
 </para>
 
 <para>
@@ -61,7 +65,8 @@ all the required UNIX utilities on the system they want to do their work.
 <para>
 Here in the introduction we first give a simple guide to understand the document
 conventions in <xref linkend="how_to"></xref>. The next section <xref linkend="what_is_new"></xref>
-describes the differences between &clm40; and &clm35;, both from a scientific
+describes the differences between &clmrel; and &clm40; as well as between 
+&clm40; and &clm35;, both from a scientific
 as well as a software engineering point of view. It also talks about differences in the
 configuration, namelist, and history fields. The next section <xref linkend="quickstart"></xref>
 is for users that are already experts in using &clm; and gives a quickstart guide to the 
@@ -291,10 +296,10 @@ that continues to the following line.
    <indexterm zone="science" id="clmsp"><primary>&clmsp;</primary></indexterm>
 </itermset>
 </prefaceinfo>
-<title>What is new with &clm4; since previous public releases?</title>
+<title>What is new with &clmrel; since previous public releases?</title>
 <para>
-In this section we list the updates that have occured to &clm4; since previous
-public releases. In the first section we describe changes since the &ccsm4; release,
+In this section we list the updates that have occurred to &clm4; since previous
+public releases. In the first section we describe changes in &clmrel; since the &ccsm4; release,
 and in the second one we describe changes from &clm35; to &clm40; release. Note, that
 the changes in the second section do NOT include the more recent changes given in the 
 first section, but only list the changes from &clm35; to the &clm40; release that
@@ -307,17 +312,18 @@ history fields.
 <title>What is new with &clmrel; since the April 1st, 2010 &ccsm4; release?</title>
 <para>
 Since, &clm40; in the &ccsm4; release there have been several developments made
-to &clm4;. A glacier multiple elevation class option was added that allows the
+to &clmrel;. A glacier multiple elevation class option was added that allows the
 use of &clm4; with a glacier land ice model the Community Ice Sheet Model (CISM).
 A bug-fix for the snow hydrology was added. Several new namelist items were added
 a few new history fields. Also the capability of reading aerosol and nitrogen
 deposition from stream files at one resolution and regridded on the fly rather than
 with datasets at the model resolution was added in. This was important for higher
 resolutions so that large datasets do not have to be created before running the model,
-nor are datasets for every resolution required.
+nor are datasets for every resolution required. There were also some updates for 
+running the model with single-point mode.
 </para>
 <sect2 id="science_since_ccsm4">
-<title>What is new with &clm4; Science since &ccsm4;?</title>
+<title>What is new with &clmrel; Science since &ccsm4;?</title>
 <para>
 In general, snow layers should not be thinner than
 <screen width="99">
@@ -349,7 +355,7 @@ the land ice sheet model.</member>
 </para>
 </sect2>
 <sect2 id="software_since_ccsm4">
-<title>What is new with &clm4; Software  since &ccsm4;?</title>
+<title>What is new with &clmrel; Software  since &ccsm4;?</title>
 <para>
 New configuration options
 <simplelist>
@@ -366,20 +372,13 @@ New namelist items:
 <member>glc_dyntopo</member>
 <member>glc_smb</member>
 <member>ice_runoff</member>
+<member>ndepmapalgo</member>
 <member>scaled_harvest</member>
 </simplelist>
 </para>
 <para>
-ice_runoff     = If true, river runoff will be split up into liquid and ice streams,
-               otherwise ice runoff will be zero and all runoff directed to liquid stream
-</para>
-<para>
-scaled_harvest = If true, harvesting will be scaled according to coefficients
-                     determined by Johann Feddema, 2009
-</para>
-<para>
 carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen will be
-                     prescribed rather than prognosed (replaces the suplimental Nitrogen #ifdef)
+                     prescribed rather than prognosed (replaces the supplemental Nitrogen #ifdef)
 </para>
 <para>
  create_glacier_mec_landunit (= T when these landunits are created; F by default)
@@ -390,6 +389,18 @@ carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen will b
 <para>
  glc_dyntopo (= T if CLM topography changes dynamically; currently F)
               (NOT fully implemented yet)
+</para>
+<para>
+ice_runoff     = If true, river runoff will be split up into liquid and ice streams,
+               otherwise ice runoff will be zero and all runoff directed to liquid stream
+</para>
+<para>
+  ndepmapalgo    = Mapping method from Nitrogen deposition input file to the model
+                   resolution (can be bilinear,nn,nnoni,nnonj,spval,copy, bilinear by default)
+</para>
+<para>
+scaled_harvest = If true, harvesting will be scaled according to coefficients
+                     determined by Johann Feddema, 2009
 </para>
 <para>
 New history fields:
@@ -542,8 +553,6 @@ variable.</member>
     <member>New &buildnml; system with XML file describing all namelist
 items.</member>
     <member>Add glacier_mec use-case and stub glacier model.</member>
-    <member>Add &ncl; script to time-interpolate between 1850 and 2000 for fndepdat
-dataset, for fndepdyn version.</member>
     <member>Make default of maxpatch_pft=numpft+1 instead of 4.</member>
     <member>Only output static 3D fields on first h0 history file to save space.</member>
     <member>Add new fields for VOC (Volatile Organic Compounds) on surface datasets, 
@@ -631,12 +640,13 @@ Changes to &buildnml;:
 <para>
    New list options to &buildnml;
 <screen width="99">
-     &buildnml; -res list          # List valid resolutions
-     &buildnml; -mask list         # List valid land-masks
-     &buildnml; -sim_year list     # List valid simulation years and simulation year ranges
-     &buildnml; -clm_demand list   # List namelist variables including those you could 
+     cd models/lnd/clm/bld
+     ./&buildnml; -res list          # List valid resolutions
+     ./&buildnml; -mask list         # List valid land-masks
+     ./&buildnml; -sim_year list     # List valid simulation years and simulation year ranges
+     ./&buildnml; -clm_demand list   # List namelist variables including those you could 
                                    # demand to be set.
-     &buildnml; -use_case list     # List valid use-cases
+     ./&buildnml; -use_case list     # List valid use-cases
 </screen>
 </para>
 
@@ -664,7 +674,6 @@ New use-cases for &buildnml;:
                                          (default .false.)
    fsnowoptics  = filename    file for snow/aerosol optical properties (required)
    fsnowaging   = filename    file for snow aging parameters (required)
-   faerdep      = filename    file of aerosol deposition (required)
 </screen>
 More information on the &buildnml; options are given in
 <xref linkend="nl_def"></xref>.
@@ -892,7 +901,10 @@ of these files). Here are the important ones that you should be familiar with.
 <listitem><para><ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> file describing how to
 use your own datasets in the model (also see <xref linkend="own_single_point_datasets"></xref>).</para></listitem>
 <listitem><para><ulink url="../KnownBugs">KnownBugs</ulink> file describing known
-problems in &clm4;.</para></listitem>
+problems in &clm4; (that we expect to eventually fix).</para></listitem>
+<listitem><para><ulink url="../KnownLimitations">KnownLimitations</ulink> file 
+describing known limitations in &clm4; and workarounds that we do NOT expect to
+fix.</para></listitem>
 </orderedlist>
 </para>
 <para>The <emphasis>IMPORTANT_NOTES</emphasis> file is given in the next chapter on what
@@ -978,16 +990,6 @@ recommended for use.
    <varname>SNICAR_FRC</varname><screen>(-snicar_frc)</screen>
        This mode is tested and functional, but is NOT constantly scientifically validated, and should be 
        considered experimental.
-   </para>
-</listitem>
-<listitem>
-   <para>
-   <varname>PERGRO</varname><screen>(-pergro)</screen>
-       This mode is tested to be functional, but NOT scientifically validated. It's purpose is 
-       to help validate that a port to a new machine is reasonable, or that changes that 
-are only roundoff will NOT affect the climate.
-       Using PERGRO as a validation tool remains experimental. See 
-<xref linkend="PERGRO"></xref> for more information on how to do this.
    </para>
 </listitem>
 </orderedlist>
@@ -1142,7 +1144,7 @@ models/lnd/clm/doc directory that give some quick information on using &clm;.
 </simplelist>
 Also note that several of the XML database files can be viewed in a web browser to get
 a nice table of namelist options, namelist defaults, or compsets. Simply view them
-as a local file and 
+as a local file and bring up one of the following files:
 <simplelist>
 <member><ulink
 url="../../bld/namelist_files/namelist_definition.xml">models/lnd/clm/bld/namelist_files/namelist_definition.xml</ulink>

@@ -22,18 +22,15 @@ NCL Scripts available:
 
 getregional_datasets.ncl ---- NCL script to extract out regional datasets.
 getco2_historical.ncl ------- Get historical CO2 to use for input in datm8 streams
-convertUrbanOffline2Seq.ncl - Convert urban offline data to ccsm sequential mode that can be used by datm8.
-pftdyntest2raw.ncl ---------- Convert pftdyn test datasets to rawdata format so can be used to create future datasets.
+pftdyntest2raw.ncl ---------- Convert pftdyn test datasets to rawdata format so can be 
+                              used to create future datasets.
 ndeplintInterp.ncl ---------- Create transient ndepdyn dataset from decadal average output
                               from CAM and convert the units to whats needed by CLM.
-getndepdatFrom20thCentury.ncl Extract out a static ndepdat file from a transient ndepdyn file
-aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different resolution.
-                              Uses bi-linear interpolation.
-ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a different resolution.
-                              Uses bi-linear interpolation.
+aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different 
+ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a different
+			      resolution.  Uses bi-linear interpolation.
 
-convertUrbanOffline2Seq.ncl - Converts urban offline datasets for Mexicocity and Vancouver to seq-ccsm format
-                              needed for datm8.
-pergroPlot.ncl -------------- Plots up two ASCII files with RMS differences in them.
-
-
+pergroPlot.ncl -------------- Plots up ASCII files with RMS differences in them (from
+                              one to five different files).
+			      (Note: There are also sample RMS error perturbation growth
+			      files, called RMS*.dat, that can be used with this)

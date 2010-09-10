@@ -11,6 +11,12 @@ Bugs fixed (include bugzilla ID):
 Known bugs (include bugzilla ID):
     http://bugs.cgd.ucar.edu/
 
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
 Type of tag: doc, critical, standard, std-test, reg-test
 
 Describe any changes made to build system:

@@ -51,7 +51,7 @@ Flag to separate the vegetated landunit into a crop landunit and a natural veget
 <entry id="create_glacier_mec_landunit" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Set to true to turn on multiple elevation classes over glacier points.
-Normally this is ONLY used when running CCSM with the active glacier model.
+Normally this is ONLY used when running CESM with the active glacier model.
 Only works when GLC_NEC is greater than zero.
 </entry>
 
@@ -83,13 +83,6 @@ Time step (seconds)
 <entry id="override_nsrest" type="integer"  category="clm_restart" 
        group="clm_inparm" valid_values="3">
 Override the start type from the driver: 3: branch
-</entry>
-
-<entry id="use_ndepstream" type="logical" category="datasets"
-       group="clm_inparm">
-Flag to use Nitrogen Deposition files from streams or not
-	If .true. will use Nitrogen Deposition files from streams and interpolate to output resolution
-        If .false. will use fndepdat and fndepdyn files, which MUST be on the output resolution
 </entry>
 
 <entry id="fatmgrid" type="char*256" input_pathname="abs" category="datasets"
@@ -128,16 +121,6 @@ Full pathname of initial conditions file.
 Full pathname of land topography file.
 </entry>
 
-<entry id="fndepdat" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of nitrogen deposition data file.
-</entry>
-
-<entry id="fndepdyn" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of dynamic nitrogen deposition data file.
-</entry>
-
 <entry id="fpftcon" type="char*256" input_pathname="abs" category="datasets"
        group="clm_inparm" valid_values="" >
 Full pathname of plant function type (PFT) constants
@@ -156,11 +139,6 @@ Full pathname of input datafile for rtm.
 <entry id="fsurdat" type="char*256" input_pathname="abs" category="datasets"
        group="clm_inparm" valid_values="" >
 Full pathname of surface data file.
-</entry>
-
-<entry id="faerdep" type="char*256"  input_pathname="abs" category="datasets" 
-       group="clm_inparm" valid_values="" >
-Aerosol deposition file name (when NOT passing deposition rates from atmosphere model)
 </entry>
 
 <entry id="fsnowoptics" type="char*256"  input_pathname="abs" category="datasets" 
@@ -332,12 +310,33 @@ TRUE if want diagnostic of global radiative temperature written to CLM log file
 Plant Function Type dataset for mksurfdata
 </entry>
 
+<!--                                                   -->
+<!-- mkgriddata namelist                               -->
+<!--                                                   -->
+<entry id="mksrf_fnavyoro" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Orography file with surface heights and land area fraction
+</entry>
+
 <!--             -->
 <!-- mkghg       -->
 <!--             -->
 <entry id="mkghg_bndtvghg" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Historical greenhouse gas concentrations from CAM
+</entry>
+
+<!--                                                   -->
+<!-- files needed for tools/ncl_scripts                -->
+<!--                                                   -->
+<entry id="faerdep" type="char*256"  input_pathname="abs" category="tools" 
+       group="clmexp" valid_values="" >
+Aerosol deposition file name (when NOT passing deposition rates from atmosphere model)
+</entry>
+
+<entry id="fndepdat" type="char*256" input_pathname="abs" category="tools"
+       group="clmexp" valid_values="" >
+Full pathname of nitrogen deposition data file.
 </entry>
 
 <!--                                                   -->
@@ -417,7 +416,7 @@ CASA Carbon Pool initial state filename (CASA is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- ndepdyn streams Namelist (only used when bgc=cn/cndv and when use_ndepstream is .true.)   -->
+<!-- ndepdyn streams Namelist (only used when bgc=cn/cndv)                                     -->
 <!-- ========================================================================================  -->
 
 <entry id="stream_year_first_ndep" type="integer" category="datasets"
@@ -527,7 +526,7 @@ Couple ocean on atm timestep.
        group="seq_infodata_inparm" valid_values="" >
 Earth's eccentricity of orbit. (unitless: typically 0. to 0.1). Setting is
 Required if <varname>orb_iyear_ad</varname> not set.  Not used when running
-as part of CCSM.
+as part of CESM.
 </entry>
 
 <entry id="orb_iyear_ad" type="integer"  category="radiation"
@@ -544,21 +543,21 @@ the above are set by the user, <varname>orb_iyear_ad</varname> takes
 precedence.  Setting is Required
 unless <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>,
 and <varname>orb_obliq</varname> are set.  Not used when running as part of
-CCSM.
+CESM.
 </entry>
 
 <entry id="orb_mvelp" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Earth's moving vernal equinox at perihelion (degrees: 0. to 360.0).
 Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
-when running as part of CCSM.
+when running as part of CESM.
 </entry>
 
 <entry id="orb_obliq" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Earth's orbital  angle of obliquity  (degrees: -90. to +90., typically 22. to 26.).
 Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
-when running as part of CCSM.
+when running as part of CESM.
 </entry>
 
 <entry id="outpathroot" type="char*256" category="drv_history"
@@ -939,6 +938,11 @@ Start time-of-day expressed as seconds past midnight.  Used in
 conjuction with <varname>start_ymd</varname> to set the start time.
 </entry>
 
+<entry id="run_startdate" type="char*10"  category="time_mgr"
+       group="default_settings" valid_values="" >
+Run start date encoded YYYY-MM-DD
+</entry>
+
 <entry id="start_ymd" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Start date encoded in an integer as (year*1000 + month*100 + day).
@@ -1226,14 +1230,8 @@ Glacier model grid
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5">
+"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5,0.33x0.33">
 Horizontal resolutions
-</entry> 
-
-<entry id="ndepsrc" type="char*7" category="default_settings"
-       group="default_settings"  
-       valid_values="none,stream,data">
-Source type of Nitrogen deposition data, when bgc=cn or bgc=cndv
 </entry> 
 
 <entry id="rcp" type="real" category="default_settings"

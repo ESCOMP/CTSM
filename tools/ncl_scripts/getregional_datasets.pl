@@ -188,14 +188,14 @@ elsif (defined $ENV{'CSMDATA'}) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 }
 else {
-    die "$ProgName - ERROR: Personal CCSM inputdata root directory must be specified by either -mycsmdata argument\n" .
+    die "$ProgName - ERROR: Personal CESM inputdata root directory must be specified by either -mycsmdata argument\n" .
         " or by the CSMDATA environment variable. :";
 }
 (-d $inputdata_rootdir)  or  die <<"EOF";
-** $ProgName - CCSM inputdata root is not a directory: \"$inputdata_rootdir\" **
+** $ProgName - CESM inputdata root is not a directory: \"$inputdata_rootdir\" **
 EOF
 
-print "CCSM inputdata root directory: $inputdata_rootdir\n";
+print "CESM inputdata root directory: $inputdata_rootdir\n";
 
 #-----------------------------------------------------------------------------------------------
 my $debug;

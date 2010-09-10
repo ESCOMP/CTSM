@@ -53,6 +53,7 @@ models/lnd/clm/doc/IMPORTANT_NOTES --------- Some important notes about this ver
                                              clm, configuration modes and namelist items 
                                              that are not validated or functional.
 models/lnd/clm/doc/KnownBugs --------------- List of known bugs.
+models/lnd/clm/doc/KnownLimitations -------- List of known limitations and workarounds.
 models/lnd/clm/doc/ChangeLog --------------- Detailed list of changes for each model version.
 models/lnd/clm/doc/ChangeSum --------------- Summary one-line list of changes for each 
                                              model version.

@@ -17,27 +17,22 @@
 
 <rcp>8.5</rcp>
 
-<clm_demand bgc="none"                   >fpftdyn</clm_demand>
-<clm_demand bgc="cn"   ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
-<clm_demand bgc="cndv" ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
-<clm_demand bgc="cn"   ndepsrc="stream"  >fpftdyn</clm_demand>
-<clm_demand bgc="cndv" ndepsrc="stream"  >fpftdyn</clm_demand>
-<clm_demand bgc="casa"                   >fpftdyn</clm_demand>
+<clm_demand >fpftdyn</clm_demand>
 
 <clm_start_type>startup</clm_start_type>
 
-<stream_year_first_ndep bgc="cn"   ndepsrc="stream" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  bgc="cn"   ndepsrc="stream" >2100</stream_year_last_ndep>
-<model_year_align_ndep  bgc="cn"   ndepsrc="stream" >2000</model_year_align_ndep>
+<stream_year_first_ndep bgc="cn"   >2000</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cn"   >2100</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cn"   >2000</model_year_align_ndep>
 
-<stream_year_first_ndep bgc="cndv" ndepsrc="stream" >2000</stream_year_first_ndep>
-<stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2100</stream_year_last_ndep>
-<model_year_align_ndep  bgc="cndv" ndepsrc="stream" >2000</model_year_align_ndep>
+<stream_year_first_ndep bgc="cndv" >2000</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cndv" >2100</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cndv" >2000</model_year_align_ndep>
 
 <!-- Settings for datm and driver, for stand-alone testing -->
-<datm_presaero       mode="ccsm_seq" >rcp8.5</datm_presaero>
-<orb_iyear_ad        mode="ccsm_seq" >1990</orb_iyear_ad>
-<datm_cycle_beg_year mode="ccsm_seq" >1972</datm_cycle_beg_year>
-<datm_cycle_end_year mode="ccsm_seq" >2004</datm_cycle_end_year>
+<datm_presaero       mode="clm_stndln" >rcp8.5</datm_presaero>
+<orb_iyear_ad        mode="clm_stndln" >1990</orb_iyear_ad>
+<datm_cycle_beg_year mode="clm_stndln" >1972</datm_cycle_beg_year>
+<datm_cycle_end_year mode="clm_stndln" >2004</datm_cycle_end_year>
 
 </namelist_defaults>

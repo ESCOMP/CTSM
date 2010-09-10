@@ -38,7 +38,7 @@ OPTIONS
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
      -config "filepath"       Read the given CLM configuration cache file. Default: "config_cache.xml".
-     -csmdata "dir"           Root directory of CCSM input data.
+     -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
@@ -196,20 +196,20 @@ $opts{'use_case_dir'} = "$cfgdir/use_cases";
 
 # The root directory for the input data files must be specified.
 
-#The root directory to ccsm utils Tools
-my $ccsm_tools = &absolute_path( "$cfgdir/../../../../../scripts/ccsm_utils/Tools" );
+#The root directory to cesm utils Tools
+my $cesm_tools = &absolute_path( "$cfgdir/../../../../../scripts/ccsm_utils/Tools" );
 
 # The XML::Lite module is required to parse the XML files.
-(-f "$ccsm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"XML/Lite.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The Build::Config module provides utilities to access the configuration information
 # in the config_cache.xml file
-(-f "$ccsm_tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/Config.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The namelist definition file contains entries for all namelist variables that
@@ -222,9 +222,9 @@ if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol";
 
 # The Build::NamelistDefinition module provides utilities to validate that the output
 # namelists are consistent with the namelist definition file
-(-f "$ccsm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The namelist defaults file contains default values for all required namelist variables.
@@ -245,21 +245,21 @@ EOF
 
 # The Build::NamelistDefaults module provides a utility to obtain default values of namelist
 # variables based on finding a best fit with the attributes specified in the defaults file.
-(-f "$ccsm_tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefaults.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The Build::Namelist module provides utilities to parse input namelists, to query and modify
 # namelists, and to write output namelists.
-(-f "$ccsm_tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/Namelist.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-my @dirs = ( "$cfgdir/..", "$ccsm_tools/perl5lib");
+my @dirs = ( "$cfgdir/..", "$cesm_tools/perl5lib");
 unshift @INC, @dirs;
 require XML::Lite;
 require Build::Config;
@@ -290,7 +290,7 @@ foreach my $nl_defaults_file ( @nl_defaults_files ) {
 # Create an empty namelist object.  Add values to it in order of precedence.
 my $nl = Build::Namelist->new();
 
-# Check that the CCSM inputdata root directory has been specified.  This must be
+# Check that the CESM inputdata root directory has been specified.  This must be
 # a local or nfs mounted directory.
 my $inputdata_rootdir = undef;
 if (defined($opts{'csmdata'})) {
@@ -300,7 +300,7 @@ elsif (defined $ENV{'CSMDATA'}) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 }
 else {
-    die "$ProgName - ERROR: CCSM inputdata root directory must be specified by either -csmdata argument\n" .
+    die "$ProgName - ERROR: CESM inputdata root directory must be specified by either -csmdata argument\n" .
 	" or by the CSMDATA environment variable. :";
 }
 if ( $ENV{'DIN_LOC_ROOT'} eq "" ) {
@@ -309,12 +309,12 @@ if ( $ENV{'DIN_LOC_ROOT'} eq "" ) {
 
 if ($opts{'test'}) {
     (-d $inputdata_rootdir)  or  die <<"EOF";
-** $ProgName - CCSM inputdata root is not a directory: \"$inputdata_rootdir\" **
+** $ProgName - CESM inputdata root is not a directory: \"$inputdata_rootdir\" **
 EOF
 }
 my $test_files = $opts{'test'};
 
-if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
+if ($print>=2) { print "CESM inputdata root directory: $inputdata_rootdir$eol"; }
 #-----------------------------------------------------------------------------------------------
 
 # Some regular expressions...
@@ -327,7 +327,7 @@ my $FALSE = '\.false\.';
 # Determine mode from config file, make sure this is CLM stand-alone testing or abort
 
 my $mode = $cfg->get('mode');
-if ( $mode ne "ccsm_seq" ) {
+if ( $mode ne "clm_stndln" ) {
    die "$nm this script can only be used for CLM stand-alone testing\n";
 }
 
@@ -526,6 +526,7 @@ if (defined $opts{'clm_usr_name'}) {
     my @vars = $uf_defaults->get_variable_names();
     my %settings;
     $settings{'mask'}           = $mask;
+    $settings{'rcp'}            = $rcp;
     $settings{'sim_year'}       = $sim_year;
     $settings{'sim_year_range'} = $sim_year_range;
     $settings{'clm_usr_name'}   = $opts{'clm_usr_name'};
@@ -909,7 +910,7 @@ sub add_default {
 # ***** N.B. ***** This routine assumes the following variables are in package main::
 #  $definition        -- the namelist definition object
 #  $defaults          -- the namelist defaults object
-#  $inputdata_rootdir -- CCSM inputdata root directory
+#  $inputdata_rootdir -- CESM inputdata root directory
 
     my $nl = shift;     # namelist object
     my $var = shift;    # name of namelist variable
@@ -966,7 +967,7 @@ sub add_default {
 
        # The default values for input pathnames are relative.  If the namelist
        # variable is defined to be an absolute pathname, then prepend
-       # the CCSM inputdata root directory.
+       # the CESM inputdata root directory.
        if (not defined $opts{'no_abspath'}) {
 	   if (defined $opts{'set_abspath'}) {
 	       $val = set_abs_filepath($val, $opts{'set_abspath'});

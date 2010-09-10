@@ -193,6 +193,15 @@ contains
          avgflag='A', long_name='Rural 2m specific humidity', &
          ptr_pft=clm3%g%l%c%p%pes%rh_ref2m_r, set_spec=spval)
 
+    ! Wind
+
+    call hist_addfld1d (fname='U10', units='m/s', &
+         avgflag='A', long_name='10-m wind', &
+         ptr_pft=clm3%g%l%c%p%pps%u10_clm)
+    call hist_addfld1d (fname='VA', units='m/s', &
+         avgflag='A', long_name='atmospheric wind speed plus convective velocity', &
+         ptr_pft=clm3%g%l%c%p%pps%va, default='inactive')
+
     ! Surface radiation
 
     call hist_addfld1d (fname='SABV', units='watt/m^2',  &
@@ -4106,7 +4115,7 @@ contains
          avgflag='A', long_name='displacement height', &
          ptr_pft=clm3%g%l%c%p%pps%displa, default='inactive')
 
-    call hist_addfld1d (fname='U10', units='m/s', &
+    call hist_addfld1d (fname='U10_DUST', units='m/s', &
          avgflag='A', long_name='10-m wind for dust model', &
          ptr_pft=clm3%g%l%c%p%pps%u10, default='inactive')
 

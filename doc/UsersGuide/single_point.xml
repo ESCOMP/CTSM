@@ -6,10 +6,10 @@
 The &clm; also allows you to set up and run cases with a single-point or a local region as well
 as global resolutions. This is often useful for running quick cases for testing, evaluating
 specific vegetation types, or land-units, or running with observed data for a specific site.
-There are three different ways to do this: <envar>PTS_MODE</envar>,
+There are three different ways to do this: &PTSMODE;,
 &CLM1PT;, and &CLMUSRDAT;.
 <simplelist>
-<member><emphasis><envar>PTS_MODE</envar></emphasis> -- to run for a single point
+<member><emphasis>&PTSMODE;</emphasis> -- to run for a single point
 using global datasets.</member>
 <member><emphasis>&CLM1PT;</emphasis> -- to run for a supported single-point
 or regional dataset.</member>
@@ -19,34 +19,83 @@ or regional).</member>
 </para>
 <note>
 <para>
-<envar>PTS_MODE</envar> only works for a single point, while the other two options can
+&PTSMODE; only works for a single point, while the other two options can
 also work for regional datasets as well.
 </para>
 </note>
+<sect1 id="which_singlept_option">
+<title>Which Single Point Option Should I choose?</title>
+<para>
+In general <xref linkend="PTS_MODE"></xref> is the quick and dirty method 
+that gets you started without having to create datasets -- but has limitations. It's 
+good for an initial attempt at seeing results for a point of interest, but since you 
+can NOT restart with it, it's usage is limited. It is the quickest method as you can
+create a case for it directly from <command>create_newcase</command>. Although you
+can't restart, running a single point is very fast, and you can run for long 
+simulation times even without restarts. If you need restarts a good solution is to use 
+<command>getregional_datasets.pl</command> and <emphasis>&CLMUSRDAT;</emphasis> 
+which can get you running almost as quickly as well as 
+<emphasis>&PTSMODE;</emphasis>. Like 
+<emphasis>&PTSMODE;</emphasis> 
+<xref linkend="getregional_datasets.pl"></xref> only runs for points that exist within 
+a global dataset.
+</para>
+<para>
+Running <emphasis>&CLM1PT;</emphasis> is a great solution, if one of the supported
+single-point/regional datasets, is your region of interest (see 
+<xref linkend="suprted_single_point_datasets"></xref>). All the datasets are 
+created for you, and you can easily select one and run, pretty much, out of the box 
+with it. The problem is that there is a very limited set of supported datasets. You 
+can also use this method for your own datasets, but you have to create the datasets, 
+and add them to the XML database and to the datm. This is worthwhile if you want to 
+repeat many multiple cases for a given point or region.
+</para>
+<para>
+Next, <emphasis>&CLMUSRDAT;</emphasis> is the best way to setup cases quickly
+where you have to create your own datasets (see 
+<xref linkend="own_single_point_datasets"></xref>). With this method you don't have to
+change datm or add files to the XML database -- but you have to follow a strict 
+naming convention for files. However, once the files are named and in the proper
+location, you can easily setup new cases that use these datasets. This is good
+for treating all the required datasets as a "group" and for a particular 
+model version. For advanced &clm; developers who need to track dataset changes with 
+different model versions you would be best off adding these datasets as supported
+datasets with the <emphasis>&CLM1PT;</emphasis> method.
+</para>
+<para>
+Finally, if you also have meteorology data that you want to force your &clm; simulations
+with you'll need to setup cases as described in <xref linkend="own_atm_forcing"></xref>.
+You'll need to create &clm; datasets either according to <emphasis>&CLM1PT;</emphasis>
+or <emphasis>&CLMUSRDAT;</emphasis>, but you'll also need to modify datm to use
+your forcing data. And you'll need to change your forcing data to be in a format that
+datm can use.
+</para>
+</sect1>
 
 <sect1 id="PTS_MODE">
-<title>Running PTS_MODE configurations</title>
+<title>Running &PTSMODE; configurations</title>
 <para>
-<envar>PTS_MODE</envar> enables you to run the model using global datasets, but just picking a
+&PTSMODE; enables you to run the model using global datasets, but just picking a
 single point from those datasets and operating on it. It can be a very quick way to do fast
 simulations and get a quick turnaround.
 </para>
 <para>
-To setup a <envar>PTS_MODE</envar> simulation you use the "-pts_lat" and "-pts_lon"
-arguments to create_newcase to give the latitude and longitude of the point you want to
+To setup a &PTSMODE; simulation you use the "-pts_lat" and "-pts_lon"
+arguments to <command>create_newcase</command> to give the latitude and longitude of the point you want to
 simulate for (the code will pick the point on the global grid nearest to the point you
 give. Here's an example to setup a simulation for the nearest point at 2-degree resolution
 to Boulder Colorado.
 <screen width="99">
 > cd scripts
-> create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
+> ./create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
 -pts_lat 40.0 -pts_lon -105 -skip_rundb
 > cd testPTS_MODE
 # We make sure the model will start up cold rather than using initial conditions
-> xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
+> ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
+> ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 </screen>
 Then configure, build and run as normal. We make sure initial conditions are NOT used
-since <envar>PTS_MODE</envar> currently CAN NOT run with initial conditions.
+since &PTSMODE; currently CAN NOT run with initial conditions.
 </para>
 <important>
 <para>
@@ -58,7 +107,7 @@ supported and you may need to change it to FALSE before you are able to build.
 </important>
 <warning>
 <para>
-<envar>PTS_MODE</envar> currently does <emphasis>NOT</emphasis> restart nor
+&PTSMODE; currently does <emphasis>NOT</emphasis> restart nor
 is it able to startup from global initial condition files.
 </para>
 </warning>
@@ -70,7 +119,7 @@ You can change the point you are simulating for at run-time by changing the valu
 </note>
 <note>
 <para>
-Note, that when running with <envar>PTS_MODE</envar> the number of processors
+Note, that when running with &PTSMODE; the number of processors
 is automatically set to one. When running a single grid point you can only use a single
 processor. You might also want to set the "env_conf" variable: <envar>USE_MPISERIAL</envar> to
 <literal>TRUE</literal> so that you can also run interactively without having to use
@@ -78,14 +127,65 @@ mpi to start up your job.
 </para>
 </note>
 </sect1>
+<sect1 id="share_que">
+<title>Warning about Running with a Single-Processor on a Batch Machine</title>
+<para>
+This problem always comes up when running for a single point, because you can only use
+a single-processor, but may come up in other instances when you are running with
+one processor. This applies to all the different ways of running in single-point mode.
+</para>
+<warning>
+<para>
+A warning for submitting single-point simulations to the batch que when only using
+one processor. On many machines this will mean using up at least an entire node, and 
+being charged for all the CPU's on that node even if you aren't using them. For example,
+on the <acronym>NCAR</acronym> machine bluefire, there are 32 processors for each node
+and the batch scripts are setup to have exclusive use of that node (and hence be charged
+for all 32 processors). There are similar issues on other machines, below we show you
+what to do when running on bluefire.
+</para>
+<para>
+To change this on bluefire -- change the following:
+<screen>
+#BSUB -q regular
+#BSUB -N
+#BSUB -x
+</screen>
+to...
+<screen>
+#BSUB -q share
+#BSUB -N
+</screen>
+so remove the "#BSUB -x" which gives you the entire node exclusively, and change to the
+share que. One other machines you may have to do something similar, but the particulars
+depend on the given machine, hence you will need to consult with the system
+administrators for the given machine you are running on.
+</para>
+</warning>
+<note>
+<para>
+Another similar problem on many machines is that some batch ques have a minimum number 
+of nodes or processors that can be used. On these machine you may have to change the
+queue (in some way similar to the above for bluefire) and possibly the time-limits of
+the job, to get it to run in the batch que.
+</para>
+</note>
+<para>
+Another way to get around this problem is to run the job interactively using
+<envar>USE_MPISERIAL</envar> so that you don't submit the job to the batch que.
+For single point mode you also may want to consider using a smaller workstation or
+cluster, rather than a super-computer, because you can't take advantage of the
+multi-processing power of the super-computer anyway.
+</para>
+</sect1>
 
 <sect1 id="suprted_single_point_datasets">
 <title>Running Supported Single-point/Regional Datasets</title>
 <para>
-In addition to <envar>PTS_MODE</envar> the &clm; supports running using single-point or
+In addition to &PTSMODE; the &clm; supports running using single-point or
 regional datasets that are customized to a particular region. In the section below we
 tell the user how to create their own dataset, but we also support a small number of
-single-point and regional datasets that are ready to setup and run in the CCSM modeling
+single-point and regional datasets that are ready to setup and run in the CESM modeling
 system.
 </para>
 <para>
@@ -102,21 +202,27 @@ To run with the supported single-point and regional datasets, you setup a simula
 do the following:
 <screen width="99">
 > cd scripts
-> create_newcase -case testSPDATASET -res pt1_pt1 -compset I \
+> ./create_newcase -case testSPDATASET -res pt1_pt1 -compset I \
 -mach bluefire -skip_rundb
 > cd testSPDATASET
-> xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_mexicocityMEX
+> ./xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_mexicocityMEX
 </screen>
 Then configure, build and run normally.
 </para>
 <important>
 <para>
-Just like <envar>PTS_MODE</envar> above, By default it sets up to run with
+Just like &PTSMODE; above, By default it sets up to run with
 <envar>USE_MPISERIAL</envar> (in the <filename>env_build.xml</filename> file) turned on, 
 which allows you to run the model interactively. On some machines this mode is NOT 
 supported and you may need to change it to FALSE before you are able to build.
 </para>
 </important>
+<warning>
+<para>
+See <xref linkend="share_que"></xref> for a warning about running single-point jobs
+on batch machines.
+</para>
+</warning>
 <note>
 <para>
 Note, that when running a <literal>pt1_pt1</literal> resolution the number of processors
@@ -147,43 +253,20 @@ supplied atmospheric forcing data for Vancouver
 <screen width="99">
 > cd scripts
 # Create a case at the single-point resolutions
-> create_newcase -case testSPDATASETnAtmForcing -res pt1_pt1 -compset I \
--mach bluefire
+> ./create_newcase -case testSPDATASETnAtmForcing -res pt1_pt1 -compset I \
+-mach bluefire -skip_rundb
 > cd testSPDATASETnAtmForcing
 # NOTE: For Mexico City and Vancouver there are special ifdef's for the urban model 
 # that can be turned on. For a generic, case you would NOT do the following step.
-> xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-cppdefs -DVANCOUVER"
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-cppdefs -DVANCOUVER"
 # Now set the CLM single-point variable to the Vancouver Canada name
-> xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_vancouverCAN
+> ./xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_vancouverCAN
 # Set the aerosols to use the single-point dataset for Vancouver for 2000 conditions
 # You could also use the default global dataset, but running would be a bit slower
-> xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
-> configure -case
+> ./xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
+> ./configure -case
 </screen>
 </example>
-<warning>
-<para>
-Note, that because of bug 1173 (shown in the KnownBugs file), there is an error 
-in the datm.buildnml.csh file that is created for the prescribed aerosols. The
-model will NOT run with this error, since it points to the wrong aerosol file.
-</para>
-</warning>
-<para>
-In order to fix the problem you must change the filepaths, and filenames in the
-presaero stream file, and also change the start and end year from 2000 to 1.
-One way to do this is to add the following patch, and then apply the patch as
-follows:
-<screen width="99">
-&fixstreams_diff;
-</screen>
-The following assumes that you created a filename of the above patch with the name:
-<filename>models/lnd/clm/doc/UsersGuide/fixvan_datm.buildnml.diff</filename>.
-<screen width="99">
-> cd scripts/testSPDATASETnAtmForcing/Buildconf
-> patch &lt; ../../../models/lnd/clm/doc/UsersGuide/fixvan_datm.buildnml.diff
-</screen>
-After the patch is applied, you will be able to build and run the case.
-</para>
 </sect2>
 </sect1>
 
@@ -206,9 +289,6 @@ surface datasets from global ones</title>
 Use the regional extraction script to get regional datasets from the global ones
 The getregional_datasets.pl script to extract out regional datasets of interest.
 Note, the script works on all files other than the "finidat" file as it's a 1D vector file.
-Also, note that it works on the deposition files without streams, so
-<envar>DATM_PRESAERO</envar> MUST be "none", and you must set "-ndepsrc" to "data" in
-build-namelist.
 The script will extract out a block of gridpoints from all the input global datasets,
 and create the full suite of input datasets to run over that block. The input datasets
 will be named according to the input "id" you give them and the id can then be used
@@ -219,16 +299,17 @@ linkend="customize"></xref>). The list of files extracted by
 their name used in the namelists are:
 <varname>fatmgrid</varname>, <varname>fatmlndfrc</varname>, 
 <varname>fsurdat</varname>, <varname>fpftdyn</varname>, 
-<varname>flndtopo</varname>, <varname>faerdep</varname>, <varname>fndepdat</varname>,
-<varname>fndepdyn</varname>, and the datm file <varname>domainfile</varname>.
+<varname>flndtopo</varname>, 
+<varname>stream_fldfilename_ndep</varname>, and the datm files 
+<varname>domainfile</varname>, and <varname>faerdep</varname>.
 For more information on these files see the <link linkend="required_files"
 >Table on required files</link>.
 </para>
 <para>
-The alternatives to using this script are to use <envar>PTS_MODE</envar>,
+The alternatives to using this script are to use &PTSMODE;,
 discussed earlier, or creating the files individually using the different 
 file creation tools (given in the <link linkend="tools">Tools Chapter</link>). Creating
-all the files individually takes quite a bit of effort and time. <envar>PTS_MODE</envar>
+all the files individually takes quite a bit of effort and time. &PTSMODE;
 has some limitations as discussed earlier, but also as it uses global files, is
 a bit slower when running simulations than using files that just have the set
 of points you want to run over. Another advantage is that once you've created the
@@ -244,7 +325,7 @@ The ncl script gets it's settings from environment variables set by the perl scr
 To get help with the script use "-help" as follows:
 <screen width="99">
 > cd models/lnd/clm/tools/ncl_scripts
-> getregional_datasets.pl -help
+> ./getregional_datasets.pl -help
 </screen>
 The output of the above is:
 <screen width="99">
@@ -263,7 +344,7 @@ for future scenarios, simulation year, and simulation year range. The location o
 input and output files will be determined by the option <varname>-mycsmdata</varname> 
 (can also be set by using the environment variable <varname>$CSMDATA</varname>). If
 you are running on a machine like at NCAR where you do NOT have write permission
-to the CCSM inputdata files, you should use the <filename>scripts/link_dirtree</filename>
+to the CESM inputdata files, you should use the <filename>scripts/link_dirtree</filename>
 script to create softlinks of the original files to a location that you can write
 to. This way you can use both your new files you created as well as the original
 files and use them from the same location.
@@ -285,15 +366,27 @@ datasets for a specific region over Alaska</title>
 > cd scripts
 # First make sure you have a inputdata location that you can write to 
 # You only need to do this step once, so you won't need to do this in the future
-> setenv MYCSMDATA "directory to put your inputdata files"
-> link_dirtree $CSMDATA $MYCSMDATA
+> setenv MYCSMDATA $HOME/inputdata         # Set env var for the directory for input data
+> ./link_dirtree $CSMDATA $MYCSMDATA
 > cd ../models/lnd/clm/tools/ncl_scripts
-> getregional_datasets.pl -sw 52,190 -ne 73,220 -id 13x12pt_f19_alaskaUSA -mycsmdata $MYCSMDATA
+> ./getregional_datasets.pl -sw 52,190 -ne 73,220 -id 13x12pt_f19_alaskaUSA -mycsmdata $MYCSMDATA
 </screen>
 </example>
 Repeat this process if you need files for multiple sim_year, resolutions, land-masks, 
 and sim_year_range values.
 </para>
+<warning>
+<para>
+See <xref linkend="share_que"></xref> for a warning about running single-point jobs
+on batch machines.
+</para>
+</warning>
+<note>
+<para>
+See <xref linkend="managingyourdata"></xref> for notes about managing your data
+when using <command>link_dirtree</command>.
+</para>
+</note>
 <para>
 Now to run a simulation with the datasets created above, you create a single-point
 case, and set &CLMUSRDAT; to the identifier used above. Note that in the example below
@@ -307,12 +400,14 @@ specific region over Alaska</title>
 <screen width="99">
 > cd scripts
 # Create the case and set it to only use one processor
-> create_newcase -case my_userdataset_test -res f19_g16 -compset I1850 \
--mach bluefire -skip_rundb -pecount 1
+> ./create_newcase -case my_userdataset_test -res pt1_pt1 -compset I1850 \
+-mach bluefire -pecount 1 -skip_rundb
 > cd my_userdataset_test/
-> xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
-> xmlchange -file env_conf.xml -id &CLMUSRDAT; -val 13x12pt_f19_alaskaUSA
-> configure -case
+> ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+> ./xmlchange -file env_conf.xml -id &CLMUSRDAT; -val 13x12pt_f19_alaskaUSA
+> ./xmlchange -file env_conf.xml -id &CLMBLDNML; -val '-mask gx1v6'
+> ./xmlchange -file env_conf.xml -id &CLM1PT; -val 13x12pt_f19_alaskaUSA
+> ./configure -case
 </screen>
 </example>
 </sect2>
@@ -336,12 +431,12 @@ see the section on setting <link linkend="CLMUSRDAT">&CLMUSRDAT;</link>.
 </para>
 <para>
 Next we need to setup the atmosphere forcing data in &netcdf; format that can be
-read by datm. There is a list of ten variables that are expected to be on the input
+read by datm. There is a list of eight variables that are expected to be on the input
 files with the names and units on the following table (in the table TDEW and SHUM
 are optional fields that can be used in place of RH). In the table we also list
 which of the fields are required and if not required what the code will do to
 replace them. If the names of the fields are different or the list is changed
-from the standard list of the ten fields: FLDS, FSDS, FSDSdif, FSDSdir, PRECTmms, 
+from the standard list of eight fields: FLDS, FSDS, PRECTmms, 
 PSRF, RH, TBOT, WIND, and ZBOT, the resulting streams file will need to be modified
 to take this into account.
 <table id="atm_forcing_fields" tocentry="1" pgwide="1" frame="all">
@@ -413,36 +508,52 @@ All of the variables should be dimensioned: time, lat, lon, with time being the 
 dimension. The coordinate variable "time" is also required with CF-compliant units in
 days, hours, minutes, or seconds. It can also have a calendar attribute that can
 be "noleap" or "gregorian". Normally the files will be placed in the:
-<filename>$CSMDATA/atm/datm7/domain.clm</filename> directory with separate files per
-month called <filename>clm1pt-YYYY-MM.nc</filename> where YYYY-MM corresponds to the four
-digit year and two digit month with a dash inbetween.
+<filename>$MYCSMDATA/atm/datm7/CLM1PT_data/$MYUSRDAT</filename> directory with separate files per
+month called <filename>YYYY-MM.nc</filename> where YYYY-MM corresponds to the four
+digit year and two digit month with a dash inbetween. You also need a domain file that
+gives the coordinate information for the data that should be placed in:
+<filename>$MYCSMDATA/atm/datm7/domain.lnd.$MYUSRDAT_USGS.nc</filename>.
 <screen width="99">
 > cd scripts
 # First make sure you have a inputdata location that you can write to 
 # You only need to do this step once, so you won't need to do this in the future
-> setenv MYCSMDATA "directory to put your inputdata files"
-> link_dirtree $CSMDATA $MYCSMDATA
+> setenv MYCSMDATA $HOME/inputdata     # Set env var for the directory for input data
+> ./link_dirtree $CSMDATA $MYCSMDATA
 # Next create and move all your datasets into $MYCSMDATA with id $MYUSRDAT
 # See above for naming conventions
 
 #  Now create a single-point case
-> create_newcase -case my_atmforc_test -res pt1_pt1 -compset I1850 \
--mach bluefire
+> ./create_newcase -case my_atmforc_test -res pt1_pt1 -compset I1850 \
+-mach bluefire -skip_rundb
 > cd my_atmforc_test
 # Set the data root to your inputdata directory, and set &CLM1PT; and &CLMUSRDAT; 
 # to the user id you created for your datasets above
-> xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
-> xmlchange -file env_conf.xml -id &CLM1PT; -val $MYUSRDAT
-> xmlchange -file env_conf.xml -id &CLMUSRDAT; -val $MYUSRDAT
+> ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+> ./xmlchange -file env_conf.xml -id &CLM1PT; -val $MYUSRDAT
+> ./xmlchange -file env_conf.xml -id &CLMUSRDAT; -val $MYUSRDAT
+# Set the land-mask to USGS, so both clm and datm can find files
+> ./xmlchange -file env_conf.xml -id &CLMBLDNML; -val '-mask USGS'
 # Then set DATM_MODE to single-point mode so datm will use your forcing datasets
-# Put your forcing datasets into $MYCSMDATA/atm/datm7/domain.clm
-> xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
-> configure -case
+# Put your forcing datasets into $MYCSMDATA/atm/datm7/CLM1PT_data/$MYUSRDAT
+> ./xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
+> ./configure -case
 # If the list of fields, or filenames, filepaths, or fieldnames are different 
 # you'll need to edit the datm namelist streams file to make it consistent
 > $EDITOR Buildconf/datm.buildnml.csh
 </screen>
 </para>
+<warning>
+<para>
+See <xref linkend="share_que"></xref> for a warning about running single-point jobs
+on batch machines.
+</para>
+</warning>
+<note>
+<para>
+See <xref linkend="managingyourdata"></xref> for notes about managing your data
+when using <command>link_dirtree</command>.
+</para>
+</note>
 </sect1>
 
 </chapter>

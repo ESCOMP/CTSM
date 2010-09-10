@@ -53,11 +53,11 @@ setenv LIB_NETCDF /usr/local/lib64/r4i4
 ## ROOT OF CLM DISTRIBUTION
 ## Contains the source code for the CLM distribution.
 ## (the root directory for CLM contains the subdirectory "src")
-## UTILROOT is the root of the CCSM tools directory
+## UTILROOT is the root of the CESM tools directory
 set curdir    = `pwd`
 set clmroot   = $curdir/../..
 setenv UTILROOT $clmroot/../../../scripts/ccsm_utils
-set ccsm_mach = "bluefire"
+set cesm_mach = "bluefire"
 
 ## ROOT OF CLM DATA DISTRIBUTION
 ## Contains the initial and boundary data for the CLM distribution.
@@ -80,7 +80,7 @@ setenv OMP_NUM_THREADS 64
 
 ## env variables
 set CCSMUSER=$USER
-source $UTILROOT/Machines/env_machopts.$ccsm_mach
+source $UTILROOT/Machines/env_machopts.$cesm_mach
 
 ## Do our best to get sufficient stack memory
 limit stacksize unlimited
@@ -125,7 +125,7 @@ foreach bgc ( "cn" )
 
    ## Build (or re-build) executable
    set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust "
-   set flags = "$flags -prog_seasalt $seaslt -mach $ccsm_mach -ccsm_bld on -mode ccsm_seq"
+   set flags = "$flags -prog_seasalt $seaslt -mach $cesm_mach -cesm_bld on -mode clm_stndln"
    if ($spmd == on ) set flags = "$flags -spmd"
    if ($spmd == off) set flags = "$flags -nospmd"
    if ($smp  == on ) set flags = "$flags -smp"

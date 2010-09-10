@@ -33,9 +33,9 @@ with the guidelines given there. Here we will restrict ourselves to problems fro
 <example id="configure_problem">
 <title>Example of configure problem with missing datasets</title>
 <screen width="99">
-> create_newcase -case transientT31 -res T31_g37 -compset I_1850-2000_CN \
--mach bluefire
-> configure -case
+> ./create_newcase -case transientT31 -res T31_g37 -compset I_1850-2000_CN \
+-mach bluefire -skip_rundb
+> ./configure -case
 </screen>
 <para>The following is what is displayed to the screen.</para>
 <screen width="99">
@@ -209,6 +209,140 @@ Please wait...
 Memory usage for   ./ccsm.exe (task #   0) is:      51696 KB. Exit status: 1. Signal: 0
 </screen>
 </para>
+<para>
+When working with the ccsm log file, for a run-time problem, you will need to be able 
+to separate it's output into three categories: pre-crash, crash, and post-crash. The
+pre-crash section is everything that is normal output for good operation of the model.
+The crash section is the section where the model dies and reports on the actual problem.
+the post-crash section is the cleanup and finalization after the model dies. The most
+important part of this of course is the crash section. The tricky part is distinguishing
+it from the other sections. Also because the ccsm log file most likely has duplicated
+output from multiple processors it is even more difficult to distinguish the different
+sections and to some extent the sections may be intertwined, as different processors 
+reach the different sections at different times. Because, of this reducing the number of
+processors for your simulation may help you sort out the output in the file (see
+<xref linkend="fewer_pes"></xref>). Also much of the output from the ccsm log file are
+system level information having to do with &mpi; multiprocessing. Usually you can ignore
+this information, but it makes it more difficult to trudge through.
+</para>
+<para>
+Sometimes the ccsm log file is the ONLY file available, because the model terminates
+early in initialization. In this case understanding the output in the ccsm log file
+becomes even more important. This also indicates the model did NOT advance far enough
+to reach the initialization of the individual model components. This may mean that the
+initialization of the multiprocessing for &mpi; and/or &omp; failed, or that the
+reading of the driver namelist file "drv_in" failed.
+</para>
+<para>
+Here we show those three sections for a ccsm log file where a two task job failed on
+reading the namelist file. For a typical job with many tasks similar sections of this
+will be repeated not just twice but for each task and hence make it harder to read.
+</para>
+<para>
+<emphasis>Pre-crash section of the ccsm log file</emphasis>
+<screen width="99">
+ATTENTION: 0031-386  MP_INSTANCES setting ignored when LoadLeveler is not being used.
+ATTENTION: 0031-386  MP_INSTANCES setting ignored when LoadLeveler is not being used.
+ATTENTION: 0031-378 MP_EUIDEVICE setting ignored when LoadLeveler is not being used.  
+ATTENTION: 0031-386  MP_INSTANCES setting ignored when LoadLeveler is not being used.
+   0:INFO: 0031-724  Executing program: &lt;/usr/local/lsf/7.0/aix5-64/bin/lsnrt_run&gt;
+   1:INFO: 0031-724  Executing program: &lt;/usr/local/lsf/7.0/aix5-64/bin/lsnrt_run&gt;
+   0:/contrib/bin/ccsm_launch: process 401894 bound to logical CPU 0 on host be0310en.ucar.edu ...
+   1:/contrib/bin/ccsm_launch: process 439264 bound to logical CPU 1 on host be0310en.ucar.edu ...
+   0:INFO: 0031-619  64bit(us, Packet striping on)  ppe_rmas MPCI_MSG: MPI/MPCI library was compiled on   Wed Aug  5 13:36:06 2009
+   0: 
+   1:LAPI version #14.26 2008/11/23 11:02:30 1.296 src/rsct/lapi/lapi.c, lapi, rsct_rpt53, rpt53s004a 09/04/29 64bit(us)  library compiled on Wed Apr 29 15:30:42 2009
+   1:.
+   1:LAPI is using lightweight lock.
+   0:LAPI version #14.26 2008/11/23 11:02:30 1.296 src/rsct/lapi/lapi.c, lapi, rsct_rpt53, rpt53s004a 09/04/29 64bit(us)  library compiled on Wed Apr 29 15:30:42 2009
+   0:.
+   0:LAPI is using lightweight lock.
+   0:Use health ping for failover/recovery
+   1:Use health ping for failover/recovery
+   0:Initial communication over instance 2.
+   1:Initial communication over instance 0.
+   1:IB RDMA initialization completed successfully
+   1:The MPI shared memory protocol is used for the job
+   0:IB RDMA initialization completed successfully
+   0:LAPI job ID for this job is: 1684890719
+   0:The MPI shared memory protocol is used for the job
+   0:(seq_comm_setcomm)  initialize ID (  7 GLOBAL ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_setcomm)  initialize ID (  2   ATM  ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_setcomm)  initialize ID (  1   LND  ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_setcomm)  initialize ID (  4   ICE  ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_setcomm)  initialize ID (  5   GLC  ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_setcomm)  initialize ID (  3   OCN  ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_setcomm)  initialize ID (  6   CPL  ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_joincomm) initialize ID (  8 CPLATM ) join IDs =     6     2       ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_joincomm) initialize ID (  9 CPLLND ) join IDs =     6     1       ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_joincomm) initialize ID ( 10 CPLICE ) join IDs =     6     4       ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_joincomm) initialize ID ( 11 CPLOCN ) join IDs =     6     3       ( npes =     2) ( nthreads =  1)
+   0:(seq_comm_joincomm) initialize ID ( 12 CPLGLC ) join IDs =     6     5       ( npes =     2) ( nthreads =  1)
+   0:  
+   0: (seq_comm_printcomms) ID layout : global pes vs local pe for each ID
+   0:     gpe        LND      ATM      OCN      ICE      GLC      CPL    GLOBAL   CPLATM   CPLLND   CPLICE   CPLOCN   CPLGLC    nthrds
+   0:     ---      ------   ------   ------   ------   ------   ------   ------   ------   ------   ------   ------   ------    ------
+   0:       0   :       0        0        0        0        0        0        0        0        0        0        0        0        1
+   1:       1   :       1        1        1        1        1        1        1        1        1        1        1        1        1
+   1:  
+   0: (t_initf) Read in prof_inparm namelist from: drv_in
+   1: (seq_io_init) cpl_io_stride, iotasks or root out of bounds - resetting to defaults  4 0 1
+   0: piolib_mod.f90 1353 1 2 1 2
+   1: piolib_mod.f90 1353 1 2 1 2
+   0: pio_support::pio_die:: myrank= 0 : ERROR: piolib_mod.f90: 1354 : not enough procs for the stride
+   1: pio_support::pio_die:: myrank= 1 : ERROR: piolib_mod.f90: 1354 : not enough procs for the stride
+</screen>
+</para>
+<para>
+<emphasis>Crash section of the ccsm log file</emphasis>
+<screen width="99">
+   0:
+   0:  Traceback:
+   1:
+   1:  Traceback:
+   0:    Offset 0x00000c4c in procedure __pio_support_NMOD_piodie, near line 88 in file pio_support.F90.in
+   1:    Offset 0x00000c4c in procedure __pio_support_NMOD_piodie, near line 88 in file pio_support.F90.in
+   0:    Offset 0x00000fd0 in procedure __piolib_mod_NMOD_init, near line 1354 in file piolib_mod.F90
+   1:    Offset 0x00000fd0 in procedure __piolib_mod_NMOD_init, near line 1354 in file piolib_mod.F90
+   1:    Offset 0x00000398 in procedure __seq_io_mod_NMOD_seq_io_init, near line 247 in file /gpfs/proj2/fis/cgd/home/erik/clm_trunk/models/drv/shr/seq_io_mod.F90
+   0:    Offset 0x00000398 in procedure __seq_io_mod_NMOD_seq_io_init, near line 247 in file /gpfs/proj2/fis/cgd/home/erik/clm_trunk/models/drv/shr/seq_io_mod.F90
+   0:    Offset 0x0001aa88 in procedure ccsm_driver, near line 465 in file /gpfs/proj2/fis/cgd/home/erik/clm_trunk/models/drv/driver/ccsm_driver.F90
+   0:    --- End of call chain ---
+   1:    Offset 0x0001aa88 in procedure ccsm_driver, near line 465 in file /gpfs/proj2/fis/cgd/home/erik/clm_trunk/models/drv/driver/ccsm_driver.F90
+   1:    --- End of call chain ---
+</screen>
+</para>
+<para>
+<emphasis>Post-crash section of the ccsm log file</emphasis>
+<screen width="99">
+   1:Communication statistics of task 1 is associated with task key: 1684890719_1
+   0:Communication statistics of task 0 is associated with task key: 1684890719_0
+   0:
+   0:Running: ./ccsm.exe 
+   0:Please wait...
+   0:
+   0:Memory usage for   ./ccsm.exe (task #   0) is:     198892 KB. Exit status: 134. Signal: 0
+   1:
+   1:Running: ./ccsm.exe 
+   1:Please wait...
+   1:
+   1:Memory usage for   ./ccsm.exe (task #   0) is:     198572 KB. Exit status: 134. Signal: 0
+INFO: 0031-656  I/O file STDOUT closed by task 0
+INFO: 0031-656  I/O file STDERR closed by task 0
+ERROR: 0031-250  task 0: IOT/Abort trap
+INFO: 0031-656  I/O file STDOUT closed by task 1
+INFO: 0031-656  I/O file STDERR closed by task 1
+ERROR: 0031-250  task 1: IOT/Abort trap
+INFO: 0031-639  Exit status from pm_respond = 0
+ATTENTION: 0031-386  MP_INSTANCES setting ignored when LoadLeveler is not being used.
+Job  /usr/local/lsf/7.0/aix5-64/bin/poejob /contrib/bin/ccsm_launch /contrib/bin/job_memusage.exe ./ccsm.exe
+
+TID   HOST_NAME   COMMAND_LINE            STATUS            TERMINATION_TIME
+===== ========== ================  =======================  ===================
+00000 be0310en   /contrib/bin/ccs  Exit (134)               08/31/2010 12:32:57
+00001 be0310en   /contrib/bin/ccs  Exit (134)               08/31/2010 12:32:57
+</screen>
+</para>
 </sect3>
 
 <sect3 id="clm_log">
@@ -221,7 +355,7 @@ in the <filename>ccsm.log.*</filename> to see if any errors showed up there.
 </para>
 <para>
 Here's an example of the <filename>lnd.log.*</filename> file when running 
-<envar>PTS_MODE</envar> with initial conditions (this is bug 1025 in the KnownBugs file).
+&PTSMODE; with initial conditions (this is bug 1025 in the KnownBugs file).
 <screen width="99">
  Successfully initialized variables for accumulation
  
@@ -242,9 +376,7 @@ is important.
 </para>
 <para>
 Here's an example of a problem that occurs when the wrong prescribed aerosol file
-is given to a <literal>pt1_pt1</literal> simulation. This is bug 1173 in the Knownbugs
-file, and occurs by default when you do a <literal>pt1_pt1</literal> simulation without
-modifying the datm prescribed aerosol streams file.
+is given to a <literal>pt1_pt1</literal> simulation.
 <screen width="99">
 (datm_comp_init)  atm mode = CLMNCEP
 (shr_strdata_init)  calling shr_dmodel_mapSet for fill
@@ -293,7 +425,7 @@ triggered as well as array bounds checking and other things the compiler can tur
 on to help you find problems. To do this edit the &envbuild; file and set <envar>DEBUG
 </envar> to <literal>TRUE</literal> as follows:
 <screen width="99">
-> xmlchange -file env_build.xml -id DEBUG -val TRUE
+> ./xmlchange -file env_build.xml -id DEBUG -val TRUE
 </screen>
 </para>
 </sect3>
@@ -305,14 +437,14 @@ Another way to simplify the system is to run with a smaller set of processors. Y
 will need to clean the configure and edit the <filename>env_mach_pes.xml</filename>.
 For example, to run with four processors:
 <screen width="99">
-> configure -cleanall
-> xmlchange -file env_mach_pes.xml -id NTASKS_ATM -val 4
-> xmlchange -file env_mach_pes.xml -id NTASKS_LND -val 4
-> xmlchange -file env_mach_pes.xml -id NTASKS_ICE -val 4
-> xmlchange -file env_mach_pes.xml -id NTASKS_OCN -val 4
-> xmlchange -file env_mach_pes.xml -id NTASKS_CPL -val 4
-> xmlchange -file env_mach_pes.xml -id NTASKS_GLC -val 4
-> configure -case
+> ./configure -cleanall
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_ATM -val 4
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_LND -val 4
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_ICE -val 4
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_OCN -val 4
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_CPL -val 4
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_GLC -val 4
+> ./configure -case
 </screen>
 Another recommended simplification is to run without threading, so set the
 <envar>NTHRDS</envar> for each component to "1" if it isn't already. Sometimes,
@@ -334,26 +466,26 @@ queue, which sometimes makes it easier to run and debug. If you can use
 <envar>USE_MPI_SERIAL</envar> you can also use threading, but still run interactively
 in order to use more processors to make it faster if needed.
 <screen width="99">
-> configure -cleanall
+> ./configure -cleanall
 # Set tasks and threads for each component to 1
 # You could also set threads to something > 1 for speed, but still
 # run interactively if threading isn't an issue.
-> xmlchange -file env_mach_pes.xml -id NTASKS_ATM -val 1
-> xmlchange -file env_mach_pes.xml -id NTHRDS_ATM -val 1
-> xmlchange -file env_mach_pes.xml -id NTASKS_LND -val 1
-> xmlchange -file env_mach_pes.xml -id NTHRDS_LND -val 1
-> xmlchange -file env_mach_pes.xml -id NTASKS_ICE -val 1
-> xmlchange -file env_mach_pes.xml -id NTHRDS_ICE -val 1
-> xmlchange -file env_mach_pes.xml -id NTASKS_OCN -val 1
-> xmlchange -file env_mach_pes.xml -id NTHRDS_OCN -val 1
-> xmlchange -file env_mach_pes.xml -id NTASKS_CPL -val 1
-> xmlchange -file env_mach_pes.xml -id NTHRDS_CPL -val 1
-> xmlchange -file env_mach_pes.xml -id NTASKS_GLC -val 1
-> xmlchange -file env_mach_pes.xml -id NTHRDS_GLC -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_ATM -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTHRDS_ATM -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_LND -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTHRDS_LND -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_ICE -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTHRDS_ICE -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_OCN -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTHRDS_OCN -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_CPL -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTHRDS_CPL -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTASKS_GLC -val 1
+> ./xmlchange -file env_mach_pes.xml -id NTHRDS_GLC -val 1
 # If mpi-serial capability is available on the machine you are using
 # set USE_MPI_SERIAL to true so that you can run interactively
-> xmlchange -file env_conf.xml -id USE_MPI_SERIAL -val TRUE
-> configure -case
+> ./xmlchange -file env_conf.xml -id USE_MPI_SERIAL -val TRUE
+> ./configure -case
 # Then build your case
 # And finally run, by running the *.run script interactively
 # (If you were able to set USE_MPI_SERIAL to true)
@@ -386,7 +518,7 @@ Another suggestion is to run the model with a debugger such as: <command>dbx</co
 <command>gdb</command>, or <command>totalview</command>. Often to run with a debugger
 you will need to reduce the number of processors as outlined above. Some debuggers such
 as <command>dbx</command> will only work with one processor, while more advanced
-debuggers such as <command>totalview</command> can work with both MPI tasks and OMP
+debuggers such as <command>totalview</command> can work with both &mpi; tasks and OMP
 threads. Even simple debuggers though can be used to query core files, to see where
 the code was at when it died (for example using the <command>where</command> in 
 <command>dbx</command> for a core file can be very helpful. For help in running

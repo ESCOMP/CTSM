@@ -20,7 +20,15 @@ determine default values for namelists.
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
 
 <!-- Default resolution -->
-<res>1.9x2.5</res>
+<res sitespf_pt="none"               >1.9x2.5</res>
+<res sitespf_pt="1x1_brazil"         >1x1_brazil</res>
+<res sitespf_pt="1x1_tropicAtl"      >1x1_tropicAtl</res>
+<res sitespf_pt="5x5_amazon"         >5x5_amazon</res>
+<res sitespf_pt="1x1_camdenNJ"       >1x1_camdenNJ</res>
+<res sitespf_pt="1x1_vancouverCAN"   >1x1_vancouverCAN</res>
+<res sitespf_pt="1x1_mexicocityMEX"  >1x1_mexicocityMEX</res>
+<res sitespf_pt="1x1_asphaltjungleNJ">1x1_asphaltjungleNJ</res>
+<res sitespf_pt="1x1_urbanc_alpha"   >1x1_urbanc_alpha</res>
 
 <!-- Default simulation year -->
 <sim_year>2000</sim_year>
@@ -30,12 +38,6 @@ determine default values for namelists.
 
 <!-- Default representative concentration pathway for future scenarios -->
 <rcp>-999.9</rcp>
-
-<!-- Default Nitrogen deposition source type -->
-<ndepsrc bgc="none"                  >none</ndepsrc>
-<ndepsrc bgc="casa"                  >none</ndepsrc>
-<ndepsrc bgc="cn"                    >stream</ndepsrc>
-<ndepsrc bgc="cndv"                  >stream</ndepsrc>
 
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>

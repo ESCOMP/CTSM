@@ -15,7 +15,7 @@ module clm_glclnd
 ! The fields received by the lnd component from the glc component
 !  via the coupler are labeled 'x2s', or coupler to sno.
 ! 'Sno' is a misnomer in that the exchanged data are related to
-!  the ice beneath the snow, not the snow itself.  But by CCSM convention,
+!  the ice beneath the snow, not the snow itself.  But by CESM convention,
 ! 'ice' refers to sea ice, not land ice.
 !
 ! !USES:

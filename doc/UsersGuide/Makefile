@@ -20,7 +20,6 @@ USRLOG    := quickstart_usrdat
 TDRLOG    := test_driver.sh
 GETREG    := getregional_datasets
 CO2DIF    := addco2_datm.buildnml
-VANDIF    := fixvan_datm.buildnml
 DATLOG    := build_date
 NMLDFTBL  := namelist_definition_table
 NMLDLTBL  := namelist_defaults_clm_table
@@ -32,7 +31,7 @@ SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
              tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml \
              appendix.xml trouble_shooting.xml \
              $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml $(CPRLOG).xml \
-	     $(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(VANDIF).xml
+	     $(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml
 
 CONVAMP    := sed 's/\&/\&amp;/g'
 CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
@@ -54,7 +53,6 @@ $(GETREG).xml: $(GETREG).tlog
 $(MKSLOG).xml: $(MKSLOG).tlog
 $(CPRLOG).xml: $(CPRLOG).tlog
 $(CO2DIF).xml: $(CO2DIF).diff
-$(VANDIF).xml: $(VANDIF).diff
 $(DATLOG).xml: $(DATLOG).tlog
 
 $(NMLDFTBL).xhtml: namelist_definition.xml namelist_definition.xsl
@@ -152,5 +150,4 @@ realclean: clean
 	$(RM) -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
 	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml \
 	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml \
-	$(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(VANDIF).xml  \
-	$(CPRLOG).xml
+	$(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(CPRLOG).xml

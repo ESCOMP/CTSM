@@ -26,7 +26,7 @@
 # MPI_LIB_NAME  Name of MPI library.
 # ESMF_LIBDIR   Directory containing the ESMF library (for use with external library only).
 # DEBUG         Set to TRUE to turn on compiler debugging options.  Default: FALSE 
-# SPMD          Whether to build in SPMD mode or not. 	[values TRUE FALSE]
+# USE_MPISERIAL Whether to build with serial-only MPI or not. 	[values TRUE FALSE]
 # SMP           Set to TRUE to enable building in SMP mode (uses OpenMP).  
 # USER_FC       Allow user to override the default Fortran compiler specified in Makefile.
 # USER_CC       Allow user to override the default C compiler specified in Makefile (linux only).
@@ -39,7 +39,7 @@
 #               Use this to replace default Fortran compiler optimization.  
 #
 # Note: An internal implementation of the ESMF time-manager interface is provided
-#       with the sequential CCSM distribution in src/utils/esmf_wrf_timemgr.
+#       with the CESM distribution in src/utils/esmf_wrf_timemgr.
 #
 #------------------------------------------------------------------------
 
@@ -102,9 +102,6 @@ OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
 
 CPPDEF    := $(USER_CPPDEFS)
 LDFLAGS   := 
-ifeq ($(SPMD),TRUE)
-   CPPDEF += -DSPMD
-endif
 
 $(MODEL_EXEDIR)/$(EXENAME): $(OBJS)
 	$(LINKER) -o $@ $(OBJS) -L$(LIB_NETCDF) -lnetcdf $(LDFLAGS)
@@ -157,10 +154,10 @@ ifeq ($(SMP),TRUE)
 endif
 
 # Use the thread-safe compilers even when disabling openMP.
-ifeq ($(SPMD),TRUE)
-  FC       := mpxlf90_r
-else
+ifeq ($(USE_MPISERIAL),TRUE)
   FC       := xlf90_r
+else
+  FC       := mpxlf90_r
 endif
 
 cpre = $(null)-WF,-D$(null)
@@ -197,10 +194,10 @@ ifeq ($(SMP),TRUE)
   LDFLAGS += -qsmp=omp:noopt
 endif
 
-ifeq ($(SPMD),TRUE)
-  LDFLAGS += -lmpi_r
-else
+ifeq ($(USE_MPISERIAL),TRUE)
   FFLAGS  += -WF,-DHIDE_MPI,-D_MPISERIAL
+else
+  LDFLAGS += -lmpi_r
 endif
 
 LDFLAGS += -bdatapsize:64K -bstackpsize:64K -btextpsize:64K
@@ -419,7 +416,7 @@ endif
 
 # Flags common to all compilers
 
-ifeq ($(SPMD),TRUE)
+ifneq ($(USE_MPISERIAL),TRUE)
   ifneq ($(LIB_MPI),$(null))
      LDFLAGS += -L$(LIB_MPI) -l$(MPI_LIB_NAME)
   endif
@@ -488,8 +485,8 @@ ifeq ($(SMP),TRUE)
   LDFLAGS +=
 endif
 
-ifeq ($(SPMD),TRUE)
-  # SPMD not implemented
+ifneq ($(USE_MPISERIAL),FALSE)
+  # Not use mpiserial not implemented
   LDFLAGS +=
 endif
 

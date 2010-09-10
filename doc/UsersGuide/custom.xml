@@ -218,13 +218,13 @@ set here. The best way to see what options can be sent to the "&buildnml;" scrip
 </para>
 <screen width="99">
 > cd models/lnd/clm/bld
-> &buildnml; -help
+> ./&buildnml; -help
 </screen>
 <para>
 Here is the output from the above.
 </para>
 <screen width="99">
-&buildnml_help;
+./&buildnml_help;
 </screen>
 <para>
 The &clm; template already sets the resolution and mask as well as the &configure; file,
@@ -255,8 +255,8 @@ To get a list of valid resolutions to run at do the following:
 <caution>
 <para>
 The fine-mesh mode is considered experimental, and you may run into problems when you use
-it. Another option is to use the CCSM level "tri-grid" capability to run the land model
-on a different grid than the atmospheric model. Read the CCSM User's-Guide to learn how
+it. Another option is to use the CESM level "tri-grid" capability to run the land model
+on a different grid than the atmospheric model. Read the CESM User's-Guide to learn how
 to do this.
 </para>
 </caution>
@@ -267,7 +267,7 @@ they are set before continuing. For example, you may want to require that
 <varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
 you would do the following.
 <screen width="99">
-> xmlchange -file env_conf.xml -id &CLMBLDNML; -val "-clm_demand fpftdyn"
+> ./xmlchange -file env_conf.xml -id &CLMBLDNML; -val "-clm_demand fpftdyn"
 </screen>
 To see a list of valid variables that you could set do this:
 <screen width="99">
@@ -279,7 +279,7 @@ To see a list of valid variables that you could set do this:
  <para>
 Using a 20th-Century transient compset or the <envar>20thC_transient</envar> use-case
 using &CLMUSECASE; would set this as well, but would also use 
-dynamic fndepdyn, and faerdep files, so using <envar>-clm_demand</envar> would be a way 
+dynamic nitrogen and aerosol deposition files, so using <envar>-clm_demand</envar> would be a way 
 to get <emphasis>just</emphasis> dynamic vegetation types and NOT the other files as well.
 </para>
 </note>
@@ -302,11 +302,6 @@ datasets. To list the valid options do the following:
 > cd models/lnd/clm/doc
 > ../bld/&buildnml; -rcp list
 </screen>
-<caution>
-<para>
-"rcp" is experimental and only a few resolutions have datasets that support it.
-</para>
-</caution>
 </listitem>
 </varlistentry>
 
@@ -330,7 +325,7 @@ so that you get vector output to your history files. To do so edit
 &envconf; and add a setting for <varname>hist_dov2xy</varname>.
 So do the following:
 <screen width="99">
-> xmlchange -file env_conf.xml -id &CLMNAMELIST; \
+> ./xmlchange -file env_conf.xml -id &CLMNAMELIST; \
 -val hist_dov2xy=.false.
 </screen>
 </para>
@@ -340,7 +335,7 @@ to your history files. To do so edit
 &envconf; and add a setting for <varname>hist_fincl1</varname>.
 So do the following:
 <screen width="99">
-> xmlchange -file env_conf.xml -id &CLMNAMELIST; \
+> ./xmlchange -file env_conf.xml -id &CLMNAMELIST; \
  -val "hist_fincl1=&amp;apos;HK&amp;apos;"
 </screen>
 </para>
@@ -395,7 +390,9 @@ the valid resolutions that can be used with &CLM1PT; are the ones that
 have city or nation names such as: 5x5_amazon, 1x1_vancouverCAN 1x1_mexicocityMEX, or
 1x1_brazil. The "1x1_" prefix means the file is for a single-point, while "5x5_" prefix means
 it's for a region of five points in latitude by five points in longitude. Both regional 
-and single point datasets can be used for &CLM1PT;.
+and single point datasets can be used for &CLM1PT;. If you create your own datasets
+you can also use &CLM1PT; along with &CLMUSRDAT; (documented below), setting &CLM1PT; to
+the value in &CLMUSRDAT; so that your datasets are used rather than the standard ones.o 
 </para>
 </listitem>
 </varlistentry>
@@ -705,7 +702,7 @@ Here we point to you where you can find the definition of each namelist item and
 separately the default values for them. The default values may change depending on 
 the resolution, land-mask, simulation-year and other attributes. Both of these 
 files are viewable in your web browser. Below we provide the link for them, and
-then expland each in turn.
+then expand each in turn.
 </para>
 <orderedlist>
 <listitem><para>
@@ -717,6 +714,9 @@ then expland each in turn.
 </para></listitem>
 </orderedlist>
 
+<!-- Currently the following two tables cause docbook to fail for PDF with a seg-fault
+     EBK Aug/19/2010
+
 <sect3 id="nl_def_table">
 &nmldfntbl;
 </sect3>
@@ -724,6 +724,7 @@ then expland each in turn.
 <sect3 id="nl_dfl_table">
 &nmldfltbl;
 </sect3>
+-->
 
 </sect2>
 <!-- End of nl definition section -->

@@ -5,8 +5,8 @@ module lnd_comp_mct
 !
 ! !MODULE: lnd_comp_mct
 !
-!  Interface of the active land model component of CCSM the CLM (Community Land Model)
-!  with the main CCSM driver. This is a thin interface taking CCSM driver information
+!  Interface of the active land model component of CESM the CLM (Community Land Model)
+!  with the main CESM driver. This is a thin interface taking CESM driver information
 !  in MCT (Model Coupling Toolkit) format and converting it to use by CLM.
 !
 ! !DESCRIPTION:
@@ -37,12 +37,12 @@ module lnd_comp_mct
   private :: lnd_SetgsMap_mct         ! Set the land model MCT GS map
   private :: lnd_chkAerDep_mct        ! Check if aerosol deposition data is input or not
   private :: lnd_domain_mct           ! Set the land model domain information
-  private :: lnd_export_mct           ! export land data to CCSM coupler
-  private :: lnd_import_mct           ! import data from the CCSM coupler to the land model
+  private :: lnd_export_mct           ! export land data to CESM coupler
+  private :: lnd_import_mct           ! import data from the CESM coupler to the land model
 #ifdef RTM
   private :: rof_SetgsMap_mct         ! Set the river runoff model MCT GS map
   private :: rof_domain_mct           ! Set the river runoff model domain information
-  private :: rof_export_mct           ! Export the river runoff model data to the CCSM coupler
+  private :: rof_export_mct           ! Export the river runoff model data to the CESM coupler
 #endif
   private :: sno_export_mct
   private :: sno_import_mct
@@ -140,7 +140,7 @@ contains
     type(mct_gGrid),         pointer :: dom_r        ! Runoff model domain
     type(mct_gsMap),         pointer :: GSMap_sno
     type(mct_gGrid),         pointer :: dom_s
-    type(seq_infodata_type), pointer :: infodata     ! CCSM driver level info data
+    type(seq_infodata_type), pointer :: infodata     ! CESM driver level info data
     integer  :: lsize                                ! size of attribute vector
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
@@ -526,7 +526,7 @@ contains
     integer :: shrlogunit,shrloglev       ! old values for share log unit and log level
     integer :: begg, endg                 ! Beginning and ending gridcell index numbers
     integer :: lbnum                      ! input to memory diagnostic
-    type(seq_infodata_type),pointer :: infodata ! CCSM information from the driver
+    type(seq_infodata_type),pointer :: infodata ! CESM information from the driver
     type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
     real(r8),               pointer :: data(:)  ! temporary
     integer :: g,i,lsize                        ! counters
@@ -890,32 +890,17 @@ contains
 !
 !------------------------------------------------------------------------------
 ! !USES:
-    use shr_const_mod    , only : spval => SHR_CONST_SPVAL
-    use shr_sys_mod      , only : shr_sys_flush
-    use clm_varctl       , only : iulog
-    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file
     use abortutils       , only : endrun
-    use seq_flds_indices , only : index_x2l_Faxa_bcphidry, index_x2l_Faxa_bcphodry, &
-                                  index_x2l_Faxa_bcphiwet,                          &
-                                  index_x2l_Faxa_ocphidry, index_x2l_Faxa_ocphodry, &
-                                  index_x2l_Faxa_ocphiwet,                          &
-                                  index_x2l_Faxa_dstdry1, index_x2l_Faxa_dstdry2,   &
-                                  index_x2l_Faxa_dstdry3, index_x2l_Faxa_dstdry4,   &
-                                  index_x2l_Faxa_dstwet1, index_x2l_Faxa_dstwet2,   &
-                                  index_x2l_Faxa_dstwet3, index_x2l_Faxa_dstwet4
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData
-    use spmdMod          , only : masterproc
-    use aerdepMod        , only : aerdepini
     implicit none
 !
 ! !ARGUMENTS:
 
-    type(seq_infodata_type),pointer :: infodata ! CCSM information from the driver
+    type(seq_infodata_type),pointer :: infodata ! CESM information from the driver
 !
 ! !LOCAL VARIABLES:
-    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
-    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
     logical :: atm_aero                    ! Flag if aerosol data sent from atm model
+    character(len=32), parameter :: sub = "lnd_chkAerDep_mct"
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -925,35 +910,7 @@ contains
 
     call seq_infodata_GetData(infodata, atm_aero=atm_aero )
     if ( .not. atm_aero )then
-        caerdep_filled = .false.
-        dustdep_filled = .false.
-    end if
-
-    if ( caerdep_filled )then
-       if ( masterproc ) &
-          write(iulog,*) "Using aerosol deposition sent from atmosphere model"
-    else
-       if ( masterproc ) then
-          write(iulog,*) "WARNING: carbon aerosol deposition data NOT sent in from atmosphere model"
-          write(iulog,*) "WARNING: Reading carbon aerosol deposition from CLM input file"
-       end if
-    end if
-    if ( dustdep_filled )then
-       if ( masterproc ) &
-          write(iulog,*) "Using dust deposition sent from atmosphere model"
-    else
-       if ( masterproc ) then
-          write(iulog,*) "WARNING: dust deposition data NOT sent in from atmosphere model"
-          write(iulog,*) "WARNING: Reading dust deposition from CLM input file"
-       end if
-    end if
-    call shr_sys_flush( iulog )
-
-    set_caerdep_from_file = .not. caerdep_filled
-    set_dustdep_from_file = .not. dustdep_filled
-
-    if ( .not. atm_aero )then
-       call aerdepini( )
+       call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
     end if
 
   end subroutine lnd_chkAerDep_mct
@@ -999,7 +956,7 @@ contains
     
     l2x_l%rAttr(:,:) = 0.0_r8
 
-    ! ccsm sign convention is that fluxes are positive downward
+    ! cesm sign convention is that fluxes are positive downward
 
     do g = begg,endg
        i = 1 + (g-begg)
@@ -1075,7 +1032,6 @@ contains
 #endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use abortutils      , only: endrun
-    use clm_varctl      , only: set_caerdep_from_file, set_dustdep_from_file
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
     use seq_flds_indices
@@ -1170,25 +1126,21 @@ contains
         a2l%forc_solai(g,2) = x2l_l%rAttr(index_x2l_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
         a2l%forc_solai(g,1) = x2l_l%rAttr(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
-        ! atmosphere coupling, if using prognostic aerosols
-        if ( .not. set_caerdep_from_file ) then
-           a2l%forc_aer(g,1) =  x2l_l%rAttr(index_x2l_Faxa_bcphidry,i)
-           a2l%forc_aer(g,2) =  x2l_l%rAttr(index_x2l_Faxa_bcphodry,i)
-           a2l%forc_aer(g,3) =  x2l_l%rAttr(index_x2l_Faxa_bcphiwet,i)
-           a2l%forc_aer(g,4) =  x2l_l%rAttr(index_x2l_Faxa_ocphidry,i)
-           a2l%forc_aer(g,5) =  x2l_l%rAttr(index_x2l_Faxa_ocphodry,i)
-           a2l%forc_aer(g,6) =  x2l_l%rAttr(index_x2l_Faxa_ocphiwet,i)
-        endif
-        if ( .not. set_dustdep_from_file ) then
-           a2l%forc_aer(g,7)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet1,i)
-           a2l%forc_aer(g,8)  =  x2l_l%rAttr(index_x2l_Faxa_dstdry1,i)
-           a2l%forc_aer(g,9)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet2,i)
-           a2l%forc_aer(g,10) =  x2l_l%rAttr(index_x2l_Faxa_dstdry2,i)
-           a2l%forc_aer(g,11) =  x2l_l%rAttr(index_x2l_Faxa_dstwet3,i)
-           a2l%forc_aer(g,12) =  x2l_l%rAttr(index_x2l_Faxa_dstdry3,i)
-           a2l%forc_aer(g,13) =  x2l_l%rAttr(index_x2l_Faxa_dstwet4,i)
-           a2l%forc_aer(g,14) =  x2l_l%rAttr(index_x2l_Faxa_dstdry4,i)
-        endif
+        ! atmosphere coupling, for prognostic/prescribed aerosols
+        a2l%forc_aer(g,1)  =  x2l_l%rAttr(index_x2l_Faxa_bcphidry,i)
+        a2l%forc_aer(g,2)  =  x2l_l%rAttr(index_x2l_Faxa_bcphodry,i)
+        a2l%forc_aer(g,3)  =  x2l_l%rAttr(index_x2l_Faxa_bcphiwet,i)
+        a2l%forc_aer(g,4)  =  x2l_l%rAttr(index_x2l_Faxa_ocphidry,i)
+        a2l%forc_aer(g,5)  =  x2l_l%rAttr(index_x2l_Faxa_ocphodry,i)
+        a2l%forc_aer(g,6)  =  x2l_l%rAttr(index_x2l_Faxa_ocphiwet,i)
+        a2l%forc_aer(g,7)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet1,i)
+        a2l%forc_aer(g,8)  =  x2l_l%rAttr(index_x2l_Faxa_dstdry1,i)
+        a2l%forc_aer(g,9)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet2,i)
+        a2l%forc_aer(g,10) =  x2l_l%rAttr(index_x2l_Faxa_dstdry2,i)
+        a2l%forc_aer(g,11) =  x2l_l%rAttr(index_x2l_Faxa_dstwet3,i)
+        a2l%forc_aer(g,12) =  x2l_l%rAttr(index_x2l_Faxa_dstdry3,i)
+        a2l%forc_aer(g,13) =  x2l_l%rAttr(index_x2l_Faxa_dstwet4,i)
+        a2l%forc_aer(g,14) =  x2l_l%rAttr(index_x2l_Faxa_dstdry4,i)
 
         ! Determine optional receive fields
 
@@ -1587,7 +1539,7 @@ contains
 !
 ! !DESCRIPTION:
 !
-! Send the runoff model export state to the CCSM coupler
+! Send the runoff model export state to the CESM coupler
 !
 !---------------------------------------------------------------------------
 ! !USES:

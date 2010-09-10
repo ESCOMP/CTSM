@@ -24,14 +24,13 @@ module controlMod
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
-                            ncd_pio_num_iotasks, fsnowaging, fsnowoptics, fglcmask, &
-                            faerdep
+                            ncd_pio_num_iotasks, fsnowaging, fsnowoptics, fglcmask
   use SurfaceAlbedoMod, only : albice
 #ifdef RTM
   use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
 #endif
 #ifdef CN
-  use clm_varctl     , only : scaled_harvest, fndepdat, fndepdyn, use_ndepstream
+  use clm_varctl     , only : scaled_harvest
   use CNAllocationMod, only : Carbon_only
 #endif
   use clm_varctl   , only : create_glacier_mec_landunit, glc_nec, glc_dyntopo, glc_smb, glc_topomax
@@ -170,8 +169,6 @@ contains
          fpftcon, fpftdyn, nrevsn, &
          fsnowoptics, fsnowaging, fglcmask
 
-    namelist /clm_inparm/ faerdep
-
     ! clm history, restart options
 
     namelist /clm_inparm/  &
@@ -196,7 +193,7 @@ contains
 
 #ifdef CN
     namelist /clm_inparm/  &
-         scaled_harvest, fndepdat, fndepdyn, Carbon_only, use_ndepstream
+         scaled_harvest, Carbon_only
 #endif
 
     namelist /clm_inparm / &
@@ -392,18 +389,12 @@ contains
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
-#ifdef CN
-    call mpi_bcast (use_ndepstream, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
-#endif
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fglcmask,     len(fglcmask),     MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
 
     ! River runoff dataset and control flag
 #if (defined RTM)
@@ -570,16 +561,6 @@ contains
        write(iulog,*) '   atm topographic data = ',trim(fatmtopo)
     end if
 #ifdef CN
-    if (fndepdat == ' ') then
-        write(iulog,*) '   NOT using input data for nitrogen deposition'
-    else
-        write(iulog,*) '   nitrogen deposition data = ',trim(fndepdat)
-    endif
-    if (fndepdyn == ' ') then
-        write(iulog,*) '   NOT using dynamic input data for nitrogen deposition'
-    else
-        write(iulog,*) '   dynamic nitrogen deposition data = ',trim(fndepdyn)
-    end if
     if (scaled_harvest)then
         write(iulog,*) '   harvesting will be scaled by coefficients from Johann Feddema'
     else
@@ -604,11 +585,6 @@ contains
     else
        write(iulog,*) '   glacier mask file = ',trim(fglcmask)
     endif
-    if (faerdep == ' ') then
-       write(iulog,*) '   aerosol deposition file NOT set'
-    else
-       write(iulog,*) '   aerosol deposition file = ',trim(faerdep)
-    endif
 
     if (create_glacier_mec_landunit) then
        write(iulog,*) '   number of elevation classes =', glc_nec
@@ -627,7 +603,7 @@ contains
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
     if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
     if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
-    write(iulog,*) '   atmospheric forcing data is from sequential ccsm model'
+    write(iulog,*) '   atmospheric forcing data is from cesm atm model'
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
 #endif

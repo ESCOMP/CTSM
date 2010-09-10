@@ -50,15 +50,15 @@ if [ ! -f ${CLM_SCRIPTDIR}/config_files/$1 ]; then
 fi
 
 ##construct string of args to configure
-config_string="$CFG_STRING -mach $CCSM_MACH "
+config_string="$CFG_STRING -mach $CESM_MACH "
 while read config_arg; do
     config_string="${config_string}${config_arg} "
 done < ${CLM_SCRIPTDIR}/config_files/$1
 
-if [ "$CLM_CCSMBLD" = "TRUE" ]; then
-    config_string="${config_string} -ccsm_bld on "
+if [ "$CLM_CESMBLD" = "TRUE" ]; then
+    config_string="${config_string} -cesm_bld on "
 else
-    config_string="${config_string} -ccsm_bld off "
+    config_string="${config_string} -cesm_bld off "
 fi
 
 echo "TCB.sh: building clm executable; output in ${CLM_TESTDIR}/${test_name}/test.log" 

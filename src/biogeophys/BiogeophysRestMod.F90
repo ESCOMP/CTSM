@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module BiogeophysRestMod
 
 !-----------------------------------------------------------------------
@@ -54,11 +51,12 @@ contains
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
     use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, istsoil, pondmx, watmin
-    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn
+    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn, pertlim
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
     use SNICARMod       , only : snw_rds_min
     use shr_infnan_mod  , only : shr_infnan_isnan
+    use mkarbinitMod    , only : perturbIC
 !
 ! !ARGUMENTS:
     implicit none
@@ -1561,6 +1559,7 @@ contains
           end do
        end do
 
+
        ! ------------------------------------------------------------
        ! If initial run -- ensure that water is properly bounded
        ! ------------------------------------------------------------
@@ -1605,7 +1604,12 @@ contains
           end do
        end if
     endif
-
+    !
+    ! Perturb initial conditions if not restart
+    !
+    if ( .not. is_restart() .and. flag=='read' .and. pertlim /= 0.0_r8 ) then
+       call perturbIC( lptr ) 
+    end if
     ! variables needed for SNICAR
     !
     ! column type physical state variable - snw_rds
@@ -1936,8 +1940,6 @@ contains
     ! place to do this, but functionally this works)
    if (flag == 'read' ) then
        do j = -nlevsno+1,0
-!dir$ concurrent
-!cdir nodep
           do c = begc,endc
              ! mass concentrations of aerosols in snow
              if (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j) > 0._r8) then

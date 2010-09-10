@@ -42,7 +42,7 @@ OPTIONS
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
      -config "filepath"       Read the given CLM configuration cache file. Default: "config_cache.xml".
-     -csmdata "dir"           Root directory of CCSM input data.
+     -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
@@ -65,8 +65,6 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -ndepsrc "value"         If bgc=cn or bgc=cndv, Nitrogen deposition will be from streams or data
-                              (i.e. default, none, stream, data)
      -rcp "value"             Representative concentration pathway (rcp) to use for future scenarios.
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
@@ -86,7 +84,7 @@ OPTIONS
                               "-use_case list" to list valid use-cases.
      -version                 Echo the SVN tag name used to check out this CLM distribution.
 
-OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)
+OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stndln)
 
      -drv_case "name"         Case identifier up to 32 characters
      -drv_drydep              Also produce a drydep namelist
@@ -102,7 +100,7 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq
                                   default = use default for this scenario
                                   none    = read in aerosols from clm rather than datm
                               (other options include: clim_1850, clim_2000, trans_1850-2000)
-     -datm_source "source"    Source data to use for datm (for ccsm_seq mode)
+     -datm_source "source"    Source data to use for datm (for clm_stndln mode)
                               "-datm_source list" to list valid datm_source types.
      -drv_runlength "length"  Length of simulation (e.g. default, 10d, 5s, 2y)
                               (Corresponding to: default, 10 days, 5 steps, or 2 years)
@@ -163,7 +161,6 @@ my %opts = ( config                => $cfg_cache,
              datm_source           => "default",
              datm_presaero         => "default",
              mask                  => "default",
-             ndepsrc               => "default",
 	     test                  => 0,
 	    );
 
@@ -180,7 +177,6 @@ GetOptions(
     "datm_domain=s"             => \$opts{'datm_domain'},
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "datm_presaero=s"           => \$opts{'datm_presaero'},
-    "ndepsrc=s"                 => \$opts{'ndepsrc'},
     "drv_drydep"                => \$opts{'drv_drydep'},
     "glc_grid=s"                => \$opts{'glc_grid'},
     "d|d=s"                     => \$opts{'dir'},
@@ -245,20 +241,20 @@ $opts{'use_case_dir'} = "$cfgdir/namelist_files/use_cases";
 
 # The root directory for the input data files must be specified.
 
-#The root directory to ccsm utils Tools
-my $ccsm_tools = &absolute_path( "$cfgdir/../../../../scripts/ccsm_utils/Tools" );
+#The root directory to cesm utils Tools
+my $cesm_tools = &absolute_path( "$cfgdir/../../../../scripts/ccsm_utils/Tools" );
 
 # The XML::Lite module is required to parse the XML files.
-(-f "$ccsm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"XML/Lite.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The Build::Config module provides utilities to access the configuration information
 # in the config_cache.xml file
-(-f "$ccsm_tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/Config.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The namelist definition file contains entries for all namelist variables that
@@ -271,9 +267,9 @@ if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol";
 
 # The Build::NamelistDefinition module provides utilities to validate that the output
 # namelists are consistent with the namelist definition file
-(-f "$ccsm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 # The namelist defaults file contains default values for all required namelist variables.
@@ -297,21 +293,21 @@ EOF
 
 # The Build::NamelistDefaults module provides a utility to obtain default values of namelist
 # variables based on finding a best fit with the attributes specified in the defaults file.
-(-f "$ccsm_tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefaults.pm\" in directory 
-    \"$ccsm_tools//perl5lib\" **
+    \"$cesm_tools//perl5lib\" **
 EOF
 
 # The Build::Namelist module provides utilities to parse input namelists, to query and modify
 # namelists, and to write output namelists.
-(-f "$ccsm_tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
+(-f "$cesm_tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/Namelist.pm\" in directory 
-    \"$ccsm_tools/perl5lib\" **
+    \"$cesm_tools/perl5lib\" **
 EOF
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$ccsm_tools/perl5lib");
+my @dirs = ( $cfgdir, "$cesm_tools/perl5lib");
 unshift @INC, @dirs;
 require XML::Lite;
 require Build::Config;
@@ -347,7 +343,7 @@ list_options( $cfg, \%opts );
 # Create an empty namelist object.  Add values to it in order of precedence.
 my $nl = Build::Namelist->new();
 
-# Check that the CCSM inputdata root directory has been specified.  This must be
+# Check that the CESM inputdata root directory has been specified.  This must be
 # a local or nfs mounted directory.
 my $inputdata_rootdir = undef;
 if (defined($opts{'csmdata'})) {
@@ -357,7 +353,7 @@ elsif (defined $ENV{'CSMDATA'}) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 }
 else {
-    die "$ProgName - ERROR: CCSM inputdata root directory must be specified by either -csmdata argument\n" .
+    die "$ProgName - ERROR: CESM inputdata root directory must be specified by either -csmdata argument\n" .
 	" or by the CSMDATA environment variable. :";
 }
 if ( $ENV{'DIN_LOC_ROOT'} eq "" ) {
@@ -366,12 +362,12 @@ if ( $ENV{'DIN_LOC_ROOT'} eq "" ) {
 
 if ($opts{'test'}) {
     (-d $inputdata_rootdir)  or  die <<"EOF";
-** $ProgName - CCSM inputdata root is not a directory: \"$inputdata_rootdir\" **
+** $ProgName - CESM inputdata root is not a directory: \"$inputdata_rootdir\" **
 EOF
 }
 my $test_files = $opts{'test'};
 
-if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
+if ($print>=2) { print "CESM inputdata root directory: $inputdata_rootdir$eol"; }
 #-----------------------------------------------------------------------------------------------
 
 # Some regular expressions...
@@ -401,7 +397,7 @@ my $maxpft = $cfg->get('maxpft');
 #
 # First get the command-line specified overall values or their defaults
 # Obtain default values for the following build-namelist input arguments
-# : res, mask, rcp, lnd_res, sim_year, sim_year_range, and ndepsrc
+# : res, mask, rcp, lnd_res, sim_year, and sim_year_range.
 #
 
 
@@ -540,32 +536,6 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    }
 }
 
-# Nitrogen Deposition source
-$var = "ndepsrc";
-if ( $opts{$var} ne "default" ) {
-    $val = $opts{$var};
-} else {
-    my %opts = ( 'hgrid'=>$lnd_res );
-    $val = $defaults->get_value($var, \%opts );
-}
-my $ndepsrc = $val;
-if ($print>=2) { print "CLM Nitrogen Deposition source is $ndepsrc $eol"; }
-$opts{$var} = $val;
-$val = &quote_string( $val );
-$group = $definition->get_group_name($var);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-}
-#
-# If bgc=CN/CNDV and NOT stream or data somethings wrong
-#
-if ( $bgc =~ /^cn/ && $ndepsrc ne "stream" && $ndepsrc ne "data" ) {
-   die "$ProgName ERROR:: ndepsrc MUST be stream or data when bgc is cn or cndv!\n";
-} elsif ( $bgc !~ /^cn/ && $ndepsrc ne "none" ) {
-   die "$ProgName ERROR:: ndepsrc MUST be none when bgc is NOT equal to cn or cndv!\n";
-}
-
 # prescribed aerosol options
 my $datm_presaero;
 if ( $opts{'datm_presaero'} eq "default" ) {
@@ -601,7 +571,6 @@ if (defined $opts{'use_case'}) {
     my %settings;
     $settings{'res'}            = $res;
     $settings{'rcp'}            = $rcp;
-    $settings{'ndepsrc'}        = $ndepsrc;
     $settings{'mask'}           = $mask;
     $settings{'sim_year'}       = $sim_year;
     $settings{'sim_year_range'} = $sim_year_range;
@@ -673,6 +642,7 @@ if (defined $opts{'clm_usr_name'}) {
     my %settings;
     $settings{'mask'}           = $mask;
     $settings{'sim_year'}       = $sim_year;
+    $settings{'rcp'}            = $rcp;
     $settings{'sim_year_range'} = $sim_year_range;
     $settings{'clm_usr_name'}   = $opts{'clm_usr_name'};
     if ( $inputdata_rootdir eq "\$DIN_LOC_ROOT" ) {
@@ -726,7 +696,7 @@ if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
    add_default($nl, $var, 'val'=>$clm_start_type ); 
 }
 
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
 
    # Case name
    if (defined $opts{'drv_case'}) {
@@ -809,7 +779,7 @@ if ($mode eq "ccsm_seq") {
 ############################
 # namelist group: ccsm_pes #
 ############################
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
 
    # By default the driver sets all components to use all tasks.  This is the
    # appropriate default for the standalone CLM configuration.
@@ -847,7 +817,7 @@ if ($mode eq "ccsm_seq") {
 # namelist group: seq_timemgr_inparm #
 ######################################
 
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
    # Length of simulation
    if ( defined $opts{'drv_runlength'} ) {
        if ( $opts{'drv_runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
@@ -871,7 +841,10 @@ if ($mode eq "ccsm_seq") {
    add_default($nl, 'end_restart');
 
    # Start date
-   add_default($nl, 'start_ymd', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+   my %opts = ( 'hgrid'=>$lnd_res, 'mask'=>$mask );
+   my $start_ymd = $defaults->get_value('runstart_date', \%opts );
+   $start_ymd =~ s/-//g;
+   add_default($nl, 'start_ymd', 'val'=>$start_ymd );
 
    # Start tod
    add_default($nl, 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
@@ -884,7 +857,7 @@ if ($mode eq "ccsm_seq") {
 # namelist group: pio_inparm #
 ##############################
 
-if ($mode eq "ccsm_seq" ) {
+if ($mode eq "clm_stndln" ) {
 
    add_default($nl, 'cpl_io_stride'   );
    add_default($nl, 'cpl_io_numtasks' );
@@ -1001,23 +974,6 @@ if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
 }
 
-# If should use ndep streams or not, make sure agrees with ndepsrc value
-if ( $bgc =~ /^cn/ ) {
-   my $use_ndep = $nl->get_value('use_ndepstream');
-   if ( defined($use_ndep) ) {
-      if ( $use_ndep =~ /$TRUE/i ) {
-         if ( $ndepsrc ne "stream" ) {
-            die "$ProgName ERROR:: use_ndepstream is incompatible with ndepsrc value from command line.\n";
-         }
-      } else {
-         if ( $ndepsrc ne "data" ) {
-            die "$ProgName ERROR:: use_ndepstream is incompatible with ndepsrc value from command line.\n";
-         }
-      }
-   }
-   add_default($nl, 'use_ndepstream', 'hgrid'=>$lnd_res, 'ndepsrc'=>$ndepsrc );
-}
-
 if ( $rtm eq "off" ) {
    if (defined $nl->get_value('frivinp_rtm')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
@@ -1044,7 +1000,6 @@ if ( $datm_presaero eq "none" ) {
 my %settings                = {};
 $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
-$settings{'ndepsrc'}        = $ndepsrc;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
 $settings{'rcp'}            = $rcp;
@@ -1114,52 +1069,17 @@ if ( $bgc =~ /^cn/ ) {
    ###############################
    # namelist group: ndepdyn_nml #
    ###############################
-   if ( $ndepsrc eq "stream" ) {
-      add_default($nl, 'stream_year_first_ndep',   'sim_year'=>$sim_year,
+   add_default($nl, 'ndepmapalgo', 'hgrid'=>$res );
+   add_default($nl, 'stream_year_first_ndep',   'sim_year'=>$sim_year,
+               'sim_year_range'=>$sim_year_range);
+   add_default($nl, 'stream_year_last_ndep',    'sim_year'=>$sim_year,
+               'sim_year_range'=>$sim_year_range);
+   # Set align year, if first and last years are different
+   if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
+      add_default($nl, 'model_year_align_ndep',    'sim_year'=>$sim_year,
                   'sim_year_range'=>$sim_year_range);
-      add_default($nl, 'stream_year_last_ndep',    'sim_year'=>$sim_year,
-                  'sim_year_range'=>$sim_year_range);
-      # Set align year, if first and last years are different
-      if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
-         add_default($nl, 'model_year_align_ndep',    'sim_year'=>$sim_year,
-                     'sim_year_range'=>$sim_year_range);
-      }
-      add_default($nl, 'stream_fldfilename_ndep',  'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
-      #
-      # Make sure that neither ndepdat nor fndepdyn are set
-      #
-      if ( defined($nl->get_value('fndepdat')) || defined($nl->get_value('fndepdyn')) ) {
-         die "$ProgName ERROR:: When ndepsrc is stream neither fndepdat nor fndepdyn can be set!\n";
-      }
-   #
-   # fndepdat and fndepdyn
-   #
-   } elsif ( $ndepsrc eq "data" ) {
-      #
-      # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
-      #
-      if ( not defined $nl->get_value('fndepdyn') ) {
-         add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
-      }
-      #
-      # Check that both fndepdat and fndepdyn are NOT set
-      #
-      if ( defined($nl->get_value('fndepdat')) && defined($nl->get_value('fndepdyn')) ) {
-         die "$ProgName ERROR:: Both fndepdat AND fndepdyn are set, must only set one!\n";
-      }
-      #
-      # Make sure that ndepdyn_nml settings are NOT set
-      #
-      if ( defined($nl->get_value('stream_year_first_ndep')) ||
-           defined($nl->get_value('stream_year_last_ndep'))  ||
-           defined($nl->get_value('model_year_align_ndep'))  ||
-           defined($nl->get_value('stream_fldfilename_ndep'))
-      ) {
-         die "$ProgName ERROR:: When ndepsrc is data none of: stream_year_first_ndep," .
-              "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" . 
-              " can be set!\n";
-      }
    }
+   add_default($nl, 'stream_fldfilename_ndep',  'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
 #
 # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set
 #
@@ -1173,15 +1093,6 @@ if ( $bgc =~ /^cn/ ) {
           "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" . 
           " can be set!\n";
   }
-  #
-  # Make sure that neither ndepdat nor fndepdyn are set
-  #
-  if ( defined($nl->get_value('fndepdat')) || defined($nl->get_value('fndepdyn')) ) {
-     die "$ProgName ERROR:: When bgc is NOT CN or CNDV neither fndepdat nor fndepdyn can be set!\n";
-  }
-}
-if ( ($bgc ne "cn") && ($bgc ne "cndv") && (defined $nl->get_value('fndepdyn') || defined($nl->get_value('fndepdat'))) ) {
-   die "$ProgName ERROR:: fndepdat or fndepdyn are set, but neither CN nor CNDV is active!\n";
 }
 if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl->get_value('scaled_harvest') ) {
    die "$ProgName ERROR:: scaled_harvest is set, but neither CN nor CNDV is active!\n";
@@ -1213,7 +1124,7 @@ if ( defined($carbon_only) ) {
 # namelist group: prof_inparm #
 ###############################
 
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
   add_default($nl, 'profile_barrier');
   add_default($nl, 'profile_disable');
   add_default($nl, 'profile_single_file');
@@ -1232,7 +1143,7 @@ if ($opts{'drv_drydep'} ) {
 ##############################
 # namelist group: modelio    #
 ##############################
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
     add_default($nl, 'diri'    );
     add_default($nl, 'diro'    );
 }
@@ -1257,7 +1168,7 @@ my $outfile = "$opts{'dir'}/lnd_in";
 $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
 if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
 
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
     # Driver
     @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm);
     push( @groups, "pio_inparm" );
@@ -1282,12 +1193,10 @@ if ($opts{'drv_drydep'} ) {
 }
 
 #ndepdyn_nml namelist
-if ( $ndepsrc eq "stream" ) {
-    @groups = qw(ndepdyn_nml);
-    $outfile = "$opts{'dir'}/lnd_in";
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note", append=>1 );
-    if ($print>=2) { print "Appending ndepdyn_nml namelist to $outfile $eol"; }
-}
+@groups = qw(ndepdyn_nml);
+$outfile = "$opts{'dir'}/lnd_in";
+$nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note", append=>1 );
+if ($print>=2) { print "Appending ndepdyn_nml namelist to $outfile $eol"; }
 
 #-----------------------------------------------------------------------------------------------
 
@@ -1300,7 +1209,7 @@ if ($opts{'inputdata'}) {
 # datm7 model namelist             #
 ####################################
 
-if ($mode eq "ccsm_seq") {
+if ($mode eq "clm_stndln") {
    my $datmbldnml     = "$cfgdir/namelist_files/datm-build-namelist";
    my $datmbldnmlopts = "-mask $mask -res $res -rcp $rcp -sim_year $sim_year" . 
                         " -sim_year_range $sim_year_range -print $print" . 
@@ -1374,7 +1283,7 @@ sub add_default {
 # ***** N.B. ***** This routine assumes the following variables are in package main::
 #  $definition        -- the namelist definition object
 #  $defaults          -- the namelist defaults object
-#  $inputdata_rootdir -- CCSM inputdata root directory
+#  $inputdata_rootdir -- CESM inputdata root directory
 
     my $nl = shift;     # namelist object
     my $var = shift;    # name of namelist variable
@@ -1431,7 +1340,7 @@ sub add_default {
 
        # The default values for input pathnames are relative.  If the namelist
        # variable is defined to be an absolute pathname, then prepend
-       # the CCSM inputdata root directory.
+       # the CESM inputdata root directory.
        if (not defined $opts{'no_abspath'}) {
 	   if (defined $opts{'set_abspath'}) {
 	       $val = set_abs_filepath($val, $opts{'set_abspath'});

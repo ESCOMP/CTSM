@@ -6,34 +6,27 @@
 <use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
 <use_case_desc bgc="cndv" >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
 
-<start_ymd>18500101</start_ymd>
-
 <sim_year>1850</sim_year>
 
 <sim_year_range>1850-2000</sim_year_range>
 
 <clm_start_type>startup</clm_start_type>
 
-<clm_demand bgc="none"                   >fpftdyn</clm_demand>
-<clm_demand bgc="cn"   ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
-<clm_demand bgc="cndv" ndepsrc="data"    >fpftdyn,fndepdyn</clm_demand>
-<clm_demand bgc="cn"   ndepsrc="stream"  >fpftdyn</clm_demand>
-<clm_demand bgc="cndv" ndepsrc="stream"  >fpftdyn</clm_demand>
-<clm_demand bgc="casa"                   >fpftdyn</clm_demand>
+<clm_demand >fpftdyn</clm_demand>
 
-<stream_year_first_ndep bgc="cn"   ndepsrc="stream" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  bgc="cn"   ndepsrc="stream" >2005</stream_year_last_ndep>
-<model_year_align_ndep  bgc="cn"   ndepsrc="stream" >1850</model_year_align_ndep>
+<stream_year_first_ndep bgc="cn"   >1850</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cn"   >2005</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cn"   >1850</model_year_align_ndep>
 
-<stream_year_first_ndep bgc="cndv" ndepsrc="stream" >1850</stream_year_first_ndep>
-<stream_year_last_ndep  bgc="cndv" ndepsrc="stream" >2005</stream_year_last_ndep>
-<model_year_align_ndep  bgc="cndv" ndepsrc="stream" >1850</model_year_align_ndep>
+<stream_year_first_ndep bgc="cndv" >1850</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cndv" >2005</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cndv" >1850</model_year_align_ndep>
 
 <!-- Settings for datm and driver, for stand-alone testing -->
-<datm_presaero       mode="ccsm_seq" >trans_1850-2000</datm_presaero>
-<orb_iyear_ad        mode="ccsm_seq" >1990</orb_iyear_ad>
-<co2_ppmv            mode="ccsm_seq" >368.9</co2_ppmv>
-<datm_cycle_beg_year mode="ccsm_seq" >1948</datm_cycle_beg_year>
-<datm_cycle_end_year mode="ccsm_seq" >1972</datm_cycle_end_year>
+<datm_presaero       mode="clm_stndln" >trans_1850-2000</datm_presaero>
+<orb_iyear_ad        mode="clm_stndln" >1990</orb_iyear_ad>
+<co2_ppmv            mode="clm_stndln" >368.9</co2_ppmv>
+<datm_cycle_beg_year mode="clm_stndln" >1948</datm_cycle_beg_year>
+<datm_cycle_end_year mode="clm_stndln" >1972</datm_cycle_end_year>
 
 </namelist_defaults>

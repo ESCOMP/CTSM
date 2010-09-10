@@ -10,7 +10,7 @@
 
 <hist_nhtfrq>1</hist_nhtfrq>
 
-<hist_fincl1>'TSOI'</hist_fincl1>
+<hist_fincl1>'TSOI','TSA'</hist_fincl1>
 
 <hist_ndens>1</hist_ndens>
 

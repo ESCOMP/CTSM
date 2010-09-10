@@ -51,15 +51,15 @@
   call getenv ('LOGNAME', logname)
   call getenv ('HOST', hostname)
 
-  str = 'NCAR-CSM:CF-1.0'
+  str = 'NCAR-CESM:CF-1.0'
   call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
        'Conventions', len_trim(str), trim(str)), subname)
 
-  str = 'CCSM domain data:'
+  str = 'CESM domain data:'
   call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
        'title', len_trim(str), trim(str)), subname)
 
-  str = 'Standard CCSM3.1/4.0 domain specification file created from CLM inputdata files:'
+  str = 'Standard CESM1.0 domain specification file created from CLM inputdata files:'
   call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
        'user_comment', len_trim(str), trim(str)), subname)
 

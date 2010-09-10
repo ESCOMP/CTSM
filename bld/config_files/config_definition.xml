@@ -11,6 +11,14 @@ Toggle to turn on accelerated decomposition spinup for CN biogeochemistry model
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
 (SNICAR_FRC .true.is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
+<entry id="sitespf_pt" 
+valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha" 
+value="none" category="physics">
+Flag to turn on site specific special configuration flags for supported single 
+point resolutions.
+Currently the only special settings are for MEXICOCITY and VANCOUVER, which make
+changes to urban parameters.
+</entry>
 <entry id="bgc" valid_values="none,cn,cndv,casa" value="none" category="bgc">
 CLM Biogeochemistry mode
    none = Satellite Phenology (SP)
@@ -26,7 +34,7 @@ Glacier model number of elevation classes
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
 </entry>
-<entry id="comp_interface" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT"
+<entry id="comp_intf" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT"
 category="directories">
 Component framework interface to use 
 (Model Coupling Toolkit, or Earth System Modeling Framework or variable set at build-time)
@@ -43,19 +51,19 @@ than defining them here.
 </entry>
 <entry id="cc" value="" category="standalone_test">
 User specified C compiler overrides Makefile default (Linux and Darwin only).
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="cflags" value="" category="standalone_test">
 User specified C compiler options to append to Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="fc" value="" category="standalone_test">
 User specified Fortran compiler overrides Makefile default.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="debug" valid_values="0,1" value="0" category="standalone_test">
 Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="dust" valid_values="on,off" value="on" category="physics">
 Toggle to turn on dust module
@@ -65,46 +73,46 @@ Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
 (C13 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="mach" value="bluefire" category="mach_options">
-CCSM build machine name and compiler (set by create_newcase)
+CESM build machine name and compiler (set by create_newcase)
 </entry>
 <entry id="exit_spinup" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on exit spinup mode on for CN biogeochemistry after ad_spinup was run.
 </entry>
 <entry id="fflags" value="" category="standalone_test">
 User specified Fortran compiler flags to append to Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="fopt" value="" category="standalone_test">
 User specified Fortran optimization flags to override Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="linker" value="" category="standalone_test">
 User specified linker.  Overrides the Makefile default $(FC).
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="ldflags" value="" category="standalone_test">
 User specified load options to append to Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
-<entry id="spmd" valid_values="0,1" value="" category="mach_options">
-Switch to enable or disable building SPMD version of CLM: 0=off, 1=on.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+<entry id="use_mpiserial" valid_values="0,1" value="" category="mach_options">
+Switch to enable or disable building with a serial-only version of MPI: 0=off, 1=on.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="smp" valid_values="0,1" value="" category="mach_options">
 Switch to enable or disable building SMP version (Open-MP) of CLM: 0=off, 1=on.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="nc_inc" value="" category="standalone_test">
 Directory containing NetCDF include files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="nc_lib" value="" category="standalone_test">
 Directory containing NetCDF library.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="nc_mod" value="" category="standalone_test">
 Directory containing NetCDF module files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 
 <entry id="maxpft"  value="numpft+1" 
@@ -115,24 +123,24 @@ Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use a
 
 <entry id="mpi_inc" value="" category="standalone_test">
 Directory containing MPI include files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="mpi_lib" value="" category="standalone_test">
 Directory containing MPI library.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="mpi_lib_name" value="" category="standalone_test">
 Name of MPI library.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
-<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ext_ccsm_seq"
+<entry id="mode" valid_values="clm_stndln,ext_cesm" value="ext_cesm"
 category="mach_options">
-CLM coupling mode, ext_ccsm_seq is for use with cpl7 scripts, 
-ccsm_seq is ONLY for CLM stand-alone testing scripts.
+CLM coupling mode, ext_cesm is for use with cpl7 scripts, 
+clm_stndln is ONLY for CLM stand-alone testing scripts.
 </entry>
-<entry id="ccsm_bld" valid_values="on,off" value="off" category="standalone_test">
-Toggle to build using CCSM makefiles or not.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
+<entry id="cesm_bld" valid_values="on,off" value="off" category="standalone_test">
+Toggle to build using CESM makefiles or not.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="pergro" valid_values="on,off" value="off" category="physics">
 Toggle to turn on perturbation error growth test
@@ -153,8 +161,8 @@ command on the target platform.  This parameter is to allow cross-compilation
 </entry>
 <entry id="voc" valid_values="on,off" value="off" category="standalone_test">
 Toggle to turn on coupling of Volatile Organic Compounds module to atmosphere model.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts.
-This is turned on with the CCSM_VOC env_conf.xml in the standard ccsm scripts.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts.
+This is turned on with the CCSM_VOC env_conf.xml in the standard cesm scripts.
 </entry>
 
 </config_definition>

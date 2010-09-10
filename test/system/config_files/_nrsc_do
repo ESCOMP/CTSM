@@ -1,5 +1,5 @@
--mode ccsm_seq
--nospmd -smp
+-mode clm_stndln
+-use_mpiserial -smp
 -debug
 -rtm off
 -s

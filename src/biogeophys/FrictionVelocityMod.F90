@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module FrictionVelocityMod
 
 !------------------------------------------------------------------------------
@@ -106,6 +103,8 @@ contains
    real(r8), pointer :: u10(:)         ! 10-m wind (m/s) (for dust model)
    real(r8), pointer :: fv(:)          ! friction velocity (m/s) (for dust model)
    real(r8), pointer :: vds(:)         ! dry deposition velocity term (m/s) (for SO4 NH4NO3)
+   real(r8), pointer :: u10_clm(:)     ! 10-m wind (m/s)
+   real(r8), pointer :: va(:)          ! atmospheric wind speed plus convective velocity (m/s)
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -138,6 +137,8 @@ contains
 
    vds        => clm3%g%l%c%p%pps%vds
    u10        => clm3%g%l%c%p%pps%u10
+   u10_clm    => clm3%g%l%c%p%pps%u10_clm
+   va         => clm3%g%l%c%p%pps%va
    fv         => clm3%g%l%c%p%pps%fv
 
    ! Assign local pointers to derived type members (pft or landunit-level)
@@ -155,8 +156,6 @@ contains
 
 #if (!defined PERGRO)
 
-!dir$ concurrent
-!cdir nodep
    do f = 1, fn
       n = filtern(f)
       g = ngridcell(n)
@@ -197,6 +196,67 @@ contains
          end do
       else
          vds(n) = vds_tmp
+      end if
+
+! Calculate a 10-m wind (10m + z0m + d)
+! For now, this will not be the same as the 10-m wind calculated for the dust 
+! model because the CLM stability functions are used here, not the LSM stability
+! functions used in the dust model. We will eventually change the dust model to be 
+! consistent with the following formulation.
+! Note that the 10-m wind calculated this way could actually be larger than the
+! atmospheric forcing wind because 1) this includes the convective velocity, 2)
+! this includes the 1 m/s minimum wind threshold
+
+! If forcing height is less than or equal to 10m, then set 10-m wind to um
+      if (present(landunit_index)) then
+        do pp = pfti(n),pftf(n)
+          if (zldis(n)-z0m(n) .le. 10._r8) then
+            u10_clm(pp) = um(n)
+          else
+            if (zeta(n) < -zetam) then
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n)))      &
+                                      - StabilityFunc1(-zetam)                              &
+                                      + StabilityFunc1((10._r8+z0m(n))/obu(n))              &
+                                      + 1.14_r8*((-zeta(n))**0.333_r8-(zetam)**0.333_r8)) )
+            else if (zeta(n) < 0._r8) then
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))           &
+                                      - StabilityFunc1(zeta(n))                             &
+                                      + StabilityFunc1((10._r8+z0m(n))/obu(n))) )
+            else if (zeta(n) <=  1._r8) then
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))           &
+                                      + 5._r8*zeta(n) - 5._r8*(10._r8+z0m(n))/obu(n)) )
+            else
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(obu(n)/(10._r8+z0m(n)))             &
+                                      + 5._r8 - 5._r8*(10._r8+z0m(n))/obu(n)                &
+                                      + (5._r8*log(zeta(n))+zeta(n)-1._r8)) )
+
+            end if
+          end if
+          va(pp) = um(n)
+        end do
+      else
+        if (zldis(n)-z0m(n) .le. 10._r8) then
+          u10_clm(n) = um(n)
+        else
+          if (zeta(n) < -zetam) then
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n)))         &
+                                   - StabilityFunc1(-zetam)                                 &
+                                   + StabilityFunc1((10._r8+z0m(n))/obu(n))                 &
+                                   + 1.14_r8*((-zeta(n))**0.333_r8-(zetam)**0.333_r8)) )
+          else if (zeta(n) < 0._r8) then
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))              &
+                                   - StabilityFunc1(zeta(n))                                &
+                                   + StabilityFunc1((10._r8+z0m(n))/obu(n))) )
+          else if (zeta(n) <=  1._r8) then
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n)))              &
+                                   + 5._r8*zeta(n) - 5._r8*(10._r8+z0m(n))/obu(n)) )
+          else
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(obu(n)/(10._r8+z0m(n)))                &
+                                   + 5._r8 - 5._r8*(10._r8+z0m(n))/obu(n)                   &
+                                   + (5._r8*log(zeta(n))+zeta(n)-1._r8)) )
+          end if
+        end if
+        va(n) = um(n)
       end if
 
       ! Temperature profile
@@ -376,8 +436,6 @@ contains
    ! The following only applies when PERGRO is defined
    !===============================================================================
 
-!dir$ concurrent
-!cdir nodep
    do f = 1, fn
       n = filtern(f)
       g = ngridcell(n)
@@ -397,6 +455,50 @@ contains
       else                             !  1 < zeta, phi=5+zeta
          ustar(n)=vkc * um(n)/log(obu(n)/z0m(n))
       endif
+
+! Calculate a 10-m wind (10m + z0m + d)
+! For now, this will not be the same as the 10-m wind calculated for the dust 
+! model because the CLM stability functions are used here, not the LSM stability
+! functions used in the dust model. We will eventually change the dust model to be 
+! consistent with the following formulation.
+! Note that the 10-m wind calculated this way could actually be larger than the
+! atmospheric forcing wind because 1) this includes the convective velocity, 2)
+! this includes the 1 m/s minimum wind threshold
+
+! If forcing height is less than or equal to 10m, then set 10-m wind to um
+      if (present(landunit_index)) then
+        do pp = pfti(n),pftf(n)
+          if (zldis(n)-z0m(n) .le. 10._r8) then
+            u10_clm(pp) = um(n)
+          else
+            if (zeta(n) < -zetam) then
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n))) ) )
+            else if (zeta(n) < 0._r8) then
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
+            else if (zeta(n) <=  1._r8) then
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
+            else
+              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(obu(n)/(10._r8+z0m(n))) ) )
+            end if
+          end if
+          va(pp) = um(n)
+        end do
+      else
+        if (zldis(n)-z0m(n) .le. 10._r8) then
+          u10_clm(n) = um(n)
+        else
+          if (zeta(n) < -zetam) then
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n))) ) )
+          else if (zeta(n) < 0._r8) then
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
+          else if (zeta(n) <=  1._r8) then
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
+          else
+            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(obu(n)/(10._r8+z0m(n))) ) )
+          end if
+        end if
+        va(n) = um(n)
+      end if
 
       if (present(landunit_index)) then
         zldis(n) = forc_hgt_t_pft(pfti(n))-displa(n)

@@ -2,17 +2,17 @@
 
 <system_defaults>
 
-<spmd
-aix="1"
-darwin="0"
-dec_osf="1"
-es="1"
+<use_mpiserial
+aix="0"
+darwin="1"
+dec_osf="0"
+es="0"
 irix="0"
 linux="0"
 solaris="0"
-super-ux="1"
-unicosmp="1"
-bgl="1"
+super-ux="0"
+unicosmp="0"
+bgl="0"
 />
 
 <smp

@@ -26,10 +26,12 @@
        <li>River Transport Model (RTM) on or off</li>
        <li>Maximum number of Plant Function Types (maxpft)</li>
        <li>Number of glacier multiple elevation classes (glc_nec)</li>
+       <li>Site specific point name (sitespf_pt)</li>
        <li>Glacier model grid size (glc_grid)</li>
     </ol>
 
     <table border="1" cellpadding="10">
+    <caption>Namelist Defaults</caption>
     <tr>
       <th rowspan="2">Name</th>
       <th>Horz. Grid</th>
@@ -105,6 +107,9 @@
         </xsl:if>
         <xsl:if test="string-length(@glc_nec)>0">
         glc_nec=<xsl:value-of select="@glc_nec"/>
+        </xsl:if>
+        <xsl:if test="string-length(@sitespf_pt)>0">
+        sitespf_pt=<xsl:value-of select="@sitespf_pt"/>
         </xsl:if>
         <xsl:if test="string-length(@glc_grid)>0">
         glc_grid=<xsl:value-of select="@glc_grid"/>

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module BiogeophysicsLakeMod
 
 !-----------------------------------------------------------------------
@@ -391,6 +388,9 @@ contains
 
        ur(p)    = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
        dth(p)   = thm(p)-t_grnd(c)
+#if (defined PERGRO)
+       dth(p)   = 0.0_r8
+#endif
        dqh(p)   = forc_q(g)-qsatg(c)
        dthv     = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
        zldis(p) = forc_hgt_u_pft(p) - 0._r8
@@ -462,6 +462,9 @@ contains
           call QSat(t_grnd(c), forc_pbot(g), eg, degdT, qsatg(c), qsatgdT(c))
 
           dth(p)=thm(p)-t_grnd(c)
+#if (defined PERGRO)
+          dth(p)=0.0_r8
+#endif
           dqh(p)=forc_q(g)-qsatg(c)
 
           tstar = temp1(p)*dth(p)

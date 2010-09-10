@@ -107,8 +107,6 @@ Process:
              $MYCSMDATA/lnd/clm2/griddata/griddata_${MYDATAID}.nc
        fatmlndfrc:  copy files into:
              $MYCSMDATA/lnd/clm2/griddata/fracdata_${MYDATAID}_${MASK}.nc
-       faerdep:     copy files into:
-             $MYCSMDATA/lnd/clm2/snicardata/aerosoldep_monthly_${SIM_YEAR}_${MYDATAID}.nc
        domainfile:  copy files into:
              $MYCSMDATA/atm/datm7/domain.clm/domain.lnd.${MYDATAID}_${MASK}.nc
 
@@ -120,48 +118,38 @@ Process:
        that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over Alaska.
 
                 cd models/lnd/clm/tools/ncl_scripts
-                getregional_datasets.pl -sw 52,190 -ne 73,220 -id $MYDATAID -mycsmdata $MYCSMDATA
+                ./getregional_datasets.pl -sw 52,190 -ne 73,220 -id $MYDATAID \
+                -mycsmdata $MYCSMDATA
 
        Repeat this process if you need files for multiple sim_year, and sim_year_range values.
 
        4.) Setup your case
 
        Follow the standard steps for executing "scripts/create_newcase" and customize
-       your case as appropriate. You still have to give it a valid dummy horizontal 
-       resolution even if all your datasets are pointing at a different resolution.
+       your case as appropriate.
 
        i.e.
 
-       		create_newcase -case my_userdataset_test -res f19_g16 -compset I1850 \
+       		./create_newcase -case my_userdataset_test -res pt1_pt1 -compset I1850 \
                 -mach bluefire -skip_rundb
 
        The above example implies that: MASK=gx1v6, SIM_YEAR=1850, and SIM_YEAR_RANGE=constant.
-       TODO: Allow resolution to be be $MYDATAID and/or allow a generic "regional" resolution.
-       NOTE: The resolution pt1_pt1 for single point datasets is already valid.
-
        5.) Edit the env_run.xml in the case to point to your new dataset area
 
        Edit DIN_LOC_ROOT_CSMDATA in env_run.xml to point to $MYCSMDATA
 
-       		xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+       		./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
 
        6.) Edit the env_conf.xml in the case to point to your user dataset identifier 
-       name and set DATM_PRESAERO to none
+       name.
 
        Edit CLM_USRDAT_NAME  to point to $MYDATAID
 
-       		xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val $MYDATAID
-
-       Edit DATM_PRESAERO to be none
-
-       		xmlchange -file env_conf.xml -id DATM_PRESAERO -val none
-
-           6.5) If you are running with CN set ndepsrc to "data"
-
-       		xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-ndepsrc data"
+       		./xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val $MYDATAID
+       		./xmlchange -file env_conf.xml -id CLM_PT1_NAME    -val $MYDATAID
 
        7.) Configure the case as normal
 
-       		configure -case
+       		./configure -case
 
        8.) Run your case as normal

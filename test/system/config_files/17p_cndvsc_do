@@ -1,6 +1,6 @@
--mode ccsm_seq
+-mode clm_stndln
 -smp 
--nospmd
+-use_mpiserial
 -debug
 -maxpft numpft+1
 -bgc cndv

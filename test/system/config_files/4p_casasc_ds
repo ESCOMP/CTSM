@@ -1,5 +1,5 @@
--mode ccsm_seq
--nospmd -nosmp
+-mode clm_stndln
+-use_mpiserial -nosmp
 -debug
 -maxpft 4
 -bgc casa

@@ -32,7 +32,7 @@ module lnd_comp_mct
 
 !
 ! Author: Fei Liu
-! This module is a wrapper layer between ccsm driver and ESMF data lnd component
+! This module is a wrapper layer between cesm driver and ESMF data lnd component
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

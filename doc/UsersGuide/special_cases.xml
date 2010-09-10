@@ -84,27 +84,27 @@ So do the following:
 <title>Example AD_SPINUP Simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_spinup
 # Add "-ad_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
 > $EDITOR env_conf.xml
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
-> xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
+> ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
 # Configure
-> configure -case
+> ./configure -case
 # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id RESUBMIT -val 30
+> ./xmlchange -file env_run.xml -id RESUBMIT -val 30
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_N -val 20
+> ./xmlchange -file env_run.xml -id STOP_N -val 20
 # The following sets STOP_DATE to Jan/1 of year 601 in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_DATE -val 6010101
+> ./xmlchange -file env_run.xml -id STOP_DATE -val 6010101
 # Make the output history files only annual, by adding the following to the &usernlclm; namelist
 > echo '&amp;clm_inparm hist_nhtfrq = -8760 /' > &usernlclm;
 # Build and run normally
-> CN_spinup.build
-> bsub < CN_spinup.run
+> ./CN_spinup.bluefire.build
+> ./CN_spinup.bluefire.submit
 </screen>
 </example>
 Afterwards save the last restart file from this simulation to use in the next step.
@@ -118,26 +118,26 @@ Afterwards save the last restart file from this simulation to use in the next st
 <title>Example EXIT_SPINUP Simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_exitspinup
 # Add "-exit_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
 > $EDITOR env_conf.xml
 # Change run type to branch and branch from the last year of the last simulation
-> xmlchange -file env_conf.xml -id RUN_TYPE    -val branch
-> xmlchange -file env_conf.xml -id RUN_REFCASE -val CN_spinup
-> xmlchange -file env_conf.xml -id RUN_REFDATE -val 0601-01-01
-> xmlchange -file env_conf.xml -id GET_REFCASE -val FALSE
-> configure -case
+> ./xmlchange -file env_conf.xml -id RUN_TYPE    -val branch
+> ./xmlchange -file env_conf.xml -id RUN_REFCASE -val CN_spinup
+> ./xmlchange -file env_conf.xml -id RUN_REFDATE -val 0601-01-01
+> ./xmlchange -file env_conf.xml -id GET_REFCASE -val FALSE
+> ./configure -case
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
-> xmlchange -file env_run.xml -id STOP_N      -val 1
+> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> ./xmlchange -file env_run.xml -id STOP_N      -val 1
 # Go ahead and build, so that the run directory is created
-> CN_exitspinup.build
+> CN_exitspinup.bluefire.build
 # Now, Copy the last restart file from the earlier case into your run directory
 > cp /ptmp/$LOGIN/archive/CN_spinup/rest/CN_spinup.*.r*.0601-01-01-00000* /ptmp/$LOGIN/CN_exitspinup
 # Build and run normally
-> CN_exitspinup.build
-> bsub < CN_exitspinup.run
+> ./CN_exitspinup.bluefire.build
+> ./CN_exitspinup.bluefire.submit
 </screen>
 </example>
 </para>
@@ -153,17 +153,17 @@ So do the following:
 <title>Example Final CN Spinup Simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_finalspinup
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
-> xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
+> ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
 # The following sets RESUBMIT to 5 times in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id RESUBMIT -val 5
+> ./xmlchange -file env_run.xml -id RESUBMIT -val 5
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 10 years in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_N -val 10
-> configure -case
+> ./xmlchange -file env_run.xml -id STOP_N -val 10
+> ./configure -case
 # Set the finidat file to the last restart file saved in previous step
 > $EDITOR Buildconf/clm.buildnml.csh
 </screen>
@@ -198,20 +198,20 @@ There are no compsets using CNDV, so in
 <title>Example CNDV Spinup Simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case CNDV_spinup -res f09_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CNDV_spinup -res f09_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CNDV_spinup
 # Set run type to startup and do a cold start
-> xmlchange -file env_conf.xml -id RUN_TYPE -val startup
+> ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # The following sets CLM_CONFIG_OPTS to "-bgc cndv" in env_conf.xml (you could also use an editor)
-> xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS  -val "-bgc cndv"
+> ./xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS  -val "-bgc cndv"
 # The following sets RESUBMIT to 10 times in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id RESUBMIT -val 10
+> ./xmlchange -file env_run.xml -id RESUBMIT -val 10
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_N -val 20
+> ./xmlchange -file env_run.xml -id STOP_N -val 20
 # Make sure you turn archiving on, so you save your files to long term archival
-> xmlchange -file env_run.xml -id DOUT_L_MS -val TRUE
+> ./xmlchange -file env_run.xml -id DOUT_L_MS -val TRUE
 # Make the default primary history file annual and add an annual 1D vector auxiliary file
 # By putting the following in a &usernlclm; file.
 > cat &lt;&lt; EOF > &usernlclm;
@@ -221,13 +221,13 @@ There are no compsets using CNDV, so in
  hist_fincl2 = 'TLAI', 'TSAI', 'HTOP', 'HBOT', 'NPP'
  hist_dov2xy = .true., .false.
 /
-> configure -case
+> ./configure -case
 # NOTE: If you were using your own CN spinup files you would edit the namelist to use it
 # $EDITOR Buildconf/clm.buildnml.csh
 #
 # Now build and run as normal
-> CNDV_spinup.build
-> bsub &lt; CNDV_spinup.run
+> ./CNDV_spinup.bluefire.build
+> ./CNDV_spinup.bluefire.submit
 </screen>
 </example>
 </para>
@@ -272,20 +272,24 @@ changes are NOT well-behaved the changes from the new machine (code changes) wil
 larger than the perturbation changes. In summary the simulations and steps that need to be performed are:
 <orderedlist>
 <listitem>
-<para>Run a simulation with the trusted code on the trusted machine.</para>
+<para>Run a simulation with the trusted code on the trusted machine.
+(optionally you can use a dataset from inputdata repository).
+</para>
 </listitem>
 <listitem>
 <para>Run a simulation with the trusted code on the trusted machine with initial conditions
-perturbed by roundoff (using a namelist item to do so).</para>
+perturbed by roundoff (using a namelist item to do so).
+(this is optional is you are using inputdata repository datasets)
+</para>
 </listitem>
 <listitem>
 <para>Run a simulation with the new code on the non-trusted machine (code changes).</para>
 </listitem>
 <listitem>
-<para>Do a plot of the RMS difference of TSOI between simulation 1 and simulation 2.</para>
+<para>Do a plot of the RMS difference of history variables between simulation 1 and simulation 2.</para>
 </listitem>
 <listitem>
-<para>Do a plot of the RMS difference of TSOI between simulation 1 and simulation 3.</para>
+<para>Do a plot of the RMS difference of history variables between simulation 1 and simulation 3.</para>
 </listitem>
 <listitem>
 <para>Compare the two plots in steps 4 and 5.</para>
@@ -299,6 +303,17 @@ perturbed by roundoff (using a namelist item to do so).</para>
 recommendation here is to lower the optimization level on the new machine and try
 again (or in the case of code changes, modify or simplify the code changes to get
 something that should be closer).</para>
+<para>
+The history variables we have used to do this is either 'TSOI', and/or 'TSA'. 'TSOI' are
+the 3D snow and soil temperatures for vegetated land-units. If there is a change in
+soil physics it should show up in this field (and it should show up even for something
+that is at a pretty deep soil depth). However, as 'TSOI' is only for vegetated
+land-units, changes in lake or urban land-units -- will NOT show up. 'TSA' by contrast is
+the 2m surface temperature across all land-units, so changes in urban or lake land-units
+will show up. However, changes in deep soil physics will only show up as it propagates
+to the surface. So one field may show something that the other doesn't. In the examples,
+we use 'TSOI', but 'TSA' can be used as well. And in most cases you should check both.
+</para>
 </listitem>
 </orderedlist>
 Now we will give a detailed description of the procedure with examples and the
@@ -309,34 +324,52 @@ exact steps to perform.
 <step>
 <title>Running non-perturbed on trusted machine</title>
 <para>
-The first step is to run a non-perturbed case on the trusted machine. You need to run
+The first step is to run a non-perturbed case on the trusted machine.  You need to run
 all of the steps with the same compset and same resolution. For these examples we will
 use 2-degree resolution with the ICN compset for 2000 conditions. You need to run for
 three days with a cold-start.
+</para>
+<note>
+<para>
+As we describe below, This is optional if you will be using datasets from the 
+inputdata repository to take place of this step.
+</para>
+</note>
+<para>
 <example>
 <title>Example non-perturbed error growth simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case trustedMachinePergro0 -compset ICN -res f19_g16 \
+> ./create_newcase -case trustedMachinePergro0 -compset ICN -res f19_g16 \
 -mach bluefire -skip_rundb
 > cd trustedMachinePergro0
 # Set the non-perturbed PERGRO use-case
-> xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
+> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
 # Set coldstart on so arbitrary initial conditions will be used
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # Set PERGRO on in the configure
 > $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
 # Now configure and build
-> configure -case
-> trustedMachinePergro0.build
+> ./configure -case
+> ./trustedMachinePergro0.bluefire.build
 # Set it to run for three days and turn archiving off
-> xmlchange -file env_run.xml -id STOP_N -val 3 
-> xmlchange -file env_run.xml -id DOUT_S -val FALSE
+> ./xmlchange -file env_run.xml -id STOP_N -val 3 
+> ./xmlchange -file env_run.xml -id DOUT_S -val FALSE
 # Run the case and then you will save the history file output for later use
-> bsub &lt; trustedMachinePergro0.run
+> ./trustedMachinePergro0.bluefire.submit
 </screen>
 </example>
 </para>
+<note>
+<para>
+If you aren't able to do this step, as you don't have access to a trusted machine, you 
+can use datasets that are available from the svn inputdata repository to take place of 
+running it yourself. The disadvantage is that this is only done for certain model
+versions and for exactly the configuration/namelist given here. You won't be able to
+test it for your own custom code or configurations.
+</para>
+</note>
 </step>
 <step>
 <title>Running perturbed on the trusted machine</title>
@@ -346,50 +379,68 @@ The next step is to run a perturbed case on the trusted machine.
 <title>Example perturbed error growth simulation</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case trustedMachinePergroRnd -compset ICN -res f19_g16 \
+> ./create_newcase -case trustedMachinePergroRnd -compset ICN -res f19_g16 \
 -mach bluefire -skip_rundb
 > cd trustedMachinePergroRnd
 # Set the perturbed PERGRO use-case
-> xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro
+> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro
 # Set coldstart on so arbitrary initial conditions will be used
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
+> ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 # Set PERGRO on in the configure
 > $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
 # Now configure and build
-> configure -case
-> trustedMachinePergroRnd.build
+> ./configure -case
+> ./trustedMachinePergroRnd.bluefire.build
 # Set it to run for three days and turn archiving off
-> xmlchange -file env_run.xml -id STOP_N -val 3 
-> xmlchange -file env_run.xml -id DOUT_S -val FALSE
+> ./xmlchange -file env_run.xml -id STOP_N -val 3 
+> ./xmlchange -file env_run.xml -id DOUT_S -val FALSE
 # Run the case and then you will save the history file output for later use
-> bsub &lt; trustedMachinePergroRnd.run
+> ./trustedMachinePergroRnd.bluefire.submit
 </screen>
 </example>
 </para>
+<note>
+<para>
+If you aren't able to do this step, as you don't have access to a trusted machine, you 
+can use datasets that are available from the svn inputdata repository to take place of 
+running it yourself. The disadvantage is that this is only done for certain model
+versions and for exactly the configuration/namelist given here. You won't be able to
+test it for your own custom code or configurations.
+</para>
+</note>
 </step>
 <step>
 <title>Running non-perturbed on the new machine</title>
 <para>
 The next step is to run a non-perturbed case on the new machine. Here
-we will demonstrate using the machine intrepid.
+we will demonstrate using the machine intrepid. For the previous two steps
+you have the option of using datasets provided in the subversion inputdata
+repository to take their place -- however this step is required.
 <screen width="99">
 > cd scripts
-> create_newcase -case newMachinePergro0 -compset ICN -res f19_g16 \
+> ./create_newcase -case newMachinePergro0 -compset ICN -res f19_g16 \
 -mach intrepid -skip_rundb
 > cd newMachinePergro0
 # Set the non-perturbed PERGRO use-case
-> xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
+> ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # Set PERGRO on in the configure
 > $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
 # Now configure and build
-> configure -case
-> newMachinePergro0.build
+> ./configure -case
+> ./newMachinePergro0.intrepid.build
 # Set it to run for three days and turn archiving off
-> xmlchange -file env_run.xml -id STOP_N -val 3 
-> xmlchange -file env_run.xml -id DOUT_S -val FALSE
+> ./xmlchange -file env_run.xml -id STOP_N -val 3 
+> ./xmlchange -file env_run.xml -id DOUT_S -val FALSE
+# A change required by intrepid is to change the queue to the development queue
+# This is because the number of nodes used by default is only 16, and the production
+# queue requires 512 nodes. You could also increase the number of processors.
+> sed s/prod/prod-devel/g newMachinePergro0.intrepid.run &gt; temp.run
+> mv temp.run newMachinePergro0.intrepid.run
 # Run the case and then you will save the history file output for later use
-> bsub &lt; newMachinePergro0.run
+> ./newMachinePergro0.intrepid.submit
 </screen>
 </para>
 </step>
@@ -416,20 +467,73 @@ more information on building the tools).
 # And now run cprnc on the trusted-machine and the new machine both without perturbation
 > ../../models/lnd/clm/tools/cprnc/cprnc trustedMachinePergro0.clm2.h0.001-01-01.00000.nc \
 ../newMachinePergro0/newMachinePergro0.clm2.h0.001-01-01.00000.nc &gt; newPergro.log
-# Now extract out the RMS differences to both
-> grep RMS trustedPergro.log | awk '{print $3}' &gt; trustedPergro.dat
-> grep RMS newPergro.log     | awk '{print $3}' &gt; newPergro.dat
+# Now extract out the RMS differences of TSOI for both
+# You may want to extract out the RMS differences for TSA as well
+# Changes in urban or lake land-units won't be detected with TSOI
+> grep "RMS TSOI" trustedPergro.log | awk '{print $3}' &gt; RMStrusted.dat
+> grep "RMS TSOI" newPergro.log     | awk '{print $3}' &gt; RMSnewmachine.dat
 # And plot the two curves up to your screen
-> env TYPE=x11 RMSDAT=newPergro.dat RMSDAT2=trustedPergro.dat ncl \
+> env TYPE=x11 RMSDAT=RMSnewmachine.dat RMSDAT2=RMStrusted.dat ncl \
 ../../models/lnd/clm/tools/ncl_scripts/pergroPlot.ncl
 </screen>
-Here is a sample plot for two trusted machines (using data that Sheri Mickelson provided
-to us). The green line is the error growth for bluefire, and the red is the error growth
-for intrepid.
+Here is a sample plot for several trusted machines: bluefire, intrepid, jaguar,
+and edinburgh (with both the lahey and intel compilers).
+The green line is the error growth for bluefire, the red is the error growth
+for intrepid, the dashed navy is for jaguar, the dashed maroon is for the intel
+compiler on edinburgh, and the thick dashed goldenrod line is for edinburgh with the
+lahey compiler. Note, the data for this plot is in
+<filename>models/lnd/clm/tools/ncl_scripts</filename> the files are named:
+according to the legend. Note, that the lines tend to cluster together and follow 
+quite closely to the bluefire line which is our main trusted machine.
 <figure id="pergroplot">
-<title>Sample Perturbation Error Growth Curve</title>
+<title>Sample Good Perturbation Error Growth Curves (within roundoff)</title>
 <mediaobject>
 <imageobject><imagedata fileref="pergro.jpg" format="JPEG"/></imageobject>
+</mediaobject>
+</figure>
+</para>
+
+<para>
+When you do NOT have access to a trusted machine you can use the trusted file from
+bluefire that is available on the inputdata repository.
+<screen width="99">
+# Build the cprnc program
+> cd models/lnd/clm/tools/cprnc
+> gmake
+# Get the unperturbed file from the subversion repository
+> cd ../../../../../scripts/newMachinePergro0
+> set dir = "lnd/clm2/pergrodata"
+> set file = bluefirePergro0.ICN.0001-01-01_1.9x2.5_gx1v6_simyr2000_clm4.0.10.c100816.nc
+> echo "trustedfile = DIN_LOC_ROOT/$dir/$file" &gt; clm.input_data_list
+> ../ccsm_utils/Tools/check_input_data -datalistdir . -export
+# And now run cprnc on the bluefire file and the new machine both without perturbation
+> ../../models/lnd/clm/tools/cprnc/cprnc $file \
+../newMachinePergro0/newMachinePergro0.clm2.h0.001-01-01.00000.nc &gt; newPergro.log
+# Now extract out the RMS difference
+# You may want to extract out the RMS differences for TSA as well
+# Changes in urban or lake land-units won't be detected with TSOI
+> grep "RMS TSOI" newPergro.log     | awk '{print $3}' &gt; RMSnewmachine.dat
+# And plot the new curve versus the trusted curve up to your screen
+> env TYPE=x11 RMSDAT=RMSnewmachine.dat \
+RMSDAT2=../../models/lnd/clm/tools/ncl_scripts/RMSbluefire.dat  \
+../../models/lnd/clm/tools/ncl_scripts/pergroPlot.ncl
+</screen>
+</para>
+<para>
+In the figure below we now show example of curves for changes that are larger than
+roundoff. Once again the green curve is the trusted error growth from bluefire. The
+other curves are for changes that may be fairly small, but are larger than roundoff. The
+goldenrod curve is for using the 1850, and the navy is for using the 1999 Nitrogen
+deposition files rather than for year 2000. The red is for using the 1850 aerosol
+dataset rather than 2000, and the maroon is for adding the snow combination bug in. The
+differences in changes that are greater than roundoff is that the curves climb very
+steeply to the 10<superscript>-6</superscript> value and then level off, while the 
+curve for bluefire climbs much more slowly and gradually. The curves also don't mimic
+each other in any way, like the trusted machine plots do.
+<figure id="badpergroplot">
+<title>Sample Bad Perturbation Error Growth Curves (changes greater than roundoff)</title>
+<mediaobject>
+<imageobject><imagedata fileref="badpergro.jpg" format="JPEG"/></imageobject>
 </mediaobject>
 </figure>
 
@@ -508,14 +612,14 @@ that includes file with a &CO2; time-series from 1765 to 2007.
 <title>Example Transient Simulation with Historical &CO2;</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN \
+> ./create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN \
 -mach bluefire -skip_rundb
 > cd DATM_CO2_TSERIES
 # Set CCSM_BGC to CO2A so that CO2 will be passed from atmosphere to land
-> xmlchange -file env_conf.xml -id CCSM_BGC -val CO2A
+> ./xmlchange -file env_conf.xml -id CCSM_BGC -val CO2A
 # Set CLM_CO2_TYPE to diagnostic so that the land will use the value sent from the atmosphere
-> xmlchange -file env_conf.xml -id CLM_CO2_TYPE -val diagnostic
-> configure -case
+> ./xmlchange -file env_conf.xml -id CLM_CO2_TYPE -val diagnostic
+> ./configure -case
 > cd Buildconf
 # Copy the sample streams file over
 > cp ../../../models/lnd/clm/doc/UsersGuide/co2_streams.txt .
@@ -550,7 +654,7 @@ If the patch fails, you will have to add the changes to the
 <filename>datm.buildnml.csh</filename> found in the above
 patch file by hand. Basically, it adds an extra streams file for &CO2; to the end of the streams variable,
 and other arrays associated with streams (adding mapalgo as a new array with bilinear for everything, but
-the &CO2; file which should be copy).
+the &CO2; file which should be "nn" for nearest neighbor).
 </para>
 </note>
 

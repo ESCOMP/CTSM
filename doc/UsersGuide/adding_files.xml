@@ -25,6 +25,82 @@ The second part is actually adding the new filenames which is done in the
 If you aren't adding any new resolutions, and you are just changing the files for existing
 resolutions, you don't need to edit the namelist_definition file.
 </para>
+
+<sect1 id="managingyourdata">
+<title>Managing Your Own Data-files</title>
+<para>
+If you are running on a supported machine (such as bluefire or jaguar) the standard
+input datasets will already be available and you won't have to check them out of the
+subversion inputdata server. However, you also will NOT be able to add your own datafiles
+to these standard inputdata directories -- because most likely you won't have permissions
+to do so. In order to add files to the XML database or to use &CLMUSRDAT; you need
+to put data in the standard locations so that they can be found. The recommended 
+way to do this is to use the <command>link_dirtree</command> tool in the &cesm; scripts.
+Some information on <command>link_dirtree</command> is available in the 
+<ulink url="&cesmwebmodelrel;cesm">&cesm1; Scripts User's Guide</ulink>. We also have
+some examples of it's use here and in other sections of this User's Guide.
+</para>
+<para>
+Using <command>link_dirtree</command> is quite simple, you give the directory where
+data exists and then the directory that you want to create where datasets will point
+to the original source files. In the example below we use "$HOME/inputdata", but 
+<envar>MYCSMDATA</envar> could be any directory you have access to where you want to
+put your data.
+<screen>
+> cd scripts
+# First make sure you have a inputdata location that you can write to 
+# You only need to do this step once, so you won't need to do this in the future
+# (except to bring in any updated files in the original $CSMDATA location).
+> setenv MYCSMDATA $HOME/inputdata    # Set env var for the directory for input data
+> ./link_dirtree $CSMDATA $MYCSMDATA
+</screen>
+Then when you create a case you will change <envar>DIN_LOC_ROOT_CSMDATA</envar> to
+point to the location you linked to rather than the default location.
+<screen>
+> ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+</screen>
+</para>
+<para>
+In order to list the files that you have created you merely need to use the UNIX
+command <command>find</command> to find the files that are NOT softlinks. So for
+example executing the following command:
+<screen>
+> find $MYCSMDATA -type f -print
+</screen>
+for me gives the following list of &CLMUSRDAT; files that I have created.
+<screen>
+/blhome/erik/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_1x1pt_US-Ha1.nc
+/blhome/erik/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_13x12pt_f19_alaskaUSA.nc
+/blhome/erik/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp8.5_monthly_1850-2100_13x12pt_f19_alaskaUSA.nc
+/blhome/erik/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1850-2100_13x12pt_f19_alaskaUSA.nc
+/blhome/erik/inputdata/atm/datm7/domain.clm/domain.lnd.1x1pt_US-Ha1_USGS.nc
+/blhome/erik/inputdata/atm/datm7/domain.clm/domain.lnd.13x12pt_f19_alaskaUSA_gx1v6.nc
+/blhome/erik/inputdata/lnd/clm2/griddata/fracdata_13x12pt_f19_alaskaUSA_gx1v6.nc
+/blhome/erik/inputdata/lnd/clm2/griddata/fracdata_1x1pt_US-Ha1_USGS.nc
+/blhome/erik/inputdata/lnd/clm2/griddata/topodata_13x12pt_f19_alaskaUSA.nc
+/blhome/erik/inputdata/lnd/clm2/griddata/griddata_1x1pt_US-Ha1.nc
+/blhome/erik/inputdata/lnd/clm2/griddata/griddata_13x12pt_f19_alaskaUSA.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata_13x12pt_f19_alaskaUSA_simyr1850.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata_1x1pt_US-Ha1_simyr2000.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata.pftdyn_rcp4.5_13x12pt_f19_alaskaUSA_simyr1850-2100.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata_1x1pt_US-Ha1_simyr1850.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata_13x12pt_f19_alaskaUSA_simyr2000.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_US-Ha1_simyr1849-2006.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata.pftdyn_13x12pt_f19_alaskaUSA_simyr1850-2100.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata.pftdyn_rcp8.5_13x12pt_f19_alaskaUSA_simyr1850-2100.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata.pftdyn_13x12pt_f19_alaskaUSA_simyr1849-2006.nc
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_US-Ha1_simyr1850-2100.nc
+</screen>
+You can also use <command>find</command> to list files that have a particular pattern 
+in the name as well (using the -name option with wildcards). Also you can always rerun the 
+<command>link_dirtree</command> command if any new files are added that you need to be 
+linked into your directory tree. Since, the files are soft-links -- it doesn't take up 
+much space other than the files that you add there. This way all of the files are kept 
+in one place, they are organized by usage according to &cesm; standards, and you can 
+easily find your own files, and &clm; can find them as well.
+</para>
+</sect1>
+
 <sect1 id="adding_resolutions">
 <title>Adding Resolution Names</title>
 <para>
@@ -82,10 +158,10 @@ their resolution (hgrid) attribute.
 <para>
 Different types of simulations and different types of configurations for CLM require
 different lists of files. The Carbon Nitrogen (cn) Biogeochemistry model for example
-requires <filename>fndepdat</filename> files, which are NOT required by other bgc modes.
-Transient simulations also require transient datasets, and the names of these datasets
-are sometimes different from the static versions (sometimes both are required as in
-the dynamic PFT cases).
+requires <filename>stream_fldfilename_ndep</filename> files, which are NOT required by 
+other bgc modes.  Transient simulations also require transient datasets, and the names 
+of these datasets are sometimes different from the static versions (sometimes both are 
+required as in the dynamic PFT cases).
 </para>
 <para>
 In the following table we list the different files used by CLM, they are listed
@@ -184,41 +260,6 @@ or region you may want to use custom input datasets to mksurfdata when
 creating the file.</para></entry>
 </row>
 <row>
-   <entry morerows="1" valign="middle">faerdep</entry>
-   <entry>ALL</entry>
-   <entry>Constant and transient scenarios when <envar>DATM_PRESAERO</envar>=none</entry>
-   <entry>Yes</entry>
-   <entry><para>simulation-year,simulation-year range, and representative 
-          concentration pathway (rcp)</para></entry>
-</row>
-<row>
-   <entry spanname="notes_span"><para>You may customize this file to get the aerosol deposition characteristics 
-of your site if available. Or use a higher resolution dataset when you use 
-<command>aerdepregrid.ncl</command> to create this file. Note, both constant and transient files have
-the same namelist entry name.</para>
-<para>
-Normally use the aerosol sent from the atmosphere instead of this file.
-</para>
-</entry>
-</row>
-<row>
-   <entry morerows="1" valign="middle">fndepdat</entry>
-   <entry>bgc=cn/cndv</entry>
-   <entry><para>Constant scenarios, when ndepsrc=data</para></entry>
-   <entry>Yes</entry>
-   <entry><para>simulation-year and representative concentration pathway (rcp)</para></entry>
-</row>
-<row>
-   <entry spanname="notes_span"><para>You may customize this file to get the Nitrogen deposition characteristics 
-of your site if available. Or use a higher resolution dataset when you use 
-<command>ndepregrid.ncl</command> to create this file.</para>
-<para>
-Normally use the <filename>stream_fldfilename_ndep</filename> below instead of
-this file.
-</para>
-</entry>
-</row>
-<row>
    <entry morerows="1" valign="middle">fpftdyn</entry>
    <entry>ALL</entry>
    <entry><para>transient land-use land-cover change</para></entry>
@@ -263,30 +304,10 @@ atmosphere resolution).</para></entry>
    <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span"><para>You may customize to give better surface heights for your site, or
+   <entry spanname="notes_span"><para>You may customize to give better surface heights
+    for your site, or
 input a higher resolution orography file when you create it using
 <command>mkgriddata</command>.</para></entry>
-</row>
-<row>
-   <entry morerows="1" valign="middle">fndepdyn</entry>
-   <entry>bgc=cn/cndv</entry>
-   <entry><para>transient simulations when ndepsrc=data</para></entry>
-   <entry>Yes</entry>
-   <entry><para>Simulation year range</para></entry>
-</row>
-<row>
-   <entry spanname="notes_span"><para>
-You may customize this file to get the Nitrogen deposition characteristics 
-of your site if available. Or use a higher resolution dataset when you use 
-<command>ndepregrid.ncl</command> to create this file.
-</para>
-<note>
-<para>
-Normally use the <filename>stream_fldfilename_ndep</filename> below instead of
-this file.
-</para>
-</note>
-</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">finidat</entry>
@@ -318,7 +339,7 @@ be for the same glacier grid. Only customized as coupled with the glacier model.
 <row>
    <entry morerows="1" valign="middle">stream_fldfilename_ndep</entry>
    <entry>bgc=cn/cndv</entry>
-   <entry><para>Only when ndepsrc is stream</para></entry>
+   <entry>Yes</entry>
    <entry>No</entry>
    <entry><para>simulation-year</para></entry>
 </row>

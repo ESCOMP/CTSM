@@ -1,4 +1,4 @@
--mode ccsm_seq
--nospmd -nosmp
+-mode clm_stndln
+-use_mpiserial -nosmp
 -debug
 -s

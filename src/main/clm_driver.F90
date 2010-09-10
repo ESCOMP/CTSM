@@ -87,7 +87,6 @@ module clm_driver
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal
 #ifdef CN
   use pftdynMod           , only : pftdyn_cnbal
-  use clm_varctl          , only : fndepdyn, use_ndepstream
 #endif
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb
@@ -116,7 +115,6 @@ module clm_driver
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
                                    CBalanceCheck, NBalanceCheck
-  use ndepFileMod         , only : ndepdyn_interp
   use ndepStreamMod       , only : ndep_interp, &
 	                           stream_year_first_ndep, stream_year_last_ndep 
 #else
@@ -139,8 +137,6 @@ module clm_driver
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use perf_mod
   use SNICARMod           , only : SnowAge_grain
-  use aerdepMod           , only : interpMonthlyAerdep
-  use clm_varctl          , only : set_caerdep_from_file, set_dustdep_from_file
 
 !
 ! !PUBLIC TYPES:
@@ -247,14 +243,6 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
      call t_stopf('interpMonthlyVeg')
   end if
 #endif
-
-
-  ! ============================================================================
-  ! interpolate aerosol deposition data, and read in new monthly data if need be.
-  ! ============================================================================
-  if ( (set_caerdep_from_file) .or. (set_dustdep_from_file) ) then
-     call interpMonthlyAerdep()
-  endif
 
 
   ! ============================================================================
@@ -382,14 +370,8 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
   ! re-written to go inside.
   ! ============================================================================
   ! PET: switching CN timestep
-  if (use_ndepstream) then
-     if (stream_year_first_ndep /= stream_year_last_ndep) then
-        call ndep_interp()
-     end if
-  else 
-     if (fndepdyn /= ' ') then
-        call ndepdyn_interp()
-     end if
+  if (stream_year_first_ndep /= stream_year_last_ndep) then
+     call ndep_interp()
   end if
 #endif       
   call t_stopf('pftdynwts')

@@ -40,12 +40,6 @@ module clm_varctl
   character(len=256), public :: version  = " "                           ! version of program
   character(len=256), public :: conventions = "CF-1.0"                   ! dataset conventions
 !
-! Aerosol deposition file read (will be removed)
-!
-  logical,            public :: set_caerdep_from_file = .false.  ! if reading in carbon aerosol deposition from file
-  logical,            public :: set_dustdep_from_file = .false.  ! if reading in dust aerosol deposition from file
-  character(len=256), public :: faerdep      = ' '               ! aerosol deposition file name
-!
 ! Unit Numbers
 !
   integer, public :: iulog = 6        ! "stdout" log file unit number, default is 6
@@ -85,11 +79,8 @@ module clm_varctl
 !
   character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
 #ifdef CN
-  logical, public :: use_ndepstream = .false.           ! Use Nitrogen depostion streams rather than fixed files
   logical,           public :: scaled_harvest = .false. ! true => scale CN harvesting according to coefficients determined 
                                                         ! by Johann Feddema, circa 2009
-  character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name
-  character(len=256), public :: fndepdyn   = ' '        ! dynamic nitrogen deposition data file name
 #endif
 !
 ! Physics
@@ -311,13 +302,6 @@ contains
        if (nsrest == iundef) call shr_sys_abort( subname//' ERROR:: must set nsrest' )
        if (nsrest == 3 .and. nrevsn == ' ') &
           call shr_sys_abort( subname//' ERROR: need to set restart data file name' )
-
-       ! Check on nitrogen deposition dataset
-
-#ifdef CN
-       if (fndepdat /= ' ' .and. fndepdyn /= ' ') &
-          call shr_sys_abort( subname//' ERROR: only one of fndepdat or fndepdyn can be defined' )
-#endif
 
        ! Model physics
 

@@ -340,9 +340,7 @@ See <xref linkend="mksurfdata"></xref> for more information on this.
 <step performance="optional">
 <title>Interpolate  aerosol deposition datasets (if <envar>DATM_PRESAERO</envar>=none)</title>
 <para>
-If you are reading in aerosol deposition in from &clm; rather than sending it
-from the atmosphere model (which is the default), then you'll need to interpolate
-the aerosol deposition datasets. By default the atmosphere model will interpolate
+By default the atmosphere model will interpolate
 these datasets on the fly, so you don't normally need to do this step.
 But, if you do, use <command>aerdepregrid.ncl</command> to regrid aerosol deposition 
 datasets to your new resolution using the grid dataset as input.
@@ -351,12 +349,10 @@ See <xref linkend="aerdepregrid"></xref> for more information on this.
 </step>
 
 <step performance="optional">
-<title>Interpolate Nitrogen deposition datasets (if running &clmcn; and ndepsrc=data)</title>
+<title>Interpolate Nitrogen deposition datasets (if running &clmcn;)</title>
 <para>
-If you are running &clmcn; and you are using <option>-ndepsrc</option> as
-<literal>data</literal>, then you'll need to interpolate Nitrogen deposition to
-the resolution you are running at. By default Nitrogen deposition is read in from stream
-files at 2-degree resolution and interpoalted to the resolution you are running at,
+By default Nitrogen deposition is read in from stream
+files at 2-degree resolution and interpolated to the resolution you are running at,
 so you don't need to do this step. But, if you do use <command>ndepregrid.ncl</command> 
 to regrid Nitrogen deposition datasets to your new resolution using the grid dataset 
 as input.
@@ -491,21 +487,21 @@ to use.
 <command>interpinic</command> to interpolate to</title>
 <screen width="99">
 > cd scripts
-> create_newcase -case cr_f10_TmpltI1850CN -res f10_f10 -compset I1850CN \
+> ./create_newcase -case cr_f10_TmpltI1850CN -res f10_f10 -compset I1850CN \
 -mach bluefire -skip_rundb
 > cd cr_f10_TmpltI1850CN
 # Set starting date to end of year
-> xmlchange -file env_conf.xml -id RUN_STARTDATE -val 1948-12-31
+> ./xmlchange -file env_conf.xml -id RUN_STARTDATE -val 1948-12-31
 # Set year align to starting year
-> xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_ALIGN -val 1948
+> ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_ALIGN -val 1948
 # Set to run a cold start
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 # Set to run only a single day, so a restart file will be created on Jan/1/1949
-> xmlchange -file env_run.xml -id STOP_N -val 1
+> ./xmlchange -file env_run.xml -id STOP_N -val 1
 # Then configure, build and run as normal
-> configure -case
-> cr_f10_TmpltI1850CN.bluefire.build
-> bsub &lt; cr_f10_TmpltI1850CN.bluefire.run
+> ./configure -case
+> ./cr_f10_TmpltI1850CN.bluefire.build
+> ./cr_f10_TmpltI1850CN.bluefire.submit
 # And copy the resulting restart file to your interpinic directory
 > cd ../models/lnd/clm/tools/interpinic
 > cp /ptmp/$LOGIN/cr_f10_TmpltI1850CN/run/cr_f10_TmpltI1850CN.clm2.r.1949-01-01-00000.nc .
@@ -523,7 +519,7 @@ interpolate a 1-degree <filename>finidat</filename> dataset to 10x15</title>
 <screen width="99">
 > cd models/lnd/clm/tools/interpinic
 > gmake OPT=TRUE SMP=TRUE
-> env OMP_NUM_THREADS=64 interpinic -o cr_f10_TmpltI1850CN.clm2.r.1949-01-01-00000.nc /
+> env OMP_NUM_THREADS=64 ./interpinic -o cr_f10_TmpltI1850CN.clm2.r.1949-01-01-00000.nc /
 -i /fs/cgd/csm/inputdata/ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
 </screen>
 <para>
@@ -761,7 +757,7 @@ a 5x5 regional grid over the Amazon:
 <warning>
 <para>
 Currently you can <emphasis>NOT</emphasis> have regional grids that straddle both
-sides of the Greenich (longitude = zero) line.
+sides of the Greenwich (longitude = zero) line.
 </para>
 </warning>
 <important>
@@ -950,7 +946,7 @@ set the files will be named according to the number of longitudes by latitudes)<
 Can be 1, 3, 5, or 10. When using the resulting dataset with &clm; you can then run
 with <varname>glc_nec</varname> of either 0 or this value.
  (default is 10)</para></listitem>
-<listitem><para><varname>outnc_large_files</varname> If output should be in NetCDF large file
+<listitem><para><varname>outnc_large_files</varname> If output should be in &netcdf; large file
 format</para></listitem>
 <listitem><para><varname>outnc_double</varname> If output should be in double
 precision (normally we turn this on)</para></listitem>
@@ -1140,14 +1136,13 @@ directory.
 <title>Using <command>ndepregrid.ncl</command> to interpolate Nitrogen deposition datasets</title>
 <para>
 <command>ndepregrid.ncl</command> interpolates the Nitrogen deposition datasets from one resolution
-to another.  It can be used to interpolate either constant datasets
-(<varname>fndepdat</varname> files) or transient datasets (<varname>fndepdyn</varname> files).
+to another.
 </para>
 <note>
 <para>
 Interpolating Nitrogen deposition files is no longer needed, because the model can
 read Nitrogen deposition files at one resolution and interpolate to the resolution the
-model is running at on the fly (when using -ndepsrc="stream"). Interpolating to another
+model is running at on the fly. Interpolating to another
 resolution is only useful for very course resolutions, if you want to save some computing
 resources in reading larger datasets. For example, this may be useful in obtaining 
 single-point datasets.
@@ -1168,10 +1163,7 @@ simulation-year of 1850, you would do the following:
 <command>aerdepregrid.ncl</command> interpolates the Aerosol deposition datasets from one resolution.
 It can be used to interpolate either constant datasets (for example:
 <filename>aerosoldep_monthly_2000_0.9x1.25_c090828.nc</filename>) or transient datasets (for example:
-<filename>aerosoldep_monthly_1849-2006_0.9x1.25_c090830.nc</filename>). The aerosol datasets unlike the
-Nitrogen deposition datasets, are named the same <varname>faerdep</varname> whether
-they contain one time-sample or a time-series of data. But, in any case, this script
-can be used to interpolate either kind of file.
+<filename>aerosoldep_monthly_1849-2006_0.9x1.25_c090830.nc</filename>).
 </para>
 <note>
 <para>
@@ -1203,9 +1195,10 @@ over-write the default data after you've created a given dataset. Depending on t
 it might be easier to do it one way or the other. In <xref
 linkend="table_required_files"></xref> we list the files that are most likely to be
 customized and the way they might be customized. Of those files, the ones you are most
-likely to customize are: fatmlndfrc, fsurdat, faerdep, and fndepdep. For more information
-on this also see <xref linkend="own_single_point_datasets"></xref> and <xref
-linkend="own_atm_forcing"></xref>.
+likely to customize are: fatmlndfrc, fsurdat, faerdep (for datm), and 
+stream_fldfilename_ndep.  For more information on this also see
+<xref linkend="own_single_point_datasets"></xref> and 
+<xref linkend="own_atm_forcing"></xref>.
 </para>
 </sect1>
 

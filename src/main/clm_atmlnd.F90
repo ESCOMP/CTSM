@@ -331,7 +331,6 @@ end subroutine init_lnd2atm_type
   use decompMod, only : ldecomp,adecomp
   use domainMod, only : ldomain,adomain
   use QSatMod,   only : QSat
-  use clm_varctl,only : set_caerdep_from_file, set_dustdep_from_file
 
 !
 ! !ARGUMENTS:

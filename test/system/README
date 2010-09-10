@@ -24,7 +24,7 @@ CLM_JOBID -------------- Job identification number to use (rather than process I
 CLM_THREADS ------------ Number of open-MP threads to use 
                          (by default this is set differently by machine)
 CLM_SOFF --------------- If set to TRUE -- stop on first failed test
-CLM_CCSMBLD ------------ If set to TRUE -- use the CCSM cpl7 build files
+CLM_CESMBLD ------------ If set to TRUE -- use the CESM cpl7 build files
 
 Important files:
 

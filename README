@@ -53,6 +53,7 @@ models/lnd/clm/doc/IMPORTANT_NOTES --------- Some important notes about this ver
                                              clm, configuration modes and namelist items 
                                              that are not validated or functional.
 models/lnd/clm/doc/KnownBugs --------------- List of known bugs.
+models/lnd/clm/doc/KnownLimitations -------- List of known limitations and workarounds.
 models/lnd/clm/doc/ChangeLog --------------- Detailed list of changes for each model version.
 models/lnd/clm/doc/ChangeSum --------------- Summary one-line list of changes for each 
                                              model version.
@@ -86,9 +87,9 @@ models/lnd/clm/bld/README --------- Description of how to use the template, conf
                                      # create new "I" case for bluefire at 1.9x2.5_gx1v6 res, without entering info on the case in the run database
                                      # "I" case is clm active, datm8, and inactive ice/ocn
          cd testI
-         configure -case             # create scripts
-         testI.build                 # build model and create namelists
-         bsub < testI.run            # submit script
+         ./configure -case           # create scripts
+         ./testI.bluefire.build      # build model and create namelists
+         ./testI.bluefire.submit     # submit script
                                      # (NOTE: edit env_run.xml to set RESUBMIT to number
                                      # #  of times to automatically resubmit)
 

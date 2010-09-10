@@ -1,7 +1,7 @@
 models/lnd/clm/bld/README                              3/13/2008 
 
 CLM build and configure directory and scripts. Scripts to help
-you prepare to build CLM as a component within CCSM, and setup
+you prepare to build CLM as a component within CESM, and setup
 a namelist for it. There is also functionality only used for CLM
 stand-alone testing to build and run the complete system (in conjuction
 with the scripts in the models/lnd/clm/test/system directory).

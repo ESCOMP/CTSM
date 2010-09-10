@@ -36,13 +36,6 @@ qflx_snofrz_lyr all have NaN's, with mlaidiff being completely full of NaN's
 (since mlaidiff is only defined for CLMSP or if drydep is on).
 
 ====================================================================================
-Bug Number: 1147
-mkgriddata regional grids can't straddle over Greenwich
-
-mkgriddata is not able to run for any domain that has Eastern edge > Western
-edge, because it straddles across the 0 degree longitude line.
-
-====================================================================================
 Bug Number: 1127
 interpinic not tested for CNDV, yet; expected not to work 
 
@@ -65,13 +58,6 @@ carbon_only on mode is over-productive. This is because it provides unlimited
 Nitrogen. Fixing it requires using fnitr from the pft-physiology file, a different 
 pft-physiology file with fnitr scaled appropriately and some code modifications 
 to get this all to work.
-
-====================================================================================
-Bug Number: 1100
-Trouble compiling with pgi7
-
-The model does NOT compile using PGI7.2.2. It DOES compile with later versions of the
-PGI compiler, such as 9.0.4.
 
 ====================================================================================
 Bug Number: 1063
@@ -118,28 +104,6 @@ expected. I think this is because the latitude coordinates are reversed from
 the other files (N to S instead of S to N).
 
 ====================================================================================
-Bug Number: 1017 and 1025
-PTS_MODE can NOT restart or use a global finidat file
-
-Single column mode (or PTS_MODE turned on using the -pts_lat and -pts_lon options in 
-scripts/create_newcase) can NOT read restart files or global finidat initial condition 
-files.
-
-Here's the message that happens when you try to run from a restart file.
-
-(OPNFIL): Successfully opened file ./rpointer.lnd on unit=  14
- Reading restart data.....
-------------------------------------------------------------
- (GETFIL): attempting to find local file
-c40b19+.I.pts.01.clm2.r.0001-01-06-00000.nc
- (GETFIL): using c40b19+.I.pts.01.clm2.r.0001-01-06-00000.nc in current working
-directory
- Reading restart dataset
- ERROR - setlatlon.F:Cant get variable dim for lat or lsmlat
- ENDRUN: called without a message string
-
-
-====================================================================================
 Bug Number: 717
 Problem with lt_archiving for too-many files
 
@@ -170,29 +134,10 @@ changed to allow 5 or 6 digit years rather than just 4-digit ones.
 scripts, drv, and csm_share also have problems with Y10K as well.
 
 ====================================================================================
-Bug number: 652
-Output different for different number of threads PGF90 
-
-PGI Version 6.1.6, and NetCDF Version 3.6.2. Works on other platforms/compilers and
-also works with PGI-7.0-7.
-
-====================================================================================
 Bug Number: 498
 problems creating .1 degree surface dataset
 
 mksurfdata can NOT create surface datasets at .1 degree resolution or higher. We've
 been successful with 0.23x0.31, but NOT higher resolutions.
-
-====================================================================================
-Bug Number: 452
-Problem with support of number of soil-colors NOT equal to 8 or 20
-
-The mksurfdata tools file mksoicol.F90 sets nsoicol to the max value found in
-the input soilcolor file:
-  nsoicol = maxval(soil_color_i)  
-
-However, the code will fail if  nsoicol does not equal 20 or 8 (which it might
-in paleo cases).  perhaps the code should be extended to handle a case where
-nsoicol is not 20 or 8.
 
 ====================================================================================

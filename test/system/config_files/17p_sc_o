@@ -1,4 +1,4 @@
--mode ccsm_seq
--nospmd -smp
+-mode clm_stndln
+-use_mpiserial -smp
 -maxpft 17
 -s

@@ -1,9 +1,34 @@
-#include <misc.h>
-#include <preproc.h>
-
 module mkarbinitMod
+!---------------------------------------------------------------------------
+!BOP
+!
+! !MODULE: mkarbinitMod
+!
+! !DESCRIPTION:
+!
+!
+!---------------------------------------------------------------------------
 
+! !USES:
+    use shr_kind_mod , only : r8 => shr_kind_r8
+    use clm_varctl   , only : iulog
+    use shr_sys_mod  , only : shr_sys_flush
+    use spmdMod      , only : masterproc
+
+    implicit none
+
+    SAVE
+    private                              ! By default make data private
+
+! !PUBLIC MEMBER FUNCTIONS:
+
+    public mkarbinit   ! Make arbitrary initial conditions
+    public perturbIC   ! Perturb the initial conditions by pertlim
+
+!EOP
+!-----------------------------------------------------------------------
 contains
+!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 !BOP
@@ -20,7 +45,6 @@ contains
 ! temperature: t_soisno, t_veg, t_grnd
 !
 ! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_const_mod, only : SHR_CONST_TKFRZ
     use clmtype
     use clm_varpar   , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
@@ -29,10 +53,7 @@ contains
                               icol_road_imperv, icol_roof, icol_sunwall, &
                               icol_shadewall
     use clm_varcon   , only : istice_mec, h2osno_max
-    use clm_varctl   , only : iulog, pertlim
-    use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
-    use shr_sys_mod  , only : shr_sys_flush
     use SNICARMod    , only : snw_rds_min
 
 !
@@ -128,13 +149,10 @@ contains
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     real(r8):: vwc,psi      ! for calculating soilpsi
-    real(r8):: pertval      ! for calculating temperature perturbation
 !-----------------------------------------------------------------------
 
     if ( masterproc )then
         write(iulog,*) 'Setting initial data to non-spun up values'
-        if ( pertlim /= 0.0_r8 ) &
-        write(iulog,*) 'Applying perturbation to initial surface temperature'
     end if
 
     ! Assign local pointers to derived subtypes components (landunit-level)
@@ -324,23 +342,6 @@ contains
                   t_soisno(c,j) = 283._r8
                end do
              end if
-#elif (defined GRANDVIEW)
-             if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
-             ! Set road layers to 18.5C
-               do j = 1, nlevurb
-                  t_soisno(c,j) = 291.66_r8
-               end do
-             else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
-             ! Set wall layers to 18.35C
-               do j = 1, nlevurb
-                  t_soisno(c,j) = 291.51_r8
-               end do
-             else if (ctype(c) == icol_roof) then
-             ! Set roof layers to 18.5C
-               do j = 1, nlevurb
-                  t_soisno(c,j) = 291.66_r8
-               end do
-             end if
 #else
              if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
                do j = 1, nlevurb
@@ -365,31 +366,10 @@ contains
           t_lake(c,1:nlevlak) = 277._r8
           t_grnd(c) = t_lake(c,1)
        endif
-       if ( pertlim /= 0.0_r8 )then
-          if (.not. lakpoi(l)) then  !not lake
-             if (     ltype(l) == isturb) then
-                nlevs = nlevurb
-             else
-                nlevs = nlevgrnd
-             end if
-             
-             do j = 1, nlevs
-                call random_number (pertval)
-                pertval       = 2._r8*pertlim*(0.5_r8 - pertval)
-                t_soisno(c,j) = t_soisno(c,j)*(1._r8 + pertval)
-             end do
-             t_grnd(c) = t_soisno(c,snl(c)+1)
-          else                       !lake
-             do j = 1, nlevlak
-                call random_number (pertval)
-                pertval     = 2._r8*pertlim*(0.5_r8 - pertval)
-                t_lake(c,j) = t_lake(c,j)*(1._r8 + pertval)
-             end do
-             t_grnd(c) = t_lake(c,1)
-          endif
-       end if
 
     end do
+
+    call perturbIC( clm3%g%l )
 
     do p = begp, endp
        c = pcolumn(p)
@@ -420,20 +400,6 @@ contains
          t_ref2m_r(p) = spval
        else
          t_ref2m_r(p) = 289.46
-       end if 
-#elif (defined GRANDVIEW)
-       ! Set to 19.0C
-       t_veg(p) = 292.16
-       t_ref2m(p) = 292.16
-       if (urbpoi(l)) then
-         t_ref2m_u(p) = 292.16
-       else
-         t_ref2m_u(p) = spval
-       end if
-       if (ifspecial(l)) then
-         t_ref2m_r(p) = spval
-       else
-         t_ref2m_r(p) = 292.16
        end if 
 #else
        t_veg(p) = 283._r8
@@ -505,11 +471,7 @@ contains
              nlevs = nlevurb
              do j = 1, nlevs
                 if (ctype(c) == icol_road_perv .and. j <= nlevsoi) then
-#if (defined GRANDVIEW)
-                   h2osoi_vol(c,j) = 0.0_r8
-#else
                    h2osoi_vol(c,j) = 0.3_r8
-#endif
                 else
                    h2osoi_vol(c,j) = 0.0_r8
                 end if
@@ -619,5 +581,97 @@ contains
 
 
   end subroutine mkarbinit
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: perturbIC
+!
+! !INTERFACE:
+  subroutine perturbIC( landunit )
+!
+! !DESCRIPTION:
+!   Perturbs initial conditions by the amount in the namelist variable pertlim.
+!
+! !USES:
+    use clm_varpar   , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
+    use clm_varctl   , only : pertlim
+    use clm_varcon   , only : isturb
+    use decompMod    , only : get_proc_bounds
+    use clmtype      , only : landunit_type
+    implicit none
+!
+! !ARGUMENTS:
+    type(landunit_type), intent(INOUT) :: landunit
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+! !LOCAL VARIABLES:
+!
+    integer :: j,l,c        ! indices
+    integer :: begc, endc   ! per-proc beginning and ending column indices
+    real(r8):: pertval      ! for calculating temperature perturbation
+    integer :: nlevs        ! number of levels
+    integer , pointer :: clandunit(:)   ! landunit index associated with each column
+    integer , pointer :: ltype(:)       ! landunit type
+    logical , pointer :: lakpoi(:)      ! true => landunit is a lake point
+    integer , pointer :: snl(:)         ! number of snow layers
+    real(r8), pointer :: t_soisno(:,:)  ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+    real(r8), pointer :: t_lake(:,:)    ! lake temperature (Kelvin)  (1:nlevlak)
+    real(r8), pointer :: t_grnd(:)      ! ground temperature (Kelvin)
+!EOP
+!-----------------------------------------------------------------------
+
+    if ( pertlim /= 0.0_r8 )then
+
+       if ( masterproc ) write(iulog,*) 'Applying perturbation to initial soil temperature'
+
+       clandunit  => landunit%c%landunit
+       lakpoi     => landunit%lakpoi
+       ltype      => landunit%itype
+       t_soisno   => landunit%c%ces%t_soisno
+       t_lake     => landunit%c%ces%t_lake
+       t_grnd     => landunit%c%ces%t_grnd
+       snl        => landunit%c%cps%snl
+
+       ! Determine subgrid bounds on this processor
+
+       call get_proc_bounds( begc=begc, endc=endc )
+
+       do c = begc,endc
+          l = clandunit(c)
+          if (.not. lakpoi(l)) then  !not lake
+             if (     ltype(l) == isturb) then
+                nlevs = nlevurb
+             else
+                nlevs = nlevgrnd
+             end if
+             
+             ! Randomly perturb soil temperature
+             do j = 1, nlevs
+                call random_number (pertval)
+                pertval       = 2._r8*pertlim*(0.5_r8 - pertval)
+                t_soisno(c,j) = t_soisno(c,j)*(1._r8 + pertval)
+             end do
+          else                       !lake
+             ! Randomly perturb lake temperature
+             do j = 1, nlevlak
+                call random_number (pertval)
+                pertval     = 2._r8*pertlim*(0.5_r8 - pertval)
+                t_lake(c,j) = t_lake(c,j)*(1._r8 + pertval)
+             end do
+          endif
+          ! Randomly perturb surface ground temp
+          call random_number (pertval)
+          pertval   = 2._r8*pertlim*(0.5_r8 - pertval)
+          t_grnd(c) = t_grnd(c)*(1._r8 + pertval)
+       end do
+    end if
+    !-----------------------------------------------------------------------
+
+  end subroutine perturbIC
+
+!-----------------------------------------------------------------------
 
 end module mkarbinitMod

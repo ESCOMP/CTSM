@@ -407,9 +407,7 @@ contains
     use mkarbinitMod    , only : mkarbinit
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
 #ifdef CN
-    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp, ndeprd
     use ndepStreamMod   , only : ndep_init, ndep_interp
-    use clm_varctl      , only : fndepdyn, fndepdat, use_ndepstream
 #endif
 #if (defined CNDV)
     use pftdynMod             , only : pftwt_init, pftwt_interp
@@ -672,21 +670,8 @@ contains
 
 #ifdef CN
     call t_startf('init_ndep')
-    if (use_ndepstream) then
-       call ndep_init()
-       call ndep_interp()
-    else
-       if (fndepdyn /= ' ') then
-          call t_startf('init_ndepdyn')
-          call ndepdyn_init()
-          call ndepdyn_interp()
-          call t_stopf('init_ndepdyn')
-       else if (fndepdat /= ' ') then
-          call ndeprd(fndepdat)
-       else
-          call ndeprd()
-       end if
-    endif
+    call ndep_init()
+    call ndep_interp()
     call t_stopf('init_ndep')
 #endif
     
