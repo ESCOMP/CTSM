@@ -10,6 +10,7 @@ contains
     use fileutils   , only : get_filename
     use mkvarpar    , only : nlevsoi, numpft, nlevurb, numsolar, numrad
     use mkvarctl
+    use mkglcmecMod , only : nglcec
     use mkharvestMod, only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
     use ncdio       , only : check_ret, ncd_defvar, ncd_convl2i
 

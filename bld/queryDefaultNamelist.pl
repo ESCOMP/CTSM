@@ -46,6 +46,7 @@ if ( ! defined($result) ) {
 EOF
 }
 require Build::Config;
+require Build::NamelistDefinition;
 require queryDefaultXML;
 
 # Defaults
@@ -68,12 +69,15 @@ OPTIONS
      -filenameonly                        Only return the filename -- not the full path to it.
      -help  [or -h]                       Display this help.
      -justvalue                           Just display the values (NOT key = value).
-     -var "varname"                       Variable name to match.
-     -namelist "namelistname"             Namelist name to read in by default ($namelist).
+     -var "varname"                       Variable name to match. Use "-var list" to
+                                          list valid variable names from all namelists.
+     -namelist "namelistname"             Namelist name to read in (by default $namelist).
      -onlyfiles                           Only output filenames.
      -options "item=value,item2=value2"   Set options to query for when matching.
                                           (comma delimited, with equality to set value).
-     -res  "resolution"                   Resolution to use for files.
+     -res  "resolution"                   Resolution to use for files. Use "-res list" to
+                                          list all valid resolutions. Use "-res any" to
+                                          use any valid resolution.
      -silent [or -s]                      Don't do any extra printing.
      -test   [or -t]                      Test that files exists.
 EXAMPLES
@@ -177,6 +181,10 @@ EOF
   $inputopts{cfgdir}         = $cfgdir;
   $inputopts{ProgName}       = $ProgName;
   $inputopts{cmdline}        = $cmdline;
+
+  my $exitearly = 0;
+  my $definition = Build::NamelistDefinition->new( $inputopts{nldef_file} );
+
   if ( ! defined($opts{csmdata}) ) {
      $inputopts{csmdata} = "default";
   } else {
@@ -190,9 +198,29 @@ EOF
   } else {
      $inputopts{config} = $opts{config};
   }
-  if ( ! defined($opts{hgrid}) ) {
-     $inputopts{hgrid} = "any";
+  if (      ! defined($opts{var}) ) {
+    $settings{'var'}  = undef;
+  } elsif ( $opts{var} eq "list" ) {
+     print "Valid variables: " if $printing;
+     my @vars = $definition->get_var_names( );
+     print "@vars\n";
+     $exitearly = 1;
   } else {
+    $settings{'var'}  = $opts{'var'};
+  }
+  if (      ! defined($opts{hgrid}) ) {
+     $inputopts{hgrid} = "any";
+  } elsif ( $opts{hgrid} eq "list" ) {
+     print "Valid resolutions: " if $printing;
+     my @hgrids = $definition->get_valid_values( "res", 'noquotes'=>1 );
+     print "@hgrids\n";
+     $exitearly = 1;
+  } else {
+     if ( ! $definition->is_valid_value( "res", $opts{hgrid}, 'noquotes'=>1 ) ) {
+        if ( $opts{'hgrid'} ne $opts{'usrname'} ) {
+           die "($ProgName $cmdline) ERROR:: invalid resolution entered.\n";
+        }
+     }
      $inputopts{hgrid} = $opts{hgrid};
   }
   # The namelist defaults file contains default values for all required namelist variables.
@@ -211,61 +239,62 @@ EOF
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
      push( @nl_defaults_files, @files );
   }
-  $settings{'var'}  = $opts{'var'};
-  $inputopts{files} = \@nl_defaults_files;
+  if ( ! $exitearly ) {
+    $inputopts{files} = \@nl_defaults_files;
 
-  my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
-  my %defaults = %$defaults_ref;
-  my @keys = keys(%defaults);
-  if ( defined($opts{'demand'}) && ($#keys == -1) ) {
-     die "($ProgName $cmdline) ERROR:: demand option is set and nothing was found.\n";
-  }
-  my $print;
-  foreach my $var ( @keys ) {
-     $print = 1;
-     my $value   = $defaults{$var}{value};
-     my $isadir  = $defaults{$var}{isdir};
-     my $isafile = $defaults{$var}{isfile};
-     my $isastr  = $defaults{$var}{isstr};
-     # If onlyfiles option set do NOT print if is NOT a file
-     if ( defined($opts{'onlyfiles'}) && (! $isafile) ) {
-        $print = undef;
-     }
-     # If is a directory
-     if ( $isadir ) {
-        # Test that this directory exists
-        if ( defined($opts{'test'})  && defined($print) ) {
-           print "Test that directory $value exists\n" if $printing;
-           if ( ! -d "$value" ) {
-              die "($ProgName) ERROR:: directory $value does NOT exist!\n";
-           }
-        }
-     }
-     # If is a file
-     if ( $isafile ) {
-        # Test that this file exists
-        if ( defined($opts{'test'})  && defined($print) ) {
-           chomp( $value );
-           print "Test that file $value exists\n" if $printing;
-           if ( ! -f "$value" ) {
-              die "($ProgName) ERROR:: file $value does NOT exist!\n";
-           }
-        }
-     }
-     # If a string
-     if ( (! defined($opts{'justvalues'}) ) && ($isastr) ) {
-       $value = "\'$value\'";
-     }
-     # if you just want the filename -- not the full path with the directory
-     if ( defined($opts{'fileonly'}) ) {
-       $value =~ s!(.*)/!!;
-     }
-     if ( defined($print) ) {
-        if ( ! defined($opts{'justvalues'})  ) {
-           print "$var = ";
-        }
-        print "$value\n";
-     }
+    my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
+    my %defaults = %$defaults_ref;
+    my @keys = keys(%defaults);
+    if ( defined($opts{'demand'}) && ($#keys == -1) ) {
+       die "($ProgName $cmdline) ERROR:: demand option is set and nothing was found.\n";
+    }
+    my $print;
+    foreach my $var ( @keys ) {
+       $print = 1;
+       my $value   = $defaults{$var}{value};
+       my $isadir  = $defaults{$var}{isdir};
+       my $isafile = $defaults{$var}{isfile};
+       my $isastr  = $defaults{$var}{isstr};
+       # If onlyfiles option set do NOT print if is NOT a file
+       if ( defined($opts{'onlyfiles'}) && (! $isafile) ) {
+          $print = undef;
+       }
+       # If is a directory
+       if ( $isadir ) {
+          # Test that this directory exists
+          if ( defined($opts{'test'})  && defined($print) ) {
+             print "Test that directory $value exists\n" if $printing;
+             if ( ! -d "$value" ) {
+                die "($ProgName) ERROR:: directory $value does NOT exist!\n";
+             }
+          }
+       }
+       # If is a file
+       if ( $isafile ) {
+          # Test that this file exists
+          if ( defined($opts{'test'})  && defined($print) ) {
+             chomp( $value );
+             print "Test that file $value exists\n" if $printing;
+             if ( ! -f "$value" ) {
+                die "($ProgName) ERROR:: file $value does NOT exist!\n";
+             }
+          }
+       }
+       # If a string
+       if ( (! defined($opts{'justvalues'}) ) && ($isastr) ) {
+         $value = "\'$value\'";
+       }
+       # if you just want the filename -- not the full path with the directory
+       if ( defined($opts{'fileonly'}) ) {
+         $value =~ s!(.*)/!!;
+       }
+       if ( defined($print) ) {
+          if ( ! defined($opts{'justvalues'})  ) {
+             print "$var = ";
+          }
+          print "$value\n";
+       }
+    }
   }
   if ( $printing && defined($opts{'test'}) ) {
      print "\n\nTesting was successful\n\n"

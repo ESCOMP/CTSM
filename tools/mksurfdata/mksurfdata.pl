@@ -51,10 +51,18 @@ my %opts = (
                hgrid=>"all", 
                rcp=>"-999.9", 
                debug=>0,
+               exedir=>undef,
                years=>"1850,2000",
                help=>0,
-               nomv=>undef,
+               pft_override=>undef,
+               pft_frc=>undef,
+               pft_idx=>undef,
+               soil_override=>undef,
+               soil_cly=>undef,
+               soil_snd=>undef,
                usrname=>"",
+               dynpft=>undef,
+               nomv=>undef,
                csmdata=>$CSMDATA,
                pftdata=>$PFTDATA,
            );
@@ -69,6 +77,11 @@ OPTIONS
                                    (default $opts{'csmdata'})
      -debug [or -d]                Don't actually run -- just print out what 
                                    would happen if ran.
+     -dynpft "filename"            Dynamic PFT/harvesting file to use 
+                                   (rather than create it on the fly) 
+                                   (must be consistent with first year)
+     -exedir "directory"           Directory where mksurfdata program is
+                                   (by default assume it's in the current directory)
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -83,8 +96,80 @@ OPTIONS
 
 NOTE: years, res, and rcp can be comma delimited lists.
 
+OPTIONS to override the mapping of the input gridded data with hardcoded input
+
+     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
+     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
+     -soil_cly "% of clay"         % of soil that is clay
+     -soil_snd "% of sand"         % of soil that is sand
+
 EOF
 }
+
+sub check_soil {
+#
+# check that the soil options are set correctly
+#
+  foreach my $type ( "soil_cly", "soil_snd" ) {
+     if ( ! defined($opts{$type} )  ) {
+        die "ERROR: Soil variables were set, but $type was NOT set\n";
+     }
+  }
+  #if ( $opts{'soil_col'} < 0 || $opts{'soil_col'} > 20 ) {
+  #   die "ERROR: Soil color is out of range = ".$opts{'soil_col'}."\n";
+  #}
+  my $texsum = $opts{'soil_cly'} + $opts{'soil_snd'};
+  my $loam   = 100.0 - $texsum;
+  if ( $texsum < 0.0 || $texsum > 100.0 ) {
+     die "ERROR: Soil textures are out of range: clay = ".$opts{'soil_cly'}.
+         " sand = ".$opts{'soil_snd'}." loam = $loam\n";
+  }
+}
+
+sub check_pft {
+#
+# check that the pft options are set correctly
+#
+  # Eliminate starting and ending square brackets
+  $opts{'pft_idx'} =~ s/^\[//;
+  $opts{'pft_idx'} =~ s/\]$//;
+  $opts{'pft_frc'} =~ s/^\[//;
+  $opts{'pft_frc'} =~ s/\]$//;
+  foreach my $type ( "pft_idx", "pft_frc" ) {
+     if ( ! defined($opts{$type} ) ) {
+        die "ERROR: PFT variables were set, but $type was NOT set\n";
+     }
+  }
+  my @pft_idx     = split( /,/, $opts{'pft_idx'} );
+  my @pft_frc     = split( /,/, $opts{'pft_frc'} );
+  if ( $#pft_idx != $#pft_frc ) {
+     die "ERROR: PFT arrays are different sizes: pft_idx and pft_frc\n";
+  }
+  my $sumfrc = 0.0;
+  for( my $i = 0; $i <= $#pft_idx; $i++ ) {
+     # check index in range
+     if ( $pft_idx[$i] < 0 || $pft_idx[$i] > 16 ) {
+         die "ERROR: pft_idx out of range = ".$opts{'pft_idx'}."\n";
+     }
+     # make sure there are no duplicates
+     for( my $j = 0; $j < $i; $j++ ) {
+        if ( $pft_idx[$i] == $pft_idx[$j] ) {
+            die "ERROR: pft_idx has duplicates = ".$opts{'pft_idx'}."\n";
+        }
+     }
+     # check fraction in range
+     if ( $pft_frc[$i] <= 0.0 || $pft_frc[$i] > 100.0 ) {
+         die "ERROR: pft_frc out of range (>0.0 and <=100.0) = ".$opts{'pft_frc'}."\n";
+     }
+     $sumfrc = $sumfrc + $pft_frc[$i];
+  }
+  # check that fraction sums up to 100%
+  if ( abs( $sumfrc - 100.0) > 1.e-6 ) {
+      die "ERROR: pft_frc does NOT add up to 100% = ".$opts{'pft_frc'}."\n";
+  }
+  
+}
+ 
 
 #-----------------------------------------------------------------------------------------------
 
@@ -96,9 +181,15 @@ EOF
         "p|pftlc=s"    => \$opts{'pftdata'},
         "nomv"         => \$opts{'nomv'},
         "d|debug"      => \$opts{'debug'},
+        "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
+        "exedir=s"     => \$opts{'exedir'},
         "h|help"       => \$opts{'help'},
         "usrname=s"    => \$opts{'usrname'},
+        "pft_frc=s"    => \$opts{'pft_frc'},
+        "pft_idx=s"    => \$opts{'pft_idx'},
+        "soil_cly=f"   => \$opts{'soil_cly'},
+        "soil_snd=f"   => \$opts{'soil_snd'},
    ) or usage();
 
    # Check for unparsed arguments
@@ -159,6 +250,24 @@ EOF
             usage();
          }
       }
+   }
+   # Check if soil set
+   if ( defined($opts{'soil_cly'}) || 
+        defined($opts{'soil_snd'}) ) {
+       &check_soil( );
+       $opts{'soil_override'} = 1;
+   }
+   # Check if pft set
+   if ( defined($opts{'pft_frc'}) || defined($opts{'pft_idx'}) ) {
+       &check_pft( );
+       $opts{'pft_override'} = 1;
+   }
+   # Check if dynpft set and is valid filename
+   if ( defined($opts{'dynpft'}) ) {
+       if ( ! -f $opts{'dynpft'} ) {
+          print "** Dynamic PFT file does NOT exist: $opts{'dynpft'}\n";
+          usage();
+       }
    }
 
    my $nl = "namelist";
@@ -312,21 +421,55 @@ EOF
                $desc     = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
                $desc_yr0 = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr0  );
             }
-            my $pftdyntext_file = "pftdyn_$desc.txt";
-            my $fhpftdyn = IO::File->new;
-            $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
-            print "Writing out pftdyn text file: $pftdyntext_file\n";
-            for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-              my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=$rcp -var mksrf_fvegtyp -namelist clmexp`;
-              chomp( $vegtypyr );
-              $vegtypyr =~ s#^$PFTDATA#$pftdata#;
-              printf $fhpftdyn "%-125.125s %4.4d\n", $vegtypyr, $yr;
-              if ( $yr % 100 == 0 ) {
-                 print "year: $yr\n";
-              }
+            my $strlen = 125;
+            my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
+            my $pftdyntext_file;
+            if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
+               $pftdyntext_file = "pftdyn_$desc.txt";
+               my $fhpftdyn = IO::File->new;
+               $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
+               print "Writing out pftdyn text file: $pftdyntext_file\n";
+               for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
+                 my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=$rcp -var mksrf_fvegtyp -namelist clmexp`;
+                 chomp( $vegtypyr );
+                 $vegtypyr =~ s#^$PFTDATA#$pftdata#;
+                 printf $fhpftdyn $dynpft_format, $vegtypyr, $yr;
+                 if ( $yr % 100 == 0 ) {
+                    print "year: $yr\n";
+                 }
+               }
+               $fhpftdyn->close;
+               print "Done writing file\n";
+            } elsif ( $opts{'pft_override'} && defined($opts{'dynpft'}) ) {
+               $pftdyntext_file = $opts{'dynpft'};
+            } else {
+               $pftdyntext_file = "pftdyn_override_$desc.txt";
+               my $fhpftdyn = IO::File->new;
+               $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
+               my $frstpft = "<pft_f>$opts{'pft_frc'}</pft_f>" . 
+                             "<pft_i>$opts{'pft_idx'}</pft_i>" .
+                             "<harv>0,0,0,0,0</harv><graz>0</graz>";
+               print "Writing out pftdyn text file: $pftdyntext_file\n";
+               if ( (my $len = length($frstpft)) > $strlen ) {
+                  die "ERROR PFT line is too long ($len): $frstpft\n";
+               }
+               printf $fhpftdyn $dynpft_format, $frstpft, $sim_yr0;
+               $fhpftdyn->close;
+               print "Done writing file\n";
             }
-            $fhpftdyn->close;
-            print "Done writing file\n";
+
+            if ( defined($opts{'soil_override'}) ) {
+               print $fh <<"EOF";
+ soil_clay          = $opts{'soil_cly'}
+ soil_sand          = $opts{'soil_snd'}
+EOF
+            }
+            if ( defined($opts{'pft_override'}) ) {
+               print $fh <<"EOF";
+ pft_frc           = $opts{'pft_frc'}
+ pft_idx           = $opts{'pft_idx'}
+EOF
+            }
 
             print $fh <<"EOF";
  mksrf_fvegtyp      = '$vegtyp'
@@ -346,11 +489,15 @@ EOF
             #
             # Run mksurfdata with the namelist file
             #
-            print "mksurfdata < $nl\n";
+            my $exedir = $scrdir;
+            if ( defined($opts{'exedir'}) ) {
+               $exedir = $opts{'exedir'};
+            }
+            print "$exedir/mksurfdata < $nl\n";
             my $filehead;
             my $pfilehead;
             if ( ! $opts{'debug'} ) {
-               system( "mksurfdata < $nl" );
+               system( "$exedir/mksurfdata < $nl" );
                if ( $? ) { die "ERROR in mksurfdata: $?\n"; }
             } else {
                $filehead  = "surfdata_$res";

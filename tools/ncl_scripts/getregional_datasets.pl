@@ -209,7 +209,7 @@ if ( $opts{'verbose'} ) {
 
 my $cmd = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
           "SIM_YR=$opts{'sim_year'} SIM_YR_RNG=$opts{'sim_yr_rng'} MASK=$opts{'mask'} " .
-          "ID=$opts{'mydataid'} RCP=$opts{'rcp'} MYCSMDATA=$inputdata_rootdir " .
+          "ID=$opts{'mydataid'} RCP=$opts{'rcp'} RES=$opts{'res'} MYCSMDATA=$inputdata_rootdir " .
           "$debug $print ncl $scrdir/getregional_datasets.ncl";
 
 print "Execute: $cmd\n";

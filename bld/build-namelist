@@ -972,6 +972,7 @@ add_default($nl, 'urban_traffic');
 my $rtm = $cfg->get('rtm');
 if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
+   add_default($nl, 'ice_runoff', 'hgrid'=>$res );
 }
 
 if ( $rtm eq "off" ) {

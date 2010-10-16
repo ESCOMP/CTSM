@@ -60,7 +60,7 @@ else
   tcbtools="."
 fi
 
-scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|HOME|$HOME|g" | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|PFTDATA|$PFTDATA|g"`
+scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|HOME|$HOME|g" | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|PFTDATA|$PFTDATA|g" | sed -e "s|EXEDIR|$tcbtools|"`
 
 echo "TSMscript_tools.sh: running ${cfgdir}/$2 with $scopts; output in ${rundir}/test.log" 
 
@@ -71,7 +71,7 @@ if [ ! -f "${cfgdir}/$2" ]; then
 fi
 
 if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
-   env PATH="${tcbtools}:${PATH}" ${cfgdir}/$2 $scopts >> test.log 2>&1
+   ${cfgdir}/$2 $scopts >> test.log 2>&1
    status="PASS"
    rc=$?
 else

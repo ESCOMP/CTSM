@@ -4,7 +4,7 @@
 ! !IROUTINE: mkglacier
 !
 ! !INTERFACE:
-subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
+subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 !
 ! !DESCRIPTION:
 ! make percent glacier
@@ -26,7 +26,8 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
   character(len=*), intent(in) :: fname           ! input dataset file name
   integer , intent(in) :: ndiag                   ! unit number for diag out
-  real(r8), intent(out):: glac_o(lsmlon,lsmlat)    ! output grid: %glacier
+  logical , intent(in) :: zero_out                ! if should zero glacier out
+  real(r8), intent(out):: glac_o(lsmlon,lsmlat)   ! output grid: %glacier
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -98,24 +99,35 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   mask_o = 1.0_r8
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  mask_i = float(tdomain%mask(:,:))
-  call areaave(mask_i,mask_o,tgridmap)
+  if ( zero_out )then
 
-  call gridmap_clean(tgridmap)
-  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        glac_o(io,jo) = 0.
+     enddo
+     enddo
 
-  ! Area-average percent cover on input grid to output grid 
-  ! and correct according to land landmask
-  ! Note that percent cover is in terms of total grid area.
+  else
 
-  call areaave(glac_i,glac_o,tgridmap)
+     mask_i = float(tdomain%mask(:,:))
+     call areaave(mask_i,mask_o,tgridmap)
 
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
+     call gridmap_clean(tgridmap)
+     call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
+     ! Area-average percent cover on input grid to output grid 
+     ! and correct according to land landmask
+     ! Note that percent cover is in terms of total grid area.
+
+     call areaave(glac_i,glac_o,tgridmap)
+
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
         if (glac_o(io,jo) < 1.) glac_o(io,jo) = 0.
-        if (all_urban         ) glac_o(io,jo) = 0.
-  enddo
-  enddo
+     enddo
+     enddo
+
+  end if
 
   ! Check for conservation
 
@@ -156,7 +168,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( .not. all_urban .and. trim(mksrf_gridtype) == 'global') then
+  if ( .not. zero_out  .and. trim(mksrf_gridtype) == 'global') then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
         write (6,*) 'MKGLACIER error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo

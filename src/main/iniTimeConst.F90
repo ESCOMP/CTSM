@@ -847,6 +847,7 @@ subroutine iniTimeConst
 
    deallocate(soic2d,sand3d,clay3d,gti,organic3d)
    deallocate(temp_ef,efisop2d)
+   deallocate(zurb_wall, zurb_roof, dzurb_wall, dzurb_roof, ziurb_wall, ziurb_roof)
 
 
    ! Initialize SNICAR optical and aging parameters:

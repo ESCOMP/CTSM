@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on breeze, edinburgh, lynx, bluefire, intrepid: 
+# usage on mirage, edinburgh, lynx, bluefire, intrepid: 
 # ./test_driver.sh
 #
 # usage on jaguar:
@@ -122,10 +122,16 @@ export LAPI_DEBUG_RC_DREG_THRESHOLD=1000000
 export LAPI_DEBUG_QP_NOTIFICATION=no
 export LAPI_DEBUG_RC_INIT_SETUP=no
 
-export INC_NETCDF=/contrib/netcdf-3.6.2/include
-export LIB_NETCDF=/contrib/netcdf-3.6.2/lib
+export NETCDF_PATH=/contrib/netcdf-3.6.2
+if [ "\$CLM_FC" = "GENIBM" ]; then
+  export CESM_MACH="generic_ibm"
+else
+  export CESM_MACH="bluefire"
+fi
+
+export INC_NETCDF=\$NETCDF_PATH/include
+export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="gmake -j 65"
-export CESM_MACH="bluefire"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
@@ -144,9 +150,12 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##breeze
-    breeze | gale | gust | hail )
-    submit_script="test_driver_breeze_${cur_time}.sh"
+    ##mirage
+    mirage* | storm* )
+    submit_script="test_driver_mirage_${cur_time}.sh"
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
+    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -167,14 +176,14 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
-netcdf=/contrib/netcdf-3.6.2/intel
-export INC_NETCDF=\$netcdf/include
-export LIB_NETCDF=\$netcdf/lib
+export NETCDF_PATH=/contrib/netcdf-3.6.3/intel-10-64
+export INC_NETCDF=\$NETCDF_PATH/include
+export LIB_NETCDF=\$NETCDF_PATH/lib
 export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
 export CESM_MACH="generic_linux_intel"
-export CFG_STRING="-fc ifort -cc icc  -cppdefs '-DFORTRANUNDERSCORE' "
+export CFG_STRING="-cppdefs '-DFORTRANUNDERSCORE' "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/fs/home/erik/bin/cprnc
@@ -182,7 +191,7 @@ export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/cgd/tss"
 dataroot="/fis/cgd/cseg/csm"
 echo_arg="-e"
-input_file="tests_posttag_breeze"
+input_file="tests_posttag_mirage"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -223,7 +232,6 @@ if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
     input_file="tests_pretag_edinburgh"
 else
-    export CLM_CESMBLD="FALSE"
     interactive="YES"
     input_file="tests_pretag_edinburgh_nompi"
 fi
@@ -247,35 +255,47 @@ export P4_GLOBMEMSIZE=500000000
 
 
 if [ "\$CLM_FC" = "PGI" ]; then
-    netcdf=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
-    mpich=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
+    export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
+    export MPICH_PATH=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
     export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
     export CESM_MACH="edinburgh_pgi"
-    export CFG_STRING=""
     export TOOLS_MAKE_STRING=""
 elif [ "\$CLM_FC" = "INTEL" ]; then
-    netcdf=/usr/local/netcdf-3.6.3-intel-3.2.02
-    mpich=/usr/local/mpich-1.2.7p1-intel-3.2.02
+    export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-3.2.02
+    export MPICH_PATH=/usr/local/mpich-1.2.7p1-intel-3.2.02
     export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
     export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
     export CESM_MACH="edinburgh_intel"
-    export CFG_STRING="-fc ifort "
     export TOOLS_MAKE_STRING="USER_FC=ifort "
     /usr/local/intel-cluster-3.2.02/intel-login-script.sh
+elif [ "\$CLM_FC" = "GENLF" ]; then
+    export NETCDF_PATH=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
+    export MPICH_PATH=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
+    export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
+    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
+    export CESM_MACH="generic_linux_lahey"
+    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
+elif [ "\$CLM_FC" = "GENPG" ]; then
+    export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
+    export MPICH_PATH=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
+    export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
+    export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
+    export CESM_MACH="generic_linux_pgi"
+    export TOOLS_MAKE_STRING=""
 else
-    netcdf=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
-    mpich=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
+    export NETCDF_PATH=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
+    export MPICH_PATH=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
     export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
     export CESM_MACH="edinburgh_lahey"
-    export CFG_STRING="-fc lf95 -cc gcc "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
-export INC_NETCDF=\${netcdf}/include
-export LIB_NETCDF=\${netcdf}/lib
-export INC_MPI=\${mpich}/include
-export LIB_MPI=\${mpich}/lib
+export CFG_STRING=""
+export INC_NETCDF=\${NETCDF_PATH}/include
+export LIB_NETCDF=\${NETCDF_PATH}/lib
+export INC_MPI=\${MPICH_PATH}/include
+export LIB_MPI=\${MPICH_PATH}/lib
 export MAKE_CMD="gmake -j 5"   ##using hyper-threading on edinburgh
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
@@ -295,10 +315,11 @@ EOF
     if [ -z "$CLM_CESMBLD" ]; then
 	export CLM_CESMBLD="TRUE"
     fi
+    shell=bash
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
-#!/bin/sh
+#!/bin/$shell
 #
 
 # Name of the queue (CHANGE THIS if needed)
@@ -314,7 +335,7 @@ cat > ./${submit_script} << EOF
 # Export all Environment variables
 #PBS -V
 # Use bourne shell
-#PBS -S /bin/sh
+#PBS -S /bin/$shell
 # End of options
 
 if [ -n "\$PBS_JOBID" ]; then    #batch job
@@ -371,25 +392,48 @@ export MPSTKZ=64M
 # Modules
 #-------------------------------------------------------------------------------
 
-module switch pgi       pgi/10.3.0        
-module switch xt-mpt    xt-mpt/4.0.3     
-module switch xt-libsci xt-libsci/10.4.3 
-module load netcdf/4.0.1.3
+alias module=/opt/modules/3.1.6.5/bin/modulecmd
 
-netcdf=\$CRAY_NETCDF_DIR/netcdf-pgi
-export CESM_MACH="lynx_pgi"
-export CFG_STRING="-fc ftn "
-export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+if [ "\$CLM_FC" = "GENPATH" ]; then
+   module $shell remove PrgEnv-pgi
+   module $shell remove pgi
+   module $shell load pathscale
+   module $shell load PrgEnv-pathscale
+   module $shell load netcdf/4.0.1.3
+   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pathscale
+   export CESM_MACH="generic_linux_pathscale"
+   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_FCTYP=pathf90 "
+   export MAKE_CMD="gmake -j 2"   ##using hyper-threading on lynx
+elif [ "\$CLM_FC" = "GENXT" ]; then
+   #module $shell switch pgi       pgi/10.3.0        
+   #module $shell switch xt-mpt    xt-mpt/4.0.3     
+   #module $shell switch xt-libsci xt-libsci/10.4.3 
+   module $shell load netcdf/4.0.1.3
+   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
+   export CESM_MACH="generic_xt"
+   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+   export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
+else
+   module $shell switch pgi       pgi/10.3.0        
+   module $shell switch xt-mpt    xt-mpt/4.0.3     
+   module $shell switch xt-libsci xt-libsci/10.4.3 
+   module $shell load netcdf/4.0.1.3
+   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
+   export CESM_MACH="lynx_pgi"
+   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+   export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
+fi
 
-export INC_NETCDF=\${netcdf}/include
-export LIB_NETCDF=\${netcdf}/lib
+export CFG_STRING=""
+
+export INC_NETCDF=\${NETCDF_PATH}/include
+export LIB_NETCDF=\${NETCDF_PATH}/lib
 export INC_MPI=""
 export LIB_MPI=""
-export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 export MACH_WORKSPACE="/ptmp/\$USER"
 export CPRNC_EXE=/ptmp/csm/tools/cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/ptmp/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="/ptmp/csm/inputdata/lnd/clm2/rawdata"
+export PFTDATA="/glade/proj2/cgd/tss/"
 dataroot="/ptmp/csm"
 echo_arg="-e"
 
@@ -455,19 +499,20 @@ export CLM_RESTART_TASKS=129
 
 export CLM_COMPSET="I"
 
-#export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
-#export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 source /opt/modules/default/init/sh
-#module load PrgEnv-pgi Base-opts
-#module load xtpe-quadcore
-#module load torque moab
-#module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
-#module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
-#module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
-module load pgi/9.0.2                     # 9.0.2 tested for bfb on 2009-sep-25
-module load xt-mpt/3.2.0                  # 3.2.0  is default on 2009-sep-25
-module load xt-libsci/10.3.5              # 10.3.5 is default on 2009-sep-25
-module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
+
+if [ "\$CLM_FC" = "GENXT" ]; then
+  module remove netcdf
+  module load   netcdf
+  export CESM_MACH="generic_xt"
+else
+  module load pgi/9.0.2                     # 9.0.2 tested for bfb on 2009-sep-25
+  module load xt-mpt/3.2.0                  # 3.2.0  is default on 2009-sep-25
+  module load xt-libsci/10.3.5              # 10.3.5 is default on 2009-sep-25
+  module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
+  export CESM_MACH="jaguar"
+fi
+
 module load p-netcdf
 module load   ncl
 module load subversion
@@ -490,13 +535,13 @@ export MALLOC_TRIM_THRESHOLD_=536870912
 # moved to DEBUG mode at some point
 export MPICH_DBMASK=0x200
 
-export LIB_NETCDF=\${NETCDF_DIR}/lib
-export INC_NETCDF=\${NETCDF_DIR}/include
-export MOD_NETCDF=\${NETCDF_DIR}/include
+export NETCDF_PATH=\${CRAY_NETCDF_DIR}/netcdf-pgi
+export LIB_NETCDF=\${NETCDF_PATH}/lib
+export INC_NETCDF=\${NETCDF_PATH}/include
+export MOD_NETCDF=\${NETCDF_PATH}/include
 export INC_PNETCDF=\${PNETCDF_DIR}/include
 export LIB_PNETCDF=\${PNETCDF_DIR}/lib
-export CESM_MACH="jaguar"
-export CFG_STRING="-fc ftn "
+export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
@@ -511,6 +556,9 @@ EOF
     ##yong
     yong* )
     submit_script="test_driver_yong_${cur_time}.sh"
+    if [ -z "$CLM_CESMBLD" ]; then
+	export CLM_CESMBLD="TRUE"
+    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -531,12 +579,12 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
-export CESM_MACH="yong_g95"
-export NETCDF=/usr/local/netcdf-3-6-3
-export INC_NETCDF=\$NETCDF/include
-export LIB_NETCDF=\$NETCDF/lib
+export CESM_MACH="generic_linux_pgi"
+export NETCDF_PATH=/usr/local/netcdf-3.6.3.gfortran_g++
+export INC_NETCDF=\$NETCDF_PATH/include
+export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="make -j 4"
-export CFG_STRING="-fc g95 -cc gcc "
+export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc
@@ -593,9 +641,9 @@ export AIXTHREAD_SCOPE=S
 export MALLOCMULTIHEAP=TRUE
 export MPI_TYPE_MAX=100000
 
-export NETCDF=/soft/apps/netcdf-3.6.2
-export INC_NETCDF=\$NETCDF/include
-export LIB_NETCDF=\$NETCDF/lib
+export NETCDF_PATH=/soft/apps/netcdf-3.6.2
+export INC_NETCDF=\$NETCDF_PATH/include
+export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="make -j 5"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
@@ -901,7 +949,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluefire, edinburgh, lynx, breeze, intrepid: "
+    echo "usage on bluefire, edinburgh, lynx, mirage, intrepid: "
     echo "./test_driver.sh"
     echo ""
     echo "usage on jaguar: (compile interactively before submitting)"

@@ -8,6 +8,7 @@
 # INC_NETCDF --- Include directory location of netcdf. (defaults to /usr/local/include)
 # MOD_NETCDF --- Module directory location of netcdf.  (defaults to $LIB_NETCDF)
 # USER_FC ------ Allow user to override the default Fortran compiler specified in Makefile.
+# USER_FCTYP --- Allow user to override the default type of Fortran compiler (linux and USER_FC=ftn only).
 # USER_CC ------ Allow user to override the default C compiler specified in Makefile (linux only).
 # USER_LINKER -- Allow user to override the default linker specified in Makefile.
 # USER_CPPDEFS - Additional CPP defines.
@@ -191,18 +192,25 @@ endif
 
 ifeq ($(UNAMES),Linux)
   ifeq ($(USER_FC),$(null))
-    FC    := pgf90
-    PGF90 := TRUE
-  endif
-  ifeq ($(USER_FC),ftn)
-    PGF90 := TRUE
+    FC      := pgf90
+    FCTYP   := pgf90
+  else 
+    ifeq ($(USER_FC),ftn)
+      ifneq ($(USER_FCTYP),$(null))
+         FCTYP := $(USER_FCTYP)
+      else
+         FCTYP := pgf90
+      endif
+    else
+      FCTYP := $(USER_FC)
+    endif
   endif
   CPPDEF += -DLINUX -DFORTRANUNDERSCORE
   CFLAGS := $(CPPDEF)
   LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
   FFLAGS =
 
-  ifeq ($(PGF90),TRUE)
+  ifeq ($(FCTYP),pgf90)
     CC     := pgcc
     ifneq ($(OPT),TRUE)
       FFLAGS += -g -Ktrap=fp -Mbounds -Kieee
@@ -218,7 +226,7 @@ ifeq ($(UNAMES),Linux)
 
   endif
 
-  ifeq ($(FC),lf95)
+  ifeq ($(FCTYP),lf95)
     ifneq ($(OPT),TRUE)
       FFLAGS += -g --chk a,e,s,u -O0
     else
@@ -234,7 +242,7 @@ ifeq ($(UNAMES),Linux)
       LDFLAGS += --openmp --threadheap 4096
     endif
   endif
-  ifeq ($(FC),pathf90)
+  ifeq ($(FCTYP),pathf90)
     FFLAGS += -extend_source -ftpp -fno-second-underscore
     ifneq ($(OPT),TRUE)
       FFLAGS += -g -O0
@@ -246,7 +254,7 @@ ifeq ($(UNAMES),Linux)
       LDFLAGS  += -mp
     endif
   endif
-  ifeq ($(FC),ifort)
+  ifeq ($(FCTYP),ifort)
 
     FFLAGS      += -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback -FR
     CFLAGS      += -m64 -g

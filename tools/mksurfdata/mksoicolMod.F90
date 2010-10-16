@@ -1,3 +1,79 @@
+module mksoicolMod
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: mksoicolMod
+!
+! !DESCRIPTION:
+! Make soil color data
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!-----------------------------------------------------------------------
+!!USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  implicit none
+
+  SAVE
+  private           ! By default make data private
+!
+! !PUBLIC MEMBER FUNCTIONS:
+!
+  public mksoicolInit  ! Initialization
+  public mksoicol      ! Set soil color
+!
+! !PUBLIC DATA MEMBERS:
+!
+  integer, parameter :: unset      = -999      ! flag to indicate soil color NOT set
+  integer, public    :: soil_color = unset     ! soil color to override with
+
+! !PRIVATE DATA MEMBERS:
+!
+!EOP
+!===============================================================
+contains
+!===============================================================
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mksoicolInit
+!
+! !INTERFACE:
+subroutine mksoicolInit( )
+!
+! !DESCRIPTION:
+! Initialize of make soil color
+! !USES:
+!
+! !ARGUMENTS:
+  implicit none
+!
+! !CALLED FROM:
+! subroutine mksrfdat in module mksrfdatMod
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  real(r8) :: sumtex
+  character(len=32) :: subname = 'mksoicolInit'
+!-----------------------------------------------------------------------
+
+  ! Error check soil_color if it is set
+  if ( soil_color /= unset )then
+     if ( soil_color < 0 .or. soil_color > 20 )then
+        write(6,*)'soil_color is out of range = ', soil_color
+        call abort()
+     end if
+     write(6,*) 'Replace soil color for all points with: ', soil_color
+  end if
+end subroutine mksoicolInit
+
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -108,7 +184,7 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   nsoicol = maxval(soil_color_i)
   write(6,*)'nsoicol = ',nsoicol
 
-  allocate(wst(0:nsoicol),gast_i(0:nsoicol),gast_o(0:nsoicol),col(0:nsoicol))
+  allocate(gast_i(0:nsoicol),gast_o(0:nsoicol),col(0:nsoicol))
 
   ! -----------------------------------------------------------------
   ! Define the model color classes: 0 to nsoicol
@@ -151,7 +227,13 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
      call abort()
   end if
 
-  ! Compute local fields _o
+  ! Error check soil_color if it is set
+  if ( soil_color /= unset )then
+     if ( soil_color > nsoicol )then
+        write(6,*)'soil_color is out of range = ', soil_color
+        call abort()
+     end if
+  end if
 
   allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
   allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
@@ -160,56 +242,71 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   mask_o = 1.0_r8
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  call gridmap_setptrs(tgridmap,mx_ovr=mxovr,n_ovr=novr,i_ovr=iovr,j_ovr=jovr,w_ovr=wovr)
+  if ( soil_color /= unset )then
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        soil_color_o(io,jo) = soil_color
+     end do
+     end do
+  else
+     allocate(wst(0:nsoicol))
 
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
-     color = 0
-     do k = 0, nsoicol
-        wst(k) = 0
+     ! Compute local fields _o
+
+     call gridmap_setptrs(tgridmap,mx_ovr=mxovr,n_ovr=novr,i_ovr=iovr,j_ovr=jovr,w_ovr=wovr)
+
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        color = 0
+        do k = 0, nsoicol
+           wst(k) = 0
+        enddo
+        do n = 1, novr(io,jo)
+           ii = iovr(io,jo,n)
+           ji = jovr(io,jo,n)
+           k = soil_color_i(ii,ji) * tdomain%mask(ii,ji)
+           wst(k) = wst(k) + wovr(io,jo,n)
+           if (k>0 .and. wst(k)>0.) color = 1
+        enddo
+        if (color == 1) wst(0) = 0.0
+
+        ! Rank non-zero weights by color type. wsti(1) is the most extensive
+        ! color type. wsti(2) is the second most extensive color type
+
+        call mkrank (nsoicol, wst, miss, wsti, num)
+        soil_color_o(io,jo) = wsti(1)
+        ! Set everything to input soil_color if it's set
+
+
+        ! If land but no color, set color to 15 (in older dataset generic 
+        ! soil color 4)
+
+        if (nsoicol == 8) then
+           if (soil_color_o(io,jo)==0) &
+              soil_color_o(io,jo) = 4
+        else if (nsoicol == 20) then
+           if (soil_color_o(io,jo)==0) &
+              soil_color_o(io,jo) = 15
+        end if
+
+        ! Set color for grid cells that are 100% glacier to zero. Otherwise,
+        ! must have a soil color for the non-glacier portion of grid cell.
+
+        if (abs(pctglac_o(io,jo)-100.)<1.e-06) soil_color_o(io,jo)=0
+
+        ! Error checks
+
+        if (soil_color_o(io,jo) < 0 .or. soil_color_o(io,jo) > nsoicol) then
+           write (6,*) 'MKSOICOL error: land model soil color = ', &
+                soil_color_o(io,jo),' is not valid for lon,lat = ',io,jo
+           call abort()
+        end if
+
      enddo
-     do n = 1, novr(io,jo)
-        ii = iovr(io,jo,n)
-        ji = jovr(io,jo,n)
-        k = soil_color_i(ii,ji) * tdomain%mask(ii,ji)
-        wst(k) = wst(k) + wovr(io,jo,n)
-        if (k>0 .and. wst(k)>0.) color = 1
      enddo
-     if (color == 1) wst(0) = 0.0
+     deallocate (wst)
 
-     ! Rank non-zero weights by color type. wsti(1) is the most extensive
-     ! color type. wsti(2) is the second most extensive color type
-
-     call mkrank (nsoicol, wst, miss, wsti, num)
-     soil_color_o(io,jo) = wsti(1)
-
-
-     ! If land but no color, set color to 15 (in older dataset generic 
-     ! soil color 4)
-
-     if (nsoicol == 8) then
-        if (soil_color_o(io,jo)==0) &
-           soil_color_o(io,jo) = 4
-     else if (nsoicol == 20) then
-        if (soil_color_o(io,jo)==0) &
-           soil_color_o(io,jo) = 15
-     end if
-
-     ! Set color for grid cells that are 100% glacier to zero. Otherwise,
-     ! must have a soil color for the non-glacier portion of grid cell.
-
-     if (abs(pctglac_o(io,jo)-100.)<1.e-06) soil_color_o(io,jo)=0
-
-     ! Error checks
-
-     if (soil_color_o(io,jo) < 0 .or. soil_color_o(io,jo) > nsoicol) then
-        write (6,*) 'MKSOICOL error: land model soil color = ', &
-             soil_color_o(io,jo),' is not valid for lon,lat = ',io,jo
-        call abort()
-     end if
-
-  enddo
-  enddo
+  end if
 
   ! Global sum of output field 
 
@@ -313,9 +410,10 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
 
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
-  deallocate (soil_color_i,wst,gast_i,gast_o,col)
+  deallocate (soil_color_i,gast_i,gast_o,col)
   deallocate (mask_i,mask_o)
   deallocate ( fld_i, fld_o)
 
 end subroutine mksoicol
 
+end module mksoicolMod

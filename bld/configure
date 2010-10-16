@@ -79,7 +79,6 @@ OPTIONS
      -target_os          Override the os setting for cross platform compilation [aix | darwin | dec_osf | irix | 
                          linux | solaris | super-ux | bgl | bgp ].  Default: OS on which configure is
 			 executing as defined by the perl \$OSNAME variable.
-     -[no]test           Switch on [off] testing of Fortran compiler and external libraries.
      -sitespf_pt <name>  Setup for the given site specific single-point resolution.
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
                          Directories containing user source code.
@@ -94,25 +93,9 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
 
      -cesm_bld <name>    Turn use of CESM build and makefiles. [on | off] (default is off)
                          Can ONLY be turned on for mode=clm_stndln.
-     -cc <name>          User specified C compiler (linux or darwin only).  Overrides Makefile default.
-     -cflags <string>    A string of user specified C compiler options.  Appended to
-                         Makefile defaults.
      -debug              Switch to turn on building CLM with debugging compiler options.
-     -fc <name>          User specified Fortran compiler.  Overrides Makefile default.
-     -fflags <string>    A string of user specified Fortran compiler flags.  Appended to
-                         Makefile defaults.  See -fopt to override optimization flags.
-     -fopt <string>      A string of user specified Fortran compiler optimization flags.  
-                         Overrides Makefile defaults.
-     -gmake <name>       Name of the GNU make program on your system.  Supply the absolute
-                         pathname if the program is not in your path (or fix your path).
-     -ldflags <string>   A string of user specified load options.  Appended to
-                         Makefile defaults.
-     -linker <name>      User specified linker.  Overrides Makefile default of \$(FC).
-     -mpi_inc <dir>      Directory containing MPI include files.
-     -mpi_lib <dir>      Directory containing MPI library.
-     -nc_inc <dir>       Directory containing netCDF include files.
-     -nc_lib <dir>       Directory containing netCDF library.
-     -nc_mod <dir>       Directory containing netCDF module files.
+     -nc_path            Path to NetCDF (lib and include directories should reside beneath it)
+     -mpi_path           Path to MPI (lib and include directories should reside beneath it)
      -[no]smp            Switch on [off] SMP parallelism.
      -[no]use_mpiserial  Switch on [off] use of serial-only MPI.
      -voc <name>         Turn on passing of Volatile Organic Compounds (VOC's) to driver [on | off] (default is on)
@@ -151,6 +134,8 @@ my $commandline = "$cfgdir/configure @ARGV";
 my %opts = (
 	    cache       => "config_cache.xml",
             nofire      => undef,
+            nc_path     => undef,
+            mpi_path    => undef,
             glc_nec     => undef,
             clm_root    => undef,
 	    );
@@ -162,8 +147,6 @@ GetOptions(
     "cachedir=s"                => \$opts{'cachedir'},
     "cesm_bld=s"                => \$opts{'cesm_bld'},
     "snicar_frc=s"              => \$opts{'snicar_frc'},
-    "cc=s"                      => \$opts{'cc'},
-    "cflags=s"                  => \$opts{'cflags'},
     "clm_root=s"                => \$opts{'clm_root'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
     "comp_intf=s"               => \$opts{'comp_intf'},
@@ -172,23 +155,14 @@ GetOptions(
     "dust=s"                    => \$opts{'dust'}, 
     "exit_spinup=s"             => \$opts{'exit_spinup'}, 
     "glc_nec=i"                 => \$opts{'glc_nec'},
-    "fc=s"                      => \$opts{'fc'},
-    "fflags=s"                  => \$opts{'fflags'},
-    "fopt=s"                    => \$opts{'fopt'},
-    "gmake=s"                   => \$opts{'gmake'},
     "mach=s"                    => \$opts{'mach'},
     "h|help"                    => \$opts{'help'},
-    "ldflags=s"                 => \$opts{'ldflags'},
-    "linker=s"                  => \$opts{'linker'},
     "maxpft=s"                  => \$opts{'maxpft'},
     "mode=s"                    => \$opts{'mode'},
-    "mpi_inc=s"                 => \$opts{'mpi_inc'},
-    "mpi_lib=s"                 => \$opts{'mpi_lib'},
     "nadv=s"                    => \$opts{'nadv'},
-    "nc_inc=s"                  => \$opts{'nc_inc'},
-    "nc_lib=s"                  => \$opts{'nc_lib'},
-    "nc_mod=s"                  => \$opts{'nc_mod'},
     "nofire"                    => \$opts{'nofire'},
+    "nc_path=s"                 => \$opts{'nc_path'},
+    "mpi_path=s"                => \$opts{'mpi_path'},
     "pergro=s"                  => \$opts{'pergro'}, 
     "snicar_frc=s"              => \$opts{'snicar_frc'}, 
     "progsslt=s"                => \$opts{'progsslt'}, 
@@ -197,8 +171,7 @@ GetOptions(
     "smp!"                      => \$opts{'smp'},
     "use_mpiserial!"            => \$opts{'use_mpiserial'},
     "target_os=s"               => \$opts{'target_os'},
-    "test!"                     => \$opts{'test'},
-    "sitespf_pt=s"                 => \$opts{'sitespf_pt'},
+    "sitespf_pt=s"              => \$opts{'sitespf_pt'},
     "usr_src=s"                 => \$opts{'usr_src'},
     "v|verbose"                 => \$opts{'verbose'},
     "version"                   => \$opts{'version'},
@@ -585,6 +558,11 @@ if ($clm_mode ne "clm_stndln" && $cesm_bld eq "on" ) {
 *** cesm_bld can NOT be turned on if mode does NOT equal clm_stndln **
 EOF
 }
+if ($clm_mode eq "clm_stndln" && $cesm_bld eq "off" ) {
+    die <<"EOF";
+*** cesm_bld can NOT be turned off if mode equals clm_stndln **
+EOF
+}
 if ($print>=2) { print "Using $cesm_bld for CESM build.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
@@ -612,45 +590,6 @@ my $clm_exe = "clm";
 if ($print>=2) { print "Name of CLM executable: $clm_exe.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# Allow override of Makefile default Fortran compiler (linux platform only)
-my $fc = '';
-if (defined $opts{'fc'}) {
-    $fc = $opts{'fc'};
-} elsif (defined $ENV{USER_FC}) {
-    $fc = $ENV{USER_FC};
-}
-$cfg_ref->set('fc', $fc);
-
-#-----------------------------------------------------------------------------------------------
-# Allow override of Makefile default C compiler (linux platform only)
-my $cc = '';
-if (defined $opts{'cc'}) {
-    $cc = $opts{'cc'};
-} elsif (defined $ENV{USER_CC}) {
-    $cc = $ENV{USER_CC};
-}
-$cfg_ref->set('cc', $cc);
-
-if ($cc) {
-    if ($target_os eq 'linux' || $target_os eq 'darwin' ) {
-	if ($print>=2) { print "Override Makefile default C compiler with: $cc.$eol"; }
-    }
-    else {
-	die "** ERROR: -cc option only recognized when target OS is linux or darwin.$eol";
-    }
-}
-
-#-----------------------------------------------------------------------------------------------
-# Allow override of Makefile default linker
-my $linker = '';
-if (defined $opts{'linker'}) {
-    $linker = $opts{'linker'};
-}
-$cfg_ref->set('linker', $linker);
-
-if ($linker and $print>=2) { print "Setting linker to $linker.$eol"; }
-
-#-----------------------------------------------------------------------------------------------
 # Use compiler debugging options?
 my $debug_opt = (defined $opts{'debug'}) ? 1 : 0;
 $cfg_ref->set('debug', $debug_opt);
@@ -659,55 +598,8 @@ my $debug = $debug_opt ? 'on': 'off';
 if ($print>=2) { print "Compiler debugging options: $debug.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# Append to Makefile default C compiler options
-my $cflags = '';
-if (defined $opts{'cflags'}) {
-    $cflags = $opts{'cflags'};
-}
-$cfg_ref->set('cflags', $cflags);
-
-if ($cflags and $print>=2) { print "Setting additional C compiler options \'$cflags\'$eol"; }
-
-#-----------------------------------------------------------------------------------------------
-# Append to Makefile default Fortran compiler options
-my $fflags = '';
-if (defined $opts{'fflags'}) {
-    $fflags = $opts{'fflags'};
-}
-$cfg_ref->set('fflags', $fflags);
-
-if ($fflags and $print>=2) { print "Setting additional Fortran compiler options \'$fflags\'$eol"; }
-
-#-----------------------------------------------------------------------------------------------
-# Fortran compiler optimization overrides Makefile defaults
-my $fopt = '';
-if (defined $opts{'fopt'}) {
-    $fopt = $opts{'fopt'};
-}
-$cfg_ref->set('fopt', $fopt);
-
-if ($fopt and $print>=2) { print "Override default Fortran optimization flags with \'$fopt\'$eol"; }
-
-#-----------------------------------------------------------------------------------------------
-# Load options appended to Makefile defaults
-my $ldflags = '';
-if (defined $opts{'ldflags'}) {
-    $ldflags = $opts{'ldflags'};
-}
-$cfg_ref->set('ldflags', $ldflags);
-
-if ($ldflags and $print>=2) { print "Load options appended to Makefile defaults: \'$ldflags\'$eol"; }
-
-#-----------------------------------------------------------------------------------------------
 # USE_MPISERIAL
 my $use_mpiserial_val = (defined $opts{'use_mpiserial'}) ? $opts{'use_mpiserial'} : $sys_defaults{'use_mpiserial'};
-
-# enforce platform specific restrictions
-if ( ! $use_mpiserial_val  and  ($target_os =~ "darwin") ) {
-    print "WARNING: Darwin does not have an option for compiling active MPI. " . 
-	      "This option is being Disabled.$eol";
-    $use_mpiserial_val = 1;
-}
 
 $cfg_ref->set('use_mpiserial', $use_mpiserial_val);
 my $use_mpiserial = $use_mpiserial_val ? 'on': 'off';
@@ -717,13 +609,6 @@ if ($print>=2) { print "Use serial-only MPI: $use_mpiserial$eol";}
 #-----------------------------------------------------------------------------------------------
 # SMP
 my $smp_val = (defined $opts{'smp'}) ? $opts{'smp'} : $sys_defaults{'smp'};
-
-# enforce platform specific restrictions
-if ($smp_val  and  ($target_os =~ "darwin") ) {
-    print "WARNING: Darwin does not have an option for compiling SMP. " . 
-	      "This option is being Disabled.$eol";
-    $smp_val = 0;
-}
 
 $cfg_ref->set('smp', $smp_val);
 my $smp = $smp_val ? 'on': 'off';
@@ -835,21 +720,23 @@ if ($print>=2) { print "CPP definitions set by configure: \'$cfg_cppdefs\'$eol";
 #-----------------------------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------------------------
-# NetCDF include
-my $nc_inc = '';
+# NetCDF path
+my $nc_path = '';
 if ($clm_build) {
-    if (defined $opts{'nc_inc'}) {
-	$nc_inc = $opts{'nc_inc'};
+    if (defined $opts{'nc_path'}) {
+	$nc_path = $opts{'nc_path'};
     }
-    elsif (defined $ENV{INC_NETCDF}) {
-	$nc_inc = $ENV{INC_NETCDF};
+    elsif (defined $ENV{NETCDF_PATH}) {
+	$nc_path = $ENV{NETCDF_PATH};
     }
     else {
-	$nc_inc = '/usr/local/include';
+	$nc_path = '/usr/local';
     }
 
+    my $nc_inc = "$nc_path/include";
+
     if (-f "$nc_inc/netcdf.inc") {
-	$cfg_ref->set('nc_inc', $nc_inc);
+	$cfg_ref->set('nc_path', $nc_path);
     }
     else {
 	die <<"EOF";
@@ -857,9 +744,9 @@ if ($clm_build) {
 ** 
 ** The NetCDF include directory is determined from the following set of options listed
 ** from highest to lowest precedence:
-** * by the command-line option -nc_inc
-** * by the environment variable INC_NETCDF
-** * by the default value /usr/local/include
+** * by the command-line option -nc_path
+** * by the environment variable NETCDF_PATH
+** * by the default value /usr/local
 EOF
     }
 
@@ -867,30 +754,18 @@ EOF
 }
 
 # NetCDF library
-my $nc_lib = '';
 if ($clm_build) {
-    if (defined $opts{'nc_lib'}) {
-	$nc_lib = $opts{'nc_lib'};
-    }
-    elsif (defined $ENV{LIB_NETCDF}) {
-	$nc_lib = $ENV{LIB_NETCDF};
-    }
-    else {
-	$nc_lib = '/usr/local/lib';
-    }
+    my $nc_lib = "$nc_path/lib";
 
-    if (-f "$nc_lib/libnetcdf.a") {
-	$cfg_ref->set('nc_lib', $nc_lib);
-    }
-    else {
+    if ( ! -f "$nc_lib/libnetcdf.a") {
 	die <<"EOF";
 ** Cannot find libnetcdf.a in specified directory: $nc_lib
 ** 
 ** The NetCDF library directory is determined from the following set of options listed
 ** from highest to lowest precedence:
-** * by the command-line option -nc_lib
-** * by the environment variable LIB_NETCDF
-** * by the default value /usr/local/lib
+** * by the command-line option -nc_path
+** * by the environment variable NETCDF_PATH
+** * by the default value /usr/local
 EOF
     }
 
@@ -898,43 +773,29 @@ EOF
 }
 
 # NetCDF module files
-my $nc_mod = '';
 if ($clm_build) {
-    if (defined $opts{'nc_mod'}) {
-	$nc_mod = $opts{'nc_mod'};
-    }
-    elsif (defined $ENV{MOD_NETCDF}) {
-	$nc_mod = $ENV{MOD_NETCDF};
-    }
+    my $nc_mod = "$nc_path/include";
+    my $nc_lib = "$nc_path/lib";
 
     # check for the mod files in the user specified location
     if ($nc_mod and (-f "$nc_mod/netcdf.mod"    or -f "$nc_mod/NETCDF.mod")
                 and (-f "$nc_mod/typesizes.mod" or -f "$nc_mod/TYPESIZES.mod") ) {
-	$cfg_ref->set('nc_mod', $nc_mod);
     }
     # if not there check in the netcdf lib directory
     elsif (    (-f "$nc_lib/netcdf.mod"    or -f "$nc_lib/NETCDF.mod")
            and (-f "$nc_lib/typesizes.mod" or -f "$nc_lib/TYPESIZES.mod") ) { 
-	$nc_mod = $nc_lib;
-	$cfg_ref->set('nc_mod', $nc_mod);
+         $nc_mod = $nc_lib;
     } 
-    # then check in the netcdf include directory
-    elsif (    (-f "$nc_inc/netcdf.mod"    or -f "$nc_inc/NETCDF.mod")
-           and (-f "$nc_inc/typesizes.mod" or -f "$nc_inc/TYPESIZES.mod") ) { 
-	$nc_mod = $nc_inc;
-	$cfg_ref->set('nc_mod', $nc_mod);
-    }
     else {
 	die <<"EOF";
 ** Cannot find netcdf.mod and typesizes.mod in specified directories: 
 **  $nc_mod
-**  $nc_inc
 **  $nc_lib
 ** 
 ** The NetCDF module directory is determined from the following set of options listed
 ** from highest to lowest precedence:
-** * by the command-line option -nc_mod
-** * by the environment variable MOD_NETCDF
+** * by the command-line option -nc_path
+** * by the environment variable NETCDF_PATH
 ** * by the directories containing the NetCDF library or include files
 EOF
    }
@@ -947,21 +808,22 @@ EOF
 # Only check for the MPI include or library files if the user has explicitly specified
 # where to look.  Often the Fortran compiler knows where to look for these files and so
 # not specifying them is the best strategy.
-my $mpi_inc = '';
-my $mpi_lib = '';
-my $mpi_lib_name = '';
+my $mpi_path = '';
 if ($clm_build and $use_mpiserial eq 'off') {
 
+    my $mpi_lib = '';
+    my $mpi_inc = '';
     # MPI include
-    if (defined $opts{'mpi_inc'}) {
-	$mpi_inc = $opts{'mpi_inc'};
+    if (defined $opts{'mpi_path'}) {
+	$mpi_path = $opts{'mpi_path'};
     }
-    elsif (defined $ENV{INC_MPI}) {
-	$mpi_inc = $ENV{INC_MPI};
+    elsif (defined $ENV{MPICH_PATH}) {
+	$mpi_path = $ENV{MPICH_PATH};
     }
+    $mpi_inc = "$mpi_path/include";
 
-    if ($mpi_inc eq '' or -f "$mpi_inc/mpif.h") {
-	$cfg_ref->set('mpi_inc', $mpi_inc);
+    if ($mpi_path eq '' or -f "$mpi_inc/mpif.h") {
+	$cfg_ref->set('mpi_path', $mpi_path);
     }
     else {
 	die <<"EOF";
@@ -969,32 +831,21 @@ if ($clm_build and $use_mpiserial eq 'off') {
 ** 
 ** The MPI include directory is determined from the following set of options listed
 ** from highest to lowest precedence:
-** * by the command-line option -mpi_inc
-** * by the environment variable INC_MPI
+** * by the command-line option -mpi_path
+** * by the environment variable MPICH_PATH
 EOF
     }
 
     if ($mpi_inc and $print>=2) { print "Found MPI include file in $mpi_inc$eol"; }
 
     # MPI library
-    if (defined $opts{'mpi_lib'}) {
-	$mpi_lib = $opts{'mpi_lib'};
-    }
-    elsif (defined $ENV{LIB_MPI}) {
-	$mpi_lib = $ENV{LIB_MPI};
-    }
+    $mpi_lib = "$mpi_path/lib";
 
-    if ($mpi_lib eq '') {
-	$cfg_ref->set('mpi_lib', $mpi_lib);
-	$cfg_ref->set('mpi_lib_name', '');
+    if ($mpi_path eq '') {
     }
     elsif (-f "$mpi_lib/libmpi.a" or -f "$mpi_lib/libmpi.so") {
-	$cfg_ref->set('mpi_lib', $mpi_lib);
-	$cfg_ref->set('mpi_lib_name', 'mpi');
     }
     elsif (-f "$mpi_lib/libmpich.a") {
-	$cfg_ref->set('mpi_lib', $mpi_lib);
-	$cfg_ref->set('mpi_lib_name', 'mpich');
     }
     else {
 	die <<"EOF";
@@ -1002,8 +853,8 @@ EOF
 ** 
 ** The MPI library directory is determined from the following set of options listed
 ** from highest to lowest precedence:
-** * by the command-line option -mpi_lib
-** * by the environment variable LIB_MPI
+** * by the command-line option -mpi_path
+** * by the environment variable MPICH_PATH
 EOF
     }
 
@@ -1037,24 +888,6 @@ if ($clm_mode eq "ext_cesm" ) {
     # Write the file for clm's cppdefs needed in cesm.
     write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
     if ($print>=2) { print "creating $clm_bld/$cpp_filename\n"; }
-
-} elsif ( $cesm_bld eq "off" ) {
-
-    # Write the filepath file.
-    write_filepath("$clm_bld/$fp_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
-
-    # Write the misc.h file 
-    write_misc_h("$clm_bld/$misc_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/$misc_filename\n"; }
-
-    # Write the preproc.h file.
-    write_preproc_h("$clm_bld/$preproc_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/$preproc_filename\n"; }
-
-    # Write the Makefile.
-    write_makefile("$cfgdir/config_files/Makefile.in", "$clm_bld/Makefile", $cfg_ref, $make_cppdefs);
-    if ($print>=2) { print "creating $clm_bld/Makefile\n"; }
 
 } elsif ( $cesm_bld eq "on" ) {
 
@@ -1145,65 +978,7 @@ $cfg_ref->write_file($config_cache_file, $commandline);
 if ($print>=2) { print "creating $config_cache_file\n"; }
 
 #-----------------------------------------------------------------------------------------------
-# Finished unless testing requested ############################################################
-#-----------------------------------------------------------------------------------------------
-unless ($clm_build and $opts{'test'}) {
-    if ($print>=2) { print "configure done.\n"; }
-    exit;
-}
-
-# create a subdirectory of the current directory for testing
-my $test_dir = "$clm_bld/configure-tests";
-unless ( &is_valid_directory( $test_dir, allowEnv=>1 ) or mkdirp($test_dir)) {
-    die <<"EOF";
-** Could not create the testing directory: $test_dir
-EOF
-}
-chdir( $test_dir ) || die <<"EOF";
-** Trouble changing directory to $test_dir
-**
-EOF
-
-# check for GNU make in the user's path
-if ($print) { print "Looking for a valid GNU make... "; }
-my @makenames = qw(gmake gnumake make);
-if ($opts{'gmake'}) { unshift @makenames, $opts{'gmake'}; }
-my $gmake = get_gmake(@makenames);
-if ($gmake) {
-    if ($print>=2) { print "using $gmake$eol"; }
-} else {
-    print "\n".
-          "** Cannot find a valid GNU make.  Tried:\n".
-          "@makenames\n";
-    die "The name of GNU make on your system can be specified to configure via\n".
-	"the -gmake option.  Make sure this\n".
-	"name is in your path (add the appropriate directory to your PATH\n".
-	"environment variable) or specify an absolute pathname.\n";
-}
-
-# The CLM Makefile requires a Filepath file.  To run the tests construct a Filepath file
-# that contains only the test directory.
-write_tests_filepath($test_dir);
-
-# Test for Fortran 90 compatible compiler
-if ($print>=2) { print "Testing for Fortran 90 compatible compiler... "; }
-my $fc = check_fc($gmake, "$clm_bld/Makefile");
-if ($fc) {
-    if ($print) { print "using $fc$eol"; }
-}
-
-# Test NetCDF library
-if ($print) { print "Test linking to NetCDF library... "; }
-if (check_netcdf($gmake, "$clm_bld/Makefile")==0) { if ($print) { print "ok$eol"; } }
-
-# Test MPI library
-if ($use_mpiserial eq 'off') {
-    if ($print) { print "Test linking to MPI library... "; }
-    if (check_mpi($gmake, "$clm_bld/Makefile")==0) { if ($print) { print "ok$eol"; } }
-}
-
-#-----------------------------------------------------------------------------------------------
-# Done testing.
+# Done
 chdir( $cwd ) || die <<"EOF";
 ** Trouble changing directory back to $cwd
 **
@@ -1212,115 +987,8 @@ if ($print) { print "configure done.\n"; }
 exit;
 
 #-----------------------------------------------------------------------------------------------
-# REALLY FINNISHED #############################################################################
+# FINNISHED ####################################################################################
 #-----------------------------------------------------------------------------------------------
-
-sub write_filepath
-{
-    my ($file, $cfg_ref) = @_;
-    my  $fh = new IO::File;
-
-    $fh->open(">$file") or die "** can't open filepath file: $file\n";
-
-    # configuration parameters used to determine paths
-    my $usr_src       = $cfg_ref->get('usr_src');
-    my $clm_root      = $cfg_ref->get('clm_root');
-    my $use_mpiserial = $cfg_ref->get('use_mpiserial');
-    my $rtm           = $cfg_ref->get('rtm');
-    my $comp_intf     = $cfg_ref->get('comp_intf');
-    my $mode          = $cfg_ref->get('mode');
-
-    # User specified source directories.
-    if ($usr_src  =~ /\S+/) {
-	my @dirs = split ',', $usr_src;
-	while ( my $dir = shift @dirs ) {
-	    print $fh "$dir\n";
-        }
-    }
-
-    # Source root
-    my $srcdir = "$clm_root/src";
-    if ( ! -d "$srcdir" ) { die "** source directory does not exist: $srcdir\n"; }
-
-    # Shared utilities.
-    my @dirs = ( "csm_share/shr", 
-                 "utils/timing",   
-                 "utils/mct/mpeu",
-                 "utils/mct/mct" );
-    if ( $use_mpiserial ) {
-	push( @dirs, "utils/mct/mpi-serial" );
-    }
-    push( @dirs, "utils/esmf_wrf_timemgr" );
-
-    foreach my $dir ( @dirs ) {
-	if ( -d "$srcdir/$dir" ) {
-	    print $fh "$srcdir/$dir\n";
-	} elsif ( -d "$srcdir/../../../$dir" ) {
-	    print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
-	} else {
-	    die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir\n";
-	}
-    }
-    
-    # Driver, stub ocean, and stub sea-ice
-    if ($mode eq "clm_stndln") {
-	my @dirs = ( "drv/driver", "drv/shr", "atm/datm", "ocn/socn", 
-                     "ice/sice" );
-        if ( $comp_intf eq "MCT" ) { 
-	    push( @dirs, "atm/datm/cpl_mct" );
-	    #push( @dirs, "drv/shr_mct" );
-        } elsif ( $comp_intf eq "ESMF" ) { 
-	    push( @dirs, "atm/datm/cpl_esmf" );
-	    push( @dirs, "drv/shr_esmf" );
-        } else {
-	    die "** Bad component interface name -- should be MCT or ESMF\n";
-        }
-	foreach my $dir ( @dirs ) {
-            # For stub components
-            if ( $dir =~ /^...\/s...$/ ) {
-               if ( $comp_intf eq "MCT" ) { 
-                  $dir .= "/cpl_mct";
-               } else {
-                  $dir .= "/cpl_esmf";
-               }
-            }
-	    if ( -d "$srcdir/../../../$dir" ) {
-		print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
-	    } else {
-		die "** source directory does not exist: $srcdir/../../../$dir\n";
-	    }
-	}
-        my $cdir;
-        if ( $comp_intf eq "MCT" ) { 
-           $cdir .= "/cpl_mct";
-        } else {
-           $cdir .= "/cpl_esmf";
-        }
-        my $glc_model = "sglc";
-	print $fh absolute_path( "$srcdir/../../../glc/$glc_model/$cdir" ) . "\n";
-	print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
-    }
-    
-    # CLM
-    my @dirs = ( "main", "biogeophys", "biogeochem" );
-    if ( $rtm eq "on" ) { 
-	push( @dirs, "riverroute" );
-    }
-    if ( $comp_intf eq "MCT" ) { 
-	push( @dirs, "main/cpl_mct" );
-    } elsif ( $comp_intf eq "ESMF" ) { 
-	push( @dirs, "main/cpl_esmf" );
-    }
-    foreach my $dir ( @dirs ) {
-	if ( -d "$srcdir/$dir" ) {
-	    print $fh "$srcdir/$dir\n";
-	} else {
-	    die "** source directory does not exist: $srcdir/$dir\n";
-	}
-    }
-    
-    $fh->close;
-}
 
 #-------------------------------------------------------------------------------
 
@@ -1430,17 +1098,11 @@ sub write_filepath_cesmbld
 	       die "** source directory does not exist: $srcdir/$dir\n";
 	   }
        }
-       if ( $use_mpiserial ) {
-	   print $fh "$srcdir/../../../utils/mct/mpi-serial\n";
-       }
     }
 
     # CESM driver
     if ( $model eq "cesm" ) {
        print $fh absolute_path( "$srcdir/../../../drv/driver" ) . "\n";
-       if ( $use_mpiserial ) {
-	   print $fh "$srcdir/../../../utils/mct/mpi-serial\n";
-       }
     }
     
     $fh->close;
@@ -1470,19 +1132,10 @@ sub write_macros
     $fh_out->open(">$file_out") or die "** can't open macros file: $file_out\n";
 
     # configuration parameters
-    my $nc_inc        = $cfg_ref->get('nc_inc');
-    my $nc_lib        = $cfg_ref->get('nc_lib');
-    my $nc_mod        = $cfg_ref->get('nc_mod');
+    my $nc_path       = $cfg_ref->get('nc_path');
     my $debug         = $cfg_ref->get('debug') ? 'TRUE' : 'FALSE';
     my $use_mpiserial = $cfg_ref->get('use_mpiserial') ? 'TRUE' : 'FALSE';
     my $smp           = $cfg_ref->get('smp') ? 'TRUE' : 'FALSE';
-    my $fc            = $cfg_ref->get('fc');
-    my $cc            = $cfg_ref->get('cc');
-    my $linker        = $cfg_ref->get('linker');
-    my $cflags        = $cfg_ref->get('cflags');
-    my $fflags        = $cfg_ref->get('fflags');
-    my $fopt          = $cfg_ref->get('fopt');
-    my $ldflags       = $cfg_ref->get('ldflags');
     my $clm_root      = $cfg_ref->get('clm_root');
     my $voc;
     if ( $cfg_ref->get('voc') eq "on" ) {
@@ -1496,21 +1149,14 @@ sub write_macros
     }
 
     my $casetools = absolute_path( "$clm_root/../../../scripts/ccsm_utils/Build" );
+    my $coderoot  = absolute_path( "$clm_root/../../../models" );
 
-    my $mpi_inc      = " ";
-    my $mpi_lib      = " ";
-    my $mpi_lib_name = " ";
-    if ( $use_mpiserial  eq "TRUE" ) {
-       $mpi_inc = absolute_path( "$clm_root/../../utils/mct/mpi-serial" );
-    } else {
-       $mpi_inc      = $cfg_ref->get('mpi_inc');
-       $mpi_lib      = $cfg_ref->get('mpi_lib');
-       $mpi_lib_name = $cfg_ref->get('mpi_lib_name');
-    }
+    my $mpi_path     = $cfg_ref->get('mpi_path');
     print $fh_out  <<"EOF";
 # Make macro settings for building CLM using the CESM build files.
 BLDROOT                 := $clm_bld
 CASETOOLS               := $casetools
+CODEROOT                := $coderoot
 LIBROOT                 := \$(BLDROOT)/lib
 INCROOT                 := \$(BLDROOT)/include
 SMP                     := $smp
@@ -1524,21 +1170,10 @@ CCSM_BGC                := none
 CCSM_VOC                := $voc
 GLC_NEC                 := 0
 USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CESM_cppdefs)
-USER_LINKER             := $linker
-USER_LIB_NETCDF         := $nc_lib
-USER_INC_NETCDF         := $nc_inc
-USER_INC_MPI            := $mpi_inc
-USER_LIB_MPI            := $mpi_lib
-USER_MPI_LIB_NAME       := $mpi_lib_name
-USER_ESMF_LIBDIR        := 
-USER_FC                 := $fc
-USER_CC                 := $cc
-USER_CFLAGS             := $cflags
-USER_FFLAGS             := $fflags
-USER_LDFLAGS            := $ldflags
+NETCDF_PATH             := $nc_path
+MPICH_PATH              := $mpi_path
 USE_MPISERIAL           := $use_mpiserial
 USE_ESMF_LIB            := FALSE
-F_OPTIMIZATION_OVERRIDE := $fopt
 
 EOF
 
@@ -1591,89 +1226,6 @@ sub write_preproc_h
 #endif
 EOF
     $fh->close;
-}
-
-#-------------------------------------------------------------------------------
-
-sub write_makefile
-{
-    # Add macro definitions to the beginning of the Makefile
-    # in the CLM configuration script directory
-
-    my ($file_in, $file_out, $cfg_ref, $make_cppdefs) = @_;
-    my  $fh_in = new IO::File;
-    my  $fh_out = new IO::File;
-
-    $fh_out->open(">$file_out") or die "** can't open file: $file_out\n";
-
-    # configuration parameters
-    my $target_os    = $cfg_ref->get('target_os');
-    my $clm_root     = $cfg_ref->get('clm_root');
-    my $nc_inc       = $cfg_ref->get('nc_inc');
-    my $nc_lib       = $cfg_ref->get('nc_lib');
-    my $nc_mod       = $cfg_ref->get('nc_mod');
-    my $mpi_inc      = $cfg_ref->get('mpi_inc');
-    my $mpi_lib      = $cfg_ref->get('mpi_lib');
-    my $mpi_lib_name = $cfg_ref->get('mpi_lib_name');
-    my $debug        = $cfg_ref->get('debug') ? 'TRUE' : 'FALSE';
-    my $smp          = $cfg_ref->get('smp') ? 'TRUE' : 'FALSE';
-    my $fc           = $cfg_ref->get('fc');
-    my $cc           = $cfg_ref->get('cc');
-    my $linker       = $cfg_ref->get('linker');
-    my $cflags       = $cfg_ref->get('cflags');
-    my $fflags       = $cfg_ref->get('fflags');
-    my $fopt         = $cfg_ref->get('fopt');
-    my $ldflags      = $cfg_ref->get('ldflags');
-
-    # map between local os names ($OSNAME) and names which are
-    # used in the Makefile (return value from "uname -s" command).
-    my %uname_map = ( 'aix'      => 'AIX',
-		      'darwin'   => 'Darwin',
-		      'dec_osf'  => 'OSF1',
-		      'es'       => 'ES',
-		      'irix'     => 'IRIX64',
-		      'linux'    => 'Linux',
-		      'solaris'  => 'SunOS',
-		      'super-ux' => 'SUPER-UX',
-                      'bgl'      => 'BGL',
-                      'bgp'      => 'BGP',
-		      );
-
-    print $fh_out  <<"EOF";
-# Make macros for CLM.
-
-UNAMES       := $uname_map{$target_os}
-ROOTDIR      := $clm_root
-EXENAME      := $clm_exe
-MODEL_EXEDIR := $clm_exedir
-INC_NETCDF   := $nc_inc
-LIB_NETCDF   := $nc_lib
-MOD_NETCDF   := $nc_mod
-INC_MPI      := $mpi_inc
-LIB_MPI      := $mpi_lib
-MPI_LIB_NAME := $mpi_lib_name
-ESMF_LIBDIR  := 
-DEBUG        := $debug
-SMP          := $smp
-USER_FC      := $fc
-USER_CC      := $cc
-USER_LINKER  := $linker
-USER_CPPDEFS := $make_cppdefs
-USER_CFLAGS  := $cflags
-USER_FFLAGS  := $fflags
-F_OPTIMIZATION_OVERRIDE := $fopt
-USER_LDFLAGS := $ldflags
-
-EOF
-
-    # Copy the "template" makefile to the new makefile.
-    $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
-    while (<$fh_in>) {
-	print $fh_out $_;
-    }
-
-    $fh_out->close;
-    $fh_in->close;
 }
 
 #-------------------------------------------------------------------------------
@@ -1947,309 +1499,6 @@ sub get_option {
 	}
     }
     die "Failed to get answer to question: $mes\n";
-}
-
-#-------------------------------------------------------------------------------
-
-sub get_gmake {
-
-# check for a valid version of GNU make in the user's path
-
-    my @makenames = @_;
-    my ($make, $retval);
-
-    foreach $make (@makenames) {
-	$retval = `$make -v 2>&1`;
-	return $make if ($retval =~ /GNU Make/);
-    }
-    return;
-}
-
-#-------------------------------------------------------------------------------
-
-sub write_tests_filepath
-{
-    my ($test_dir) = @_;
-    my  $fh = new IO::File;
-
-    $fh->open(">Filepath") or die "** can't open file: $test_dir/Filepath\n";
-
-    print $fh "$test_dir\n";
-
-    $fh->close;
-}
-
-#-------------------------------------------------------------------------------
-
-sub run_test
-{
-    # Return true if the test should be run after a successful build.
-    # Note that this function is depending on the main package variables
-    # main::$use_mpiserial and main:: $target_os.
-
-    # Default is to try running a test that's been successfully built.
-    my $result = 1;
-
-    # But don't attempt to run a test if...
-    if ( $use_mpiserial eq 'off'           # Active MPI is enabled
-	 or $target_os ne $OSNAME          # cross compilation
-	 ) {$result = 0;}
-
-    return $result;
-}
-
-#-------------------------------------------------------------------------------
-
-sub check_fc {
-
-# Create a "hello world" test code in Fortran 90 syntax to check the compiler.
-# If successful then the name of the compiler used is returned.
-
-    my ($gmake, $makefile) = @_;
-    my $fh = new IO::File;
-    my $file = 'test_fc.F90';
-
-    # create test program
-    $fh->open(">$file") or die "** can't open file: $file\n";
-    print $fh  <<"EOF";
-module m1
-   private
-   public :: hello
-contains
-subroutine hello()
-   implicit none
-   print *, 'hello world'
-end subroutine hello
-end module m1
-program main
-   use m1, only: hello
-   implicit none
-   call hello
-end program main
-EOF
-    $fh->close;
-
-    # Build the test_fc target in the CLM Makefile
-    my $cmd = "$gmake -f $makefile test_fc 2>&1";
-    my $out = `$cmd`;
-    my $cmd_error = $CHILD_ERROR;
-    my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-    if ($cmd_error) { 
-	die "**** FAILED ****\n$test_output";
-    } elsif ($print>=2) {
-	print "**** PASS ****\n$test_output";
-    }
-
-    # search make output for name of Fortran compiler -- Assume that the Makefile
-    # rule has the syntax "$(FC) -c ..."
-    $out =~ m{ ^\s*      # leading whitespace
-	       (\w+)     # 1st word (name of compiler)
-	       \s+       # followed by one or more spaces
-	       -c        # and the -c option
-	       \s   
-	     }xm;
-
-    my $fc_compiler_name = $1;
-
-    if (run_test()) {
-	# Run test_fc.
-	my $cmd = "./test_fc";
-	my $out = `$cmd`;
-	my $cmd_error = $CHILD_ERROR;
-	my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-	if ($cmd_error) { 
-	    die "**** FAILED ****\n$test_output";
-	} elsif ($print>=2) {
-	    print "**** PASS ****\n$test_output";
-	}
-    }
-
-    # clean-up (Srcfiles and Depends are created by the makefile)
-    unlink 'test_fc.F90', 'test_fc.o', 'test_fc', 'Depends', 'Srcfiles', glob("[Mm]1.[Mm][Oo][Dd]");
-
-    return $fc_compiler_name;
-}
-
-#-------------------------------------------------------------------------------
-
-sub check_netcdf {
-
-# Create a test code that has an external reference to the netCDF library
-# and check that the Makefile can build it.  Returns 0 on success.
-
-    my ($gmake, $makefile) = @_;
-    my $fh = new IO::File;
-    my $file = 'test_nc.F90';
-
-    # create test program
-    $fh->open(">$file") or die "** can't open file: $file\n";
-    print $fh  <<"EOF";
-program main
-   use netcdf
-   implicit none
-   integer :: cmode, ncid, ret
-   ret = nf90_create('foo.nc', cmode, ncid)
-   if ( ret == NF90_NOERR ) then
-      print *, 'created foo.nc'
-   else
-      print *, nf90_strerror( ret )
-   end if
-end program main
-EOF
-    $fh->close;
-
-    # Build the test_nc target in the CLM Makefile
-    my $cmd = "$gmake -f $makefile test_nc 2>&1";
-    my $out = `$cmd`;
-    my $cmd_error = $CHILD_ERROR;
-    my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-    if ($cmd_error) { 
-	die "**** FAILED ****\n$test_output";
-    } elsif ($print>=2) {
-	print "**** PASS ****\n$test_output";
-    }
-
-    if (run_test()) {
-	# Run test_nc.
-	my $cmd = "./test_nc";
-	my $out = `$cmd`;
-	my $cmd_error = $CHILD_ERROR;
-	my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-	if ($cmd_error) { 
-	    die "**** FAILED ****\n$test_output";
-	} elsif ($print>=2) {
-	    print "**** PASS ****\n$test_output";
-	}
-    }
-
-    # clean-up
-    unlink 'test_nc.F90', 'test_nc.o', 'test_nc', 'foo.nc', 'Depends', 'Srcfiles';
-
-    return 0;
-}
-
-#-------------------------------------------------------------------------------
-
-sub check_mpi {
-
-# Create a test code that has an external reference to the MPI library
-# and check that the Makefile can build it.  Returns 0 on success.
-
-    my ($gmake, $makefile) = @_;
-    my $fh = new IO::File;
-    my $file = 'test_mpi.F90';
-
-    # create the test program
-    $fh->open(">$file") or die "** can't open file: $file\n";
-    print $fh  <<"EOF";
-      program test_mpi
-      implicit none
-#include <mpif.h>
-      integer :: ierr
-      call mpi_init(ierr)
-      if ( ierr == MPI_SUCCESS ) then
-         print *, 'successfully called mpi_init'
-      else
-         print *, 'ERROR returned from mpi_init'
-      end if
-      end program test_mpi
-EOF
-    $fh->close;
-
-    # Build the test_mpi target in the CLM Makefile
-    my $cmd = "$gmake -f $makefile test_mpi 2>&1";
-    my $out = `$cmd`;
-    my $cmd_error = $CHILD_ERROR;
-    my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-    if ($cmd_error) { 
-	die "**** FAILED ****\n$test_output";
-    } elsif ($print>=2) {
-	print "**** PASS ****\n$test_output";
-    }
-
-    if (run_test()) {
-	# Run test_mpi.
-	my $cmd = "./test_mpi";
-	my $out = `$cmd`;
-	my $cmd_error = $CHILD_ERROR;
-	my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-	if ($cmd_error) { 
-	    die "**** FAILED ****\n$test_output";
-	} elsif ($print>=2) {
-	    print "**** PASS ****\n$test_output";
-	}
-    }
-
-    # clean-up
-    unlink 'test_mpi.F90', 'test_mpi.o', 'test_mpi', 'Depends', 'Srcfiles';
-
-    return 0;
-}
-
-#-------------------------------------------------------------------------------
-
-sub check_esmf {
-
-# Create a test code that has an external reference to the ESMF library
-# and check that the Makefile can build it.  Returns 0 on success.
-
-    my ($gmake, $makefile) = @_;
-    my $fh = new IO::File;
-    my $file = 'test_esmf.F90';
-
-    # create the test program
-    $fh->open(">$file") or die "** can't open file: $file\n";
-    print $fh  <<"EOF";
-      program test_esmf
-      use ESMF_Mod
-      implicit none
-      integer :: ierr
-      call ESMF_Initialize(rc=ierr)
-      if ( ierr == ESMF_SUCCESS ) then
-         print *, 'successfully called ESMF_Initialize'
-      else
-         print *, 'ERROR returned from ESMF_Initialize'
-      end if
-      end program test_esmf
-EOF
-    $fh->close;
-
-    # Build the test_esmf target in the CLM Makefile
-    my $cmd = "$gmake -f $makefile test_esmf 2>&1";
-    my $out = `$cmd`;
-    my $cmd_error = $CHILD_ERROR;
-    my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-    if ($cmd_error) { 
-	die "**** FAILED ****\n$test_output";
-    } elsif ($print>=2) {
-	print "**** PASS ****\n$test_output";
-    }
-
-    if (run_test()) {
-	# Run test_esmf.
-	my $cmd = "./test_esmf";
-	my $out = `$cmd`;
-	my $cmd_error = $CHILD_ERROR;
-	my $test_output = "Issued the command:\n$cmd\n\nThe output was:\n$out\n";
-
-	if ($cmd_error) { 
-	    die "**** FAILED ****\n$test_output";
-	} elsif ($print>=2) {
-	    print "**** PASS ****\n$test_output";
-	}
-    }
-
-    # clean-up
-    unlink 'test_esmf.F90', 'test_esmf.o', 'test_esmf', 'Depends', 'Srcfiles';
-
-    return 0;
 }
 
 #-------------------------------------------------------------------------------

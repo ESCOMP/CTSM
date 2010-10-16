@@ -29,8 +29,9 @@ bgl="0"
 />
 
 <mach
-aix="bluefire"
-linux="edinburgh_pgi"
+aix="generic_ibm"
+linux="generic_linux_pgi"
+darwin="generic_linux_pgi"
 bgl="intrepid"
 />
 

@@ -31,7 +31,7 @@ sub read_cfg_file
        die "Bad filename entered: $file does NOT exist or can not open it.\n";
     }
     #
-    # Make sure certain variables are set (in case this is a non-CLM config file)
+    # Make sure variables are set to valid values
     #
     if ( $cfg->get('use_mpiserial') eq "" ) { $config{'use_mpiserial'} = 0; }
     if ( $cfg->get('smp')           eq "" ) { $config{'smp'}           = 0; }

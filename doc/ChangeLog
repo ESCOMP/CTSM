@@ -1,4 +1,194 @@
 ===============================================================
+Tag name:  clm4_0_13
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Oct 16 09:14:08 MDT 2010
+One-line Summary: Bring in PTCLM branch, add in T31 finidat file and turn off ice_runoff for T31
+
+Purpose of changes:
+
+Bring in PTCLM work. Update externals for scripts, datm, drv. Get mksurfdata to have options to override soil/PFT with user input values. Fix some issues with getregional_datasets.pl.  Remove old stand-alone CLM Makefile (always use CESM Macro's files and Makefile). More removal of ndepsrc in build-namelist. Turn off ice_runoff for T31. Add in T31 finidat file.
+
+Bugs fixed (include bugzilla ID):
+                                 1189 (Create ability to change soil color/texture in mksurfdata)
+                                 1188 (Add ability to handle control transient land-cover change)
+                                 1211 (Small memory leak in CLM4 initialization)
+                                 1223 (ESMF problem)
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+                                 1206 (Problem looping over a single year of CPLHIST forcing)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: 
+
+    Remove custom options to stand-alone build/test, require using cesm make files
+
+Describe any changes made to the namelist: None, although many new options to mksurfdata namelist
+
+List any changes to the defaults for the boundary datasets: New T31 finidat files
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm, csm_share
+
+   drv       to drvseq3_1_37
+   datm      to datm8_100921
+   csm_share to share3_101001
+   scripts   to PTCLM03_scripts4_101005
+
+List all files eliminated:
+
+   R models/lnd/clm/test/system/tests_posttag_breeze >>> rename to mirage
+>>>>>>>>>>> Rename to module
+   R models/lnd/clm/tools/mksurfdata/mkglcmec.F90
+   R models/lnd/clm/tools/mksurfdata/mksoicol.F90
+   R models/lnd/clm/tools/mksurfdata/mksoitex.F90
+
+   R models/lnd/clm/bld/config_files/Makefile.in --- Remove always use CESM make
+
+List all files added and what they do:
+
+>>>>>>>>>>> Renames
+   A models/lnd/clm/test/system/tests_posttag_mirage
+   A models/lnd/clm/tools/mksurfdata/mkglcmecMod.F90
+   A models/lnd/clm/tools/mksurfdata/mksoitexMod.F90
+   A models/lnd/clm/tools/mksurfdata/mksoicolMod.F90
+
+>>>>>>>>>>> Namelist settings for standard urban single-point
+   A models/lnd/clm/bld/namelist_files/use_cases/stdurbpt.xml
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>> Remove PTS_MODE restart/branch tests
+   M models/lnd/clm/test/system/tests_posttag_lynx_nompi
+   M models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M models/lnd/clm/test/system/tests_posttag_spot1 --------- remove hybrid test
+   M models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+   M models/lnd/clm/test/system/tests_pretag_jaguar_nompi
+   M models/lnd/clm/test/system/tests_posttag_intrepid_nompi
+   M models/lnd/clm/test/system/tests_posttag_nompi_regression
+
+>>>>>>>>>>> Change breeze+ for mirage changes for new build that requires CESM build files
+   M models/lnd/clm/test/system/TCB.sh -------------------- Set nc_path
+   M models/lnd/clm/test/system/config_files/_nrmexsc_ds -- Use -sitespf_pt
+   M models/lnd/clm/test/system/config_files/_nrvansc_ds -- Use -sitespf_pt
+   M models/lnd/clm/test/system/test_driver.sh ------------ Swap out mirage/storm for breeze+, add GEN machine options, remove CLM_CESMBLD
+   M models/lnd/clm/test/system/mknamelist ---------------- Use config_file variable
+   M models/lnd/clm/test/system/TSMscript_tools.sh -------- Add exedir
+   M models/lnd/clm/test/system/CLM_runcmnd.sh ------------ Add more options for yong, change breeze+ to mirage/storm
+   M models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850 ------ Add exedir
+   M models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850-2000 - Add exedir
+
+>>>>>>>>>>> Add new options to override dataset setttings with your own values for: soil color/texture, and PFT
+   M models/lnd/clm/tools/mksurfdata/mkvarctl.F90 ----- Make private
+   M models/lnd/clm/tools/mksurfdata/mkglacier.F90 ---- Add option to zero out glacier
+   M models/lnd/clm/tools/mksurfdata/mkharvestMod.F90 - Add mkharvest_parse_oride to override harvesting
+   M models/lnd/clm/tools/mksurfdata/mkfileMod.F90 ---- Move nglcec here
+   M models/lnd/clm/tools/mksurfdata/mklanwat.F90 ----- Add option to zero out lake
+   M models/lnd/clm/tools/mksurfdata/mkurban.F90 ------ Add option to zero out urban
+   M models/lnd/clm/tools/mksurfdata/mkvarsur.F90 ----- Make private
+   M models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ----- Add new namelist options: soil_color, soil_sand, soil_clay, pft_idx, pft_frc
+   M models/lnd/clm/tools/mksurfdata/mkpftMod.F90 ----- Add init and override methods: mkpftInit, mkpft, and mkpft_parse_oride
+   M models/lnd/clm/tools/mksurfdata/Filepath --------- Add esmf_wrf_timemgr to directory list
+   M models/lnd/clm/tools/mksurfdata/Srcfiles --------- Change names, add shr_cal_mod, shr_string_mod, and ESMF files
+
+   M models/lnd/clm/tools/mksurfdata/mksurfdata.pl ---- Add new options to override your own values, and error check the input:
++     -dynpft "filename"            Dynamic PFT/harvesting file to use
++                                   (rather than create it on the fly)
++                                   (must be consistent with first year)
++     -exedir "directory"           Directory where mksurfdata program is
++                                   (by default assume it's in the current directory)
++OPTIONS to override the mapping of the input gridded data with hardcoded input
++
++     -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
++     -pft_idx "list of veg index"  Comma delimited veg index for each fraction
++     -soil_cly "% of clay"         % of soil that is clay
++     -soil_snd "% of sand"         % of soil that is sand
+
+>>>>>>>>>>> Start fixing some issues with getregional scripts
+M       models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl
+M       models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl
+
+>>>>>>>>>>> Add USER_FCTYP
+   M models/lnd/clm/tools/mksurfdata/Makefile
+   M models/lnd/clm/tools/interpinic/Makefile
+   M models/lnd/clm/tools/mkgriddata/Makefile
+   M models/lnd/clm/tools/mkdatadomain/Makefile
+
+>>>>>>>>>>>  Remove stand-alone user options and require cesm_bld, add ice_runoff run_stopdate, and new finidat files for T31, more ndepmapalgo defaults
+>>>>>>>>>>>  Change stop_n values for urban single-point so will run to completion
+   M models/lnd/clm/bld/configure --------------- Remove options: test, cc, cflags, fc, fflags, fopt, gmake, ldflags, linker, mpi/nc_inc/_lib
+                                                  add nc_path and mpi_path options, require cesm_bld, and remove logic for doing 
+                                                  clm-stand-alone build
+   M models/lnd/clm/bld/queryDefaultNamelist.pl - Check for valid values, add list options, 
+   M models/lnd/clm/bld/queryDefaultXML.pm ------ Change a comment
+   M models/lnd/clm/bld/build-namelist ---------- Add setting of ice_runoff
+   M models/lnd/clm/bld/config_files/config_sys_defaults.xml --- Set more default machine names
+   M models/lnd/clm/bld/config_files/config_definition.xml ----- Remove compiler options above and add nc_path/mpi_path
+
+   M models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Add run_stopdate and work on comments
+   M models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Add ice_runoff defaults, new finidat files for T31, add more ndepmapalgo defaults
+   M models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml - Change stop_n for urban single-point, add stop_date
+
+   M models/lnd/clm/doc/UsersGuide/preface.xml - Change comment
+
+>>>>>>>>>>> Fix two code bugs (1211 and 1223)
+   M models/lnd/clm/src/main/iniTimeConst.F90 ------------ make sure to deallocate memory
+   M models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 -- add use statement needed for endrun
+
+Summary of testing:
+
+  bluefire testing: All PASS except.. (up to 054 smI59)
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+032 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  bluefire interactive testing: All PASS except..
+061 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................FAIL! rc= 6
+  bluefire/CESM testing: All PASS except
+BFAIL SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_11
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_11
+  jaguar interactive testing: All PASS except...
+005 smAK4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............FAIL! rc= 10
+007 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+008 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+009 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  edinburgh/lf95 interactive testing: All PASS
+  mirage/storm.intel interactive testing: ALL PASS up to...
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 10+38 cold ....FAIL! rc= 13
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_12
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_12
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Sep 10 13:07:03 MDT 2010

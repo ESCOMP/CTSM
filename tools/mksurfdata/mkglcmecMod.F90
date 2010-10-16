@@ -1,3 +1,105 @@
+module mkglcmecMod
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: mkglcmecMod
+!
+! !DESCRIPTION:
+! Make glacier multi-elevation class  data
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!-----------------------------------------------------------------------
+!!USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  implicit none
+
+  private           ! By default make data private
+!
+! !PUBLIC MEMBER FUNCTIONS:
+!
+  public mkglcmecInit  ! Initialization
+  public mkglcmec      ! Set glacier multi-elevation class
+!
+! !PUBLIC DATA MEMBERS: 
+!
+  integer, public       :: nglcec         = 10   ! number of elevation classes for glaciers
+  real(r8), pointer     :: elevclass(:)          ! elevation classes
+!EOP
+!===============================================================
+contains
+!===============================================================
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mkglcmecInit
+!
+! !INTERFACE:
+subroutine mkglcmecInit( elevclass_o )
+!
+! !DESCRIPTION:
+! Initialize of Make glacier multi-elevation class data
+! !USES:
+!
+! !ARGUMENTS:
+  implicit none
+  real(r8), intent(OUT) :: elevclass_o(:)          ! elevation classes
+!
+! !CALLED FROM:
+! subroutine mksrfdat in module mksrfdatMod
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  character(len=32) :: subname = 'mkglcmecInit:: '
+!-----------------------------------------------------------------------
+  allocate( elevclass(nglcec+1) )
+
+  ! -----------------------------------------------------------------
+  ! Define elevation classes, represents lower boundary of each class
+  ! -----------------------------------------------------------------
+
+  if (      nglcec == 10 )then
+     elevclass(1)  =     0.
+     elevclass(2)  =   200.
+     elevclass(3)  =   400.
+     elevclass(4)  =   700.
+     elevclass(5)  =  1000.
+     elevclass(6)  =  1300.
+     elevclass(7)  =  1600.
+     elevclass(8)  =  2000.
+     elevclass(9)  =  2500.
+     elevclass(10) =  3000.
+     elevclass(11) = 10000.
+  else if ( nglcec == 5  )then
+     elevclass(1)  =     0.
+     elevclass(2)  =   500.
+     elevclass(3)  =  1000.
+     elevclass(4)  =  1500.
+     elevclass(5)  =  2000.
+     elevclass(6)  = 10000.
+  else if ( nglcec == 3  )then
+     elevclass(1)  =     0.
+     elevclass(2)  =  1000.
+     elevclass(3)  =  2000.
+     elevclass(4)  = 10000.
+  else if ( nglcec == 1  )then
+     elevclass(1)  =     0.
+     elevclass(2)  = 10000.
+  else
+     write(6,*) subname//"ERROR:: nglcec must be 1, 3, 5, or 10 to work with CLM: "
+     call abort()
+  end if
+
+  elevclass_o(:) = elevclass(:)
+
+end subroutine mkglcmecInit
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -5,13 +107,12 @@
 !
 ! !INTERFACE:
 subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pctglcmec_o, &
-                    topoglcmec_o, thckglcmec_o, elevclass)
+                    topoglcmec_o, thckglcmec_o )
 !
 ! !DESCRIPTION:
 ! make percent glacier on multiple elevation classes and mean elevation for each elevation class
 !
 ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
@@ -33,7 +134,6 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   real(r8), intent(out) :: pctglcmec_o(lsmlon,lsmlat,nglcec)  ! 
   real(r8), intent(out) :: topoglcmec_o(lsmlon,lsmlat,nglcec) ! 
   real(r8), intent(out) :: thckglcmec_o(lsmlon,lsmlat,nglcec) ! 
-  real(r8), intent(out) :: elevclass(nglcec+1)                ! elevation classes
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -87,48 +187,28 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   integer  :: k,l,n,m                       ! indices
   integer  :: ncid,dimid,varid              ! input netCDF id's
   integer  :: ier                           ! error status
+  real(r8), parameter :: minglac = 1.e-6_r8 ! Minimum glacier amount
   character(len=256) locfn                  ! local dataset file name
   character(len=32) :: subname = 'mkglcmec'
 !-----------------------------------------------------------------------
 
+  ! Initialize output to zero
+
+  pctglcmec_o = 0.
+  topoglcmec_o = 0.
+  thckglcmec_o = 0.
+
+  ! -----------------------------------------------------------------
+  ! Exit early, if no glaciers exist
+  ! -----------------------------------------------------------------
+  if ( all(pctglac_o < minglac ) )then
+     write (6,*) 'No glaciers exist, set glcmec to zero as well'
+     call shr_sys_flush(6)
+     return
+  end if
+
   write (6,*) 'Attempting to make percent elevation class and mean elevation for glaciers .....'
   call shr_sys_flush(6)
-
-  ! -----------------------------------------------------------------
-  ! Define elevation classes, represents lower boundary of each class
-  ! -----------------------------------------------------------------
-
-  if (      nglcec == 10 )then
-     elevclass(1)  =     0.
-     elevclass(2)  =   200.
-     elevclass(3)  =   400.
-     elevclass(4)  =   700.
-     elevclass(5)  =  1000.
-     elevclass(6)  =  1300.
-     elevclass(7)  =  1600.
-     elevclass(8)  =  2000.
-     elevclass(9)  =  2500.
-     elevclass(10) =  3000.
-     elevclass(11) = 10000.
-  else if ( nglcec == 5  )then
-     elevclass(1)  =     0.
-     elevclass(2)  =   500.
-     elevclass(3)  =  1000.
-     elevclass(4)  =  1500.
-     elevclass(5)  =  2000.
-     elevclass(6)  = 10000.
-  else if ( nglcec == 3  )then
-     elevclass(1)  =     0.
-     elevclass(2)  =  1000.
-     elevclass(3)  =  2000.
-     elevclass(4)  = 10000.
-  else if ( nglcec == 1  )then
-     elevclass(1)  =     0.
-     elevclass(2)  = 10000.
-  else
-     write(6,*) "ERROR:: nglcec must be 1, 3, 5, or 10 to work with CLM: "
-     call abort()
-  end if
 
   ! -----------------------------------------------------------------
   ! Read input file
@@ -169,7 +249,6 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   call check_ret(nf_close(ncid), subname)
 
   ! Get pct_glacier data
-
 
   call getfil (fname3, locfn, 0)
 
@@ -217,7 +296,7 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
      po = 0
      nptsectot = 0
      
-     if (glac_i(io,jo) > 1.e-6) then 
+     if (glac_i(io,jo) > minglac) then 
 
         do n = 1, novr(io,jo)
            ii = iovr(io,jo,n)
@@ -292,12 +371,7 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   enddo 
   enddo
 
-
 !! Average from input pct_glacier to output grid
-
-  pctglcmec_o = 0.
-  topoglcmec_o = 0.
-  thckglcmec_o = 0.
 
   call areaini(tdomain3,ldomain,tgridmap,fracin=maskg_i,fracout=mask_o)
 
@@ -308,7 +382,7 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 
      pcttot = 0.
      pcttotec = 0.
-     if (pctglac_o(io,jo) .gt. 1.e-6) then 
+     if (pctglac_o(io,jo) .gt. minglac) then 
 
         do n = 1, novr(io,jo)
            ii = iovr(io,jo,n)
@@ -368,3 +442,4 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 
 end subroutine mkglcmec
 
+end module mkglcmecMod

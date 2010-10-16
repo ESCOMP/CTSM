@@ -20,11 +20,12 @@ module mkharvestMod
   private
 
 ! !PUBLIC MEMBER FUNCTIONS:
-  public mkharvest_init       ! Initialization
-  public mkharvest            ! Calculate the harvest values on output grid
-  public mkharvest_fieldname  ! Field name
-  public mkharvest_longname   ! Long name
-  public mkharvest_numtypes   ! Number of harvest types
+  public mkharvest_init        ! Initialization
+  public mkharvest             ! Calculate the harvest values on output grid
+  public mkharvest_fieldname   ! Field name
+  public mkharvest_longname    ! Long name
+  public mkharvest_numtypes    ! Number of harvest types
+  public mkharvest_parse_oride ! Parse the over-ride string
 
 ! !PRIVATE DATA MEMBERS:
 
@@ -39,7 +40,9 @@ module mkharvestMod
                                                         'GRAZING    '   &
                                                       /)
   character(len=CL), parameter :: string_undef = 'STRING_UNDEFINED'
+  real(r8),          parameter :: real_undef   = -999.99
   character(len=CL), save :: harvest_longnames(numharv) = string_undef
+  real(r8),  pointer     :: oride_harv(:)        ! array that can override harvesting
 
 
 !EOP
@@ -98,6 +101,9 @@ contains
     end do
 
     call check_ret(nf_close(ncid), subname)
+
+    allocate( oride_harv(numharv) )
+    oride_harv(:) = real_undef
 
   end subroutine mkharvest_init
 
@@ -288,126 +294,216 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
   call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
-  ! Read input harvesting file
+  ! Normally read in the harvesting file, and then regrid to output grid
   ! -----------------------------------------------------------------
+  
+  if ( all(oride_harv == real_undef ) )then
+     ! -----------------------------------------------------------------
+     ! Read input harvesting file
+     ! -----------------------------------------------------------------
 
-  ! Obtain input grid info, read HARVEST_VH1, HARVEST_VH2, ... GRAZING etc.
+     ! Obtain input grid info, read HARVEST_VH1, HARVEST_VH2, ... GRAZING etc.
 
-  call getfil (fharvest, locfn, 0)
+     call getfil (fharvest, locfn, 0)
 
-  call read_domain(tdomain,locfn)
-  call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
+     call read_domain(tdomain,locfn)
+     call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+     call check_ret(nf_open(locfn, 0, ncid), subname)
 
-  allocate(harv_i(nlon_i,nlat_i,1:numharv), stat=ier)
-  if (ier/=0) call abort()
+     allocate(harv_i(nlon_i,nlat_i,1:numharv), stat=ier)
+     if (ier/=0) call abort()
 
-  do ifld = 1, numharv
-     call check_ret(nf_inq_varid (     ncid, mkharvest_fieldname(ifld), varid),             subname)
-     call check_ret(nf_get_var_double (ncid, varid, harv_i(:,:,ifld)),                      subname)
-  end do
-
-  call check_ret(nf_close(ncid), subname)
-
-  ! Compute pctlnd_o, harv_o
-
-  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat),pctlnd_o(lsmlon,lsmlat))
-
-  mask_i = 1.0_r8
-  mask_o = 1.0_r8
-  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
-
-  mask_i = 100._r8*float(tdomain%mask(:,:))
-  call areaave(mask_i,pctlnd_o,tgridmap)
-
-  mask_i = mask_i   / 100._r8
-  mask_o = pctlnd_o / 100._r8
-  ldomain%frac = mask_o
-  call gridmap_clean(tgridmap)
-  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
-
-
-  ! Area-average normalized harvest on input grid [harv_i] to output grid [harv_o]
-
-  call areaave(harv_i,harv_o,tgridmap)
-
-  ! -----------------------------------------------------------------
-  ! Error check
-  ! Compare global areas on input and output grids
-  ! -----------------------------------------------------------------
-
-  ! input grid
-
-  gharv_i(:) = 0.
-  garea_i = 0.
-  do ji = 1, nlat_i
-  do ii = 1, nlon_i
-     garea_i = garea_i + tdomain%area(ii,ji)
-     do m = 1, numharv
-        gharv_i(m) = gharv_i(m) + harv_i(ii,ji,m)*tdomain%area(ii,ji) * &
-                                tdomain%frac(ii,ji)
+     do ifld = 1, numharv
+        call check_ret(nf_inq_varid (     ncid, mkharvest_fieldname(ifld), varid), &
+                       subname)
+        call check_ret(nf_get_var_double (ncid, varid, harv_i(:,:,ifld)), &
+                       subname)
      end do
-  end do
-  end do
 
-  ! output grid
+     call check_ret(nf_close(ncid), subname)
 
-  gharv_o(:) = 0.
-  garea_o = 0.
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
-     garea_o = garea_o + ldomain%area(io,jo)
-     do m = 1, numharv
-        gharv_o(m) = gharv_o(m) + harv_o(io,jo,m)*ldomain%area(io,jo) * &
-                                ldomain%frac(io,jo)
+     ! Compute pctlnd_o, harv_o
+
+     allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat),pctlnd_o(lsmlon,lsmlat))
+
+     mask_i = 1.0_r8
+     mask_o = 1.0_r8
+     call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
+     mask_i = 100._r8*float(tdomain%mask(:,:))
+     call areaave(mask_i,pctlnd_o,tgridmap)
+
+     mask_i = mask_i   / 100._r8
+     mask_o = pctlnd_o / 100._r8
+     ldomain%frac = mask_o
+     call gridmap_clean(tgridmap)
+     call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
+     ! Area-average normalized harvest on input grid [harv_i] to output grid [harv_o]
+
+     call areaave(harv_i,harv_o,tgridmap)
+
+     ! -----------------------------------------------------------------
+     ! Error check
+     ! Compare global areas on input and output grids
+     ! -----------------------------------------------------------------
+
+     ! input grid
+
+     gharv_i(:) = 0.
+     garea_i = 0.
+     do ji = 1, nlat_i
+     do ii = 1, nlon_i
+        garea_i = garea_i + tdomain%area(ii,ji)
+        do m = 1, numharv
+           gharv_i(m) = gharv_i(m) + harv_i(ii,ji,m)*tdomain%area(ii,ji) * &
+                                   tdomain%frac(ii,ji)
+        end do
      end do
-  end do
-  end do
+     end do
 
-  !
-  ! Write out to diagnostic output file
-  !
+     ! output grid
 
-  write (ndiag,*)
-  write (ndiag,'(1x,70a1)') ('=',k=1,70)
-  write (ndiag,*) 'Harvesting Output'
-  write (ndiag,'(1x,70a1)') ('=',k=1,70)
+     gharv_o(:) = 0.
+     garea_o = 0.
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        garea_o = garea_o + ldomain%area(io,jo)
+        do m = 1, numharv
+           gharv_o(m) = gharv_o(m) + harv_o(io,jo,m)*ldomain%area(io,jo) * &
+                                   ldomain%frac(io,jo)
+        end do
+     end do
+     end do
 
-  write (ndiag,*)
-  write (ndiag,'(1x,70a1)') ('.',k=1,70)
-  write (ndiag,1001) unit, unit
+     !
+     ! Write out to diagnostic output file
+     !
+
+     write (ndiag,*)
+     write (ndiag,'(1x,70a1)') ('=',k=1,70)
+     write (ndiag,*) 'Harvesting Output'
+     write (ndiag,'(1x,70a1)') ('=',k=1,70)
+
+     write (ndiag,*)
+     write (ndiag,'(1x,70a1)') ('.',k=1,70)
+     write (ndiag,1001) unit, unit
 1001 format (1x,'harvest type   ',20x,' input grid area',' output grid area',/ &
              1x,33x,'     ',A,'      ',A)
-  write (ndiag,'(1x,70a1)') ('.',k=1,70)
-  write (ndiag,*)
-  do m = 1, numharv
-     write (ndiag,1002) mkharvest_fieldname(m), gharv_i(m)*rat,gharv_o(m)*rat
-  end do
+     write (ndiag,'(1x,70a1)') ('.',k=1,70)
+     write (ndiag,*)
+     do m = 1, numharv
+        write (ndiag,1002) mkharvest_fieldname(m), gharv_i(m)*rat,gharv_o(m)*rat
+     end do
 1002 format (1x,a35,f16.3,f17.3)
 
-  if (lsmlat > 1) then
-     k = lsmlat/2
-     write (ndiag,*)
-     write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
-     write (ndiag,'(f10.3,2a)')ldomain%area(1,k)*fac,' x ', unit
-     write (ndiag,*)
-  endif
-  call shr_sys_flush(ndiag)
+     if (lsmlat > 1) then
+        k = lsmlat/2
+        write (ndiag,*)
+        write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
+        write (ndiag,'(f10.3,2a)')ldomain%area(1,k)*fac,' x ', unit
+        write (ndiag,*)
+     endif
+     call shr_sys_flush(ndiag)
+
+     ! Deallocate dynamic memory
+
+     call domain_clean(tdomain)
+     call gridmap_clean(tgridmap)
+     deallocate (harv_i)
+     deallocate (mask_i,mask_o)
+     deallocate( pctlnd_o )
+  else
+  ! -----------------------------------------------------------------
+  ! Otherwise override the harvesting with the input harvest values
+  ! -----------------------------------------------------------------
+  
+     if ( any(oride_harv == real_undef ) )then
+         write(6,*) subname, ' error some override harvesting fields set ', &
+                    'and others are not = ', oride_harv
+         call abort()
+     end if
+     do m = 1, numharv
+        if ( oride_harv(m) < 0.0_r8 .or. oride_harv(m) > 100.0_r8 )then
+            write(6,*) subname, ' error override harvesting field out of range', &
+                       oride_harv(m), ' field = ', mkharvest_fieldname(m)
+            call abort()
+        end if
+     end do
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        do m = 1, numharv
+           harv_o(io,jo,m) = oride_harv(m)
+        end do
+     end do
+     end do
+  end if
 
   write (6,*) 'Successfully made harvest and grazing'
   write (6,*)
 
-  ! Deallocate dynamic memory
-
-  call domain_clean(tdomain)
-  call gridmap_clean(tgridmap)
-  deallocate (harv_i)
-  deallocate (mask_i,mask_o)
-  deallocate( pctlnd_o )
 !-----------------------------------------------------------------------
 
 end subroutine mkharvest
+
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mkharvest_parse_oride
+!
+! !INTERFACE:
+subroutine mkharvest_parse_oride( string )
+!
+! !DESCRIPTION:
+! Parse the string with harvest and grazing information on it, to override
+! the file with this information rather than reading from a file.
+!
+! !USES:
+   use shr_string_mod, only: shr_string_betweenTags
+! !ARGUMENTS:
+   character(len=256), intent(IN) :: string  ! String to parse with harvest and grazing data
+!
+! !CALLED FROM:
+! subroutine mksrfdat in module mksrfdatMod
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  integer :: rc                         ! error return code
+  character(len=256) :: substring       ! substring between tags
+  character(len=*), parameter :: harv_start = "<harv>"
+  character(len=*), parameter :: harv_end   = "</harv>"
+  character(len=*), parameter :: graz_start = "<graz>"
+  character(len=*), parameter :: graz_end   = "</graz>"
+  character(len=*), parameter :: subname = 'mkharvest_parse_oride'
+!-----------------------------------------------------------------------
+  call shr_string_betweenTags( string, harv_start, harv_end, substring, rc )
+  if ( rc /= 0 )then
+     write(6,*) subname//'Trouble finding harvest start end tags'
+     call abort()
+  end if
+  read(substring,*) oride_harv(1:numharv-1)
+  call shr_string_betweenTags( string, graz_start, graz_end, substring, rc )
+  if ( rc /= 0 )then
+     write(6,*) subname//'Trouble finding grazing start end tags'
+     call abort()
+  end if
+  read(substring,*) oride_harv(numharv)
+  if ( harvest_fieldnames(numharv) /= 'GRAZING' )then
+     write(6,*) subname, ' grazing is NOT last field as was expected'
+     call abort()
+  end if
+
+!-----------------------------------------------------------------------
+
+end subroutine mkharvest_parse_oride
 
 !-----------------------------------------------------------------------
 

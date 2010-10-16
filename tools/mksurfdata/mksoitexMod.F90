@@ -1,3 +1,91 @@
+module mksoitexMod
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: mksoitexMod
+!
+! !DESCRIPTION:
+! Make soil texture data
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!-----------------------------------------------------------------------
+!!USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  implicit none
+
+  SAVE
+  private           ! By default make data private
+!
+! !PUBLIC MEMBER FUNCTIONS:
+!
+  public mksoitexInit  ! Initialization
+  public mksoitex      ! Set soil texture
+!
+! !PUBLIC DATA MEMBERS:
+!
+  real(r8), public, parameter :: unset = -999.99_r8 ! Flag to signify soil texture override not set
+  real(r8), public            :: soil_sand = unset  ! soil texture sand % to override with
+  real(r8), public            :: soil_clay = unset  ! soil texture clay % to override with
+!
+! !PRIVATE DATA MEMBERS:
+!
+!EOP
+!===============================================================
+contains
+!===============================================================
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mksoitexInit
+!
+! !INTERFACE:
+subroutine mksoitexInit( )
+!
+! !DESCRIPTION:
+! Initialize of make soil texture
+! !USES:
+!
+! !ARGUMENTS:
+  implicit none
+!
+! !CALLED FROM:
+! subroutine mksrfdat in module mksrfdatMod
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  real(r8) :: sumtex
+  character(len=32) :: subname = 'mksoitexInit'
+!-----------------------------------------------------------------------
+    if ( soil_clay /= unset )then
+       write(6,*) 'Replace soil clay % for all points with: ', soil_clay
+       if ( soil_sand == unset )then
+           write (6,*) subname//':error: soil_clay set, but NOT soil_sand'
+           call abort()
+       end if
+    end if
+    if ( soil_sand /= unset )then
+       write(6,*) 'Replace soil sand % for all points with: ', soil_sand
+       if ( soil_clay == unset )then
+           write (6,*) subname//':error: soil_sand set, but NOT soil_clay'
+           call abort()
+       end if
+       sumtex = soil_sand + soil_clay
+       if ( sumtex < 0.0_r8 .or. sumtex > 100.0_r8 )then
+           write (6,*) subname//':error: soil_sand and soil_clay out of bounds: sand, clay = ', &
+                       soil_sand, soil_clay
+           call abort()
+       end if
+    end if
+
+end subroutine mksoitexInit
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -182,8 +270,15 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
            sand_o(io,jo,l) = 0.
            clay_o(io,jo,l) = 0.
         end do
-     else                                                  !---need soil
-        if (wsti(1) /= 0) then                !---not 'no data'
+     else                                             !---need soil
+
+                                                      !---if soil texture is input
+        if ( soil_sand /= unset .and. soil_clay /= unset ) then  
+           do l = 1, nlay
+              sand_o(io,jo,l) = soil_sand
+              clay_o(io,jo,l) = soil_clay
+           end do
+        else if (wsti(1) /= 0) then           !---not 'no data'
            mapunit_o(io,jo) = wsti(1)
            do l = 1, nlay
               sand_o(io,jo,l) = sand_i(wsti(1),l)
@@ -366,3 +461,4 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
 
 end subroutine mksoitex
 
+end module mksoitexMod

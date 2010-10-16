@@ -142,11 +142,33 @@ case $hostname in
 
     ##yong
     yong* )
-    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
+    if grep -ic NOUSE_MPISERIAL ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+        if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+            ##mpi only
+	    cmnd="mpirun -n ${CLM_TASKS} "
+        elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+            ##hybrid
+	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -n ${CLM_TASKS} -d ${CLM_THREADS}"
+        else
+            ##mpi only
+	    cmnd="mpirun -n ${CLM_TASKS} "
+        fi
+    else
+	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+            ##serial
+	    cmnd=""
+	elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+            ##open-mp only
+	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
+	else
+            ##serial
+	    cmnd=""
+	fi
+    fi
     ;;
 
-    ##breeze
-    breeze | gale | gust | hail )
+    ##mirage
+    mirage* | storm* )
     if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
        ##serial
        cmnd=""

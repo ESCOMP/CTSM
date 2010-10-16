@@ -49,18 +49,6 @@ User specified CPP defines to append to Makefile defaults.
 Note: It's recommended to use configure options to set standard CPP values rather
 than defining them here.
 </entry>
-<entry id="cc" value="" category="standalone_test">
-User specified C compiler overrides Makefile default (Linux and Darwin only).
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="cflags" value="" category="standalone_test">
-User specified C compiler options to append to Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="fc" value="" category="standalone_test">
-User specified Fortran compiler overrides Makefile default.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
 <entry id="debug" valid_values="0,1" value="0" category="standalone_test">
 Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
@@ -78,22 +66,6 @@ CESM build machine name and compiler (set by create_newcase)
 <entry id="exit_spinup" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on exit spinup mode on for CN biogeochemistry after ad_spinup was run.
 </entry>
-<entry id="fflags" value="" category="standalone_test">
-User specified Fortran compiler flags to append to Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="fopt" value="" category="standalone_test">
-User specified Fortran optimization flags to override Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="linker" value="" category="standalone_test">
-User specified linker.  Overrides the Makefile default $(FC).
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="ldflags" value="" category="standalone_test">
-User specified load options to append to Makefile defaults.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
 <entry id="use_mpiserial" valid_values="0,1" value="" category="mach_options">
 Switch to enable or disable building with a serial-only version of MPI: 0=off, 1=on.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
@@ -102,16 +74,8 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scr
 Switch to enable or disable building SMP version (Open-MP) of CLM: 0=off, 1=on.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
-<entry id="nc_inc" value="" category="standalone_test">
-Directory containing NetCDF include files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="nc_lib" value="" category="standalone_test">
-Directory containing NetCDF library.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="nc_mod" value="" category="standalone_test">
-Directory containing NetCDF module files.
+<entry id="nc_path" value="" category="standalone_test">
+Directory containing NetCDF include and library directories and files.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 
@@ -121,16 +85,8 @@ Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use a
 (Setting maxpft to anything other than numpft+1 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
-<entry id="mpi_inc" value="" category="standalone_test">
-Directory containing MPI include files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="mpi_lib" value="" category="standalone_test">
-Directory containing MPI library.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="mpi_lib_name" value="" category="standalone_test">
-Name of MPI library.
+<entry id="mpi_path" value="" category="standalone_test">
+Directory containing MPI include and library directories.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 <entry id="mode" valid_values="clm_stndln,ext_cesm" value="ext_cesm"

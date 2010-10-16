@@ -377,8 +377,8 @@ New namelist items:
 </simplelist>
 </para>
 <para>
-carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen will be
-                     prescribed rather than prognosed (replaces the supplemental Nitrogen #ifdef)
+carbon_only    = If true, and CLMCN carbon-nitrogen model is on, Nitrogen is unlimited
+                     rather than prognosed and vegetation will be overproductive (replaces the supplemental Nitrogen #ifdef)
 </para>
 <para>
  create_glacier_mec_landunit (= T when these landunits are created; F by default)

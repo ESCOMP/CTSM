@@ -1,12 +1,12 @@
-scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_100901a
-models/drv                    https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq3_1_35
-models/atm/datm               https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_100830
+scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/PTCLMbr_tags/PTCLM04_scripts4_101005/
+models/drv                    https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq3_1_37
+models/atm/datm               https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_100921
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/socn
 models/ice/sice               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/sice
 models/glc/sglc               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/sglc
 models/glc/cism               https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_100608
 
-models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_100802
+models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_101001
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_090402
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_091021
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_7_0_100228

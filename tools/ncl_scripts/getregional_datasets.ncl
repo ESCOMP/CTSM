@@ -134,24 +134,40 @@ begin
   end if
   indx = region_ind ( (/ncg->LATIXY/), (/ncg->LONGXY/), latS, latN, lonW, lonE );
 
+  latdim = dimsizes(ncg->LATIXY)
+  londim = dimsizes(ncg->LONGXY)
+  if ( any( ismissing(indx)) )then
+     print( "Indices:"+indx );
+     print( "Missing indices found" );
+     print( "LATIXY: "+ncg->LATIXY );
+     print( "LONGXY: "+ncg->LONGXY );
+     exit
+  end if
+
   if ( debug .eq. True )then
      print( "Indices:"+indx );
   end if
   if ( printn .eq. True )then
-     latdim = indx(1) - indx(0) + 1;
-     londim = indx(3) - indx(2) + 1;
+     latdim = indx(3) - indx(2) + 1;
+     londim = indx(1) - indx(0) + 1;
      print( "Grid size:"+latdim+"x"+londim );
-     print( "Actual grid span: Latitude="+ncg->LATIXY(indx(2),indx(0))+"-"+ncg->LATIXY(indx(3),indx(1))+" Longitude="+ncg->LONGXY(indx(2),indx(0))+"-"+ncg->LONGXY(indx(3),indx(1)) );
+     LOLAT = ncg->LATIXY(indx(2),indx(0));
+     HILAT = ncg->LATIXY(indx(3),indx(1));
+     print( "Actual grid span: Latitude="+LOLAT+"-"+HILAT );
+     LOLON = ncg->LONGXY(indx(2),indx(0));
+     HILON = ncg->LONGXY(indx(3),indx(1));
+     print( "Actual grid span: Longitude="+LOLON+"-"+HILON );
   end if
+
   ;
   ; Setup filenames to process
   ;
 
-  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "stream_fldfilename_ndep", "domainfile"      /)
-  qryopt    = (/ querynyr,   querynyr,     querynyr,  querynyr,  querynyr,   queryyrs,  queryyrs,                  querynyr          /)
-  namelist  = (/ " ",        " ",          " ",       " ",       " ",        "clmexp",  "ndepdyn_nml",             "shr_strdata_nml" /)
-  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat",     "lat",                     "nj"              /)
-  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon",     "lon",                     "ni"              /)
+  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "stream_fldfilename_ndep", "domainfile"      /);
+  qryopt    = (/ querynyr,   querynyr,     querynyr,  querynyr,  querynyr,   queryyrs, queryyrs,                  querynyr          /);
+  qnamelist = (/ " ",        " ",          " ",       " ",       " ",        "clmexp", "ndepdyn_nml",             "shr_strdata_nml" /);
+  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat", "lat",                     "nj"              /);
+  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon", "lon",                     "ni"              /);
 
   ;
   ; Loop over each of the files to process...
@@ -160,10 +176,10 @@ begin
      ;
      ; Get the filename of the input global file and the output regional filename
      ;
-     if ( namelist(i) .eq. " " ) then
+     if ( qnamelist(i) .eq. " " ) then
         queryopt= " ";
      else
-        queryopt= " -namelist "_namelist(i);
+        queryopt= " -namelist "+qnamelist(i);
      end if
      qry = querynml+queryopts+qryopt(i)+queryopt+" -res "+res+" -var "+files(i);
      globalfile = systemfunc( qry );

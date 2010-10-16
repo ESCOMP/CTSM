@@ -15,13 +15,14 @@ module mkvarsur
 ! !PUBLIC TYPES:
   implicit none
   save
+  private
 !
 ! land model grid
 !
-  real(r8) :: spval = 1.e36                     ! special value
+  real(r8), public, parameter :: spval = 1.e36    ! special value
 
-  type(domain_type) :: ldomain
-  type(domain_type) :: ddomain
+  type(domain_type), public :: ldomain
+  type(domain_type), public :: ddomain
 
 !
 ! !REVISION HISTORY:

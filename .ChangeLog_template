@@ -46,7 +46,7 @@ Summary of testing:
   jaguar interactive testing:
   edinburgh/lf95 interactive testing:
   edinburgh/lf95:
-  breeze,gale,hail,gust/ifort interactive testing:
+  mirage,storm/ifort interactive testing:
 
 CLM tag used for the baseline comparison tests if applicable:
 

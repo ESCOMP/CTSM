@@ -17,9 +17,12 @@ program mksrfdat
     use shr_timer_mod
     use fileutils   , only : getfil, putfil, opnfil, getavu, get_filename
     use mklaiMod    , only : mklai
-    use mkpftMod    , only : mkpft
+    use mkpftMod    , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
+    use mksoitexMod , only : soil_sand, soil_clay, mksoitex, mksoitexInit
+    use mksoicolMod , only : soil_color, mksoicol, mksoicolInit
+    use mkglcmecMod , only : nglcec, mkglcmec, mkglcmecInit
     use mkharvestMod, only : mkharvest, mkharvest_init, mkharvest_fieldname, &
-                             mkharvest_numtypes
+                             mkharvest_numtypes, mkharvest_parse_oride
     use mkurbanparMod, only : mkurbanpar
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
@@ -59,12 +62,14 @@ program mksrfdat
     integer  :: ret                         ! netCDF return status
     integer  :: ntim                        ! time sample for dynamic land use
     integer  :: year                        ! year for dynamic land use
+    logical  :: all_veg                     ! if gridcell will be 100% vegetated land-cover
     real(r8) :: suma                        ! sum for error check
     character(len=256) :: fgrddat           ! grid data file
     character(len=256) :: fsurdat           ! surface data file name
     character(len=256) :: fsurlog           ! surface log file name
     character(len=256) :: fdyndat           ! dynamic landuse data file name
     character(len=256) :: fname             ! generic filename
+    character(len=256) :: string            ! string read in
     character(len=256) :: loc_fn            ! local file name
     character(len= 32) :: resol             ! resolution for file name
     integer  :: t1                          ! timer
@@ -123,6 +128,11 @@ program mksrfdat
          outnc_large_files,        &
          outnc_double,             &
          nglcec,                   &
+         soil_color,               &
+         soil_sand,                &
+         soil_clay,                &
+         pft_idx,                  &
+         pft_frc,                  &
          all_urban
 !-----------------------------------------------------------------------
 
@@ -152,13 +162,21 @@ program mksrfdat
     ! Optionally specify setting for:
     ! ======================================
     !    mksrf_firrig ------ Irrigation dataset
-    !    all_urban --------- If entire area is urban
     !    mksrf_fdynuse ----- ASCII text file that lists the
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    mksrf_gridnm ------ Name of output grid resolution
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
     !    nglcec ------------ If you want to change the number of Glacier elevation classes
+    ! ======================================
+    ! Optional settings to change values for entire area
+    ! ======================================
+    !    all_urban --------- If entire area is urban
+    !    soil_color -------- If you want to change the soil_color to this value everywhere
+    !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
+    !    soil_sand --------- If you want to change the soil_sand % to this value everywhere
+    !    pft_idx ----------- If you want to change to 100% veg covered with given PFT indices
+    !    pft_frc ----------- Fractions that correspond to the pft_idx above
     ! ==================
     ! ======================================================================
 
@@ -209,6 +227,14 @@ program mksrfdat
     end if
     if ( all_urban )then
        write(6,*) 'Output ALL data in file as 100% urban'
+    end if
+    call mksoitexInit( )
+    call mksoicolInit( )
+    call mkpftInit( all_urban, all_veg )
+    allocate ( elevclass(nglcec+1) )
+    call mkglcmecInit (elevclass)
+    if ( all_veg )then
+       write(6,*) 'Output ALL data in file as 100% vegetated'
     end if
 
     ! ----------------------------------------------------------------------
@@ -327,14 +353,16 @@ program mksrfdat
 
     ! Make inland water [pctlak, pctwet] from Cogley's one degree data [flanwat]
 
-    call mklanwat (lsmlon, lsmlat, mksrf_flanwat, ndiag, pctlak, pctwet)
+    call mklanwat (lsmlon, lsmlat, mksrf_flanwat, ndiag, all_urban.or.all_veg, &
+                   pctlak, pctwet)
 
     write(6,*) ' timer_c mklanwat-----'
     call shr_timer_print(t1)
 
     ! Make glacier fraction [pctgla] from [fglacier] dataset
 
-    call mkglacier (lsmlon, lsmlat, mksrf_fglacier, ndiag, pctgla)
+    call mkglacier (lsmlon, lsmlat, mksrf_fglacier, all_urban.or.all_veg, &
+                    ndiag, pctgla)
 
     write(6,*) ' timer_d mkglacier-----'
     call shr_timer_print(t1)
@@ -348,7 +376,7 @@ program mksrfdat
 
     ! Make urban fraction [pcturb] from [furban] dataset
 
-    call mkurban (lsmlon, lsmlat, mksrf_furban, ndiag, pcturb)
+    call mkurban (lsmlon, lsmlat, mksrf_furban, ndiag, all_veg, pcturb)
 
     write(6,*) ' timer_g mkurban-----'
     call shr_timer_print(t1)
@@ -487,14 +515,13 @@ program mksrfdat
     ! This call needs to occur after pctgla has been adjusted for the final time
     allocate ( pctglcmec(lsmlon,lsmlat,nglcec),  &
                topoglcmec(lsmlon,lsmlat,nglcec), &
-               thckglcmec(lsmlon,lsmlat,nglcec), &
-               elevclass(nglcec+1) )
+               thckglcmec(lsmlon,lsmlat,nglcec) )
 
     pctglcmec(:,:,:)  = spval
     topoglcmec(:,:,:) = spval
     thckglcmec(:,:,:) = spval
     call mkglcmec (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, mksrf_fglacier, ndiag, pctgla, &
-                   pctglcmec, topoglcmec, thckglcmec, elevclass)
+                   pctglcmec, topoglcmec, thckglcmec )
 
     write(6,*) ' timer_d mkglcmec-----'
     call shr_timer_print(t1)
@@ -649,11 +676,25 @@ program mksrfdat
 
        ntim = 0
        do 
-          ! Read input pft data filename
+          ! Read input pft data
 
-          read(nfdyn, '(A125,1x,I4)', iostat=ier) fname, year
-	  write(6,*)'input pft dynamic dataset is ',trim(fname),' year is ',year
+          read(nfdyn, '(A125,1x,I4)', iostat=ier) string, year
           if (ier /= 0) exit
+          !
+          ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
+          !
+          if ( any(pft_frc > 0.0_r8 ) )then
+             fname = ' '
+             call mkpft_parse_oride(     string )
+             call mkharvest_parse_oride( string )
+	     write(6,*)'PFT and harvesting values are ',trim(string),' year is ',year
+          !
+          ! Otherwise intrepret string as a filename with PFT and harvesting values in it
+          !
+          else
+             fname = string
+	     write(6,*)'input pft dynamic dataset is  ',trim(fname),' year is ',year
+          end if
           ntim = ntim + 1
 
           ! Create pctpft data at model resolution
@@ -672,7 +713,12 @@ program mksrfdat
                 if (pctlnd_pft_dyn(i,j) /= pctlnd_pft(i,j)) then
                    write(6,*) subname,' error: pctlnd_pft for dynamics data = ',&
                         pctlnd_pft_dyn(i,j), ' not equal to pctlnd_pft for surface data = ',&
-                        pctlnd_pft(i,j),' at i,j= ',i,j,' and filename = ',trim(fname)
+                        pctlnd_pft(i,j),' at i,j= ',i,j
+                   if ( trim(fname) == ' ' )then
+                      write(6,*) ' PFT string = ', string
+                   else
+                      write(6,*) ' PFT file = ', fname
+                   end if
                    call abort()
                 end if
 
@@ -709,7 +755,7 @@ program mksrfdat
           call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
 
           call check_ret(nf_inq_varid(ncid, 'input_pftdata_filename', varid), subname)
-          call check_ret(nf_put_vara_text(ncid, varid, (/ 1, ntim /), (/ len_trim(fname), 1 /), trim(fname) ), subname)
+          call check_ret(nf_put_vara_text(ncid, varid, (/ 1, ntim /), (/ len_trim(string), 1 /), trim(string) ), subname)
 
 	  ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 

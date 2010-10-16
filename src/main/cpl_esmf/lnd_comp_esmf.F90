@@ -14,6 +14,7 @@ module lnd_comp_esmf
 !
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use abortutils   , only : endrun
   use esmf_mod
   use esmfshr_mod
 !
@@ -1212,7 +1213,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 #endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
-    use abortutils      , only: endrun
     use clm_varctl      , only: iulog
     use seq_flds_indices
     implicit none

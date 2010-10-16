@@ -4,7 +4,7 @@
 ! !IROUTINE: mkurban
 !
 ! !INTERFACE:
-subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
+subroutine mkurban(lsmlon, lsmlat, fname, ndiag, zero_out, urbn_o)
 !
 ! !DESCRIPTION:
 ! make percent urban
@@ -26,6 +26,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
   character(len=*), intent(in) :: fname           ! input dataset file name
   integer , intent(in) :: ndiag                   ! unit number for diag out
+  logical , intent(in) :: zero_out                ! if should zero urban out
   real(r8), intent(out):: urbn_o(lsmlon,lsmlat)    ! output grid: %urban
 !
 ! !CALLED FROM:
@@ -98,24 +99,36 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   mask_o = 1.0_r8
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  mask_i = float(tdomain%mask(:,:))
-  call areaave(mask_i,mask_o,tgridmap)
+  if ( all_urban .or. zero_out )then
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+           if (all_urban )then
+              urbn_o(io,jo) = 100.00_r8
+           else 
+              urbn_o(io,jo) =   0.00_r8
+           end if
+     enddo
+     enddo
+  else
+     mask_i = float(tdomain%mask(:,:))
+     call areaave(mask_i,mask_o,tgridmap)
 
-  call gridmap_clean(tgridmap)
-  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+     call gridmap_clean(tgridmap)
+     call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  ! Area-average percent cover on input grid to output grid 
-  ! and correct according to land landmask
-  ! Note that percent cover is in terms of total grid area.
+     ! Area-average percent cover on input grid to output grid 
+     ! and correct according to land landmask
+     ! Note that percent cover is in terms of total grid area.
 
-  call areaave(urbn_i,urbn_o,tgridmap)
+     call areaave(urbn_i,urbn_o,tgridmap)
 
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
-        if (urbn_o(io,jo) < 0.1_r8) urbn_o(io,jo) = 0._r8
-        if (all_urban )             urbn_o(io,jo) = 100.00_r8
-  enddo
-  enddo
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+           if (urbn_o(io,jo) < 0.1_r8) urbn_o(io,jo) = 0._r8
+     enddo
+     enddo
+
+  end if
 
   ! Check for conservation
 

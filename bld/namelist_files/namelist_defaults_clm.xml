@@ -41,6 +41,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
 
+<!-- Default ice stream -->
+<ice_runoff rtm="on" hgrid="48x96" >.false.</ice_runoff>
+<ice_runoff rtm="on"               >.true.</ice_runoff>
+
 <!-- ================================================================== -->
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
@@ -133,27 +137,27 @@ ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.1949-01-01_4x
 </finidat>
 
 <finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="none" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr1850_c100303.nc
+ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
 <finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cn"   ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr1850_c100303.nc
+ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
 <finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cndv" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr1850_c100303.nc
+ic_tod="0" sim_year="1850" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
 <finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="none" ic_ymd="00510101" 
-ic_tod="0" sim_year="2000" glc_nec="0" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+ic_tod="0" sim_year="2000" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
 <finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cn"   ic_ymd="00510101" 
-ic_tod="0" sim_year="2000" glc_nec="0" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+ic_tod="0" sim_year="2000" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
 <finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cndv" ic_ymd="00510101" 
-ic_tod="0" sim_year="2000" glc_nec="0" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+ic_tod="0" sim_year="2000" glc_nec="0" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
@@ -445,6 +449,26 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cn"   rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
+
+<ndepmapalgo bgc="cn"   ndepsrc="stream"                             >bilinear</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream"                             >bilinear</ndepmapalgo>
+
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <ndepmapalgo bgc="cn"   ndepsrc="stream"                             >bilinear</ndepmapalgo>
 <ndepmapalgo bgc="cndv" ndepsrc="stream"                             >bilinear</ndepmapalgo>

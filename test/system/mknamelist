@@ -79,7 +79,7 @@ atm_cpl_dt="atm_cpl_dt=$dtime"
 #
 # If pergro -- don't set history frequency
 #
-pergro=`grep 'id="pergro"' config_cache.xml | awk '{print $3}'`
+pergro=`grep 'id="pergro"' $config_file | awk '{print $3}'`
 if [ "$pergro" = 'value="on"' ]; then
   echo "pergro is on"
   hist_freq=" "
