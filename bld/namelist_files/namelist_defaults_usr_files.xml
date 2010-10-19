@@ -45,12 +45,12 @@ provided they are in the valid list expressed above.
 
 <fatmlndfrc >lnd/clm2/griddata/fracdata_${clm_usr_name}_${mask}.nc</fatmlndfrc>
 
-<!-- Aerosol deposition fluxes - if NOT running CAM or DATM with dust and aerosols -->
-<faerdep sim_year_range="constant"  rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year}_${clm_usr_name}.nc</faerdep>
-<faerdep                            rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year_range}_${clm_usr_name}.nc</faerdep>
-<faerdep sim_year_range="1850-2000" rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_${clm_usr_name}.nc</faerdep>
-<faerdep                                        >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp${rcp}_monthly_${sim_year_range}_${clm_usr_name}.nc</faerdep>
-<faerdep sim_year_range="1850-2000"             >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp${rcp}_monthly_1849-2006_${clm_usr_name}.nc</faerdep>
+<!-- Aerosol deposition fluxes for datm -->
+<datm_file_aero sim_year_range="constant"  rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year}_${clm_usr_name}.nc</datm_file_aero>
+<datm_file_aero                            rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year_range}_${clm_usr_name}.nc</datm_file_aero>
+<datm_file_aero sim_year_range="1850-2000" rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_${clm_usr_name}.nc</datm_file_aero>
+<datm_file_aero                                        >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp${rcp}_monthly_${sim_year_range}_${clm_usr_name}.nc</datm_file_aero>
+<datm_file_aero sim_year_range="1850-2000"             >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp${rcp}_monthly_1849-2006_${clm_usr_name}.nc</datm_file_aero>
 
 <!-- Domain files for datm (relative to ${csmdata}) -->
 <domainfile >atm/datm7/domain.clm/domain.lnd.${clm_usr_name}_${mask}.nc</domainfile>

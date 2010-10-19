@@ -1,4 +1,84 @@
 ===============================================================
+Tag name:  clm4_0_14
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Oct 19 13:12:36 MDT 2010
+One-line Summary: Fix finidat file for T31 sim_year=2000 cases
+
+Purpose of changes:
+
+Remove the 1850 T31 finidat file for sim_year=2000 and use the previous sim_year=2000
+files (created using interpinic). Update scripts and datm.
+
+Bugs fixed (include bugzilla ID): Correct finidat file for T31 sim_year=2000
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on gust...)
+                                 1165 (Restart trouble for scaled harvest test on gust)
+                                 1206 (Problem looping over a single year of CPLHIST forcing)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Go back to T31,sim_year=2000
+finidat file
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts and datm
+
+   scripts to mpiserial05_scripts4_101018
+   datm    to datm8_101008
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- Return to old
+                                                  finidat file for T31 sim_year=2000
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml - change
+                                                  fearedep to datm_file_aero
+
+Summary of testing:
+
+  bluefire/CESM testing:
+PASS  SMS_D.T31_g37.I1850CN.bluefire 
+PASS  SMS_D.T31_g37.ICN.bluefire 
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_13
+
+Changes answers relative to baseline: T31 2000 cases
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_13
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Oct 16 09:14:08 MDT 2010
