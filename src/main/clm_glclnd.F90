@@ -163,7 +163,7 @@ end subroutine init_lnd2glc_type
 ! Maps lnd2glc fields from clm grid to external grid
 !
 ! !USES:
-  use areaMod  , only : map_maparrayl, map1dl_l2a
+  use downscaleMod  , only : map_maparrayl, map1dl_l2a
 !
 ! !ARGUMENTS:
   implicit none
@@ -227,9 +227,9 @@ end subroutine clm_maps2x
 ! Maps glc2lnd fields from external grid to clm grid
 !
 ! !USES:
-  use areaMod  , only : map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
-  use decompMod, only : ldecomp,adecomp
-  use domainMod, only : ldomain,adomain
+  use downscaleMod, only : map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
+  use decompMod   , only : ldecomp,adecomp
+  use domainMod   , only : ldomain,adomain
 !
 ! !ARGUMENTS:
   implicit none
@@ -308,15 +308,12 @@ end subroutine clm_maps2x
 ! Assign values to clm_s2x based on the appropriate derived types
 !
 ! !USES:
-  use clm_varctl, only : glc_smb
-!!  use clm_varctl  , only : csm_doflxave_lg
+  use clm_varctl  , only : glc_smb
   use clmtype     , only : clm3
-!!  use clm_varpar  , only : nlevsoi
   use domainMod   , only : ldomain
   use clm_varcon  , only : istice_mec
   use clm_atmlnd  , only : clm_l2a, clm_a2l
   use clm_varcon  , only : spval
-
 !
 ! !ARGUMENTS:
   implicit none

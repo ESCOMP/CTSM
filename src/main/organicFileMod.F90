@@ -48,17 +48,15 @@ contains
 ! Read the organic matter dataset.
 !
 ! !USES:
-    use clm_varctl  , only : fsurdat, single_column, scmlon, scmlat
+    use clm_varctl  , only : fsurdat, single_column
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi
-    use ncdio       , only : ncd_iolocal, check_dim, check_ret
     use fileutils   , only : getfil
-    use decompMod   , only : get_proc_bounds
     use spmdMod     , only : masterproc
     use clmtype     , only : grlnd
+    use ncdio_pio
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     real(r8), pointer :: organic(:,:)         ! organic matter density (kg/m3)
 !
 ! !CALLED FROM:
@@ -71,19 +69,10 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    character(len=256) :: locfn                          ! local file name
-    real(r8),pointer :: arrayl(:)                        ! generic global array
-    integer  :: ncid,dimid,varid                         ! netCDF id's
-    integer  :: begg,endg                                ! start/stop gridcells
-    integer  :: start(3),count(3)                        ! netcdf start/count arrays
-    integer  :: ier                                      ! error status 
-    integer  :: n                                        ! indices
-    integer  :: closelatidx,closelonidx
-    real(r8) :: closelat,closelon
-    character(len=32) :: subname = 'organicrd'          ! subroutine name
+    character(len=256) :: locfn                 ! local file name
+    type(file_desc_t)  :: ncid                  ! netcdf id
+    character(len=32)  :: subname = 'organicrd' ! subroutine name
 !-----------------------------------------------------------------------
-
-    call get_proc_bounds(begg,endg)
 
     ! Initialize data to zero - no organic matter dataset
 
@@ -93,43 +82,30 @@ contains
        
     if (fsurdat /= ' ') then
 
-       count(1) = lsmlon
-       count(2) = lsmlat
-       start(1) = 1
-       start(2) = 1
-       start(3) = 1
-       count(3) = 1
-
        ! Obtain netcdf file and read surface data
 
        if (masterproc) then
-
           write(iulog,*) 'Attempting to read organic matter data .....'
-
-          call getfil (fsurdat, locfn, 0)
-          call check_ret(nf_open(locfn, 0, ncid), subname)
 	  write(iulog,*) subname,trim(fsurdat)
           write(iulog,*) "  Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
-          if (.not.single_column) then
-             call check_dim(ncid, 'lsmlon' , lsmlon)
-             call check_dim(ncid, 'lsmlat' , lsmlat)
-	  endif 
-       endif 
+       end if
 
-       allocate(arrayl(begg:endg))
-       do n = 1,nlevsoi 
-          start(3) = n
-          call ncd_iolocal(ncid,'ORGANIC','read',arrayl,grlnd,start,count)
-          organic(begg:endg,n) = arrayl(begg:endg)
-       enddo
-       deallocate(arrayl)
+       call getfil (fsurdat, locfn, 0)
+       call ncd_pio_openfile (ncid, locfn, 0)
+
+       if (.not.single_column) then
+          call check_dim(ncid, 'lsmlon' , lsmlon)
+          call check_dim(ncid, 'lsmlat' , lsmlat)
+       endif
+
+       call ncd_io(ncid=ncid, varname='ORGANIC', flag='read', data=organic, dim1name=grlnd)
+
+       if ( masterproc )then
+          write(iulog,*) 'Successfully read organic matter data'
+          write(iulog,*)
+       end if
 
     endif
-
-    if ( masterproc )then
-       write(iulog,*) 'Successfully read organic matter data'
-       write(iulog,*)
-    end if
 
   end subroutine organicrd
 

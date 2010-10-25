@@ -14,7 +14,7 @@ Known bugs (include bugzilla ID):
 Known Limitations:
                                  1147 (mkgriddata can't straddle over Greenwich)
                                  1025 (SCM mode can NOT use a global finidat file)
-                                 1017 (SCM mode can NOT restart
+                                 1017 (SCM mode can NOT restart)
                                   452 (Problem with support of soil-colors != 8 or 20)
 
 Type of tag: doc, critical, standard, std-test, reg-test
@@ -42,10 +42,12 @@ Summary of testing:
   bluefire:
   bluefire interactive testing:
   bluefire/CESM testing:
+  bluefire/PTCLM testing:
   jaguar:
   jaguar interactive testing:
   edinburgh/lf95 interactive testing:
-  edinburgh/lf95:
+  edinburgh/lf95 testing:
+  edinburgh/PTCLM testing:
   mirage,storm/ifort interactive testing:
 
 CLM tag used for the baseline comparison tests if applicable:

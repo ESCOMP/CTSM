@@ -46,7 +46,6 @@ module lnd_comp_mct
 #endif
   private :: sno_export_mct
   private :: sno_import_mct
-
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -92,12 +91,13 @@ contains
 !
 ! !USES:
     use abortutils       , only : endrun
-    use areaMod          , only : map1dl_a2l, map1dl_l2a, map_maparrayl
+    use downscaleMod     , only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
-    use clm_atmlnd       , only : clm_l2a, clm_mapa2l
+    use clm_atmlnd       , only : clm_l2a
     use clm_comp         , only : clm_init1, clm_init2, clm_init3
-    use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland
+    use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
+                                  downscale
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
@@ -330,15 +330,19 @@ contains
     call mct_aVect_init(l2x_l_clm, rList=seq_flds_l2x_fields, lsize=endg_l-begg_l+1)
     call mct_aVect_zero(l2x_l_clm)
     
-    ! Create land export state then map this from the 
-    ! clm internal grid (dst) to the clm driver grid (src)
-
-    call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
-    call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-        	       l2x_l_clm, l2x_l, map1dl_l2a)
+    ! Create land export state 
+    ! If downscale, map this from the clm internal grid (dst) to the clm driver grid (src)
     ! Reset landfrac on atmosphere grid to have the right domain
+
+    if (downscale) then
+       call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
+       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
+           	          l2x_l_clm, l2x_l, map1dl_l2a)
+    else
+       call lnd_export_mct( clm_l2a, l2x_l, begg_l, endg_l )
+    end if
     do g = begg_a,endg_a
-       l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
+       l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) = adomain%frac(g)
     end do
 
 #ifdef RTM
@@ -390,9 +394,12 @@ contains
        ! Create mct sno export state
 
        call create_clm_s2x(clm_s2x)
-       call clm_maps2x(clm_s2x, atm_s2x)
-       call sno_export_mct( atm_s2x, s2x_s )
-
+       if (downscale) then
+          call clm_maps2x(clm_s2x, atm_s2x)
+          call sno_export_mct(atm_s2x, s2x_s)
+       else
+          call sno_export_mct(clm_s2x, s2x_s)
+       end if
     endif   ! create_glacier_mec_landunit
 
     ! Initialize averaging counter
@@ -463,8 +470,8 @@ contains
 !
 ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
-    use areaMod         ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
-    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_mapa2l
+    use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
+    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
@@ -483,7 +490,7 @@ contains
     use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
                                 mct_aVect_zero
     use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
-    use clm_varctl      ,only : create_glacier_mec_landunit
+    use clm_varctl      ,only : create_glacier_mec_landunit, downscale
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use seq_flds_indices
@@ -583,51 +590,38 @@ contains
           adomain%asca(g) = data(i)
        end do
        deallocate(data)
-
     endif
     
     ! Map MCT to land data type
-
-    call t_startf ('lc_lnd_import')
-    call lnd_import_mct( x2l_l, atm_a2l, begg_a, endg_a )
-    call t_stopf ('lc_lnd_import')
-
-    call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
-	               x2l_l, x2l_l_clm, map1dl_a2l)
-
-    call t_startf ('lc_lnd_import')
-    call lnd_import_mct( x2l_l_clm, clm_a2l, begg_l, endg_l )
-    call t_stopf ('lc_lnd_import')
-
     ! Perform downscaling if appropriate
 
-    call t_startf ('lc_clm_mapa2l')
-    call clm_mapa2l(atm_a2l, clm_a2l)
-    call t_stopf ('lc_clm_mapa2l')
+    call t_startf ('lc_lnd_import')
+    if (downscale) then
+       call lnd_import_mct( x2l_l, atm_a2l, begg_a, endg_a )
+       call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
+   	                  x2l_l, x2l_l_clm, map1dl_a2l)
+       call lnd_import_mct( x2l_l_clm, clm_a2l, begg_l, endg_l )
+       call clm_downscale_a2l(atm_a2l, clm_a2l)
+    else
+       call lnd_import_mct( x2l_l, clm_a2l, begg_l, endg_l )
+    end if
     
+    ! Map to clm (only when state and/or fluxes need to be updated)
+
     if (create_glacier_mec_landunit) then
-
-       ! Receive sno data
-
-       call t_startf ('lc_sno_import')
-       call sno_import_mct( x2s_s, atm_x2s )
-       call t_stopf ('lc_sno_import')
-
-       ! Map to clm (only when state and/or fluxes need to be updated)
-
        update_glc2sno_fields  = .false.
        call seq_infodata_GetData(infodata, glc_g2supdate = update_glc2sno_fields)
-
        if (update_glc2sno_fields) then
-
-          call t_startf ('lc_clm_mapa2s')
-          call clm_mapx2s(atm_x2s, clm_x2s)
-          call t_stopf ('lc_clm_mapa2s')
-
+          if (downscale) then
+             call sno_import_mct( x2s_s, atm_x2s )
+             call clm_mapx2s(atm_x2s, clm_x2s)
+          else
+             call sno_import_mct( x2s_s, clm_x2s )
+          end if
           call unpack_clm_x2s(clm_x2s)
-       endif   ! update_glc2sno
-
-    endif      ! create_glacier_mec_landunit
+       endif ! update_glc2sno
+    endif ! create_glacier_mec_landunit
+    call t_stopf ('lc_lnd_import')
 
     ! Loop over time steps in coupling interval
 
@@ -676,13 +670,16 @@ contains
        call t_stopf ('clm_run2')
 
        ! Map land data type to MCT
+       ! Reset landfrac on atmosphere grid to have the right domain
        
        call t_startf ('lc_lnd_export')
-       call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
-       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-           	          l2x_l_clm, l2x_l, map1dl_l2a)
-
-       ! Reset landfrac on atmosphere grid to have the right domain
+       if (downscale) then
+          call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
+          call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
+                             l2x_l_clm, l2x_l, map1dl_l2a)
+       else
+          call lnd_export_mct( clm_l2a, l2x_l, begg_l, endg_l )
+       end if
        do g = begg_a,endg_a
           l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
        end do
@@ -702,18 +699,16 @@ contains
           avg_count = avg_count + 1
        endif
        
-       if (create_glacier_mec_landunit) then
        ! Map sno data type to MCT
 
+       if (create_glacier_mec_landunit) then
           call create_clm_s2x(clm_s2x)
-
-          call t_startf ('lc_clm_maps2a')
-          call clm_maps2x(clm_s2x, atm_s2x)
-          call t_stopf ('lc_clm_maps2a')
-
-          call t_startf ('lc_sno_export')
-          call sno_export_mct( atm_s2x, s2x_s )
-          call t_stopf ('lc_sno_export')
+          if (downscale) then
+             call clm_maps2x(clm_s2x, atm_s2x)
+             call sno_export_mct(atm_s2x, s2x_s)
+          else
+             call sno_export_mct(clm_s2x, s2x_s)
+          end if
 
           if (nstep <= 1) then
              call mct_aVect_copy( s2x_s, s2x_s_SUM )
@@ -747,7 +742,6 @@ contains
           call mct_aVect_copy( s2x_s_SUM, s2x_s )
           call mct_aVect_zero( s2x_s_SUM)
           avg_count_sno = 0
-
        endif
     endif
 
@@ -969,6 +963,7 @@ contains
        l2x_l%rAttr(index_l2x_Sl_anidf,i)    =  l2a%albi(g,2)
        l2x_l%rAttr(index_l2x_Sl_tref,i)     =  l2a%t_ref2m(g)
        l2x_l%rAttr(index_l2x_Sl_qref,i)     =  l2a%q_ref2m(g)
+       l2x_l%rAttr(index_l2x_Sl_u10,i)      =  l2a%u_ref10m(g)
        l2x_l%rAttr(index_l2x_Fall_taux,i)   = -l2a%taux(g)
        l2x_l%rAttr(index_l2x_Fall_tauy,i)   = -l2a%tauy(g)
        l2x_l%rAttr(index_l2x_Fall_lat,i)    = -l2a%eflx_lh_tot(g)

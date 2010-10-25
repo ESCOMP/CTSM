@@ -18,13 +18,11 @@ module controlMod
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
   use clm_varpar   , only : maxpatch_pft
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, model_version=>version,    &
-                            iulog, hist_crtinic, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
+                            iulog, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
                             fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn,                   &
                             create_crop_landunit, allocate_all_vegpfts, fget_archdev, &
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
-                            hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
-                            ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
-                            ncd_pio_num_iotasks, fsnowaging, fsnowoptics, fglcmask
+                            username, fsnowaging, fsnowoptics, fglcmask
   use SurfaceAlbedoMod, only : albice
 #ifdef RTM
   use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
@@ -44,7 +42,6 @@ module controlMod
                             hist_fincl4, hist_fincl5, hist_fincl6, &
                             hist_fexcl1, hist_fexcl2, hist_fexcl3, &
                             hist_fexcl4, hist_fexcl5, hist_fexcl6
-  use restFileMod  , only : rest_flag
   use shr_const_mod, only : SHR_CONST_CDAY
   use abortutils   , only : endrun
   use UrbanMod     , only : urban_hac, urban_traffic
@@ -179,10 +176,7 @@ contains
          hist_fincl4,  hist_fincl5, hist_fincl6, &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
-         hist_crtinic, rest_flag, outnc_large_files, &
-         hist_pioflag, ncd_lowmem2d, ncd_pio_def, &
-         ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, &
-         ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, ncd_pio_num_iotasks
+         outnc_large_files
 
     ! clm bgc info
 
@@ -427,15 +421,6 @@ contains
     call mpi_bcast (scmlon,       1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (co2_ppmv    , 1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (albice      , 2, MPI_REAL8,   0, mpicom, ier)
-    call mpi_bcast (hist_pioflag, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_lowmem2d, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_def , 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_UseRearranger , 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_UseBoxRearr   , 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_SerialCDF     , 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_IODOF_rootonly, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_DebugLevel    , 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (ncd_pio_num_iotasks   , 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! glacier_mec variables
     call mpi_bcast (create_glacier_mec_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -452,7 +437,6 @@ contains
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_mfilt, size(hist_mfilt), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_ndens, size(hist_ndens), MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (hist_crtinic, len(hist_crtinic), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_avgflag_pertape, size(hist_avgflag_pertape), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_type1d_pertape, max_namlen*size(hist_type1d_pertape), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl1, max_namlen*size(hist_fexcl1), MPI_CHARACTER, 0, mpicom, ier)
@@ -467,7 +451,6 @@ contains
     call mpi_bcast (hist_fincl4, (max_namlen+2)*size(hist_fincl4), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl5, (max_namlen+2)*size(hist_fincl5), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl6, (max_namlen+2)*size(hist_fincl6), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (rest_flag, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! restart file variables
 
@@ -616,17 +599,6 @@ contains
     if ( trim(fget_archdev) /= "null:" ) then
        write(iulog,*)'try to retreive input files that do NOT exist from archival device: ', trim(fget_archdev)
     end if
-    if (hist_crtinic == 'MONTHLY') then
-       write(iulog,*)'initial datasets will be written monthly'
-    else if (hist_crtinic == 'YEARLY') then
-       write(iulog,*)'initial datasets will be written yearly'
-    else if (hist_crtinic == 'DAILY') then
-       write(iulog,*)'initial datasets will be written daily'
-    else if (hist_crtinic == '6-HOURLY') then
-       write(iulog,*)'initial datasets will be written 6-hourly'
-    else
-       write(iulog,*)'initial datasets will not be produced'
-    endif
     write(iulog,*) 'model physics parameters:'
 #if (defined PERGRO)
     write(iulog,*) '   flag for random perturbation test is set'
@@ -664,18 +636,6 @@ contains
     write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
     write(iulog,*) '   nsegspc              = ',nsegspc
-
-!tcx for debugging
-    write(iulog,*) 'history/PIO parameters:'
-    write(iulog,*) '   hist_pioflag           = ', hist_pioflag
-    write(iulog,*) '   ncd_lowmem2d           = ', ncd_lowmem2d
-    write(iulog,*) '   ncd_pio_def            = ', ncd_pio_def
-    write(iulog,*) '   ncd_pio_UseRearranger  = ', ncd_pio_UseRearranger
-    write(iulog,*) '   ncd_pio_UseBoxRearr    = ', ncd_pio_UseBoxRearr
-    write(iulog,*) '   ncd_pio_SerialCDF      = ', ncd_pio_SerialCDF
-    write(iulog,*) '   ncd_pio_IODOF_rootonly = ', ncd_pio_IODOF_rootonly
-    write(iulog,*) '   ncd_pio_DebugLevel     = ', ncd_pio_DebugLevel
-    write(iulog,*) '   ncd_pio_num_iotasks    = ', ncd_pio_num_iotasks
 
   end subroutine control_print
 

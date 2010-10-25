@@ -20,12 +20,13 @@ module clm_initializeMod
   use clm_varsur      , only : topoxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use perf_mod        , only : t_startf, t_stopf
+  use ncdio_pio
   use mct_mod
 
 ! !PUBLIC TYPES:
   implicit none
   save
-!
+
   private    ! By default everything is private
 
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -69,27 +70,25 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use clm_varpar, only : lsmlon, lsmlat, maxpatch
-    use clm_varpar, only : clm_varpar_init
-    use pftvarcon , only : pftconrd
-    use decompInitMod, only : decompInit_atm, &
-                           decompInit_lnd, decompInit_glcp
-    use decompMod , only : adecomp,ldecomp
-    use decompMod , only : get_proc_clumps, get_clump_bounds, &
-                           get_proc_bounds, get_proc_bounds_atm
-    use domainMod , only : domain_check,domain_setsame
-    use domainMod , only : adomain,ldomain
-    use domainMod , only : alatlon,llatlon,gatm,amask,pftm
-    use domainMod , only : latlon_check, latlon_setsame
-    use areaMod   , only : cellarea, map_setgatm
-    use surfrdMod , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
-                           surfrd_get_topo, surfrd_get_latlon
-    use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
-                           fatmtopo, flndtopo, noland
-    use clm_varctl, only : fglcmask
-    use controlMod, only : control_init, control_print
-    use UrbanInputMod    , only : UrbanInput
-
+    use clm_varpar   , only : lsmlon, lsmlat, maxpatch, clm_varpar_init
+    use pftvarcon    , only : pftconrd
+    use decompInitMod, only : decompInit_atm, decompInit_lnd, decompInit_glcp
+    use decompMod    , only : adecomp,ldecomp
+    use decompMod    , only : get_proc_clumps, get_clump_bounds, &
+                              get_proc_bounds, get_proc_bounds_atm
+    use domainMod    , only : domain_check,domain_setsame
+    use domainMod    , only : adomain,ldomain
+    use domainMod    , only : alatlon,llatlon,gatm,amask,pftm
+    use domainMod    , only : latlon_check, latlon_setsame
+    use surfrdMod    , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
+                              surfrd_get_topo, surfrd_get_latlon
+    use clm_varctl   , only : fsurdat, fatmgrid, fatmlndfrc, &
+                              fatmtopo, flndtopo, noland, downscale, fglcmask
+    use controlMod   , only : control_init, control_print, nlfilename
+    use UrbanInputMod, only : UrbanInput
+    use ncdio_pio    , only : ncd_pio_init
+    use areaMod      , only : cellarea, map_setgatm
+    use downscaleMod , only : map_setgatmfm
 !
 ! !ARGUMENTS:
 !
@@ -121,8 +120,9 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call clm_varpar_init ()
-    call control_init ( )
+    call clm_varpar_init()
+    call control_init( )
+    call ncd_pio_init(nlfilename)
 
     if (masterproc) call control_print()
 
@@ -130,7 +130,7 @@ contains
     call t_startf('init_grids')
 
     ! ------------------------------------------------------------------------
-    ! Initialize the subgrid hierarchy
+    ! Read atm and land grids - global reads of data
     ! ------------------------------------------------------------------------
 
     if (masterproc) then
@@ -166,6 +166,7 @@ contains
     !--- set llatlon== alatlon if lats/lons < 0.001 different ---
     !--- exit if lats/lon > 0.001 and < 1.0 different          ---
     !--- continue if lat/lons > 1.0 different                  ---
+
     samegrids = .false.
     if (alatlon%ni == llatlon%ni .and. alatlon%nj == llatlon%nj) then
        rmaxlon = 0.0_r8
@@ -194,22 +195,39 @@ contains
           'sizes:continue'
     endif
 
+    if (samegrids) then
+       downscale = .false.
+    else
+       downscale = .true.
+    end if
+
     ! Exit early if no valid land points
     if ( all(amask == 0) )then
        noland = .true.
        return
     end if
 
+    ! ------------------------------------------------------------------------
+    ! Initialize clump and processor decomposition
+    ! ------------------------------------------------------------------------
+
     call decompInit_atm(alatlon,amask)
 
-    call map_setgatm(gatm,alatlon,llatlon,amask,pftm)
+    if (downscale) then
+       call map_setgatmfm(gatm,alatlon,llatlon,amask,pftm)
+    else
+       call map_setgatm(gatm, alatlon, amask)
+    end if
 
-    ! Initialize clump and processor decomposition 
-    call decompInit_lnd(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+    call decompInit_lnd(alatlon%ns, alatlon%ni, alatlon%nj, &
+                        llatlon%ns, llatlon%ni, llatlon%nj)
+
+    ! ------------------------------------------------------------------------
+    ! Determine atm and lnd domains and surface properties
+    ! ------------------------------------------------------------------------
 
     !--- Read atm grid -----------------------------------------------------
 
-    ! Set "local" domains
     call get_proc_bounds_atm(begg_atm, endg_atm)
 
     if (masterproc) then
@@ -235,17 +253,16 @@ contains
              call endrun()
           endif
        enddo
-
     else
        call surfrd_get_frac(adomain, fatmlndfrc)
     endif
 
     if (fatmtopo /= " ") then
-    if (masterproc) then
-       write(iulog,*) 'Attempting to read atm topo from fatmtopo'
-       call shr_sys_flush(iulog)
-    endif
-    call surfrd_get_topo(adomain, fatmtopo)
+       if (masterproc) then
+          write(iulog,*) 'Attempting to read atm topo from fatmtopo'
+          call shr_sys_flush(iulog)
+       endif
+       call surfrd_get_topo(adomain, fatmtopo)
     endif
 
     !--- compute area
@@ -275,11 +292,11 @@ contains
     call surfrd_get_grid(ldomain, fsurdat, begg, endg, grlnd)
 
     if (flndtopo /= " ") then
-    if (masterproc) then
-       write(iulog,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
-       call shr_sys_flush(iulog)
-    endif
-    call surfrd_get_topo(ldomain, flndtopo)
+       if (masterproc) then
+          write(iulog,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
+          call shr_sys_flush(iulog)
+       endif
+       call surfrd_get_topo(ldomain, flndtopo)
     endif
 
     !--- compute area
@@ -304,7 +321,9 @@ contains
        call domain_setsame(adomain,ldomain)
     endif
 
+    ! --------------------------------------------------------------------
     ! Initialize urban model input (initialize urbinp data structure)
+    ! --------------------------------------------------------------------
 
     call UrbanInput(mode='initialize')
 
@@ -386,23 +405,20 @@ contains
 ! !USES:
     use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
                                  clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
-                                 init_adiag_type
+	                         init_adiag_type
     use initGridCellsMod, only : initGridCells
     use clm_varctl      , only : finidat, fpftdyn
     use clmtypeInitMod  , only : initClmtype
-    use domainMod       , only : gatm
-    use domainMod       , only : ldomain, adomain
-    use decompMod       , only : adecomp,ldecomp
-    use areaMod         , only : map1dl_a2l, map1dl_l2a
-    use areaMod         , only : map_setmapsFM
-    use decompMod       , only : get_proc_clumps, get_clump_bounds, &
+    use domainMod       , only : gatm, ldomain, adomain
+    use decompMod       , only : adecomp,ldecomp, &
+                                 get_proc_clumps, get_clump_bounds, &
                                  get_proc_bounds, get_proc_bounds_atm
+    use downscaleMod    , only : map_setmapsFM, map1dl_a2l, map1dl_l2a
     use filterMod       , only : allocFilters, setFilters
     use histFldsMod     , only : hist_initFlds
     use histFileMod     , only : hist_htapes_build
     use restFileMod     , only : restFile_getfile, &
-                                 restFile_open, restFile_close, &
-                                 restFile_read, restFile_read_binary
+                                 restFile_open, restFile_close, restFile_read 
     use accFldsMod      , only : initAccFlds, initAccClmtype
     use mkarbinitMod    , only : mkarbinit
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
@@ -435,7 +451,7 @@ contains
     use UrbanInputMod   , only : UrbanInput
     use clm_glclnd      , only : init_glc2lnd_type, init_lnd2glc_type, &
                                  clm_x2s, clm_s2x, atm_x2s, atm_s2x
-    use seq_drydep_mod,       only : n_drydep, drydep_method, DD_XLND
+    use seq_drydep_mod  , only : n_drydep, drydep_method, DD_XLND
 
 ! !Arguments    
     implicit none
@@ -460,11 +476,7 @@ contains
     integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
     character(len=256) :: fnamer             ! name of netcdf restart file 
     character(len=256) :: pnamer             ! full pathname of netcdf restart file
-    character(len=256) :: fnamer_bin         ! name of binary restart file
-    character(len=256) :: pnamer_bin         ! full pathname of binary restart file
-    integer  :: ncid                         ! netcdf id
-    logical ,parameter :: a2ltrue = .true.   ! local
-    logical ,parameter :: a2lfalse = .false. ! local
+    type(file_desc_t)  :: ncid               ! netcdf id
 !----------------------------------------------------------------------
 
     ! Set the a2l and l2a maps
@@ -571,7 +583,6 @@ contains
        call restFile_close( ncid=ncid )
        call timemgr_restart()
     end if
-
     call t_stopf('init_io1')
 
     ! Initialize river routing model, after time manager because ts needed
@@ -643,7 +654,6 @@ contains
     ! "mkarbinit, inicfile and restFile". 
 
     call t_startf('init_io2')
-
     if (do_restread()) then
        if (masterproc) write(iulog,*)'reading restart file ',fnamer
        call restFile_read( fnamer )
@@ -651,17 +661,6 @@ contains
        call mkarbinit()
        call UrbanInitTimeVar( )
     end if
-       
-    ! For restart run, read binary history restart
-
-    if (nsrest == 1) then
-       if (masterproc)then 
-          pnamer_bin = pnamer(1:(len_trim(pnamer)-3))
-          call getfil( pnamer_bin, fnamer_bin )
-       end if
-       call restFile_read_binary( fnamer_bin )
-    end if
-
     call t_stopf('init_io2')
 
     ! ------------------------------------------------------------------------

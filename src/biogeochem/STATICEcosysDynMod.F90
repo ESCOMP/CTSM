@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 module STATICEcosysdynMOD
 
 !-----------------------------------------------------------------------
@@ -17,8 +15,8 @@ module STATICEcosysdynMOD
   use abortutils,      only : endrun
   use clm_varctl,      only : scmlat,scmlon,single_column
   use clm_varctl,      only : iulog
-  use spmdGathScatMod, only : scatter_data_from_master
   use perf_mod,        only : t_startf, t_stopf
+  use ncdio_pio   
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -209,9 +207,9 @@ contains
           hbot(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
 
 #if (defined CASA)
-! use PLAI from CASA
-!! can also choose to use default tlai instead of plai - need option
-! 03/03/11: don't reset lai of crops - use default lsm tlai/elai
+          ! use PLAI from CASA
+          !! can also choose to use default tlai instead of plai - need option
+          ! 03/03/11: don't reset lai of crops - use default lsm tlai/elai
 
           if (ivt(p) > noveg .and. ivt(p) < ncorn ) tlai(p) = plai(p)
 #endif
@@ -264,8 +262,9 @@ contains
 ! Determine if 2 new months of data are to be read.
 !
 ! !USES:
-    use clm_varctl  , only : fsurdat
-    use clm_time_manager, only : get_curr_date, get_step_size, get_perp_date, is_perpetual
+    use clm_varctl      , only : fsurdat
+    use clm_time_manager, only : get_curr_date, get_step_size, &
+                                 get_perp_date, is_perpetual, get_nstep
 !
 ! !ARGUMENTS:
     implicit none
@@ -307,8 +306,12 @@ contains
     timwt(2) = 1._r8-timwt(1)
 
     if (InterpMonths1 /= months(1)) then
+       if (masterproc) then
+          write(iulog,*) 'Attempting to read monthly vegetation data .....'
+          write(iulog,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
+       end if
        call t_startf('readMonthlyVeg')
-       call readMonthlyVegetation (fsurdat, kmo, kda, months)
+       call readMonthlyVegetation (fsurdat, months)
        InterpMonths1 = months(1)
        call t_stopf('readMonthlyVeg')
     end if
@@ -318,49 +321,43 @@ contains
 !-----------------------------------------------------------------------
 ! read 12 months of veg data for dry deposition
 !-----------------------------------------------------------------------
+
   subroutine readAnnualVegetation ( )
 
     use clmtype
     use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
-    use decompMod   , only : get_proc_bounds, ldecomp
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
-    use ncdio       , only : check_ret,ncd_iolocal
+    use decompMod   , only : get_proc_bounds
+    use spmdMod     , only : masterproc
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
-    use netcdf
 
     implicit none
 
     ! local vars
 
-    real(r8), pointer     :: annlai(:,:)  ! 12 months of monthly lai from input data set 
-    real(r8), allocatable :: mlai(:,:)    ! lai read from input files
-    real(r8), pointer :: arrayl(:)        ! temp local array
-    character(len=32) :: subname = 'readAnnualVegetation'
+    type(file_desc_t) :: ncid             ! netcdf id
+    real(r8), pointer :: annlai(:,:)      ! 12 months of monthly lai from input data set 
+    real(r8), pointer :: mlai(:,:)        ! lai read from input files
     integer :: ier                        ! error code
     character(len=256) :: locfn           ! local file name
     integer :: g,k,l,m,n,p,ivt            ! indices
-    integer :: ncid,dimid,varid           ! input netCDF id's
-    integer :: beg4d(4),len4d(4)          ! netCDF variable edges
+    integer :: dimid,varid                ! input netCDF id's
     integer :: ntim                       ! number of input data time samples
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
     integer :: begp,endp                  ! beg and end local p index
-    integer :: nps,npe              ! start/end numpft limits
     integer :: closelatidx,closelonidx
     real(r8):: closelat,closelon
     integer :: begg,endg                  ! beg and end local g index
+    character(len=32) :: subname = 'readAnnualVegetation'
 
     annlai    => clm3%g%l%c%p%pps%annlai
 
     ! Determine necessary indices
 
     call get_proc_bounds(begg=begg,endg=endg,begp=begp,endp=endp)
-
-    nps = 0
-    npe = numpft
 
     allocate(mlai(begg:endg,0:numpft), stat=ier)
     if (ier /= 0) then
@@ -370,112 +367,48 @@ contains
     call get_proc_bounds(begp=begp,endp=endp)
 
     if (masterproc) then
-
        write (6,*) 'Attempting to read annual vegetation data .....'
+    end if
 
-       call getfil(fsurdat, locfn, 0)
-       call check_ret(nf90_open(locfn, 0, ncid), subname)
+    call getfil(fsurdat, locfn, 0)
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-       call check_ret(nf90_inq_dimid (ncid, 'lsmlon', dimid), subname)
-       call check_ret(nf90_inquire_dimension(ncid, dimid, len=nlon_i), subname)
-       if (.not.single_column) then
-          if (nlon_i /= lsmlon) then
-             write(6,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
-             call endrun()
-          end if
-       endif
-       call check_ret(nf90_inq_dimid(ncid, 'lsmlat', dimid), subname)
-       call check_ret(nf90_inquire_dimension(ncid, dimid, len=nlat_i), subname)
-
-       if (.not.single_column ) then
-          if (nlat_i /= lsmlat) then
-             write(6,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
-             call endrun()
-          end if
-       endif
-       call check_ret(nf90_inq_dimid(ncid, 'lsmpft', dimid), subname)
-       call check_ret(nf90_inquire_dimension(ncid, dimid, len=npft_i), subname)
-
-       if (.not. single_column ) then
-          if (npft_i /= numpft+1) then
-             write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
-             call endrun()
-          end if
-       endif
-       call check_ret(nf90_inq_dimid(ncid, 'time', dimid), subname)
-       call check_ret(nf90_inquire_dimension(ncid, dimid, len=ntim), subname)
-
-       call check_ret(nf90_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
-
-    endif ! masterproc
-
-    call mpi_bcast (nlon_i, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (nlat_i, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (npft_i, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (ntim  , 1, MPI_INTEGER, 0, mpicom, ier)
+    call check_dim(ncid, 'lsmlon', lsmlon)
+    call check_dim(ncid, 'lsmlat', lsmlat)
+    call check_dim(ncid, 'lsmpft', numpft+1)
 
     if (single_column) then
-       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+       call scam_setlatlonidx(ncid, scmlat, scmlon,&
+            closelat, closelon, closelatidx, closelonidx)
     endif
-
-    allocate(arrayl(begg:endg),stat=ier)
-    if (ier /= 0) then
-       write(6,*)subname, 'allocation array error '; call endrun()
-    end if
 
     do k=1,12   !! loop over months and read vegetated data
 
-       do n = nps,npe
-          beg4d(1) = 1         ; len4d(1) = nlon_i
-          beg4d(2) = 1         ; len4d(2) = nlat_i
-          beg4d(3) = n         ; len4d(3) = 1
-          beg4d(4) = k         ; len4d(4) = 1
-          if (single_column) then
-             beg4d(1) = closelonidx; len4d(1) = 1
-             beg4d(2) = closelatidx; len4d(2) = 1
-          else
-             beg4d(1) = 1         ; len4d(1) = nlon_i
-             beg4d(2) = 1         ; len4d(2) = nlat_i
-          end if
-          if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
+       call ncd_io(ncid=ncid, varname='MONTHLY_LAI', flag='read', data=mlai, &
+            dim1name=grlnd, nt=k)
 
-          call ncd_iolocal(ncid,'MONTHLY_LAI','read',arrayl,grlnd,beg4d,len4d)
-          mlai(begg:endg,n) = arrayl(begg:endg)
-
-          !! store data directly in clmtype structure
-          !! only vegetated pfts have nonzero values
-
-       enddo
+       !! store data directly in clmtype structure
+       !! only vegetated pfts have nonzero values
+       !! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
+       !! as determined in subroutine surfrd
 
        do p = begp,endp
-
           g = clm3%g%l%c%p%gridcell(p)
-
-          !! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
-          !! as determined in subroutine surfrd
-
           ivt = clm3%g%l%c%p%itype(p)
           if (ivt /= noveg) then     !! vegetated pft
              do l = 0, numpft
                 if (l == ivt) then
-
                    annlai(k,p) = mlai(g,l)
-
                 end if
              end do
           else                       !! non-vegetated pft
-
              annlai(k,p) = 0._r8
-
           end if
-
        end do   ! end of loop over pfts  
 
     enddo ! months loop
 
-    if (masterproc) then
-       call check_ret(nf90_close(ncid), subname)
-    endif
+    call pio_closefile(ncid)
 
     deallocate(mlai)
 
@@ -487,28 +420,23 @@ contains
 ! !IROUTINE: readMonthlyVegetation
 !
 ! !INTERFACE:
-  subroutine readMonthlyVegetation (fveg, kmo, kda, months)
+  subroutine readMonthlyVegetation (fveg, months)
 !
 ! !DESCRIPTION:
 ! Read monthly vegetation data for two consec. months.
 !
 ! !USES:
     use clmtype
-    use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo
+    use decompMod   , only : get_proc_bounds
     use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
-    use clm_time_manager, only : get_nstep
-    use ncdio       , only : check_ret,ncd_iolocal
-    use netcdf
+    use spmdMod     , only : masterproc
 !
 ! !ARGUMENTS:
     implicit none
 
     character(len=*), intent(in) :: fveg  ! file with monthly vegetation data
-    integer, intent(in) :: kmo            ! month (1, ..., 12)
-    integer, intent(in) :: kda            ! day of month (1, ..., 31)
     integer, intent(in) :: months(2)      ! months to be interpolated (1 to 12)
 !
 ! !REVISION HISTORY:
@@ -518,26 +446,24 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     character(len=256) :: locfn           ! local file name
+    type(file_desc_t)  :: ncid            ! netcdf id
     integer :: g,n,k,l,m,p,ivt            ! indices
-    integer :: ncid,dimid,varid           ! input netCDF id's
-    integer :: beg4d(4),len4d(4)          ! netCDF variable edges
+    integer :: dimid,varid                ! input netCDF id's
     integer :: ntim                       ! number of input data time samples
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
     integer :: begp,endp                  ! beg and end local p index
     integer :: begg,endg                  ! beg and end local g index
-    integer :: ier,ret                    ! error code
+    integer :: ier                        ! error code
     integer :: closelatidx,closelonidx
     real(r8):: closelat,closelon
-
-    integer :: nps,npe              ! start/end numpft limits
-    real(r8), pointer :: mlai(:,:)  ! lai read from input files
-    real(r8), pointer :: msai(:,:)  ! sai read from input files
-    real(r8), pointer :: mhgtt(:,:) ! top vegetation height
-    real(r8), pointer :: mhgtb(:,:) ! bottom vegetation height
-    real(r8), pointer :: arrayl(:)  ! temp local array
-    real(r8), pointer :: mlaidiff(:)! difference between lai month one and month two
+    logical :: readvar
+    real(r8), pointer :: mlai(:,:)        ! lai read from input files
+    real(r8), pointer :: msai(:,:)        ! sai read from input files
+    real(r8), pointer :: mhgtt(:,:)       ! top vegetation height
+    real(r8), pointer :: mhgtb(:,:)       ! bottom vegetation height
+    real(r8), pointer :: mlaidiff(:)      ! difference between lai month one and month two
     character(len=32) :: subname = 'readMonthlyVegetation'
 !-----------------------------------------------------------------------
 
@@ -545,13 +471,11 @@ contains
 
     call get_proc_bounds(begg=begg,endg=endg,begp=begp,endp=endp)
 
-    nps = 0
-    npe = numpft
     allocate(mlai(begg:endg,0:numpft), &
              msai(begg:endg,0:numpft), &
              mhgtt(begg:endg,0:numpft), &
-             mhgtb(begg:endg,0:numpft), stat=ier)
-
+             mhgtb(begg:endg,0:numpft), &
+             stat=ier)
     if (ier /= 0) then
        write(iulog,*)subname, 'allocation big error '; call endrun()
     end if
@@ -560,120 +484,43 @@ contains
     ! Open monthly vegetation file
     ! Read data and convert from [lsmlon] x [lsmlat] grid to patch data
     ! ----------------------------------------------------------------------
-
+   
+    call getfil(fveg, locfn, 0)
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
+    
+    if (.not. single_column) then
+       call check_dim(ncid, 'lsmlon', lsmlon)
+       call check_dim(ncid, 'lsmlat', lsmlat)
+       call check_dim(ncid, 'lsmpft', numpft+1)
+    else
+       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+    endif
+    
     do k=1,2   !loop over months and read vegetated data
 
-       if (masterproc) then
+       call ncd_io(ncid=ncid, varname='MONTHLY_LAI', flag='read', data=mlai, dim1name=grlnd, &
+            nt=months(k), readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_LAI NOT on fveg file' )
 
-          write(iulog,*) 'Attempting to read monthly vegetation data .....'
-          write(iulog,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
+       call ncd_io(ncid=ncid, varname='MONTHLY_SAI', flag='read', data=msai, dim1name=grlnd, &
+            nt=months(k), readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_SAI NOT on fveg file' )
 
-          call getfil(fveg, locfn, 0)
-          call check_ret(nf90_open(locfn, 0, ncid), subname)
+       call ncd_io(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', flag='read', data=mhgtt, dim1name=grlnd, &
+            nt=months(k), readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file' )
 
-          call check_ret(nf90_inq_dimid (ncid, 'lsmlon', dimid), subname)
-          call check_ret(nf90_inquire_dimension(ncid, dimid, len=nlon_i), subname)
-          if (.not.single_column) then
-             if (nlon_i /= lsmlon) then
-                write(iulog,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
-                call endrun()
-             end if
-          endif
-          call check_ret(nf90_inq_dimid(ncid, 'lsmlat', dimid), subname)
-          call check_ret(nf90_inquire_dimension(ncid, dimid, len=nlat_i), subname)
+       call ncd_io(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', flag='read', data=mhgtb, dim1name=grlnd, &
+            nt=months(k), readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file' )
 
-          if (.not.single_column ) then
-             if (nlat_i /= lsmlat) then
-                write(iulog,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
-                call endrun()
-             end if
-          endif
-          call check_ret(nf90_inq_dimid(ncid, 'lsmpft', dimid), subname)
-          call check_ret(nf90_inquire_dimension(ncid, dimid, len=npft_i), subname)
-
-          if (.not. single_column ) then
-             if (npft_i /= numpft+1) then
-                write(iulog,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
-                call endrun()
-             end if
-          endif
-          call check_ret(nf90_inq_dimid(ncid, 'time', dimid), subname)
-          call check_ret(nf90_inquire_dimension(ncid, dimid, len=ntim), subname)
- 
-       else
-
-          nlon_i = lsmlon
-          nlat_i = lsmlon
-          npft_i = numpft+1
-
-       endif   ! masterproc
-
-       call mpi_bcast (nlon_i, 1, MPI_INTEGER, 0, mpicom, ier)
-       call mpi_bcast (nlat_i, 1, MPI_INTEGER, 0, mpicom, ier)
-       call mpi_bcast (npft_i, 1, MPI_INTEGER, 0, mpicom, ier)
-       call mpi_bcast (ntim  , 1, MPI_INTEGER, 0, mpicom, ier)
-
-       if (single_column) then
-          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
-       endif
-
-       allocate(arrayl(begg:endg),stat=ier)
-       if (ier /= 0) then
-          write(iulog,*)subname, 'allocation array error '; call endrun()
-       end if
-
-       do n = nps,npe
-          beg4d(1) = 1         ; len4d(1) = nlon_i
-          beg4d(2) = 1         ; len4d(2) = nlat_i
-          beg4d(3) = n         ; len4d(3) = 1
-          beg4d(4) = months(k) ; len4d(4) = 1
-          if (single_column) then
-             beg4d(1) = closelonidx; len4d(1) = 1
-             beg4d(2) = closelatidx; len4d(2) = 1
-          else
-             beg4d(1) = 1         ; len4d(1) = nlon_i
-             beg4d(2) = 1         ; len4d(2) = nlat_i
-          end if
-          if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
-
-          call ncd_iolocal(ncid,'MONTHLY_LAI','read',arrayl,grlnd,beg4d,len4d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_LAI NOT on fveg file' )
-          mlai(begg:endg,n) = arrayl(begg:endg)
-
-          call ncd_iolocal(ncid,'MONTHLY_SAI','read',arrayl,grlnd,beg4d,len4d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_SAI NOT on fveg file' )
-          msai(begg:endg,n) = arrayl(begg:endg)
-
-          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_TOP','read',arrayl,grlnd,beg4d,len4d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file' )
-          mhgtt(begg:endg,n) = arrayl(begg:endg)
-
-          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_BOT','read',arrayl,grlnd,beg4d,len4d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_BOT NOT on fveg file' )
-          mhgtb(begg:endg,n) = arrayl(begg:endg)
-       enddo
-
-       deallocate(arrayl)
-
-       if (masterproc) then
-          call check_ret(nf90_close(ncid), subname)
-          write(iulog,*) 'Successfully read monthly vegetation data for'
-          write(iulog,*) 'month ', months(k)
-          write(iulog,*)
-       end if
-
-
-       ! store data directly in clmtype structure
+       ! Store data directly in clmtype structure
        ! only vegetated pfts have nonzero values
+       ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
+       ! as determined in subroutine surfrd
 
        do p = begp,endp
-
           g = clm3%g%l%c%p%gridcell(p)
-
-          ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
-          ! as determined in subroutine surfrd
-
-
           ivt = clm3%g%l%c%p%itype(p)
           if (ivt /= noveg) then     ! vegetated pft
              do l = 0, numpft
@@ -690,10 +537,18 @@ contains
              mhvt2t(p,k) = 0._r8
              mhvb2t(p,k) = 0._r8
           end if
-
        end do   ! end of loop over pfts
 
     end do   ! end of loop over months
+
+    call pio_closefile(ncid)
+
+    if (masterproc) then
+       k = 2
+       write(iulog,*) 'Successfully read monthly vegetation data for'
+       write(iulog,*) 'month ', months(k)
+       write(iulog,*)
+    end if
 
     deallocate(mlai, msai, mhgtt, mhgtb)
 

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module UrbanInputMod
 
 !----------------------------------------------------------------------- 
@@ -80,14 +77,12 @@ contains
     use clm_varctl, only : iulog, fsurdat, single_column
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
-    use ncdio     , only : ncd_iolocal, check_dim, check_ret
     use clmtype   , only : grlnd
     use decompMod , only : get_proc_bounds
-    use spmdGathScatMod
+    use ncdio_pio 
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     character(len=*), intent(in) :: mode
 !
 ! !CALLED FROM:
@@ -101,19 +96,18 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     character(len=256) :: locfn      ! local file name
-    character(len=32)  :: desc
-    integer :: ncid,dimid,varid      ! netCDF id's
+    type(file_desc_t)  :: ncid       ! netcdf id
+    integer :: dimid,varid           ! netCDF id's
     integer :: begg,endg             ! start/stop gridcells
-    integer :: start4d(4),count4d(4) ! netcdf start/count arrays
-    integer :: start3d(3),count3d(3) ! netcdf start/count arrays
-    integer :: nw,n,k,i,j,nn,mm
-    integer :: ier  
+    integer :: nw,n,k,i,j            ! indices
     integer :: nlevurb_i             ! input grid: number of urban vertical levels
     integer :: numsolar_i            ! input grid: number of solar type (DIR/DIF)
     integer :: numrad_i              ! input grid: number of solar bands (VIS/NIR)
+    integer :: ier  
     integer :: ret
-    real(r8),pointer :: arrayl(:)    ! generic global array
-    character(len=32) :: subname = 'UrbanInput'          ! subroutine name
+    logical :: readvar
+    real(r8), pointer :: arrayl3d(:,:,:)  ! generic global array
+    character(len=32) :: subname = 'UrbanInput' ! subroutine name
 !-----------------------------------------------------------------------
 
     call get_proc_bounds(begg,endg)
@@ -121,7 +115,6 @@ contains
     if (mode == 'initialize') then
 
        ! Allocate dynamic memory
-
        allocate(urbinp%canyon_hwr(begg:endg), &  
                 urbinp%wtlunit_roof(begg:endg), &  
                 urbinp%wtroad_perv(begg:endg), &
@@ -159,159 +152,154 @@ contains
        
        if (masterproc) then
           write(iulog,*)' Reading in urban input data from fsurdat file ...'
-          call getfil (fsurdat, locfn, 0)
-          call check_ret(nf_open(locfn, 0, ncid), subname)
+       end if
+       
+       call getfil (fsurdat, locfn, 0)
+       call ncd_pio_openfile (ncid, locfn, 0)
+
+       if (masterproc) then
           write(iulog,*) subname,trim(fsurdat)
           write(iulog,*) " Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
-          if (.not. single_column) then
-             call check_dim(ncid, 'lsmlon', lsmlon)
-             call check_dim(ncid, 'lsmlon', lsmlon)
-          end if 
-
-          call check_ret(nf_inq_dimid(ncid, 'nlevurb', dimid), subname)
-          call check_ret(nf_inq_dimlen(ncid, dimid, nlevurb_i), subname)
-          if (nlevurb_i /= nlevurb) then
-             write(iulog,*)trim(subname)// ': parameter nlevurb= ',nlevurb, &
-                           'does not equal input dataset nlevurb= ',nlevurb_i
-             call endrun
-          endif
-          call check_ret(nf_inq_dimid(ncid, 'numsolar', dimid), subname)
-          call check_ret(nf_inq_dimlen(ncid, dimid, numsolar_i), subname)
-          if (numsolar_i /= numsolar) then
-             write(iulog,*)trim(subname)// ': parameter numsolar= ',numsolar, &
-                           'does not equal input dataset numsolar= ',numsolar_i
-             call endrun
-          endif
-          call check_ret(nf_inq_dimid(ncid, 'numrad', dimid), subname)
-          call check_ret(nf_inq_dimlen(ncid, dimid, numrad_i), subname)
-          if (numrad_i /= numrad) then
-             write(iulog,*)trim(subname)// ': parameter numrad= ',numrad, &
-                           'does not equal input dataset numrad= ',numrad_i
-             call endrun
-          endif
-
+       end if
+       if (.not. single_column) then
+          call check_dim(ncid, 'lsmlon', lsmlon)
+          call check_dim(ncid, 'lsmlat', lsmlat)
        end if
 
-       allocate(arrayl(begg:endg))
+       call ncd_inqdid(ncid, 'nlevurb', dimid)
+       call ncd_inqdlen(ncid, dimid, nlevurb_i)
+       if (nlevurb_i /= nlevurb) then
+          write(iulog,*)trim(subname)// ': parameter nlevurb= ',nlevurb, &
+               'does not equal input dataset nlevurb= ',nlevurb_i
+          call endrun
+       endif
 
-       call ncd_iolocal(ncid,'CANYON_HWR','read',urbinp%canyon_hwr,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: CANYON_HWR NOT on fsurdat file' )
+       call ncd_inqdid(ncid, 'numsolar', dimid)
+       call ncd_inqdlen(ncid, dimid, numsolar_i)
+       if (numsolar_i /= numsolar) then
+          write(iulog,*)trim(subname)// ': parameter numsolar= ',numsolar, &
+               'does not equal input dataset numsolar= ',numsolar_i
+          call endrun
+       endif
 
-       call ncd_iolocal(ncid,'WTLUNIT_ROOF','read',urbinp%wtlunit_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: WTLUNIT_ROOF NOT on fsurdat file' )
+       call ncd_inqdid(ncid, 'numrad', dimid)
+       call ncd_inqdlen(ncid, dimid, numrad_i)
+       if (numrad_i /= numrad) then
+          write(iulog,*)trim(subname)// ': parameter numrad= ',numrad, &
+               'does not equal input dataset numrad= ',numrad_i
+          call endrun
+       endif
 
-       call ncd_iolocal(ncid,'WTROAD_PERV','read',urbinp%wtroad_perv,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: WTROAD_PERV NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='CANYON_HWR', flag='read', data=urbinp%canyon_hwr,&
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: CANYON_HWR NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'EM_ROOF','read',urbinp%em_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_ROOF NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='WTLUNIT_ROOF', flag='read', data=urbinp%wtlunit_roof, &
+            dim1name=grlnd,  readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: WTLUNIT_ROOF NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'EM_IMPROAD','read',urbinp%em_improad,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_IMPROAD NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='WTROAD_PERV', flag='read', data=urbinp%wtroad_perv, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: WTROAD_PERV NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'EM_PERROAD','read',urbinp%em_perroad,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_PERROAD NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='EM_ROOF', flag='read', data=urbinp%em_roof, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: EM_ROOF NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'EM_WALL','read',urbinp%em_wall,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_WALL NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='EM_IMPROAD', flag='read', data=urbinp%em_improad, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: EM_IMPROAD NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'HT_ROOF','read',urbinp%ht_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: HT_ROOF NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='EM_PERROAD', flag='read', data=urbinp%em_perroad, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: EM_PERROAD NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'WIND_HGT_CANYON','read',urbinp%wind_hgt_canyon,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: WIND_HGT_CANYON NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='EM_WALL', flag='read', data=urbinp%em_wall, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: EM_WALL NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'THICK_WALL','read',urbinp%thick_wall,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: THICK_WALL NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='HT_ROOF', flag='read', data=urbinp%ht_roof, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: HT_ROOF NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'THICK_ROOF','read',urbinp%thick_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: THICK_ROOF NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='WIND_HGT_CANYON', flag='read', data=urbinp%wind_hgt_canyon, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: WIND_HGT_CANYON NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'NLEV_IMPROAD','read',urbinp%nlev_improad,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: NLEV_IMPROAD NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='THICK_WALL', flag='read', data=urbinp%thick_wall, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: THICK_WALL NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'T_BUILDING_MIN','read',urbinp%t_building_min,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: T_BUILDING_MIN NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='THICK_ROOF', flag='read', data=urbinp%thick_roof, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: THICK_ROOF NOT on fsurdat file' )
 
-       call ncd_iolocal(ncid,'T_BUILDING_MAX','read',urbinp%t_building_max,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: T_BUILDING_MAX NOT on fsurdat file' )
+       call ncd_io(ncid=ncid, varname='NLEV_IMPROAD', flag='read', data=urbinp%nlev_improad, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: NLEV_IMPROAD NOT on fsurdat file' )
 
-       start4d(1) = 1
-       count4d(1) = lsmlon
-       start4d(2) = 1
-       count4d(2) = lsmlat
-       start4d(3) = 1
-       count4d(3) = 1
-       start4d(4) = 1
-       count4d(4) = 1
+       call ncd_io(ncid=ncid, varname='T_BUILDING_MIN', flag='read', data=urbinp%t_building_min, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: T_BUILDING_MIN NOT on fsurdat file' )
 
-       do mm = 1,numsolar
-         do nn = 1,numrad
-            start4d(3) = nn
-            start4d(4) = mm
-            call ncd_iolocal(ncid,'ALB_IMPROAD','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_IMPROAD NOT on fsurdat file' )
-            if (mm .eq. 1) then
-              urbinp%alb_improad_dir(begg:endg,nn) = arrayl(begg:endg)
-            else
-              urbinp%alb_improad_dif(begg:endg,nn) = arrayl(begg:endg)
-            end if
-            call ncd_iolocal(ncid,'ALB_PERROAD','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_PERROAD NOT on fsurdat file' )
-            if (mm .eq. 1) then
-              urbinp%alb_perroad_dir(begg:endg,nn) = arrayl(begg:endg)
-            else
-              urbinp%alb_perroad_dif(begg:endg,nn) = arrayl(begg:endg)
-            end if
-            call ncd_iolocal(ncid,'ALB_ROOF','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_ROOF NOT on fsurdat file' )
-            if (mm .eq. 1) then
-              urbinp%alb_roof_dir(begg:endg,nn) = arrayl(begg:endg)
-            else
-              urbinp%alb_roof_dif(begg:endg,nn) = arrayl(begg:endg)
-            end if
-            call ncd_iolocal(ncid,'ALB_WALL','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_WALL NOT on fsurdat file' )
-            if (mm .eq. 1) then
-              urbinp%alb_wall_dir(begg:endg,nn) = arrayl(begg:endg)
-            else
-              urbinp%alb_wall_dif(begg:endg,nn) = arrayl(begg:endg)
-            end if
-         end do
-       end do
+       call ncd_io(ncid=ncid, varname='T_BUILDING_MAX', flag='read', data=urbinp%t_building_max, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: T_BUILDING_MAX NOT on fsurdat file' )
 
-       start3d(1) = 1
-       count3d(1) = lsmlon
-       start3d(2) = 1
-       count3d(2) = lsmlat
-       start3d(3) = 1
-       count3d(3) = 1
-       do nn = 1,nlevurb
-          start3d(3) = nn
-          call ncd_iolocal(ncid,'TK_IMPROAD','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_IMPROAD NOT on fsurdat file' )
-          urbinp%tk_improad(begg:endg,nn) = arrayl(begg:endg)
-          call ncd_iolocal(ncid,'TK_ROOF','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_ROOF NOT on fsurdat file' )
-          urbinp%tk_roof(begg:endg,nn) = arrayl(begg:endg)
-          call ncd_iolocal(ncid,'TK_WALL','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_WALL NOT on fsurdat file' )
-          urbinp%tk_wall(begg:endg,nn) = arrayl(begg:endg)
-          call ncd_iolocal(ncid,'CV_IMPROAD','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_IMPROAD NOT on fsurdat file' )
-          urbinp%cv_improad(begg:endg,nn) = arrayl(begg:endg)
-          call ncd_iolocal(ncid,'CV_ROOF','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_ROOF NOT on fsurdat file' )
-          urbinp%cv_roof(begg:endg,nn) = arrayl(begg:endg)
-          call ncd_iolocal(ncid,'CV_WALL','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_WALL NOT on fsurdat file' )
-          urbinp%cv_wall(begg:endg,nn) = arrayl(begg:endg)
-       end do
+       allocate(arrayl3d(begg:endg,numrad,numsolar))
 
-       deallocate(arrayl)
-       
-       if (masterproc) then  
-          call check_ret(nf_close(ncid), subname)
+       call ncd_io(ncid=ncid, varname='ALB_IMPROAD', flag='read', data=arrayl3d, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not.readvar) call endrun( trim(subname)//' ERROR: ALB_IMPROAD NOT on fsurdat file' )
+       urbinp%alb_improad_dir(begg:endg,:) = arrayl3d(begg:endg,:,1)
+       urbinp%alb_improad_dif(begg:endg,:) = arrayl3d(begg:endg,:,2)
+
+       call ncd_io(ncid=ncid, varname='ALB_PERROAD', flag='read',data=arrayl3d, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: ALB_PERROAD NOT on fsurdat file' )
+       urbinp%alb_perroad_dir(begg:endg,:) = arrayl3d(begg:endg,:,1)
+       urbinp%alb_perroad_dif(begg:endg,:) = arrayl3d(begg:endg,:,2)
+
+       call ncd_io(ncid=ncid, varname='ALB_ROOF', flag='read', data=arrayl3d,  &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: ALB_ROOF NOT on fsurdat file' )
+       urbinp%alb_roof_dir(begg:endg,:) = arrayl3d(begg:endg,:,1)
+       urbinp%alb_roof_dif(begg:endg,:) = arrayl3d(begg:endg,:,2 )
+
+       call ncd_io(ncid=ncid, varname='ALB_WALL', flag='read', data=arrayl3d, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: ALB_WALL NOT on fsurdat file' )
+       urbinp%alb_wall_dir(begg:endg,:) = arrayl3d(begg:endg,:,1)
+       urbinp%alb_wall_dif(begg:endg,:) = arrayl3d(begg:endg,:,2)
+
+       deallocate (arrayl3d)
+
+       call ncd_io(ncid=ncid, varname='TK_IMPROAD', flag='read', data=urbinp%tk_improad, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TK_IMPROAD NOT on fsurdat file' )
+
+       call ncd_io(ncid=ncid, varname='TK_ROOF', flag='read', data=urbinp%tk_roof, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TK_ROOF NOT on fsurdat file' )
+
+       call ncd_io(ncid=ncid, varname='TK_WALL', flag='read', data=urbinp%tk_wall, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TK_WALL NOT on fsurdat file' )
+
+       call ncd_io(ncid=ncid, varname='CV_IMPROAD', flag='read', data=urbinp%cv_improad, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: CV_IMPROAD NOT on fsurdat file' )
+
+       call ncd_io(ncid=ncid, varname='CV_ROOF', flag='read', data=urbinp%cv_roof, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: CV_ROOF NOT on fsurdat file' )
+
+       call ncd_io(ncid=ncid, varname='CV_WALL', flag='read', data=urbinp%cv_wall, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: CV_WALL NOT on fsurdat file' )
+
+       call pio_closefile(ncid)
+       if (masterproc) then
           write(iulog,*)' Sucessfully read urban input data' 
           write(iulog,*)
        end if

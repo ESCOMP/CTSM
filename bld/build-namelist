@@ -959,7 +959,6 @@ add_default($nl, 'fpftcon');
 add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_year );
 add_default($nl, 'co2_type');
 #add_default($nl, 'wrtdia',       'val'=> '.false.');
-add_default($nl, 'hist_crtinic',  'bgc'=>$bgc );
 
 add_default($nl, 'urban_hac');
 add_default($nl, 'urban_traffic');

@@ -65,6 +65,7 @@ module clm_atmlnd
      real(r8), pointer :: t_rad(:)        !radiative temperature (Kelvin)
      real(r8), pointer :: t_ref2m(:)      !2m surface air temperature (Kelvin)
      real(r8), pointer :: q_ref2m(:)      !2m surface specific humidity (kg/kg)
+     real(r8), pointer :: u_ref10m(:)     !10m surface wind speed (m/sec)
      real(r8), pointer :: h2osno(:)       !snow water (mm H2O)
      real(r8), pointer :: albd(:,:)       !(numrad) surface albedo (direct)
      real(r8), pointer :: albi(:,:)       !(numrad) surface albedo (diffuse)
@@ -98,7 +99,7 @@ module clm_atmlnd
   public :: init_adiag_type
   public :: init_atm2lnd_type
   public :: init_lnd2atm_type
-  public :: clm_mapa2l
+  public :: clm_downscale_a2l
   public :: clm_map2gcell
 !
 ! !REVISION HISTORY:
@@ -269,6 +270,7 @@ end subroutine init_atm2lnd_type
   allocate(l2a%t_rad(beg:end))
   allocate(l2a%t_ref2m(beg:end))
   allocate(l2a%q_ref2m(beg:end))
+  allocate(l2a%u_ref10m(beg:end))
   allocate(l2a%h2osno(beg:end))
   allocate(l2a%albd(beg:end,1:numrad))
   allocate(l2a%albi(beg:end,1:numrad))
@@ -294,6 +296,7 @@ end subroutine init_atm2lnd_type
   l2a%t_rad(beg:end) = ival
   l2a%t_ref2m(beg:end) = ival
   l2a%q_ref2m(beg:end) = ival
+  l2a%u_ref10m(beg:end) = ival
   l2a%h2osno(beg:end) = ival
   l2a%albd(beg:end,1:numrad) = ival
   l2a%albi(beg:end,1:numrad) = ival
@@ -318,19 +321,19 @@ end subroutine init_lnd2atm_type
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: clm_mapa2l
+! !IROUTINE: clm_downscale_a2l
 !
 ! !INTERFACE:
-  subroutine clm_mapa2l(a2l_src, a2l_dst)
+subroutine clm_downscale_a2l(a2l_src, a2l_dst)
 !
 ! !DESCRIPTION:
 ! Maps atm2lnd fields from external grid to clm grid
 !
 ! !USES:
-  use areaMod  , only : map1dl_a2l, map1dl_l2a, map_setptrs
-  use decompMod, only : ldecomp,adecomp
-  use domainMod, only : ldomain,adomain
-  use QSatMod,   only : QSat
+  use downscaleMod, only : map1dl_a2l, map1dl_l2a, map_setptrs
+  use decompMod   , only : ldecomp,adecomp
+  use domainMod   , only : ldomain,adomain
+  use QSatMod     , only : QSat
 
 !
 ! !ARGUMENTS:
@@ -378,7 +381,7 @@ end subroutine init_lnd2atm_type
 !------------------------------------------------------------------------------
 
   if (first_call .and. masterproc) then
-    write(iulog,*) 'clm_mapa2l subroutine'
+    write(iulog,*) 'clm_downscale_a2l subroutine'
   endif
 
   nradflds = size(a2l_src%forc_solad,dim=2)
@@ -394,6 +397,7 @@ end subroutine init_lnd2atm_type
   !-only call this if there is more than 1 land cell / atm cell somewhere
 
   call map_setptrs(map1dl_l2a, dstmo=mo)
+
   if (mo > 1) then
 
      if (first_call.and.masterproc) then
@@ -656,14 +660,14 @@ end subroutine init_lnd2atm_type
      
   else    ! mx_ovr > 1
      
-     ! adomain and ldomain same, copy asca from adomain
-     ldomain%asca = adomain%asca
-     
+     write(iulog,*)' need mx_ovr > 1 for downscaling'
+     call endrun()
+
   endif   ! mx_ovr > 1
 
   first_call = .false.
 
-end subroutine clm_mapa2l
+end subroutine clm_downscale_a2l
 
 !------------------------------------------------------------------------
 !BOP
@@ -671,7 +675,7 @@ end subroutine clm_mapa2l
 ! !IROUTINE: clm_map2gcell
 !
 ! !INTERFACE: subroutine clm_map2gcell(init)
-  subroutine clm_map2gcell(init)
+subroutine clm_map2gcell(init)
 !
 ! !DESCRIPTION:
 ! Compute l2a component of gridcell derived type
@@ -783,6 +787,10 @@ end subroutine clm_mapa2l
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pes%q_ref2m, clm_l2a%q_ref2m, & 
+          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+          pptr%pps%u10_clm, clm_l2a%u_ref10m, & 
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &

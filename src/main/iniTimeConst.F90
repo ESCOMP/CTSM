@@ -41,10 +41,10 @@ subroutine iniTimeConst
   use abortutils      , only : endrun
   use fileutils       , only : getfil
   use organicFileMod  , only : organicrd 
-  use ncdio           , only : ncd_iolocal, nf_close, nf_get_var_int, NF_NOERR, nf_inq_varid, nf_open, check_ret
   use spmdMod         , only : mpicom, MPI_INTEGER, masterproc
   use clm_varctl      , only : fsnowoptics, fsnowaging
   use SNICARMod       , only : SnowAge_init, SnowOptics_init
+  use ncdio_pio       
 
 !
 ! !ARGUMENTS:
@@ -118,7 +118,7 @@ subroutine iniTimeConst
 !
 ! !OTHER LOCAL VARIABLES:
 !EOP
-  integer  :: ncid             ! netCDF file id 
+  type(file_desc_t)  :: ncid   ! netcdf id
   integer  :: n,j,ib,lev,bottom! indices
   integer  :: g,l,c,p          ! indices
   integer  :: m                ! vegetation type index
@@ -178,6 +178,7 @@ subroutine iniTimeConst
   real(r8), allocatable :: dzurb_roof(:,:)       ! roof (layer thickness)
   real(r8), allocatable :: ziurb_wall(:,:)       ! wall (layer interface)
   real(r8), allocatable :: ziurb_roof(:,:)       ! roof (layer interface)
+  logical :: readvar 
 !------------------------------------------------------------------------
 
   integer :: closelatidx,closelonidx
@@ -250,9 +251,13 @@ subroutine iniTimeConst
   sandfrac        => clm3%g%l%c%p%pps%sandfrac
   clayfrac        => clm3%g%l%c%p%pps%clayfrac
 
-  allocate(zurb_wall(begl:endl,nlevurb), zurb_roof(begl:endl,nlevurb), &
-           dzurb_wall(begl:endl,nlevurb), dzurb_roof(begl:endl,nlevurb), &
-           ziurb_wall(begl:endl,0:nlevurb), ziurb_roof(begl:endl,0:nlevurb),  stat=ier)
+  allocate(zurb_wall(begl:endl,nlevurb),    &
+           zurb_roof(begl:endl,nlevurb),    &
+           dzurb_wall(begl:endl,nlevurb),   &
+           dzurb_roof(begl:endl,nlevurb),   &
+           ziurb_wall(begl:endl,0:nlevurb), &
+           ziurb_roof(begl:endl,0:nlevurb), &
+           stat=ier)
   if (ier /= 0) then
      call endrun( 'iniTimeConst: allocation error for zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof' )
   end if
@@ -263,97 +268,71 @@ subroutine iniTimeConst
 
   if (masterproc) then
      write(iulog,*) 'Attempting to read soil color, sand and clay boundary data .....'
-     call getfil (fsurdat, locfn, 0)
-     call check_ret(nf_open(locfn, 0, ncid), subname)
-
-     ! Determine number of soil color classes - if number of soil color classes is not
-     ! on input dataset set it to 8
-
-     ier = nf_inq_varid(ncid, 'mxsoil_color', varid)
-     if (ier == NF_NOERR) then
-        call check_ret(nf_inq_varid(ncid, 'mxsoil_color', varid), subname)
-        call check_ret(nf_get_var_int(ncid, varid, mxsoil_color), subname)
-     else
-        mxsoil_color = 8  
-     end if
-  endif
-  call mpi_bcast( mxsoil_color, 1, MPI_INTEGER, 0, mpicom, ier )
-
-  count(1) = lsmlon
-  count(2) = lsmlat
-  if (single_column) then
-     call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
-     start(1) = closelonidx
-     start(2) = closelatidx
-  else
-     start(1) = 1
-     start(2) = 1
   end if
-  start(3) = 1
-  count(3) = 1
+
+  call getfil (fsurdat, locfn, 0)
+  call ncd_pio_openfile (ncid, locfn, 0)
+
+  ! Determine number of soil color classes - if number of soil color classes is not
+  ! on input dataset set it to 8
+
+  ier = pio_inq_varid(ncid, 'mxsoil_color', varid)
+  if (ier == PIO_NOERR) then
+     ier = pio_inq_varid(ncid, 'mxsoil_color', varid)
+     ier = pio_get_var(ncid, varid, mxsoil_color)
+  else
+     mxsoil_color = 8  
+  end if
 
   ! Read fmax
-  call ncd_iolocal(ncid, 'FMAX', 'read', gti, grlnd,start(:2),count(:2), status=ret)
-  if (ret /= 0) call endrun( trim(subname)//' ERROR: FMAX NOT on surfdata file' ) 
+
+  call ncd_io(ncid=ncid, varname='FMAX', flag='read', data=gti, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: FMAX NOT on surfdata file') 
 
   ! Read in soil color, sand and clay fraction
-  call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, grlnd,start(:2),count(:2),status=ret)
-  if (ret /= 0) call endrun( trim(subname)//' ERROR: SOIL_COLOR NOT on surfdata file' ) 
+
+  call ncd_io(ncid=ncid, varname='SOIL_COLOR', flag='read', data=soic2d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: SOIL_COLOR NOT on surfdata file' ) 
+
   ! Read in emission factors
 
-  call ncd_iolocal(ncid, 'EF1_BTR', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
-  if (iostat/=0) then
-     call endrun('iniTimeConst: errror reading EF1_BTR')
-  endif
+  call ncd_io(ncid=ncid, varname='EF1_BTR', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun('iniTimeConst: errror reading EF1_BTR')
   efisop2d(1,:)=temp_ef(:)
 
-  call ncd_iolocal(ncid, 'EF1_FET', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
-  if (iostat/=0) then
-     call endrun('iniTimeConst: errror reading EF1_FET')
-  endif
+  call ncd_io(ncid=ncid, varname='EF1_FET', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun('iniTimeConst: errror reading EF1_FET')
   efisop2d(2,:)=temp_ef(:)
 
-  call ncd_iolocal(ncid, 'EF1_FDT', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
-  if (iostat/=0) then
-     call endrun('iniTimeConst: errror reading EF1_FDT')
-  endif
+  call ncd_io(ncid=ncid, varname='EF1_FDT', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun('iniTimeConst: errror reading EF1_FDT')
   efisop2d(3,:)=temp_ef(:)
 
-  call ncd_iolocal(ncid, 'EF1_SHR', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
-  if (iostat/=0) then
-     call endrun('iniTimeConst: errror reading EF1_SHR')
-  endif
+  call ncd_io(ncid=ncid, varname='EF1_SHR', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun('iniTimeConst: errror reading EF1_SHR')
   efisop2d(4,:)=temp_ef(:)
 
-  call ncd_iolocal(ncid, 'EF1_GRS', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
-  if (iostat/=0) then
-     call endrun('iniTimeConst: errror reading EF1_GRS')
-  endif
+  call ncd_io(ncid=ncid, varname='EF1_GRS', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun('iniTimeConst: errror reading EF1_GRS')
   efisop2d(5,:)=temp_ef(:)
 
-  call ncd_iolocal(ncid, 'EF1_CRP', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
-  if (iostat/=0) then
-     call endrun('iniTimeConst: errror reading EF1_CRP')
-  endif
+  call ncd_io(ncid=ncid, varname='EF1_CRP', flag='read', data=temp_ef, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun('iniTimeConst: errror reading EF1_CRP')
   efisop2d(6,:)=temp_ef(:)
 
-  allocate(arrayl(begg:endg))
-  do n = 1,nlevsoi
-     start(3) = n
-     call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,grlnd,start,count,status=ret)
-     if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_SAND NOT on surfdata file' ) 
-     sand3d(begg:endg,n) = arrayl(begg:endg)
-     call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,grlnd,start,count,status=ret)
-     if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_CLAY NOT on surfdata file' ) 
-     clay3d(begg:endg,n) = arrayl(begg:endg)
-  enddo
-  deallocate(arrayl)
+  call ncd_io(ncid=ncid, varname='PCT_SAND', flag='read', data=sand3d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_SAND NOT on surfdata file' ) 
+
+  call ncd_io(ncid=ncid, varname='PCT_CLAY', flag='read', data=clay3d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CLAY NOT on surfdata file' ) 
+
+  call pio_closefile(ncid)
 
   if (masterproc) then
-     call check_ret(nf_close(ncid), subname)
      write(iulog,*) 'Successfully read fmax, soil color, sand and clay boundary data'
      write(iulog,*)
   endif
+
   ! Determine saturated and dry soil albedos for n color classes and 
   ! numrad wavebands (1=vis, 2=nir)
 

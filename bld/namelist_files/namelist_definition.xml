@@ -165,12 +165,6 @@ Per file averaging flag.
 Averaging of output for 1D vector output
 </entry>
 
-<entry id="hist_crtinic" type="char*8" category="history"
-       group="clm_inparm" valid_values="6-HOURLY,DAILY,MONTHLY,YEARLY,NONE" >
-Frequency to generate initial dataset.
-<default>'NONE'.</default>
-</entry>
-
 <entry id="hist_dov2xy" type="logical(6)" category="history"
        group="clm_inparm" valid_values="" >
 TRUE implies do grid averaging.  One setting per history file.
@@ -337,49 +331,6 @@ Aerosol deposition file name (when NOT passing deposition rates from atmosphere 
 <entry id="fndepdat" type="char*256" input_pathname="abs" category="tools"
        group="clmexp" valid_values="" >
 Full pathname of nitrogen deposition data file.
-</entry>
-
-<!--                                                   -->
-<!-- PIO experimental namelist  NOT currently working  -->
-<!--                                                   -->
-<entry id="hist_pioflag" type="logical" category="pio"
-       group="clm_inparm" valid_values="" >
-TRUE if want to use PIO to write history data out (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_lowmem2d" type="logical" category="pio"
-       group="clm_inparm" valid_values="" >
-TRUE if want to turn on low memory 2d writes in clm hist (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_pio_def" type="logical" category="pio"
-       group="clm_inparm" valid_values="" >
-TRUE if want default pio use setting (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_pio_UseRearranger" type="logical" category="pio"
-       group="clm_inparm" valid_values="" >
-TRUE if want to use MCT as Rearranger (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_pio_UseBoxRearr" type="logical" category="pio"
-       group="clm_inparm" valid_values="" >
-TRUE if want to use box as Rearranger (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_pio_SerialCDF" type="logical" category="pio"
-       group="clm_inparm" valid_values="" >
-TRUE if want to write with pio serial netcdf mode (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_pio_DebugLevel" type="integer" category="pio"
-       group="clm_inparm" valid_values="0,1,2,3" >
-Integer pio debug level (EXPERIMENTAL AND NOT FUNCTIONAL!)
-</entry>
-
-<entry id="ncd_pio_num_iotasks" type="integer" category="pio"
-       group="clm_inparm" valid_values="" >
-Integer number of iotasks to use for PIO (EXPERIMENTAL AND NOT FUNCTIONAL!)
 </entry>
 
 <!--                                                              -->
@@ -1164,7 +1115,7 @@ Stream restart file name for datm model, needed for branch simulations
 Description of data source for datm input data.
 </entry>
 
-<entry id="datm_file_aero" type="char*80" category="datm_internal"
+<entry id="datm_file_aero" type="char*256" category="datm_internal"
        group="datm_internal"  input_pathname="abs"
        valid_values="">
 Prescribed aerosol file name, full path

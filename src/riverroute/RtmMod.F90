@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 #define L2R_Decomp
 #undef  L2R_Decomp
 
@@ -1413,13 +1411,13 @@ contains
 ! Read/write RTM restart data.
 !
 ! !USES:
-    use ncdio
+    use ncdio_pio
     use decompMod    , only : get_proc_bounds
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid            ! netcdf id
-    character(len=*), intent(in) :: flag   ! 'read' or 'write'
+    type(file_desc_t), intent(inout)  :: ncid ! netcdf id
+    character(len=*) , intent(in) :: flag   ! 'read' or 'write'
 !
 ! !CALLED FROM:
 ! subroutine restart in module restFileMod
@@ -1472,14 +1470,14 @@ contains
                xtype=nf_double,  dim1name='rtmlon', dim2name='rtmlat', &
                long_name=trim(lname), units=trim(uname))
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_iolocal(varname=trim(vname), data=dfld, dim1name='allrof', &
-               ncid=ncid, flag=flag, nlonxy=rtmlon,nlatxy=rtmlat,readvar=readvar)
+          call ncd_io(varname=trim(vname), data=dfld, dim1name='allrof', &
+               ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) then
-!tcx this is for backward compatability, will not be bfb, endrun should be used
+                !tcx this is for backward compatability, will not be bfb, endrun should be used
                 write(iulog,*) 'Rtm ERROR: data not found on restart, set to zero ',trim(vname)
                 dfld = 0._r8
-!                call endrun()
+                ! call endrun()
              else
                 dfld = 0._r8
              end if
@@ -1500,14 +1498,14 @@ contains
                xtype=nf_double,  dim1name='gridcell', &
                long_name=trim(lname), units=trim(uname))
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_iolocal(varname=trim(vname), data=dfld, dim1name='gridcell', &
+          call ncd_io(varname=trim(vname), data=dfld, dim1name='gridcell', &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) then
-!tcx this is for backward compatability, will not be bfb, endrun should be used
+                !tcx this is for backward compatability, will not be bfb, endrun should be used
                 write(iulog,*) 'Rtm ERROR: data not found on restart, set to zero ',trim(vname)
                 dfld = 0._r8
-!                call endrun()
+                ! call endrun()
              else
                 dfld = 0._r8
              end if
@@ -1522,8 +1520,8 @@ contains
        call ncd_defvar(ncid=ncid, varname=trim(vname), xtype=nf_int,  &
             long_name='counter for RTM averaged input on CLM grid', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_ioglobal(varname=trim(vname), data=ncount_rtm, &
-            ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+       call ncd_io(varname=trim(vname), data=ncount_rtm, &
+            ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) then
              write(iulog,*) 'Rtm ERROR: data not found on restart RTM_NCOUNT'

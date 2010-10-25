@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module pftdynMod
 
 !---------------------------------------------------------------------------
@@ -11,15 +8,14 @@ module pftdynMod
 ! !USES:
   use spmdMod
   use clmtype
-  use decompMod   , only : gsmap_lnd_gdc2glo
   use decompMod   , only : get_proc_bounds
-  use ncdio
   use clm_varsur  , only : pctspec
   use clm_varpar  , only : max_pft_per_col
   use clm_varctl  , only : iulog
-  use shr_sys_mod, only : shr_sys_flush
+  use shr_sys_mod , only : shr_sys_flush
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
+  use ncdio_pio
 !
 ! !DESCRIPTION:
 ! Determine pft weights at current time using dynamic landuse datasets.
@@ -61,7 +57,7 @@ module pftdynMod
   integer :: nt2
   integer :: ntimes
   logical :: do_harvest
-  integer :: ncid
+  type(file_desc_t)  :: ncid   ! netcdf id
 !---------------------------------------------------------------------------
 
 contains
@@ -81,9 +77,8 @@ contains
 ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
-    use clm_varpar  , only : lsmlon, lsmlat, numpft, maxpatch_pft
+    use clm_varpar  , only : numpft, maxpatch_pft
     use fileutils   , only : getfil
-    use spmdGathScatMod, only : gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -101,6 +96,7 @@ contains
     integer  :: sec                             ! seconds into current date for nstep+1
     integer  :: ier, ret                        ! error status
     logical  :: found                           ! true => input dataset bounding dates found
+    logical  :: readvar	                        ! true => variable is on input dataset
     integer  :: begg,endg                       ! beg/end indices for land gridcells
     integer  :: begl,endl                       ! beg/end indices for land landunits
     integer  :: begc,endc                       ! beg/end indices for land columns
@@ -152,53 +148,50 @@ contains
     end if
 
     if (masterproc) then
-
-       ! Obtain file
-
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
-       call getfil (fpftdyn, locfn, 0)
-       call check_ret(nf_open(locfn, 0, ncid), subname)
+    end if
 
-       ! Obtain pft years from dynamic landuse file
+    ! Obtain file
+    call getfil (fpftdyn, locfn, 0)
+    call ncd_pio_openfile (ncid, locfn, 0)
 
-       call check_ret(nf_inq_dimid(ncid, 'time', varid), subname)
-       call check_ret(nf_inq_dimlen(ncid, varid, ntimes), subname)
+    ! Obtain pft years from dynamic landuse file
+    
+    call ncd_inqdid(ncid, 'time', varid)
+    call ncd_inqdlen(ncid, varid, ntimes)
 
-       ! Consistency check
-
-       call check_dim(ncid, 'lsmpft', numpft+1)
-
-    endif
-
-    call mpi_bcast(ntimes,1,MPI_INTEGER,0,mpicom,ier)
+    ! Consistency check
+    
+    call check_dim(ncid, 'lsmpft', numpft+1)
 
     allocate (yearspft(ntimes), stat=ier)
     if (ier /= 0) then
        write(iulog,*) subname//' allocation error for yearspft'; call endrun()
     end if
 
-    if (masterproc) then
-       call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
-       call check_ret(nf_get_var_int(ncid, varid, yearspft), subname)
-    endif
+    call ncd_io(ncid=ncid, varname='YEAR', flag='read', data=yearspft)
 
-    call mpi_bcast(yearspft,ntimes,MPI_INTEGER,0,mpicom,ier)
+    call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_WETLAND NOT on pftdyn file' )
 
-    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, grlnd, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_WETLAND NOT on pftdyn file' )
-    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, grlnd, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on pftdyn file' )
-    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, grlnd, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on pftdyn file' )
-    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
+    call ncd_io(ncid=ncid, varname= 'PCT_LAKE', flag='read', data=pctlak, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on pftdyn file' )
+
+    call ncd_io(ncid=ncid, varname= 'PCT_GLACIER', flag='read', data=pctgla, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on pftdyn file' )
+
+    call ncd_io(ncid=ncid, varname= 'PCT_URBAN'  , flag='read', data=pcturb, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
 
     ! Consistency check
     do g = begg,endg
     !   this was causing a fail, even though values are the same to within 1e-15
     !   if (pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g) /= pctspec(g)) then 
        if (abs((pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g))-pctspec(g)) > 1e-13_r8) then 
-    
           write(iulog,*) subname//'mismatch between input pctspec = ',&
                      pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g),&
                     ' and that obtained from surface dataset ', pctspec(g),' at g= ',g
@@ -290,7 +283,7 @@ contains
 ! !USES:
     use clm_time_manager, only : get_curr_date, get_curr_calday
     use clm_varcon  , only : istsoil
-    use clm_varpar  , only : numpft, lsmlon, lsmlat
+    use clm_varpar  , only : numpft
     implicit none
 !
 !
@@ -444,11 +437,10 @@ contains
 ! percentage of PFTs sum to 100% cover for vegetated landunit
 !
 ! !USES:
-    use clm_varpar  , only : numpft, lsmlon, lsmlat
+    use clm_varpar  , only : numpft
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     integer , intent(in)  :: ntime
     integer , intent(in)  :: begg,endg,pft0,maxpft
     real(r8), intent(out) :: pctpft(begg:endg,pft0:maxpft)
@@ -459,27 +451,19 @@ contains
     integer  :: i,j,m,n
     integer  :: err, ierr, ret
     real(r8) :: sumpct,sumerr                     ! temporary
-    integer  :: start(4), count(4)                ! input sizes
-    real(r8),pointer :: arrayl(:)                 ! temporary array
+    real(r8), pointer :: arrayl(:,:)              ! temporary array
+    logical  :: readvar
+   
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
     write(iulog,*) subname,' get next pftdyn data'
-    allocate(arrayl(begg:endg))
-    do n = 0,numpft
-       start(1) = 1
-       count(1) = lsmlon
-       start(2) = 1
-       count(2) = lsmlat
-       start(3) = n+1      ! dataset is 1:numpft+1, not 0:numpft
-       count(3) = 1
-       start(4) = ntime 
-       count(4) = 1
-       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count, status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on pftdyn file' )
-       pctpft(begg:endg,n) = arrayl(begg:endg)
-    enddo
-    deallocate(arrayl)
+    allocate(arrayl(begg:endg,pft0:maxpft))	
+    call ncd_io(ncid=ncid, varname= 'PCT_PFT', flag='read', data=arrayl, &
+         dim1name=grlnd, nt=ntime, readvar=readvar)
+    pctpft(begg:endg,pft0:maxpft) = arrayl(begg:endg,pft0:maxpft)
+    deallocate(arrayl)		
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on pftdyn file' )
 
     err = 0
     do n = begg,endg
@@ -519,12 +503,10 @@ contains
 ! Obtain harvest data 
 !
 ! !USES:
-    use clm_varpar  , only : lsmlon, lsmlat
     use clm_varctl  , only : scaled_harvest
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     integer , intent(in)  :: ntime
     integer , intent(IN)  :: begg     ! beg indices for land gridcells
     integer , intent(IN)  :: endg     ! end indices for land gridcells
@@ -532,50 +514,48 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer  :: ret
-    integer  :: start(3), count(3)                ! input sizes
-    real(r8),pointer :: arrayl(:)                 ! temporary array
+    real(r8), pointer :: arrayl(:)                   ! temporary array
+    logical :: readvar 
     character(len=32) :: subname='pftdyn_getharvest' ! subroutine name
 !-----------------------------------------------------------------------
     
     allocate(arrayl(begg:endg))
-    start(1) = 1
-    count(1) = lsmlon
-    start(2) = 1
-    count(2) = lsmlat
-    start(3) = ntime 
-    count(3) = 1
     
-    call ncd_iolocal(ncid, 'HARVEST_VH1', 'read', arrayl, grlnd, start, count, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_VH1 not on pftdyn file' )
+    call ncd_io(ncid=ncid, varname= 'HARVEST_VH1', flag='read', data=arrayl, dim1name=grlnd, &
+         nt=ntime, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH1 not on pftdyn file' )
     harvest(begg:endg) = arrayl(begg:endg)
     
-    call ncd_iolocal(ncid, 'HARVEST_VH2', 'read', arrayl, grlnd, start, count, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on pftdyn file' )
+    call ncd_io(ncid=ncid, varname= 'HARVEST_VH2', flag='read', data=arrayl, dim1name=grlnd, &
+         nt=ntime, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on pftdyn file' )
     if ( scaled_harvest )then
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.05_r8
     else
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     end if
     
-    call ncd_iolocal(ncid, 'HARVEST_SH1', 'read', arrayl, grlnd, start, count, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on pftdyn file' )
+    call ncd_io(ncid=ncid, varname= 'HARVEST_SH1', flag='read', data=arrayl, dim1name=grlnd, &
+         nt=ntime, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on pftdyn file' )
     if ( scaled_harvest )then
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.60_r8
     else
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     endif
     
-    call ncd_iolocal(ncid, 'HARVEST_SH2', 'read', arrayl, grlnd, start, count, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on pftdyn file' )
+    call ncd_io(ncid=ncid, varname= 'HARVEST_SH2', flag='read', data=arrayl, dim1name=grlnd, &
+         nt=ntime, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on pftdyn file' )
     if ( scaled_harvest )then
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.60_r8
     else
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     endif
     
-    call ncd_iolocal(ncid, 'HARVEST_SH3', 'read', arrayl, grlnd, start, count, status=ret)
-    if (ret /= 0) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on pftdyn file' )
+    call ncd_io(ncid=ncid, varname= 'HARVEST_SH3', flag='read', data=arrayl, dim1name=grlnd, &
+         nt=ntime, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on pftdyn file' )
     if ( scaled_harvest )then
        harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.05_r8
     else
@@ -740,7 +720,6 @@ contains
           end if
 
        end if
-       
     end do
 
     do pi = 1,max_pft_per_col

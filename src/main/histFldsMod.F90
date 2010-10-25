@@ -46,9 +46,9 @@ contains
     use clmtype
     use clm_varcon , only : spval
     use clm_varctl , only : nsrest
-    use clm_atmlnd , only : clm_a2l, atm_a2l
-    use clm_atmlnd , only : adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux
-    use clm_varctl , only : create_glacier_mec_landunit
+    use clm_atmlnd , only : clm_a2l, atm_a2l, &
+	                    adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux
+    use clm_varctl , only : create_glacier_mec_landunit, downscale
 #if (defined RTM)
     use RunoffMod  , only : runoff, nt_rtm, rtm_tracers
 #endif
@@ -911,13 +911,21 @@ contains
 
     ! Atmospheric forcing
 
-    call hist_addfld1d (fname='RAINATM', units='mm/s',  &
-         avgflag='A', long_name='atmospheric rain forcing', &
-         ptr_atm=atm_a2l%forc_rain)
-
-    call hist_addfld1d (fname='SNOWATM', units='mm/s',  &
-         avgflag='A', long_name='atmospheric snow forcing', &
-         ptr_atm=atm_a2l%forc_snow)
+    if (downscale) then
+       call hist_addfld1d (fname='RAINATM', units='mm/s',  &
+            avgflag='A', long_name='atmospheric rain forcing', &
+            ptr_atm=atm_a2l%forc_rain)
+       call hist_addfld1d (fname='SNOWATM', units='mm/s',  &
+            avgflag='A', long_name='atmospheric snow forcing', &
+            ptr_atm=atm_a2l%forc_snow)
+    else
+       call hist_addfld1d (fname='RAINATM', units='mm/s',  &
+            avgflag='A', long_name='atmospheric rain forcing', &
+            ptr_lnd=clm_a2l%forc_rain)
+       call hist_addfld1d (fname='SNOWATM', units='mm/s',  &
+            avgflag='A', long_name='atmospheric snow forcing', &
+            ptr_lnd=clm_a2l%forc_snow)
+    end if
 
     call hist_addfld1d (fname='RAINFM2A', units='mm/s',  &
          avgflag='A', long_name='land rain on atm grid', &

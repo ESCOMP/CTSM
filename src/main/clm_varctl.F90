@@ -44,10 +44,6 @@ module clm_varctl
 !
   integer, public :: iulog = 6        ! "stdout" log file unit number, default is 6
 !
-! Initial file variables
-!
-  character(len= 8), public :: hist_crtinic = 'NONE'    ! if set to 'MONTHLY' or 'YEARLY', write initial cond. file
-!
 ! Output NetCDF files
 !
   logical, public :: outnc_large_files = .true.         ! large file support for output NetCDF files
@@ -67,7 +63,8 @@ module clm_varctl
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
   character(len=256), public :: fglcmask     = ' '      ! glacier mask file name
   character(len=8),   public :: fget_archdev = 'null:'  ! archive device to read input files from if not on local disk
-  
+  logical         ,   public :: downscale               ! true => do downscaling with fine mesh
+                                                        ! ASSUMES that all grids are lat/lon
 !
 ! Landunit logic
 !
@@ -95,7 +92,7 @@ module clm_varctl
   logical, public :: glc_dyntopo = .false.                  ! true => CLM glacier topography changes dynamically
   logical, public :: glc_smb = .false.                      ! if true, pass surface mass balance info to GLC
                                                             ! if false, pass positive-degree-day info to GLC
-  integer, public :: glc_nec = 0                            ! number of elevation classes for glacier_mec landunits
+  integer , public :: glc_nec = 0                           ! number of elevation classes for glacier_mec landunits
   real(r8), public :: glc_topomax(0:maxpatch_glcmec)        ! upper limit of each class (m)
 !
 ! single column control variables
@@ -124,20 +121,6 @@ module clm_varctl
 ! Error growth perturbation limit
 !
   real(r8), public :: pertlim = 0.0_r8                  ! perturbation limit when doing error growth test
-!
-! History File control
-! TODO: Remove the ones NOT really needed, put BUILDPIO #ifdef around ones that require PIO, make sure function correctly.
-!
-  logical, public :: hist_pioflag           = .false.   ! turns on and off hist with pio
-  logical, public :: ncd_lowmem2d           = .true.    ! turns on low memory 2d writes in clm hist
-  logical, public :: ncd_pio_def            = .false.   ! default pio use setting
-  logical, public :: ncd_pio_UseRearranger  = .true.    ! use MCT or box
-  logical, public :: ncd_pio_UseBoxRearr    = .false.   ! use box
-  logical, public :: ncd_pio_SerialCDF      = .false.   ! write with pio serial netcdf mode
-  logical, public :: ncd_pio_IODOF_rootonly = .false.   ! write history in pio from root only
-  integer, public :: ncd_pio_DebugLevel     = 2         ! pio debug level
-  integer, public :: ncd_pio_num_iotasks    = 999999999 ! num of iotasks to use
-
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein and Gordon Bonan
@@ -311,16 +294,8 @@ contains
        if (nsrest == 0) nrevsn = ' '
        if (nsrest == 1) nrevsn = 'set by restart pointer file file'
 
-       if (trim(hist_crtinic) /= 'MONTHLY'  .and. trim(hist_crtinic) /= 'YEARLY' .and. &
-            trim(hist_crtinic) /= '6-HOURLY' .and. trim(hist_crtinic) /= 'DAILY'  ) &
-          hist_crtinic = 'NONE'
        if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) &
           call shr_sys_abort( subname//' ERROR:: single column mode on -- but scmlat and scmlon are NOT set' )
-
-       if (hist_pioflag .and. ncd_lowmem2d) then
-          ncd_lowmem2d = .false.
-          write(iulog,*) 'control: resetting ncd_lowmem2d to false'
-       endif
 
     endif   ! end of if-masterproc if-block
 

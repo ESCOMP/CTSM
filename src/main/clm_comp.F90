@@ -48,7 +48,7 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use clm_initializeMod,     only : initialize1
+    use clm_initializeMod,  only : initialize1
 !
 ! !ARGUMENTS:
 !

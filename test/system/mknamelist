@@ -105,7 +105,7 @@ echo "                 -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \ 
 echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
 echo "                             &seq_infodata_inparm $restart_file $logfile / "
 echo "                             &datm_nml $restfilm $restfils / "
-echo "                             &clm_inparm dtime=$dtime hist_crtinic='$inithist' "
+echo "                             &clm_inparm dtime=$dtime "
 echo "                             $hist_samp $nrevsnfile $hist_freq /\""
 
 env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
@@ -114,4 +114,4 @@ env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $s
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
                                   &seq_infodata_inparm $restart_file $logfile / \
                                   &datm_nml $restfilm $restfils / \
-                                  &clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp $nrevsnfile $hist_freq /"
+                                  &clm_inparm dtime=$dtime $hist_samp $nrevsnfile $hist_freq /"

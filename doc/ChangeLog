@@ -1,4 +1,179 @@
 ===============================================================
+Tag name:  clm4_0_15
+Originator(s):  mvertens (Mariana Vertenstein), erik (Erik Kluzek)
+Date: Sun Oct 24 19:16:06 MDT 2010
+One-line Summary: Move pio branch to trunk
+
+Purpose of changes: 
+
+Move Mariana's pio branch to trunk. Update driver to pass U10 field to. Remove the 
+separate creation of clm.i files (always use clm.r files for initial conditions. 
+Move the finemesh downscale methods to it's own module. Remove unused modules, and
+move the close_dispose method to inside of the history module. Change history 
+restart files to NetCDF.
+
+Bugs fixed (include bugzilla ID): 1219 (remove clm.i files)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Remove old PIO namelist items (there is a new clm namelist to control PIO)
+   We aren't supporting the new clm PIO namelist until we move the PIO control to the driver and the drv_in namelist.
+   So there is no support to handle the namelist in build-namelist nor in the buildnml template.
+
+
+Describe any substantial timing or memory changes: none with PIO off
+
+Code reviewed by: self, mvertens (mvertens created the original work on the branch)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, pio and drv
+
+    scripts   to mpiserial06_scripts4_101022
+    pio       to pio1_1_2
+    drv       to drvseq3_1_38
+
+List all files eliminated:
+
+    R  models/lnd/clm/src/main/ncdio.F90 --- Old NetCDF I/O interface
+    R  models/lnd/clm/src/main/system_messages.F90
+    R  models/lnd/clm/src/main/iobinary.F90
+    R  models/lnd/clm/src/main/do_close_dispose.F90
+
+List all files added and what they do:
+
+    A  models/lnd/clm/src/main/ncdio_pio.F90 ----- New PIO I/O interface
+    A  models/lnd/clm/src/main/downscaleMod.F90 -- New module with downscaling methods for fine-mesh
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>> Remove setting of hist_crtinic
+    M  models/lnd/clm/test/system/mknamelist
+    M  models/lnd/clm/test/system/nl_files/nl_urb
+    M  models/lnd/clm/test/system/nl_files/nl_noicertm_sclharv
+    M  models/lnd/clm/test/system/nl_files/nl_cn_conly
+    M  models/lnd/clm/test/system/nl_files/nl_urb_br
+
+    M  models/lnd/clm/bld/configure ------- Remove USEPIO
+    M  models/lnd/clm/bld/build-namelist -- Remove hist_crtinic
+    M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Remove hist_crtinic and old PIO options, 
+               increase datm_file_aero string length from 80 to 256
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Remove hist_crtinic
+
+    M  models/lnd/clm/doc/UsersGuide/preface.xml - Remove old PIO options
+
+>>>>>>>>>>> Remove ncdio calls to ncdio_pio, add in downscale module, remove do_close_dispose, handle history restarts as NetCDF
+>>>>>>>>>>> rather than binary. Remove some of the misc.h/preproc.h includes
+    M  models/lnd/clm/src/biogeochem/CASAMod.F90 ------------ Update ncdio calls to ncdio_pio calls
+    M  models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 - Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/biogeochem/CNDVMod.F90 ---- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/biogeochem/CNrestMod.F90 -- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/inicFileMod.F90 ------ Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/organicFileMod.F90 --- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/spmdGathScatMod.F90 -- Remove allgather_data, and scatter/gather_2darray_int/real
+    M  models/lnd/clm/src/main/accumulMod.F90 -- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/clm_comp.F90 ---- Change format
+    M  models/lnd/clm/src/main/decompInitMod.F90 - Remove misc.h/preproc.h
+    M  models/lnd/clm/src/main/getdatetime.F90 --- Remove misc.h/preproc.h
+    M  models/lnd/clm/src/main/clm_initializeMod.F90 - Update ncdio to ncdio_pio, add in downscale module
+    M  models/lnd/clm/src/main/subgridRestMod.F90 ---- Update ncdio to ncdio_pio
+                      NOTE: mcdate and mcsec are NOT on output files
+    M  models/lnd/clm/src/main/clm_glclnd.F90 -------- Move map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
+                      to downscale module
+    M  models/lnd/clm/src/main/fileutils.F90 --------- Add "if masterproc" to error write statements
+    M  models/lnd/clm/src/main/pftdynMod.F90 --------- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/iniTimeConst.F90 ------ Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/histFileMod.F90 ------- Update ncdio to ncdio_pio, add if_disphist to keep track of if saving file
+                      add hist_do_disp, and strip_null methods
+                      (remove external do_close_dispose and do it in here) add history restart files, improve indenting 
+    M  models/lnd/clm/src/main/clm_atmlnd.F90 -------- Add u10 in, and change name of calls to include downscale in names
+    M  models/lnd/clm/src/main/restFileMod.F90 ------- Update ncdio to ncdio_pio, add netCDF history restart, remove binary read/write
+    M  models/lnd/clm/src/main/scam_setlatlonidx.F90 - Update to using pio calls
+    M  models/lnd/clm/src/main/controlMod.F90 -------- Remove old PIO namelist items
+    M  models/lnd/clm/src/main/clm_time_manager.F90 -- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/main/clm_driver.F90 -------- Remove do_inicwrite, restFile_write_binary
+    M  models/lnd/clm/src/main/clm_varctl.F90 -------- Remove hist_crtinic and old PIO control, add downscale flag
+    M  models/lnd/clm/src/main/surfrdMod.F90 --------- Update ncdio to ncdio_pio and use a mix of ncdio_pio and PIO calls for reads
+                      also work with file formatting
+    M  models/lnd/clm/src/main/decompMod.F90 --------- Add a blank line
+    M  models/lnd/clm/src/main/areaMod.F90 ----------- Move some of this to the downscale module
+    M  models/lnd/clm/src/main/histFldsMod.F90 ------- Change RAINATM/SNOWATM depending on downscale or not
+    M  models/lnd/clm/src/riverroute/RtmMod.F90 ------ Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/biogeophys/UrbanInputMod.F90 ----- Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 - Update ncdio to ncdio_pio
+    M  models/lnd/clm/src/biogeophys/SNICARMod.F90 --------- Update ncdio to ncdio_pio, remove check_ret
+
+    M  models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ---- Add u10, change some finemesh calls to downscale module
+    M  models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 -- Add u10, change some finemesh calls to downscale module
+
+Summary of testing:
+
+  bluefire interactive testing: All PASS up to...
+037 smK74 TSM.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670 arb_ic ............PASS
+  bluefire/PTCLM testing: All PASS
+  bluefire/CESM testing: All PASS except...
+BFAIL SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_14 
+BFAIL SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_14 
+BFAIL SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_14 
+BFAIL ERS_D.f45_g37.I.bluefire.compare.clm4_0_14 
+BFAIL PST.f45_g37.I1850.bluefire.compare.clm4_0_14 
+BFAIL PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_14 
+BFAIL ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_14 
+BFAIL ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_14 
+BFAIL ERI.f19_g16.IG.bluefire.compare.clm4_0_14 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_14 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_14 
+BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_14 
+BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_14 
+BFAIL PST.f10_f10.I8520CN.bluefire.compare.clm4_0_14 
+BFAIL PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_14 
+BFAIL ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_14 
+  lynx/pgi interactive testing: All PASS
+  jaguar interactive testing: Up to following PASS
+007 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+  edinburgh/lf95 testing: All FAIL except...
+001 smA92 TSM.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -6 arb_ic ...................PASS
+002 erA92 TER.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic ................PASS
+003 brA92 TBR.sh _sc_dm clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic .............PASS
+017 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 96 cold ..........PASS
+021 smJ92 TSM.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 96 cold ...............PASS
+022 erJ92 TER.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 10+38 cold ............PASS
+023 brJ92 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold .........PASS
+  edinburgh/lf95 interactive testing: All PASS
+  edinburgh/PTCLM testing: Up to following PASS
+myPTCLMtests_US-Ha1_I_1850.PTCLM          FAIL 0
+  mirage,storm/ifort interactive testing: up to following PASS
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 10+38 cold ....FAIL! rc= 13
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_14
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_14
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Oct 19 13:12:36 MDT 2010
@@ -28,7 +203,6 @@ Known bugs (include bugzilla ID):
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on gust...)
                                  1165 (Restart trouble for scaled harvest test on gust)
-                                 1206 (Problem looping over a single year of CPLHIST forcing)
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
     http://bugs.cgd.ucar.edu/
 
@@ -91,6 +265,7 @@ Bring in PTCLM work. Update externals for scripts, datm, drv. Get mksurfdata to 
 Bugs fixed (include bugzilla ID):
                                  1189 (Create ability to change soil color/texture in mksurfdata)
                                  1188 (Add ability to handle control transient land-cover change)
+                                 1206 (Problem looping over a single year of CPLHIST forcing)
                                  1211 (Small memory leak in CLM4 initialization)
                                  1223 (ESMF problem)
 Known bugs (include bugzilla ID):
@@ -110,7 +285,6 @@ Known bugs (include bugzilla ID):
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on gust...)
                                  1165 (Restart trouble for scaled harvest test on gust)
-                                 1206 (Problem looping over a single year of CPLHIST forcing)
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
     http://bugs.cgd.ucar.edu/
 

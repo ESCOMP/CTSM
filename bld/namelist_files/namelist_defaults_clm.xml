@@ -505,8 +505,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <!-- New direction file with negative directions over ocean - frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.081203.txt</frivinp_rtm> -->
 <frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>
 
-<hist_crtinic >NONE</hist_crtinic>
-
 <!-- =========================================  -->
 <!-- Defaults for modelio namelist              -->
 <!-- =========================================  -->

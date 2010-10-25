@@ -980,13 +980,6 @@ recommended for use.
 </listitem>
 <listitem>
    <para>
-   <varname>BUILDPIO</varname><screen>(-pio)</screen>
-       This mode is NOT tested and is not functional and hence should NOT be used. PIO WILL be provided
-       in future versions however.
-   </para>
-</listitem>
-<listitem>
-   <para>
    <varname>SNICAR_FRC</varname><screen>(-snicar_frc)</screen>
        This mode is tested and functional, but is NOT constantly scientifically validated, and should be 
        considered experimental.
@@ -1037,10 +1030,6 @@ only used for &clm; stand-alone testing.</para>
 unlimited nitrogen and therefore vegetation is over-productive in this mode.
    </para>
 
-</listitem>
-<listitem><para><emphasis>pio namelist options:</emphasis>  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
-                         ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
-        These options are NOT currently tested or functional. See the pio &configure; mode above.</para>
 </listitem>
 <listitem><para><emphasis>urban_traffic:</emphasis>         Not currently functional</para>
 </listitem>

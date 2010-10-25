@@ -46,7 +46,7 @@ contains
 ! Read/Write biogeophysics information to/from restart file.
 !
 ! !USES:
-    use ncdio
+    use ncdio_pio
     use clmtype
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
@@ -60,8 +60,8 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid           ! netcdf id
-    character(len=*), intent(in) :: flag  ! 'read' or 'write'
+    type(file_desc_t), intent(inout) :: ncid ! netcdf id
+    character(len=*), intent(in)  :: flag  ! 'read' or 'write'
 !
 ! !CALLED FROM:
 !
@@ -100,6 +100,7 @@ contains
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
+    real(r8), pointer   :: temp2d(:,:)    ! temporary for zisno
     real(r8), parameter :: adiff = 5.e-04_r8   ! tolerance of acceptible difference
     character(len=7), parameter :: filetypes(0:3) = (/ "finidat", "restart", "missing", "nrevsn " /)
     character(len=32) :: fileusing
@@ -137,7 +138,7 @@ contains
              allocate( wtgcell(begp:endp) )
              wtgcell(:) = pptr%wtgcell(:)
           end if
-          call ncd_iolocal(varname='PFT_WTGCELL', data=pptr%wtgcell, &
+          call ncd_io(varname='PFT_WTGCELL', data=pptr%wtgcell, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
@@ -158,7 +159,7 @@ contains
              allocate( wtlunit(begp:endp) )
              wtlunit(:) = pptr%wtlunit(:)
           end if
-          call ncd_iolocal(varname='PFT_WTLUNIT', data=pptr%wtlunit, &
+          call ncd_io(varname='PFT_WTLUNIT', data=pptr%wtlunit, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
@@ -179,7 +180,7 @@ contains
              allocate( wtcol(begp:endp)   )
              wtcol(:) = pptr%wtcol(:)
           end if
-          call ncd_iolocal(varname='PFT_WTCOL', data=pptr%wtcol, &
+          call ncd_io(varname='PFT_WTCOL', data=pptr%wtcol, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
@@ -249,7 +250,7 @@ contains
             dim1name='pft', &
             long_name='emitted infrared (longwave) radiation', units='watt/m^2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='EFLX_LWRAD_OUT', data=pptr%pef%eflx_lwrad_out, &
+       call ncd_io(varname='EFLX_LWRAD_OUT', data=pptr%pef%eflx_lwrad_out, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -264,7 +265,7 @@ contains
             dim1name='column', &
             long_name='number of snow layers', units='unitless')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='SNLSNO', data=cptr%cps%snl, &
+       call ncd_io(varname='SNLSNO', data=cptr%cps%snl, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -279,7 +280,7 @@ contains
             dim1name='column', &
             long_name='snow depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='SNOWDP', data=cptr%cps%snowdp, &
+       call ncd_io(varname='SNOWDP', data=cptr%cps%snowdp, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -294,7 +295,7 @@ contains
             dim1name='column', &
             long_name='water in the unconfined aquifer', units='mm')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='WA', data=cptr%cws%wa, &
+       call ncd_io(varname='WA', data=cptr%cws%wa, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -309,7 +310,7 @@ contains
             dim1name='column', &
             long_name='total water storage', units='mm')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='WT', data=cptr%cws%wt, &
+       call ncd_io(varname='WT', data=cptr%cws%wt, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -324,7 +325,7 @@ contains
             dim1name='column', &
             long_name='water table depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ZWT', data=cptr%cws%zwt, &
+       call ncd_io(varname='ZWT', data=cptr%cws%zwt, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -339,7 +340,7 @@ contains
             dim1name='column',&
             long_name='fraction of ground covered by snow (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='frac_sno', data=cptr%cps%frac_sno, &
+       call ncd_io(varname='frac_sno', data=cptr%cps%frac_sno, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag == 'read' .and. .not. readvar) then
@@ -351,45 +352,69 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='DZSNO', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer thickness', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='DZSNO', data=cptr%cps%dz, &
-            dim1name=namec, dim2name='levsno', &
+       allocate(temp2d(begc:endc,-nlevsno+1:0))
+       if (flag == 'write') then 
+          temp2d(begc:endc,-nlevsno+1:0) = cptr%cps%dz(begc:endc,-nlevsno+1:0)
+       end if
+       call ncd_io(varname='DZSNO', data=temp2d, &
+            dim1name=namec, switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
+       if (flag == 'read') then
+          cptr%cps%dz(begc:endc,-nlevsno+1:0) = temp2d(begc:endc,-nlevsno+1:0) 
+       end if
+       deallocate(temp2d)
     end if
 
     ! column type physical state variable - zsno
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='ZSNO', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno',&
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ZSNO', data=cptr%cps%z, &
-            dim1name=namec, dim2name='levsno', lowerb2=-nlevsno+1, upperb2=0, &
-            ncid=ncid, flag=flag, readvar=readvar)
+       allocate(temp2d(begc:endc,-nlevsno+1:0))
+       if (flag == 'write') then 
+          temp2d(begc:endc,-nlevsno+1:0) = cptr%cps%z(begc:endc,-nlevsno+1:0)
+       end if
+       call ncd_io(varname='ZSNO', data=temp2d, &
+            dim1name=namec, switchdim=.true., &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
+       if (flag == 'read') then
+          cptr%cps%z(begc:endc,-nlevsno+1:0) = temp2d(begc:endc,-nlevsno+1:0) 
+       end if
+       deallocate(temp2d)
     end if
 
     ! column type physical state variable - zisno
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='ZISNO', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow interface depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ZISNO', data=cptr%cps%zi, &
-            dim1name=namec, dim2name='levsno', lowerb2=-nlevsno, upperb2=-1, &
-            ncid=ncid, flag=flag, readvar=readvar)
+       allocate(temp2d(begc:endc,-nlevsno:-1))
+       if (flag == 'write') then 
+          temp2d(begc:endc,-nlevsno:-1) = cptr%cps%zi(begc:endc,-nlevsno:-1)
+       end if
+       call ncd_io(varname='ZISNO', data=temp2d, &
+            dim1name=namec, switchdim=.true., &
+            lowerb2=-nlevsno, upperb2=-1, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
+       if (flag == 'read') then 
+          cptr%cps%zi(begc:endc,-nlevsno:-1) = temp2d(begc:endc,-nlevsno:-1)
+       end if
+       deallocate(temp2d)	
     end if
 
     ! column type physical state variable - coszen
@@ -399,7 +424,7 @@ contains
             dim1name='column', &
             long_name='cosine of solar zenith angle', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='coszen', data=cptr%cps%coszen, &
+       call ncd_io(varname='coszen', data=cptr%cps%coszen, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag == 'read' .and. .not. readvar) then
@@ -414,7 +439,7 @@ contains
             dim1name='pft', &
             long_name='leaf projection in solar direction (0 to 1)', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='gdir', data=pptr%pps%gdir, &
+       call ncd_io(varname='gdir', data=pptr%pps%gdir, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -425,12 +450,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='omega', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='fraction of intercepted radiation that is scattered (0 to 1)', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='omega', data=pptr%pps%omega, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='omega', data=pptr%pps%omega, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -440,12 +464,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_roof_dir', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by roof per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_roof_dir', data=lptr%lps%sabs_roof_dir, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_roof_dir', data=lptr%lps%sabs_roof_dir, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -455,12 +478,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_roof_dif', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by roof per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_roof_dif', data=lptr%lps%sabs_roof_dif, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_roof_dif', data=lptr%lps%sabs_roof_dif, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -470,12 +492,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dir', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by sunwall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_sunwall_dir', data=lptr%lps%sabs_sunwall_dir, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_sunwall_dir', data=lptr%lps%sabs_sunwall_dir, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -485,12 +506,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dif', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by sunwall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_sunwall_dif', data=lptr%lps%sabs_sunwall_dif, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_sunwall_dif', data=lptr%lps%sabs_sunwall_dif, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -500,12 +520,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dir', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by shadewall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_shadewall_dir', data=lptr%lps%sabs_shadewall_dir, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_shadewall_dir', data=lptr%lps%sabs_shadewall_dir, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -515,12 +534,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dif', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by shadewall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_shadewall_dif', data=lptr%lps%sabs_shadewall_dif, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_shadewall_dif', data=lptr%lps%sabs_shadewall_dif, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -530,12 +548,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_improad_dir', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by impervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_improad_dir', data=lptr%lps%sabs_improad_dir, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_improad_dir', data=lptr%lps%sabs_improad_dir, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -545,12 +562,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_improad_dif', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by impervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_improad_dif', data=lptr%lps%sabs_improad_dif, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_improad_dif', data=lptr%lps%sabs_improad_dif, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -560,12 +576,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_perroad_dir', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by pervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_perroad_dir', data=lptr%lps%sabs_perroad_dir, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_perroad_dir', data=lptr%lps%sabs_perroad_dir, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -575,12 +590,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='sabs_perroad_dif', xtype=nf_double,  &
-            dim1name='landunit', dim2name='numrad', &
+            dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by pervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sabs_perroad_dif', data=lptr%lps%sabs_perroad_dif, &
-            dim1name=namel, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='sabs_perroad_dif', data=lptr%lps%sabs_perroad_dif, &
+            dim1name=namel, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -593,7 +607,7 @@ contains
             dim1name='landunit', &
             long_name='view factor of sky for road',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='vf_sr', data=lptr%lps%vf_sr, &
+       call ncd_io(varname='vf_sr', data=lptr%lps%vf_sr, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -608,7 +622,7 @@ contains
             dim1name='landunit', &
             long_name='view factor of one wall for road',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='vf_wr', data=lptr%lps%vf_wr, &
+       call ncd_io(varname='vf_wr', data=lptr%lps%vf_wr, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -623,7 +637,7 @@ contains
             dim1name='landunit', &
             long_name='view factor of sky for one wall',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='vf_sw', data=lptr%lps%vf_sw, &
+       call ncd_io(varname='vf_sw', data=lptr%lps%vf_sw, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -638,7 +652,7 @@ contains
             dim1name='landunit', &
             long_name='view factor of road for one wall',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='vf_rw', data=lptr%lps%vf_rw, &
+       call ncd_io(varname='vf_rw', data=lptr%lps%vf_rw, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -653,7 +667,7 @@ contains
             dim1name='landunit', &
             long_name='view factor of opposing wall for one wall',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='vf_ww', data=lptr%lps%vf_ww, &
+       call ncd_io(varname='vf_ww', data=lptr%lps%vf_ww, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -668,7 +682,7 @@ contains
             dim1name='landunit', &
             long_name='urban canopy air temperature',units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='taf', data=lptr%lps%taf, &
+       call ncd_io(varname='taf', data=lptr%lps%taf, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -683,7 +697,7 @@ contains
             dim1name='landunit', &
             long_name='urban canopy specific humidity',units='kg/kg')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='qaf', data=lptr%lps%qaf, &
+       call ncd_io(varname='qaf', data=lptr%lps%qaf, &
             dim1name=namel, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -695,12 +709,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albd', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='surface albedo (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albd', data=pptr%pps%albd, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='albd', data=pptr%pps%albd, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) then
              call endrun()
@@ -714,12 +727,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albi', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='surface albedo (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albi', data=pptr%pps%albi, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='albi', data=pptr%pps%albi, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) then
              call endrun()
@@ -733,12 +745,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgrd', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgrd', data=cptr%cps%albgrd, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='albgrd', data=cptr%cps%albgrd, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -748,12 +759,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgri', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo (indirect) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgri', data=cptr%cps%albgri, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='albgri', data=cptr%cps%albgri, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -763,12 +773,11 @@ contains
     ! column type physical state variable - albgrd_bc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgrd_bc', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without BC (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgrd_bc', data=cptr%cps%albgrd_bc, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgrd_bc', data=cptr%cps%albgrd_bc, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_bc in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgrd_bc to albgrd"
@@ -780,12 +789,11 @@ contains
     ! column type physical state variable - albgri_bc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgri_bc', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without BC (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgri_bc', data=cptr%cps%albgri_bc, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgri_bc', data=cptr%cps%albgri_bc, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_bc in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgri_bc to albgri"
@@ -797,12 +805,11 @@ contains
     ! column type physical state variable - albgrd_pur
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgrd_pur', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='pure snow ground albedo (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgrd_pur', data=cptr%cps%albgrd_pur, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgrd_pur', data=cptr%cps%albgrd_pur, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_pur in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgrd_pur to albgrd"
@@ -814,12 +821,11 @@ contains
     ! column type physical state variable - albgri_pur
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgri_pur', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='pure snow ground albedo (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgri_pur', data=cptr%cps%albgri_pur, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgri_pur', data=cptr%cps%albgri_pur, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_pur in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgri_pur to albgri"
@@ -831,12 +837,11 @@ contains
     ! column type physical state variable - albgrd_oc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgrd_oc', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without OC (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgrd_oc', data=cptr%cps%albgrd_oc, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgrd_oc', data=cptr%cps%albgrd_oc, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_oc in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgrd_oc to albgrd"
@@ -848,12 +853,11 @@ contains
     ! column type physical state variable - albgri_oc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgri_oc', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without OC (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgri_oc', data=cptr%cps%albgri_oc, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgri_oc', data=cptr%cps%albgri_oc, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_oc in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgri_oc to albgri"
@@ -865,12 +869,11 @@ contains
     ! column type physical state variable - albgrd_dst
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgrd_dst', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without dust (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgrd_dst', data=cptr%cps%albgrd_dst, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgrd_dst', data=cptr%cps%albgrd_dst, &
+            dim1name=namec, switchdim=.true.,  ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_dst in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgrd_dst to albgrd"
@@ -882,12 +885,11 @@ contains
     ! column type physical state variable - albgri_dst
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albgri_dst', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without dust (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albgri_dst', data=cptr%cps%albgri_dst, &
-            dim1name=namec, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='albgri_dst', data=cptr%cps%albgri_dst, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_dst in restart (or initial) file..."
           if (masterproc) write(iulog,*) "Initialize albgri_dst to albgri"
@@ -905,7 +907,7 @@ contains
             dim1name='column', &
             long_name='snow water', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='H2OSNO', data=cptr%cws%h2osno, &
+       call ncd_io(varname='H2OSNO', data=cptr%cws%h2osno, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -917,12 +919,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='H2OSOI_LIQ', xtype=nf_double,  &
-            dim1name='column', dim2name='levtot', &
+            dim1name='column', dim2name='levtot', switchdim=.true., &
             long_name='liquid water', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, &
-            dim1name=namec, dim2name='levtot', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -932,11 +933,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='H2OSOI_ICE', xtype=nf_double,   &
-            dim1name='column', dim2name='levtot', long_name='ice lens', units='kg/m2')
+            dim1name='column', dim2name='levtot', switchdim=.true., &
+            long_name='ice lens', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, &
-            dim1name=namec, dim2name='levtot', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -949,7 +950,7 @@ contains
             dim1name='column', &
             long_name='ground temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_GRND', data=cptr%ces%t_grnd, &
+       call ncd_io(varname='T_GRND', data=cptr%ces%t_grnd, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -964,7 +965,7 @@ contains
             dim1name='column', &
             long_name='urban air conditioning flux', units='watt/m^2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='URBAN_AC', data=cptr%cef%eflx_urban_ac, &
+       call ncd_io(varname='URBAN_AC', data=cptr%cef%eflx_urban_ac, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -979,7 +980,7 @@ contains
             dim1name='column', &
             long_name='urban heating flux', units='watt/m^2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='URBAN_HEAT', data=cptr%cef%eflx_urban_heat, &
+       call ncd_io(varname='URBAN_HEAT', data=cptr%cef%eflx_urban_heat, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -994,7 +995,7 @@ contains
             dim1name='pft', &
             long_name='daily minimum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MIN', data=pptr%pes%t_ref2m_min, &
+       call ncd_io(varname='T_REF2M_MIN', data=pptr%pes%t_ref2m_min, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1009,7 +1010,7 @@ contains
             dim1name='pft', &
             long_name='daily maximum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MAX', data=pptr%pes%t_ref2m_max, &
+       call ncd_io(varname='T_REF2M_MAX', data=pptr%pes%t_ref2m_max, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1024,7 +1025,7 @@ contains
             dim1name='pft', &
             long_name='instantaneous daily min of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MIN_INST', data=pptr%pes%t_ref2m_min_inst, &
+       call ncd_io(varname='T_REF2M_MIN_INST', data=pptr%pes%t_ref2m_min_inst, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1039,7 +1040,7 @@ contains
             dim1name='pft', &
             long_name='instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MAX_INST', data=pptr%pes%t_ref2m_max_inst, &
+       call ncd_io(varname='T_REF2M_MAX_INST', data=pptr%pes%t_ref2m_max_inst, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1054,7 +1055,7 @@ contains
             dim1name='pft', &
             long_name='Urban 2m height surface air temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname="T_REF2M_U", data=pptr%pes%t_ref2m_u, &
+       call ncd_io(varname="T_REF2M_U", data=pptr%pes%t_ref2m_u, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1069,7 +1070,7 @@ contains
             dim1name='column', &
             long_name='urban ground temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_GRND_U', data=cptr%ces%t_grnd_u, &
+       call ncd_io(varname='T_GRND_U', data=cptr%ces%t_grnd_u, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1084,7 +1085,7 @@ contains
             dim1name='pft', &
             long_name='urban daily minimum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MIN_U', data=pptr%pes%t_ref2m_min_u, &
+       call ncd_io(varname='T_REF2M_MIN_U', data=pptr%pes%t_ref2m_min_u, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1099,7 +1100,7 @@ contains
             dim1name='pft', &
             long_name='urban daily maximum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MAX_U', data=pptr%pes%t_ref2m_max_u, &
+       call ncd_io(varname='T_REF2M_MAX_U', data=pptr%pes%t_ref2m_max_u, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1114,7 +1115,7 @@ contains
             dim1name='pft', &
             long_name='urban instantaneous daily min of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MIN_INST_U', data=pptr%pes%t_ref2m_min_inst_u, &
+       call ncd_io(varname='T_REF2M_MIN_INST_U', data=pptr%pes%t_ref2m_min_inst_u, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1129,7 +1130,7 @@ contains
             dim1name='pft', &
             long_name='urban instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MAX_INST_U', data=pptr%pes%t_ref2m_max_inst_u, &
+       call ncd_io(varname='T_REF2M_MAX_INST_U', data=pptr%pes%t_ref2m_max_inst_u, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1144,7 +1145,7 @@ contains
             dim1name='pft', &
             long_name='Rural 2m height surface air temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname="T_REF2M_R", data=pptr%pes%t_ref2m_r, &
+       call ncd_io(varname="T_REF2M_R", data=pptr%pes%t_ref2m_r, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1159,7 +1160,7 @@ contains
             dim1name='column', &
             long_name='rural ground temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_GRND_R', data=cptr%ces%t_grnd_r, &
+       call ncd_io(varname='T_GRND_R', data=cptr%ces%t_grnd_r, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1174,7 +1175,7 @@ contains
             dim1name='pft', &
             long_name='rural daily minimum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MIN_R', data=pptr%pes%t_ref2m_min_r, &
+       call ncd_io(varname='T_REF2M_MIN_R', data=pptr%pes%t_ref2m_min_r, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1189,7 +1190,7 @@ contains
             dim1name='pft', &
             long_name='rural daily maximum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MAX_R', data=pptr%pes%t_ref2m_max_r, &
+       call ncd_io(varname='T_REF2M_MAX_R', data=pptr%pes%t_ref2m_max_r, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1204,7 +1205,7 @@ contains
             dim1name='pft', &
             long_name='rural instantaneous daily min of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MIN_INST_R', data=pptr%pes%t_ref2m_min_inst_r, &
+       call ncd_io(varname='T_REF2M_MIN_INST_R', data=pptr%pes%t_ref2m_min_inst_r, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1219,7 +1220,7 @@ contains
             dim1name='pft', &
             long_name='rural instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_REF2M_MAX_INST_R', data=pptr%pes%t_ref2m_max_inst_r, &
+       call ncd_io(varname='T_REF2M_MAX_INST_R', data=pptr%pes%t_ref2m_max_inst_r, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1231,12 +1232,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='T_SOISNO', xtype=nf_double,   &
-            dim1name='column', dim2name='levtot', &
+            dim1name='column', dim2name='levtot', switchdim=.true., &
             long_name='soil-snow temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_SOISNO', data=cptr%ces%t_soisno, &
-            dim1name=namec, dim2name='levtot', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='T_SOISNO', data=cptr%ces%t_soisno, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1246,12 +1246,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='T_LAKE', xtype=nf_double,  &
-            dim1name='column', dim2name='levlak', &
+            dim1name='column', dim2name='levlak', switchdim=.true., &
             long_name='lake temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_LAKE', data=cptr%ces%t_lake, &
-            dim1name=namec, dim2name='levlak', &
-            ncid=ncid, flag=flag, readvar=readvar)
+       call ncd_io(varname='T_LAKE', data=cptr%ces%t_lake, &
+            dim1name=namec, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1264,7 +1263,7 @@ contains
             dim1name='pft',&
             long_name='fraction of vegetation not covered by snow (0 or 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='FRAC_VEG_NOSNO_ALB', data=pptr%pps%frac_veg_nosno_alb, &
+       call ncd_io(varname='FRAC_VEG_NOSNO_ALB', data=pptr%pps%frac_veg_nosno_alb, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -1279,7 +1278,7 @@ contains
             dim1name='pft', &
             long_name='fraction of canopy that is wet (0 to 1)', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='FWET', data=pptr%pps%fwet, &
+       call ncd_io(varname='FWET', data=pptr%pps%fwet, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1294,7 +1293,7 @@ contains
             dim1name='pft', &
             long_name='one-sided leaf area index, no burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='tlai', data=pptr%pps%tlai, &
+       call ncd_io(varname='tlai', data=pptr%pps%tlai, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1309,7 +1308,7 @@ contains
             dim1name='pft', &
             long_name='one-sided stem area index, no burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='tsai', data=pptr%pps%tsai, &
+       call ncd_io(varname='tsai', data=pptr%pps%tsai, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1322,7 +1321,7 @@ contains
             dim1name='pft',&
             long_name='difference between lai month one and month two',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mlaidiff', data=pptr%pps%mlaidiff, &
+       call ncd_io(varname='mlaidiff', data=pptr%pps%mlaidiff, &
             dim1name='pft', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
@@ -1337,7 +1336,7 @@ contains
             dim1name='pft', &
             long_name='one-sided leaf area index, with burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='elai', data=pptr%pps%elai, &
+       call ncd_io(varname='elai', data=pptr%pps%elai, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1352,7 +1351,7 @@ contains
             dim1name='pft', &
             long_name='one-sided stem area index, with burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='esai', data=pptr%pps%esai, &
+       call ncd_io(varname='esai', data=pptr%pps%esai, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1367,7 +1366,7 @@ contains
             dim1name='pft', &
             long_name='sunlit fraction of canopy', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='fsun', data=pptr%pps%fsun, &
+       call ncd_io(varname='fsun', data=pptr%pps%fsun, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' )then
@@ -1390,7 +1389,7 @@ contains
             dim1name='pft', &
             long_name='canopy top', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='htop', data=pptr%pps%htop, &
+       call ncd_io(varname='htop', data=pptr%pps%htop, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1405,7 +1404,7 @@ contains
             dim1name='pft', &
             long_name='canopy botton', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='hbot', data=pptr%pps%hbot, &
+       call ncd_io(varname='hbot', data=pptr%pps%hbot, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1417,12 +1416,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='fabd', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='flux absorbed by veg per unit direct flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='fabd', data=pptr%pps%fabd, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='fabd', data=pptr%pps%fabd, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1432,12 +1430,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='fabi', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='flux absorbed by veg per unit diffuse flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='fabi', data=pptr%pps%fabi, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='fabi', data=pptr%pps%fabi, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1447,12 +1444,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='ftdd', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='down direct flux below veg per unit direct flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ftdd', data=pptr%pps%ftdd, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='ftdd', data=pptr%pps%ftdd, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1462,12 +1458,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='ftid', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='down diffuse flux below veg per unit direct flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ftid', data=pptr%pps%ftid, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='ftid', data=pptr%pps%ftid, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1477,12 +1472,11 @@ contains
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='ftii', xtype=nf_double,  &
-            dim1name='pft', dim2name='numrad', &
+            dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='down diffuse flux below veg per unit diffuse flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ftii', data=pptr%pps%ftii, &
-            dim1name=namep, dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='ftii', data=pptr%pps%ftii, &
+            dim1name=namep, switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1495,7 +1489,7 @@ contains
             dim1name='pft', &
             long_name='vegetation temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='T_VEG', data=pptr%pes%t_veg, &
+       call ncd_io(varname='T_VEG', data=pptr%pes%t_veg, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1511,7 +1505,7 @@ contains
             dim1name='pft', &
             long_name='2m height surface air temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname=varname, data=pptr%pes%t_ref2m, &
+       call ncd_io(varname=varname, data=pptr%pes%t_ref2m, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1530,7 +1524,7 @@ contains
             dim1name='pft', &
             long_name='canopy water', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='H2OCAN', data=pptr%pws%h2ocan, &
+       call ncd_io(varname='H2OCAN', data=pptr%pws%h2ocan, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -1615,11 +1609,11 @@ contains
     ! column type physical state variable - snw_rds
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='snw_rds', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer effective radius', units='um')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='snw_rds', data=cptr%cps%snw_rds, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='snw_rds', data=cptr%cps%snw_rds, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find snw_rds in restart (or initial) file..."
@@ -1657,11 +1651,11 @@ contains
     ! column type physical state variable - mss_bcpho
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_bcpho', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophobic black carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_bcpho', data=cptr%cps%mss_bcpho, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_bcpho', data=cptr%cps%mss_bcpho, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1678,11 +1672,11 @@ contains
     ! column type physical state variable - mss_bcphi
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_bcphi', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophilic black carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_bcphi', data=cptr%cps%mss_bcphi, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_bcphi', data=cptr%cps%mss_bcphi, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1699,11 +1693,11 @@ contains
     ! column type physical state variable - mss_ocpho
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_ocpho', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophobic organic carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_ocpho', data=cptr%cps%mss_ocpho, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_ocpho', data=cptr%cps%mss_ocpho, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1720,11 +1714,11 @@ contains
     ! column type physical state variable - mss_ocphi
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_ocphi', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophilic organic carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_ocphi', data=cptr%cps%mss_ocphi, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_ocphi', data=cptr%cps%mss_ocphi, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1741,11 +1735,11 @@ contains
     ! column type physical state variable - mss_dst1
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst1', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 1 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_dst1', data=cptr%cps%mss_dst1, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_dst1', data=cptr%cps%mss_dst1, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1762,11 +1756,11 @@ contains
     ! column type physical state variable - mss_dst2
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst2', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 2 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_dst2', data=cptr%cps%mss_dst2, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_dst2', data=cptr%cps%mss_dst2, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1783,11 +1777,11 @@ contains
     ! column type physical state variable - mss_dst3
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst3', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 3 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_dst3', data=cptr%cps%mss_dst3, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_dst3', data=cptr%cps%mss_dst3, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1804,11 +1798,11 @@ contains
     ! column type physical state variable - mss_dst4
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst4', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 4 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='mss_dst4', data=cptr%cps%mss_dst4, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='mss_dst4', data=cptr%cps%mss_dst4, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then
@@ -1825,11 +1819,11 @@ contains
     ! column type physical state variable - flx_absdv
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absdv', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno1', &
+            dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (direct, VIS)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='flx_absdv', data=cptr%cps%flx_absdv, &
-            dim1name='column', dim2name='levsno1', &
+       call ncd_io(varname='flx_absdv', data=cptr%cps%flx_absdv, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -1841,11 +1835,11 @@ contains
     ! column type physical state variable - flx_absdn
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absdn', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno1', &
+            dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (direct, NIR)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='flx_absdn', data=cptr%cps%flx_absdn, &
-            dim1name='column', dim2name='levsno1', &
+       call ncd_io(varname='flx_absdn', data=cptr%cps%flx_absdn, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -1857,11 +1851,11 @@ contains
     ! column type physical state variable - flx_absiv
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absiv', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno1', &
+            dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (diffuse, VIS)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='flx_absiv', data=cptr%cps%flx_absiv, &
-            dim1name='column', dim2name='levsno1', &
+       call ncd_io(varname='flx_absiv', data=cptr%cps%flx_absiv, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -1873,11 +1867,11 @@ contains
     ! column type physical state variable - flx_absin
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absin', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno1', &
+            dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (diffuse, NIR)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='flx_absin', data=cptr%cps%flx_absin, &
-            dim1name='column', dim2name='levsno1', &
+       call ncd_io(varname='flx_absin', data=cptr%cps%flx_absin, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -1889,12 +1883,11 @@ contains
     ! column type physical state variable - albsnd_hst
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albsnd_hst', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='snow albedo (direct) (0 to 1)',units='proportion')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albsnd_hst', data=cptr%cps%albsnd_hst, &
-            dim1name='column', dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='albsnd_hst', data=cptr%cps%albsnd_hst, &
+            dim1name='column', switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1903,12 +1896,11 @@ contains
     ! column type physical state variable - albsni_hst
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albsni_hst', xtype=nf_double,  &
-            dim1name='column', dim2name='numrad', &
+            dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='snow albedo (diffuse) (0 to 1)',units='proportion')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='albsni_hst', data=cptr%cps%albsni_hst, &
-            dim1name='column', dim2name='numrad', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='albsni_hst', data=cptr%cps%albsni_hst, &
+            dim1name='column', switchdim=.true., ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -1917,11 +1909,11 @@ contains
     ! column type water flux variable - qflx_snofrz_lyr
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='qflx_snofrz_lyr', xtype=nf_double,  &
-            dim1name='column', dim2name='levsno', &
+            dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer ice freezing rate', units='kg m-2 s-1')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='qflx_snofrz_lyr', data=cptr%cwf%qflx_snofrz_lyr, &
-            dim1name='column', dim2name='levsno', &
+       call ncd_io(varname='qflx_snofrz_lyr', data=cptr%cwf%qflx_snofrz_lyr, &
+            dim1name='column', switchdim=.true., &
             lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) then

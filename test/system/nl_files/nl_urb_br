@@ -6,6 +6,5 @@
  wrtdia         = .true.
  hist_dov2xy    = .true.,.false.
  hist_ndens     = 1,1
- hist_crtinic   = 'NONE'
  hist_fincl1    = 'TRAFFICFLUX', 'SNOWLIQ:A','SNOWICE:A'
  /

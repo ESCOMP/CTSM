@@ -130,12 +130,13 @@ end subroutine
 !
 ! !USES:
     use abortutils       , only : endrun
-    use areaMod          , only : map1dl_a2l, map1dl_l2a, map_maparrayl
+    use downscaleMod     , only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
-    use clm_atmlnd       , only : clm_l2a, clm_mapa2l
+    use clm_atmlnd       , only : clm_l2a
     use clm_comp         , only : clm_init1, clm_init2, clm_init3
-    use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland
+    use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
+                                  downscale
     use controlMod       , only : control_setNL
     use decompMod        , only : get_proc_bounds, get_proc_bounds_atm
     use domainMod        , only : adomain
@@ -512,13 +513,17 @@ end subroutine
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call set_nextsw_cday( nextsw_cday )
 
-    ! Create land export state (reset landfrac on atmosphere grid to have the right domain)
+    ! Create land export state 
+    ! If downscale, map this from the clm internal grid (dst) to the clm driver grid (src)
+    ! Reset landfrac on atmosphere grid to have the right domain
 
-    call lnd_export_esmf( clm_l2a, fptr_l2x_clm, begg_l, endg_l )
-
-    call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-                       fptr_l2x_clm, fptr, map1dl_l2a, reverse_order=.true.)
-
+    if (downscale) then
+       call lnd_export_esmf(clm_l2a, fptr_l2x_clm, begg_l, endg_l)
+       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
+                          fptr_l2x_clm, fptr, map1dl_l2a, reverse_order=.true.)
+    else
+       call lnd_export_esmf(clm_l2a, fptr, begg_l, endg_l)
+    end if
     do g = begg_a,endg_a
        fptr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
     end do
@@ -530,7 +535,6 @@ end subroutine
 
     !call sno_export_esmf( s2x, rc=rc)
     !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
 
     ! Determine atmosphere modes
 
@@ -574,8 +578,8 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
 !
 ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
-    use areaMod         ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
-    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_mapa2l
+    use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
+    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
@@ -590,7 +594,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_varctl      ,only : create_glacier_mec_landunit
+    use clm_varctl      ,only : create_glacier_mec_landunit, downscale
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use seq_flds_indices
@@ -687,58 +691,47 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
           i = 1 + (g - begg_a)
           adomain%asca(g) = fptr(ka, i)
        end do
-
     endif
     call t_stopf ('lc_lnd_run1')
     
     ! Map ESMF to CLM data type
+    ! Perform downscaling if appropriate
 
     call t_startf ('lc_lnd_import')
     call ESMF_StateGet(import_state, itemName="x2l", array=x2l, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
     call ESMF_ArrayGet(x2l, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
-    call lnd_import_esmf( fptr, atm_a2l, begg_a, endg_a )
-
-    call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
-	               fptr, fptr_x2l_clm, map1dl_a2l, reverse_order=.true.)
-
-    call lnd_import_esmf( fptr_x2l_clm, clm_a2l, begg_l, endg_l )
-    call t_stopf ('lc_lnd_import')
-
-    ! Perform downscaling if appropriate
+    if (downscale) then
+       call lnd_import_esmf( fptr, atm_a2l, begg_a, endg_a )
+       call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
+	                  fptr, fptr_x2l_clm, map1dl_a2l, reverse_order=.true.)
+       call lnd_import_esmf( fptr_x2l_clm, clm_a2l, begg_l, endg_l )
+       call clm_downscale_a2l(atm_a2l, clm_a2l)
+    else
+       call lnd_import_esmf( fptr, clm_a2l, begg_l, endg_l )
+    end if
     
-    call t_startf ('lc_clm_mapa2l')
-    call clm_mapa2l(atm_a2l, clm_a2l)
-    call t_stopf ('lc_clm_mapa2l')
-    
+    ! Map to clm (only when state and/or fluxes need to be updated)
+
     if (create_glacier_mec_landunit) then
-
-       ! Receive sno data
-
-       call t_startf ('lc_sno_import')
-       call sno_import_esmf( x2s, atm_x2s, rc=rc )
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-       call t_stopf ('lc_sno_import')
-
-       ! Map to clm (only when state and/or fluxes need to be updated)
-
        update_glc2sno_fields  = .false.
        call ESMF_AttributeGet(export_state, name="glc_g2supdate", value=update_glc2sno_fields, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
        if (update_glc2sno_fields) then
-
-          call t_startf ('lc_clm_mapa2s')
-          call clm_mapx2s(atm_x2s, clm_x2s)
-          call t_stopf ('lc_clm_mapa2s')
-
+          if (downscale) then
+             call sno_import_esmf( x2s, atm_x2s, rc=rc )
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+             call clm_mapx2s(atm_x2s, clm_x2s)
+          else
+             call sno_import_esmf( x2s, clm_x2s, rc=rc )
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          end if
           call unpack_clm_x2s(clm_x2s)
        endif   ! update_glc2sno
-
-    endif      ! create_glacier_mec_landunit
+    endif   ! create_glacier_mec_landunit
+    call t_stopf ('lc_lnd_import')
 
     ! Loop over time steps in coupling interval
 
@@ -790,24 +783,24 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        call t_stopf ('clm_run2')
 
        ! Map CLM data type to MCT
+       ! Reset landfrac on atmosphere grid to have the right domain
        
        call t_startf ('lc_lnd_export')
        call ESMF_StateGet(export_state, itemName="l2x", array=l2x, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
        call ESMF_ArrayGet(l2x, localDe=0, farrayPtr=fptr, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-       call lnd_export_esmf( clm_l2a, fptr_l2x_clm, begg_l, endg_l )
-
-       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-	         	  fptr_l2x_clm, fptr, map1dl_l2a)
-
-       ! Reset landfrac on atmosphere grid to have the right domain
+       if (downscale) then
+          call lnd_export_esmf( clm_l2a, fptr_l2x_clm, begg_l, endg_l )
+          call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
+	            	     fptr_l2x_clm, fptr, map1dl_l2a)
+       else
+          call lnd_export_esmf( clm_l2a, fptr, begg_l, endg_l )
+       end if
        do g = begg_a,endg_a
           fptr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
        end do
-       
        call t_stopf ('lc_lnd_export')
        
        ! Compute snapshot attribute vector for accumulation
@@ -828,22 +821,20 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
           avg_count = avg_count + 1
        endif
 
-       if (create_glacier_mec_landunit) then
-
        ! Map sno data type to MCT
 
+       if (create_glacier_mec_landunit) then
           call create_clm_s2x(clm_s2x)
-
-          call t_startf ('lc_clm_maps2a')
-          call clm_maps2x(clm_s2x, atm_s2x)
-          call t_stopf ('lc_clm_maps2a')
-
-          call t_startf ('lc_sno_export')
           call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-          call sno_export_esmf( atm_s2x, s2x, rc=rc )
-          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-          call t_stopf ('lc_sno_export')
+          if (downscale) then
+             call clm_maps2x(clm_s2x, atm_s2x)
+             call sno_export_esmf( atm_s2x, s2x, rc=rc )
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          else
+             call sno_export_esmf( clm_s2x, s2x, rc=rc )
+             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+          end if
 
           if (nstep <= 1) then
              call esmfshr_util_ArrayCopy(s2x, s2x_s_SUM, rc=rc)
@@ -1149,6 +1140,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        fptr(index_l2x_Sl_anidf,i)    =  l2a%albi(g,2)
        fptr(index_l2x_Sl_tref,i)     =  l2a%t_ref2m(g)
        fptr(index_l2x_Sl_qref,i)     =  l2a%q_ref2m(g)
+       fptr(index_l2x_Sl_u10,i)      =  l2a%u_ref10m(g)
        fptr(index_l2x_Fall_taux,i)   = -l2a%taux(g)
        fptr(index_l2x_Fall_tauy,i)   = -l2a%tauy(g)
        fptr(index_l2x_Fall_lat,i)    = -l2a%eflx_lh_tot(g)

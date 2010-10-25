@@ -14,6 +14,7 @@ module fileutils
 ! !USES:
   use abortutils, only : endrun
   use clm_varctl, only : iulog
+  use spmdMod   , only : masterproc
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -152,10 +153,10 @@ contains
      i = 0
 100  locfn = fulpath(i+1:klen)
      if (len_trim(locfn) == 0) then
-        write(iulog,*)'(GETFIL): local filename has zero length'
+	if (masterproc) write(iulog,*)'(GETFIL): local filename has zero length'
         call endrun
      else
-        write(iulog,*)'(GETFIL): attempting to find local file ',  &
+        if (masterproc) write(iulog,*)'(GETFIL): attempting to find local file ',  &
              trim(locfn)
      endif
 
@@ -163,7 +164,7 @@ contains
 
      inquire (file=locfn,exist=lexist)
      if (lexist) then
-        write(iulog,*) '(GETFIL): using ',trim(locfn), &
+        if (masterproc) write(iulog,*) '(GETFIL): using ',trim(locfn), &
              ' in current working directory'
         RETURN
      endif
@@ -174,7 +175,7 @@ contains
         inquire(file=fulpath,exist=lexist)
         if (lexist) then
            locfn = trim(fulpath)
-           write(iulog,*)'(GETFIL): using ',trim(fulpath)
+           if (masterproc) write(iulog,*)'(GETFIL): using ',trim(fulpath)
            return
         endif
         fulpath2 = trim(fget_archdev)//trim(fulpath)
@@ -186,9 +187,9 @@ contains
 
      call shr_file_get( ierr, locfn, fulpath2 )
      if (ierr==0) then
-        write(iulog,*)'(GETFIL): File ',trim(locfn),' read in from: ', fulpath2
+        if (masterproc) write(iulog,*)'(GETFIL): File ',trim(locfn),' read in from: ', fulpath2
      else  ! all tries to get file have been unsuccessful
-        write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath2
+        if (masterproc) write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath2
         if (present(iflag) .and. iflag==0) then
            call endrun ('GETFIL: FAILED to get '//trim(fulpath2))
         else
@@ -200,7 +201,7 @@ contains
 
      inquire (file=locfn,exist=lexist)
      if ( .not. lexist) then
-        write(iulog,*)'(GETFIL): failed transferring file to local path: ', locfn
+        if (masterproc) write(iulog,*)'(GETFIL): failed transferring file to local path: ', locfn
         if (present(iflag) .and. iflag==0) then
            call endrun ('GETFIL: file not transfered to local path' )
         end if

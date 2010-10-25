@@ -93,7 +93,7 @@ module clm_driver
   use clm_time_manager    , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
-  use restFileMod         , only : restFile_write, restFile_write_binary, restFile_filename
+  use restFileMod         , only : restFile_write, restFile_filename
   use inicFileMod         , only : inicfile_perp  
   use accFldsMod          , only : updateAccFlds
   use clm_driverInitMod   , only : clm_driverInit
@@ -148,7 +148,6 @@ module clm_driver
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: write_diagnostic        ! Write diagnostic information to log file
-  private :: do_inicwrite            ! If time to write an initial condition file
 !EOP
 !-----------------------------------------------------------------------
 
@@ -734,7 +733,6 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 #endif
   character(len=256) :: filer  ! restart file name
   integer :: ier               ! error code
-  logical :: write_restart     ! flag if should write restart files
 !-----------------------------------------------------------------------
 
   ! ============================================================================
@@ -824,10 +822,9 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 
   call t_startf('clm_driver_io')
 #ifndef _NOIO
+
   call t_startf('clm_driver_io_htapes')
-
   call hist_htapes_wrapup( rstwr, nlend )
-
   call t_stopf('clm_driver_io_htapes')
 
   ! ============================================================================
@@ -847,30 +844,13 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   ! Write restart/initial files if appropriate
   ! ============================================================================
 
-  write_restart = rstwr
-     
-  if (write_restart) then
-
+  if (rstwr) then
      call t_startf('clm_driver_io_wrest')
-     filer = restFile_filename(type='netcdf', rdate=rdate)
-     call restFile_write( filer, nlend )
-
-     filer = restFile_filename(type='binary', rdate=rdate )
-
-     call restFile_write_binary( filer, nlend )
-
+     filer = restFile_filename(rdate=rdate)
+     call restFile_write( filer, nlend, rdate=rdate )
      call t_stopf('clm_driver_io_wrest')
-
-  else if (do_inicwrite()) then
-
-     call t_startf('clm_driver_io_wrest')
-     dtime = get_step_size()
-     filer = restFile_filename(type='netcdf', offset=int(dtime))
-
-     call restFile_write( filer, nlend, noptr=.true. )
-     call t_stopf('clm_driver_io_wrest')
-
   end if
+
 #endif
   call t_stopf('clm_driver_io')
 
@@ -975,71 +955,5 @@ subroutine write_diagnostic (wrtdia, nstep)
 1000 format (1x,'nstep = ',i10,'   TS = ',f21.15)
 
 end subroutine write_diagnostic
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: do_inicwrite
-!
-! !INTERFACE:
-  logical function do_inicwrite()
-!
-! !DESCRIPTION:
-! Determine if initial dataset is to be written at this time step
-! True implies that the initial file will be written one time step
-! before the date contained in the filename.
-!
-! !USES:
-    use clm_time_manager, only : get_curr_date, get_prev_date, get_step_size
-    use clm_varctl  , only : hist_crtinic
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer :: yr         !nstep year (0 -> ...)
-    integer :: yrm1       !nstep-1 year (0 -> ...)
-    integer :: daym1      !nstep-1 day (1 -> 31)
-    integer :: day        !nstep day (1 -> 31)
-    integer :: mon        !nstep month (1 -> 12)
-    integer :: monm1      !nstep-1 month (1 -> 12)
-    integer :: mcsec      !nstep time of day [seconds]
-    integer :: mcsecm1    !nstep-1 time of day [seconds]
-    integer :: mcsecp1    !nstep+1 time of day [seconds]
-    integer :: dayp1      !nstep+1 day (1 -> 31)
-    integer :: monp1      !nstep+1 month (1 -> 12)
-    integer :: yrp1       !nstep+1 year (0 -> ...)
-    integer :: dtime      !timestep size [seconds]
-!-----------------------------------------------------------------------
-
-    ! Set calendar for current, previous, and next time steps
-
-    dtime = get_step_size()
-    call get_curr_date (yr  , mon  , day  , mcsec  )
-    call get_prev_date (yrm1, monm1, daym1, mcsecm1)
-    call get_curr_date (yrp1, monp1, dayp1, mcsecp1, offset=dtime)
-
-    ! Determine if time to write out initial dataset
-
-    do_inicwrite = .false.
-    if (hist_crtinic /= 'NONE') then
-       if      (hist_crtinic == '6-HOURLY') then
-          if (mod(mcsecp1,21600) == 0) do_inicwrite = .true.
-       elseif  (hist_crtinic == 'DAILY') then
-          if (day /= dayp1)  do_inicwrite = .true.
-       else if (hist_crtinic == 'MONTHLY') then
-          if (mon /= monp1)  do_inicwrite = .true.
-       else if (hist_crtinic == 'YEARLY') then
-          if (mon == 12 .and. monp1 == 1)  do_inicwrite = .true.
-       endif
-    endif
-
-  end function do_inicwrite
-!-----------------------------------------------------------------------
 
 end module clm_driver

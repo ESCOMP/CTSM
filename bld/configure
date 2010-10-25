@@ -1163,7 +1163,6 @@ SMP                     := $smp
 compile_threaded        := $compile_threaded
 DEBUG                   := $debug
 BUILD_THREADED          := $smp
-USEPIO                  := false
 HIRES                   := false
 FRAMEWORK               := MCT
 CCSM_BGC                := none

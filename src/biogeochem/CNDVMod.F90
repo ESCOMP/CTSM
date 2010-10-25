@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CNDVMod
 
 #if (defined CNDV)
@@ -156,8 +153,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use ncdio
-    use decompMod       , only : get_proc_bounds, get_proc_global, ldecomp
+    use decompMod       , only : get_proc_bounds, get_proc_global
     use clm_varpar      , only : lsmlon, lsmlat, maxpatch_pft
     use domainMod       , only : ldomain,llatlon
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
@@ -169,6 +165,7 @@ contains
     use shr_sys_mod     , only : shr_sys_getenv
     use spmdMod         , only : masterproc
     use shr_const_mod   , only : SHR_CONST_CDAY
+    use ncdio_pio
 !
 ! !ARGUMENTS:
     implicit none
@@ -193,15 +190,13 @@ contains
 !
 ! !LOCAL VARIABLES:
     character(len=256) :: dgvm_fn      ! dgvm history filename
-    integer :: ncid                    ! dgvm netcdf file id
-    integer :: omode                   ! returned mode from netCDF call
+    type(file_desc_t)  :: ncid         ! netcdf file id
     integer :: ncprec                  ! output precision
     integer :: g,p,l                   ! indices
     integer :: begp, endp              ! per-proc beginning and ending pft indices
     integer :: begc, endc              ! per-proc beginning and ending column indices
     integer :: begl, endl              ! per-proc beginning and ending landunit indices
     integer :: begg, endg              ! per-proc gridcell ending gridcell indices
-    integer :: numg,numl,numc,nump     ! global glcp cells
     integer :: ier                     ! error status
     integer :: mdcur, mscur, mcdate    ! outputs from get_curr_time
     integer :: yr,mon,day,mcsec        ! outputs from get_curr_date
@@ -215,10 +210,7 @@ contains
     character(len=  8) :: curtime      ! current time
     character(len= 10) :: basedate     ! base date (yyyymmdd)
     character(len=  8) :: basesec      ! base seconds
-    character(len=256) :: rem_dir      ! remote (archive) directory
-    character(len=256) :: rem_fn       ! remote (archive) filename
     real(r8), pointer :: rbuf2dg(:,:)  ! temporary
-    integer , pointer :: ibuf2dg(:,:)  ! temporary
     character(len=32) :: subname='histCNDV'
 !-----------------------------------------------------------------------
 
@@ -241,214 +233,190 @@ contains
     ! Determine subgrid bounds for this processor and allocate dynamic memory
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-    call get_proc_global(numg, numl, numc, nump)
 
-    allocate(rbuf2dg(begg:endg,maxpatch_pft), ibuf2dg(begg:endg,maxpatch_pft), stat=ier)
-    if (ier /= 0) call endrun('histCNDV: allocation error for rbuf2dg, ibuf2dg')
+    allocate(rbuf2dg(begg:endg,maxpatch_pft), stat=ier)
+    if (ier /= 0) call endrun('histCNDV: allocation error for rbuf2dg')
 
     ! Set output precision
 
-    ncprec = nf_double
+    ncprec = pio_double
 
-    if (masterproc) then
+    ! -----------------------------------------------------------------------
+    ! Create new netCDF file. File will be in define mode
+    ! -----------------------------------------------------------------------
 
-       ! -----------------------------------------------------------------------
-       ! Create new netCDF file. File will be in define mode
-       ! Set fill mode to "no fill" to optimize performance
-       ! -----------------------------------------------------------------------
+    dgvm_fn = set_dgvm_filename()
+    call ncd_pio_createfile(ncid, trim(dgvm_fn))
 
-       dgvm_fn = set_dgvm_filename()
-       call check_ret(nf_create(dgvm_fn, nf_clobber, ncid), subname)
-       call check_ret(nf_set_fill(ncid, nf_nofill, omode), subname)
+    ! -----------------------------------------------------------------------
+    ! Create global attributes.
+    ! -----------------------------------------------------------------------
+    
+    str = 'CF1.0'
+    call ncd_putatt (ncid, ncd_global, 'conventions', trim(str))
+    
+    call getdatetime(curdate, curtime)
+    str = 'created on ' // curdate // ' ' // curtime
+    call ncd_putatt(ncid, ncd_global,'history', trim(str))
+    
+    call shr_sys_getenv('LOGNAME', str, ier)
+    if (ier /= 0) call endrun('error: LOGNAME environment variable not defined')
+       
+    call ncd_putatt (ncid, ncd_global, 'logname', trim(str))
+       
+    call shr_sys_getenv('HOST', str, ier)
+    call ncd_putatt (ncid, ncd_global, 'host', trim(str))
+       
+    str = 'Community Land Model: CLM3'
+    call ncd_putatt (ncid, ncd_global, 'source',  trim(str))
+       
+    str = '$Name$'
+    call ncd_putatt (ncid, ncd_global, 'version', trim(str))
+       
+    str = '$Id$'
+    call ncd_putatt (ncid, ncd_global, 'revision_id',  trim(str))
 
-       ! -----------------------------------------------------------------------
-       ! Create global attributes.
-       ! -----------------------------------------------------------------------
+    str = ctitle
+    call ncd_putatt (ncid, ncd_global, 'case_title', trim(str))
 
-       str = 'CF1.0'
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'conventions', len_trim(str), trim(str)), subname)
+    str = caseid
+    call ncd_putatt (ncid, ncd_global, 'case_id',  trim(str))
 
-       call getdatetime(curdate, curtime)
-       str = 'created on ' // curdate // ' ' // curtime
-       call check_ret(&
-            nf_put_att_text(ncid, NF_GLOBAL,'history', len_trim(str), trim(str)), subname)
+    str = get_filename(fsurdat)
+    call ncd_putatt(ncid, ncd_global, 'Surface_dataset',  trim(str))
 
-       call shr_sys_getenv('LOGNAME', str, ier)
-       if (ier /= 0) call endrun('error: LOGNAME environment variable not defined')
-       
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'logname',len_trim(str), trim(str)), subname)
-       
-       call shr_sys_getenv('HOST', str, ier)
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'host', len_trim(str), trim(str)), subname)
-       
-       str = 'Community Land Model: CLM3'
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
-       
-       str = '$Name$'
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
-       
-       str = '$Id$'
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
+    str = 'arbitrary initialization'
+    if (finidat /= ' ') str = get_filename(finidat)
+    call ncd_putatt(ncid, ncd_global, 'Initial_conditions_dataset',  trim(str))
 
-       str = ctitle
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'case_title', len_trim(str), trim(str)), subname)
+    str = get_filename(fpftcon)
+    call ncd_putatt(ncid, ncd_global, 'PFT_physiological_constants_dataset', trim(str))
 
-       str = caseid
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'case_id', len_trim(str), trim(str)), subname)
-       
-       str = get_filename(fsurdat)
-       call check_ret(&
-            nf_put_att_text(ncid, NF_GLOBAL, 'Surface_dataset', len_trim(str), trim(str)), subname)
-       
-       str = 'arbitrary initialization'
-       if (finidat /= ' ') str = get_filename(finidat)
-       call check_ret(&
-            nf_put_att_text(ncid, NF_GLOBAL, 'Initial_conditions_dataset', len_trim(str), trim(str)), subname)
-       
-       str = get_filename(fpftcon)
-       call check_ret(&
-            nf_put_att_text(ncid, NF_GLOBAL, 'PFT_physiological_constants_dataset', len_trim(str), trim(str)), subname)
-       
-       if (frivinp_rtm /= ' ') then
-          str = get_filename(frivinp_rtm)
-          call check_ret(&
-               nf_put_att_text(ncid, NF_GLOBAL, 'RTM_input_datset', len_trim(str), trim(str)), subname)
-       end if
+    if (frivinp_rtm /= ' ') then
+       str = get_filename(frivinp_rtm)
+       call ncd_putatt(ncid, ncd_global, 'RTM_input_datset', trim(str)) 
+    end if
 
-       ! -----------------------------------------------------------------------
-       ! Define dimensions.
-       ! -----------------------------------------------------------------------
+    ! -----------------------------------------------------------------------
+    ! Define dimensions.
+    ! -----------------------------------------------------------------------
+    
+    call ncd_defdim (ncid, 'lon', lsmlon       , dimid)
+    call ncd_defdim (ncid, 'lat', lsmlat       , dimid)
+    call ncd_defdim (ncid, 'pft', maxpatch_pft , dimid)
+    call ncd_defdim (ncid, 'time', pio_unlimited, dimid)
+    call ncd_defdim (ncid, 'string_length', 80 , dimid)
+    
+    ! -----------------------------------------------------------------------
+    ! Define variables
+    ! -----------------------------------------------------------------------
+    
+    ! Define coordinate variables (including time)
+    
+    call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon', &
+         long_name='coordinate longitude', units='degrees_east')
+    
+    call ncd_defvar(ncid=ncid, varname='lat', xtype=ncprec, dim1name='lat', &
+         long_name='coordinate latitude', units='degrees_north')
+    
+    call get_curr_time(mdcur, mscur)
+    call get_ref_date(yr, mon, day, nbsec)
+    hours   = nbsec / 3600
+    minutes = (nbsec - hours*3600) / 60
+    secs    = (nbsec - hours*3600 - minutes*60)
+    write(basedate,80) yr,mon,day
+80  format(i4.4,'-',i2.2,'-',i2.2)
+    write(basesec ,90) hours, minutes, secs
+90  format(i2.2,':',i2.2,':',i2.2)
+    str = 'days since ' // basedate // " " // basesec
+    time = mdcur + mscur/SHR_CONST_CDAY
+    
+    call ncd_defvar(ncid=ncid, varname='time', xtype=pio_double, dim1name='time', &
+         long_name='time', units=str)
        
-       call check_ret(nf_def_dim (ncid, 'lon', lsmlon, dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'lat', lsmlat, dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'pft', maxpatch_pft, dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'time', nf_unlimited, dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'string_length', 80, dimid), subname)
-       
-       ! -----------------------------------------------------------------------
-       ! Define variables
-       ! -----------------------------------------------------------------------
-       
-       ! Define coordinate variables (including time)
-       
-       call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon', &
-            long_name='coordinate longitude', units='degrees_east')
-          
-       call ncd_defvar(ncid=ncid, varname='lat', xtype=ncprec, dim1name='lat', &
-            long_name='coordinate latitude', units='degrees_north')
+    call ncd_defvar(ncid=ncid, varname='edgen', xtype=ncprec, &
+         long_name='northern edge of surface grid', units='degrees_north')
+    
+    call ncd_defvar(ncid=ncid, varname='edgee', xtype=ncprec, &
+         long_name='eastern edge of surface grid', units='degrees_east')
+    
+    call ncd_defvar(ncid=ncid, varname='edges', xtype=ncprec, &
+         long_name='southern edge of surface grid', units='degrees_north')
+    
+    call ncd_defvar(ncid=ncid, varname='edgew', xtype=ncprec, &
+         long_name='western edge of surface grid', units='degrees_east')
+    
+    ! Define surface grid (coordinate variables, latitude, longitude, surface type).
+    
+    call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
+         long_name='longitude', units='degrees_east')
 
-       call get_curr_time(mdcur, mscur)
-       call get_ref_date(yr, mon, day, nbsec)
-       hours   = nbsec / 3600
-       minutes = (nbsec - hours*3600) / 60
-       secs    = (nbsec - hours*3600 - minutes*60)
-       write(basedate,80) yr,mon,day
-80     format(i4.4,'-',i2.2,'-',i2.2)
-       write(basesec ,90) hours, minutes, secs
-90     format(i2.2,':',i2.2,':',i2.2)
-       str = 'days since ' // basedate // " " // basesec
-       time = mdcur + mscur/SHR_CONST_CDAY
-       
-       call ncd_defvar(ncid=ncid, varname='time', xtype=nf_double, dim1name='time', &
-            long_name='time', units=str)
-       
-       call ncd_defvar(ncid=ncid, varname='edgen', xtype=ncprec, &
-            long_name='northern edge of surface grid', units='degrees_north')
-          
-       call ncd_defvar(ncid=ncid, varname='edgee', xtype=ncprec, &
-            long_name='eastern edge of surface grid', units='degrees_east')
-          
-       call ncd_defvar(ncid=ncid, varname='edges', xtype=ncprec, &
-            long_name='southern edge of surface grid', units='degrees_north')
-          
-       call ncd_defvar(ncid=ncid, varname='edgew', xtype=ncprec, &
-            long_name='western edge of surface grid', units='degrees_east')
+    call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, dim1name='lon', dim2name='lat', &
+         long_name='latitude', units='degrees_north')
 
-       ! Define surface grid (coordinate variables, latitude, longitude, surface type).
-       
-       call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-            long_name='longitude', units='degrees_east')
-       
-       call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-            long_name='latitude', units='degrees_north')
-       
-       call ncd_defvar(ncid=ncid, varname='landmask', xtype=nf_int, dim1name='lon', dim2name='lat', &
-            long_name='land/ocean mask (0.=ocean and 1.=land)')
-       
-       ! Define time information
-       
-       call ncd_defvar(ncid=ncid, varname='mcdate', xtype=nf_int, dim1name='time',&
-            long_name='current date (YYYYMMDD)')
-       
-       call ncd_defvar(ncid=ncid, varname='mcsec', xtype=nf_int, dim1name='time',&
-            long_name='current seconds of current date', units='s')
-       
-       call ncd_defvar(ncid=ncid, varname='mdcur', xtype=nf_int, dim1name='time',&
-            long_name='current day (from base day)')
-       
-       call ncd_defvar(ncid=ncid, varname='mscur', xtype=nf_int, dim1name='time',&
-            long_name='current seconds of current day', units='s')
+    call ncd_defvar(ncid=ncid, varname='landmask', xtype=pio_int, dim1name='lon', dim2name='lat', &
+         long_name='land/ocean mask (0.=ocean and 1.=land)')
 
-       call ncd_defvar(ncid=ncid, varname='nstep', xtype=nf_int, dim1name='time',&
-            long_name='time step', units='s')
+    ! Define time information
 
-       ! Define time dependent variables
-       
-       call ncd_defvar(ncid=ncid, varname='FPCGRID', xtype=ncprec, &
-            dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
-            long_name='plant functional type cover', units='fraction of vegetated area', &
-            missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='mcdate', xtype=pio_int, dim1name='time',&
+         long_name='current date (YYYYMMDD)')
 
-       call ncd_defvar(ncid=ncid, varname='NIND', xtype=ncprec, &
-            dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
-            long_name='number of individuals', units='individuals/m2 vegetated land', &
-            missing_value=spval, fill_value=spval)
-       
-       call check_ret(nf_enddef(ncid), subname)
+    call ncd_defvar(ncid=ncid, varname='mcsec', xtype=pio_int, dim1name='time',&
+         long_name='current seconds of current date', units='s')
 
-    end if   ! End of if-masterproc block
+    call ncd_defvar(ncid=ncid, varname='mdcur', xtype=pio_int, dim1name='time',&
+         long_name='current day (from base day)')
+
+    call ncd_defvar(ncid=ncid, varname='mscur', xtype=pio_int, dim1name='time',&
+         long_name='current seconds of current day', units='s')
+
+    call ncd_defvar(ncid=ncid, varname='nstep', xtype=pio_int, dim1name='time',&
+         long_name='time step', units='s')
+
+    ! Define time dependent variables
+
+    call ncd_defvar(ncid=ncid, varname='FPCGRID', xtype=ncprec, &
+         dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
+         long_name='plant functional type cover', units='fraction of vegetated area', &
+         missing_value=spval, fill_value=spval)
+
+    call ncd_defvar(ncid=ncid, varname='NIND', xtype=ncprec, &
+         dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
+         long_name='number of individuals', units='individuals/m2 vegetated land', &
+         missing_value=spval, fill_value=spval)
+
+    call ncd_enddef(ncid)
 
     ! -----------------------------------------------------------------------
     ! Write variables
     ! -----------------------------------------------------------------------
 
-    call ncd_ioglobal(varname='edgen', data=llatlon%edges(1), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgee', data=llatlon%edges(2), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edges', data=llatlon%edges(3), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgew', data=llatlon%edges(4), ncid=ncid, flag='write')
+    call ncd_io(ncid=ncid, varname='edgen', data=llatlon%edges(1), flag='write')
+    call ncd_io(ncid=ncid, varname='edgee', data=llatlon%edges(2), flag='write')
+    call ncd_io(ncid=ncid, varname='edges', data=llatlon%edges(3), flag='write')
+    call ncd_io(ncid=ncid, varname='edgew', data=llatlon%edges(4), flag='write')
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    if (masterproc) then
-       call ncd_ioglobal(varname='lon', data=llatlon%lonc, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='lat', data=llatlon%latc, ncid=ncid, flag='write')
-    end if
-    call ncd_iolocal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, &
-                      flag='write', dim1name=grlnd)
-    call ncd_iolocal(varname='latixy'  , data=ldomain%latc, ncid=ncid, &
-                      flag='write', dim1name=grlnd)
-    call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
-                      flag='write', dim1name=grlnd)
+    call ncd_io(ncid=ncid, varname='lon'     , data=llatlon%lonc, flag='write')
+    call ncd_io(ncid=ncid, varname='lat'     , data=llatlon%latc, flag='write')
+    call ncd_io(ncid=ncid, varname='longxy'  , data=ldomain%lonc, flag='write', dim1name=grlnd)
+    call ncd_io(ncid=ncid, varname='latixy'  , data=ldomain%latc, flag='write', dim1name=grlnd)
+    call ncd_io(ncid=ncid, varname='landmask', data=ldomain%mask, flag='write', dim1name=grlnd)
+
     ! Write current date, current seconds, current day, current nstep
 
     call get_curr_date(yr, mon, day, mcsec)
     mcdate = yr*10000 + mon*100 + day
     nstep = get_nstep()
 
-    call ncd_ioglobal(varname='mcdate', data=mcdate, nt=1, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='mcsec' , data=mcsec , nt=1, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='mdcur' , data=mdcur , nt=1, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='mscur' , data=mcsec , nt=1, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='nstep' , data=nstep , nt=1, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='time'  , data=time  , nt=1, ncid=ncid, flag='write')
+    call ncd_io(ncid=ncid, varname='mcdate', data=mcdate, nt=1, flag='write')
+    call ncd_io(ncid=ncid, varname='mcsec' , data=mcsec , nt=1, flag='write')
+    call ncd_io(ncid=ncid, varname='mdcur' , data=mdcur , nt=1, flag='write')
+    call ncd_io(ncid=ncid, varname='mscur' , data=mcsec , nt=1, flag='write')
+    call ncd_io(ncid=ncid, varname='nstep' , data=nstep , nt=1, flag='write')
+    call ncd_io(ncid=ncid, varname='time'  , data=time  , nt=1, flag='write')
 
     ! Write time dependent variables to CNDV history file
 
@@ -461,8 +429,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = fpcgrid(p)*100._r8
     end do
-    call ncd_iolocal(varname='FPCGRID', dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
-         nt=1, ncid=ncid, flag='write')
+    call ncd_io(ncid=ncid, varname='FPCGRID', dim1name=grlnd, data=rbuf2dg, &
+         nt=1, flag='write')
 
     rbuf2dg(:,:) = 0._r8
     do p = begp,endp
@@ -470,19 +438,20 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = nind(p)
     end do
-    call ncd_iolocal(varname='NIND',dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
-         nt=1, ncid=ncid, flag='write')
+    call ncd_io(ncid=ncid, varname='NIND', dim1name=grlnd, data=rbuf2dg, &
+         nt=1, flag='write')
 
     ! Deallocate dynamic memory
 
-    deallocate(rbuf2dg, ibuf2dg)
+    deallocate(rbuf2dg)
 
     !------------------------------------------------------------------
     ! Close and archive netcdf CNDV history file
     !------------------------------------------------------------------
 
+    call pio_closefile(ncid)
+
     if (masterproc) then
-       call check_ret(nf_close(ncid), subname)
        write(6,*)'(histCNDV): Finished writing CNDV history dataset ',&
             trim(dgvm_fn), 'at nstep = ',get_nstep()
     end if

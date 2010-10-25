@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module accumulMod
 
 !-----------------------------------------------------------------------
@@ -666,12 +663,12 @@ contains
 ! Read/write accumulation restart data
 !
 ! !USES:
-    use ncdio
+    use ncdio_pio
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid            !netcdf unit
-    character(len=*), intent(in) :: flag   !'define','read', or 'write'
+    type(file_desc_t), intent(inout) :: ncid   !netcdf unit
+    character(len=*) , intent(in) :: flag   !'define','read', or 'write'
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -712,7 +709,7 @@ contains
              if (flag == 'write') then
                 rbuf1d(beg1d:end1d) = accum(nf)%val(beg1d:end1d,1) 
              end if
-             call ncd_iolocal(varname=varname, data=rbuf1d, &
+             call ncd_io(varname=varname, data=rbuf1d, &
                   dim1name=accum(nf)%type1d, &
                   ncid=ncid, flag=flag, readvar=readvar)
              if (flag == 'read' .and. readvar) then
@@ -720,8 +717,8 @@ contains
              end if
              deallocate(rbuf1d)
           else
-             call ncd_iolocal(varname=varname, data=accum(nf)%val, &
-                  dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
+             call ncd_io(varname=varname, data=accum(nf)%val, &
+                  dim1name=accum(nf)%type1d, &
                   ncid=ncid, flag=flag, readvar=readvar)
           end if
           if (flag=='read' .and. .not. readvar) then
@@ -734,8 +731,8 @@ contains
           call ncd_defvar(ncid=ncid, varname=varname, xtype=nf_int,  &
                long_name='', units='time steps')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_ioglobal(varname=varname, data=accum(nf)%period, &
-               ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+          call ncd_io(varname=varname, data=accum(nf)%period, &
+               ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun()
           end if

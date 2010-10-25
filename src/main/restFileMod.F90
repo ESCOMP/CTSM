@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module restFileMod
 
 !-----------------------------------------------------------------------
@@ -16,29 +13,24 @@ module restFileMod
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
-  use ncdio       
+  use ncdio_pio       
 !
 ! !PUBLIC TYPES:
   implicit none
   save
 !
-  logical, public :: &
-       rest_flag = .true.     ! namelist true => restart on
-!
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: restFile_read
   public :: restFile_write
-  public :: restFile_read_binary
-  public :: restFile_write_binary
   public :: restFile_open
   public :: restFile_close
   public :: restFile_getfile
-  public :: restFile_filename       ! Sets restart filename
+  public :: restFile_filename        ! Sets restart filename
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: restFile_read_pfile     
   private :: restFile_write_pfile    ! Writes restart pointer file
-  private :: restFile_closeRestart        ! Close restart file and write restart pointer file
+  private :: restFile_closeRestart   ! Close restart file and write restart pointer file
   private :: restFile_dimset
   private :: restFile_dimcheck
   private :: restFile_enddef
@@ -60,7 +52,7 @@ contains
 ! !IROUTINE: restFile_write
 !
 ! !INTERFACE:
-  subroutine restFile_write( file, nlend, noptr )
+  subroutine restFile_write( file, nlend, noptr, rdate )
 !
 ! !DESCRIPTION:
 ! Read/write CLM restart file.
@@ -79,12 +71,14 @@ contains
     use CASAMod          , only : CASARest
 #endif
     use accumulMod       , only : accumulRest
+    use histFileMod      , only : hist_restart_ncd
 !
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
     character(len=*) , intent(in) :: file            ! output netcdf restart file
     logical,           intent(in) :: nlend	     ! if at the end of the simulation
+    character(len=*) , intent(in) :: rdate           ! restart file time stamp for name
     logical,           intent(in), optional :: noptr ! if should NOT write to the restart pointer file
 !
 ! !CALLED FROM:
@@ -96,28 +90,35 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: ncid    ! netcdf id
+    type(file_desc_t) :: ncid ! netcdf id
     integer :: i       ! index
     logical :: ptrfile ! write out the restart pointer file
 !-----------------------------------------------------------------------
+
     if ( present(noptr) )then
        ptrfile = .not. noptr
     else
        ptrfile = .true.
     end if
 
+    ! --------------------------------------------
     ! Open restart file
+    ! --------------------------------------------
 
     call restFile_open( flag='write', file=file, ncid=ncid )
 
-    ! Define dimensions
+    ! --------------------------------------------
+    ! Define dimensions and variables
+    ! --------------------------------------------
 
     call restFile_dimset ( ncid )
 
     ! Define restart file variables
 
     call timemgr_restart_io( ncid, flag='define' )
+
     call SubgridRest( ncid, flag='define' )
+
     call BiogeophysRest( ncid, flag='define' )
 #if (defined CN)
     call CNRest( ncid, flag='define' )
@@ -129,25 +130,40 @@ contains
     call RtmRest( ncid, flag='define' )
 #endif
     call accumulRest( ncid, flag='define' )
+
+    call hist_restart_ncd ( ncid, flag='define' )
+
     call restFile_enddef( ncid )
 
+    ! --------------------------------------------
     ! Write restart file variables
+    ! --------------------------------------------
     
     call timemgr_restart_io( ncid, flag='write' )
+
     call SubgridRest( ncid, flag='write' )
+
     call BiogeophysRest( ncid, flag='write' )
+
 #if (defined CN)
     call CNRest( ncid, flag='write' )
 #endif
+
 #if (defined CASA)
     call CASARest( ncid, flag='write' )
 #endif
+
 #if (defined RTM)
     call RtmRest( ncid, flag='write' )
 #endif
+
     call accumulRest( ncid, flag='write' )
     
+    call hist_restart_ncd (ncid, flag='write', rdate=rdate)
+
+    ! --------------------------------------------
     ! Close restart file and write restart pointer file
+    ! --------------------------------------------
     
     call restFile_close( ncid )
     call restFile_closeRestart( file, nlend )
@@ -188,6 +204,7 @@ contains
     use CASAMod          , only : CASARest
 #endif
     use accumulMod       , only : accumulRest
+    use histFileMod      , only : hist_restart_ncd
 !
 ! !ARGUMENTS:
     implicit none
@@ -203,8 +220,8 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: ncid                        ! netcdf id
-    integer :: i                           ! index
+    type(file_desc_t) :: ncid ! netcdf id
+    integer :: i              ! index
 !-----------------------------------------------------------------------
 
     ! Open file
@@ -214,18 +231,25 @@ contains
     ! Read file
 
     call restFile_dimcheck( ncid )
+
     call BiogeophysRest( ncid, flag='read' )
+
 #if (defined CN)
     call CNRest( ncid, flag='read' )
 #endif
+
 #if (defined CASA)
     call CASARest( ncid, flag='read' )
 #endif
+
 #if (defined RTM)
     call RtmRest( ncid, flag='read' )
 #endif
+
     call accumulRest( ncid, flag='read' )
     
+    call hist_restart_ncd (ncid, flag='read')
+
     ! Close file 
 
     call restFile_close( ncid )
@@ -239,92 +263,6 @@ contains
     end if
 
   end subroutine restFile_read
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: restFile_read_binary
-!
-! !INTERFACE:
-  subroutine restFile_read_binary( file )
-!
-! !DESCRIPTION:
-! Read a CLM restart file.
-!
-! !USES:
-    use fileutils  , only : relavu, opnfil, getfil, getavu
-    use histFileMod, only : hist_restart
-!
-! !ARGUMENTS:
-    implicit none
-    character(len=*), intent(in) :: file   ! binary restart file
-!
-! !CALLED FROM:
-! subroutine initialize2
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer :: nio                         ! Fortran unit number
-!-----------------------------------------------------------------------
-
-    if (masterproc) then
-       nio = getavu()
-       call opnfil (file, nio, 'u')
-    end if
-    call hist_restart(nio, flag='read')
-    if (masterproc) then
-       call relavu (nio)
-    end if
-
-  end subroutine restFile_read_binary
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: restFile_write_binary
-!
-! !INTERFACE:
-  subroutine restFile_write_binary( file, nlend )
-!
-! !DESCRIPTION:
-! Read a CLM restart file.
-!
-! !USES:
-    use fileutils  , only : relavu, opnfil, getfil, getavu
-    use histFileMod, only : hist_restart
-!
-! !ARGUMENTS:
-    implicit none
-    character(len=*) , intent(in) :: file   ! binary restart file
-    logical,           intent(in) :: nlend
-!
-! !CALLED FROM:
-! subroutine clm_driver2
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer :: nio                         ! Fortran unit number
-!-----------------------------------------------------------------------
-
-    if (masterproc) then
-       nio = getavu()
-       call opnfil (file, nio, 'u')
-    end if
-    call hist_restart(nio, flag='write')
-    if (masterproc) then
-       call relavu (nio)
-       call restFile_closeRestart( file, nlend )
-    end if
-
-  end subroutine restFile_write_binary
 
 !-----------------------------------------------------------------------
 !BOP
@@ -361,54 +299,49 @@ contains
     character(len=256) :: ftest,ctest      ! temporaries
 !-----------------------------------------------------------------------
 
-    if (masterproc) then
-
-       ! Restart run:
-       ! Restart file pathname is read restart pointer file 
-
-       if (nsrest==1) then
-          call restFile_read_pfile( path )
-          call getfil( path, file, 0 )
-       end if
+    ! Continue run:
+    ! Restart file pathname is read restart pointer file 
+    
+    if (nsrest==1) then
+       call restFile_read_pfile( path )
+       call getfil( path, file, 0 )
+    end if
        
-       ! Branch run: 
-       ! Restart file pathname is obtained from namelist "nrevsn"
-       ! Check case name consistency (case name must be different for branch run, 
-       ! unless namelist specification states otherwise)
-
-       if (nsrest==3) then
-          length = len_trim(nrevsn)
-          if (nrevsn(length-2:length) == '.nc') then
-             path = trim(nrevsn) 
-          else
-             path = trim(nrevsn) // '.nc'
-          end if
-          call getfil( path, file, 0 )
-
-          ! tcraig, adding xx. and .clm2 makes this more robust
-          ctest = 'xx.'//trim(caseid)//'.clm2'
-          ftest = 'xx.'//trim(file)
-          status = index(trim(ftest),trim(ctest))
-          if (status /= 0 .and. .not.(brnch_retain_casename)) then
-             write(iulog,*) 'Must change case name on branch run if ',&
-                  'brnch_retain_casename namelist is not set'
-             write(iulog,*) 'previous case filename= ',trim(file),&
-                  ' current case = ',trim(caseid), &
-                  ' ctest = ',trim(ctest), &
-                  ' ftest = ',trim(ftest)
-             call endrun()
-          end if
+    ! Branch run: 
+    ! Restart file pathname is obtained from namelist "nrevsn"
+    ! Check case name consistency (case name must be different for branch run, 
+    ! unless namelist specification states otherwise)
+    
+    if (nsrest==3) then
+       length = len_trim(nrevsn)
+       if (nrevsn(length-2:length) == '.nc') then
+          path = trim(nrevsn) 
+       else
+          path = trim(nrevsn) // '.nc'
        end if
-
-       ! Initial run: 
-       ! Restart file pathname is obtained from namelist "finidat"
-
-       if (nsrest==0) then
-          call getfil( finidat, file, 0 )
+       call getfil( path, file, 0 )
+       
+       ! tcraig, adding xx. and .clm2 makes this more robust
+       ctest = 'xx.'//trim(caseid)//'.clm2'
+       ftest = 'xx.'//trim(file)
+       status = index(trim(ftest),trim(ctest))
+       if (status /= 0 .and. .not.(brnch_retain_casename)) then
+          write(iulog,*) 'Must change case name on branch run if ',&
+               'brnch_retain_casename namelist is not set'
+          write(iulog,*) 'previous case filename= ',trim(file),&
+               ' current case = ',trim(caseid), ' ctest = ',trim(ctest), &
+               ' ftest = ',trim(ftest)
+          call endrun()
        end if
-
     end if
 
+    ! Initial run: 
+    ! Restart file pathname is obtained from namelist "finidat"
+    
+    if (nsrest==0) then
+       call getfil( finidat, file, 0 )
+    end if
+    
   end subroutine restFile_getfile
 
 !-----------------------------------------------------------------------
@@ -428,7 +361,7 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(out) :: pnamer ! full path of binary restart file
+    character(len=*), intent(out) :: pnamer ! full path of restart file
 !
 ! !CALLED FROM:
 ! subroutine restart in this module
@@ -453,11 +386,15 @@ contains
        
     if (masterproc) then
        write(iulog,*) 'Reading restart pointer file....'
-       nio = getavu()
-       locfn = trim(rpntdir) //'/'// trim(rpntfil)
-       call opnfil (locfn, nio, 'f')
-       read (nio,'(a256)') pnamer
-       call relavu (nio)
+    endif
+
+    nio = getavu()
+    locfn = trim(rpntdir) //'/'// trim(rpntfil)
+    call opnfil (locfn, nio, 'f')
+    read (nio,'(a256)') pnamer
+    call relavu (nio)
+
+    if (masterproc) then
        write(iulog,*) 'Reading restart data.....'
        write(iulog,'(72a1)') ("-",i=1,60)
     end if
@@ -498,11 +435,9 @@ contains
 !-----------------------------------------------------------------------
 
    if (masterproc) then
-
       write(iulog,*) 'Successfully wrote local restart file ',trim(file)
       write(iulog,'(72a1)') ("-",i=1,60)
       write(iulog,*)
-
    end if
 
  end subroutine restFile_closeRestart
@@ -516,8 +451,7 @@ contains
   subroutine restFile_write_pfile( fnamer )
 !
 ! !DESCRIPTION:
-! Open restart pointer file. Write names of current binary and netcdf
-! restart files.
+! Open restart pointer file. Write names of current netcdf restart file.
 !
 ! !USES:
     use clm_varctl, only : rpntdir, rpntfil
@@ -560,34 +494,35 @@ contains
     use clm_time_manager, only : get_nstep
     
     implicit none
-    character(len=*), intent(in) :: flag ! flag to specify read or write
-    character(len=*), intent(in) :: file ! filename
-    integer, intent(out)         :: ncid ! netcdf id
+    character(len=*),  intent(in) :: flag ! flag to specify read or write
+    character(len=*),  intent(in) :: file ! filename
+    type(file_desc_t), intent(out):: ncid ! netcdf id
 
     integer :: omode                              ! netCDF dummy variable
     character(len= 32) :: subname='restFile_open' ! subroutine name
 
-    if (masterproc) then
-       if (flag == 'write') then
+    if (flag == 'write') then
 
-          ! Create new netCDF file (in define mode) and set fill mode
-          ! to "no fill" to optimize performance
-
+       ! Create new netCDF file (in define mode) and set fill mode
+       ! to "no fill" to optimize performance
+       
+       if (masterproc) then	
           write(iulog,*)
           write(iulog,*)'restFile_open: writing restart dataset at ',&
                trim(file), ' at nstep = ',get_nstep()
           write(iulog,*)
-          call ncd_create(trim(file), nf_clobber, ncid, subname )
-          call check_ret( nf_set_fill(ncid, nf_nofill, omode), subname )
-
-       else if (flag == 'read') then
-       
-          ! Open netcdf restart file
-
-          write(iulog,*) 'Reading restart dataset'
-          call ncd_open(file, nf_nowrite, ncid, subname )
-
        end if
+       call ncd_pio_createfile(ncid, trim(file))
+       
+    else if (flag == 'read') then
+       
+       ! Open netcdf restart file
+       
+       if (masterproc) then
+          write(iulog,*) 'Reading restart dataset'
+       end if
+       call ncd_pio_openfile (ncid, trim(file), 0)
+       
     end if
   
   end subroutine restFile_open
@@ -598,21 +533,16 @@ contains
 ! !IROUTINE: restFile_filename
 !
 ! !INTERFACE:
-  character(len=256) function restFile_filename( type, offset, rdate )
+  character(len=256) function restFile_filename( rdate )
 !
 ! !DESCRIPTION:
 !
 ! !USES:
-    use clm_varctl  , only : caseid
-    use clm_time_manager, only : get_curr_date, get_step_size
+    use clm_varctl, only : caseid
 !
 ! !ARGUMENTS:
     implicit none
-    character(len=*)          , intent(in) :: type    ! output type "binary" or "netcdf"
-    integer         , optional, intent(in) :: offset  ! offset from current time in seconds
-                                                      ! positive for future times and 
-                                                      ! negative for previous times
-    character(len=*), optional, intent(in) :: rdate   ! input date for restart file name 
+    character(len=*), intent(in) :: rdate   ! input date for restart file name 
 !
 ! !CALLED FROM:
 ! subroutine restart in this module
@@ -623,47 +553,13 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    character(len=256) :: cdate       ! date char string
-    integer :: day                    ! day (1 -> 31)
-    integer :: mon                    ! month (1 -> 12)
-    integer :: yr                     ! year (0 -> ...)
-    integer :: sec                    ! seconds into current day
 !-----------------------------------------------------------------------
 
-    ! Note - the only difference between a restart and an initial file
-    ! is that an initial file is written one time step before the date
-    ! stamp associated with the file name. Consequently it can be used
-    ! for an initial run and have "restart" type of capabilities for that run
-
+    restFile_filename = "./"//trim(caseid)//".clm2.r."//trim(rdate)//".nc"
     if (masterproc) then
-       if (present(rdate)) then
-          cdate = rdate
-       else
-          if (present(offset)) then
-             call get_curr_date (yr, mon, day, sec, offset=offset)
-          else
-             call get_curr_date (yr, mon, day, sec)
-          end if
-          write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
-       end if
-       
-       if (trim(type) == 'binary') then
-          restFile_filename = "./"//trim(caseid)//".clm2.r."//trim(cdate)
-       else if (trim(type) == 'netcdf') then
-          if (present(offset)) then
-             restFile_filename = "./"//trim(caseid)//".clm2.i."//trim(cdate)//".nc"
-             write(iulog,*)'writing initial file ',trim(restFile_filename),' for model date = ',cdate
-          else
-             restFile_filename = "./"//trim(caseid)//".clm2.r."//trim(cdate)//".nc"
-             write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',cdate
-          end if
-       else
-          write(iulog,*)'restart file type ',trim(type),' is not supported'; call endrun()
-       end if
-    else
-      restfile_filename = 'not_defined'
+       write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',rdate
     end if
-    
+ 
   end function restFile_filename
 
 !------------------------------------------------------------------------
@@ -694,7 +590,7 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid           ! netCDF dataset id
+    type(file_desc_t), intent(inout) :: ncid
 !
 ! !REVISION HISTORY:
 !
@@ -711,9 +607,6 @@ contains
     integer :: numl                ! total number of landunits across all processors
     integer :: numc                ! total number of columns across all processors
     integer :: nump                ! total number of pfts across all processors
-!    integer :: nrof_lnd            ! total number of land runoff points across all procs
-!    integer :: nrof_ocn            ! total number of ocean runoff points across all procs
-!    integer :: nrof_rtm            ! total number of rtm cells over all procs
     integer :: ier                 ! error status
     integer :: strlen_dimid        ! string dimension id
     character(len=  8) :: curdate  ! current date
@@ -722,69 +615,49 @@ contains
     character(len= 32) :: subname='restFile_dimset' ! subroutine name
 !------------------------------------------------------------------------
 
-    if (masterproc) then
+    call get_proc_global(numg, numl, numc, nump)
 
-       call get_proc_global(numg, numl, numc, nump)
-#if (defined RTM)
-!       call get_proc_rof_global(nrof_rtm, nrof_lnd, nrof_ocn)
-#endif
-
-       ! Define dimensions
-
-       call check_ret( nf_def_dim(ncid, 'gridcell', numg           , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'landunit', numl           , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'column'  , numc           , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'pft'     , nump           , dimid), subname )
-       
-       call check_ret( nf_def_dim(ncid, 'levgrnd' , nlevgrnd       , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'levlak'  , nlevlak        , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'levsno'  , nlevsno        , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'levsno1'  , nlevsno+1     , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'levtot'  , nlevsno+nlevgrnd, dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'numrad'  , numrad         , dimid), subname )
+    ! Define dimensions
+    
+    call ncd_defdim(ncid, 'gridcell', numg           , dimid)
+    call ncd_defdim(ncid, 'landunit', numl           , dimid)
+    call ncd_defdim(ncid, 'column'  , numc           , dimid)
+    call ncd_defdim(ncid, 'pft'     , nump           , dimid)
+    
+    call ncd_defdim(ncid, 'levgrnd' , nlevgrnd       , dimid)
+    call ncd_defdim(ncid, 'levlak'  , nlevlak        , dimid)
+    call ncd_defdim(ncid, 'levsno'  , nlevsno        , dimid)
+    call ncd_defdim(ncid, 'levsno1'  , nlevsno+1     , dimid)
+    call ncd_defdim(ncid, 'levtot'  , nlevsno+nlevgrnd, dimid)
+    call ncd_defdim(ncid, 'numrad'  , numrad         , dimid)
 #if (defined CASA)
-       call check_ret(nf_def_dim (ncid, 'nlive'   , nlive          , dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'npools'  , npools         , dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'npool_types', npool_types , dimid), subname)
+    call ncd_defdim (ncid, 'nlive'   , nlive          , dimid)
+    call ncd_defdim (ncid, 'npools'  , npools         , dimid)
+    call ncd_defdim (ncid, 'npool_types', npool_types , dimid)
 #endif
 #if (defined RTM)
-!       call check_ret( nf_def_dim(ncid, 'ocnrof'  , nrof_ocn       , dimid), subname )
-!       call check_ret( nf_def_dim(ncid, 'lndrof'  , nrof_lnd       , dimid), subname )
-!       call check_ret( nf_def_dim(ncid, 'allrof'  , nrof_rtm       , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'rtmlon'  , rtmlon         , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'rtmlat'  , rtmlat         , dimid), subname )
+    call ncd_defdim(ncid, 'rtmlon'  , rtmlon         , dimid)
+    call ncd_defdim(ncid, 'rtmlat'  , rtmlat         , dimid)
 #endif
-       call check_ret( nf_def_dim(ncid, 'string_length', 64        , dimid), subname)
+    call ncd_defdim(ncid, 'string_length', 64        , dimid)
        
-       ! Define global attributes
-       
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'conventions', len_trim(conventions), trim(conventions)), &
-                                      subname)
-
-       call getdatetime(curdate, curtime)
-       str = 'created on ' // curdate // ' ' // curtime
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'history', len_trim(str), trim(str)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'username', len_trim(username), trim(username)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'host', len_trim(hostname), trim(hostname)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'version', len_trim(version), trim(version)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'source', len_trim(source), trim(source)), subname)
-
-       str = &
-       '$Id$'
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'case_title', len_trim(ctitle), trim(ctitle)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'case_id', len_trim(caseid), trim(caseid)), subname)
-
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'surface_dataset', len_trim(fsurdat), trim(fsurdat)), &
-                                      subname)
-    end if
-
+    ! Define global attributes
+    
+    call ncd_putatt(ncid, PIO_GLOBAL, 'conventions', trim(conventions))
+    call getdatetime(curdate, curtime)
+    str = 'created on ' // curdate // ' ' // curtime
+    call ncd_putatt(ncid, PIO_GLOBAL, 'history' , trim(str))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'username', trim(username))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'host'    , trim(hostname))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'version' , trim(version))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'source'  , trim(source))
+    str = '$Id: &
+         restFileMod.F90 21588 2010-03-10 00:58:41Z erik $'
+    call ncd_putatt(ncid, PIO_GLOBAL, 'revision_id'    , trim(str))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'case_title'     , trim(ctitle))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'case_id'        , trim(caseid))
+    call ncd_putatt(ncid, PIO_GLOBAL, 'surface_dataset', trim(fsurdat))
+    
   end subroutine restFile_dimset
   
 !-----------------------------------------------------------------------
@@ -805,7 +678,7 @@ contains
     implicit none
 !
 ! !ARGUMENTS:
-    integer, intent(in) :: ncid
+    type(file_desc_t), intent(inout) :: ncid
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -822,25 +695,23 @@ contains
 
     ! Get relevant sizes
 
-    if (masterproc) then
-       if ( .not. single_column .or. nsrest /= 0 )then
-          call get_proc_global(numg, numl, numc, nump)
-          call check_dim(ncid, 'gridcell', numg)
-          call check_dim(ncid, 'landunit', numl)
-          call check_dim(ncid, 'column'  , numc)
-          call check_dim(ncid, 'pft'     , nump)
-       end if
-       call check_dim(ncid, 'levsno'  , nlevsno)
-       call check_dim(ncid, 'levgrnd'  , nlevgrnd)
-       call check_dim(ncid, 'levlak'  , nlevlak) 
-#if (defined CASA)
-       ! Dimensions should be checked, but this will only work for initial
-       ! datasets created with CASA enabled so do not normally do this.
-       ! call check_dim(ncid, 'nlive'   , nlive)
-       ! call check_dim(ncid, 'npools'  , npools)
-       ! call check_dim(ncid, 'npool_types'  , npool_types)
-#endif
+    if ( .not. single_column .or. nsrest /= 0 )then
+       call get_proc_global(numg, numl, numc, nump)
+       call check_dim(ncid, 'gridcell', numg)
+       call check_dim(ncid, 'landunit', numl)
+       call check_dim(ncid, 'column'  , numc)
+       call check_dim(ncid, 'pft'     , nump)
     end if
+    call check_dim(ncid, 'levsno'  , nlevsno)
+    call check_dim(ncid, 'levgrnd' , nlevgrnd)
+    call check_dim(ncid, 'levlak'  , nlevlak) 
+#if (defined CASA)
+    ! Dimensions should be checked, but this will only work for initial
+    ! datasets created with CASA enabled so do not normally do this.
+    ! call check_dim(ncid, 'nlive'   , nlive)
+    ! call check_dim(ncid, 'npools'  , npools)
+    ! call check_dim(ncid, 'npool_types'  , npool_types)
+#endif
 
   end subroutine restFile_dimcheck
 
@@ -859,7 +730,7 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid
+    type(file_desc_t), intent(inout) :: ncid
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -867,13 +738,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: nio    ! Fortran unit number
-    character(len=32) :: subname='restFile_enddef' ! subroutine name
 !-----------------------------------------------------------------------
 
-    if (masterproc) then
-       call check_ret(nf_enddef(ncid), subname)
-    end if
+    call ncd_enddef(ncid)
 
   end subroutine restFile_enddef
 
@@ -892,7 +759,7 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid
+    type(file_desc_t), intent(inout) :: ncid
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -903,9 +770,7 @@ contains
     character(len=32) :: subname='restFile_close' ! subroutine name
 !-----------------------------------------------------------------------
 
-    if (masterproc) then
-       call ncd_close(ncid, subname)
-    end if
+    call pio_closefile(ncid)
 
   end subroutine restFile_close
 

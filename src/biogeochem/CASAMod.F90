@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CASAMod
 
 #if (defined CASA)
@@ -277,7 +274,6 @@ contains
 !
 ! !USES:
     use fileutils    , only : getfil
-    use ncdio        , only : check_ret,check_dim,ncd_iolocal,ncd_close
     use shr_const_mod, only : SHR_CONST_CDAY
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varctl   , only : nsrest
@@ -285,10 +281,10 @@ contains
     use spmdMod      , only : masterproc
     use clm_time_manager , only : get_step_size
     use pftvarcon    , only : noveg, nc3_nonarctic_grass
+    use ncdio_pio    
 !
 ! !ARGUMENTS:
     implicit none
-    include "netcdf.inc"
 ! 
 ! !LOCAL VARIABLES:
     real(r8), parameter :: plai_min_ic = 0.8_r8 ! init plai => Dickinson value
@@ -296,10 +292,10 @@ contains
 
     ! local variables
 
-    character(len=256) locfn ! local file name
-    integer :: ncid          ! netCDF file id
+    integer :: g,c,i,j,l,m,n,p,pi ! indices
+    character(len=256) :: locfn   ! local file name
+    type(file_desc_t)  :: ncid    ! netCDF file id
     integer :: varid         ! netCDF variable id
-    logical :: varpresent    ! netCDF variable present flag
     integer :: begp, endp    ! per-proc beginning and ending pft indices
     integer :: begc, endc    ! per-proc beginning and ending column indices
     integer :: begl, endl    ! per-proc beginning and ending landunit indices
@@ -308,10 +304,10 @@ contains
     integer :: numl          ! total number of landunits across all processors
     integer :: numc          ! total number of columns across all processors
     integer :: nump          ! total number of pfts across all processors
-    integer :: g,c,i,j,l,m,n,p,pi
+    logical :: readvar       ! is variable on file
     integer :: ier, ret      ! error return code
 
-    real(r8) dtime                  !land model time step (sec)
+    real(r8) dtime           ! land model time step (sec)
     real(r8) lnscl
     real(r8) hardwire_sla(0:numpft)
     real(r8), pointer :: sumwts(:)
@@ -665,100 +661,100 @@ contains
        ! Read file
 
        if (masterproc) then
-          call getfil(fcpool, locfn, 0)
           write(iulog,*)'Reading initial carbon pools from ',locfn
-          call check_ret(nf_open(locfn, nf_nowrite, ncid), subname)
-          call check_dim(ncid, 'longitude', lsmlon)
-          call check_dim(ncid, 'latitude',  lsmlat)
        end if
+       call getfil(fcpool, locfn, 0)
+       call ncd_pio_openfile (ncid, locfn, 0)
+       call check_dim(ncid, 'longitude', lsmlon)
+       call check_dim(ncid, 'latitude',  lsmlat)
 
        ! TPOOL_C_LEAF
-       call ncd_iolocal(ncid,'TPOOL_C_LEAF','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_LEAF NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_LEAF',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_LEAF NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,LEAF) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_WOOD
-       call ncd_iolocal(ncid,'TPOOL_C_WOOD','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_WOOD NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_WOOD',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_WOOD NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,WOOD) = rloc(pgridcell(p)) * wood_scale(p)
        end do
 
        ! TPOOL_C_FROOT
-       call ncd_iolocal(ncid,'TPOOL_C_FROOT','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_FROOT NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_FROOT',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_FROOT NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,FROOT) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SURFMET
-       call ncd_iolocal(ncid,'TPOOL_C_SURFMET','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMET NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SURFMET',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMET NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SURFMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SURFSTR
-       call ncd_iolocal(ncid,'TPOOL_C_SURFSTR','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFSTR NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SURFSTR',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFSTR NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SURFSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILMET
-       call ncd_iolocal(ncid,'TPOOL_C_SOILMET','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMET NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SOILMET',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMET NOT on fcpool file' )
        do p = begp, endp
           Tpool_C(p,SOILMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILSTR
-       call ncd_iolocal(ncid,'TPOOL_C_SOILSTR','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILSTR NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SOILSTR',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILSTR NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SOILSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_CWD
-       call ncd_iolocal(ncid,'TPOOL_C_CWD','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_CWD NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_CWD',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_CWD NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,CWD) = rloc(pgridcell(p)) * wood_scale(p)
        end do
 
        ! TPOOL_C_SURFMIC
-       call ncd_iolocal(ncid,'TPOOL_C_SURFMIC','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMIC NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SURFMIC',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMIC NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SURFMIC) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILMIC
-       call ncd_iolocal(ncid,'TPOOL_C_SOILMIC','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMIC NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SOILMIC',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMIC NOT on fcpool file' )
        do p = begp, endp
           Tpool_C(p,SOILMIC) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SLOW
-       call ncd_iolocal(ncid,'TPOOL_C_SLOW','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SLOW  NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_SLOW',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_SLOW  NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SLOW) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_PASSIVE
-       call ncd_iolocal(ncid,'TPOOL_C_PASSIVE','read',rloc,nameg,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_PASSIVE NOT on fcpool file' )
+       call ncd_io(ncid=ncid, varname='TPOOL_C_PASSIVE',flag='read', data=rloc, dim1name=nameg , readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: TPOOL_C_PASSIVE NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,PASSIVE) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! Close netcdf file
 
-       if (masterproc) call ncd_close(ncid, subname)
+       call pio_closefile(ncid)
 
        ! Deallocate dynamic memory
 
@@ -869,19 +865,17 @@ contains
 !
 ! !USES:
     use decompMod    , only : get_proc_bounds, get_proc_global
-    use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal, ncd_create, &
-                              ncd_close, ncd_clobber
     use subgridAveMod, only : p2g
     use domainMod    , only : ldomain, llatlon
     use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
+    use ncdio_pio
 !
 ! !ARGUMENTS:
     implicit none
-    include "netcdf.inc"
 !
 ! !LOCAL VARIABLES:
-    integer :: ncid          ! netCDF file id
+    type(file_desc_t):: ncid ! file id
     integer :: omode         ! netCDF mode returned
     integer :: dimid         ! netCDF dimension id
     integer :: begp, endp    ! per-proc beginning and ending pft indices
@@ -916,81 +910,79 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
 
-    if (masterproc) then
-       call ncd_create('CPOOL_INITIAL.nc',ncd_clobber,ncid,subname)
-       call check_ret(nf_set_fill(ncid, nf_nofill, omode), subname)
-       call check_ret(nf_def_dim(ncid, 'longitude', lsmlon, dimid), subname)
-       call check_ret(nf_def_dim(ncid, 'latitude', lsmlat, dimid), subname)
-       call ncd_defvar(ncid=ncid, varname='longitude', xtype=nf_double, &
-          dim1name='longitude', long_name='coordinate longitude', &
-          units='degrees_east')
-       call ncd_defvar(ncid=ncid, varname='latitude', xtype=nf_double, &
-          dim1name='latitude', long_name='coordinate latitude', &
-          units='degrees_north')
-       call ncd_defvar(ncid=ncid, varname='landfrac', xtype=nf_double, &
-          dim1name='longitude', dim2name='latitude', long_name='land fraction')
-       call ncd_defvar(ncid=ncid, varname='landmask', xtype=nf_int, &
-          dim1name='longitude', dim2name='latitude', &
-          long_name='land/ocean mask (0.=ocean and 1.=land)')
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_LEAF', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in leaf pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_WOOD', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in wood pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_CWD', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in coarse woody debris pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_FROOT', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in fine root pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFMET', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFSTR', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILMET', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILSTR', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFMIC', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILMIC', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_SLOW', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call ncd_defvar(ncid=ncid, varname='TPOOL_C_PASSIVE', &
-          xtype=nf_double, dim1name='longitude', dim2name='latitude', &
-          long_name='total C in pool', &
-          missing_value=spval, fill_value=spval)
-       call check_ret(nf_enddef(ncid), subname)
-    end if
+    call ncd_pio_createfile(ncid, 'CPOOL_INITIAL.nc')
 
-    if (masterproc) then
-       call ncd_ioglobal(varname='longitude', data=llatlon%lonc, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='latitude', data=llatlon%latc, ncid=ncid, flag='write')
-    endif
+    call ncd_defdim(ncid, 'longitude', lsmlon, dimid)
+    call ncd_defdim(ncid, 'latitude' , lsmlat, dimid)
 
-    call ncd_iolocal(varname='landfrac', data=ldomain%frac, ncid=ncid, &
+    call ncd_defvar(ncid=ncid, varname='longitude', xtype=pio_double, &
+         dim1name='longitude', long_name='coordinate longitude', &
+         units='degrees_east')
+    call ncd_defvar(ncid=ncid, varname='latitude', xtype=pio_double, &
+         dim1name='latitude', long_name='coordinate latitude', &
+         units='degrees_north')
+    call ncd_defvar(ncid=ncid, varname='landfrac', xtype=pio_double, &
+         dim1name='longitude', dim2name='latitude', long_name='land fraction')
+    call ncd_defvar(ncid=ncid, varname='landmask', xtype=pio_int, &
+         dim1name='longitude', dim2name='latitude', &
+         long_name='land/ocean mask (0.=ocean and 1.=land)')
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_LEAF', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in leaf pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_WOOD', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in wood pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_CWD', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in coarse woody debris pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_FROOT', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in fine root pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFMET', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFSTR', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILMET', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILSTR', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFMIC', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILMIC', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_SLOW', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+    call ncd_defvar(ncid=ncid, varname='TPOOL_C_PASSIVE', &
+         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         long_name='total C in pool', &
+         missing_value=spval, fill_value=spval)
+
+    call ncd_enddef(ncid)
+
+    call ncd_io(varname='longitude', data=llatlon%lonc, ncid=ncid, flag='write')
+    call ncd_io(varname='latitude' , data=llatlon%latc, ncid=ncid, flag='write')
+
+    call ncd_io(varname='landfrac', data=ldomain%frac, ncid=ncid, &
          flag='write', dim1name=grlnd)
-    call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
+    call ncd_io(varname='landmask', data=ldomain%mask, ncid=ncid, &
          flag='write', dim1name=grlnd)
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
@@ -1004,7 +996,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_LEAF', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_LEAF', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_WOOD
@@ -1013,7 +1005,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_WOOD', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_WOOD', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_CWD
@@ -1022,7 +1014,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_CWD', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_CWD', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_FROOT
@@ -1031,7 +1023,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_FROOT', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_FROOT', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SURFMET
@@ -1040,7 +1032,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFMET', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SURFMET', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SURFSTR
@@ -1049,7 +1041,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFSTR', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SURFSTR', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SOILMET
@@ -1058,7 +1050,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILMET', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SOILMET', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SOILSTR
@@ -1067,7 +1059,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILSTR', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SOILSTR', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SURFMIC
@@ -1076,7 +1068,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFMIC', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SURFMIC', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SOILMIC
@@ -1085,7 +1077,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILMIC', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SOILMIC', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SLOW
@@ -1094,7 +1086,7 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SLOW', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_SLOW', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     ! TPOOL_C_PASSIVE
@@ -1103,14 +1095,14 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_PASSIVE', dim1name=grlnd, &
+    call ncd_io(flag='write', varname='TPOOL_C_PASSIVE', dim1name=grlnd, &
        data=hist1do, ncid=ncid)
 
     deallocate(hist1do)
     deallocate(histo)
     deallocate(histi)
 
-    if (masterproc) call check_ret(nf_close(ncid), subname)
+    call pio_closefile(ncid)
 
   end subroutine casa_write_cpool
 
@@ -2424,12 +2416,12 @@ contains
 !
 ! !USES:
     use clmtype
-    use ncdio
+    use ncdio_pio
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid           !netcdf id
-    character(len=*), intent(in) :: flag  !'read' or 'write'
+    type(file_desc_t), intent(inout) :: ncid  !netcdf id
+    character(len=*) , intent(in)    :: flag  !flag='read, data= or 'write'
 !
 ! !CALLED FROM:
 ! restart in restFileMod
@@ -2457,13 +2449,12 @@ contains
 
     ! pft type physical state variable - livefr
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livefr', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='livefr', xtype=pio_double,  &
             dim1name='pft', dim2name='nlive',&
             long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='livefr', data=pptr%pps%livefr, &
-            dim1name=namep, dim2name='nlive', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='livefr', data=pptr%pps%livefr, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2471,13 +2462,12 @@ contains
 
     ! pft type physical state variable - Tpool_C  (Tracer 1)
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='Tpool_C', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='Tpool_C', xtype=pio_double,  &
             dim1name='pft', dim2name='npools',&
             long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='Tpool_C', data=pptr%pps%Tpool_C, &
-            dim1name=namep, dim2name='npools', &
-            ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='Tpool_C', data=pptr%pps%Tpool_C, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read') then
           if (.not. readvar) then
              if (is_restart()) then
@@ -2496,10 +2486,10 @@ contains
 
     ! pft type physical state variable - lgrow
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='lgrow', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='lgrow', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='lgrow', data=pptr%pps%lgrow, &
+       call ncd_io(varname='lgrow', data=pptr%pps%lgrow, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2508,10 +2498,10 @@ contains
 
     ! pft type physical state variable - iseabeg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='iseabeg', xtype=nf_double, &
+       call ncd_defvar(ncid=ncid, varname='iseabeg', xtype=pio_double, &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='iseabeg', data=pptr%pps%iseabeg, &
+       call ncd_io(varname='iseabeg', data=pptr%pps%iseabeg, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2520,10 +2510,10 @@ contains
 
     ! pft type physical state variable - nstepbeg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='nstepbeg', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='nstepbeg', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='nstepbeg', data=pptr%pps%nstepbeg, &
+       call ncd_io(varname='nstepbeg', data=pptr%pps%nstepbeg, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2532,10 +2522,10 @@ contains
 
     ! pft type physical state variable - degday
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='degday', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='degday', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='degday', data=pptr%pps%degday, &
+       call ncd_io(varname='degday', data=pptr%pps%degday, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2544,10 +2534,10 @@ contains
 
     ! pft type physical state variable - ndegday
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ndegday', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ndegday', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='ndegday', data=pptr%pps%ndegday, &
+       call ncd_io(varname='ndegday', data=pptr%pps%ndegday, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2556,10 +2546,10 @@ contains
 
     ! pft type physical state variable - tday
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tday', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='tday', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='tday', data=pptr%pps%tday, &
+       call ncd_io(varname='tday', data=pptr%pps%tday, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2568,10 +2558,10 @@ contains
 
     ! pft type physical state variable - tcount
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tcount', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='tcount', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='tcount', data=pptr%pps%tcount, &
+       call ncd_io(varname='tcount', data=pptr%pps%tcount, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2580,10 +2570,10 @@ contains
 
     ! pft type physical state variable - tdayavg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tdayavg', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='tdayavg', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='tdayavg', data=pptr%pps%tdayavg, &
+       call ncd_io(varname='tdayavg', data=pptr%pps%tdayavg, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2592,10 +2582,10 @@ contains
 
     ! pft type physical state variable - stressCD
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='stressCD', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='stressCD', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='stressCD', data=pptr%pps%stressCD, &
+       call ncd_io(varname='stressCD', data=pptr%pps%stressCD, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2606,10 +2596,10 @@ contains
 
     ! pft type physical state variable - stressT
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='stressT', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='stressT', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='stressT', data=pptr%pps%stressT, &
+       call ncd_io(varname='stressT', data=pptr%pps%stressT, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2618,10 +2608,10 @@ contains
 
     ! pft type physical state variable - stressW
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='stressW', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='stressW', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='stressW', data=pptr%pps%stressW, &
+       call ncd_io(varname='stressW', data=pptr%pps%stressW, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2632,10 +2622,10 @@ contains
 
     ! pft type physical state variable - XSCpool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='XSCpool', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='XSCpool', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='XSCpool', data=pptr%pps%XSCpool, &
+       call ncd_io(varname='XSCpool', data=pptr%pps%XSCpool, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2644,10 +2634,10 @@ contains
 
     ! eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net  
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lwrad_net', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lwrad_net', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='eflx_lwrad_net', data=pptr%pef%eflx_lwrad_net, &
+       call ncd_io(varname='eflx_lwrad_net', data=pptr%pef%eflx_lwrad_net, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2656,10 +2646,10 @@ contains
 
     ! eflx_lh_grnd => clm3%g%l%c%p%pef%eflx_lh_grnd  
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lh_grnd', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lh_grnd', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='eflx_lh_grnd', data=pptr%pef%eflx_lh_grnd, &
+       call ncd_io(varname='eflx_lh_grnd', data=pptr%pef%eflx_lh_grnd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2668,10 +2658,10 @@ contains
 
     ! eflx_lh_vege => clm3%g%l%c%p%pef%eflx_lh_vege
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lh_vege', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lh_vege', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='eflx_lh_vege', data=pptr%pef%eflx_lh_vege, &
+       call ncd_io(varname='eflx_lh_vege', data=pptr%pef%eflx_lh_vege, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2680,10 +2670,10 @@ contains
 
     ! eflx_lh_vegt => clm3%g%l%c%p%pef%eflx_lh_vegt
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lh_vegt', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lh_vegt', xtype=pio_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='eflx_lh_vegt', data=pptr%pef%eflx_lh_vegt, &
+       call ncd_io(varname='eflx_lh_vegt', data=pptr%pef%eflx_lh_vegt, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun

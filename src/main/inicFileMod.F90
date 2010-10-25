@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module inicFileMod
 
 !-----------------------------------------------------------------------
@@ -13,10 +10,10 @@ module inicFileMod
 !
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use spmdMod        , only : masterproc
+  use spmdMod        , only : mpicom, MPI_CHARACTER, masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
-  use ncdio
+  use ncdio_pio
 
 ! !PUBLIC TYPES:
   implicit none
@@ -27,7 +24,7 @@ module inicFileMod
 !
 ! !REVISION HISTORY:
 ! Jan/2004 Mariana Vertenstein: Creation
-! Jan/2010 Li Xu: Modified to correct ncd_iolocal and snow_fraction
+! Jan/2010 Li Xu: Modified to correct ncd_io and snow_fraction
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -63,7 +60,7 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: ncid                           ! netCDF dataset id
+    type(file_desc_t) :: ncid                 ! netcdf id
     integer :: j,c,l                          ! indices
     integer :: begp, endp                     ! per-proc beginning and ending pft indices
     integer :: begc, endc                     ! per-proc beginning and ending column indices
@@ -74,6 +71,7 @@ contains
     integer :: numc                           ! total number of column across all processors
     integer :: nump                           ! total number of pfts across all processors
     logical :: readvar                        ! determine if variable is on initial file
+    integer :: ier                            ! error status
     type(gridcell_type), pointer :: gptr      ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr      ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr      ! pointer to column derived subtype
@@ -85,20 +83,14 @@ contains
     character(len= 32) :: subname='inicfile_perp'  ! subroutine name
 !------------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (landunit-level)
+    ! Assign local pointers to derived subtypes components 
 
-    itypelun            => clm3%g%l%itype
-
-    ! Assign local pointers to derived subtypes components (column-level)
-
-    clandunit           => clm3%g%l%c%landunit
-
-    ! Set pointers into derived type
-
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
+    itypelun  => clm3%g%l%itype
+    clandunit => clm3%g%l%c%landunit
+    gptr      => clm3%g
+    lptr      => clm3%g%l
+    cptr      => clm3%g%l%c
+    pptr      => clm3%g%l%c%p
 
     ! Determine necessary processor subgrid bounds
 
@@ -107,61 +99,60 @@ contains
 
     ! Read initial dataset
 
-    if (masterproc) then
-       if (.not. opened_finidat) then
-          call getfil(finidat, loc_fni, 0)
-          call check_ret(nf_open(loc_fni, nf_nowrite, ncid), subname)
-	  write(iulog,*)trim(subname),': opened netcdf file ',loc_fni
-	  call shr_sys_flush(iulog)
-
-          call check_dim(ncid, 'gridcell', numg)
-          call check_dim(ncid, 'landunit', numl)
-          call check_dim(ncid, 'column'  , numc)
-          call check_dim(ncid, 'pft'     , nump)
-          call check_dim(ncid, 'levsno'  , nlevsno)
-          call check_dim(ncid, 'levgrnd' , nlevgrnd)
-          call check_dim(ncid, 'levlak'  , nlevlak) 
-          opened_finidat = .true.
-       else
-          call check_ret(nf_open(loc_fni, nf_nowrite, ncid), subname)
+    if (.not. opened_finidat) then
+       call getfil(finidat, loc_fni, 0)
+       call ncd_pio_openfile(ncid, trim(loc_fni), 0)
+       if (masterproc) then
+          write(iulog,*)trim(subname),': opened netcdf file ',loc_fni
+          call shr_sys_flush(iulog)
        end if
+       
+       call check_dim(ncid, 'gridcell', numg)
+       call check_dim(ncid, 'landunit', numl)
+       call check_dim(ncid, 'column'  , numc)
+       call check_dim(ncid, 'pft'     , nump)
+       call check_dim(ncid, 'levsno'  , nlevsno)
+       call check_dim(ncid, 'levgrnd' , nlevgrnd)
+       call check_dim(ncid, 'levlak'  , nlevlak) 
+       opened_finidat = .true.
+       call mpi_bcast (opened_finidat, 1, MPI_LOGICAL, 0, mpicom, ier)
+    else
+       call ncd_pio_openfile(ncid, trim(loc_fni), 0) 
     end if
 
-    call ncd_iolocal(varname='ZSNO', data=cptr%cps%z, dim1name=namec, dim2name='levsno', &
+    call ncd_io(varname='ZSNO', data=cptr%cps%z, dim1name=namec, &
          lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='DZSNO', data=cptr%cps%dz, dim1name=namec, dim2name='levsno', &
+    call ncd_io(varname='DZSNO', data=cptr%cps%dz, dim1name=namec, &
          lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='ZISNO', data=cptr%cps%zi, dim1name=namec, dim2name='levsno', &
+    call ncd_io(varname='ZISNO', data=cptr%cps%zi, dim1name=namec, &
          lowerb2=-nlevsno, upperb2=-1, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='H2OSNO', data=cptr%cws%h2osno, dim1name=namec, &
+    call ncd_io(varname='H2OSNO', data=cptr%cws%h2osno, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='SNOWDP', data=cptr%cps%snowdp, dim1name=namec, &
+    call ncd_io(varname='SNOWDP', data=cptr%cps%snowdp, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='SNLSNO', data=cptr%cps%snl, dim1name=namec, &
+    call ncd_io(varname='SNLSNO', data=cptr%cps%snl, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, dim1name=namec, dim2name='levtot', &
+    call ncd_io(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, dim1name=namec, dim2name='levtot', &
+    call ncd_io(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    if (masterproc) then
-       call check_ret(nf_close(ncid), subname)
-    end if
+    call pio_closefile(ncid)
 
     ! Determine volumetric soil water
 

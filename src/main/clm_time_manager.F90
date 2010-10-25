@@ -421,10 +421,10 @@ subroutine timemgr_restart_io( ncid, flag )
 
   !---------------------------------------------------------------------------------
   ! Read/Write information needed on restart to a netcdf file. 
-  use ncdio
+  use ncdio_pio
   !
   ! Arguments
-  integer         , intent(in) :: ncid  ! netcdf id
+  type(file_desc_t), intent(inout) :: ncid  ! netcdf id
   character(len=*), intent(in) :: flag  ! 'read' or 'write'
   !
   ! Local variables
@@ -450,8 +450,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_nstep_rad_prev', xtype=nf_int,  &
           long_name='previous_radiation_nstep', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_nstep_rad_prev', data=rst_nstep_rad_prev, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_nstep_rad_prev', data=rst_nstep_rad_prev, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -479,8 +479,8 @@ subroutine timemgr_restart_io( ncid, flag )
            call endrun
         end if
      end if
-     call ncd_ioglobal(varname='timemgr_rst_type', data=rst_caltype, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_type', data=rst_caltype, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -511,8 +511,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_step_sec', xtype=nf_int,  &
           long_name='seconds component of timestep size', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_step_sec', data=rst_step_sec, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_step_sec', data=rst_step_sec, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -524,8 +524,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_ymd', xtype=nf_int,  &
           long_name='start date', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_start_ymd', data=rst_start_ymd, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_start_ymd', data=rst_start_ymd, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -537,8 +537,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_tod', xtype=nf_int,  &
           long_name='start time of day', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_start_tod', data=rst_start_tod, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_start_tod', data=rst_start_tod, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -550,8 +550,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_ymd', xtype=nf_int,  &
           long_name='reference date', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_ref_ymd', data=rst_ref_ymd, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_ref_ymd', data=rst_ref_ymd, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -563,8 +563,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_tod', xtype=nf_int,  &
           long_name='reference time of day', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_ref_tod', data=rst_ref_tod, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_ref_tod', data=rst_ref_tod, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -576,8 +576,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_ymd', xtype=nf_int,  &
           long_name='current date', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_curr_ymd', data=rst_curr_ymd, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_curr_ymd', data=rst_curr_ymd, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()
@@ -589,8 +589,8 @@ subroutine timemgr_restart_io( ncid, flag )
      call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_tod', xtype=nf_int,  &
           long_name='current time of day', units='')
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_ioglobal(varname='timemgr_rst_curr_tod', data=rst_curr_tod, &
-          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     call ncd_io(varname='timemgr_rst_curr_tod', data=rst_curr_tod, &
+          ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
            call endrun()

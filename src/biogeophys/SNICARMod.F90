@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module SNICARMod
 
 !-----------------------------------------------------------------------
@@ -17,8 +14,10 @@ module SNICARMod
   use shr_sys_mod   , only : shr_sys_flush
   use clm_varctl    , only : iulog
   use shr_const_mod , only : SHR_CONST_RHOICE
+  use abortutils    , only : endrun
 
   implicit none
+  include 'netcdf.inc'
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -202,7 +201,6 @@ contains
     use clmtype
     use clm_varpar       , only : nlevsno, numrad
     use clm_time_manager , only : get_nstep
-    use abortutils       , only : endrun
     use shr_const_mod    , only : SHR_CONST_PI
 
 
@@ -1360,8 +1358,6 @@ contains
    use fileutils       , only : getfil
    use CLM_varctl      , only : fsnowoptics
    use spmdMod         , only : mpicom, MPI_REAL8, masterproc
-   use ncdio           , only : nf_close, nf_inq_varid, nf_open, check_ret, &
-                                nf_get_var_double
 
    integer            :: ncid                        ! netCDF file id
    character(len=256) :: locfn                       ! local filename
@@ -1536,8 +1532,6 @@ contains
    use CLM_varctl      , only : fsnowaging
    use fileutils       , only : getfil
    use spmdMod         , only : mpicom, MPI_REAL8, masterproc
-   use ncdio           , only : nf_close, nf_inq_varid, nf_open, check_ret, &
-                                nf_get_var_double
 
    integer            :: ncid                        ! netCDF file id
    character(len=256) :: locfn                       ! local filename
@@ -1575,5 +1569,17 @@ contains
    endif
 
   end subroutine SnowAge_init
+
+  subroutine check_ret(ret, cstring)
+    implicit none
+    integer, intent(in) :: ret
+    character(len=*) :: cstring
+    character(len=*),parameter :: subname='check_ret' ! subroutine name
+
+    if (ret /= NF_NOERR) then
+       write(iulog,*)'netcdf error from check_ret:',trim(cstring),':',trim(NF_STRERROR(ret))
+       call endrun()
+    end if
+  end subroutine check_ret
 
 end module SNICARMod

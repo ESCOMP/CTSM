@@ -12,16 +12,15 @@ contains
 
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-    use ncdio           
-    use decompMod    , only : get_proc_bounds, ldecomp
-    use domainMod    , only : ldomain
+    use ncdio_pio           
+    use decompMod        , only : get_proc_bounds, ldecomp
+    use domainMod        , only : ldomain
     use clm_time_manager , only : get_curr_date
-    use spmdMod      , only : masterproc
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: ncid           ! netCDF dataset id
-    character(len=*), intent(in) :: flag  ! flag to determine if define, write or read data
+    type(file_desc_t), intent(inout) :: ncid  ! netCDF dataset id
+    character(len=*) , intent(in)    :: flag  ! flag to determine if define, write or read data
 !
 ! !REVISION HISTORY:
 !
@@ -77,17 +76,16 @@ contains
     ! Write output data (first write current date and seconds of current date)
 
     if (flag == 'define') then
-       if (masterproc) then
-          call ncd_defvar(ncid=ncid, varname='mcdate', xtype=nf_int, &
-               long_name='current date as 8 digit integer (YYYYMMDD)')
-          call ncd_defvar(ncid=ncid, varname='mcsec', xtype=nf_int,  &
-               long_name='current seconds of current date', units='s')
-       else if (flag == 'write') then
-          call get_curr_date (yr, mon, day, mcsec)
-          mcdate = yr*10000 + mon*100 + day
-          call ncd_ioglobal(varname='mcdate', data=mcdate, ncid=ncid, flag=flag)
-          call ncd_ioglobal(varname='mcsec' , data=mcsec , ncid=ncid, flag=flag)
-       end if
+       call ncd_defvar(ncid=ncid, varname='mcdate', xtype=nf_int, &
+            long_name='current date as 8 digit integer (YYYYMMDD)')
+       call ncd_defvar(ncid=ncid, varname='mcsec', xtype=nf_int,  &
+            long_name='current seconds of current date', units='s')
+    else if (flag == 'write') then
+       call get_curr_date (yr, mon, day, mcsec)
+       mcdate = yr*10000 + mon*100 + day
+       !TODO - add this to the file - get this to work
+!DEBUG  call ncd_io(varname='mcdate', data=mcdate, ncid=ncid, flag=flag)
+!DEBUG  call ncd_io(varname='mcsec' , data=mcsec , ncid=ncid, flag=flag)
     end if
 
     ! Write gridcell info
@@ -105,13 +103,13 @@ contains
        do g=begg,endg
           igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag=flag)
+       call ncd_io(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag=flag)
        do g=begg,endg
           igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='grid1d_lon', data=gptr%londeg, dim1name=nameg, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='grid1d_lat', data=gptr%latdeg, dim1name=nameg, ncid=ncid, flag=flag)
+       call ncd_io(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag=flag)
+       call ncd_io(varname='grid1d_lon', data=gptr%londeg, dim1name=nameg, ncid=ncid, flag=flag)
+       call ncd_io(varname='grid1d_lat', data=gptr%latdeg, dim1name=nameg, ncid=ncid, flag=flag)
     end if
 
     ! Write landunit info
@@ -135,22 +133,22 @@ contains
        do l=begl,endl
           rlarr(l) = gptr%londeg(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_lon'    , data=rlarr        , dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_lon'    , data=rlarr        , dim1name=namel, ncid=ncid, flag=flag)
        do l=begl,endl
           rlarr(l) = gptr%latdeg(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_lat'    , data=rlarr        , dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_lat'    , data=rlarr        , dim1name=namel, ncid=ncid, flag=flag)
        do l=begl,endl
           ilarr(l) = mod(ldecomp%gdc2glo(lptr%gridcell(l))-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='land1d_ixy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_ixy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
        do l=begl,endl
           ilarr(l) = (ldecomp%gdc2glo(lptr%gridcell(l))-1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='land1d_jxy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='land1d_wtxy'   , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='land1d_ityplun', data=lptr%itype   , dim1name=namel, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='land1d_gi'     , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_jxy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_wtxy'   , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_ityplun', data=lptr%itype   , dim1name=namel, ncid=ncid, flag=flag)
+       call ncd_io(varname='land1d_gi'     , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag=flag)
     end if
 
     ! Write column info
@@ -181,31 +179,31 @@ contains
        do c=begc,endc
           rcarr(c) = gptr%londeg(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_lon'  , data=rcarr        , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_lon'  , data=rcarr        , dim1name=namec, ncid=ncid, flag=flag)
        do c=begc,endc
           rcarr(c) = gptr%latdeg(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_lat'  , data=rcarr        , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_lat'  , data=rcarr        , dim1name=namec, ncid=ncid, flag=flag)
        do c=begc,endc
           icarr(c) = mod(ldecomp%gdc2glo(cptr%gridcell(c))-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='cols1d_ixy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_ixy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
        do c=begc,endc
           icarr(c) = (ldecomp%gdc2glo(cptr%gridcell(c))-1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='cols1d_jxy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='cols1d_wtxy' , data=cptr%wtgcell , dim1name=namec, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='cols1d_wtlnd', data=cptr%wtlunit , dim1name=namec, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='cols1d_gi'   , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='cols1d_li'   , data=cptr%landunit, dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_jxy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_wtxy' , data=cptr%wtgcell , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_wtlnd', data=cptr%wtlunit , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_gi'   , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_li'   , data=cptr%landunit, dim1name=namec, ncid=ncid, flag=flag)
        do c=begc,endc
           icarr(c) = lptr%itype(cptr%landunit(c))
        enddo
-       call ncd_iolocal(varname='cols1d_ityplun', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_ityplun', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
        do c=begc,endc
           icarr(c) = cptr%itype((c))
        enddo
-       call ncd_iolocal(varname='cols1d_ityp', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
+       call ncd_io(varname='cols1d_ityp', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
     end if
 
     ! Write pft info
@@ -239,30 +237,30 @@ contains
        do p=begp,endp
           rparr(p) = gptr%londeg(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_lon'    , data=rparr        , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_lon'    , data=rparr        , dim1name=namep, ncid=ncid, flag=flag)
        do p=begp,endp
           rparr(p) = gptr%latdeg(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_lat'    , data=rparr        , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_lat'    , data=rparr        , dim1name=namep, ncid=ncid, flag=flag)
        do p=begp,endp
           iparr(p) = mod(ldecomp%gdc2glo(pptr%gridcell(p))-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='pfts1d_ixy'    , data=iparr        , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_ixy'    , data=iparr        , dim1name=namep, ncid=ncid, flag=flag)
        do p=begp,endp
           iparr(p) = (ldecomp%gdc2glo(pptr%gridcell(p))-1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='pfts1d_jxy'    , data=iparr        , dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_wtxy'   , data=pptr%wtgcell , dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_wtlnd'  , data=pptr%wtlunit , dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_wtcol'  , data=pptr%wtcol   , dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_itypveg', data=pptr%itype   , dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_gi'     , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_li'     , data=pptr%landunit, dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_ci'     , data=pptr%column  , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_jxy'    , data=iparr        , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_wtxy'   , data=pptr%wtgcell , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_wtlnd'  , data=pptr%wtlunit , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_wtcol'  , data=pptr%wtcol   , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_itypveg', data=pptr%itype   , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_gi'     , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_li'     , data=pptr%landunit, dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_ci'     , data=pptr%column  , dim1name=namep, ncid=ncid, flag=flag)
        do p=begp,endp
           iparr(p) = lptr%itype(pptr%landunit(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_ityplun', data=iparr      , dim1name=namep, ncid=ncid, flag=flag)
+       call ncd_io(varname='pfts1d_ityplun', data=iparr      , dim1name=namep, ncid=ncid, flag=flag)
     end if
 
     if (flag == 'write') then

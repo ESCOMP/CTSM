@@ -258,14 +258,14 @@ if [ "\$CLM_FC" = "PGI" ]; then
     export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
     export MPICH_PATH=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
     export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
+    export PATH=\${PGI}/linux86/bin:\${MPICH_PATH}/bin:\${PATH}
     export CESM_MACH="edinburgh_pgi"
     export TOOLS_MAKE_STRING=""
 elif [ "\$CLM_FC" = "INTEL" ]; then
     export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-3.2.02
     export MPICH_PATH=/usr/local/mpich-1.2.7p1-intel-3.2.02
     export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
-    export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
+    export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${MPICH_PATH}/bin:\${PATH}
     export CESM_MACH="edinburgh_intel"
     export TOOLS_MAKE_STRING="USER_FC=ifort "
     /usr/local/intel-cluster-3.2.02/intel-login-script.sh
@@ -273,21 +273,21 @@ elif [ "\$CLM_FC" = "GENLF" ]; then
     export NETCDF_PATH=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
     export MPICH_PATH=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
     export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
+    export PATH=\${LAHEY}/bin:\${MPICH_PATH}/bin:\${PATH}
     export CESM_MACH="generic_linux_lahey"
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 elif [ "\$CLM_FC" = "GENPG" ]; then
     export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
     export MPICH_PATH=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
     export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
+    export PATH=\${PGI}/linux86/bin:\${MPICH_PATH}/bin:\${PATH}
     export CESM_MACH="generic_linux_pgi"
     export TOOLS_MAKE_STRING=""
 else
     export NETCDF_PATH=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
     export MPICH_PATH=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
     export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
+    export PATH=\${LAHEY}/bin:\${MPICH_PATH}/bin:\${PATH}
     export CESM_MACH="edinburgh_lahey"
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
