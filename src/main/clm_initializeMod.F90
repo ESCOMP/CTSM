@@ -83,7 +83,7 @@ contains
     use surfrdMod    , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
                               surfrd_get_topo, surfrd_get_latlon
     use clm_varctl   , only : fsurdat, fatmgrid, fatmlndfrc, &
-                              fatmtopo, flndtopo, noland, downscale, fglcmask
+                              fatmtopo, flndtopo, noland, downscale, fglcmask, samegrids
     use controlMod   , only : control_init, control_print, nlfilename
     use UrbanInputMod, only : UrbanInput
     use ncdio_pio    , only : ncd_pio_init
@@ -102,7 +102,6 @@ contains
     integer  :: i,j,n1,n2,n,k,nr      ! loop indices
     integer  :: nl,nlg                ! gdc and glo lnd indices
     real(r8) :: rmaxlon,rmaxlat       ! local min/max vars
-    logical  :: samegrids             ! are atm and lnd grids same?
     integer  :: begg, endg            ! clump beg and ending gridcell indices
     integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
 !-----------------------------------------------------------------------

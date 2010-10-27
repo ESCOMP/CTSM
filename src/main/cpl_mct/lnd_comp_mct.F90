@@ -475,10 +475,10 @@ contains
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use domainMod       ,only : adomain
+    use domainMod       ,only : adomain, ldomain
     use decompMod       ,only : get_proc_bounds_atm, get_proc_bounds
     use abortutils      ,only : endrun
-    use clm_varctl      ,only : iulog
+    use clm_varctl      ,only : iulog, samegrids
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
     use seq_cdata_mod   ,only : seq_cdata, seq_cdata_setptrs
@@ -588,6 +588,9 @@ contains
        do g = begg_a,endg_a
           i = 1 + (g - begg_a)
           adomain%asca(g) = data(i)
+          if (samegrids) then
+             ldomain%asca(g) = adomain%asca(g)
+          end if
        end do
        deallocate(data)
     endif

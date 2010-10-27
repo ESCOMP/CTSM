@@ -583,7 +583,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use domainMod       ,only : adomain
+    use domainMod       ,only : adomain, ldomain
     use decompMod       ,only : get_proc_bounds_atm, get_proc_bounds
     use abortutils      ,only : endrun
     use esmf_mod
@@ -594,7 +594,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_varctl      ,only : create_glacier_mec_landunit, downscale
+    use clm_varctl      ,only : create_glacier_mec_landunit, downscale, samegrids
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use seq_flds_indices
@@ -690,6 +690,9 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        do g = begg_a,endg_a
           i = 1 + (g - begg_a)
           adomain%asca(g) = fptr(ka, i)
+          if ( samegrids )then
+             ldomain%asca(g) = adomain%asca(g)
+          end if
        end do
     endif
     call t_stopf ('lc_lnd_run1')
