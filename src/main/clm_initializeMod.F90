@@ -83,7 +83,7 @@ contains
     use surfrdMod    , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
                               surfrd_get_topo, surfrd_get_latlon
     use clm_varctl   , only : fsurdat, fatmgrid, fatmlndfrc, &
-                              fatmtopo, flndtopo, noland, downscale, fglcmask, samegrids
+                              fatmtopo, flndtopo, noland, downscale, fglcmask
     use controlMod   , only : control_init, control_print, nlfilename
     use UrbanInputMod, only : UrbanInput
     use ncdio_pio    , only : ncd_pio_init
@@ -121,7 +121,7 @@ contains
 
     call clm_varpar_init()
     call control_init( )
-    call ncd_pio_init(nlfilename)
+    call ncd_pio_init( )
 
     if (masterproc) call control_print()
 
@@ -166,7 +166,7 @@ contains
     !--- exit if lats/lon > 0.001 and < 1.0 different          ---
     !--- continue if lat/lons > 1.0 different                  ---
 
-    samegrids = .false.
+    downscale = .true.
     if (alatlon%ni == llatlon%ni .and. alatlon%nj == llatlon%nj) then
        rmaxlon = 0.0_r8
        rmaxlat = 0.0_r8
@@ -180,7 +180,7 @@ contains
           if (masterproc) write(iulog,*) 'initialize1: set llatlon =~ alatlon', &
              ':continue',rmaxlon,rmaxlat
           call latlon_setsame(alatlon,llatlon)
-          samegrids = .true.
+          downscale = .false.
        elseif (rmaxlon < 1.0_r8 .and. rmaxlat < 1.0_r8) then
           if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon mismatch', &
              ':error',rmaxlon,rmaxlat
@@ -193,12 +193,6 @@ contains
        if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon different ', &
           'sizes:continue'
     endif
-
-    if (samegrids) then
-       downscale = .false.
-    else
-       downscale = .true.
-    end if
 
     ! Exit early if no valid land points
     if ( all(amask == 0) )then
@@ -315,8 +309,8 @@ contains
 
     !--- overwrite ldomain if same grids -----------------------------------
 
-    if (samegrids) then
-       if (masterproc) write(iulog,*) 'initialize1: samegrids true, set ldomain =~ adomain'
+    if (.not. downscale) then
+       if (masterproc) write(iulog,*) 'initialize1: downscale false, set ldomain =~ adomain'
        call domain_setsame(adomain,ldomain)
     endif
 

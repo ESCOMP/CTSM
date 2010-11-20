@@ -10,6 +10,7 @@ module histFileMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use spmdMod     , only : masterproc
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
   use clm_varcon  , only : spval,ispval
@@ -251,7 +252,6 @@ contains
 ! Print summary of master field list.
 !
 ! !USES:
-    use spmdMod, only : masterproc
 !
 ! !ARGUMENTS:
     implicit none
@@ -449,7 +449,6 @@ contains
 ! appropriate variables and calling appropriate routines
 !
 ! !USES:
-    use spmdMod, only : masterproc
     use clm_time_manager, only: get_prev_time
 !
 ! !ARGUMENTS:
@@ -665,7 +664,6 @@ contains
 ! Then sort the result alphanumerically.
 !
 ! !USES:
-    use spmdMod, only : masterproc
 !
 ! !ARGUMENTS:
     implicit none
@@ -2753,7 +2751,6 @@ contains
 !
 ! !USES:
     use fileutils       , only : set_filename, putfil
-    use spmdMod         , only : masterproc
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use shr_const_mod   , only : SHR_CONST_CDAY
     use clmtype
@@ -2996,8 +2993,12 @@ contains
     integer :: num_lndrof           ! total number of land runoff across all procs
     integer :: num_ocnrof           ! total number of ocean runoff across all procs
 #endif
-    character(len=max_namlen) :: name	
-    character(len=max_namlen) :: name_acc	
+    character(len=max_namlen) :: name            ! variable name
+    character(len=max_namlen) :: name_acc        ! accumulator variable name
+    character(len=max_namlen) :: long_name       ! long name of variable
+    character(len=max_chars)  :: long_name_acc   ! long name for accumulator
+    character(len=max_chars)  :: units           ! units of variable
+    character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
     character(len=max_chars)  :: filename        ! generic filename
     character(len=1)   :: hnum                   ! history file index
@@ -3086,55 +3087,66 @@ contains
        call ncd_defdim( ncid, 'max_flds'   , max_flds    , dimid)   
        call ncd_defdim( ncid, 'ntapes'     , ntapes      , dimid)
        
-       call ncd_defvar(ncid=ncid, varname='nflds', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='nflds', xtype=ncd_int, &
+            long_name="Numer of fields", units="unitless",        &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='ntimes', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='ntimes', xtype=ncd_int, &
+            long_name="Numer of time steps", units="unitless",     &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='nhtfrq', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='nhtfrq', xtype=ncd_int, &
+            long_name="Frequency of history writes", units="unitless",     &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='mfilt', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='mfilt', xtype=ncd_int, &
+            long_name="Number of history time samples on a file", units="unitless",     &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='ncprec', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='ncprec', xtype=ncd_int, &
+            long_name="Precision", units="unitless",     &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='dov2xy', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='dov2xy', xtype=ncd_int, &
+            long_name="Output on 2D grid format or vector format", units="unitless logical (0 or 1)",     &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='is_endhist', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='is_endhist', xtype=ncd_int, &
+            long_name="End of history", units="unitless logical (0 or 1)",     &
             dim1name='ntapes')
        call ncd_defvar(ncid=ncid, varname='begtime', xtype=pio_double, &
+            long_name="Beginning time", units="unitless",     &
             dim1name='ntapes')
 
-       call ncd_defvar(ncid=ncid, varname='num2d', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='num2d', xtype=ncd_int, &
             dim1name='max_nflds', dim2name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='hpindex', xtype=pio_int, &
+       call ncd_defvar(ncid=ncid, varname='hpindex', xtype=ncd_int, &
             dim1name='max_nflds', dim2name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='locfnh', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
             dim1name='max_chars', dim2name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
             dim1name='max_chars', dim2name='ntapes')
 
-       call ncd_defvar(ncid=ncid, varname='avgflag', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='avgflag', xtype=ncd_char, &
+            long_name="Averaging flag", units="unitless",     &
             dim1name='len1', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='fincl', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='fincl', xtype=ncd_char, &
+            long_name="Max number of fields", units="unitless",     &
             dim1name='fname_lenp2', dim2name='max_flds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='fexcl', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='fexcl', xtype=ncd_char, &
             dim1name='fname_lenp2', dim2name='max_flds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='name', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='name', xtype=ncd_char, &
             dim1name='fname_len', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='long_name', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='long_name', xtype=ncd_char, &
             dim1name='max_chars', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='units', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='units', xtype=ncd_char, &
+            long_name="Units for each history field output", units="unitless",     &
             dim1name='max_chars', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='type1d', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='type1d', xtype=ncd_char, &
             dim1name='len8', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='type1d_out', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='type1d_out', xtype=ncd_char, &
             dim1name='len8', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='type2d', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='type2d', xtype=ncd_char, &
             dim1name='len8', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='p2c_scale_type', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='p2c_scale_type', xtype=ncd_char, &
             dim1name='len8', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='c2l_scale_type', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='c2l_scale_type', xtype=ncd_char, &
             dim1name='len8', dim2name='max_nflds', dim3name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='l2g_scale_type', xtype=pio_char, &
+       call ncd_defvar(ncid=ncid, varname='l2g_scale_type', xtype=ncd_char, &
             dim1name='len8', dim2name='max_nflds', dim3name='ntapes')
 
        RETURN
@@ -3555,13 +3567,17 @@ contains
 #endif
 
              do f = 1,tape(t)%nflds
-                name       =  tape(t)%hlist(f)%field%name
-                name_acc   =  trim(name) // "_acc"
-                type1d_out =  tape(t)%hlist(f)%field%type1d_out
-	        type2d     =  tape(t)%hlist(f)%field%type2d
-                num2d      =  tape(t)%hlist(f)%field%num2d
-                nacs       => tape(t)%hlist(f)%nacs
-                hbuf       => tape(t)%hlist(f)%hbuf
+                name           =  tape(t)%hlist(f)%field%name
+                long_name      =  tape(t)%hlist(f)%field%long_name
+                units          =  tape(t)%hlist(f)%field%units
+                name_acc       =  trim(name) // "_acc"
+                units_acc      =  "unitless positive integer"
+                long_name_acc  =  trim(long_name) // " accumulator number of samples"
+                type1d_out     =  tape(t)%hlist(f)%field%type1d_out
+	        type2d         =  tape(t)%hlist(f)%field%type2d
+                num2d          =  tape(t)%hlist(f)%field%num2d
+                nacs           => tape(t)%hlist(f)%nacs
+                hbuf           => tape(t)%hlist(f)%hbuf
                
                 if (type1d_out == gratm) then
                    dim1name = 'lonatm'   ; dim2name = 'latatm'
@@ -3576,26 +3592,34 @@ contains
                 if (dim2name == 'undefined') then
                    if (num2d == 1) then
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, & 
-                           dim1name=dim1name)
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=pio_int,  &
-                           dim1name=dim1name)
+                           dim1name=dim1name, &
+                           long_name=trim(long_name), units=trim(units))
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                           dim1name=dim1name, &
+                           long_name=trim(long_name_acc), units=trim(units_acc))
                    else
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, &
-                           dim1name=dim1name, dim2name=type2d)
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=pio_int,  &
-                           dim1name=dim1name, dim2name=type2d)
+                           dim1name=dim1name, dim2name=type2d, &
+                           long_name=trim(long_name), units=trim(units))
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                           dim1name=dim1name, dim2name=type2d, &
+                           long_name=trim(long_name_acc), units=trim(units_acc))
                    end if
                 else
                    if (num2d == 1) then
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, &
-                           dim1name=dim1name, dim2name=dim2name)
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=pio_int,  &
-                           dim1name=dim1name, dim2name=dim2name)
+                           dim1name=dim1name, dim2name=dim2name, &
+                           long_name=trim(long_name), units=trim(units))
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                           dim1name=dim1name, dim2name=dim2name, &
+                           long_name=trim(long_name_acc), units=trim(units_acc))
                    else
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, &
-                           dim1name=dim1name, dim2name=dim2name, dim3name=type2d)
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=pio_int,  &
-                           dim1name=dim1name, dim2name=dim2name, dim3name=type2d)
+                           dim1name=dim1name, dim2name=dim2name, dim3name=type2d, &
+                           long_name=trim(long_name), units=trim(units))
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                           dim1name=dim1name, dim2name=dim2name, dim3name=type2d, &
+                           long_name=trim(long_name_acc), units=trim(units_acc))
                    end if
                 endif
              end do

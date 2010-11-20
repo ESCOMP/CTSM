@@ -16,6 +16,7 @@ module STATICEcosysdynMOD
   use clm_varctl,      only : scmlat,scmlon,single_column
   use clm_varctl,      only : iulog
   use perf_mod,        only : t_startf, t_stopf
+  use spmdMod,         only : masterproc
   use ncdio_pio   
 !
 ! !PUBLIC TYPES:
@@ -328,7 +329,6 @@ contains
     use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
     use decompMod   , only : get_proc_bounds
-    use spmdMod     , only : masterproc
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
 
@@ -431,7 +431,6 @@ contains
     use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
-    use spmdMod     , only : masterproc
 !
 ! !ARGUMENTS:
     implicit none

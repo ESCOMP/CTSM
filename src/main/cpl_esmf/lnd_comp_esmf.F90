@@ -199,6 +199,7 @@ end subroutine
     integer :: stop_tod                              ! stop time of day (sec)
     logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
     logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
+    logical :: samegrid_al                           ! true if atmosphere and land are on the same grid
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
     integer :: begg_l, endg_l, begg_a, endg_a
@@ -301,6 +302,8 @@ end subroutine
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call ESMF_AttributeGet(export_state, name="username", value=username, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="samegrid_al", value=samegrid_al, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
                            ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
@@ -336,6 +339,15 @@ end subroutine
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
        call ESMF_AttributeSet(export_state, name="rof_present", value=.false., rc=rc)
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    end if
+
+    ! If trigrid AND downscale -- abort as an error
+
+    if ( (.not. samegrid_al) .and. downscale )then
+       write(iulog,format) "Incompatible inputs, atmosphere and land are on different grids"
+       write(iulog,format) "But, you are also trying to use the CLM fine-mesh to downscale to a finer grid"
+       write(iulog,format) "When using CLM finemesh mode -- you must NOT run the atmosphere on a different grid"
+       call endrun( sub//' ERROR: downscaling using finemesh AND running atmosphere on a different grid' )
     end if
 
     ! Determine if aerosol and dust deposition come from atmosphere component
@@ -581,6 +593,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
     use clm_comp        ,only : clm_run1, clm_run2
+    use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
     use domainMod       ,only : adomain, ldomain
@@ -594,7 +607,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_varctl      ,only : create_glacier_mec_landunit, downscale, samegrids
+    use clm_varctl      ,only : create_glacier_mec_landunit, downscale
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use seq_flds_indices
@@ -662,6 +675,17 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
+    ! Use infodata to set orbital values if it was updated at run time
+
+    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
     ! Determine time of next atmospheric shortwave calculation
 
     call seq_timemgr_EClockGetData(EClock, &
@@ -690,7 +714,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        do g = begg_a,endg_a
           i = 1 + (g - begg_a)
           adomain%asca(g) = fptr(ka, i)
-          if ( samegrids )then
+          if ( .not. downscale )then
              ldomain%asca(g) = adomain%asca(g)
           end if
        end do

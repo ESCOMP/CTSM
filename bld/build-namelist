@@ -721,11 +721,13 @@ if ($mode eq "clm_stndln") {
    # If orbital parameters have not been specified then set default orbital year.
    # If NOT all of obliq, eccen and mvelp are specified -- return an error.
    
-   if (not defined $nl->get_value('orb_obliq') and
-       not defined $nl->get_value('orb_eccen') and
-       not defined $nl->get_value('orb_mvelp')     ) {
-         add_default($nl, 'orb_iyear_ad');
-   } else {
+   add_default($nl, 'orb_mode');
+
+   if (      $nl->get_value('orb_mode') =~ /fixed_year/ ) {
+         add_default($nl, 'orb_iyear', 'sim_year'=>$sim_year );
+   } elsif ( $nl->get_value('orb_mode') =~ /variable_year/ ) {
+         add_default($nl, 'orb_iyear_align', 'sim_year'=>$sim_year );
+   } elsif ( $nl->get_value('orb_mode') =~ /fixed_parameters/ ) {
       if (not defined $nl->get_value('orb_obliq') or
           not defined $nl->get_value('orb_eccen') or
           not defined $nl->get_value('orb_mvelp')     ) {
@@ -859,10 +861,26 @@ if ($mode eq "clm_stndln") {
 
 if ($mode eq "clm_stndln" ) {
 
-   add_default($nl, 'cpl_io_stride'   );
-   add_default($nl, 'cpl_io_numtasks' );
-   add_default($nl, 'cpl_io_typename' );
-   add_default($nl, 'cpl_io_root'     );
+   my $serial = $cfg->get('use_mpiserial');
+   if ( $serial ) {
+     foreach my $var ( "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
+                       "cpl_pio_numtasks", "lnd_pio_numtasks", "atm_pio_numtasks" ) {
+       add_default($nl, $var, 'val'=>1   );
+     }
+     foreach my $var ( "cpl_pio_root", "lnd_pio_root", "atm_pio_root" ) {
+       add_default($nl, $var, 'val'=>0   );
+     }
+     foreach my $var ( "cpl_pio_typename", "lnd_pio_typename", "atm_pio_typename" ) {
+       add_default($nl, $var, 'val'=>"NETCDF"   );
+     }
+   } else {
+     foreach my $var ( "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
+                       "cpl_pio_root",     "lnd_pio_root",     "atm_pio_root",
+                       "cpl_pio_typename", "lnd_pio_typename", "atm_pio_typename",
+                       "cpl_pio_numtasks", "lnd_pio_numtasks", "atm_pio_numtasks" ) {
+       add_default($nl, $var );
+     }
+   }
 
 }
 
@@ -1163,15 +1181,14 @@ my $note = "Comment:\n" .
            "For help on options use: $cfgdir/$ProgName -help";
 
 # CLM component
-my @groups = qw(clm_inparm);
+my @groups = qw(clm_inparm ndepdyn_nml);
 my $outfile = "$opts{'dir'}/lnd_in";
 $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
 if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
 
 if ($mode eq "clm_stndln") {
     # Driver
-    @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm);
-    push( @groups, "pio_inparm" );
+    @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm pio_inparm);
     $outfile = "$opts{'dir'}/drv_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
@@ -1191,12 +1208,6 @@ if ($opts{'drv_drydep'} ) {
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing drydep_inparm namelist to $outfile $eol"; }
 }
-
-#ndepdyn_nml namelist
-@groups = qw(ndepdyn_nml);
-$outfile = "$opts{'dir'}/lnd_in";
-$nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note", append=>1 );
-if ($print>=2) { print "Appending ndepdyn_nml namelist to $outfile $eol"; }
 
 #-----------------------------------------------------------------------------------------------
 

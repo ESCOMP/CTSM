@@ -1467,7 +1467,7 @@ contains
 
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname=trim(vname), &
-               xtype=nf_double,  dim1name='rtmlon', dim2name='rtmlat', &
+               xtype=ncd_double,  dim1name='rtmlon', dim2name='rtmlat', &
                long_name=trim(lname), units=trim(uname))
        else if (flag == 'read' .or. flag == 'write') then
           call ncd_io(varname=trim(vname), data=dfld, dim1name='allrof', &
@@ -1495,7 +1495,7 @@ contains
 
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname=trim(vname), &
-               xtype=nf_double,  dim1name='gridcell', &
+               xtype=ncd_double,  dim1name='gridcell', &
                long_name=trim(lname), units=trim(uname))
        else if (flag == 'read' .or. flag == 'write') then
           call ncd_io(varname=trim(vname), data=dfld, dim1name='gridcell', &
@@ -1517,7 +1517,7 @@ contains
     ! counter for rtm averaged input (on clm grid)
     vname = 'RTM_NCOUNT'
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname=trim(vname), xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname=trim(vname), xtype=ncd_int,  &
             long_name='counter for RTM averaged input on CLM grid', units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname=trim(vname), data=ncount_rtm, &

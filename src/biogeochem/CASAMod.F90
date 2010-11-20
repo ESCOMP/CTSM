@@ -915,63 +915,63 @@ contains
     call ncd_defdim(ncid, 'longitude', lsmlon, dimid)
     call ncd_defdim(ncid, 'latitude' , lsmlat, dimid)
 
-    call ncd_defvar(ncid=ncid, varname='longitude', xtype=pio_double, &
+    call ncd_defvar(ncid=ncid, varname='longitude', xtype=ncd_double, &
          dim1name='longitude', long_name='coordinate longitude', &
          units='degrees_east')
-    call ncd_defvar(ncid=ncid, varname='latitude', xtype=pio_double, &
+    call ncd_defvar(ncid=ncid, varname='latitude', xtype=ncd_double, &
          dim1name='latitude', long_name='coordinate latitude', &
          units='degrees_north')
-    call ncd_defvar(ncid=ncid, varname='landfrac', xtype=pio_double, &
+    call ncd_defvar(ncid=ncid, varname='landfrac', xtype=ncd_double, &
          dim1name='longitude', dim2name='latitude', long_name='land fraction')
-    call ncd_defvar(ncid=ncid, varname='landmask', xtype=pio_int, &
+    call ncd_defvar(ncid=ncid, varname='landmask', xtype=ncd_int, &
          dim1name='longitude', dim2name='latitude', &
          long_name='land/ocean mask (0.=ocean and 1.=land)')
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_LEAF', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in leaf pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_WOOD', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in wood pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_CWD', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in coarse woody debris pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_FROOT', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in fine root pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFMET', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFSTR', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILMET', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILSTR', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SURFMIC', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SOILMIC', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_SLOW', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
     call ncd_defvar(ncid=ncid, varname='TPOOL_C_PASSIVE', &
-         xtype=pio_double, dim1name='longitude', dim2name='latitude', &
+         xtype=ncd_double, dim1name='longitude', dim2name='latitude', &
          long_name='total C in pool', &
          missing_value=spval, fill_value=spval)
 
@@ -2449,7 +2449,7 @@ contains
 
     ! pft type physical state variable - livefr
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livefr', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livefr', xtype=ncd_double,  &
             dim1name='pft', dim2name='nlive',&
             long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -2462,7 +2462,7 @@ contains
 
     ! pft type physical state variable - Tpool_C  (Tracer 1)
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='Tpool_C', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='Tpool_C', xtype=ncd_double,  &
             dim1name='pft', dim2name='npools',&
             long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -2486,7 +2486,7 @@ contains
 
     ! pft type physical state variable - lgrow
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='lgrow', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='lgrow', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='lgrow', data=pptr%pps%lgrow, &
@@ -2498,7 +2498,7 @@ contains
 
     ! pft type physical state variable - iseabeg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='iseabeg', xtype=pio_double, &
+       call ncd_defvar(ncid=ncid, varname='iseabeg', xtype=ncd_double, &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='iseabeg', data=pptr%pps%iseabeg, &
@@ -2510,7 +2510,7 @@ contains
 
     ! pft type physical state variable - nstepbeg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='nstepbeg', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='nstepbeg', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='nstepbeg', data=pptr%pps%nstepbeg, &
@@ -2522,7 +2522,7 @@ contains
 
     ! pft type physical state variable - degday
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='degday', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='degday', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='degday', data=pptr%pps%degday, &
@@ -2534,7 +2534,7 @@ contains
 
     ! pft type physical state variable - ndegday
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ndegday', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='ndegday', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='ndegday', data=pptr%pps%ndegday, &
@@ -2546,7 +2546,7 @@ contains
 
     ! pft type physical state variable - tday
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tday', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tday', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tday', data=pptr%pps%tday, &
@@ -2558,7 +2558,7 @@ contains
 
     ! pft type physical state variable - tcount
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tcount', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tcount', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tcount', data=pptr%pps%tcount, &
@@ -2570,7 +2570,7 @@ contains
 
     ! pft type physical state variable - tdayavg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tdayavg', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tdayavg', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tdayavg', data=pptr%pps%tdayavg, &
@@ -2582,7 +2582,7 @@ contains
 
     ! pft type physical state variable - stressCD
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='stressCD', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='stressCD', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='stressCD', data=pptr%pps%stressCD, &
@@ -2596,7 +2596,7 @@ contains
 
     ! pft type physical state variable - stressT
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='stressT', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='stressT', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='stressT', data=pptr%pps%stressT, &
@@ -2608,7 +2608,7 @@ contains
 
     ! pft type physical state variable - stressW
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='stressW', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='stressW', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='stressW', data=pptr%pps%stressW, &
@@ -2622,7 +2622,7 @@ contains
 
     ! pft type physical state variable - XSCpool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='XSCpool', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='XSCpool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='XSCpool', data=pptr%pps%XSCpool, &
@@ -2634,7 +2634,7 @@ contains
 
     ! eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net  
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lwrad_net', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lwrad_net', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='eflx_lwrad_net', data=pptr%pef%eflx_lwrad_net, &
@@ -2646,7 +2646,7 @@ contains
 
     ! eflx_lh_grnd => clm3%g%l%c%p%pef%eflx_lh_grnd  
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lh_grnd', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lh_grnd', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='eflx_lh_grnd', data=pptr%pef%eflx_lh_grnd, &
@@ -2658,7 +2658,7 @@ contains
 
     ! eflx_lh_vege => clm3%g%l%c%p%pef%eflx_lh_vege
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lh_vege', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lh_vege', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='eflx_lh_vege', data=pptr%pef%eflx_lh_vege, &
@@ -2670,7 +2670,7 @@ contains
 
     ! eflx_lh_vegt => clm3%g%l%c%p%pef%eflx_lh_vegt
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='eflx_lh_vegt', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='eflx_lh_vegt', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='eflx_lh_vegt', data=pptr%pef%eflx_lh_vegt, &

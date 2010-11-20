@@ -12,6 +12,7 @@ module CNrestMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
+  use abortutils  , only : endrun
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -93,7 +94,7 @@ contains
     
     ! dormant_flag
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='dormant_flag', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='dormant_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='dormant_flag', data=pptr%pepv%dormant_flag, &
@@ -105,7 +106,7 @@ contains
 
     ! days_active
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='days_active', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='days_active', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='days_active', data=pptr%pepv%days_active, &
@@ -117,7 +118,7 @@ contains
 
     ! onset_flag
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='onset_flag', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='onset_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_flag', data=pptr%pepv%onset_flag, &
@@ -129,7 +130,7 @@ contains
 
     ! onset_counter
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='onset_counter', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='onset_counter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_counter', data=pptr%pepv%onset_counter, &
@@ -141,7 +142,7 @@ contains
 
     ! onset_gddflag
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='onset_gddflag', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='onset_gddflag', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_gddflag', data=pptr%pepv%onset_gddflag, &
@@ -153,7 +154,7 @@ contains
 
     ! onset_fdd
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='onset_fdd', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='onset_fdd', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_fdd', data=pptr%pepv%onset_fdd, &
@@ -165,7 +166,7 @@ contains
 
     ! onset_gdd
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='onset_gdd', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='onset_gdd', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_gdd', data=pptr%pepv%onset_gdd, &
@@ -177,7 +178,7 @@ contains
 
     ! onset_swi
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='onset_swi', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='onset_swi', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_swi', data=pptr%pepv%onset_swi, &
@@ -189,7 +190,7 @@ contains
 
     ! offset_flag
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='offset_flag', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='offset_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_flag', data=pptr%pepv%offset_flag, &
@@ -201,7 +202,7 @@ contains
 
     ! offset_counter
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='offset_counter', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='offset_counter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_counter', data=pptr%pepv%offset_counter, &
@@ -213,7 +214,7 @@ contains
 
     ! offset_fdd
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='offset_fdd', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='offset_fdd', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_fdd', data=pptr%pepv%offset_fdd, &
@@ -225,7 +226,7 @@ contains
 
     ! offset_swi
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='offset_swi', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='offset_swi', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_swi', data=pptr%pepv%offset_swi, &
@@ -237,7 +238,7 @@ contains
 
     ! lgsf
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='lgsf', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='lgsf', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='lgsf', data=pptr%pepv%lgsf, &
@@ -249,7 +250,7 @@ contains
 
     ! bglfr
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='bglfr', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='bglfr', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='bglfr', data=pptr%pepv%bglfr, &
@@ -261,7 +262,7 @@ contains
 
     ! bgtr
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='bgtr', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='bgtr', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='bgtr', data=pptr%pepv%bgtr, &
@@ -273,7 +274,7 @@ contains
 
     ! dayl
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='dayl', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='dayl', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='dayl', data=pptr%pepv%dayl, &
@@ -285,7 +286,7 @@ contains
 
     ! prev_dayl
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prev_dayl', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prev_dayl', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prev_dayl', data=pptr%pepv%prev_dayl, &
@@ -297,7 +298,7 @@ contains
 
     ! annavg_t2m
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annavg_t2m', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='annavg_t2m', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='annavg_t2m', data=pptr%pepv%annavg_t2m, &
@@ -309,7 +310,7 @@ contains
 
     ! tempavg_t2m
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempavg_t2m', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tempavg_t2m', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tempavg_t2m', data=pptr%pepv%tempavg_t2m, &
@@ -321,7 +322,7 @@ contains
 
     ! gpp
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='gpp_pepv', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='gpp_pepv', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='gpp_pepv', data=pptr%pepv%gpp, &
@@ -333,7 +334,7 @@ contains
 
     ! availc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='availc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='availc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='availc', data=pptr%pepv%availc, &
@@ -345,7 +346,7 @@ contains
 
     ! xsmrpool_recover
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='xsmrpool_recover', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='xsmrpool_recover', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='xsmrpool_recover', data=pptr%pepv%xsmrpool_recover, &
@@ -358,7 +359,7 @@ contains
 #if (defined C13)
     ! xsmrpool_c13ratio
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='xsmrpool_c13ratio', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='xsmrpool_c13ratio', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='xsmrpool_c13ratio', data=pptr%pepv%xsmrpool_c13ratio, &
@@ -371,7 +372,7 @@ contains
 
     ! alloc_pnow
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='alloc_pnow', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='alloc_pnow', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='alloc_pnow', data=pptr%pepv%alloc_pnow, &
@@ -383,7 +384,7 @@ contains
 
     ! c_allometry
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='c_allometry', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='c_allometry', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='c_allometry', data=pptr%pepv%c_allometry, &
@@ -395,7 +396,7 @@ contains
 
     ! n_allometry
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='n_allometry', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='n_allometry', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='n_allometry', data=pptr%pepv%n_allometry, &
@@ -407,7 +408,7 @@ contains
 
     ! plant_ndemand
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='plant_ndemand', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='plant_ndemand', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='plant_ndemand', data=pptr%pepv%plant_ndemand, &
@@ -419,7 +420,7 @@ contains
 
     ! tempsum_potential_gpp
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempsum_potential_gpp', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tempsum_potential_gpp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tempsum_potential_gpp', data=pptr%pepv%tempsum_potential_gpp, &
@@ -431,7 +432,7 @@ contains
 
     !annsum_potential_gpp 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annsum_potential_gpp', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='annsum_potential_gpp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='annsum_potential_gpp', data=pptr%pepv%annsum_potential_gpp, &
@@ -443,7 +444,7 @@ contains
 
     ! tempmax_retransn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempmax_retransn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tempmax_retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tempmax_retransn', data=pptr%pepv%tempmax_retransn, &
@@ -455,7 +456,7 @@ contains
 
     ! annmax_retransn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annmax_retransn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='annmax_retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='annmax_retransn', data=pptr%pepv%annmax_retransn, &
@@ -467,7 +468,7 @@ contains
 
     ! avail_retransn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='avail_retransn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='avail_retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='avail_retransn', data=pptr%pepv%avail_retransn, &
@@ -479,7 +480,7 @@ contains
 
     ! plant_nalloc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='plant_nalloc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='plant_nalloc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='plant_nalloc', data=pptr%pepv%plant_nalloc, &
@@ -491,7 +492,7 @@ contains
 
     ! plant_calloc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='plant_calloc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='plant_calloc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='plant_calloc', data=pptr%pepv%plant_calloc, &
@@ -503,7 +504,7 @@ contains
 
     ! excess_cflux
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='excess_cflux', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='excess_cflux', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='excess_cflux', data=pptr%pepv%excess_cflux, &
@@ -515,7 +516,7 @@ contains
 
     ! downreg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='downreg', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='downreg', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='downreg', data=pptr%pepv%downreg, &
@@ -527,7 +528,7 @@ contains
 
     ! prev_leafc_to_litter
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prev_leafc_to_litter', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prev_leafc_to_litter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prev_leafc_to_litter', data=pptr%pepv%prev_leafc_to_litter, &
@@ -539,7 +540,7 @@ contains
 
     ! prev_frootc_to_litter
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prev_frootc_to_litter', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prev_frootc_to_litter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prev_frootc_to_litter', data=pptr%pepv%prev_frootc_to_litter, &
@@ -551,7 +552,7 @@ contains
 
     ! tempsum_npp
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempsum_npp', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tempsum_npp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tempsum_npp', data=pptr%pepv%tempsum_npp, &
@@ -563,7 +564,7 @@ contains
 
     ! annsum_npp
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annsum_npp', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='annsum_npp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='annsum_npp', data=pptr%pepv%annsum_npp, &
@@ -576,7 +577,7 @@ contains
 #if (defined C13)
     ! rc13_canair
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='rc13_canair', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='rc13_canair', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='rc13_canair', data=pptr%pepv%rc13_canair, &
@@ -588,7 +589,7 @@ contains
 
     ! rc13_psnsun
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='rc13_psnsun', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='rc13_psnsun', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='rc13_psnsun', data=pptr%pepv%rc13_psnsun, &
@@ -600,7 +601,7 @@ contains
 
     ! rc13_psnsha
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='rc13_psnsha', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='rc13_psnsha', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='rc13_psnsha', data=pptr%pepv%rc13_psnsha, &
@@ -617,7 +618,7 @@ contains
 
     ! leafc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafc', data=pptr%pcs%leafc, &
@@ -629,7 +630,7 @@ contains
     
     ! leafc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafc_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafc_storage', data=pptr%pcs%leafc_storage, &
@@ -641,7 +642,7 @@ contains
     
     ! leafc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafc_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafc_xfer', data=pptr%pcs%leafc_xfer, &
@@ -653,7 +654,7 @@ contains
     
     ! frootc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootc', data=pptr%pcs%frootc, &
@@ -665,7 +666,7 @@ contains
     
     ! frootc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootc_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootc_storage', data=pptr%pcs%frootc_storage, &
@@ -677,7 +678,7 @@ contains
     
     !frootc_xfer 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootc_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootc_xfer', data=pptr%pcs%frootc_xfer, &
@@ -689,7 +690,7 @@ contains
     
     ! livestemc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemc', data=pptr%pcs%livestemc, &
@@ -701,7 +702,7 @@ contains
     
     ! livestemc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemc_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemc_storage', data=pptr%pcs%livestemc_storage, &
@@ -713,7 +714,7 @@ contains
     
     ! livestemc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemc_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemc_xfer', data=pptr%pcs%livestemc_xfer, &
@@ -725,7 +726,7 @@ contains
     
     ! deadstemc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemc', data=pptr%pcs%deadstemc, &
@@ -737,7 +738,7 @@ contains
     
     ! deadstemc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemc_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemc_storage', data=pptr%pcs%deadstemc_storage, &
@@ -749,7 +750,7 @@ contains
     
     ! deadstemc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemc_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemc_xfer', data=pptr%pcs%deadstemc_xfer, &
@@ -761,7 +762,7 @@ contains
     
     ! livecrootc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootc', data=pptr%pcs%livecrootc, &
@@ -773,7 +774,7 @@ contains
     
     ! livecrootc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootc_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootc_storage', data=pptr%pcs%livecrootc_storage, &
@@ -785,7 +786,7 @@ contains
     
     ! livecrootc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootc_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootc_xfer', data=pptr%pcs%livecrootc_xfer, &
@@ -797,7 +798,7 @@ contains
     
     ! deadcrootc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootc', data=pptr%pcs%deadcrootc, &
@@ -809,7 +810,7 @@ contains
     
     ! deadcrootc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootc_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootc_storage', data=pptr%pcs%deadcrootc_storage, &
@@ -821,7 +822,7 @@ contains
     
     ! deadcrootc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootc_xfer', data=pptr%pcs%deadcrootc_xfer, &
@@ -833,7 +834,7 @@ contains
     
     ! gresp_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='gresp_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='gresp_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='gresp_storage', data=pptr%pcs%gresp_storage, &
@@ -845,7 +846,7 @@ contains
     
     ! gresp_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='gresp_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='gresp_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='gresp_xfer', data=pptr%pcs%gresp_xfer, &
@@ -857,7 +858,7 @@ contains
     
     ! cpool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cpool', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cpool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cpool', data=pptr%pcs%cpool, &
@@ -869,7 +870,7 @@ contains
 
     ! xsmrpool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='xsmrpool', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='xsmrpool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='xsmrpool', data=pptr%pcs%xsmrpool, &
@@ -881,7 +882,7 @@ contains
 
     ! pft_ctrunc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='pft_ctrunc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='pft_ctrunc', data=pptr%pcs%pft_ctrunc, &
@@ -893,7 +894,7 @@ contains
 
     ! totvegc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totvegc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totvegc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totvegc', data=pptr%pcs%totvegc, &
@@ -910,7 +911,7 @@ contains
     
     ! leafc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafc_13', data=pptr%pc13s%leafc, &
@@ -922,7 +923,7 @@ contains
     
     ! leafc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafc_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafc_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafc_storage_13', data=pptr%pc13s%leafc_storage, &
@@ -934,7 +935,7 @@ contains
     
     ! leafc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafc_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafc_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafc_xfer_13', data=pptr%pc13s%leafc_xfer, &
@@ -946,7 +947,7 @@ contains
     
     ! frootc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootc_13', data=pptr%pc13s%frootc, &
@@ -958,7 +959,7 @@ contains
     
     ! frootc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootc_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootc_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootc_storage_13', data=pptr%pc13s%frootc_storage, &
@@ -970,7 +971,7 @@ contains
     
     !frootc_xfer 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootc_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootc_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootc_xfer_13', data=pptr%pc13s%frootc_xfer, &
@@ -982,7 +983,7 @@ contains
     
     ! livestemc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemc_13', data=pptr%pc13s%livestemc, &
@@ -994,7 +995,7 @@ contains
     
     ! livestemc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemc_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemc_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemc_storage_13', data=pptr%pc13s%livestemc_storage, &
@@ -1006,7 +1007,7 @@ contains
     
     ! livestemc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemc_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemc_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemc_xfer_13', data=pptr%pc13s%livestemc_xfer, &
@@ -1018,7 +1019,7 @@ contains
     
     ! deadstemc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemc_13', data=pptr%pc13s%deadstemc, &
@@ -1030,7 +1031,7 @@ contains
     
     ! deadstemc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemc_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemc_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemc_storage_13', data=pptr%pc13s%deadstemc_storage, &
@@ -1042,7 +1043,7 @@ contains
     
     ! deadstemc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemc_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemc_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemc_xfer_13', data=pptr%pc13s%deadstemc_xfer, &
@@ -1054,7 +1055,7 @@ contains
     
     ! livecrootc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootc_13', data=pptr%pc13s%livecrootc, &
@@ -1066,7 +1067,7 @@ contains
     
     ! livecrootc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootc_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootc_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootc_storage_13', data=pptr%pc13s%livecrootc_storage, &
@@ -1078,7 +1079,7 @@ contains
     
     ! livecrootc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootc_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootc_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootc_xfer_13', data=pptr%pc13s%livecrootc_xfer, &
@@ -1090,7 +1091,7 @@ contains
     
     ! deadcrootc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootc_13', data=pptr%pc13s%deadcrootc, &
@@ -1102,7 +1103,7 @@ contains
     
     ! deadcrootc_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootc_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootc_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootc_storage_13', data=pptr%pc13s%deadcrootc_storage, &
@@ -1114,7 +1115,7 @@ contains
     
     ! deadcrootc_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootc_xfer_13', data=pptr%pc13s%deadcrootc_xfer, &
@@ -1126,7 +1127,7 @@ contains
     
     ! gresp_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='gresp_storage_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='gresp_storage_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='gresp_storage_13', data=pptr%pc13s%gresp_storage, &
@@ -1138,7 +1139,7 @@ contains
     
     ! gresp_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='gresp_xfer_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='gresp_xfer_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='gresp_xfer_13', data=pptr%pc13s%gresp_xfer, &
@@ -1150,7 +1151,7 @@ contains
     
     ! cpool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cpool_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cpool_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cpool_13', data=pptr%pc13s%cpool, &
@@ -1162,7 +1163,7 @@ contains
 
     ! xsmrpool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='xsmrpool_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='xsmrpool_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='xsmrpool_13', data=pptr%pc13s%xsmrpool, &
@@ -1174,7 +1175,7 @@ contains
 
     ! pft_ctrunc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='pft_ctrunc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='pft_ctrunc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='pft_ctrunc_13', data=pptr%pc13s%pft_ctrunc, &
@@ -1186,7 +1187,7 @@ contains
 
     ! totvegc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totvegc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totvegc_13', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totvegc_13', data=pptr%pc13s%totvegc, &
@@ -1203,7 +1204,7 @@ contains
     
     ! leafn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafn', data=pptr%pns%leafn, &
@@ -1215,7 +1216,7 @@ contains
     
     ! leafn_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafn_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafn_storage', data=pptr%pns%leafn_storage, &
@@ -1227,7 +1228,7 @@ contains
     
     ! leafn_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafn_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafn_xfer', data=pptr%pns%leafn_xfer, &
@@ -1239,7 +1240,7 @@ contains
     
     ! frootn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootn', data=pptr%pns%frootn, &
@@ -1251,7 +1252,7 @@ contains
     
     ! frootn_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootn_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootn_storage', data=pptr%pns%frootn_storage, &
@@ -1263,7 +1264,7 @@ contains
     
     ! frootn_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frootn_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='frootn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frootn_xfer', data=pptr%pns%frootn_xfer, &
@@ -1275,7 +1276,7 @@ contains
     
     ! livestemn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemn', data=pptr%pns%livestemn, &
@@ -1287,7 +1288,7 @@ contains
     
     ! livestemn_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemn_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemn_storage', data=pptr%pns%livestemn_storage, &
@@ -1299,7 +1300,7 @@ contains
     
     ! livestemn_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livestemn_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livestemn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livestemn_xfer', data=pptr%pns%livestemn_xfer, &
@@ -1311,7 +1312,7 @@ contains
     
     ! deadstemn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemn', data=pptr%pns%deadstemn, &
@@ -1323,7 +1324,7 @@ contains
     
     !deadstemn_storage 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemn_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemn_storage', data=pptr%pns%deadstemn_storage, &
@@ -1335,7 +1336,7 @@ contains
     
     !deadstemn_xfer 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadstemn_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadstemn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadstemn_xfer', data=pptr%pns%deadstemn_xfer, &
@@ -1347,7 +1348,7 @@ contains
     
     ! livecrootn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootn', data=pptr%pns%livecrootn, &
@@ -1359,7 +1360,7 @@ contains
     
     ! livecrootn_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootn_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootn_storage', data=pptr%pns%livecrootn_storage, &
@@ -1371,7 +1372,7 @@ contains
     
     !livecrootn_xfer 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='livecrootn_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='livecrootn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='livecrootn_xfer', data=pptr%pns%livecrootn_xfer, &
@@ -1383,7 +1384,7 @@ contains
     
     ! deadcrootn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootn', data=pptr%pns%deadcrootn, &
@@ -1395,7 +1396,7 @@ contains
     
     ! deadcrootn_storage
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootn_storage', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootn_storage', data=pptr%pns%deadcrootn_storage, &
@@ -1407,7 +1408,7 @@ contains
     
     ! deadcrootn_xfer
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='deadcrootn_xfer', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='deadcrootn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='deadcrootn_xfer', data=pptr%pns%deadcrootn_xfer, &
@@ -1419,7 +1420,7 @@ contains
     
     !retransn 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='retransn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='retransn', data=pptr%pns%retransn, &
@@ -1431,7 +1432,7 @@ contains
     
     ! npool
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='npool', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='npool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='npool', data=pptr%pns%npool, &
@@ -1443,7 +1444,7 @@ contains
     
     ! pft_ntrunc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='pft_ntrunc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='pft_ntrunc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='pft_ntrunc', data=pptr%pns%pft_ntrunc, &
@@ -1459,7 +1460,7 @@ contains
     
     ! decl
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='decl', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='decl', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='decl', data=cptr%cps%decl, &
@@ -1471,7 +1472,7 @@ contains
 
     ! fpi
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fpi', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='fpi', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='fpi', data=cptr%cps%fpi, &
@@ -1483,7 +1484,7 @@ contains
 
     ! fpg
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fpg', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='fpg', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='fpg', data=cptr%cps%fpg, &
@@ -1495,7 +1496,7 @@ contains
 
     ! annsum_counter
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annsum_counter', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='annsum_counter', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='annsum_counter', data=cptr%cps%annsum_counter, &
@@ -1507,7 +1508,7 @@ contains
 
     ! cannsum_npp
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cannsum_npp', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cannsum_npp', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cannsum_npp', data=cptr%cps%cannsum_npp, &
@@ -1519,7 +1520,7 @@ contains
 
     ! cannavg_t2m
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cannavg_t2m', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cannavg_t2m', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cannavg_t2m', data=cptr%cps%cannavg_t2m, &
@@ -1531,7 +1532,7 @@ contains
 
     ! wf
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='wf', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='wf', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='wf', data=cptr%cps%wf, &
@@ -1543,7 +1544,7 @@ contains
 
     ! me
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='me', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='me', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='me', data=cptr%cps%me, &
@@ -1555,7 +1556,7 @@ contains
 
     ! fire_prob
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fire_prob', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='fire_prob', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='fire_prob', data=cptr%cps%fire_prob, &
@@ -1567,7 +1568,7 @@ contains
 
     ! mean_fire_prob
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mean_fire_prob', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='mean_fire_prob', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='mean_fire_prob', data=cptr%cps%mean_fire_prob, &
@@ -1579,7 +1580,7 @@ contains
 
     ! fireseasonl
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fireseasonl', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='fireseasonl', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='fireseasonl', data=cptr%cps%fireseasonl, &
@@ -1591,7 +1592,7 @@ contains
 
     ! farea_burned
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='farea_burned', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='farea_burned', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='farea_burned', data=cptr%cps%farea_burned, &
@@ -1603,7 +1604,7 @@ contains
 
     ! ann_farea_burned
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ann_farea_burned', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='ann_farea_burned', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='ann_farea_burned', data=cptr%cps%ann_farea_burned, &
@@ -1619,7 +1620,7 @@ contains
 
     ! cwdc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cwdc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cwdc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cwdc', data=cptr%ccs%cwdc, &
@@ -1631,7 +1632,7 @@ contains
 
     ! litr1c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr1c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr1c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr1c', data=cptr%ccs%litr1c, &
@@ -1643,7 +1644,7 @@ contains
 
     !litr2c 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr2c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr2c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr2c', data=cptr%ccs%litr2c, &
@@ -1655,7 +1656,7 @@ contains
 
     ! litr3c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr3c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr3c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr3c', data=cptr%ccs%litr3c, &
@@ -1667,7 +1668,7 @@ contains
 
     !soil1c 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil1c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil1c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil1c', data=cptr%ccs%soil1c, &
@@ -1679,7 +1680,7 @@ contains
 
     ! soil2c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil2c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil2c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil2c', data=cptr%ccs%soil2c, &
@@ -1691,7 +1692,7 @@ contains
 
     ! soil3c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil3c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil3c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil3c', data=cptr%ccs%soil3c, &
@@ -1703,7 +1704,7 @@ contains
 
     ! soil4c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil4c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil4c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil4c', data=cptr%ccs%soil4c, &
@@ -1715,7 +1716,7 @@ contains
     
     ! seedc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='seedc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='seedc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='seedc', data=cptr%ccs%seedc, &
@@ -1727,7 +1728,7 @@ contains
     
     ! col_ctrunc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='col_ctrunc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='col_ctrunc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='col_ctrunc', data=cptr%ccs%col_ctrunc, &
@@ -1739,7 +1740,7 @@ contains
     
     ! totlitc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totlitc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totlitc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totlitc', data=cptr%ccs%totlitc, &
@@ -1751,7 +1752,7 @@ contains
     
     ! totcolc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totcolc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totcolc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totcolc', data=cptr%ccs%totcolc, &
@@ -1763,7 +1764,7 @@ contains
     
     ! prod10c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prod10c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prod10c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prod10c', data=cptr%ccs%prod10c, &
@@ -1775,7 +1776,7 @@ contains
     
     ! prod100c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prod100c', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prod100c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prod100c', data=cptr%ccs%prod100c, &
@@ -1792,7 +1793,7 @@ contains
 
     ! cwdc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cwdc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cwdc_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cwdc_13', data=cptr%cc13s%cwdc, &
@@ -1804,7 +1805,7 @@ contains
 
     ! litr1c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr1c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr1c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr1c_13', data=cptr%cc13s%litr1c, &
@@ -1816,7 +1817,7 @@ contains
 
     !litr2c 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr2c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr2c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr2c_13', data=cptr%cc13s%litr2c, &
@@ -1828,7 +1829,7 @@ contains
 
     ! litr3c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr3c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr3c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr3c_13', data=cptr%cc13s%litr3c, &
@@ -1840,7 +1841,7 @@ contains
 
     !soil1c 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil1c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil1c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil1c_13', data=cptr%cc13s%soil1c, &
@@ -1852,7 +1853,7 @@ contains
 
     ! soil2c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil2c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil2c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil2c_13', data=cptr%cc13s%soil2c, &
@@ -1864,7 +1865,7 @@ contains
 
     ! soil3c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil3c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil3c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil3c_13', data=cptr%cc13s%soil3c, &
@@ -1876,7 +1877,7 @@ contains
     
     ! soil4c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil4c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil4c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil4c_13', data=cptr%cc13s%soil4c, &
@@ -1888,7 +1889,7 @@ contains
     
     ! seedc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='seedc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='seedc_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='seedc_13', data=cptr%cc13s%seedc, &
@@ -1900,7 +1901,7 @@ contains
     
     ! col_ctrunc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='col_ctrunc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='col_ctrunc_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='col_ctrunc_13', data=cptr%cc13s%col_ctrunc, &
@@ -1912,7 +1913,7 @@ contains
     
     ! totlitc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totlitc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totlitc_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totlitc_13', data=cptr%cc13s%totlitc, &
@@ -1924,7 +1925,7 @@ contains
     
     ! totcolc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totcolc_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totcolc_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totcolc_13', data=cptr%cc13s%totcolc, &
@@ -1936,7 +1937,7 @@ contains
     
     ! prod10c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prod10c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prod10c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prod10c_13', data=cptr%cc13s%prod10c, &
@@ -1948,7 +1949,7 @@ contains
     
     ! prod100c
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prod100c_13', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prod100c_13', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prod100c_13', data=cptr%cc13s%prod100c, &
@@ -1965,7 +1966,7 @@ contains
     
     ! cwdn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cwdn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='cwdn', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='cwdn', data=cptr%cns%cwdn, &
@@ -1977,7 +1978,7 @@ contains
     
     !litr1n 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr1n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr1n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr1n', data=cptr%cns%litr1n, &
@@ -1989,7 +1990,7 @@ contains
     
     ! litr2n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr2n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr2n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr2n', data=cptr%cns%litr2n, &
@@ -2001,7 +2002,7 @@ contains
     
     ! litr3n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='litr3n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='litr3n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='litr3n', data=cptr%cns%litr3n, &
@@ -2013,7 +2014,7 @@ contains
     
     ! soil1n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil1n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil1n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil1n', data=cptr%cns%soil1n, &
@@ -2025,7 +2026,7 @@ contains
     
     ! soil2n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil2n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil2n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil2n', data=cptr%cns%soil2n, &
@@ -2037,7 +2038,7 @@ contains
     
     ! soil3n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil3n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil3n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil3n', data=cptr%cns%soil3n, &
@@ -2049,7 +2050,7 @@ contains
     
     ! soil4n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil4n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil4n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='soil4n', data=cptr%cns%soil4n, &
@@ -2061,7 +2062,7 @@ contains
     
     ! sminn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sminn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='sminn', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='sminn', data=cptr%cns%sminn, &
@@ -2073,7 +2074,7 @@ contains
 
     ! col_ntrunc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='col_ntrunc', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='col_ntrunc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='col_ntrunc', data=cptr%cns%col_ntrunc, &
@@ -2085,7 +2086,7 @@ contains
 
     ! totcoln
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='totcoln', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='totcoln', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='totcoln', data=cptr%cns%totcoln, &
@@ -2097,7 +2098,7 @@ contains
 
     ! seedn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='seedn', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='seedn', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='seedn', data=cptr%cns%seedn, &
@@ -2109,7 +2110,7 @@ contains
     
     ! prod10n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prod10n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prod10n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prod10n', data=cptr%cns%prod10n, &
@@ -2121,7 +2122,7 @@ contains
     
     ! prod100n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='prod100n', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='prod100n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='prod100n', data=cptr%cns%prod100n, &
@@ -2159,7 +2160,7 @@ contains
 #if (defined CNDV)
     ! pft type dgvm physical state - crownarea
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='CROWNAREA', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='CROWNAREA', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='CROWNAREA', data=pptr%pdgvs%crownarea, &
@@ -2171,7 +2172,7 @@ contains
 
     ! tempsum_litfall
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tempsum_litfall', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='tempsum_litfall', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='tempsum_litfall', data=pptr%pepv%tempsum_litfall, &
@@ -2183,7 +2184,7 @@ contains
 
     ! annsum_litfall
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='annsum_litfall', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='annsum_litfall', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='annsum_litfall', data=pptr%pepv%annsum_litfall, &
@@ -2195,7 +2196,7 @@ contains
 
     ! nind
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='nind', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='nind', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='nind', data=pptr%pdgvs%nind, &
@@ -2207,7 +2208,7 @@ contains
 
     ! fpcgrid
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fpcgrid', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='fpcgrid', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='fpcgrid', data=pptr%pdgvs%fpcgrid, &
@@ -2219,7 +2220,7 @@ contains
 
     ! fpcgridold
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fpcgridold', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='fpcgridold', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='fpcgridold', data=pptr%pdgvs%fpcgridold, &
@@ -2231,7 +2232,7 @@ contains
 
     ! gridcell type dgvm physical state - tmomin20
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='TMOMIN20', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='TMOMIN20', xtype=ncd_double,  &
             dim1name='gridcell',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='TMOMIN20', data=gptr%gdgvs%tmomin20, &
@@ -2243,7 +2244,7 @@ contains
 
     ! gridcell type dgvm physical state - agdd20
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='AGDD20', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='AGDD20', xtype=ncd_double,  &
             dim1name='gridcell',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='AGDD20', data=gptr%gdgvs%agdd20, &
@@ -2255,7 +2256,7 @@ contains
 
     ! pft type dgvm physical state - t_mo_min
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_MO_MIN', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_MO_MIN', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='T_MO_MIN', data=pptr%pdgvs%t_mo_min, &
@@ -2267,7 +2268,7 @@ contains
 
     ! present
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='present', xtype=pio_int,  &
+       call ncd_defvar(ncid=ncid, varname='present', xtype=ncd_int,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        allocate (iptemp(begp:endp), stat=ier)
@@ -2297,7 +2298,7 @@ contains
 
     ! leafcmax
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='leafcmax', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='leafcmax', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='leafcmax', data=pptr%pcs%leafcmax, &
@@ -2309,7 +2310,7 @@ contains
 
     ! heatstress
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='heatstress', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='heatstress', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='heatstress', data=pptr%pdgvs%heatstress, &
@@ -2321,7 +2322,7 @@ contains
 
     ! greffic
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='greffic', xtype=pio_double,  &
+       call ncd_defvar(ncid=ncid, varname='greffic', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='greffic', data=pptr%pdgvs%greffic, &

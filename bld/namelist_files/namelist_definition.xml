@@ -473,42 +473,50 @@ Postfix for output log files.
 Couple ocean on atm timestep.
 </entry>
 
-<entry id="orb_eccen" type="real"  category="radiation"
-       group="seq_infodata_inparm" valid_values="" >
-Earth's eccentricity of orbit. (unitless: typically 0. to 0.1). Setting is
-Required if <varname>orb_iyear_ad</varname> not set.  Not used when running
-as part of CESM.
+<entry id="orb_mode" type="char*256" category="radiation" value="fixed_year"
+       group="seq_infodata_inparm" valid_values="fixed_year,variable_year,fixed_parameters" >
 </entry>
 
-<entry id="orb_iyear_ad" type="integer"  category="radiation"
+<entry id="orb_eccen" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
-Year (AD) used to compute earth's orbital parameters. If not set, then use
-the values from
-the <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>,
-and <varname>orb_obliq</varname> namelist parameters.  If only
-<varname>orb_iyear_ad</varname> is set, orbital parameters will be computed
-automatically (based on Berger, 1977).  If one
-of <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>, or
-<varname>orb_obliq</varname> is set, all three must be set.  If all four of
-the above are set by the user, <varname>orb_iyear_ad</varname> takes
-precedence.  Setting is Required
-unless <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>,
-and <varname>orb_obliq</varname> are set.  Not used when running as part of
-CESM.
+Earth's eccentricity of orbit. (unitless: typically 0. to 0.1). 
+Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
+
+Not used when running as part of CESM.
 </entry>
+
+<entry id="orb_iyear" type="integer"  category="radiation"
+       group="seq_infodata_inparm" valid_values="" >
+Year (AD) used to compute earth's orbital parameters, when orb_mode='fixed_year'
+Orbital parameters will be computed automatically (based on Berger, 1977).
+
+Not used when running as part of CESM.
+</entry>
+
+<entry id="orb_iyear_align" type="integer"  category="radiation"
+       group="seq_infodata_inparm" valid_values="" >
+Align year (AD) used to compute earth's orbital parameters, when orb_mode='variable_year'.
+Orbital parameters will be computed automatically (based on Berger, 1977), and
+updated yearly as the model progresses.
+
+Not used when running as part of CESM.
+</entry>
+
 
 <entry id="orb_mvelp" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Earth's moving vernal equinox at perihelion (degrees: 0. to 360.0).
-Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
-when running as part of CESM.
+Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
+
+Not used when running as part of CESM.
 </entry>
 
 <entry id="orb_obliq" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Earth's orbital  angle of obliquity  (degrees: -90. to +90., typically 22. to 26.).
-Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
-when running as part of CESM.
+Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
+
+Not used when running as part of CESM.
 </entry>
 
 <entry id="outpathroot" type="char*256" category="drv_history"
@@ -640,6 +648,11 @@ Directory name to store timing files
 <entry id="tchkpt_dir" type="char*256"  category="driver"
        group="seq_infodata_inparm" valid_values="" >
 Directory name to store timing checkpoint files
+</entry>
+
+<entry id="run_barriers" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Flag to turn on barriers around the component run calls.
 </entry>
 
 <entry id="eps_frac" type="real"  category="driver"
@@ -783,6 +796,7 @@ Number of cpl tasks.
        group="ccsm_pes" valid_values="" >
 Number of threads in each cpl task.
 </entry>
+
 
 <!-- Time Manager -->
 
@@ -979,26 +993,95 @@ integer indicating which timer to use. As defined in gptl.inc.
 
 <!-- PIO namelist -->
 
-<entry id="cpl_io_stride" type="integer" category="driver"
+<entry id="pio_async_interface" type="logical"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+If you want to use PIO asynchronously
+</entry>
+
+<entry id="pio_debug_level" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="0,1,2,3" >
+Debug printing level for PIO
+</entry>
+
+<entry id="pio_stride" type="integer"  catagory="driver"
        group="pio_inparm" valid_values="" >
 Stride to use for PIO tasks
 </entry>
 
-<entry id="cpl_io_numtasks" type="integer" category="driver"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for PIO
-</entry>
-
-<entry id="cpl_io_typename" type="char*80" category="driver"
-       group="pio_inparm" valid_values="netcdf" >
-Type of output files for PIO
-</entry>
-
-<entry id="cpl_io_root" type="integer" category="driver"
+<entry id="pio_root" type="integer"  catagory="driver"
        group="pio_inparm" valid_values="" >
 Root PE for PIO output processing
 </entry>
 
+<entry id="pio_numtasks" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for PIO
+</entry>
+
+<entry id="pio_typename" type="char*80"  catagory="driver"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for PIO
+</entry>
+
+<entry id="cpl_pio_stride" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Stride to use for coupler PIO tasks
+</entry>
+
+<entry id="cpl_pio_root" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Root PE for coupler PIO output processing
+</entry>
+
+<entry id="cpl_pio_numtasks" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for coupler PIO
+</entry>
+
+<entry id="cpl_pio_typename" type="char*80"  catagory="driver"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for coupler PIO
+</entry>
+
+<entry id="lnd_pio_stride" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Stride to use for CLM PIO tasks
+</entry>
+
+<entry id="lnd_pio_root" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Root PE for CLM PIO output processing
+</entry>
+
+<entry id="lnd_pio_numtasks" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for CLM PIO
+</entry>
+
+<entry id="lnd_pio_typename" type="char*80"  catagory="driver"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for CLM PIO
+</entry>
+
+<entry id="atm_pio_stride" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Stride to use for datm PIO tasks
+</entry>
+
+<entry id="atm_pio_root" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Root PE for datm PIO output processing
+</entry>
+
+<entry id="atm_pio_numtasks" type="integer"  catagory="driver"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for datm PIO
+</entry>
+
+<entry id="atm_pio_typename" type="char*80"  catagory="driver"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for datm PIO
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- DATM Namelists                                                                            -->
@@ -1039,31 +1122,6 @@ Scalar mapping algorithm
 Time interpolation algrorithm method
 </entry>
 
-<entry id="io_type" type="char*256"  category="datm"
-       group="shr_strdata_nml" valid_values="pio_netcdf,netcdf,pio_pnetcdf">
-Input/Output (IO) type
-</entry>
-
-<entry id="num_iotasks" type="integer"  category="datm"
-       group="shr_strdata_nml" valid_values="">
-Total number of tasks for IO
-</entry>
-
-<entry id="io_root" type="integer"  category="datm"
-       group="shr_strdata_nml" valid_values="">
-MPI rank of starting IO task
-</entry>
-
-<entry id="io_stride" type="integer"  category="datm"
-       group="shr_strdata_nml" valid_values="">
-Ranks to skip for MPI IO tasks
-</entry>
-
-<entry id="num_agg" type="integer"  category="datm"
-       group="shr_strdata_nml" valid_values="">
-MPI aggregator count
-</entry>
-
 <entry id="streams" type="char*256(30)" category="datm"
        group="shr_strdata_nml" valid_values="">
 Character array of stream description file names
@@ -1087,11 +1145,6 @@ If prescribed aerosols are coming from the data atmosphere model (datm)
 <entry id="atm_in" type="char*256" category="datm"
        group="datm_nml" valid_values="">
 Namelist filename for data model share stream data namelist
-</entry>
-
-<entry id="decomp" type="char*256" category="datm"
-       group="datm_nml" valid_values="1d,root">
-Decomposition type
 </entry>
 
 <entry id="iradsw" type="integer" category="datm"
@@ -1186,7 +1239,7 @@ Glacier model grid
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5,0.33x0.33">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5,0.33x0.33">
 Horizontal resolutions
 </entry> 
 

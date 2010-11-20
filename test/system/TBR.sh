@@ -75,8 +75,7 @@ fi
 echo "TBR.sh: branching clm; output in ${CLM_TESTDIR}/${test_name}/test.log"
 
 start_ymd=`echo $3 | awk -F: '{print $1}'`
-freq=`echo      $3 | awk -F: '{print $2}'`
-dtime=`echo     $3 | awk -F: '{print $3}'`
+dtime=`echo     $3 | awk -F: '{print $2}'`
 if [ $branch_length -lt 0 ]; then
   branch_len_days=$((-$branch_length))
 else
@@ -84,7 +83,7 @@ else
 fi
 start_ymd=$(( $start_ymd + $branch_len_days))
 
-branch_nlops="$start_ymd:$freq:$dtime"
+branch_nlops="$start_ymd:$dtime"
 
 echo "TBR.sh: calling TSM.sh for smoke test of branch length ${branch_length}"
 ${CLM_SCRIPTDIR}/TSM.sh $1 $2 $branch_nlops $4 $5 ${branch_length} \

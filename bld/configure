@@ -1267,16 +1267,25 @@ target: $target
 
 EOF
     if ( $model eq "cesm" ) {
-        print $fh_out  <<"EOF";
+        if ( $macfile !~ /darwin_intel/ ) {
+           print $fh_out  <<"EOF";
 ULIBS   := -L\$(LIBROOT) -lcesm_lib
 CLIBS   := -L\$(LIBROOT) -llnd
+EOF
+        } else {
+           print $fh_out  <<"EOF";
+ULIBS   := -all_load \$(LIBROOT)/libcesm_lib.a
+CLIBS   := -all_load \$(LIBROOT)/liblnd.a
+EOF
+        }
+        print $fh_out  <<"EOF";
 ULIBDEP := \$(LIBROOT)/libcesm_lib.a \$(LIBROOT)/liblnd.a
 
 \$(LIBROOT)/liblnd.a: \$(LIBROOT)/libcesm_lib.a
-	cd lnd && \$(MAKE) \$(MAKEFLAGS)
+	cd lnd && \$(MAKE) \$(MAKEFLAGS) mkcomplib
 
 \$(LIBROOT)/libcesm_lib.a:
-	cd cesm_lib && \$(MAKE) \$(MAKEFLAGS)
+	cd cesm_lib && \$(MAKE) \$(MAKEFLAGS) mkcomplib
 
 #-----------------------------------------------------------------------------
 # This is duplicated from the CESM Makefile with the following mods.

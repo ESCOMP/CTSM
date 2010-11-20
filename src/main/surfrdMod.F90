@@ -154,7 +154,7 @@ contains
     endif
     
     call latlon_init(latlon,ni,nj)
-
+    nullify(idata)
     if (present(mask)) then
        allocate(mask(ni*nj))
        allocate(idata(ni,nj))	
@@ -259,8 +259,9 @@ contains
           call pio_closefile(ncidm)
        endif
     endif
-    
+
     deallocate(rdata)
+    if(associated(idata)) deallocate(idata)
         
 !tcx fix, this or a test/abort should be added so overlaps can be computed
 !tcx fix, this is demonstrated not bfb in cam bl311 test.

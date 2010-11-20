@@ -561,12 +561,6 @@ if (defined $opts{'clm_usr_name'}) {
 
 my $atm_in;
 
-add_default($nl, 'io_type');
-add_default($nl, 'num_iotasks');
-add_default($nl, 'io_root');
-add_default($nl, 'io_stride');
-add_default($nl, 'num_agg');
-
 #
 # Set streams text file
 #
@@ -828,7 +822,6 @@ add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask);
 add_default($nl, 'factorfn');
 add_default($nl, 'iradsw');
 add_default($nl, 'vectors');
-add_default($nl, 'decomp');
 add_default($nl, 'atm_in');
 $atm_in = $nl->get_value('atm_in');
 $atm_in =~ s/"|'//g;

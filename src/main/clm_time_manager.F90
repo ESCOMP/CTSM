@@ -33,6 +33,7 @@ module clm_time_manager
       get_prev_time,            &! return components of elapsed time since reference date at beg of current timestep
       get_curr_calday,          &! return calendar day at end of current timestep
       get_calday,               &! return calendar day from input date
+      get_calendar,             &! return calendar
       get_days_per_year,        &! return the days per year for current year
       set_nextsw_cday,          &! set the next radiation calendar day
       is_first_step,            &! return true on first step of initial run
@@ -447,7 +448,7 @@ subroutine timemgr_restart_io( ncid, flag )
      nstep_rad_prev  = rst_nstep_rad_prev
   end if
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_nstep_rad_prev', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_nstep_rad_prev', xtype=ncd_int,  &
           long_name='previous_radiation_nstep', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_nstep_rad_prev', data=rst_nstep_rad_prev, &
@@ -465,7 +466,7 @@ subroutine timemgr_restart_io( ncid, flag )
      calendar = rst_calendar
   end if
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_type', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_type', xtype=ncd_int,  &
           long_name='calendar type', units='')
   else if (flag == 'read' .or. flag == 'write') then
      if (flag== 'write') then
@@ -508,7 +509,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
   
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_step_sec', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_step_sec', xtype=ncd_int,  &
           long_name='seconds component of timestep size', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_step_sec', data=rst_step_sec, &
@@ -521,7 +522,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
 
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_ymd', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_ymd', xtype=ncd_int,  &
           long_name='start date', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_start_ymd', data=rst_start_ymd, &
@@ -534,7 +535,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
 
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_tod', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_tod', xtype=ncd_int,  &
           long_name='start time of day', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_start_tod', data=rst_start_tod, &
@@ -547,7 +548,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
 
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_ymd', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_ymd', xtype=ncd_int,  &
           long_name='reference date', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_ref_ymd', data=rst_ref_ymd, &
@@ -560,7 +561,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
 
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_tod', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_tod', xtype=ncd_int,  &
           long_name='reference time of day', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_ref_tod', data=rst_ref_tod, &
@@ -573,7 +574,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
 
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_ymd', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_ymd', xtype=ncd_int,  &
           long_name='current date', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_curr_ymd', data=rst_curr_ymd, &
@@ -586,7 +587,7 @@ subroutine timemgr_restart_io( ncid, flag )
   end if
 
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_tod', xtype=nf_int,  &
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_tod', xtype=ncd_int,  &
           long_name='current time of day', units='')
   else if (flag == 'read' .or. flag == 'write') then
      call ncd_io(varname='timemgr_rst_curr_tod', data=rst_curr_tod, &
@@ -1327,6 +1328,19 @@ function get_calday(ymd, tod)
    end if
 
 end function get_calday
+
+!=========================================================================================
+
+function get_calendar()
+
+! Return calendar
+
+! Return value
+   character(len=ESMF_MAXSTR) :: get_calendar
+
+   get_calendar = calendar
+
+end function get_calendar
 
 !=========================================================================================
 

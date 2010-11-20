@@ -146,6 +146,7 @@ contains
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
     logical  :: exists                               ! true if file exists
+    logical  :: samegrid_al                          ! true if atmosphere and land are on the same grid
     real(r8) :: scmlat                               ! single-column latitude
     real(r8) :: scmlon                               ! single-column longitude
     real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
@@ -238,7 +239,8 @@ contains
                               scmlat=scmlat, scmlon=scmlon,                     &
                               brnch_retain_casename=brnch_retain_casename,      &
                               start_type=starttype, model_version=version,      &
-                              hostname=hostname, username=username              &
+                              hostname=hostname, username=username,             &
+                              samegrid_al=samegrid_al                           &
                                 )
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
                            ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
@@ -271,6 +273,15 @@ contains
        call seq_infodata_PutData( infodata, lnd_prognostic=.false.)
        call seq_infodata_PutData( infodata, rof_present   =.false.)
        return
+    end if
+
+    ! If trigrid AND downscale -- abort as an error
+
+    if ( (.not. samegrid_al) .and. downscale )then
+       write(iulog,format) "Incompatible inputs, atmosphere and land are on different grids"
+       write(iulog,format) "But, you are also trying to use the CLM fine-mesh to downscale to a finer grid"
+       write(iulog,format) "When using CLM finemesh mode -- you must NOT run the atmosphere on a different grid"
+       call endrun( sub//' ERROR: downscaling using finemesh AND running atmosphere on a different grid' )
     end if
 
     ! Determine if aerosol and dust deposition come from atmosphere component
@@ -478,7 +489,8 @@ contains
     use domainMod       ,only : adomain, ldomain
     use decompMod       ,only : get_proc_bounds_atm, get_proc_bounds
     use abortutils      ,only : endrun
-    use clm_varctl      ,only : iulog, samegrids
+    use clm_varctl      ,only : iulog, downscale
+    use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
     use seq_cdata_mod   ,only : seq_cdata, seq_cdata_setptrs
@@ -588,7 +600,7 @@ contains
        do g = begg_a,endg_a
           i = 1 + (g - begg_a)
           adomain%asca(g) = data(i)
-          if (samegrids) then
+          if (.not. downscale) then
              ldomain%asca(g) = adomain%asca(g)
           end if
        end do
@@ -625,6 +637,11 @@ contains
        endif ! update_glc2sno
     endif ! create_glacier_mec_landunit
     call t_stopf ('lc_lnd_import')
+
+    ! Use infodata to set orbital values if updated mid-run
+
+    call seq_infodata_GetData( infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
+         orb_lambm0=lambm0, orb_obliqr=obliqr )
 
     ! Loop over time steps in coupling interval
 

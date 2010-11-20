@@ -50,8 +50,10 @@ contains
     use clmtype
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
-    use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, istsoil, pondmx, watmin
-    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn, pertlim
+    use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, &
+                                 istsoil, pondmx, watmin, spval
+    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn,    &
+                                 pertlim, iulog
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
     use SNICARMod       , only : snw_rds_min
@@ -128,7 +130,7 @@ contains
        ! pft weight wrt gridcell 
 
        if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='PFT_WTGCELL', xtype=nf_double,  &
+          call ncd_defvar(ncid=ncid, varname='PFT_WTGCELL', xtype=ncd_double,  &
                dim1name='pft', &
                long_name='pft weight relative to corresponding gridcell', units='')
        else if (flag == 'read' .or. flag == 'write') then
@@ -149,7 +151,7 @@ contains
        ! pft weight wrt landunit
 
        if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='PFT_WTLUNIT', xtype=nf_double,  &
+          call ncd_defvar(ncid=ncid, varname='PFT_WTLUNIT', xtype=ncd_double,  &
                dim1name='pft', &
                long_name='pft weight relative to corresponding landunit', units='')
        else if (flag == 'read' .or. flag == 'write') then
@@ -170,7 +172,7 @@ contains
        ! pft weight wrt column
 
        if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname='PFT_WTCOL', xtype=nf_double,  &
+          call ncd_defvar(ncid=ncid, varname='PFT_WTCOL', xtype=ncd_double,  &
                dim1name='pft', &
                long_name='pft weight relative to corresponding column', units='')
        else if (flag == 'read' .or. flag == 'write') then
@@ -246,7 +248,7 @@ contains
     ! pft energy flux - eflx_lwrad_out
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='EFLX_LWRAD_OUT', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='EFLX_LWRAD_OUT', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='emitted infrared (longwave) radiation', units='watt/m^2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -261,7 +263,7 @@ contains
     ! column water state variable - snow levels
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='SNLSNO', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='SNLSNO', xtype=ncd_int,  &
             dim1name='column', &
             long_name='number of snow layers', units='unitless')
     else if (flag == 'read' .or. flag == 'write') then
@@ -276,7 +278,7 @@ contains
     ! column water state variable - snowdp
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='SNOWDP', xtype=nf_double, &
+       call ncd_defvar(ncid=ncid, varname='SNOWDP', xtype=ncd_double, &
             dim1name='column', &
             long_name='snow depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -291,7 +293,7 @@ contains
     ! column water state variable - wa
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='WA', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='WA', xtype=ncd_double,  &
             dim1name='column', &
             long_name='water in the unconfined aquifer', units='mm')
     else if (flag == 'read' .or. flag == 'write') then
@@ -306,7 +308,7 @@ contains
     ! column water state variable - wt
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='WT', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='WT', xtype=ncd_double,  &
             dim1name='column', &
             long_name='total water storage', units='mm')
     else if (flag == 'read' .or. flag == 'write') then
@@ -321,7 +323,7 @@ contains
     ! column water state variable - zwt
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ZWT', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ZWT', xtype=ncd_double,  &
             dim1name='column', &
             long_name='water table depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -336,7 +338,7 @@ contains
     ! column type physical state variable - frac_sno
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='frac_sno', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='frac_sno', xtype=ncd_double,  &
             dim1name='column',&
             long_name='fraction of ground covered by snow (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -351,7 +353,7 @@ contains
     ! column type physical state variable - dzsno
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='DZSNO', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='DZSNO', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer thickness', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -374,7 +376,7 @@ contains
     ! column type physical state variable - zsno
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ZSNO', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ZSNO', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -397,7 +399,7 @@ contains
     ! column type physical state variable - zisno
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ZISNO', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ZISNO', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow interface depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -420,7 +422,7 @@ contains
     ! column type physical state variable - coszen
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='coszen', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='coszen', xtype=ncd_double,  &
             dim1name='column', &
             long_name='cosine of solar zenith angle', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -435,7 +437,7 @@ contains
     ! pft type physical state variable - gdir
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='gdir', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='gdir', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='leaf projection in solar direction (0 to 1)', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -449,7 +451,7 @@ contains
     ! pft type physical state variable - omega
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='omega', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='omega', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='fraction of intercepted radiation that is scattered (0 to 1)', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -463,7 +465,7 @@ contains
     ! landunit type physical state variable - sabs_roof_dir
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_roof_dir', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_roof_dir', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by roof per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -477,7 +479,7 @@ contains
     ! landunit type physical state variable - sabs_roof_dif
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_roof_dif', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_roof_dif', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by roof per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -491,7 +493,7 @@ contains
     ! landunit type physical state variable - sabs_sunwall_dir
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dir', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dir', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by sunwall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -505,7 +507,7 @@ contains
     ! landunit type physical state variable - sabs_sunwall_dif
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dif', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dif', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by sunwall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -519,7 +521,7 @@ contains
     ! landunit type physical state variable - sabs_shadewall_dir
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dir', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dir', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by shadewall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -533,7 +535,7 @@ contains
     ! landunit type physical state variable - sabs_shadewall_dif
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dif', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dif', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by shadewall per unit wall area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -547,7 +549,7 @@ contains
     ! landunit type physical state variable - sabs_improad_dir
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_improad_dir', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_improad_dir', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by impervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -561,7 +563,7 @@ contains
     ! landunit type physical state variable - sabs_improad_dif
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_improad_dif', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_improad_dif', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by impervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -575,7 +577,7 @@ contains
     ! landunit type physical state variable - sabs_perroad_dir
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_perroad_dir', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_perroad_dir', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='direct solar absorbed by pervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -589,7 +591,7 @@ contains
     ! landunit type physical state variable - sabs_perroad_dif
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sabs_perroad_dif', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sabs_perroad_dif', xtype=ncd_double,  &
             dim1name='landunit', dim2name='numrad', switchdim=.true., &
             long_name='diffuse solar absorbed by pervious road per unit ground area per unit incident flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -603,7 +605,7 @@ contains
     ! landunit type physical state variable - vf_sr
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='vf_sr', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='vf_sr', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='view factor of sky for road',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -618,7 +620,7 @@ contains
     ! landunit type physical state variable - vf_wr
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='vf_wr', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='vf_wr', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='view factor of one wall for road',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -633,7 +635,7 @@ contains
     ! landunit type physical state variable - vf_sw
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='vf_sw', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='vf_sw', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='view factor of sky for one wall',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -648,7 +650,7 @@ contains
     ! landunit type physical state variable - vf_rw
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='vf_rw', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='vf_rw', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='view factor of road for one wall',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -663,7 +665,7 @@ contains
     ! landunit type physical state variable - vf_ww
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='vf_ww', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='vf_ww', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='view factor of opposing wall for one wall',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -678,7 +680,7 @@ contains
     ! landunit type physical state variable - taf
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='taf', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='taf', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='urban canopy air temperature',units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -693,7 +695,7 @@ contains
     ! landunit type physical state variable - qaf
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='qaf', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='qaf', xtype=ncd_double,  &
             dim1name='landunit', &
             long_name='urban canopy specific humidity',units='kg/kg')
     else if (flag == 'read' .or. flag == 'write') then
@@ -708,7 +710,7 @@ contains
     ! pft type physical state variable - albd
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albd', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albd', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='surface albedo (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -726,7 +728,7 @@ contains
     ! pft type physical state variable - albi
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albi', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albi', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='surface albedo (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -744,7 +746,7 @@ contains
     ! column type physical state variable - albgrd
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgrd', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -758,7 +760,7 @@ contains
     ! column type physical state variable - albgri
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgri', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo (indirect) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -772,7 +774,7 @@ contains
 #ifdef SNICAR_FRC
     ! column type physical state variable - albgrd_bc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_bc', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgrd_bc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without BC (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -788,7 +790,7 @@ contains
     end if
     ! column type physical state variable - albgri_bc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_bc', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgri_bc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without BC (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -804,7 +806,7 @@ contains
     end if
     ! column type physical state variable - albgrd_pur
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_pur', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgrd_pur', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='pure snow ground albedo (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -820,7 +822,7 @@ contains
     end if
     ! column type physical state variable - albgri_pur
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_pur', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgri_pur', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='pure snow ground albedo (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -836,7 +838,7 @@ contains
     end if
     ! column type physical state variable - albgrd_oc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_oc', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgrd_oc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without OC (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -852,7 +854,7 @@ contains
     end if
     ! column type physical state variable - albgri_oc
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_oc', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgri_oc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without OC (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -868,7 +870,7 @@ contains
     end if
     ! column type physical state variable - albgrd_dst
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgrd_dst', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgrd_dst', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without dust (direct) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -884,7 +886,7 @@ contains
     end if
     ! column type physical state variable - albgri_dst
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albgri_dst', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albgri_dst', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without dust (diffuse) (0 to 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -903,7 +905,7 @@ contains
    ! column water state variable - h2osno
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='H2OSNO', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='H2OSNO', xtype=ncd_double,  &
             dim1name='column', &
             long_name='snow water', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -918,7 +920,7 @@ contains
     ! column water state variable - h2osoi_liq
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='H2OSOI_LIQ', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='H2OSOI_LIQ', xtype=ncd_double,  &
             dim1name='column', dim2name='levtot', switchdim=.true., &
             long_name='liquid water', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -932,7 +934,7 @@ contains
     ! column water state variable - h2osoi_ice
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='H2OSOI_ICE', xtype=nf_double,   &
+       call ncd_defvar(ncid=ncid, varname='H2OSOI_ICE', xtype=ncd_double,   &
             dim1name='column', dim2name='levtot', switchdim=.true., &
             long_name='ice lens', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -946,7 +948,7 @@ contains
    ! column energy state variable - t_grnd
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_GRND', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_GRND', xtype=ncd_double,  &
             dim1name='column', &
             long_name='ground temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -961,7 +963,7 @@ contains
    ! column urban energy state variable - eflx_urban_ac
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='URBAN_AC', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='URBAN_AC', xtype=ncd_double,  &
             dim1name='column', &
             long_name='urban air conditioning flux', units='watt/m^2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -976,7 +978,7 @@ contains
    ! column urban energy state variable - eflx_urban_heat
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='URBAN_HEAT', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='URBAN_HEAT', xtype=ncd_double,  &
             dim1name='column', &
             long_name='urban heating flux', units='watt/m^2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -991,7 +993,7 @@ contains
    ! pft energy state variable - t_ref2m_min
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='daily minimum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1006,7 +1008,7 @@ contains
    ! pft energy state variable - t_ref2m_max
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='daily maximum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1021,7 +1023,7 @@ contains
    ! pft energy state variable - t_ref2m_min_inst
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='instantaneous daily min of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1036,7 +1038,7 @@ contains
    ! pft energy state variable - t_ref2m_max_inst
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1051,7 +1053,7 @@ contains
     ! pft energy state variable - t_ref2m_u
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname="T_REF2M_U", xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname="T_REF2M_U", xtype=ncd_double,  &
             dim1name='pft', &
             long_name='Urban 2m height surface air temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1066,7 +1068,7 @@ contains
    ! column energy state variable - t_grnd_u
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_GRND_U', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_GRND_U', xtype=ncd_double,  &
             dim1name='column', &
             long_name='urban ground temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1081,7 +1083,7 @@ contains
    ! pft energy state variable - t_ref2m_min_u
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_U', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_U', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='urban daily minimum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1096,7 +1098,7 @@ contains
    ! pft energy state variable - t_ref2m_max_u
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_U', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_U', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='urban daily maximum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1111,7 +1113,7 @@ contains
    ! pft energy state variable - t_ref2m_min_inst_u
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST_U', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST_U', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='urban instantaneous daily min of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1126,7 +1128,7 @@ contains
    ! pft energy state variable - t_ref2m_max_inst_u
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST_U', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST_U', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='urban instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1141,7 +1143,7 @@ contains
     ! pft energy state variable - t_ref2m_r
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname="T_REF2M_R", xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname="T_REF2M_R", xtype=ncd_double,  &
             dim1name='pft', &
             long_name='Rural 2m height surface air temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1156,7 +1158,7 @@ contains
    ! column energy state variable - t_grnd_r
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_GRND_R', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_GRND_R', xtype=ncd_double,  &
             dim1name='column', &
             long_name='rural ground temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1171,7 +1173,7 @@ contains
    ! pft energy state variable - t_ref2m_min_r
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_R', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_R', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='rural daily minimum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1186,7 +1188,7 @@ contains
    ! pft energy state variable - t_ref2m_max_r
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_R', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_R', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='rural daily maximum of average 2 m height surface air temperature (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1201,7 +1203,7 @@ contains
    ! pft energy state variable - t_ref2m_min_inst_r
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST_R', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST_R', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='rural instantaneous daily min of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1216,7 +1218,7 @@ contains
    ! pft energy state variable - t_ref2m_max_inst_r
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST_R', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST_R', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='rural instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1231,7 +1233,7 @@ contains
     ! column energy state variable - t_soisno
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_SOISNO', xtype=nf_double,   &
+       call ncd_defvar(ncid=ncid, varname='T_SOISNO', xtype=ncd_double,   &
             dim1name='column', dim2name='levtot', switchdim=.true., &
             long_name='soil-snow temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1245,7 +1247,7 @@ contains
     ! column type energy state variable - t_lake
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_LAKE', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_LAKE', xtype=ncd_double,  &
             dim1name='column', dim2name='levlak', switchdim=.true., &
             long_name='lake temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1259,7 +1261,7 @@ contains
     ! pft physical state variable - frac_veg_nosno_alb
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='FRAC_VEG_NOSNO_ALB', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='FRAC_VEG_NOSNO_ALB', xtype=ncd_int,  &
             dim1name='pft',&
             long_name='fraction of vegetation not covered by snow (0 or 1)',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1274,7 +1276,7 @@ contains
     ! pft type physical state variable - fwet
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='FWET', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='FWET', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='fraction of canopy that is wet (0 to 1)', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1289,7 +1291,7 @@ contains
     ! pft type physical state variable - tlai
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tlai', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='tlai', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='one-sided leaf area index, no burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1304,7 +1306,7 @@ contains
     ! pft type physical state variable - tsai
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='tsai', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='tsai', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='one-sided stem area index, no burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1317,7 +1319,7 @@ contains
     end if
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mlaidiff', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mlaidiff', xtype=ncd_double,  &
             dim1name='pft',&
             long_name='difference between lai month one and month two',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1332,7 +1334,7 @@ contains
     ! pft type physical state variable - elai
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='elai', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='elai', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='one-sided leaf area index, with burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1347,7 +1349,7 @@ contains
     ! pft type physical state variable - esai
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='esai', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='esai', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='one-sided stem area index, with burying by snow', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1362,7 +1364,7 @@ contains
     ! pft type physical state variable - fsun
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fsun', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='fsun', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='sunlit fraction of canopy', units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1385,7 +1387,7 @@ contains
     ! pft type physical state variable - htop
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='htop', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='htop', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='canopy top', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1400,7 +1402,7 @@ contains
     ! pft type physical state variable - hbot
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='hbot', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='hbot', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='canopy botton', units='m')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1415,7 +1417,7 @@ contains
     ! pft type physical state variable - fabd
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fabd', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='fabd', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='flux absorbed by veg per unit direct flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1429,7 +1431,7 @@ contains
     ! pft type physical state variable - fabi
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fabi', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='fabi', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='flux absorbed by veg per unit diffuse flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1443,7 +1445,7 @@ contains
     ! pft type physical state variable - ftdd
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ftdd', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ftdd', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='down direct flux below veg per unit direct flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1457,7 +1459,7 @@ contains
     ! pft type physical state variable - ftid
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ftid', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ftid', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='down diffuse flux below veg per unit direct flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1471,7 +1473,7 @@ contains
     ! pft type physical state variable - ftii
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ftii', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='ftii', xtype=ncd_double,  &
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='down diffuse flux below veg per unit diffuse flux',units='')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1485,7 +1487,7 @@ contains
     ! pft energy state variable - t_veg
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='T_VEG', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='T_VEG', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='vegetation temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1501,7 +1503,7 @@ contains
 
     varname = 'T_REF2M'
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname=varname, xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_double,  &
             dim1name='pft', &
             long_name='2m height surface air temperature', units='K')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1520,7 +1522,7 @@ contains
     ! pft type water state variable - h2ocan
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='H2OCAN', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='H2OCAN', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='canopy water', units='kg/m2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1608,7 +1610,7 @@ contains
     !
     ! column type physical state variable - snw_rds
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='snw_rds', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='snw_rds', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer effective radius', units='um')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1650,7 +1652,7 @@ contains
 
     ! column type physical state variable - mss_bcpho
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_bcpho', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_bcpho', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophobic black carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1671,7 +1673,7 @@ contains
 
     ! column type physical state variable - mss_bcphi
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_bcphi', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_bcphi', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophilic black carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1692,7 +1694,7 @@ contains
 
     ! column type physical state variable - mss_ocpho
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_ocpho', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_ocpho', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophobic organic carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1713,7 +1715,7 @@ contains
 
     ! column type physical state variable - mss_ocphi
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_ocphi', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_ocphi', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer hydrophilic organic carbon mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1734,7 +1736,7 @@ contains
 
     ! column type physical state variable - mss_dst1
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_dst1', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_dst1', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 1 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1755,7 +1757,7 @@ contains
 
     ! column type physical state variable - mss_dst2
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_dst2', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_dst2', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 2 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1776,7 +1778,7 @@ contains
 
     ! column type physical state variable - mss_dst3
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_dst3', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_dst3', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 3 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1797,7 +1799,7 @@ contains
 
     ! column type physical state variable - mss_dst4
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mss_dst4', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='mss_dst4', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer dust species 4 mass', units='kg m-2')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1818,7 +1820,7 @@ contains
 
     ! column type physical state variable - flx_absdv
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='flx_absdv', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='flx_absdv', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (direct, VIS)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1834,7 +1836,7 @@ contains
 
     ! column type physical state variable - flx_absdn
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='flx_absdn', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='flx_absdn', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (direct, NIR)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1850,7 +1852,7 @@ contains
 
     ! column type physical state variable - flx_absiv
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='flx_absiv', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='flx_absiv', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (diffuse, VIS)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1866,7 +1868,7 @@ contains
 
     ! column type physical state variable - flx_absin
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='flx_absin', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='flx_absin', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno1', switchdim=.true., &
             long_name='snow layer flux absorption factors (diffuse, NIR)', units='fraction')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1882,7 +1884,7 @@ contains
 
     ! column type physical state variable - albsnd_hst
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albsnd_hst', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albsnd_hst', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='snow albedo (direct) (0 to 1)',units='proportion')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1895,7 +1897,7 @@ contains
 
     ! column type physical state variable - albsni_hst
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='albsni_hst', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='albsni_hst', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='snow albedo (diffuse) (0 to 1)',units='proportion')
     else if (flag == 'read' .or. flag == 'write') then
@@ -1908,7 +1910,7 @@ contains
 
     ! column type water flux variable - qflx_snofrz_lyr
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='qflx_snofrz_lyr', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='qflx_snofrz_lyr', xtype=ncd_double,  &
             dim1name='column', dim2name='levsno', switchdim=.true., &
             long_name='snow layer ice freezing rate', units='kg m-2 s-1')
     else if (flag == 'read' .or. flag == 'write') then

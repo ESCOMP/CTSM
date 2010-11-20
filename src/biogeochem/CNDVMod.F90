@@ -239,7 +239,7 @@ contains
 
     ! Set output precision
 
-    ncprec = pio_double
+    ncprec = ncd_double
 
     ! -----------------------------------------------------------------------
     ! Create new netCDF file. File will be in define mode
@@ -304,7 +304,7 @@ contains
     call ncd_defdim (ncid, 'lon', lsmlon       , dimid)
     call ncd_defdim (ncid, 'lat', lsmlat       , dimid)
     call ncd_defdim (ncid, 'pft', maxpatch_pft , dimid)
-    call ncd_defdim (ncid, 'time', pio_unlimited, dimid)
+    call ncd_defdim (ncid, 'time', ncd_unlimited, dimid)
     call ncd_defdim (ncid, 'string_length', 80 , dimid)
     
     ! -----------------------------------------------------------------------
@@ -331,7 +331,7 @@ contains
     str = 'days since ' // basedate // " " // basesec
     time = mdcur + mscur/SHR_CONST_CDAY
     
-    call ncd_defvar(ncid=ncid, varname='time', xtype=pio_double, dim1name='time', &
+    call ncd_defvar(ncid=ncid, varname='time', xtype=ncd_double, dim1name='time', &
          long_name='time', units=str)
        
     call ncd_defvar(ncid=ncid, varname='edgen', xtype=ncprec, &
@@ -354,24 +354,24 @@ contains
     call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, dim1name='lon', dim2name='lat', &
          long_name='latitude', units='degrees_north')
 
-    call ncd_defvar(ncid=ncid, varname='landmask', xtype=pio_int, dim1name='lon', dim2name='lat', &
+    call ncd_defvar(ncid=ncid, varname='landmask', xtype=ncd_int, dim1name='lon', dim2name='lat', &
          long_name='land/ocean mask (0.=ocean and 1.=land)')
 
     ! Define time information
 
-    call ncd_defvar(ncid=ncid, varname='mcdate', xtype=pio_int, dim1name='time',&
+    call ncd_defvar(ncid=ncid, varname='mcdate', xtype=ncd_int, dim1name='time',&
          long_name='current date (YYYYMMDD)')
 
-    call ncd_defvar(ncid=ncid, varname='mcsec', xtype=pio_int, dim1name='time',&
+    call ncd_defvar(ncid=ncid, varname='mcsec', xtype=ncd_int, dim1name='time',&
          long_name='current seconds of current date', units='s')
 
-    call ncd_defvar(ncid=ncid, varname='mdcur', xtype=pio_int, dim1name='time',&
+    call ncd_defvar(ncid=ncid, varname='mdcur', xtype=ncd_int, dim1name='time',&
          long_name='current day (from base day)')
 
-    call ncd_defvar(ncid=ncid, varname='mscur', xtype=pio_int, dim1name='time',&
+    call ncd_defvar(ncid=ncid, varname='mscur', xtype=ncd_int, dim1name='time',&
          long_name='current seconds of current day', units='s')
 
-    call ncd_defvar(ncid=ncid, varname='nstep', xtype=pio_int, dim1name='time',&
+    call ncd_defvar(ncid=ncid, varname='nstep', xtype=ncd_int, dim1name='time',&
          long_name='time step', units='s')
 
     ! Define time dependent variables

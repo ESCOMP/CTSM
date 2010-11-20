@@ -225,6 +225,8 @@ lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c100409.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_1x1_asphaltjungleNJ_simyr2000_c100409.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
+<fsurdat hgrid="512x1024"  sim_year="1850">
+lnd/clm2/surfdata/surfdata_512x1024_simyr1850_c100315.nc</fsurdat>
 <fsurdat hgrid="128x256"   sim_year="1850">
 lnd/clm2/surfdata/surfdata_128x256_simyr1850_c100406.nc</fsurdat>
 <fsurdat hgrid="64x128"    sim_year="1850" >
@@ -287,6 +289,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="10x15"         rcp="2.6" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
 
 <!-- Grid datasets (relative to {csmdata}) -->
+<fatmgrid hgrid="512x1024"  >lnd/clm2/griddata/griddata_512x1024_c100513.nc</fatmgrid>
 <fatmgrid hgrid="128x256"   >lnd/clm2/griddata/griddata_128x256_060829.nc</fatmgrid>
 <fatmgrid hgrid="64x128"    >lnd/clm2/griddata/griddata_64x128_060829.nc</fatmgrid>
 <fatmgrid hgrid="48x96"     >lnd/clm2/griddata/griddata_48x96_060829.nc</fatmgrid>
@@ -324,6 +327,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fglcmask hgrid="1.9x2.5"  glc_grid="gland5"  >glc/cism/griddata/glcmaskdata_1.9x2.5_Gland5km.nc</fglcmask>
 
 <!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
+<flndtopo hgrid="512x1024"  >lnd/clm2/griddata/topodata_512x1024_c100315.nc</flndtopo>
 <flndtopo hgrid="128x256"   >lnd/clm2/griddata/topodata_128x256_060829.nc</flndtopo>
 <flndtopo hgrid="64x128"    >lnd/clm2/griddata/topodata_64x128_060829.nc</flndtopo>
 <flndtopo hgrid="48x96"     >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</flndtopo>
@@ -340,6 +344,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <flndtopo hgrid="10x15"     >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
 
 <!-- Atmosphere topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
+<fatmtopo hgrid="512x1024"  >lnd/clm2/griddata/topodata_512x1024_c100315.nc</fatmtopo>
 <fatmtopo hgrid="128x256"   >lnd/clm2/griddata/topodata_128x256_060829.nc</fatmtopo>
 <fatmtopo hgrid="64x128"    >lnd/clm2/griddata/topodata_64x128_060829.nc</fatmtopo>
 <fatmtopo hgrid="48x96"     >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</fatmtopo>
@@ -357,13 +362,15 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <!-- Fraction datasets (relative to {csmdata}) -->
 
-<fatmlndfrc hgrid="128x256" mask="USGS"  >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="64x128"  mask="USGS"  >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="48x96"   mask="USGS"  >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="48x96"   mask="gx3v7" >lnd/clm2/griddata/fracdata_48x96_gx3v7_c090915.nc</fatmlndfrc>
-<fatmlndfrc hgrid="32x64"   mask="USGS"  >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="8x16"    mask="USGS"  >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="94x192"  mask="T62"   >lnd/clm2/griddata/fracdata_94x192_T62_c081219.nc</fatmlndfrc>
+<fatmlndfrc hgrid="512x1024" mask="USGS"    >lnd/clm2/griddata/fracdata_512x1024_USGS_c090220.nc</fatmlndfrc>
+<fatmlndfrc hgrid="512x1024" mask="tx0.1v2" >lnd/clm2/griddata/fracdata_512x1024_tx0.1v2_c100322.nc</fatmlndfrc>
+<fatmlndfrc hgrid="128x256"  mask="USGS"    >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"   mask="USGS"    >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="48x96"    mask="USGS"    >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="48x96"    mask="gx3v7"   >lnd/clm2/griddata/fracdata_48x96_gx3v7_c090915.nc</fatmlndfrc>
+<fatmlndfrc hgrid="32x64"    mask="USGS"    >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="8x16"     mask="USGS"    >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="94x192"   mask="T62"     >lnd/clm2/griddata/fracdata_94x192_T62_c081219.nc</fatmlndfrc>
 
 <fatmlndfrc hgrid="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/fracdata_0.23x0.31_USGS_c070927.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.23x0.31" mask="gx1v6"  >lnd/clm2/griddata/fracdata_0.23x0.31_gx1v6_c100517.nc</fatmlndfrc>

@@ -65,7 +65,6 @@ module clm_varctl
   character(len=8),   public :: fget_archdev = 'null:'  ! archive device to read input files from if not on local disk
   logical         ,   public :: downscale               ! true => do downscaling with fine mesh
                                                         ! ASSUMES that all grids are lat/lon
-  logical         ,   public :: samegrids               ! adomain and ldomain are identical
 !
 ! Landunit logic
 !

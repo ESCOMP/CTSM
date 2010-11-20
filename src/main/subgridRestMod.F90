@@ -16,6 +16,7 @@ contains
     use decompMod        , only : get_proc_bounds, ldecomp
     use domainMod        , only : ldomain
     use clm_time_manager , only : get_curr_date
+    use abortutils       , only : endrun
 !
 ! !ARGUMENTS:
     implicit none
@@ -76,9 +77,9 @@ contains
     ! Write output data (first write current date and seconds of current date)
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mcdate', xtype=nf_int, &
+       call ncd_defvar(ncid=ncid, varname='mcdate', xtype=ncd_int, &
             long_name='current date as 8 digit integer (YYYYMMDD)')
-       call ncd_defvar(ncid=ncid, varname='mcsec', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='mcsec', xtype=ncd_int,  &
             long_name='current seconds of current date', units='s')
     else if (flag == 'write') then
        call get_curr_date (yr, mon, day, mcsec)
@@ -91,13 +92,13 @@ contains
     ! Write gridcell info
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='grid1d_lon', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='grid1d_lon', xtype=ncd_double,  &
             dim1name='gridcell', long_name='gridcell longitude', units='degrees_east')
-       call ncd_defvar(ncid=ncid, varname='grid1d_lat', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='grid1d_lat', xtype=ncd_double,  &
             dim1name='gridcell', long_name='gridcell latitude', units='degrees_north')
-       call ncd_defvar(ncid=ncid, varname='grid1d_ixy', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='grid1d_ixy', xtype=ncd_int,  &
             dim1name='gridcell', long_name='2d longitude index of corresponding gridcell')
-       call ncd_defvar(ncid=ncid, varname='grid1d_jxy', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='grid1d_jxy', xtype=ncd_int,  &
             dim1name='gridcell', long_name='2d latitude index of corresponding gridcell')
     else if (flag == 'write') then
        do g=begg,endg
@@ -115,19 +116,19 @@ contains
     ! Write landunit info
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='land1d_lon', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_lon', xtype=ncd_double,  &
             dim1name='landunit', long_name='landunit longitude', units='degrees_east')
-       call ncd_defvar(ncid=ncid, varname='land1d_lat', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_lat', xtype=ncd_double,  &
             dim1name='landunit', long_name='landunit latitude', units='degrees_north')
-       call ncd_defvar(ncid=ncid, varname='land1d_ixy', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_ixy', xtype=ncd_int,  &
             dim1name='landunit', long_name='2d longitude index of corresponding landunit')
-       call ncd_defvar(ncid=ncid, varname='land1d_jxy', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_jxy', xtype=ncd_int,  &
             dim1name='landunit', long_name='2d latitude index of corresponding landunit')
-       call ncd_defvar(ncid=ncid, varname='land1d_gi', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_gi', xtype=ncd_int,  &
             dim1name='landunit', long_name='1d grid index of corresponding landunit')
-       call ncd_defvar(ncid=ncid, varname='land1d_wtxy', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_wtxy', xtype=ncd_double,  &
             dim1name='landunit', long_name='landunit weight relative to corresponding gridcell')
-       call ncd_defvar(ncid=ncid, varname='land1d_ityplun', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='land1d_ityplun', xtype=ncd_int,  &
             dim1name='landunit', long_name='landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
        do l=begl,endl
@@ -154,25 +155,25 @@ contains
     ! Write column info
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='cols1d_lon', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='cols1d_lon', xtype=ncd_double,  &
             dim1name='column', long_name='column longitude', units='degrees_east')
-       call ncd_defvar(ncid=ncid, varname='cols1d_lat', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='cols1d_lat', xtype=ncd_double,  &
             dim1name='column', long_name='column latitude', units='degrees_north')
-       call ncd_defvar(ncid=ncid, varname='cols1d_ixy', xtype=nf_int,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_ixy', xtype=ncd_int,   &
             dim1name='column', long_name='2d longitude index of corresponding column')
-       call ncd_defvar(ncid=ncid, varname='cols1d_jxy', xtype=nf_int,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_jxy', xtype=ncd_int,   &
             dim1name='column', long_name='2d latitude index of corresponding column')
-       call ncd_defvar(ncid=ncid, varname='cols1d_gi', xtype=nf_int,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_gi', xtype=ncd_int,   &
             dim1name='column', long_name='1d grid index of corresponding column')
-       call ncd_defvar(ncid=ncid, varname='cols1d_li', xtype=nf_int,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_li', xtype=ncd_int,   &
             dim1name='column', long_name='1d landunit index of corresponding column')
-       call ncd_defvar(ncid=ncid, varname='cols1d_wtxy', xtype=nf_double,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_wtxy', xtype=ncd_double,   &
             dim1name='column', long_name='column weight relative to corresponding gridcell')
-       call ncd_defvar(ncid=ncid, varname='cols1d_wtlnd', xtype=nf_double,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_wtlnd', xtype=ncd_double,   &
             dim1name='column', long_name='column weight relative to corresponding landunit')
-       call ncd_defvar(ncid=ncid, varname='cols1d_ityplun', xtype=nf_int,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_ityplun', xtype=ncd_int,   &
             dim1name='column', long_name='column landunit type (vegetated,urban,lake,wetland or glacier)')
-       call ncd_defvar(ncid=ncid, varname='cols1d_ityp', xtype=nf_int,   &
+       call ncd_defvar(ncid=ncid, varname='cols1d_ityp', xtype=ncd_int,   &
             dim1name='column', long_name=&
            'column type (61-roof,62-sunwall,63-shadewall,64-impervious road,65-pervious road,1-all other columns)')
     else if (flag == 'write') then
@@ -209,29 +210,29 @@ contains
     ! Write pft info
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='pfts1d_lon', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_lon', xtype=ncd_double,  &
             dim1name='pft', long_name='pft longitude', units='degrees_east')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_lat', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_lat', xtype=ncd_double,  &
             dim1name='pft', long_name='pft latitude', units='degrees_north')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_ixy', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_ixy', xtype=ncd_int,  &
             dim1name='pft', long_name='2d longitude index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_jxy', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_jxy', xtype=ncd_int,  &
             dim1name='pft', long_name='2d latitude index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_gi', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_gi', xtype=ncd_int,  &
             dim1name='pft', long_name='1d grid index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_li', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_li', xtype=ncd_int,  &
             dim1name='pft', long_name='1d landunit index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_ci', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_ci', xtype=ncd_int,  &
             dim1name='pft', long_name='1d column index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_wtxy', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_wtxy', xtype=ncd_double,  &
             dim1name='pft', long_name='pft weight relative to corresponding gridcell')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_wtlnd', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_wtlnd', xtype=ncd_double,  &
             dim1name='pft', long_name='pft weight relative to corresponding landunit')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_wtcol', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_wtcol', xtype=ncd_double,  &
             dim1name='pft', long_name='pft weight relative to corresponding column')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_itypveg', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_itypveg', xtype=ncd_int,  &
             dim1name='pft', long_name='pft vegetation type')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_ityplun', xtype=nf_int,  &
+       call ncd_defvar(ncid=ncid, varname='pfts1d_ityplun', xtype=ncd_int,  &
             dim1name='pft', long_name='pft landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
        do p=begp,endp

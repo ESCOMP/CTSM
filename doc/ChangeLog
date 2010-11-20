@@ -1,4 +1,258 @@
 ===============================================================
+Tag name:  clm4_0_17
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Nov 20 10:04:09 MST 2010
+One-line Summary: Update to externals that change answers to roundoff, use drv pio namelist, add in T341 datasets
+
+Purpose of changes:
+
+Update driver, datm, esmf_wrf,csm_share to version that changes answers to roundoff.
+Update pio to new pio drv namelist, remove pio namelist in clm. Remove samegrids, just
+use downscale. Add in new T341 datasets.
+
+PIO for all model components is now controlled in the pio_inparm namelist that's in
+the drv_in namelist file in cpl.buildnml.csh. CLM and DATM now respond to the settings
+for lnd_pio_* and atm_pio_* in this namelist respectively.
+
+There's also a new driver namelist setting that will update the orbit each year
+(setting orb_mode and orb_iyear_align).
+
+Bugs fixed (include bugzilla ID):
+                                 1225 (abort if both trigrid and finemesh on)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+                                 1238 (PST test fails)
+                                 1239 (ESMF build fails)
+                                 1240 (lynx_pgi build fails)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: Add in darwin_intel build
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets: Add in T341 datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm,
+           csm_share, pio, mct, cprnc
+
+    scripts     to mpiserial07_scripts4_101117
+    drv         to drv3_1_45
+    datm        to datm8_101105
+    csm_share   to share3_101118
+    pio         to pio1_2_6
+    mct         to MCT2_7_0_100228-mpiserial101109_tag02
+    cprnc       to cprnc_101119
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  models/lnd/clm/test/system/tests_pretag_jaguar - remove non-existant tests
+
+>>>>>>>>>> Remove clmi frequency setting, add darwin build/run
+   M  models/lnd/clm/test/system/input_tests_master
+   M  models/lnd/clm/test/system/TBR.sh
+   M  models/lnd/clm/test/system/test_driver.sh - Add darwin builds
+   M  models/lnd/clm/test/system/mknamelist
+
+>>>>>>>>>> Change orb_iyear for orb_iyear_ad
+   M  models/lnd/clm/test/system/nl_files/nl_urb
+   M  models/lnd/clm/test/system/nl_files/nl_noicertm_sclharv
+   M  models/lnd/clm/test/system/nl_files/clm_ndepdyn -- remove ndepsrc stream setting
+              Can now replace usage of this file with clm_std
+   M  models/lnd/clm/test/system/nl_files/nl_cn_conly
+   M  models/lnd/clm/test/system/nl_files/nl_urb_br
+
+>>>>>>>>>> Get build working with darwin_intel
+   M  models/lnd/clm/bld/configure ------ get it working with darwin_intel
+   M  models/lnd/clm/bld/clm.cpl7.template - Use $GMAKE, set to gmake if not set
+
+>>>>>>>>>> Remove non-existant resolution: 2.5x3.33
+   M  models/lnd/clm/bld/namelist_files/checklatsfiles.ncl
+   M  models/lnd/clm/bld/namelist_files/checkdatmfiles.ncl
+
+>>>>>>>>>> Add orb_mode, set orbit based on it, also add orb_iyear_align
+>>>>>>>>>> Add run_barriers, pio_inparm namelist, add T341 resolution (512x1024)
+   M  models/lnd/clm/bld/build-namelist - Set orbit based on orb_mode, set pio namelist
+             for stand-alone testing, 
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml ---- Remove pio namelist
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml
+   M  models/lnd/clm/bld/namelist_files/datm-build-namelist
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- Add T341: griddata,
+             fracdata, surfdata, topodata (fracdata for USGS and tx0.1 masks)`
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml
+
+>>>>>>>>>> Switch orb_iyear for orb_iyear_ad
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+   M  models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+   M  models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+   M  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+
+>>>>>>>>>> Switch ncd_x for pio_x/nf_x
+>>>>>>>>>> Fix a couple memory leaks that Jim Edwards found
+>>>>>>>>>> Make ncd_pio private, add documentation add attributes for restart history
+>>>>>>>>>> files, add 2D character read (needed for NetCDF pft-physiology file read on
+>>>>>>>>>> irrigation branch)
+   M  models/lnd/clm/src/biogeochem/CASAMod.F90 ------------ Replcae pio_x
+   M  models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 - use masterproc at top of module
+   M  models/lnd/clm/src/biogeochem/CNDVMod.F90 ------------ Replace pio_x
+   M  models/lnd/clm/src/biogeochem/CNrestMod.F90 ---------- Replace pio_x
+   M  models/lnd/clm/src/main/inicFileMod.F90 -------------- Add use MPI_LOGICAL
+   M  models/lnd/clm/src/main/accumulMod.F90 --------------- Replace pio_x
+   M  models/lnd/clm/src/main/clm_initializeMod.F90 -------- Remove samegrids use downscale,
+                don't pass namelist to ncd_pio initialization
+   M  models/lnd/clm/src/main/subgridRestMod.F90 ----------- Add use endrun, switch ncd_x for nf_x
+   M  models/lnd/clm/src/main/ndepStreamMod.F90 ------------ PIO initialization uses 
+                driver settings, pass get_calendar to initialization
+   M  models/lnd/clm/src/main/histFileMod.F90 -------------- Add attributes to history restart files
+   M  models/lnd/clm/src/main/restFileMod.F90 -------------- Replace pio_x
+   M  models/lnd/clm/src/main/clm_time_manager.F90 --------- Replace nf_x with ncd_x add
+                get_calendar
+   M  models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ----- Abort if trigrid and downscale
+                Update orbit params in run-phase
+   M  models/lnd/clm/src/main/clm_varctl.F90 --------------- Remove samegrids
+   M  models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 --- Abort if trigrid and downscale
+                Update orbit params in run-phase
+   M  models/lnd/clm/src/main/ncdio_pio.F90 ---------------- Update documentation, make private
+                add ncd_pio_closefile wrapper, make some pio interfaces public from here,
+                add ncd_io_char_var2_nf for NetCDF pft-physiology file, remove pio namelist
+                remove a second allocation that Jim Edwards found
+   M  models/lnd/clm/src/main/surfrdMod.F90 ---------------- Fix memory leak from Jim Edwards
+   M  models/lnd/clm/src/riverroute/RtmMod.F90 ------------- Switch nf_x with ncd_x
+   M  models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 -- Add use for spval and iulog,
+                change nf_x for ncd_x
+
+Summary of testing:
+
+All TBL tests fail... (although you can use clm4_0_16 with updated externals and show b4b)
+
+  bluefire: All PASS except...
+029 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+030 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+031 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+033 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+055 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+056 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+057 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+  bluefire interactive testing: All PASS
+  bluefire/CESM testing:
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_16 
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_16 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_16 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_16 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_16 
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_16 
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_16 
+FAIL PST.f45_g37.I1850.bluefire <<<<< Didn't create scripts problem, bug 1238
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_16 
+FAIL  ERS_E.f19_g16.I1850.bluefire <<<< Scripts build issue, bug 1239
+BFAIL ERS_E.f19_g16.I1850.bluefire.generate.clm4_0_17 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare_hist.clm4_0_16 
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_16 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_16 
+FAIL  PST.f10_f10.I8520CN.bluefire <<<<< Didn't create scripts problem, bug 1238
+FAIL  PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_16 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_16 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_16 
+  bluefire/PTCLM testing: All PASS
+  jaguar: All PASS except...
+007 brB91 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 72+72 arb_ic ..................FAIL! rc= 13
+022 erH92 TER.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:1800 4x5 gx3v7@1850-2000 10+38 cold FAIL! rc= 13
+023 brH92 TBR.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:1800 4x5 gx3v7@1850-2000 72+72 cold FAIL! rc= 11
+038 smLI2 TSM.sh _sc_dm clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+039 erLI2 TER.sh _sc_dm clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+040 brLI2 TBR.sh _sc_dm clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+042 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 96 arb_ic ....................FAIL! rc= 10
+043 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 72+72 arb_ic .................FAIL! rc= 5
+044 brL58 TBR.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 72+72 arb_ic .................FAIL! rc= 5
+  jaguar interactive testing: All PASS except...
+007 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+008 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+009 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+027 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds ....FAIL! rc= 6
+  edinburgh/lf95 interactive testing: All PASS
+  edinburgh/lf95 testing: All PASS except...
+005 smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 10
+006 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:1200 4x5 gx3v7 72+72 cold ....................FAIL! rc= 5
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+012 smG56 TSM.sh 17p_sc_m clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+013 smE91 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 96 arb_ic .................FAIL! rc= 10
+014 erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 10+38 arb_ic ..............FAIL! rc= 5
+015 brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:1800 4x5 gx3v7 72+72 arb_ic ...........FAIL! rc= 5
+018 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 10+38 cold ............FAIL! rc= 13
+019 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:1800 10x15 USGS@2000 72+72 cold .........FAIL! rc= 11
+025 smL51 TSM.sh _sc_dh clm_std^nl_urb 20020115:1800 10x15 USGS 96 arb_ic .......................FAIL! rc= 10
+026 erL51 TER.sh _sc_dh clm_std^nl_urb 20020115:1800 10x15 USGS 10+38 arb_ic ....................FAIL! rc= 5
+027 brL51 TBR.sh _sc_dh clm_std^nl_urb_br 20020115:1800 10x15 USGS 72+72 arb_ic .................FAIL! rc= 5
+029 smH41 TSM.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 96 cold ..FAIL! rc= 10
+030 erH41 TER.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 5
+031 brH41 TBR.sh 17p_cnsc_dh clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 5
+033 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 96 arb_ic ....................FAIL! rc= 10
+  edinburgh/PTCLM testing: All PASS up to...
+myPTCLMtests_US-Ha1_I_1850.PTCLM    FAIL 0
+  mirage,storm/ifort interactive testing: All PASS except...
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:1800 10x15 USGS@1850 10+38 cold .........FAIL!  rc= 13
+018 brR53 TBR.sh 17p_cnc13sc_do clm_std^nl_urb_br 20020115:1800 10x15 USGS@1850 72+72 cold ......FAIL! rc= 11
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+021 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 10+38 arb_ic ...........FAIL! rc= 5
+022 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+025 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 13
+026 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 11
+  lynx/pgi testing: All FAIL scripts build issue <<<< bug 1240
+  yong/darwin_intel testing: All PASS up to ...
+005 smD94 TSM.sh _persc_ds clm_per^nl_urb 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_16
+
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All with datm
+    - what platforms/compilers: All
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     PERGRO test on bluefire
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_16
 Originator(s):  erik/mvertens (Kluzek Erik 1326 CGD) (Vertenstein Mariana 1349 CGD)
 Date: Wed Oct 27 13:33:21 MDT 2010

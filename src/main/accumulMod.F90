@@ -693,11 +693,11 @@ contains
        varname = trim(accum(nf)%name) // '_VALUE'
        if (flag == 'define') then
           if (accum(nf)%numlev == 1) then
-             call ncd_defvar(ncid=ncid, varname=varname, xtype=nf_double,  &
+             call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_double,  &
                   dim1name=accum(nf)%type1d, &
                   long_name=accum(nf)%desc, units=accum(nf)%units) 
           else
-             call ncd_defvar(ncid=ncid, varname=varname, xtype=nf_double,  &
+             call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_double,  &
                   dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                   long_name=accum(nf)%desc, units=accum(nf)%units) 
           end if
@@ -728,7 +728,7 @@ contains
 
        varname = trim(accum(nf)%name) // '_PERIOD'
        if (flag == 'define') then
-          call ncd_defvar(ncid=ncid, varname=varname, xtype=nf_int,  &
+          call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
                long_name='', units='time steps')
        else if (flag == 'read' .or. flag == 'write') then
           call ncd_io(varname=varname, data=accum(nf)%period, &

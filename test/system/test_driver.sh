@@ -186,7 +186,7 @@ export CESM_MACH="generic_linux_intel"
 export CFG_STRING="-cppdefs '-DFORTRANUNDERSCORE' "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/fs/home/erik/bin/cprnc
+export CPRNC_EXE=/glade/home/erik/bin/cprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/cgd/tss"
 dataroot="/fis/cgd/cseg/csm"
@@ -579,14 +579,21 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
-export CESM_MACH="generic_linux_pgi"
-export NETCDF_PATH=/usr/local/netcdf-3.6.3.gfortran_g++
+if [ "\$CLM_FC" = "PGI" ]; then
+   export CESM_MACH="generic_darwin_pgi"
+   export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
+   export CFG_STRING=""
+   export TOOLS_MAKE_STRING=""
+else
+   export CESM_MACH="generic_darwin_intel"
+   export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
+   export CFG_STRING=""
+   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+fi
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="make -j 4"
-export CFG_STRING=""
-export TOOLS_MAKE_STRING=""
-export MACH_WORKSPACE="$HOME/runs"
+export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/cgd/tss";

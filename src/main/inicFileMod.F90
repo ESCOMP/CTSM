@@ -10,7 +10,7 @@ module inicFileMod
 !
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use spmdMod        , only : mpicom, MPI_CHARACTER, masterproc
+  use spmdMod        , only : mpicom, MPI_CHARACTER, masterproc, MPI_LOGICAL
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
   use ncdio_pio

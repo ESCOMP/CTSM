@@ -187,7 +187,8 @@ EOF
 # Build the clm library
 #
 set clmdefs = "`cat \$CASEBUILD/clmconf/CESM_cppdefs`"
-gmake complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$CASETOOLS/Makefile || exit 2
+if ( ! \$?GMAKE ) setenv GMAKE gmake
+$GMAKE complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$CASETOOLS/Makefile || exit 2
 
 EOF2
 

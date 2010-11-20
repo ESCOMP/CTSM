@@ -23,8 +23,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <case_name>clmrun</case_name>
 
 <!-- Orbit -->
-<orb_iyear_ad sim_year="2000" >2000</orb_iyear_ad>
-<orb_iyear_ad sim_year="1850" >1850</orb_iyear_ad>
+<orb_mode                  >fixed_year</orb_mode>
+<orb_iyear                 >1990</orb_iyear>
+<orb_iyear sim_year="2000" >2000</orb_iyear>
+<orb_iyear sim_year="1850" >1850</orb_iyear>
+<orb_iyear_align                 >1990</orb_iyear_align>
+<orb_iyear_align sim_year="2000" >2000</orb_iyear_align>
+<orb_iyear_align sim_year="1850" >1850</orb_iyear_align>
 
 <!-- Model Version -->
 <model_version>
@@ -49,11 +54,25 @@ $URL$
 <!-- Defaults for driver namelist pio_inparm                            -->
 <!-- ================================================================== -->
 
-<cpl_io_stride   >4</cpl_io_stride>
-<cpl_io_numtasks >-1</cpl_io_numtasks>
-<cpl_io_typename >netcdf</cpl_io_typename>
-<cpl_io_root     >1</cpl_io_root>
+<pio_stride   >4</pio_stride>
+<pio_numtasks >-1</pio_numtasks>
+<pio_typename >NETCDF</pio_typename>
+<pio_root     >1</pio_root>
 
+<cpl_pio_stride   >4</cpl_pio_stride>
+<cpl_pio_numtasks >-1</cpl_pio_numtasks>
+<cpl_pio_typename >NETCDF</cpl_pio_typename>
+<cpl_pio_root     >1</cpl_pio_root>
+
+<lnd_pio_stride   >4</lnd_pio_stride>
+<lnd_pio_numtasks >-1</lnd_pio_numtasks>
+<lnd_pio_typename >NETCDF</lnd_pio_typename>
+<lnd_pio_root     >1</lnd_pio_root>
+
+<atm_pio_stride   >4</atm_pio_stride>
+<atm_pio_numtasks >-1</atm_pio_numtasks>
+<atm_pio_typename >NETCDF</atm_pio_typename>
+<atm_pio_root     >1</atm_pio_root>
 
 <!-- ================================================================== -->
 <!-- Defaults for driver namelist seq_timemgr_inparm                    -->

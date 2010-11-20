@@ -651,8 +651,7 @@ contains
     call ncd_putatt(ncid, PIO_GLOBAL, 'host'    , trim(hostname))
     call ncd_putatt(ncid, PIO_GLOBAL, 'version' , trim(version))
     call ncd_putatt(ncid, PIO_GLOBAL, 'source'  , trim(source))
-    str = '$Id: &
-         restFileMod.F90 21588 2010-03-10 00:58:41Z erik $'
+    str = '$Id$'
     call ncd_putatt(ncid, PIO_GLOBAL, 'revision_id'    , trim(str))
     call ncd_putatt(ncid, PIO_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, PIO_GLOBAL, 'case_id'        , trim(caseid))
