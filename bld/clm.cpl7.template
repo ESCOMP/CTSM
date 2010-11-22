@@ -188,7 +188,7 @@ EOF
 #
 set clmdefs = "`cat \$CASEBUILD/clmconf/CESM_cppdefs`"
 if ( ! \$?GMAKE ) setenv GMAKE gmake
-$GMAKE complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$CASETOOLS/Makefile || exit 2
+\$GMAKE complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$CASETOOLS/Makefile || exit 2
 
 EOF2
 

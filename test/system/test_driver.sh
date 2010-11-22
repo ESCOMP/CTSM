@@ -3,12 +3,18 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on mirage, edinburgh, lynx, bluefire, intrepid: 
+# usage on mirage, edinburgh, bluefire, intrepid (will submit itself to batch): 
+#
 # ./test_driver.sh
 #
-# usage on jaguar:
+# usage on jaguar and lynx: 
+#
 # env CLM_JOBID=1001 ./test_driver.sh -c
 # env CLM_JOBID=1001 ./test_driver.sh
+#
+# interactive usage on all machines (runs a different list of tests):
+#
+# env CLM_SOFF=FALSE ./test_driver.sh -i
 #
 # valid arguments: 
 # -i    interactive usage

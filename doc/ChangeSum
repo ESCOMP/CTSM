@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_18         erik 11/21/2010 Fix a problem with the clm template, update scripts version to fix bug with linking with ESMF
    clm4_0_17         erik 11/20/2010 Update to externals that change answers to roundoff, use drv pio namelist, add in T341 datasets
    clm4_0_16 erik/mverten 10/27/2010 Fix downscaling roundoff difference for same-grids by copying scale factor when needed
    clm4_0_15 erik/mverten 10/24/2010 Move pio branch to trunk

@@ -1,4 +1,81 @@
 ===============================================================
+Tag name:  clm4_0_18
+Originator(s):  erik (Erik Kluzek)
+Date: Sun Nov 21 22:08:03 MST 2010
+One-line Summary: Fix a problem with the clm template, update scripts version to fix bug with linking with ESMF
+
+Purpose of changes:
+
+Bugs fixed (include bugzilla ID):
+                                 1239 (ESMF build fails)
+                                 1240 (lynx_pgi build fails)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+                                 1238 (PST test fails)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+
+   scripts to mpiserial08_scripts4_101117
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+  M models/lnd/clm/test/system/test_driver.sh
+  M models/lnd/clm/bld/clm.cpl7.template
+
+Summary of testing:
+
+  bluefire/CESM testing: All PASS except
+cat: 0652-050 Cannot open
+/glade/proj2/fis/cgd/home/erik/clm_trunk/scripts/PST.f45_g37.I1850.bluefire.GC.140531/TestStatus.
+BFAIL ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_17 
+RUN   ERI.f19_g16.IG.bluefire.GC.140531 
+cat: 0652-050 Cannot open
+/glade/proj2/fis/cgd/home/erik/clm_trunk/scripts/PST.f10_f10.I8520CN.bluefire.GC.140531/TestStatus.
+  lynx/ifort testing:
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_17
+
+Changes answers relative to baseline: bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_17
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Nov 20 10:04:09 MST 2010
