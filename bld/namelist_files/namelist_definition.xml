@@ -1256,6 +1256,16 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 Land mask description
 </entry> 
 
+<entry id="irrig" type="logical" category="default_settings"
+       group="default_settings"  >
+If true, irrigation will be active (find surface datasets with active irrigation).
+</entry> 
+
+<entry id="rtm_res" type="char*20" category="default_settings" value="R05"
+       group="default_settings" valid_values="R05,RX1,19BASIN" >
+Resolution for River Transport Model (RTM)
+</entry> 
+
 <entry id="sim_year" type="integer" category="default_settings"
        group="default_settings" valid_values=
 "1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">

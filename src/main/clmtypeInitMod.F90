@@ -2754,6 +2754,8 @@ contains
     allocate(cps%albgri_dst(beg:end,numrad))
     allocate(cps%dTdz_top(beg:end))
     allocate(cps%snot_top(beg:end))
+    allocate(cps%irrig_rate(beg:end))
+    allocate(cps%n_irrig_steps_left(beg:end))
     allocate(cps%forc_pbot(beg:end))
     allocate(cps%forc_rho(beg:end))
     allocate(cps%glc_topo(beg:end))
@@ -2863,6 +2865,8 @@ contains
     cps%albgri_dst(beg:end,:numrad) = nan
     cps%dTdz_top(beg:end) = nan
     cps%snot_top(beg:end) = nan
+    cps%irrig_rate(beg:end) = nan
+    cps%n_irrig_steps_left(beg:end) = 0
     cps%forc_pbot(beg:end) = nan
     cps%forc_rho(beg:end) = nan
     cps%glc_topo(beg:end) = nan
@@ -3218,6 +3222,7 @@ contains
     allocate(cwf%flx_dst_dep_wet4(beg:end))
     allocate(cwf%flx_dst_dep(beg:end))
     allocate(cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0))
+    allocate(cwf%qflx_irrig(beg:end))
     allocate(cwf%qflx_glcice(beg:end))
     allocate(cwf%glc_rofi(beg:end))
     allocate(cwf%glc_rofl(beg:end))
@@ -3254,9 +3259,10 @@ contains
     cwf%flx_dst_dep_wet4(beg:end) = nan
     cwf%flx_dst_dep(beg:end) = nan
     cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0) = spval
+    cwf%qflx_irrig(beg:end)  = nan
     cwf%qflx_glcice(beg:end) = spval
-    cwf%glc_rofi(beg:end) = nan
-    cwf%glc_rofl(beg:end) = nan
+    cwf%glc_rofi(beg:end)    = nan
+    cwf%glc_rofl(beg:end)    = nan
 
   end subroutine init_column_wflux_type
 

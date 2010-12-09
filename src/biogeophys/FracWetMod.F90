@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module FracWetMod
 
 !-----------------------------------------------------------------------
@@ -95,8 +92,6 @@ contains
 
     ! Compute fraction of canopy that is wet and dry
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,numf
        p = filter(fp)
        if (frac_veg_nosno(p) == 1) then

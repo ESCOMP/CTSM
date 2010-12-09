@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module subgridAveMod
 
 !-----------------------------------------------------------------------
@@ -121,39 +118,6 @@ contains
 
     carr(lbc:ubc) = spval
     sumwt(lbc:ubc) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-    do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
-       do c = lbc,ubc
-          if (pi <= npfts(c)) then
-             p = pfti(c) + pi - 1
-             if (wtcol(p) /= 0._r8) then
-                if (parr(p) /= spval) then
-                   carr(c) = 0._r8
-                end if
-             end if
-          end if
-       end do
-    end do
-!dir$ nointerchange
-    do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
-       do c = lbc,ubc
-          if (pi <= npfts(c)) then
-             p = pfti(c) + pi - 1
-             if (wtcol(p) /= 0._r8) then
-                if (parr(p) /= spval) then
-                   carr(c) = carr(c) + parr(p) * scale_p2c(p) * wtcol(p)
-                   sumwt(c) = sumwt(c) + wtcol(p)
-                end if
-             end if
-          end if
-       end do
-    end do
-#else
     do p = lbp,ubp
        if (wtcol(p) /= 0._r8) then
           if (parr(p) /= spval) then
@@ -164,7 +128,6 @@ contains
           end if
        end if
     end do
-#endif
     found = .false.
     do c = lbc,ubc
        if (sumwt(c) > 1.0_r8 + 1.e-6_r8) then
@@ -238,39 +201,6 @@ contains
     carr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-       do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
-          do c = lbc,ubc
-             if (pi <= npfts(c)) then
-                p = pfti(c) + pi - 1
-                if (wtcol(p) /= 0._r8) then
-                   if (parr(p,j) /= spval) then
-                      carr(c,j) = 0._r8
-                   end if
-                end if
-             end if
-          end do
-       end do
-!dir$ nointerchange
-       do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
-          do c = lbc,ubc
-             if (pi <= npfts(c)) then
-                p = pfti(c) + pi - 1
-                if (wtcol(p) /= 0._r8) then
-                   if (parr(p,j) /= spval) then
-                      carr(c,j) = carr(c,j) + parr(p,j) * scale_p2c(p) * wtcol(p)
-                      sumwt(c) = sumwt(c) + wtcol(p)
-                   end if
-                end if
-             end if
-          end do
-       end do
-#else
        do p = lbp,ubp
           if (wtcol(p) /= 0._r8) then
              if (parr(p,j) /= spval) then
@@ -281,7 +211,6 @@ contains
              end if
           end if
        end do
-#endif
        found = .false.
        do c = lbc,ubc
           if (sumwt(c) > 1.0_r8 + 1.e-6_r8) then
@@ -339,26 +268,6 @@ contains
     wtcol   => clm3%g%l%c%p%wtcol
     wtgcell => clm3%g%l%c%p%wtgcell
 
-#if (defined CPP_VECTOR)
-!dir$ concurrent
-!cdir nodep
-    do fc = 1,numfc
-       c = filterc(fc)
-       colarr(c) = 0._r8
-    end do
-!dir$ nointerchange
-    do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
-       do fc = 1,numfc
-          c = filterc(fc)
-          if ( pi <=  npfts(c) ) then
-             p = pfti(c) + pi - 1
-             if (wtgcell(p) > 0._r8) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
-          end if
-       end do
-    end do
-#else
     do fc = 1,numfc
        c = filterc(fc)
        colarr(c) = 0._r8
@@ -366,7 +275,6 @@ contains
           if (wtgcell(p) > 0._r8) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
        end do
     end do
-#endif
 
   end subroutine p2c_1d_filter
 
@@ -410,28 +318,6 @@ contains
     pftf  => clm3%g%l%c%pftf
     wtcol => clm3%g%l%c%p%wtcol
 
-#if (defined CPP_VECTOR)
-    do j = 1,lev
-!dir$ concurrent
-!cdir nodep
-       do fc = 1,numfc
-          c = filterc(fc)
-          colarr(c,j) = 0._r8
-       end do
-!dir$ nointerchange
-       do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
-          do fc = 1,numfc
-             c = filterc(fc)
-             if ( pi <=  npfts(c) ) then
-                p = pfti(c) + pi - 1
-                colarr(c,j) = colarr(c,j) + pftarr(p,j) * wtcol(p)
-             end if
-          end do
-       end do
-    end do
-#else
     do j = 1,lev
        do fc = 1,numfc
           c = filterc(fc)
@@ -441,7 +327,6 @@ contains
           end do
        end do
     end do
-#endif
 
   end subroutine p2c_2d_filter
 
@@ -574,40 +459,6 @@ contains
 
     larr(:) = spval
     sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-    do pi = 1,max_pft_per_lu
-!dir$ concurrent
-!cdir nodep
-       do l = lbl,ubl
-          if (pi <= npfts(l)) then
-             p = pfti(l) + pi - 1
-             if (wtlunit(p) /= 0._r8) then
-                if (parr(p) /= spval) then
-                   larr(l) = 0._r8
-                end if
-             end if
-          end if
-       end do
-    end do
-!dir$ nointerchange
-    do pi = 1,max_pft_per_lu
-!dir$ concurrent
-!cdir nodep
-       do l = lbl,ubl
-          if (pi <= npfts(l)) then
-             p = pfti(l) + pi - 1
-             if (wtlunit(p) /= 0._r8) then
-                c = pcolumn(p)
-                if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
-                   larr(l) = larr(l) + parr(p) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
-                   sumwt(l) = sumwt(l) + wtlunit(p)
-                end if
-             end if
-          end if
-       end do
-    end do
-#else
     do p = lbp,ubp
        if (wtlunit(p) /= 0._r8) then
           c = pcolumn(p)
@@ -619,7 +470,6 @@ contains
           end if
        end if
     end do
-#endif
     found = .false.
     do l = lbl,ubl
        if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
@@ -767,40 +617,6 @@ contains
     larr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-       do pi = 1,max_pft_per_lu
-!dir$ concurrent
-!cdir nodep
-          do l = lbl,ubl
-             if (pi <= npfts(l)) then
-                p = pfti(l) + pi - 1
-                if (wtlunit(p) /= 0._r8) then
-                   if (parr(p,j) /= spval) then
-                      larr(l,j) = 0._r8
-                   end if
-                end if
-             end if
-          end do
-       end do
-!dir$ nointerchange
-       do pi = 1,max_pft_per_lu
-!dir$ concurrent
-!cdir nodep
-          do l = lbl,ubl
-             if (pi <= npfts(l)) then
-                p = pfti(l) + pi - 1
-                if (wtlunit(p) /= 0._r8) then
-                   c = pcolumn(p)
-                   if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
-                      larr(l,j) = larr(l,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
-                      sumwt(l) = sumwt(l) + wtlunit(p)
-                   end if
-                end if
-             end if
-          end do
-       end do
-#else
        do p = lbp,ubp
           if (wtlunit(p) /= 0._r8) then
              c = pcolumn(p)
@@ -812,7 +628,6 @@ contains
              end if
           end if
        end do
-#endif
        found = .false.
        do l = lbl,ubl
           if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
@@ -972,41 +787,6 @@ contains
 
     garr(:) = spval
     sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-    do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg,ubg
-          if (pi <= npfts(g)) then
-             p = pfti(g) + pi - 1
-             if (wtgcell(p) /= 0._r8) then
-                if (parr(p) /= spval) then
-                   garr(g) = 0._r8
-                end if
-             end if
-          end if
-       end do
-    end do
-!dir$ nointerchange
-    do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg,ubg
-          if (pi <= npfts(g)) then
-             p = pfti(g) + pi - 1
-             if (wtgcell(p) /= 0._r8) then
-                c = pcolumn(p)
-                if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
-                   l = plandunit(p)
-                   garr(g) = garr(g) + parr(p) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
-                   sumwt(g) = sumwt(g) + wtgcell(p)
-                end if
-             end if
-          end if
-       end do
-    end do
-#else
     do p = lbp,ubp
        if (wtgcell(p) /= 0._r8) then
           c = pcolumn(p)
@@ -1019,7 +799,6 @@ contains
           end if
        end if
     end do
-#endif
     found = .false.
     do g = lbg, ubg
        if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
@@ -1181,41 +960,6 @@ contains
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-       do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
-          do g = lbg,ubg
-             if (pi <= npfts(g)) then
-                p = pfti(g) + pi - 1
-                if (wtgcell(p) /= 0._r8) then
-                   if (parr(p,j) /= spval) then
-                      garr(g,j) = 0._r8
-                   end if
-                end if
-             end if
-          end do
-       end do
-!dir$ nointerchange
-       do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
-          do g = lbg,ubg
-             if (pi <= npfts(g)) then
-                p = pfti(g) + pi - 1
-                if (wtgcell(p) /= 0._r8) then
-                   c = pcolumn(p)
-                   if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
-                      l = plandunit(p)
-                      garr(g,j) = garr(g,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
-                      sumwt(g) = sumwt(g) + wtgcell(p)
-                   end if
-                end if
-             end if
-          end do
-       end do
-#else
        do p = lbp,ubp
           if (wtgcell(p) /= 0._r8) then
              c = pcolumn(p)
@@ -1228,7 +972,6 @@ contains
              end if
           end if
        end do
-#endif
        found = .false.
        do g = lbg, ubg
           if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
@@ -1356,43 +1099,6 @@ contains
 
     larr(:) = spval
     sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-    max_col_per_lu = 0
-    do l = lbl,ubl
-       max_col_per_lu = max(ncolumns(l), max_col_per_lu)
-    end do
-!dir$ nointerchange
-    do ci = 1,max_col_per_lu
-!dir$ concurrent
-!cdir nodep
-       do l = lbl,ubl
-          if (ci <= ncolumns(l)) then
-             c = coli(l) + ci - 1
-             if (wtlunit(c) /= 0._r8) then
-                if (carr(c) /= spval) then
-                   larr(l) = 0._r8
-                end if
-             end if
-          end if
-       end do
-    end do
-!dir$ nointerchange
-    do ci = 1,max_col_per_lu
-!dir$ concurrent
-!cdir nodep
-       do l = lbl,ubl
-          if (ci <= ncolumns(l)) then
-             c = coli(l) + ci - 1
-             if (wtlunit(c) /= 0._r8) then
-                if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
-                   larr(l) = larr(l) + carr(c) * scale_c2l(c) * wtlunit(c)
-                   sumwt(l) = sumwt(l) + wtlunit(c)
-                end if
-             end if
-          end if
-      end do
-    end do
-#else
     do c = lbc,ubc
        if (wtlunit(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
@@ -1403,7 +1109,6 @@ contains
           end if
        end if
     end do
-#endif
     found = .false.
     do l = lbl,ubl
        if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
@@ -1529,49 +1234,9 @@ contains
        call endrun()
     end if
 
-#if (defined CPP_VECTOR)
-    max_col_per_lu = 0
-    do l = lbl,ubl
-       max_col_per_lu = max(ncolumns(l), max_col_per_lu)
-    end do
-#endif
-
     larr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-       do ci = 1,max_col_per_lu
-!dir$ concurrent
-!cdir nodep
-          do l = lbl,ubl
-             if (ci <= ncolumns(l)) then
-                c = coli(l) + ci - 1
-                if (wtlunit(c) /= 0._r8) then
-                   if (carr(c,j) /= spval) then
-                      larr(l,j) = 0._r8
-                   end if
-                end if
-             end if
-          end do
-       end do
-!dir$ nointerchange
-       do ci = 1,max_col_per_lu
-!dir$ concurrent
-!cdir nodep
-          do l = lbl,ubl
-             if (ci <= ncolumns(l)) then
-                c = coli(l) + ci - 1
-                if (wtlunit(c) /= 0._r8) then
-                   if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
-                      larr(l,j) = larr(l,j) + carr(c,j) * scale_c2l(c) * wtlunit(c)
-                      sumwt(l) = sumwt(l) + wtlunit(c)
-                   end if
-                end if
-             end if
-          end do
-       end do
-#else
        do c = lbc,ubc
           if (wtlunit(c) /= 0._r8) then
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
@@ -1582,7 +1247,6 @@ contains
              end if
           end if
        end do
-#endif
        found = .false.
        do l = lbl,ubl
           if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
@@ -1725,44 +1389,6 @@ contains
 
     garr(:) = spval
     sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-    max_col_per_gcell = 0
-    do g = lbg,ubg
-       max_col_per_gcell = max(ncolumns(g), max_col_per_gcell)
-    end do
-!dir$ nointerchange
-    do ci = 1,max_col_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg,ubg
-          if (ci <= ncolumns(g)) then
-             c = coli(g) + ci - 1
-             if (wtgcell(c) /= 0._r8) then
-                if (carr(c) /= spval) then
-                   garr(g) = 0._r8
-                end if
-             end if
-          end if
-       end do
-    end do
-!dir$ nointerchange
-    do ci = 1,max_col_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg,ubg
-          if (ci <= ncolumns(g)) then
-             c = coli(g) + ci - 1
-             if (wtgcell(c) /= 0._r8) then
-                if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
-                   l = clandunit(c)
-                   garr(g) = garr(g) + carr(c) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
-                   sumwt(g) = sumwt(g) + wtgcell(c)
-                end if
-             end if
-          end if
-       end do
-    end do
-#else
     do c = lbc,ubc
        if ( wtgcell(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
@@ -1774,7 +1400,6 @@ contains
           end if
        end if
     end do
-#endif
     found = .false.
     do g = lbg, ubg
        if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
@@ -1914,50 +1539,9 @@ contains
        call endrun()
     end if
 
-#if (defined CPP_VECTOR)
-    max_col_per_gcell = 0
-    do g = lbg,ubg
-       max_col_per_gcell = max(ncolumns(g), max_col_per_gcell)
-    end do
-#endif
-
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-       do ci = 1,max_col_per_gcell
-!dir$ concurrent
-!cdir nodep
-          do g = lbg,ubg
-             if (ci <= ncolumns(g)) then
-                c = coli(g) + ci - 1
-                if (wtgcell(c) /= 0._r8) then
-                   if (carr(c,j) /= spval) then
-                      garr(g,j) = 0._r8
-                   end if
-                end if
-             end if
-          end do
-       end do
-!dir$ nointerchange
-       do ci = 1,max_col_per_gcell
-!dir$ concurrent
-!cdir nodep
-          do g = lbg,ubg
-             if (ci <= ncolumns(g)) then
-                c = coli(g) + ci - 1
-                if (wtgcell(c) /= 0._r8) then
-                   if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
-                      l = clandunit(c)
-                      garr(g,j) = garr(g,j) + carr(c,j) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
-                      sumwt(g) = sumwt(g) + wtgcell(c)
-                   end if
-                end if
-             end if
-          end do
-       end do
-#else
        do c = lbc,ubc
           if (wtgcell(c) /= 0._r8) then
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
@@ -1969,7 +1553,6 @@ contains
              end if
           end if
        end do
-#endif
        found = .false.
        do g = lbg, ubg
           if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
@@ -2040,43 +1623,6 @@ contains
 
     garr(:) = spval
     sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-    max_lu_per_gcell = 0
-    do g = lbg,ubg
-       max_lu_per_gcell = max(nlandunits(g), max_lu_per_gcell)
-    end do
-!dir$ nointerchange
-    do li = 1,max_lu_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg,ubg
-          if (li <= nlandunits(g)) then
-             l = luni(g) + li - 1
-             if (wtgcell(l) /= 0._r8) then
-                if (larr(l) /= spval) then
-                   garr(g) = 0._r8
-                end if
-             end if
-          end if
-       end do
-    end do
-!dir$ nointerchange
-    do li = 1,max_lu_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg,ubg
-          if (li <= nlandunits(g)) then
-             l = luni(g) + li - 1
-             if (wtgcell(l) /= 0._r8) then
-                if (larr(l) /= spval) then
-                   garr(g) = garr(g) + larr(l) * scale_l2g(l) * wtgcell(l)
-                   sumwt(g) = sumwt(g) + wtgcell(l)
-                end if
-             end if
-          end if
-       end do
-    end do
-#else
     do l = lbl,ubl
        if (wtgcell(l) /= 0._r8) then
           if (larr(l) /= spval) then
@@ -2087,7 +1633,6 @@ contains
           end if
        end if
     end do
-#endif
     found = .false.
     do g = lbg, ubg
        if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then
@@ -2156,49 +1701,9 @@ contains
        call endrun()
     end if
 
-#if (defined CPP_VECTOR)
-    max_lu_per_gcell = 0
-    do g = lbg,ubg
-       max_lu_per_gcell = max(nlandunits(g), max_lu_per_gcell)
-    end do
-#endif
-
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
-#if (defined CPP_VECTOR)
-!dir$ nointerchange
-       do li = 1,max_lu_per_gcell
-!dir$ concurrent
-!cdir nodep
-          do g = lbg,ubg
-             if (li <= nlandunits(g)) then
-                l = luni(g) + li - 1
-                if (wtgcell(l) /= 0._r8) then
-                   if (larr(l,j) /= spval) then
-                      garr(g,j) = 0._r8
-                   end if
-                end if
-             end if
-          end do
-       end do
-!dir$ nointerchange
-       do li = 1,max_lu_per_gcell
-!dir$ concurrent
-!cdir nodep
-          do g = lbg,ubg
-             if (li <= nlandunits(g)) then
-                l = luni(g) + li - 1
-                if (wtgcell(l) /= 0._r8) then
-                   if (larr(l,j) /= spval) then
-                      garr(g,j) = garr(g,j) + larr(l,j) * scale_l2g(l) * wtgcell(l)
-                      sumwt(g) = sumwt(g) + wtgcell(l)
-                   end if
-                end if
-             end if
-          end do
-       end do
-#else
        do l = lbl,ubl
           if (wtgcell(l) /= 0._r8) then
              if (larr(l,j) /= spval) then
@@ -2209,7 +1714,6 @@ contains
              end if
           end if
        end do
-#endif
        found = .false.
        do g = lbg,ubg
           if (sumwt(g) > 1.0_r8 + 1.e-6_r8) then

@@ -50,6 +50,10 @@ $URL$
 <eps_amask>1.0e-12</eps_amask>
 <eps_aarea>9.0e-07</eps_aarea>
 
+<!-- Output budgets -->
+<do_budgets >.true.</do_budgets>
+<budget_inst>1</budget_inst>
+
 <!-- ================================================================== -->
 <!-- Defaults for driver namelist pio_inparm                            -->
 <!-- ================================================================== -->

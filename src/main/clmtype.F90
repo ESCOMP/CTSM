@@ -55,8 +55,12 @@ module clmtype
 !   12 => c3 arctic grass
 !   13 => c3 non-arctic grass
 !   14 => c4 grass
-!   15 => corn
-!   16 => wheat
+!   15 => c3_crop
+!   16 => c3_irrigated
+!   17 => corn
+!   18 => spring_wheat
+!   19 => winter_wheat
+!   20 => soybean
 ! -------------------------------------------------------- 
 !
 ! !USES:
@@ -1142,6 +1146,8 @@ type, public :: column_pstate_type
    real(r8), pointer :: albgri_dst(:,:)       ! ground diffuse albedo without dust (numrad)
    real(r8), pointer :: dTdz_top(:)           ! temperature gradient in top layer  [K m-1]
    real(r8), pointer :: snot_top(:)           ! temperature of top snow layer [K]
+   real(r8), pointer :: irrig_rate(:)         ! current irrigation rate [mm/s]
+   integer, pointer  :: n_irrig_steps_left(:) ! number of time steps for which we still need to irrigate today (if 0, ignore irrig_rate)
    real(r8), pointer :: forc_pbot(:)          ! surface atm pressure, downscaled to column (Pa)
    real(r8), pointer :: forc_rho(:)           ! surface air density, downscaled to column (kg/m^3)
    real(r8), pointer :: glc_frac(:)           ! ice fractional area
@@ -1344,6 +1350,7 @@ type, public :: column_wflux_type
    real(r8), pointer :: flx_dst_dep_wet4(:) ! dust species 4 wet deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: flx_dst_dep(:)      ! total (dry+wet) dust deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: qflx_snofrz_lyr(:,:)! snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+   real(r8), pointer :: qflx_irrig(:)     !irrigation flux (mm H2O/s)
    real(r8), pointer :: qflx_glcice(:)      ! flux of new glacial ice (mm H2O/s), passed to GLC
    real(r8), pointer :: glc_rofi(:)         ! ice runoff passed from GLC to CLM (mm H2O /s)
    real(r8), pointer :: glc_rofl(:)         ! liquid runoff passed from GLC to CLM (mm H2O /s)

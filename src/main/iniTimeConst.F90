@@ -24,7 +24,7 @@ subroutine iniTimeConst
   use clm_varcon  , only : istice, istdlak, istwet, isturb, istice_mec,  &
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
-                           albsat, albdry
+                           albsat, albdry, secspday
   use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
   use clm_varctl  , only : iulog
   use pftvarcon   , only : noveg, ntree, roota_par, rootb_par,  &
@@ -44,6 +44,7 @@ subroutine iniTimeConst
   use spmdMod         , only : mpicom, MPI_INTEGER, masterproc
   use clm_varctl      , only : fsnowoptics, fsnowaging
   use SNICARMod       , only : SnowAge_init, SnowOptics_init
+  use shr_scam_mod    , only : shr_scam_getCloseLatLon
   use ncdio_pio       
 
 !
@@ -276,6 +277,13 @@ subroutine iniTimeConst
   ! Determine number of soil color classes - if number of soil color classes is not
   ! on input dataset set it to 8
 
+  count(1) = lsmlon
+  count(2) = lsmlat
+  if (single_column) then
+     call shr_scam_getCloseLatLon(locfn,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+     start(1) = closelonidx
+     start(2) = closelatidx
+  end if
   ier = pio_inq_varid(ncid, 'mxsoil_color', varid)
   if (ier == PIO_NOERR) then
      ier = pio_inq_varid(ncid, 'mxsoil_color', varid)
@@ -326,7 +334,7 @@ subroutine iniTimeConst
   call ncd_io(ncid=ncid, varname='PCT_CLAY', flag='read', data=clay3d, dim1name=grlnd, readvar=readvar)
   if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CLAY NOT on surfdata file' ) 
 
-  call pio_closefile(ncid)
+  call ncd_pio_closefile(ncid)
 
   if (masterproc) then
      write(iulog,*) 'Successfully read fmax, soil color, sand and clay boundary data'
@@ -537,13 +545,6 @@ subroutine iniTimeConst
     end if
    end do
 
-   ! --------------------------------------------------------------------
-   ! Initialize nitrogen deposition values 
-   ! for now these are constants by gridcell, eventually they
-   ! will be variables from the atmosphere, and at some point in between
-   ! they will be specified time varying fields.
-   ! --------------------------------------------------------------------
-
    ! Grid level initialization
    do g = begg, endg
 
@@ -695,7 +696,7 @@ subroutine iniTimeConst
             !! added by K.Sakaguchi for beta from Lee and Pielke, 1992
             ! water content at field capacity, defined as hk = 0.1 mm/day
             ! used eqn (7.70) in CLM3 technote with k = 0.1 (mm/day) / 86400 (day/sec)
-            watfc(c,lev) = watsat(c,lev) * (0.1_r8 / (hksat(c,lev)*86400._r8))**(1._r8/(2._r8*bsw(c,lev)+3._r8))
+            watfc(c,lev) = watsat(c,lev) * (0.1_r8 / (hksat(c,lev)*secspday))**(1._r8/(2._r8*bsw(c,lev)+3._r8))
          end do
          !
          ! Urban pervious and impervious road

@@ -11,7 +11,7 @@ module UrbanMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar  , only : numrad
-  use clm_varcon  , only : secspday
+  use clm_varcon  , only : isecspday, degpsec
   use clm_varctl  , only : iulog
   use abortutils  , only : endrun  
   use shr_sys_mod , only : shr_sys_flush 
@@ -70,9 +70,7 @@ module UrbanMod
 
   type (urban_clump_t), private, pointer :: urban_clump(:)  ! array of urban clumps for this processor
 
-  integer,  private, parameter :: isecspday = secspday      ! integer seconds per day
   integer,  private, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
-  real(r8), parameter :: degpsec = 15._r8/3600.0_r8         ! degree's earth rotates per second
 !----------------------------------------------------------------------- 
 
 contains

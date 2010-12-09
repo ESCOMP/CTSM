@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module TridiagonalMod
 
 !-----------------------------------------------------------------------
@@ -75,17 +72,12 @@ contains
 
     ! Solve the matrix
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,numf
        ci = filter(fc)
        bet(ci) = b(ci,jtop(ci))
     end do
 
     do j = lbj, ubj
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
        do fc = 1,numf
           ci = filter(fc)
           if (j >= jtop(ci)) then
@@ -100,12 +92,7 @@ contains
        end do
     end do
 
-!Cray X1 unroll directive used here as work-around for compiler issue 2003/10/20
-!dir$ unroll 0
     do j = ubj-1,lbj,-1
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
        do fc = 1,numf
           ci = filter(fc)
           if (j >= jtop(ci)) then

@@ -1,3 +1,34 @@
+module mkvocefMod
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: mkfmaxMod
+!
+! !DESCRIPTION:
+! Make fmax for surface dataset
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!-----------------------------------------------------------------------
+! !USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_flush
+
+  implicit none
+  private
+
+! !PUBLIC MEMBER FUNCTIONS:
+  public :: mkvocef  ! Get the percentage emissions for VOC for different
+                     ! land cover types
+
+!EOP
+!-----------------------------------------------------------------------
+contains
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -10,8 +41,6 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
 ! make volatile organic coumpunds (VOC) emission factors.
 !
 ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
@@ -293,3 +322,6 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
        ef_shr_i, ef_grs_i, ef_crp_i )
 end subroutine mkvocef
 
+!-----------------------------------------------------------------------
+
+end module mkvocefMod

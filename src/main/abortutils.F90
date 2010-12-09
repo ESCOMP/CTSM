@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module abortutils
 
 !-----------------------------------------------------------------------
@@ -58,16 +55,12 @@ CONTAINS
       write(iulog,*)'ENDRUN: called without a message string'
    end if
 
-#if defined(NEC_SX)
-   call mesput("ENDRUN", len("ENDRUN"), 1)
-#elif defined(AIX) && !defined(BGL) && !defined(BGP)
+#if defined(AIX) && !defined(BGL) && !defined(BGP)
    close(5)    ! needed to prevent batch jobs from hanging in xl__trbk
    call xl__trbk()
 #endif
 
-#ifndef UNICOSMP
    call shr_sys_flush(iulog)   ! Flush all output to standard output
-#endif
 
    ! passing an argument of 1 to mpi_abort will lead to a STOPALL output
    ! error code of 257

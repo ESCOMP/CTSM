@@ -1534,6 +1534,38 @@ contains
        end if
     end if
 
+   ! column irrigation variable - n_irrig_steps_left
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='n_irrig_steps_left', xtype=ncd_int,  &
+            dim1name='column', &
+            long_name='number of irrigation time steps left', units='#')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_io(varname='n_irrig_steps_left', data=cptr%cps%n_irrig_steps_left, &
+            dim1name=namec, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+          cptr%cps%n_irrig_steps_left = 0
+       end if
+    end if
+
+   ! column irrigation variable - irrig_rate
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='irrig_rate', xtype=ncd_double,  &
+            dim1name='column', &
+            long_name='irrigation rate', units='mm/s')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_io(varname='irrig_rate', data=cptr%cps%irrig_rate, &
+            dim1name=namec, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+          cptr%cps%irrig_rate = 0.0_r8
+       end if
+    end if
+
     ! ------------------------------------------------------------
     ! Determine volumetric soil water (for read only)
     ! ------------------------------------------------------------

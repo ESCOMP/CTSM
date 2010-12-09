@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module VOCEmissionMod
 
 !-----------------------------------------------------------------------
@@ -84,8 +81,8 @@ contains
                               nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub,  &
                               nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree,   &
                               nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub,      &
-                              nc3_arctic_grass,    nwheat,                &
-                              ncorn,               nc4_grass,             &
+                              nc3_arctic_grass,                           &
+                              nc3crop,             nc4_grass,             &
                               noveg
 !
 ! !ARGUMENTS:
@@ -362,7 +359,7 @@ contains
              else if (ivt(p) >= nc3_arctic_grass &
              .and.    ivt(p) <= nc4_grass) then              !grass
                 	epsilon(p) = efisop(5,g)*scale_mw
-             else if (ivt(p) >= ncorn) then                  !crops
+             else if (ivt(p) >= nc3crop) then                !crops
                 	epsilon(p) =efisop(6,g)*scale_mw
              end if
 

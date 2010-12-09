@@ -323,14 +323,10 @@ contains
 
     if (accum(nf)%acctype == 'timeavg' .and. &
          mod(nstep,accum(nf)%period) /= 0) then
-!dir$ concurrent
-!cdir nodep
        do k = beg,end
           field(k) = spval  !assign absurd value when avg not ready
        end do
     else
-!dir$ concurrent
-!cdir nodep
        do k = beg,end
           field(k) = accum(nf)%val(k,1)
        end do
@@ -408,16 +404,12 @@ contains
     if (accum(nf)%acctype == 'timeavg' .and. &
          mod(nstep,accum(nf)%period) /= 0) then
        do j = 1,numlev
-!dir$ concurrent
-!cdir nodep
           do k = beg,end
              field(k,j) = spval  !assign absurd value when avg not ready
           end do
        end do
     else
        do j = 1,numlev
-!dir$ concurrent
-!cdir nodep
           do k = beg,end
              field(k,j) = accum(nf)%val(k,j)
           end do
@@ -520,8 +512,6 @@ contains
 
        !running accumulation field reset at trigger -99999
 
-!dir$ concurrent
-!cdir nodep
        do k = beg,end
           if (nint(field(k)) == -99999) then
              accum(nf)%val(k,1) = 0._r8
@@ -636,8 +626,6 @@ contains
        !running accumulation field reset at trigger -99999
 
        do j = 1,numlev
-!dir$ concurrent
-!cdir nodep
           do k = beg,end
              if (nint(field(k,j)) == -99999) then
                 accum(nf)%val(k,j) = 0._r8

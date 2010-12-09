@@ -38,7 +38,6 @@ module lnd_comp_esmf
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: lnd_DistGrid_esmf        ! Distribute clm grid
-  private :: lnd_chkAerDep_esmf       ! Check if aerosol deposition data is input or not
   private :: lnd_domain_esmf          ! Set the land model domain information
   private :: lnd_export_esmf          ! export land data to CESM coupler
   private :: lnd_import_esmf          ! import data from the CESM coupler to the land model
@@ -134,7 +133,7 @@ end subroutine
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
-    use clm_comp         , only : clm_init1, clm_init2, clm_init3
+    use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
                                   downscale
     use controlMod       , only : control_setNL
@@ -200,6 +199,7 @@ end subroutine
     logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
     logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
     logical :: samegrid_al                           ! true if atmosphere and land are on the same grid
+    logical :: atm_aero                              ! Flag if aerosol data sent from atm model
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
     integer :: begg_l, endg_l, begg_a, endg_a
@@ -268,8 +268,8 @@ end subroutine
     call control_setNL( 'lnd_in' )
 
     ! Initialize clm
-    ! clm_init1 reads namelist, grid and surface data
-    ! clm_init2 and clm_init3 performs rest of initialization	
+    ! initialize1 reads namelist, grid and surface data
+    ! initialize2 performs rest of initialization    
 
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
@@ -328,7 +328,7 @@ end subroutine
 
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
-    call clm_init1( )
+    call initialize1( )
 
     ! If no land then exit out of initialization
 
@@ -352,7 +352,14 @@ end subroutine
 
     ! Determine if aerosol and dust deposition come from atmosphere component
 
-    call lnd_chkAerDep_esmf(export_state, rc=rc )
+    rc = ESMF_SUCCESS
+
+    call ESMF_AttributeGet(export_state, name="atm_aero", value=atm_aero, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    if ( .not. atm_aero )then
+       call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
+    end if
 
     ! Initialize lnd distributed grid
 
@@ -370,8 +377,7 @@ end subroutine
 
     ! Finish initializing clm
 
-    call clm_init2()
-    call clm_init3()
+    call initialize2()
 
 #ifdef RTM
     ! Initialize rof distgrid and domain
@@ -592,7 +598,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use shr_kind_mod    ,only : r8 => shr_kind_r8
     use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
-    use clm_comp        ,only : clm_run1, clm_run2
+    use clm_driver      ,only : clm_drv
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
@@ -610,6 +616,8 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use clm_varctl      ,only : create_glacier_mec_landunit, downscale
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
+    use shr_orb_mod     ,only : shr_orb_decl
+    use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
     use seq_flds_indices
     implicit none
 !
@@ -643,6 +651,10 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     logical :: doalb                      ! .true. ==> do albedo calculation on this time step
     real(r8):: nextsw_cday                ! calday from clock of next radiation computation
     real(r8):: caldayp1                   ! clm calday plus dtime offset
+    real(r8):: calday                     ! calendar day for nstep
+    real(r8):: declin                     ! solar declination angle in radians for nstep
+    real(r8):: declinp1                   ! solar declination angle in radians for nstep+1
+    real(r8):: eccf                       ! earth orbit eccentricity factor
     integer :: shrlogunit,shrloglev       ! old values
     integer :: begg_l, endg_l, begg_a, endg_a ! Beginning and ending gridcell index numbers
     integer :: lbnum                          ! input to memory diagnostic
@@ -799,15 +811,13 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
 
        ! Run clm 
 
-       call t_barrierf('sync_clm_run1', mpicom)
-       call t_startf ('clm_run1')
-       call clm_run1( doalb, nextsw_cday )
-       call t_stopf ('clm_run1')
-
-       call t_barrierf('sync_clm_run2', mpicom)
-       call t_startf ('clm_run2')
-       call clm_run2( nextsw_cday, rstwr, nlend, rdate )
-       call t_stopf ('clm_run2')
+       call t_barrierf('sync_clm_run', mpicom)
+       call t_startf ('clm_run')
+       calday = get_curr_calday()
+       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
+       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
+       call t_stopf ('clm_run')
 
        ! Map CLM data type to MCT
        ! Reset landfrac on atmosphere grid to have the right domain
@@ -1069,51 +1079,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
   end function lnd_DistGrid_esmf
 
 !=================================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_chkAerDep_esmf
-!
-! !INTERFACE:
-  subroutine lnd_chkAerDep_esmf(export_state, rc )
-!
-! !DESCRIPTION:
-! Check infodata to see if aerosol deposition data is sent to the land model.
-! If data is NOT sent, read in CLM version of datasets that have this information.
-!
-!------------------------------------------------------------------------------
-!BOP
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-
-    type(ESMF_State)     :: export_state    ! CLM export state
-    integer, intent(out) :: rc              ! return code
-!
-! !LOCAL VARIABLES:
-    logical :: atm_aero                    ! Flag if aerosol data sent from atm model
-    character(len=32), parameter :: sub = "lnd_chkAerDep_esmf"
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek, Fei Liu
-!
-!EOP
-!---------------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_AttributeGet(export_state, name="atm_aero", value=atm_aero, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
-
-    if ( .not. atm_aero )then
-       call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
-    end if
-
-  end subroutine lnd_chkAerDep_esmf
-
-!====================================================================================
 
 !---------------------------------------------------------------------------
 !BOP

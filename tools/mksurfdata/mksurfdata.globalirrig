@@ -1,5 +1,5 @@
 &clmexp
- mksrf_fgrid        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_10x15_070212.nc'
+ mksrf_fgrid        = '/fis/cgd/cseg/csm/inputdata/lnd/clm2/griddata/griddata_1.9x2.5_060404.nc'
  mksrf_fsoitex      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
  mksrf_forganic     = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc'
  mksrf_flanwat      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
@@ -8,7 +8,8 @@
  mksrf_furban       = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_urban_3den_0.5x0.5_simyr2000.c090223_v1.nc'
  mksrf_ftopo        = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc'
  mksrf_ffrac        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
- mksrf_firrig       = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_firrig.090320.nc'
+ mksrf_firrig       = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_irrig_2160x4320_simyr2000.c090320.nc'
+ mksrf_fvocef       = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_vocef.c060502.nc'
  mksrf_fvegtyp      = 
 '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc2000_c090630.nc'
  mksrf_fsoicol      = 

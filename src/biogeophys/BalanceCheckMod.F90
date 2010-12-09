@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module BalanceCheckMod
 
 !-----------------------------------------------------------------------
@@ -222,6 +219,7 @@ contains
     real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m8*2)  [+ to atm]
     real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
     real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_irrig(:)      ! irrigation flux (mm H2O /s)
     real(r8), pointer :: qflx_surf(:)       ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)      ! qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_drain(:)      ! sub-surface runoff (mm H2O /s)
@@ -281,6 +279,7 @@ contains
     cwtgcell          => clm3%g%l%c%wtgcell
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
+    qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
     qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
@@ -346,25 +345,33 @@ contains
     do c = lbc, ubc
        g = cgridcell(c)
 
-       errh2o(c) = endwb(c) - begwb(c) &
-            - (forc_rain_col(c) + forc_snow_col(c) - qflx_evap_tot(c) - qflx_surf(c) &
-            - qflx_qrgwl(c) - qflx_drain(c) - qflx_snwcp_ice(c)) * dtime
+       if (cwtgcell(c) > 0._r8)then
+          errh2o(c) = endwb(c) - begwb(c) &
+               - (forc_rain_col(c) + forc_snow_col(c) + qflx_irrig(c) &
+                 - qflx_evap_tot(c) - qflx_surf(c) &
+                 - qflx_qrgwl(c) - qflx_drain(c) - qflx_snwcp_ice(c)) * dtime
 
-! Suppose glc_dyntopo = T:   
-! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice.  
-!     This flux must be included here to complete the water balance.
-! (2) Meltwater from ice is allowed to run off and is included in qflx_qrgwl,
-!     but the water content of the ice column has not changed (at least for now) because
-!     an equivalent ice mass has been "borrowed" from the base of the column.  That
-!     meltwater is included in qflx_glcice.
+          ! Suppose glc_dyntopo = T:   
+          ! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice.  
+          !     This flux must be included here to complete the water balance.
+          ! (2) Meltwater from ice is allowed to run off and is included in qflx_qrgwl,
+          !     but the water content of the ice column has not changed (at least for now) because
+          !     an equivalent ice mass has been "borrowed" from the base of the column.  That
+          !     meltwater is included in qflx_glcice.
 
-       if (glc_dyntopo) errh2o(c) = errh2o(c) - qflx_glcice(c)*dtime
+          if (glc_dyntopo) errh2o(c) = errh2o(c) - qflx_glcice(c)*dtime
+
+       else
+
+          errh2o(c) = 0.0_r8
+
+       end if
 
     end do
 
     found = .false.
     do c = lbc, ubc
-       if (cwtgcell(c) > 0._r8 .and. abs(errh2o(c)) > 1e-7_r8) then
+       if (abs(errh2o(c)) > 1e-7_r8) then
           found = .true.
           indexc = c
        end if
@@ -382,6 +389,7 @@ contains
           write(iulog,*)'endwb        = ',endwb(indexc)
           write(iulog,*)'begwb        = ',begwb(indexc)
           write(iulog,*)'qflx_evap_tot= ',qflx_evap_tot(indexc)
+          write(iulog,*)'qflx_irrig   = ',qflx_irrig(indexc)
           write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
@@ -397,6 +405,7 @@ contains
           write(iulog,*)'endwb        = ',endwb(indexc)
           write(iulog,*)'begwb        = ',begwb(indexc)
           write(iulog,*)'qflx_evap_tot= ',qflx_evap_tot(indexc)
+          write(iulog,*)'qflx_irrig   = ',qflx_irrig(indexc)
           write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)

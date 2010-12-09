@@ -1,9 +1,9 @@
-module areaMod
+module RtmMapMod
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: areaMod
+! !MODULE: RtmMapMod
 !
 ! !DESCRIPTION:
 ! Area averaging routines
@@ -18,6 +18,7 @@ module areaMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use spmdMod      , only : masterproc
   use abortutils   , only : endrun
+  use clm_mct_mod
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -26,9 +27,7 @@ module areaMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: map_setmapsAR
-  public :: map_setgatm
   public :: celledge
-  public :: cellarea
 !
 ! !REVISION HISTORY:
 ! Created by Sam Levis
@@ -45,48 +44,6 @@ contains
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: map_setgatm
-!
-! !INTERFACE:
-  subroutine map_setgatm(gatm, alatlon, amask)
-!
-! !DESCRIPTION:
-! Set gatm index in ldomain.  This assumes that downscaling will NOT occur
-! and that internally to clm land and atm domains are identical.
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  integer, pointer               :: gatm(:)
-  type(latlon_type), intent(in)  :: alatlon
-  integer          , intent(in)  :: amask(:)
-!
-! !REVISION HISTORY:
-! 2006.06.28  T Craig  Creation.
-! 2006.08.23  P Worley Performance optimizations
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer :: ln,lns
-!
-!------------------------------------------------------------------------
-
-    lns = alatlon%ns
-    allocate(gatm(lns))
-    gatm = -1
-    do ln = 1,lns
-       if (amask(ln) /= 0) then
-          gatm(ln)=ln
-       end if
-    end do
-    
-  end subroutine map_setgatm
-
-!------------------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: map_setmapsAR
 !
 ! !INTERFACE:
@@ -98,7 +55,6 @@ contains
 ! grid to another.
 !
 ! !USES:
-    use clm_mct_mod
 !
 ! !ARGUMENTS:
     implicit none
@@ -428,53 +384,6 @@ contains
 
   end subroutine map_setmapsAR
 
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: cellarea
-!
-! !INTERFACE:
-  real(r8) function cellarea(latlon,i,j)
-!
-! !DESCRIPTION:
-! Comute area of grid cells (square kilometers)
-! Verify total area from grid cells is same as area of grid
-! as defined by its edges
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(latlon_type), intent(in   ) :: latlon    ! latlon datatype
-    integer          , intent(in)    :: i,j       ! latlon index to compute
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer  :: nbeg
-    integer  :: nend
-    integer  :: ni
-    integer  :: nj
-
-    real(r8) deg2rad            !pi/180
-    real(r8) dx                 !cell width: E-W
-    real(r8) dy                 !cell width: N-S
-!------------------------------------------------------------------------
-
-    deg2rad = SHR_CONST_PI / 180._r8
-
-    dx = (latlon%lone(i) - latlon%lonw(i)) * deg2rad
-    dy = sin(latlon%latn(j)*deg2rad) - sin(latlon%lats(j)*deg2rad)
-
-    cellarea = dx*dy*re*re
-
-    return
-
-  end function cellarea
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -525,21 +434,19 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
+    integer  :: i,j     
+    real(r8) :: dx      
     integer  :: nlon              
     integer  :: nlat              
-    real(r8),pointer :: lonc(:) 
     real(r8),pointer :: latc(:) 
     real(r8),pointer :: lats(:)   
     real(r8),pointer :: latn(:)   
     real(r8),pointer :: lonw(:)   
     real(r8),pointer :: lone(:)   
-    integer i,j             !indices
-    real(r8) dx             !cell width
 !------------------------------------------------------------------------
 
     nlon = latlon%ni
     nlat = latlon%nj
-    lonc => latlon%lonc
     latc => latlon%latc
     lats => latlon%lats
     latn => latlon%latn
@@ -586,11 +493,9 @@ contains
     latlon%edges(3) = edges
     latlon%edges(4) = edgew
 
-    return
-
   end subroutine celledge
 
-end module areaMod
+end module RtmMapMod
 
 
 

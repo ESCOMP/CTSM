@@ -1,6 +1,3 @@
-#include <preproc.h>
-#include <misc.h>
-
 module clm_varpar
 
 !-----------------------------------------------------------------------
@@ -35,6 +32,8 @@ module clm_varpar
 
   integer, parameter :: numwat      =   5   ! number of water types (soil, ice, 2 lakes, wetland)
   integer, parameter :: numrad      =   2   ! number of solar radiation bands: vis, nir
+  integer, parameter :: ivis        =   1   ! index for visible band
+  integer, parameter :: inir        =   2   ! index for near-infrared band
   integer, parameter :: numsolar    =   2   ! number of solar type bands: direct, diffuse
   integer, parameter :: ndst        =   4   ! number of dust size classes (BGC only)
   integer, parameter :: dst_src_nbr =   3   ! number of size distns in src soil (BGC only)
@@ -43,8 +42,8 @@ module clm_varpar
 
 ! Define parameters for RTM river routing model
 
-  integer, parameter :: rtmlon = 720  !number of rtm longitudes
-  integer, parameter :: rtmlat = 360  !number of rtm latitudes
+  integer            :: rtmlon        !number of rtm longitudes
+  integer            :: rtmlat        !number of rtm latitudes
 
 ! Define indices used in surface file read
 ! maxpatch_pft     = max number of plant functional types in naturally vegetated landunit
@@ -120,6 +119,8 @@ contains
 
   lsmlon         = 1
   lsmlat         = 1
+  rtmlon         = 1
+  rtmlat         = 1
   maxpatch_pft   = MAXPATCH_PFT
   npatch_urban   = maxpatch_pft + 1
   npatch_lake    = npatch_urban + maxpatch_urb

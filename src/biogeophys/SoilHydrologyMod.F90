@@ -933,6 +933,7 @@ contains
 ! local pointers to original implicit out arguments
 !
     real(r8), pointer :: qflx_drain(:)     !sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_irrig(:)     !irrigation flux (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)     !qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
     real(r8), pointer :: eflx_impsoil(:)   !implicit evaporation for soil temperature equation
     real(r8), pointer :: qflx_rsub_sat(:)  !soil saturation excess [mm h2o/s]
@@ -992,6 +993,7 @@ contains
     qflx_dew_snow => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
     qflx_sub_snow => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
     qflx_drain    => clm3%g%l%c%cwf%qflx_drain
+    qflx_irrig    => clm3%g%l%c%cwf%qflx_irrig
     qflx_qrgwl    => clm3%g%l%c%cwf%qflx_qrgwl
     qflx_rsub_sat => clm3%g%l%c%cwf%qflx_rsub_sat
     eflx_impsoil  => clm3%g%l%c%cef%eflx_impsoil
@@ -1197,6 +1199,7 @@ contains
        c = filter_urbanc(fc)
        if (ctype(c) /= icol_road_perv) then
          qflx_drain(c) = 0._r8
+         qflx_irrig(c) = 0._r8
          ! This must be done for roofs and impervious road (walls will be zero)
          qflx_qrgwl(c) = qflx_snwcp_liq(c)
          eflx_impsoil(c) = 0._r8

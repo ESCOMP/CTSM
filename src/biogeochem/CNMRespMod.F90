@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CNMRespMod
 #ifdef CN
 
@@ -131,8 +128,6 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    ! column loop to calculate temperature factors in each soil layer
    do j=1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
       do fc = 1, num_soilc
          c = filter_soilc(fc)
 
@@ -144,8 +139,6 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do
 
    ! pft loop for leaves and live wood
-!dir$ concurrent
-!cdir nodep
    do fp = 1, num_soilp
       p = filter_soilp(fp)
 
@@ -163,8 +156,6 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    ! soil and pft loop for fine root
    do j = 1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = pcolumn(p)

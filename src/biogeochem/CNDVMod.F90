@@ -449,7 +449,7 @@ contains
     ! Close and archive netcdf CNDV history file
     !------------------------------------------------------------------
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
     if (masterproc) then
        write(6,*)'(histCNDV): Finished writing CNDV history dataset ',&

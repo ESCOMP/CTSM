@@ -2877,9 +2877,7 @@ contains
                   ' for history time interval beginning at ', tape(t)%begtime, &
                   ' and ending at ',time
              write(iulog,*)
-#ifndef UNICOSMP
              call shr_sys_flush(iulog)
-#endif
           endif
 
           ! Update beginning time of next interval
@@ -2915,7 +2913,7 @@ contains
                      trim(locfnh(t)),' at nstep = ', get_nstep()
                 write(iulog,*)
              endif
-	     call pio_closefile(nfid(t))
+	     call ncd_pio_closefile(nfid(t))
              if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
                 call ncd_pio_openfile (nfid(t), trim(locfnh(t)), pio_write)
              end if
@@ -3663,7 +3661,7 @@ contains
 
              end do
 
-             call pio_closefile(ncid_hist(t))
+             call ncd_pio_closefile(ncid_hist(t))
 
           end if  ! end of is_endhist block
        end do   ! end of ntapes loop   
@@ -3714,7 +3712,7 @@ contains
                 end if
              end do
              
-             call pio_closefile(ncid_hist(t))
+             call ncd_pio_closefile(ncid_hist(t))
              
           end if
        end do

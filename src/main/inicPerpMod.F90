@@ -1,12 +1,12 @@
-module inicFileMod
+module inicPerpMod
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: inicFileMod
+! !MODULE: inicPerpMod
 !
 ! !DESCRIPTION:
-! Read CLM initial data netCDF files (used only in CAM perpetual mode)
+! Read initial data for perpetual mode
 !
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -20,7 +20,7 @@ module inicFileMod
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: inicfile_perp
+  public :: inicPerp
 !
 ! !REVISION HISTORY:
 ! Jan/2004 Mariana Vertenstein: Creation
@@ -34,10 +34,10 @@ contains
 !------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: inicfile_perp
+! !IROUTINE: inicPerp
 !
 ! !INTERFACE:
-  subroutine inicfile_perp
+  subroutine inicPerp
 !
 ! !DESCRIPTION: 
 ! Read perpetual initial data fields
@@ -66,10 +66,7 @@ contains
     integer :: begc, endc                     ! per-proc beginning and ending column indices
     integer :: begl, endl                     ! per-proc beginning and ending landunit indices
     integer :: begg, endg                     ! per-proc gridcell ending gridcell indices
-    integer :: numg                           ! total number of gridcells across all processors
-    integer :: numl                           ! total number of landunits across all processors
-    integer :: numc                           ! total number of column across all processors
-    integer :: nump                           ! total number of pfts across all processors
+    integer :: numg,numl,numc,nump            ! total numbers
     logical :: readvar                        ! determine if variable is on initial file
     integer :: ier                            ! error status
     type(gridcell_type), pointer :: gptr      ! pointer to gridcell derived subtype
@@ -152,7 +149,7 @@ contains
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
     ! Determine volumetric soil water
 
@@ -185,6 +182,6 @@ contains
        end if
     end do
 
-  end subroutine inicfile_perp
+  end subroutine inicPerp
 
-end module inicFileMod
+end module inicPerpMod

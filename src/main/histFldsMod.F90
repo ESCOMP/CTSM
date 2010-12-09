@@ -819,6 +819,10 @@ contains
          avgflag='A', long_name='canopy transpiration', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_tran_veg, set_lake=0._r8, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='QIRRIG', units='mm/s', &
+         avgflag='A', long_name='water added through irrigation', &
+         ptr_col=clm3%g%l%c%cwf%qflx_irrig, set_lake=0._r8)
+
     if (create_glacier_mec_landunit) then
 
        call hist_addfld1d (fname='QICE',  units='mm/s',  &

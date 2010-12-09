@@ -4,6 +4,7 @@ module clm_time_manager
    use spmdMod     , only: masterproc, iam
    use abortutils  , only: endrun
    use clm_varctl  , only: iulog
+   use clm_varcon  , only: isecspday
    use ESMF_Mod
 
    implicit none
@@ -377,7 +378,7 @@ function TimeSetymd( ymd, tod, desc )
   integer :: rc                    ! return code
   !---------------------------------------------------------------------------------
 
-  if ( (ymd < 0) .or. (tod < 0) .or. (tod > 24*3600) )then
+  if ( (ymd < 0) .or. (tod < 0) .or. (tod > isecspday) )then
      write(iulog,*) sub//': error yymmdd is a negative number or time-of-day out of bounds', &
           ymd, tod
      call endrun
@@ -736,7 +737,7 @@ subroutine calc_nestep()
   
   call ESMF_ClockGet( tm_clock, stopTime=stop_date, startTime=start_date, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_ClockGet')
-  ntspday = 86400/dtime
+  ntspday = isecspday/dtime
   diff = stop_date - start_date
   call ESMF_TimeIntervalGet( diff, d=ndays, s=nsecs, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet calculating nestep')

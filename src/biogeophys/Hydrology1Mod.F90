@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module Hydrology1Mod
 
 !-----------------------------------------------------------------------
@@ -105,6 +102,7 @@ contains
     real(r8), pointer :: elai(:)           ! one-sided leaf area index with burying by snow
     real(r8), pointer :: esai(:)           ! one-sided stem area index with burying by snow
     real(r8), pointer :: h2ocan_loss(:)    ! canopy water mass balance term (column)
+    real(r8), pointer :: irrig_rate(:)     ! current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
 !
 ! local pointers to original implicit inout arrays
 !
@@ -112,6 +110,8 @@ contains
     real(r8), pointer :: snowdp(:)         ! snow height (m)
     real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
     real(r8), pointer :: h2ocan(:)         ! total canopy water (mm H2O)
+    real(r8), pointer :: qflx_irrig(:)          ! irrigation amount (mm/s)
+    integer, pointer  :: n_irrig_steps_left(:)  ! number of time steps for which we still need to irrigate today
 !
 ! local pointers to original implicit out arrays
 !
@@ -244,6 +244,9 @@ contains
     qflx_rain_grnd     => clm3%g%l%c%p%pwf%qflx_rain_grnd
     fwet               => clm3%g%l%c%p%pps%fwet
     fdry               => clm3%g%l%c%p%pps%fdry
+    irrig_rate         => clm3%g%l%c%cps%irrig_rate
+    n_irrig_steps_left => clm3%g%l%c%cps%n_irrig_steps_left
+    qflx_irrig         => clm3%g%l%c%cwf%qflx_irrig
 
     ! Compute time step
 
@@ -260,6 +263,7 @@ contains
        ! Canopy interception and precipitation onto ground surface
        ! Add precipitation to leaf water
 
+       ! Add '.or. ltype(l)==istcrop' here when getting on the trunk
        if (ltype(l)==istsoil .or. ltype(l)==istwet .or. ltype(l)==isturb) then
 
           qflx_candrip(p) = 0._r8      ! rate of canopy runoff
@@ -346,6 +350,21 @@ contains
           qflx_prec_grnd_snow(p) = 0.
           qflx_prec_grnd_rain(p) = 0.
        end if
+
+       ! Determine whether we're irrigating here; set qflx_irrig appropriately
+       if (n_irrig_steps_left(c) > 0) then
+          qflx_irrig(c)         = irrig_rate(c)
+          n_irrig_steps_left(c) = n_irrig_steps_left(c) - 1
+       else
+          qflx_irrig(c) = 0._r8
+       end if
+
+       ! Add irrigation water directly onto ground (bypassing canopy interception)
+       ! Note that it's still possible that (some of) this irrigation water will runoff (as runoff is computed later)
+       qflx_prec_grnd_rain(p) = qflx_prec_grnd_rain(p) + qflx_irrig(c)
+
+       ! Done irrigation
+
        qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
        if (do_capsnow(c)) then

@@ -35,7 +35,6 @@ module lnd_comp_mct
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: lnd_SetgsMap_mct         ! Set the land model MCT GS map
-  private :: lnd_chkAerDep_mct        ! Check if aerosol deposition data is input or not
   private :: lnd_domain_mct           ! Set the land model domain information
   private :: lnd_export_mct           ! export land data to CESM coupler
   private :: lnd_import_mct           ! import data from the CESM coupler to the land model
@@ -95,7 +94,7 @@ contains
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
-    use clm_comp         , only : clm_init1, clm_init2, clm_init3
+    use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
                                   downscale
     use clm_varpar       , only : rtmlon, rtmlat
@@ -146,6 +145,7 @@ contains
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     integer  :: dtime_clm                            ! clm time-step
     logical  :: exists                               ! true if file exists
+    logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     logical  :: samegrid_al                          ! true if atmosphere and land are on the same grid
     real(r8) :: scmlat                               ! single-column latitude
     real(r8) :: scmlon                               ! single-column longitude
@@ -224,8 +224,8 @@ contains
     call control_setNL( 'lnd_in' )
 
     ! Initialize clm
-    ! clm_init1 reads namelist, grid and surface data
-    ! clm_init2 and clm_init3 performs rest of initialization	
+    ! initialize1 reads namelist, grid and surface data
+    ! initialize2 performs rest of initialization	
 
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
@@ -264,7 +264,7 @@ contains
 
     ! Read namelist, grid and surface data
 
-    call clm_init1( )
+    call initialize1( )
 
     ! If no land then exit out of initialization
 
@@ -286,7 +286,10 @@ contains
 
     ! Determine if aerosol and dust deposition come from atmosphere component
 
-    call lnd_chkAerDep_mct( infodata )
+    call seq_infodata_GetData(infodata, atm_aero=atm_aero )
+    if ( .not. atm_aero )then
+       call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
+    end if
 
     ! Initialize lnd gsMap and domain
 
@@ -315,8 +318,7 @@ contains
 
     ! Finish initializing clm
 
-    call clm_init2()
-    call clm_init3()
+    call initialize2()
 
     ! Check that clm internal dtime aligns with clm coupling interval
 
@@ -483,7 +485,7 @@ contains
     use shr_kind_mod    ,only : r8 => shr_kind_r8
     use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
-    use clm_comp        ,only : clm_run1, clm_run2
+    use clm_driver      ,only : clm_drv
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
     use domainMod       ,only : adomain, ldomain
@@ -501,12 +503,13 @@ contains
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
     use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
                                 mct_aVect_zero
-    use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
+    use mct_mod         ,only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
     use clm_varctl      ,only : create_glacier_mec_landunit, downscale
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
+    use shr_orb_mod     ,only : shr_orb_decl
+    use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
     use seq_flds_indices
-
     use ESMF_mod
     implicit none
 !
@@ -555,6 +558,10 @@ contains
     character(len=32), parameter :: sub = "lnd_run_mct"
     logical :: glcrun_alarm    ! if true, sno data is averaged and sent to glc this step
     logical :: update_glc2sno_fields  ! if true, update glacier_mec fields
+    real(r8) :: calday                ! calendar day for nstep
+    real(r8) :: declin                ! solar declination angle in radians for nstep
+    real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
+    real(r8) :: eccf                  ! earth orbit eccentricity factor
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -645,7 +652,7 @@ contains
 
     ! Loop over time steps in coupling interval
 
-    dosend      = .false.
+    dosend = .false.
     do while(.not. dosend)
 
        ! Determine if dosend
@@ -680,14 +687,12 @@ contains
        ! Run clm 
 
        call t_barrierf('sync_clm_run1', mpicom)
-       call t_startf ('clm_run1')
-       call clm_run1( doalb, nextsw_cday )
-       call t_stopf ('clm_run1')
-
-       call t_barrierf('sync_clm_run2', mpicom)
-       call t_startf ('clm_run2')
-       call clm_run2( nextsw_cday, rstwr, nlend, rdate )
-       call t_stopf ('clm_run2')
+       call t_startf ('clm_run')
+       calday = get_curr_calday()
+       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
+       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
+       call t_stopf ('clm_run')
 
        ! Map land data type to MCT
        ! Reset landfrac on atmosphere grid to have the right domain
@@ -887,47 +892,6 @@ contains
     deallocate(gindex)
 
   end subroutine lnd_SetgsMap_mct
-
-!=================================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_chkAerDep_mct
-!
-! !INTERFACE:
-  subroutine lnd_chkAerDep_mct( infodata )
-!
-! !DESCRIPTION:
-! Check infodata to see if aerosol deposition data is sent to the land model.
-! If data is NOT sent, read in CLM version of datasets that have this information.
-!
-!------------------------------------------------------------------------------
-! !USES:
-    use abortutils       , only : endrun
-    use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData
-    implicit none
-!
-! !ARGUMENTS:
-
-    type(seq_infodata_type),pointer :: infodata ! CESM information from the driver
-!
-! !LOCAL VARIABLES:
-    logical :: atm_aero                    ! Flag if aerosol data sent from atm model
-    character(len=32), parameter :: sub = "lnd_chkAerDep_mct"
-!
-! !REVISION HISTORY:
-! Author: Erik Kluzek
-!
-!EOP
-!---------------------------------------------------------------------------
-
-    call seq_infodata_GetData(infodata, atm_aero=atm_aero )
-    if ( .not. atm_aero )then
-       call endrun( sub//' ERROR: atmosphere model MUST send aerosols to CLM' )
-    end if
-
-  end subroutine lnd_chkAerDep_mct
 
 !=================================================================================
 

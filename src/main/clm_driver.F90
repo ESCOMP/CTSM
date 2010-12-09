@@ -67,6 +67,16 @@ module clm_driver
 !  -> SurfaceAlbedo       albedos for next time step
 !  -> UrbanAlbedo         Urban landunit albedos for next time step
 !  ====  End Loop over clumps  ====
+!
+! Second phase of the clm main driver, for handling history and restart file output.
+!
+!  -> write_diagnostic    output diagnostic if appropriate
+!   + Rtmriverflux        calls RTM river routing model                [RTM]
+!   + inicPerp            initial snow and soil moisture               [is_perpetual]
+!  -> updateAccFlds       update accumulated fields
+!  -> hist_update_hbuf    accumulate history fields for time interval
+!  -> htapes_wrapup       write history tapes if appropriate
+!  -> restFile_write      write restart file if appropriate
 ! \end{verbatim}
 !
 ! Optional subroutines are denoted by an plus (+) with the associated
@@ -78,7 +88,7 @@ module clm_driver
   use clm_varctl          , only : wrtdia, fpftdyn
   use clm_varctl          , only : iulog
   use spmdMod             , only : masterproc,mpicom
-  use decompMod           , only : get_proc_clumps, get_clump_bounds
+  use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds
   use filterMod           , only : filter, setFilters
 #if (defined CNDV)
   use CNDVMod             , only : dv, histCNDV
@@ -94,7 +104,7 @@ module clm_driver
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
-  use inicFileMod         , only : inicfile_perp  
+  use inicPerpMod         , only : inicPerp  
   use accFldsMod          , only : updateAccFlds
   use clm_driverInitMod   , only : clm_driverInit
   use BalanceCheckMod     , only : BeginWaterBalance, BalanceCheck
@@ -131,23 +141,22 @@ module clm_driver
   use CASAMod             , only : casa_ecosystemDyn
 #endif
 #if (defined RTM)
-  use RtmMod              , only : Rtmriverflux
+  use RtmMod              , only : RtmInput, RtmMapl2r, Rtm
 #endif
   use abortutils          , only : endrun
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
-  use perf_mod
   use SNICARMod           , only : SnowAge_grain
-
+  use clm_atmlnd          , only : clm_map2gcell
+  use perf_mod
 !
 ! !PUBLIC TYPES:
   implicit none
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: clm_driver1              ! Phase one of the clm driver (clm physics)
-  public :: clm_driver2              ! Phase two of the clm driver (history, restart writes updates etc.)
+  public :: clm_drv                 ! clm physics,history, restart writes
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: write_diagnostic        ! Write diagnostic information to log file
+  private :: write_diagnostic       ! Write diagnostic information to log file
 !EOP
 !-----------------------------------------------------------------------
 
@@ -156,10 +165,10 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: clm_driver1
+! !ROUTINE: clm_drv
 !
 ! !INTERFACE:
-subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
+subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 !
 ! !DESCRIPTION:
 !
@@ -170,10 +179,13 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
 
 ! !ARGUMENTS:
   implicit none
-  logical , intent(in) :: doalb       ! true if time for surface albedo calc
-  real(r8), intent(in) :: nextsw_cday ! calendar day for nstep+1
-  real(r8), intent(in) :: declinp1    ! declination angle for next time step
-  real(r8), intent(in) :: declin      ! declination angle for current time step
+  logical,         intent(in) :: doalb       ! true if time for surface albedo calc
+  real(r8),        intent(in) :: nextsw_cday ! calendar day for nstep+1
+  real(r8),        intent(in) :: declinp1    ! declination angle for next time step
+  real(r8),        intent(in) :: declin      ! declination angle for current time step
+  logical,         intent(in) :: rstwr       ! true => write restart file this step
+  logical,         intent(in) :: nlend       ! true => end of run on this step
+  character(len=*),intent(in) :: rdate       ! restart file time stamp for name
 !
 ! !REVISION HISTORY:
 ! 2002.10.01  Mariana Vertenstein latest update to new data structures
@@ -197,17 +209,38 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
   integer , pointer :: itypelun(:)  ! landunit type
 !
 ! !OTHER LOCAL VARIABLES:
-  real(r8) :: dtime                       ! land model time step (sec)
-  real(r8) :: t1, t2, t3                  ! temporary for mass balance checks
-  integer  :: nc, fc, c, fp, p, l, g      ! indices
-  integer  :: nclumps                     ! number of clumps on this processor
-  integer  :: nstep                       ! time step number
-  integer  :: begp, endp                  ! clump beginning and ending pft indices
-  integer  :: begc, endc                  ! clump beginning and ending column indices
-  integer  :: begl, endl                  ! clump beginning and ending landunit indices
-  integer  :: begg, endg                  ! clump beginning and ending gridcell indices
-  type(column_type)  , pointer :: cptr    ! pointer to column derived subtype
+  integer  :: nstep                    ! time step number
+  real(r8) :: dtime                    ! land model time step (sec)
+  real(r8) :: t1, t2, t3               ! temporary for mass balance checks
+  integer  :: nc, fc, c, fp, p, l, g   ! indices
+  integer  :: nclumps                  ! number of clumps on this processor
+  integer  :: begg, endg               ! clump beginning and ending gridcell indices
+  integer  :: begl, endl               ! clump beginning and ending landunit indices
+  integer  :: begc, endc               ! clump beginning and ending column indices
+  integer  :: begp, endp               ! clump beginning and ending pft indices
+  integer  :: begg_proc, endg_proc     ! proc beginning and ending gridcell indices
+  integer  :: begl_proc, endl_proc     ! proc beginning and ending landunit indices
+  integer  :: begc_proc, endc_proc     ! proc beginning and ending column indices
+  integer  :: begp_proc, endp_proc     ! proc beginning and ending pft indices
+  type(column_type), pointer :: cptr   ! pointer to column derived subtype
+#if (defined CNDV)
+  integer  :: yrp1                     ! year (0, ...) for nstep+1
+  integer  :: monp1                    ! month (1, ..., 12) for nstep+1
+  integer  :: dayp1                    ! day of month (1, ..., 31) for nstep+1
+  integer  :: secp1                    ! seconds into current date for nstep+1
+  integer  :: yr                       ! year (0, ...)
+  integer  :: mon                      ! month (1, ..., 12)
+  integer  :: day                      ! day of month (1, ..., 31)
+  integer  :: sec                      ! seconds of the day
+  integer  :: ncdate                   ! current date
+  integer  :: nbdate                   ! base date (reference date)
+  integer  :: kyr                      ! thousand years, equals 2 at end of first year
+#endif
+  character(len=256) :: filer          ! restart file name
+  integer :: ier                       ! error code
+  logical, save :: do_rtm              ! true => perform rtm calculation
 !-----------------------------------------------------------------------
+
   ! Assign local pointers to derived subtypes components (landunit-level)
 
   itypelun            => clm3%g%l%itype
@@ -242,7 +275,6 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
      call t_stopf('interpMonthlyVeg')
   end if
 #endif
-
 
   ! ============================================================================
   ! Loop over clumps
@@ -670,70 +702,13 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
   end do
 !$OMP END PARALLEL DO
 
-end subroutine clm_driver1
+  ! ============================================================================
+  ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)
+  ! ============================================================================
 
-!-----------------------------------------------------------------------
-!
-! !ROUTINE: clm_driver2
-!
-! !INTERFACE:
-subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
-!
-! !DESCRIPTION:
-!
-! Second phase of the clm main driver, for handling history and restart file output.
-!
-! The main CLM driver calling sequence is as follows:
-! \begin{verbatim}
-!
-!  -> write_diagnostic    output diagnostic if appropriate
-!   + Rtmriverflux        calls RTM river routing model                [RTM]
-!   + inicfile_perp       initial snow and soil moisture               [is_perpetual]
-!  -> updateAccFlds       update accumulated fields
-!  -> hist_update_hbuf    accumulate history fields for time interval
-!  -> htapes_wrapup       write history tapes if appropriate
-!  -> restFile_write      write restart file if appropriate
-!  -> restFile_write      write initial file if appropriate
-! \end{verbatim}
-!
-! !ARGUMENTS:
-  implicit none
-  real(r8),          intent(in) :: nextsw_cday ! calendar day for nstep+1
-  real(r8),          intent(in) :: declinp1    ! declination angle for next time step
-  logical,           intent(in) :: rstwr       ! true => write restart file this step
-  logical,           intent(in) :: nlend       ! true => end of run on this step
-  character(len=*),  intent(in) :: rdate       ! restart file time stamp for name
-!
-! !REVISION HISTORY:
-! 2005.05.22  Mariana Vertenstein creation
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-  integer  :: nstep         ! time step number
-  real(r8) :: dtime         ! land model time step (sec)
-#if (defined CNDV)
-  integer  :: nc, c         ! indices
-  integer  :: nclumps       ! number of clumps on this processor
-  integer  :: yrp1          ! year (0, ...) for nstep+1
-  integer  :: monp1         ! month (1, ..., 12) for nstep+1
-  integer  :: dayp1         ! day of month (1, ..., 31) for nstep+1
-  integer  :: secp1         ! seconds into current date for nstep+1
-  integer  :: yr            ! year (0, ...)
-  integer  :: mon           ! month (1, ..., 12)
-  integer  :: day           ! day of month (1, ..., 31)
-  integer  :: sec           ! seconds of the day
-  integer  :: ncdate        ! current date
-  integer  :: nbdate        ! base date (reference date)
-  integer  :: kyr           ! thousand years, equals 2 at end of first year
-  integer  :: begp, endp    ! clump beginning and ending pft indices
-  integer  :: begc, endc    ! clump beginning and ending column indices
-  integer  :: begl, endl    ! clump beginning and ending landunit indices
-  integer  :: begg, endg    ! clump beginning and ending gridcell indices
-#endif
-  character(len=256) :: filer  ! restart file name
-  integer :: ier               ! error code
-!-----------------------------------------------------------------------
+    call t_startf('clm_map2gcell')
+    call clm_map2gcell( )
+    call t_stopf('clm_map2gcell')
 
   ! ============================================================================
   ! Write global average diagnostics to standard output
@@ -752,7 +727,15 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 
   call mpi_barrier(mpicom,ier)
   call t_startf('clmrtm')
-  call Rtmriverflux()
+  call get_proc_bounds(begg_proc, endg_proc, begl_proc, endl_proc, &
+                       begc_proc, endc_proc, begp_proc, endp_proc)
+  call RtmInput(do_rtm, begg_proc, endg_proc, &
+                clm3%g%gwf%qflx_runoffg(begg_proc:endg_proc),&
+                clm3%g%gwf%qflx_snwcp_iceg(begg_proc:endg_proc))
+  if (do_rtm) then
+     call RtmMapl2r()
+     call Rtm()
+  end if
   call t_stopf('clmrtm')
 #endif
 
@@ -762,7 +745,7 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 
   call t_startf('inicperp')
   if (is_perpetual()) then
-     call inicfile_perp()
+     call inicPerp()
   end if
   call t_stopf('inicperp')
 
@@ -820,12 +803,12 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   ! Create history and write history tapes if appropriate
   ! ============================================================================
 
-  call t_startf('clm_driver_io')
+  call t_startf('clm_drv_io')
 #ifndef _NOIO
 
-  call t_startf('clm_driver_io_htapes')
+  call t_startf('clm_drv_io_htapes')
   call hist_htapes_wrapup( rstwr, nlend )
-  call t_stopf('clm_driver_io_htapes')
+  call t_stopf('clm_drv_io_htapes')
 
   ! ============================================================================
   ! Write to CNDV history buffer if appropriate
@@ -833,10 +816,10 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 
 #if (defined CNDV)
   if (monp1==1 .and. dayp1==1 .and. secp1==dtime .and. nstep>0)  then
-     call t_startf('clm_driver_io_hdgvm')
+     call t_startf('clm_drv_io_hdgvm')
      call histCNDV()
      if (masterproc) write(iulog,*) 'Annual CNDV calculations are complete'
-     call t_stopf('clm_driver_io_hdgvm')
+     call t_stopf('clm_drv_io_hdgvm')
   end if
 #endif
 
@@ -845,16 +828,16 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   ! ============================================================================
 
   if (rstwr) then
-     call t_startf('clm_driver_io_wrest')
+     call t_startf('clm_drv_io_wrest')
      filer = restFile_filename(rdate=rdate)
      call restFile_write( filer, nlend, rdate=rdate )
-     call t_stopf('clm_driver_io_wrest')
+     call t_stopf('clm_drv_io_wrest')
   end if
 
 #endif
-  call t_stopf('clm_driver_io')
+  call t_stopf('clm_drv_io')
 
-end subroutine clm_driver2
+end subroutine clm_drv
 
 !------------------------------------------------------------------------
 !BOP

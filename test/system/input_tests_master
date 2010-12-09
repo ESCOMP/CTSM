@@ -400,6 +400,26 @@ erHV1 TER.sh 17p_cnsc_dh clm_drydep 20000704:1800 4x5 gx3v7@2000 -3+-7 cold
 brHV1 TBR.sh 17p_cnsc_dh clm_drydep 20000704:1800 4x5 gx3v7@2000 -5+-5 cold
 blHV1 TBL.sh 17p_cnsc_dh clm_drydep 20000704:1800 4x5 gx3v7@2000 -90   cold
 
+smAZ1 TSM.sh _sc_dh clm_irrig 20020401:3600 10x15 USGS  -10   cold
+erAZ1 TER.sh _sc_dh clm_irrig 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ1 TBR.sh _sc_dh clm_irrig 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ1 TBL.sh _sc_dh clm_irrig 20020401:3600 10x15 USGS  -10   cold
+
+smAZ2 TSM.sh _sc_dm clm_irrig 20020401:3600 10x15 USGS  -10   cold
+erAZ2 TER.sh _sc_dm clm_irrig 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ2 TBR.sh _sc_dm clm_irrig 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ2 TBL.sh _sc_dm clm_irrig 20020401:3600 10x15 USGS  -10   cold
+
+smAZ3 TSM.sh _sc_do clm_irrig 20020401:3600 10x15 USGS  -10   cold
+erAZ3 TER.sh _sc_do clm_irrig 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ3 TBR.sh _sc_do clm_irrig 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ3 TBL.sh _sc_do clm_irrig 20020401:3600 10x15 USGS  -10   cold
+
+smAZ4 TSM.sh _sc_ds clm_irrig 20020401:3600 10x15 USGS  -10   cold
+erAZ4 TER.sh _sc_ds clm_irrig 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ4 TBR.sh _sc_ds clm_irrig 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ4 TBL.sh _sc_ds clm_irrig 20020401:3600 10x15 USGS  -10   cold
+
 smH65 TSM.sh _cnnsc_dh clm_pftdyn 18501230:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 erH65 TER.sh _cnnsc_dh clm_pftdyn 18501230:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
 brH65 TBR.sh _cnnsc_dh clm_pftdyn 18501230:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
@@ -424,6 +444,11 @@ smHN3 TSM.sh 17p_cnsc_do clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2
 erHN3 TER.sh 17p_cnsc_do clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cold
 brHN3 TBR.sh 17p_cnsc_do clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cold
 blHN3 TBL.sh 17p_cnsc_do clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
+
+smHN5 TSM.sh 17p_cnsc_h clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
+erHN5 TER.sh 17p_cnsc_h clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cold
+brHN5 TBR.sh 17p_cnsc_h clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cold
+blHN5 TBL.sh 17p_cnsc_h clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
 
 smHW3 TSM.sh 17p_cnsc_do clm_transient_rcp6 20051220:1800 10x15 USGS@1850-2100 -10   cold
 erHW3 TER.sh 17p_cnsc_do clm_transient_rcp6 20051220:1800 10x15 USGS@1850-2100 -3+-7 cold
@@ -724,6 +749,11 @@ smL52 TSM.sh _sc_dm clm_std^nl_urb    20020115:1800 10x15 USGS 96     arb_ic
 erL52 TER.sh _sc_dm clm_std^nl_urb    20020115:1800 10x15 USGS 10+38  arb_ic
 brL52 TBR.sh _sc_dm clm_std^nl_urb_br 20020115:1800 10x15 USGS 72+72  arb_ic
 blL52 TBL.sh _sc_dm clm_std^nl_urb    20020115:1800 10x15 USGS 48     arb_ic
+
+smL53 TSM.sh _sc_do clm_std^nl_urb    20020115:1800 10x15 USGS 96     arb_ic
+erL53 TER.sh _sc_do clm_std^nl_urb    20020115:1800 10x15 USGS 10+38  arb_ic
+brL53 TBR.sh _sc_do clm_std^nl_urb_br 20020115:1800 10x15 USGS 72+72  arb_ic
+blL53 TBL.sh _sc_do clm_std^nl_urb    20020115:1800 10x15 USGS 48     arb_ic
 
 smL54 TSM.sh _sc_ds clm_std^nl_urb    20020115:1800 10x15 USGS 96     arb_ic
 erL54 TER.sh _sc_ds clm_std^nl_urb    20020115:1800 10x15 USGS 72+72  arb_ic

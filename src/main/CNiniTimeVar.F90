@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -173,6 +170,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: alphapsnsha(:)        !shaded 13c fractionation ([])
 #endif
    real(r8), pointer :: qflx_drain(:)         ! sub-surface runoff (mm H2O /s)
+   real(r8), pointer :: qflx_irrig(:)         !irrigation flux (mm H2O/s)
    ! new variables for fire
    real(r8), pointer :: wf(:)                 ! soil moisture in top 0.5 m
    real(r8), pointer :: me(:)                 ! moisture of extinction (proportion)
@@ -294,6 +292,7 @@ subroutine CNiniTimeVar()
     farea_burned                   => clm3%g%l%c%cps%farea_burned
     ann_farea_burned               => clm3%g%l%c%cps%ann_farea_burned
     qflx_drain                     => clm3%g%l%c%cwf%qflx_drain
+    qflx_irrig                     => clm3%g%l%c%cwf%qflx_irrig
     cwdc                           => clm3%g%l%c%ccs%cwdc
     litr1c                         => clm3%g%l%c%ccs%litr1c
     litr2c                         => clm3%g%l%c%ccs%litr2c
@@ -522,15 +521,11 @@ subroutine CNiniTimeVar()
    ! Changed 3/21/08, KO: still needed but don't have sufficient information 
    ! to set this properly (e.g., pft-level displacement height and roughness 
    ! length). So leave at 30m.
-!dir$ concurrent
-!cdir nodep
    do p = begp, endp
       forc_hgt_u_pft(p) = 30._r8
    end do
 
    ! initialize column-level variables
-!dir$ concurrent
-!cdir nodep
    do c = begc, endc
       l = clandunit(c)
       if (itypelun(l) == istsoil) then
@@ -549,6 +544,8 @@ subroutine CNiniTimeVar()
          
          ! needed for CNNLeaching
          qflx_drain(c) = 0._r8
+
+         qflx_irrig(c) = 0._r8
 
          ! column carbon state variable initialization
          cwdc(c)   = 0._r8
@@ -658,8 +655,6 @@ subroutine CNiniTimeVar()
    end do
 
    ! initialize pft-level variables
-!dir$ concurrent
-!cdir nodep
    do p = begp, endp
       l = plandunit(p)
       if (itypelun(l) == istsoil) then

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module SurfaceRadiationMod
 
 !------------------------------------------------------------------------------
@@ -63,7 +60,7 @@ contains
      use clmtype
      use clm_atmlnd      , only : clm_a2l
      use clm_varpar      , only : numrad
-     use clm_varcon      , only : spval, istsoil
+     use clm_varcon      , only : spval, istsoil, degpsec, isecspday
      use clm_varcon      , only : istice_mec
      use clm_time_manager, only : get_curr_date, get_step_size
      use clm_varpar      , only : nlevsno
@@ -755,9 +752,9 @@ contains
            fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
            fsr_nir_i(p)  = albi(p,2)*forc_solai(g,2)
            
-           local_secp1 = secs + nint((londeg(g)/15._r8*3600._r8)/dtime)*dtime
-           local_secp1 = mod(local_secp1,86400)
-           if (local_secp1 == 43200) then
+           local_secp1 = secs + nint((londeg(g)/degpsec)/dtime)*dtime
+           local_secp1 = mod(local_secp1,isecspday)
+           if (local_secp1 == isecspday/2) then
               fsds_vis_d_ln(p) = forc_solad(g,1)
               fsds_nir_d_ln(p) = forc_solad(g,2)
               fsr_vis_d_ln(p) = albd(p,1)*forc_solad(g,1)

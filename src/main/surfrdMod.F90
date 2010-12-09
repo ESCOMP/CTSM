@@ -256,7 +256,7 @@ contains
        endif
        
        if (present(mfilename)) then
-          call pio_closefile(ncidm)
+          call ncd_pio_closefile(ncidm)
        endif
     endif
 
@@ -277,7 +277,7 @@ contains
     endif
 #endif
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_latlon
 
@@ -419,7 +419,7 @@ contains
     endif
 #endif
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_grid
 
@@ -520,7 +520,7 @@ contains
     end if
 #endif
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'
        write(iulog,*)
@@ -634,7 +634,7 @@ contains
 
     deallocate(latc,lonc)
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
     if (present(glcfilename)) then
        if (masterproc) then
@@ -651,7 +651,7 @@ contains
             dim1name=clmlevel, readvar=readvar)
        if (.not. readvar) call endrun( trim(subname)//' ERROR: GLCMASK NOT in file' )
 
-       call pio_closefile(ncidg)
+       call ncd_pio_closefile(ncidg)
     endif   ! present(glcfilename)
 
   end subroutine surfrd_get_frac
@@ -757,7 +757,7 @@ contains
 
     deallocate(latc,lonc)
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_topo
 
@@ -1065,7 +1065,7 @@ contains
 !
 ! !USES:
     use clm_varctl, only : create_crop_landunit
-    use pftvarcon , only : crop, noveg
+    use pftvarcon , only : crop, noveg, nirrig
     use domainMod , only : domain_type
 !
 ! !ARGUMENTS:
@@ -1162,6 +1162,12 @@ contains
                 ! Separate crop landunit is not created
 
                 pctpft(nl,m) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
+                if (m == nirrig) then
+                   if (pctpft(nl,m) > 0._r8) then
+                      write(iulog,*) 'ERROR surfrdMod: irrigated crop pft requires create_crop_landunit=.true. to be irrigated'
+                      call endrun()
+                   end if
+                end if
              end if
           end do
 
@@ -1384,6 +1390,8 @@ contains
 !
 ! !USES:
     use domainMod   , only : domain_type
+    use clm_varctl  , only : create_crop_landunit
+    use pftvarcon   , only : nirrig
 !
 ! !ARGUMENTS:
     implicit none
@@ -1436,6 +1444,12 @@ contains
              sumpct = 0._r8
              do m = 0,numpft
                 sumpct = sumpct + pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
+                if (m == nirrig .and. .not. create_crop_landunit) then
+                   if (pctpft(nl,m) > 0._r8) then
+                      write(iulog,*) 'ERROR surfrdMod: pft irrigated crop requires create_crop_landunit=.true. to be irrigated'
+                      call endrun()
+                   end if
+                end if
              end do
              if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
                 write(iulog,*)'surfrdMod error: sum(pct) over numpft+1 is not = 100.'

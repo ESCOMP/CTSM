@@ -53,7 +53,7 @@ ifneq ($(strip $(SMP)),)
   SMP := FALSE
 endif
 
-CPPDEF := -DNO_SHR_VMATH -DOFFLINE $(USER_CPPDEFS)
+CPPDEF := -DNO_SHR_VMATH $(USER_CPPDEFS)
 
 ifeq ($(OPT),FALSE)
 else
@@ -144,11 +144,13 @@ ifeq ($(strip $(USER_CC)),)
   CC := gcc
 endif
 
-CFLAGS  := -g -O2 $(CPPDEF)
-CPPDEF  += -DFORTRAN_SAME -DSYSDARWIN -DDarwin
+CFLAGS  := -g -O2
+CPPDEF  += -DSYSDARWIN -DDarwin -DLINUX
+LDFLAGS :=
 
 ifeq ($(FC),g95)
 
+   CPPDEF   += -DFORTRAN_SAME
    CPPDEF   += -DG95
    FFLAGS   := -c -fno-second-underscore $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF)
    ifeq ($(OPT),TRUE)
@@ -162,6 +164,7 @@ endif
 ifeq ($(FC),gfortran)
 
    CPPDEF   += -DG95
+   CPPDEF   += -DFORTRAN_SAME
    FFLAGS   := -c -fno-second-underscore $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF) \
                -fno-range-check
    ifeq ($(OPT),TRUE)
@@ -172,14 +175,53 @@ ifeq ($(FC),gfortran)
 
 endif
 
-ifeq ($(CC),gcc)
-   CFLAGS     := $(cpp_path) -O2 $(CPPDEF)
-endif
-ifeq ($(CC),xlc)
-   CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
+ifeq ($(FC),ifort)
+
+  CPPDEF  += -DFORTRANUNDERSCORE
+  FFLAGS  += -c -ftz -g -fp-model precise $(CPPDEF) $(cpp_path) \
+             -convert big_endian -assume byterecl -traceback -FR
+  LDFLAGS += -m64
+
+  ifneq ($(OPT),TRUE)
+     FFLAGS    += -CB -O0
+  else
+     FFLAGS    += -O2
+  endif
+  ifeq ($(SMP),TRUE)
+    FFLAGS    += -openmp
+    LDFLAGS   += -openmp
+  endif
 endif
 
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
+ifeq ($(FC),pgf90)
+
+  CPPDEF  += -DFORTRANUNDERSCORE
+  FFLAGS  += -c $(CPPDEF) $(cpp_path)
+  ifneq ($(OPT),TRUE)
+    FFLAGS += -g -Ktrap=fp -Mbounds -Kieee
+  else
+    FFLAGS += -fast -Kieee
+  endif
+
+  ifeq ($(SMP),TRUE)
+    FFLAGS   += -mp
+    LDFLAGS  += -mp
+  endif
+
+endif
+
+ifeq ($(CC),icc)
+   CFLAGS     += -m64 -g
+   ifeq ($(SMP),TRUE)
+     CFLAGS    += -openmp
+   endif
+endif
+ifeq ($(CC),pgcc)
+  CFLAGS     += -g -fast
+endif
+
+CFLAGS  += $(CPPDEF) $(cpp_path)
+LDFLAGS += -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
 
 endif
 

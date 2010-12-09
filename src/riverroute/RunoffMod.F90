@@ -72,7 +72,6 @@ module RunoffMod
 !
   type (runoff_flow)         ,public :: runoff
   type(mct_gsMap)    ,target ,public :: gsMap_rtm_gdc2glo
-  type(mct_sMatP)            ,public :: sMatP_l2r
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public get_proc_rof_bounds

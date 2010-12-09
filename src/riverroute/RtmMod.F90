@@ -22,10 +22,9 @@ module RtmMod
   use clm_varcon  , only : re, spval
   use clm_varctl  , only : iulog
   use shr_sys_mod , only : shr_sys_flush
-  use domainMod   , only : latlon_type, latlon_init, latlon_clean
   use abortutils  , only : endrun
   use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
-  use RunoffMod   , only : gsMap_rtm_gdc2glo,sMatP_l2r
+  use RunoffMod   , only : gsMap_rtm_gdc2glo
   use clm_mct_mod
   use perf_mod
 !
@@ -34,9 +33,11 @@ module RtmMod
   private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public Rtmini        ! Initialize RTM grid and land mask
-  public Rtmriverflux  ! Interface with RTM river routing model
-  public RtmRest       ! Read/write RTM restart data (netcdf)
+  public Rtmini          ! Initialize RTM grid and land mask
+  public RtmInput        ! Update rtm inputs
+  public RtmMapl2r       ! Maps input from clm to rtm grid
+  public Rtm             ! River routing model (based on U. Texas code)
+  public RtmRest         ! Read/write RTM restart data (netcdf)
 !
 ! !REVISION HISTORY:
 ! Author: Sam Levis
@@ -44,8 +45,6 @@ module RtmMod
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
-  private RtmUpdateInput  ! Update rtm inputs
-  private Rtm             ! River routing model (based on U. Texas code)
 
 ! !PRIVATE TYPES:
 
@@ -53,9 +52,9 @@ module RtmMod
   character(len=256) :: rtm_trstr   ! tracer string
 
 ! RTM input
-  real(r8), pointer :: rtmin_acc(:,:)        ! RTM averaging buffer for runoff
-  real(r8), pointer :: rtmin_avg(:,:)       ! RTM global input
-  integer  :: ncount_rtm                   ! RTM time averaging = number of time samples to average over
+  real(r8), pointer :: rtmin_acc(:,:)      ! RTM averaging buffer for runoff
+  real(r8), pointer :: rtmin_avg(:,:)      ! RTM global input
+  integer  :: ncount_rtm = 0               ! RTM time averaging = number of time samples to average over
   real(r8) :: delt_rtm                     ! RTM time step
   real(r8) :: delt_rtm_max                 ! RTM max timestep
   real(r8) :: cfl_scale = 0.1_r8           ! cfl scale factor, must be <= 1.0
@@ -72,8 +71,9 @@ module RtmMod
   real(r8), pointer :: totrunin(:,:)   ! cell tracer lnd forcing on rtm grid (mm/s)
 
 !map
-  type(mct_sMat)     :: sMat0_l2r
-  type(mct_sMat)     :: sMat0_l2r_d
+  type(mct_sMat)  :: sMat0_l2r
+  type(mct_sMat)  :: sMat0_l2r_d
+  type(mct_sMatP) :: sMatP_l2r
 
 !EOP
 !-----------------------------------------------------------------------
@@ -93,15 +93,15 @@ contains
 !
 ! !USES:
     use shr_const_mod, only : SHR_CONST_PI
-    use domainMod    , only : llatlon,ldomain,domain_check
-    use areaMod      , only : celledge, cellarea, map_setmapsAR
-    use clm_varctl   , only : frivinp_rtm
-    use clm_varctl   , only : rtm_nsteps
-    use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
-    use decompMod    , only : gsMap_lnd_gdc2glo
-    use clm_time_manager, only : get_curr_date
-    use clm_time_manager, only : get_step_size
+    use domainMod    , only : llatlon,ldomain,domain_check, &
+                              latlon_type, latlon_init, latlon_clean
+    use RtmMapMod    , only : celledge, map_setmapsAR
+    use clm_varctl   , only : frivinp_rtm, rtm_nsteps
+    use decompMod    , only : get_proc_bounds, ldecomp, gsMap_lnd_gdc2glo
     use clmtype      , only : grlnd
+    use ncdio_pio    , only : ncd_pio_openfile, ncd_pio_closefile, ncd_io, &
+                              ncd_inqdid, ncd_inqdlen, file_desc_t
+    use fileutils    , only : getfil
     use spmdGathScatMod
 !
 ! !ARGUMENTS:
@@ -126,7 +126,7 @@ contains
     real(r8) :: deg2rad                       ! pi/180
     real(r8) :: dx,dx1,dx2,dx3                ! lon dist. betn grid cells (m)
     real(r8) :: dy                            ! lat dist. betn grid cells (m)
-    real(r8),allocatable :: tempg(:)          ! temporary buffer
+    real(r8),allocatable :: tempr(:,:)        ! temporary buffer
     integer ,allocatable :: rdirc(:)          ! temporary buffer
     integer ,allocatable :: iocn(:)           ! downstream ocean cell
     integer ,allocatable :: nocn(:)           ! number of rtm cells in basin
@@ -148,16 +148,14 @@ contains
     integer  :: day                           ! day of month (1, ..., 31)
     integer  :: ncsec                         ! seconds of current date
     integer  :: begg,endg                     ! local start/end gridcell indices
-    integer  :: numg                          ! tot num of gridcells on all pes
-    integer  :: numl                          ! tot num of landunits on all pes
-    integer  :: numc                          ! tot num of columns on all pes
-    integer  :: nump                          ! tot num of pfts on all pes
     integer  :: begr,endr,numr                ! tot num of roff pts on all pes
     real(r8) :: dtover,dtovermax              ! ts calc temporaries
     character(len=16), dimension(50) :: river_name
     character(len=30), dimension(50) :: rivstat_name
     real(r8)         , dimension(50) :: rivstat_lon
     real(r8)         , dimension(50) :: rivstat_lat
+    type(file_desc_t)                :: ncid  ! netcdf id
+    integer  :: dimid                         ! dimension identifier
     integer  :: nroflnd
     integer  :: nrofocn
     integer  :: pid,np,npmin,npmax,npint      ! log loop control
@@ -177,6 +175,9 @@ contains
     real(r8),pointer :: lfrac(:)           ! global land frac
     integer ,pointer :: gmask(:)           ! global mask
     type(latlon_type):: rlatlon            ! rtm grid 
+    logical          :: found              ! if variable found on rdirc file
+    character(len=256):: locfn             ! local file name
+    character(len=32) :: subname = 'Rtmini'! subroutine name
 
 !-----------------------------------------------------------------------
 
@@ -190,6 +191,26 @@ contains
     if (masterproc) then
        write(iulog,*)'rtm tracers = ',nt_rtm,trim(rtm_trstr)
     end if
+
+    !--- Read in RTM file to get dimension sizes
+    call getfil(frivinp_rtm, locfn, 0 )
+    if (masterproc) then
+       write(iulog,*)'Read in RTM file name: ',trim(frivinp_rtm)
+       call shr_sys_flush(iulog)
+    endif
+
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+    call ncd_inqdid(ncid,'ni',dimid)
+    call ncd_inqdlen(ncid,dimid,rtmlon)
+    call ncd_inqdid(ncid,'nj',dimid)
+    call ncd_inqdlen(ncid,dimid,rtmlat)
+
+    if (masterproc) then
+       write(iulog,*) 'Values for rtmlon/rtmlat: ',rtmlon,rtmlat
+       write(iulog,*) 'Successfully read RTM dimensions'
+       call shr_sys_flush(iulog)
+    endif
 
     !--- Allocate rtm grid variables
     call latlon_init(rlatlon,rtmlon,rtmlat)
@@ -214,7 +235,7 @@ contains
 
     !--- Allocate temporaries
 
-    allocate(rdirc(rtmlon*rtmlat),tempg(rtmlon*rtmlat),stat=ier)
+    allocate(rdirc(rtmlon*rtmlat),stat=ier)
     if (ier /= 0) then
        write(iulog,*)'Rtmgridini: Allocation error for ',&
             'rdirc'
@@ -226,38 +247,41 @@ contains
     deg2rad = SHR_CONST_PI / 180._r8
 
     ! Open and read input data (river direction file)
-    ! rtm operates from south to north and from the dateline
-    ! River station data is currently not used by the model -
-    ! it is only used by the diagnostic package
-    ! If the river direction file is modified - the river station
-    ! part must also be modified
-
     rlatlon%edges(1:4) = rtmedge(1:4)
-    if (masterproc) then
-       open (1,file=frivinp_rtm)
-       do n = 1,rtmlon*rtmlat
-          read(1,*) glatc(n),glonc(n),tempg(n)
-          rdirc(n) = nint(tempg(n))
+    allocate(tempr(rtmlon,rtmlat))
+
+    call ncd_io(ncid=ncid, varname='RTM_FLOW_DIRECTION', flag='read', data=tempr, readvar=found)
+    if ( .not. found ) call endrun( trim(subname)//' ERROR: RTM_FLOW_DIRECTION NOT on rdirc file' )
+    do j=1,rtmlat
+      do i=1,rtmlon
+         n = (j-1)*rtmlon + i
+         rdirc(n) = nint(tempr(i,j))
+      enddo
+    enddo
+    call ncd_io(ncid=ncid, varname='xc', flag='read', data=tempr, readvar=found)
+    if ( .not. found ) call endrun( trim(subname)//' ERROR: RTM longitudes NOT on rdirc file' )
+    do j=1,rtmlat
+       do i=1,rtmlon
+          n = (j-1)*rtmlon + i
+          glonc(n) = tempr(i,j)
        enddo
-       do n = 1,50
-          read(1,10,iostat=ier) river_name(n), rivstat_lon(n), rivstat_lat(n), &
-                                rivstat_name(n)
-          if (ier /= 0) exit
-10        format(1x,a16,f7.2,1x,f7.2,a30)
-       end do
-       close(1)
-    endif
-    deallocate(tempg)
+    enddo
+    call ncd_io(ncid=ncid, varname='yc', flag='read', data=tempr, readvar=found)
+    if ( .not. found ) call endrun( trim(subname)//' ERROR: RTM latitudes NOT on rdirc file' )
+    do j=1,rtmlat
+       do i=1,rtmlon
+          n = (j-1)*rtmlon + i
+          glatc(n) = tempr(i,j)
+       enddo
+    enddo
 
-    call mpi_bcast(glatc,size(glatc),MPI_REAL8,0,mpicom,ier)
-    call mpi_bcast(glonc,size(glonc),MPI_REAL8,0,mpicom,ier)
-    call mpi_bcast(rdirc,size(rdirc),MPI_INTEGER,0,mpicom,ier)
+    call ncd_pio_closefile(ncid)
+    deallocate(tempr)
 
     if (masterproc) then
-       write(iulog,*)'Columns in RTM = ',rtmlon
-       write(iulog,*)'Rows in RTM    = ',rtmlat
-       write(iulog,*)'read river direction data'
-    end if
+       write(iulog,*)'RTM netcdf river direction file successfully read '
+       call shr_sys_flush(iulog)
+    endif
 
     !--- set 1d lat/lon values
 
@@ -341,8 +365,8 @@ contains
     enddo
     rfield = 1._r8
 
-    call map_setmapsAR(llatlon,rlatlon,sMat0_l2r, &
-       fracin=lfield, fracout=rfield)
+    call map_setmapsAR(llatlon,rlatlon,sMat0_l2r,fracin=lfield,fracout=rfield)
+
     igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
     igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
     iwgt  = mct_sMat_indexRA(sMat0_l2r,'weight')
@@ -460,7 +484,6 @@ contains
     do n = 1,mct_sMat_lsize(sMat0_l2r)
        nr = sMat0_l2r%data%iAttr(igrow,n)
        ns = sMat0_l2r%data%iAttr(igcol,n)
-!       wt = sMat0_l2r%data%rAttr(iwgt ,n)
        if (ldecomp%glo2gdc(ns) > 0)  then
           pocn(nr) = ns          ! set ocean overlap to one of the lnd cells
        endif
@@ -685,16 +708,12 @@ contains
 
     call t_startf('rtmi_print')
 
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
     if (masterproc) then
        write(iulog,*) 'total runoff cells numr = ',runoff%numr, &
           'numrl = ',runoff%numrl,'numro = ',runoff%numro
     endif
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
     call mpi_barrier(mpicom,ier)
     npmin = 0
     npmax = npes-1
@@ -726,9 +745,7 @@ contains
              ' begro= ',runoff%begro,' endro= ',runoff%endro, &
              ' numro= ',runoff%lnumro
        endif
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
        call mpi_barrier(mpicom,ier)
     enddo
 
@@ -841,11 +858,10 @@ contains
           enddo
        endif
 
-!tcx testing
+       !tcx testing
        dx = (rlatlon%lone(i) - rlatlon%lonw(i)) * deg2rad
        dy = sin(rlatlon%latn(j)*deg2rad) - sin(rlatlon%lats(j)*deg2rad)
        runoff%area(nr) = 1.e6_r8 * dx*dy*re*re
-!       runoff%area(nr) = cellarea(rlatlon,i,j) * 1.e6_r8   ! m2 cellarea is km2
        if (dwnstrm_index(n) == 0) then
           runoff%dsi(nr) = 0
        else
@@ -883,12 +899,6 @@ contains
 
     !--- Compute timestep and subcycling number
 
-    if (rtm_nsteps < 1) then
-       write(iulog,*) 'rtm ERROR in rtm_nsteps',rtm_nsteps
-       call endrun()
-    endif
-    delt_rtm = rtm_nsteps*get_step_size()
-
     dtover = 0._r8
     dtovermax = 0._r8
     do nt=1,nt_rtm
@@ -910,11 +920,9 @@ contains
        call endrun
     endif
     if (masterproc) write(iulog,*) 'rtm max timestep = ',delt_rtm_max,' (sec) for cfl_scale = ',cfl_scale
-    if (masterproc) write(iulog,*) 'rtm act timestep ~ ',delt_rtm
 
     !--- Allocate and initialize rtm input fields on clm decomp
 
-    call get_proc_global(numg, numl, numc, nump)
     call get_proc_bounds(begg, endg)
     allocate (rtmin_avg(begg:endg,nt_rtm), rtmin_acc(begg:endg,nt_rtm), stat=ier)
     if (ier /= 0) then
@@ -981,11 +989,6 @@ contains
                         gsmap_lnd_gdc2glo, gsMap_rtm_gdc2glo, &
                        'Xonly',0,mpicom,comp_id)
 
-#ifdef CPP_VECTOR
-   !--- initialize the vector parts of the sMat
-   call mct_sMatP_Vecinit(sMatP_l2r)
-#endif
-
    deallocate(rgdc2glo,rglo2gdc)
    call latlon_clean(rlatlon)
 
@@ -1008,16 +1011,16 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: Rtmriverflux
+! !IROUTINE: RtmMap
 !
 ! !INTERFACE:
-  subroutine Rtmriverflux()
+  subroutine RtmMapl2r()
 !
 ! !DESCRIPTION:
 ! Interface with RTM river routing model.
 !
 ! !USES:
-    use decompMod      , only : get_proc_bounds, get_proc_global
+    use decompMod      , only : get_proc_bounds
     use decompMod      , only : gsMap_lnd_gdc2glo
     use domainMod      , only : ldomain
 !
@@ -1033,153 +1036,107 @@ contains
 !EOP
 !
     integer  :: i,j,n,n2,nr,ns,nt          ! indices
-    logical  :: do_rtm                     ! true => perform rtm calculation
     integer  :: begg,endg
     logical  :: usevector = .false.
     real(r8) :: suml(nt_rtm),sumr(nt_rtm),sumlt(nt_rtm),sumrt(nt_rtm)   ! water diagnostics
     integer  :: ier
+    type(mct_aVect)   :: aV_lndr,aV_rtmr
     integer,parameter :: dbug = 1
-    type(mct_aVect)    :: aV_lndr,aV_rtmr
 !-----------------------------------------------------------------------
 
     ! Determine RTM inputs on land model grid
 
-    call RtmUpdateInput(do_rtm)
+    call t_startf('clmrtm_l2r')
 
-    if (do_rtm) then
+    ! Map RTM inputs from land model grid to RTM grid (1/2 degree resolution)
 
-       call t_startf('clmrtm_l2r')
-       ! Map RTM inputs from land model grid to RTM grid (1/2 degree resolution)
+    ns = mct_gsMap_lsize(gsmap_lnd_gdc2glo, mpicom)
+    call mct_aVect_init(aV_lndr,rlist=trim(rtm_trstr),lsize=ns)
 
-       ns = mct_gsMap_lsize(gsmap_lnd_gdc2glo, mpicom)
-       call mct_aVect_init(aV_lndr,rlist=trim(rtm_trstr),lsize=ns)
-       ns = mct_gsMap_lsize(gsMap_rtm_gdc2glo, mpicom)
-       call mct_aVect_init(aV_rtmr,rlist=trim(rtm_trstr),lsize=ns)
+    ns = mct_gsMap_lsize(gsMap_rtm_gdc2glo, mpicom)
+    call mct_aVect_init(aV_rtmr,rlist=trim(rtm_trstr),lsize=ns)
 
-       suml = 0._r8
-       sumr = 0._r8
-       call get_proc_bounds(begg, endg)
-       do n = begg,endg
+    suml = 0._r8
+    sumr = 0._r8
+    call get_proc_bounds(begg, endg)
+    do n = begg,endg
        do nt = 1,nt_rtm
           n2 = n-begg+1
           av_lndr%rAttr(nt,n2) = rtmin_avg(n,nt)*ldomain%frac(n)
           suml(nt) = suml(nt) + av_lndr%rAttr(nt,n2)*ldomain%area(n)
        enddo
-       enddo
-
-       call mct_Smat_AvMult    (av_lndr,sMatP_l2r,av_rtmr,vector=usevector)
+    enddo
+    
+    call mct_Smat_AvMult(av_lndr, sMatP_l2r, av_rtmr, vector=usevector)
  
-       do n = runoff%begr,runoff%endr
+    do n = runoff%begr,runoff%endr
        do nt = 1,nt_rtm
           n2 = n-runoff%begr+1
           totrunin(n,nt) = av_rtmr%rAttr(nt,n2)
           sumr(nt) = sumr(nt) + totrunin(n,nt)*runoff%area(n)*1.0e-6_r8   ! area m2 to km2
        enddo
-       enddo
-
-       if (dbug > 1) then
-          call mpi_reduce(suml, sumlt, nt_rtm, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
-          call mpi_reduce(sumr, sumrt, nt_rtm, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
-          if (masterproc) then
-             do nt = 1,nt_rtm
-                if (abs(sumlt(nt)+sumrt(nt)) > 0.0_r8) then
+    enddo
+    
+    if (dbug > 1) then
+       call mpi_reduce(suml, sumlt, nt_rtm, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+       call mpi_reduce(sumr, sumrt, nt_rtm, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+       if (masterproc) then
+          do nt = 1,nt_rtm
+             if (abs(sumlt(nt)+sumrt(nt)) > 0.0_r8) then
                 if (abs(sumlt(nt) - sumrt(nt))/(sumlt(nt)+sumrt(nt)) > 1.0e-6) then
                    write(iulog,*) 'WARNING: l2r water not conserved ',nt,sumlt(nt),sumrt(nt)
                 endif
-                endif
-             enddo
-          endif
+             endif
+          enddo
        endif
+    endif
+    
+    call mct_aVect_clean(aV_lndr)
+    call mct_aVect_clean(aV_rtmr)
 
-       call mct_aVect_clean(aV_lndr)
-       call mct_aVect_clean(aV_rtmr)
-       call t_stopf('clmrtm_l2r')
-
-       ! Determine RTM runoff fluxes
-
-       call t_startf('clmrtm_calc')
-       call Rtm()
-       call t_stopf('clmrtm_calc')
-
-    else
-       ! for clean timing log output
-       call t_startf('clmrtm_l2r')
-       call t_stopf('clmrtm_l2r')
-       call t_startf('clmrtm_calc')
-       call t_stopf('clmrtm_calc')
-    end if
-
-  end subroutine Rtmriverflux
+    call t_stopf('clmrtm_l2r')
+    
+  end subroutine RtmMapl2r
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: RtmUpdateInput
+! !IROUTINE: RtmInput
 !
 ! !INTERFACE:
-  subroutine RtmUpdateInput(do_rtm)
+  subroutine RtmInput(do_rtm, begg, endg, qflx_runoffg, qflx_snwcp_iceg)
 !
 ! !DESCRIPTION:
 ! Update RTM inputs.
 !
 ! !USES:
-    use clmtype        , only : clm3,nameg
-    use domainMod      , only : ldomain
-    use decompMod      , only : get_proc_bounds, get_proc_global
-    use clm_varctl     , only : rtm_nsteps
-    use clm_time_manager   , only : get_step_size, get_nstep
+    use domainMod       , only : ldomain
+    use clm_varctl      , only : rtm_nsteps
+    use clm_time_manager, only : get_step_size, get_nstep
 !
 ! !ARGUMENTS:
     implicit none
     logical , intent(out) :: do_rtm
+    integer , intent(in)  :: begg, endg                 ! per-proc gridcell ending gridcell indices
+    real(r8), intent(in)  :: qflx_runoffg(begg:endg)    ! total runoff (mm H2O /s)
+    real(r8), intent(in)  :: qflx_snwcp_iceg(begg:endg) ! excess snowfall due to snow capping (mm H2O /s)
 !
 ! !CALLED FROM:
-! subroutine rtmriverflux
+! subroutine rtmMap
 !
 ! !REVISION HISTORY:
 ! Author: Sam Levis
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    integer , pointer :: cgridcell(:)         ! corresponding gridcell index for each column
-    real(r8), pointer :: wtgcell(:)           ! weight (relative to gridcell) for each column (0-1)
-    real(r8), pointer :: qflx_runoffg(:)      ! total runoff (mm H2O /s)
-    real(r8), pointer :: qflx_snwcp_iceg(:)   ! excess snowfall due to snow capping (mm H2O /s)
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
-    integer :: i,j,k,n,g,l,c,p,nt             ! indices
-    integer :: io,jo,ir,jr,is,js              ! mapping indices
-    integer :: begp, endp                     ! per-proc beginning and ending pft indices
-    integer :: begc, endc                     ! per-proc beginning and ending column indices
-    integer :: begl, endl                     ! per-proc beginning and ending landunit indices
-    integer :: begg, endg                     ! per-proc gridcell ending gridcell indices
-    integer :: numg                           ! total number of gridcells across all processors
-    integer :: numl                           ! total number of landunits across all processors
-    integer :: numc                           ! total number of columns across all processors
-    integer :: nump                           ! total number of pfts across all processors
-    integer :: ier                            ! error status
-    integer :: nliq,nfrz                      ! field indices
-    integer :: nstep                          ! time step index
+    integer  :: g,nt                           ! indices
+    integer  :: nliq,nfrz                      ! field indices
+    integer  :: nstep                          ! time step index
+    logical  :: first_time = .true.
 !-----------------------------------------------------------------------
 
     call t_barrierf('sync_clmrtm', mpicom)
-
-   ! Assign local pointers to derived type members
-
-    cgridcell         => clm3%g%l%c%gridcell
-    wtgcell           => clm3%g%l%c%wtgcell
-    qflx_runoffg      => clm3%g%gwf%qflx_runoffg
-    qflx_snwcp_iceg   => clm3%g%gwf%qflx_snwcp_iceg
-
-    ! Determine subgrid bounds for this processor
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-    call get_proc_global(numg, numl, numc, nump)
 
     ! Make gridded representation of runoff from clm for tracers
 
@@ -1194,7 +1151,7 @@ contains
        endif
     enddo
     if (nliq == 0 .or. nfrz == 0) then
-       write(iulog,*)'RtmUpdateInput: ERROR in rtm_tracers LIQ ICE ',nliq,nfrz,nt_rtm,rtm_tracers
+       write(iulog,*)'RtmInput: ERROR in rtm_tracers LIQ ICE ',nliq,nfrz,nt_rtm,rtm_tracers
        call endrun()
     endif
 
@@ -1205,10 +1162,21 @@ contains
 
     ncount_rtm = ncount_rtm + 1
 
+    if (first_time) then	
+       if (rtm_nsteps < 1) then
+          write(iulog,*) 'rtm ERROR in rtm_nsteps',rtm_nsteps
+          call endrun()
+       endif
+       delt_rtm = rtm_nsteps * get_step_size()
+       if (masterproc) write(iulog,*) 'rtm act timestep ~ ',delt_rtm
+       first_time = .false.
+    end if
+
     nstep = get_nstep()
     if (mod(nstep,rtm_nsteps)==0 .and. nstep>1) then
        if (ncount_rtm*get_step_size() /= delt_rtm) then
-          if (masterproc) write(iulog,*) 'RtmUpdateInput timestep out of sync ',delt_rtm,ncount_rtm*get_step_size()
+          if (masterproc) write(iulog,*) 'RtmInput timestep out of sync ',&
+               delt_rtm,ncount_rtm*get_step_size()
           delt_rtm = ncount_rtm*get_step_size()
        endif
        do nt = 1,nt_rtm
@@ -1223,7 +1191,7 @@ contains
        do_rtm = .false.
     endif
 
-  end subroutine RtmUpdateInput
+  end subroutine RtmInput
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1245,7 +1213,7 @@ contains
     implicit none
 !
 ! !CALLED FROM:
-! subroutine Rtmriverflux in this module
+! subroutine RtmMap in this module
 !
 ! !REVISION HISTORY:
 ! Author: Sam Levis
@@ -1431,8 +1399,7 @@ contains
     logical :: readvar          ! determine if variable is on initial file
     integer :: nt,nv,n          ! indices
     integer :: begg,endg        ! start end indices
-    integer :: ier              ! error flag
-    real(r8),pointer :: dfld(:) ! temporary array
+    real(r8) , pointer :: dfld(:) ! temporary array
     character(len=32)  :: vname,uname
     character(len=128) :: lname
 !-----------------------------------------------------------------------

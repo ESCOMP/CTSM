@@ -39,6 +39,12 @@ determine default values for namelists.
 <!-- Default representative concentration pathway for future scenarios -->
 <rcp>-999.9</rcp>
 
+<!-- Default irrigation -->
+<irrig>.false.</irrig>
+
+<!-- Default RTM resolution -->
+<rtm_res rtm="on">R05</rtm_res>
+
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>
 <mask hgrid="0.47x0.63"           >gx1v6</mask>

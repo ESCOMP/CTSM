@@ -1,17 +1,29 @@
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: mkglacier
-!
-! !INTERFACE:
-subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
-!
-! !DESCRIPTION:
-! make percent glacier
-!
+module mklanwatMod
+
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
+
+implicit none
+
+  private
+
+  public mklanwat
+
+contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mklanwat
+!
+! !INTERFACE:
+subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, zero_out, lake_o, swmp_o)
+!
+! !DESCRIPTION:
+! make %lake and %wetland from Cogley's one degree data
+!
+! !USES:
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
@@ -27,7 +39,8 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   character(len=*), intent(in) :: fname           ! input dataset file name
   integer , intent(in) :: ndiag                   ! unit number for diag out
   logical , intent(in) :: zero_out                ! if should zero glacier out
-  real(r8), intent(out):: glac_o(lsmlon,lsmlat)   ! output grid: %glacier
+  real(r8), intent(out):: lake_o(lsmlon,lsmlat)   ! output grid: %lake
+  real(r8), intent(out):: swmp_o(lsmlon,lsmlat)   ! output grid: %wetland
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -44,16 +57,19 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   type(domain_type)     :: tdomain            ! local domain
   type(gridmap_type)    :: tgridmap           ! local gridmap
 
-  real(r8), allocatable :: glac_i(:,:)        ! input grid: percent glac
+  real(r8), allocatable :: lake_i(:,:)        ! input grid: percent lake
+  real(r8), allocatable :: swmp_i(:,:)        ! input grid: percent swamp
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
   real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
   real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
   real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
-  real(r8) :: gglac_i                          ! input  grid: global glac
+  real(r8) :: glake_i                         ! input  grid: global lake
+  real(r8) :: gswmp_i                         ! input  grid: global swamp
   real(r8) :: garea_i                         ! input  grid: global area
-  real(r8) :: gglac_o                          ! output grid: global glac
+  real(r8) :: glake_o                         ! output grid: global lake
+  real(r8) :: gswmp_o                         ! output grid: global swamp
   real(r8) :: garea_o                         ! output grid: global area
 
   integer  :: ii,ji                           ! indices
@@ -63,10 +79,10 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
   character(len=256) locfn                    ! local dataset file name
-  character(len=32) :: subname = 'mkglacier'
+  character(len=32) :: subname = 'mklanwat'
 !-----------------------------------------------------------------------
 
-  write (6,*) 'Attempting to make %glacier .....'
+  write (6,*) 'Attempting to make %lake and %wetland .....'
   call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
@@ -82,11 +98,14 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 
   call check_ret(nf_open(locfn, 0, ncid), subname)
 
-  allocate(glac_i(nlon_i,nlat_i), stat=ier)
+  allocate(lake_i(nlon_i,nlat_i), swmp_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()
 
-  call check_ret(nf_inq_varid (ncid, 'PCT_GLACIER', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, glac_i), subname)
+  call check_ret(nf_inq_varid (ncid, 'PCT_LAKE', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, lake_i), subname)
+
+  call check_ret(nf_inq_varid (ncid, 'PCT_WETLAND', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, swmp_i), subname)
 
   call check_ret(nf_close(ncid), subname)
 
@@ -99,44 +118,36 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   mask_o = 1.0_r8
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  if ( zero_out )then
+  mask_i = float(tdomain%mask(:,:))
+  call areaave(mask_i,mask_o,tgridmap)
 
-     do jo = 1, ldomain%nj
-     do io = 1, ldomain%numlon(jo)
-        glac_o(io,jo) = 0.
-     enddo
-     enddo
+  call gridmap_clean(tgridmap)
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  else
+  ! Area-average percent cover on input grid to output grid 
+  ! and correct according to land landmask
+  ! Note that percent cover is in terms of total grid area.
 
-     mask_i = float(tdomain%mask(:,:))
-     call areaave(mask_i,mask_o,tgridmap)
+  call areaave(lake_i,lake_o,tgridmap)
+  call areaave(swmp_i,swmp_o,tgridmap)
 
-     call gridmap_clean(tgridmap)
-     call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
-
-     ! Area-average percent cover on input grid to output grid 
-     ! and correct according to land landmask
-     ! Note that percent cover is in terms of total grid area.
-
-     call areaave(glac_i,glac_o,tgridmap)
-
-     do jo = 1, ldomain%nj
-     do io = 1, ldomain%numlon(jo)
-        if (glac_o(io,jo) < 1.) glac_o(io,jo) = 0.
-     enddo
-     enddo
-
-  end if
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+        if (lake_o(io,jo) < 1.) lake_o(io,jo) = 0.
+        if (swmp_o(io,jo) < 1.) swmp_o(io,jo) = 0.
+        if (zero_out          ) lake_o(io,jo) = 0.
+        if (zero_out          ) swmp_o(io,jo) = 0.
+  enddo
+  enddo
 
   ! Check for conservation
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-     if ((glac_o(io,jo)) > 100.000001_r8) then
-        write (6,*) 'MKGLACIER error: glacier = ',glac_o(io,jo), &
-                ' greater than 100.000001 for column, row = ',io,jo
-        call shr_sys_flush(6)
+     if ((lake_o(io,jo) + swmp_o(io,jo)) > 100.000001_r8) then
+        write (6,*) 'MKLANWAT error: lake = ',lake_o(io,jo), &
+             ' and wetland = ',swmp_o(io,jo), &
+             ' sum are greater than 100 for lon,lat = ',io,jo
         stop
      end if
   enddo
@@ -168,9 +179,9 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( .not. zero_out  .and. trim(mksrf_gridtype) == 'global') then
+  if ( .not. zero_out .and. (trim(mksrf_gridtype) == 'global') ) then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-        write (6,*) 'MKGLACIER error: input field not conserved'
+        write (6,*) 'MKLANWAT error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
         stop
@@ -184,27 +195,29 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 
   ! Input grid
 
-  gglac_i = 0.
+  glake_i = 0.
+  gswmp_i = 0.
   garea_i = 0.
 
   do ji = 1, nlat_i
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
-     gglac_i = gglac_i + glac_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
-                         tdomain%frac(ii,ji)
+     glake_i = glake_i + lake_i(ii,ji)*tdomain%area(ii,ji)/100.
+     gswmp_i = gswmp_i + swmp_i(ii,ji)*tdomain%area(ii,ji)/100.
   end do
   end do
 
   ! Output grid
 
-  gglac_o = 0.
+  glake_o = 0.
+  gswmp_o = 0.
   garea_o = 0.
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
-     gglac_o = gglac_o + glac_o(io,jo)*(ldomain%area(io,jo)/100.) * &
-                         ldomain%frac(io,jo)
+     glake_o = glake_o + lake_o(io,jo)*ldomain%area(io,jo)/100.
+     gswmp_o = gswmp_o + swmp_o(io,jo)*ldomain%area(io,jo)/100.
   end do
   end do
 
@@ -212,7 +225,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 
   write (ndiag,*)
   write (ndiag,'(1x,70a1)') ('=',k=1,70)
-  write (ndiag,*) 'Glacier Output'
+  write (ndiag,*) 'Inland Water Output'
   write (ndiag,'(1x,70a1)') ('=',k=1,70)
 
   write (ndiag,*)
@@ -222,9 +235,11 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
              1x,'                 10**6 km**2      10**6 km**2   ')
   write (ndiag,'(1x,70a1)') ('.',k=1,70)
   write (ndiag,*)
-  write (ndiag,2002) gglac_i*1.e-06,gglac_o*1.e-06
+  write (ndiag,2002) glake_i*1.e-06,glake_o*1.e-06
+  write (ndiag,2003) gswmp_i*1.e-06,gswmp_o*1.e-06
   write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
-2002 format (1x,'glaciers    ',f14.3,f17.3)
+2002 format (1x,'lakes       ',f14.3,f17.3)
+2003 format (1x,'wetlands    ',f14.3,f17.3)
 2004 format (1x,'all surface ',f14.3,f17.3)
 
   if (lsmlat > 1) then
@@ -236,7 +251,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   endif
   call shr_sys_flush(ndiag)
 
-  write (6,*) 'Successfully made %glacier'
+  write (6,*) 'Successfully made %lake and %wetland'
   write (6,*)
   call shr_sys_flush(6)
 
@@ -244,9 +259,10 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
-  deallocate (glac_i)
+  deallocate (lake_i,swmp_i)
   deallocate (mask_i,mask_o)
   deallocate ( fld_i, fld_o)
 
-end subroutine mkglacier
+end subroutine mklanwat
 
+end module mklanwatMod

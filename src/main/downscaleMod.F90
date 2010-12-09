@@ -787,7 +787,7 @@ end subroutine map_setgatmFM
 ! !IROUTINE: map_setmapsFM
 !
 ! !INTERFACE:
-  subroutine map_setmapsFM(domain_a, domain_l, gatm_l, map1dl_a2l, map1dl_l2a, name)
+  subroutine map_setmapsFM(domain_a, domain_l, gatm_l, name)
 !
 ! !DESCRIPTION:
 ! Set course to fine mesh maps and reverse.  domain_a should be coarse
@@ -808,8 +808,6 @@ end subroutine map_setgatmFM
   type(domain_type),intent(in)    :: domain_a
   type(domain_type),intent(in)    :: domain_l
   integer          ,intent(in)    :: gatm_l(:)
-  type(map_type)   ,intent(inout) :: map1dl_a2l
-  type(map_type)   ,intent(inout) :: map1dl_l2a
   character(len=*) ,optional,intent(in) :: name
 !
 ! !REVISION HISTORY:
@@ -825,7 +823,6 @@ end subroutine map_setgatmFM
     real(r8),pointer :: area_a(:)    !input grid: cell area
     real(r8),pointer :: topo_a(:)    !input grid: cell topo/elevation
     real(r8),pointer :: frac_a(:)    !input grid: cell frac
-    integer ,pointer :: mask_l(:)    !output grid: cell mask
     real(r8),pointer :: area_l(:)    !output grid: cell area
     real(r8),pointer :: nara_l(:)    !output grid: cell equiv upscale area
     real(r8),pointer :: topo_l(:)    !output grid: cell topo/elevation
@@ -861,11 +858,9 @@ end subroutine map_setgatmFM
 
     !--- set pointers into domains, initialize gridmap a2l gridmap ---
 
-    call domain_setptrs(domain_a,ns=ns_a,area=area_a, &
-       frac=frac_a, topo=topo_a)
-    call domain_setptrs(domain_l,ns=ns_l, &
-       area=area_l, mask=mask_l, frac=frac_l, &
-       nara=nara_l,topo=topo_l,ntop=ntop_l)
+    call domain_setptrs(domain_a,ns=ns_a,area=area_a,frac=frac_a,topo=topo_a)
+    call domain_setptrs(domain_l,ns=ns_l,area=area_l,frac=frac_l,topo=topo_l, &
+                        nara=nara_l,ntop=ntop_l)
 
     !--- allocate temporaries
 
@@ -981,6 +976,8 @@ end subroutine map_setgatmFM
           write(iulog,*) 'map_setmapsFM ERROR in index2 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
+       !??? MV: Note that frac_l is not set yet - so it is -1.0e36 - so first if will never be
+       ! exercised - seems like this is a bug???
        if (frac_l(nl) > 0.0_r8) then
           ntop_l(nl) = topo_l(nl)                      ! set topo ovr lnd
        else
@@ -1068,30 +1065,6 @@ end subroutine map_setgatmFM
 
     call map_checkmap(map1dl_a2l)
     call map_checkmap(map1dl_l2a)
-
-    ! Set ldomain mask and frac based on adomain and mapping.
-    ! Want ldomain%frac to match adomain%frac but scale by effective area.
-    ! so the implied area of an ldomain cell is the actual area *
-    ! scaled frac which aggregated over all land cells under an atm cell,
-    ! will match the area associated with the atm cell.
-
-    do nl = begg,endg
-       nlg = ldecomp%gdc2glo(nl)
-       nag = gatm_l(nlg)
-       if (nag <= 0) then
-          write(iulog,*) 'initialize2 nag <= 0 ERROR ',nl,nlg,nag
-          call endrun()
-       endif
-       na = adecomp%glo2gdc(nag)
-       if (nlg < 1 .or. nlg > ns_l .or. &
-           nag < 1 .or. nag > ns_a .or. &
-           na  < abegg .or. na > aendg) then
-          write(iulog,*) 'initialize2 index ERROR ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
-          call endrun()
-       endif
-       mask_l(nl) = 1
-       frac_l(nl) = frac_a(na)* (nara_l(nl)/area_l(nl))
-    enddo
 
 end subroutine map_setmapsFM
 

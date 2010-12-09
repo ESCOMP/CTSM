@@ -218,8 +218,6 @@ contains
 ! initialize variables which get passed to the atmosphere
     flx_mss_vrt_dst(lbp:ubp,:)=0._r8
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -244,8 +242,6 @@ contains
        end if
     end do
     
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        if (lnd_frc_mbl(p)>1.0_r8 .or. lnd_frc_mbl(p)<0.0_r8) then
@@ -256,23 +252,17 @@ contains
     
     ! reset history output variables before next if-statement to avoid output = inf
     
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        flx_mss_vrt_dst_tot(p) = 0.0_r8
     end do
     do n = 1, ndst
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_nolakep
           p = filter_nolakep(fp)
           flx_mss_vrt_dst(p,n) = 0.0_r8
        end do
     end do
     
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -369,8 +359,6 @@ contains
           
     do n = 1, ndst
        do m = 1, dst_src_nbr
-!dir$ concurrent
-!cdir nodep
           do fp = 1,num_nolakep
              p = filter_nolakep(fp)
              if (lnd_frc_mbl(p) > 0.0_r8) then
@@ -381,8 +369,6 @@ contains
     end do
 
     do n = 1, ndst
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_nolakep
           p = filter_nolakep(fp)
           if (lnd_frc_mbl(p) > 0.0_r8) then
@@ -488,8 +474,6 @@ contains
     vlc_trb_3 => clm3%g%l%c%p%pdf%vlc_trb_3
     vlc_trb_4 => clm3%g%l%c%p%pdf%vlc_trb_4
 
-!dir$ concurrent
-!cdir nodep
     do p = lbp,ubp
        if (pwtgcell(p)>0._r8) then
           g = pgridcell(p)
@@ -519,8 +503,6 @@ contains
     end do
 
     do m = 1, ndst
-!dir$ concurrent
-!cdir nodep
        do p = lbp,ubp
           if (pwtgcell(p)>0._r8) then
              g = pgridcell(p)
@@ -547,8 +529,6 @@ contains
     ! Lowest layer: Turbulent deposition (CAM will calc. gravitational dep)
 
     do m = 1, ndst
-!dir$ concurrent
-!cdir nodep
        do p = lbp,ubp
           if (pwtgcell(p)>0._r8) then
              rss_trb = ram1(p) + rss_lmn(p,m) + ram1(p) * rss_lmn(p,m) * vlc_grv(p,m) ![s m-1]
@@ -557,8 +537,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do p = lbp,ubp
        if (pwtgcell(p)>0._r8) then
           vlc_trb_1(p) = vlc_trb(p,1)

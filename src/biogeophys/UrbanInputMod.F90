@@ -298,7 +298,7 @@ contains
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( trim(subname)//' ERROR: CV_WALL NOT on fsurdat file' )
 
-       call pio_closefile(ncid)
+       call ncd_pio_closefile(ncid)
        if (masterproc) then
           write(iulog,*)' Sucessfully read urban input data' 
           write(iulog,*)

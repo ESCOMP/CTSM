@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CanopyFluxesMod
 
 !------------------------------------------------------------------------------
@@ -79,10 +76,13 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size, get_prev_date
     use clm_varpar         , only : nlevgrnd, nlevsno
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, &
-                                    denh2o, tfrz, csoilc, tlsai_crit, alpha_aero
+                                    denh2o, tfrz, csoilc, tlsai_crit, alpha_aero, &
+                                    isecspday, degpsec
+    use shr_const_mod      , only : SHR_CONST_TKFRZ
+    use pftvarcon          , only : nirrig
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use spmdMod            , only : masterproc
@@ -177,6 +177,7 @@ contains
    real(r8), pointer :: lat(:)         ! latitude (radians)
    real(r8), pointer :: decl(:)        ! declination angle (radians)
    real(r8), pointer :: max_dayl(:)    !maximum daylength for this column (s)
+   real(r8), pointer :: londeg(:)      ! longitude (degrees) (for calculation of local time)
    
 !
 ! local pointers to implicit inout arguments
@@ -230,6 +231,8 @@ contains
    real(r8), pointer :: fpsn(:)            ! photosynthesis (umol CO2 /m**2 /s)
    real(r8), pointer :: rootr(:,:)         ! effective fraction of roots in each soil layer
    real(r8), pointer :: rresis(:,:)        ! root resistance by layer (0-1)  (nlevgrnd)	
+   real(r8), pointer :: irrig_rate(:)      ! current irrigation rate [mm/s]
+   integer, pointer  :: n_irrig_steps_left(:) ! # of time steps for which we still need to irrigate today
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -243,6 +246,22 @@ contains
    real(r8), parameter :: dtmin = 0.01_r8  ! max limit for temperature convergence [K]
    integer , parameter :: itmax = 40       ! maximum number of iteration [-]
    integer , parameter :: itmin = 2        ! minimum number of iteration [-]
+   real(r8), parameter :: irrig_min_lai = 0.0_r8           ! Minimum LAI for irrigation
+   real(r8), parameter :: irrig_btran_thresh = 0.999999_r8 ! Irrigate when btran falls below 0.999999 rather than 1 to allow for round-off error
+   integer , parameter :: irrig_start_time = isecspday/4   ! Time of day to check whether we need irrigation, seconds (0 = midnight). 
+                                                           ! We start applying the irrigation in the time step FOLLOWING this time, 
+                                                           ! since we won't begin irrigating until the next call to Hydrology1
+   integer , parameter :: irrig_length = isecspday/6       ! Desired amount of time to irrigate per day (sec). Actual time may 
+                                                           ! differ if this is not a multiple of dtime. Irrigation won't work properly 
+                                                           ! if dtime > secsperday
+   real(r8), parameter :: irrig_factor = 0.7_r8            ! Determines target soil moisture level for irrigation. If h2osoi_liq_so 
+                                                           ! is the soil moisture level at which stomata are fully open and 
+                                                           ! h2osoi_liq_sat is the soil moisture level at saturation (eff_porosity), 
+                                                           ! then the target soil moisture level is 
+                                                           !     (h2osoi_liq_so + irrig_factor*(h2osoi_liq_sat - h2osoi_liq_so)). 
+                                                           ! A value of 0 means that the target soil moisture level is h2osoi_liq_so. 
+                                                           ! A value of 1 means that the target soil moisture level is h2osoi_liq_sat
+
    !added by K.Sakaguchi for litter resistance
    real(r8), parameter :: lai_dl = 0.5_r8  ! placeholder for (dry) plant litter area index (m2/m2)
    real(r8), parameter :: z_dl = 0.05_r8   ! placeholder for (dry) litter layer thickness (m)
@@ -370,6 +389,18 @@ contains
    real(r8) :: dayl                  ! daylength (s)
    real(r8) :: temp                  ! temporary, for daylength calculation
    real(r8) :: dayl_factor(lbp:ubp)  ! scalar (0-1) for daylength effect on Vcmax
+   integer  :: yr                       ! year at start of time step
+   integer  :: mon                      ! month at start of time step
+   integer  :: day                      ! day at start of time step
+   integer  :: time                     ! time at start of time step (seconds after 0Z)
+   integer  :: local_time               ! local time at start of time step (seconds after solar midnight)
+   integer  :: irrig_nsteps_per_day     ! number of time steps per day in which we irrigate
+   logical  :: check_for_irrig(lbp:ubp) ! where do we need to check soil moisture to see if we need to irrigate?
+   logical  :: frozen_soil(lbc:ubc)     ! set to true if we have encountered a frozen soil layer
+   real(r8) :: vol_liq_so               ! partial volume of liquid water in layer for which smp_node = smpso
+   real(r8) :: h2osoi_liq_so            ! liquid water corresponding to vol_liq_so for this layer [kg/m2]
+   real(r8) :: h2osoi_liq_sat           ! liquid water corresponding to eff_porosity for this layer [kg/m2]
+   real(r8) :: deficit                  ! difference between desired soil moisture level for this layer and current soil moisture level [kg/m2]
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -387,6 +418,7 @@ contains
    forc_th        => clm_a2l%forc_th
    forc_rho       => clm_a2l%forc_rho
    lat            => clm3%g%lat
+   londeg         => clm3%g%londeg
 
    ! Assign local pointers to derived type members (column-level)
 
@@ -481,6 +513,8 @@ contains
    fpsn           => clm3%g%l%c%p%pcf%fpsn
    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
    thm            => clm3%g%l%c%p%pes%thm
+   irrig_rate         => clm3%g%l%c%cps%irrig_rate
+   n_irrig_steps_left => clm3%g%l%c%cps%n_irrig_steps_left
       
    ! Assign local pointers to derived type members (ecophysiological)
 
@@ -491,6 +525,7 @@ contains
    ! Determine step size
 
    dtime = get_step_size()
+   irrig_nsteps_per_day = ((irrig_length + (dtime - 1))/dtime)  ! round up
 
    ! Filter pfts where frac_veg_nosno is non-zero
 
@@ -540,8 +575,6 @@ contains
    ! and root resistance factors
 
    do j = 1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
       do f = 1, fn
          p = filterp(f)
          c = pcolumn(p)
@@ -569,8 +602,6 @@ contains
    ! Normalize root resistances to get layer contribution to ET
 
    do j = 1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
       do f = 1, fn
          p = filterp(f)
          if (btran(p) .gt. btran0) then
@@ -580,6 +611,67 @@ contains
          end if
       end do
    end do
+
+   ! Determine if irrigation is needed (over irrigated soil columns)
+
+   ! First, determine in what grid cells we need to bother 'measuring' soil water, to see if we need irrigation
+   ! Also set n_irrig_steps_left for these grid cells
+   ! n_irrig_steps_left(p) > 0 is ok even if irrig_rate(p) ends up = 0
+   ! in this case, we'll irrigate by 0 for the given number of time steps
+   call get_prev_date(yr, mon, day, time)  ! get time as of beginning of time step
+   do f = 1, fn
+      p = filterp(f)
+      c = pcolumn(p)
+      g = pgridcell(p)
+      if (ivt(p) == nirrig .and. elai(p) > irrig_min_lai .and. btran(p) < irrig_btran_thresh) then
+         ! see if it's the right time of day to start irrigating:
+         local_time = modulo(time + nint(londeg(g)/degpsec), isecspday)
+         if (modulo(local_time - irrig_start_time, isecspday) < dtime) then
+            ! it's time to start irrigating
+            check_for_irrig(p)    = .true.
+            n_irrig_steps_left(c) = irrig_nsteps_per_day
+            irrig_rate(c)         = 0._r8  ! reset; we'll add to this later
+         else
+            check_for_irrig(p)    = .false.
+         end if
+      else  ! non-irrig pft or elai<=irrig_min_lai or btran>irrig_btran_thresh
+         check_for_irrig(p)       = .false.
+      end if
+
+   end do
+
+
+   ! Now 'measure' soil water for the grid cells identified above and see if the soil is dry enough to warrant irrigation
+   frozen_soil(:) = .false.
+   do j = 1,nlevgrnd
+      do f = 1, fn
+         p = filterp(f)
+         c = pcolumn(p)
+         if (check_for_irrig(p) .and. .not. frozen_soil(c)) then
+            ! if level L was frozen, then we don't look at any levels below L
+            if (t_soisno(c,j) <= SHR_CONST_TKFRZ) then
+               frozen_soil(c) = .true.
+            else if (rootfr(p,j) > 0._r8) then
+               ! determine soil water deficit in this layer:
+
+               ! Calculate vol_liq_so - i.e., vol_liq at which smp_node = smpso - by inverting the above equations 
+               ! for the root resistance factors
+               vol_ice      = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))  ! this duplicates the above equation for vol_ice
+               eff_porosity = watsat(c,j)-vol_ice  ! this duplicates the above equation for eff_porosity
+               vol_liq_so   = eff_porosity * (-smpso(ivt(p))/sucsat(c,j))**(-1/bsw(c,j))
+
+               ! Translate vol_liq_so and eff_porosity into h2osoi_liq_so and h2osoi_liq_sat and calculate deficit
+               h2osoi_liq_so  = vol_liq_so * denh2o * dz(c,j)
+               h2osoi_liq_sat = eff_porosity * denh2o * dz(c,j)
+               deficit        = max((h2osoi_liq_so + irrig_factor*(h2osoi_liq_sat - h2osoi_liq_so)) - h2osoi_liq(c,j), 0._r8)
+
+               ! Add deficit to irrig_rate, converting units from mm to mm/sec
+               irrig_rate(c)  = irrig_rate(c) + deficit/(dtime*irrig_nsteps_per_day)
+
+            end if  ! else if (rootfr(p,j) .gt. 0)
+         end if     ! if (check_for_irrig(p) .and. .not. frozen_soil(c))
+      end do        ! do f
+   end do           ! do j
 
  ! Modify aerodynamic parameters for sparse/dense canopy (X. Zeng)
    do f = 1, fn
@@ -596,8 +688,6 @@ contains
   end do
 
    found = .false.
-!dir$ concurrent
-!cdir nodep
    do f = 1, fn
       p = filterp(f)
       c = pcolumn(p)
@@ -653,8 +743,6 @@ contains
       call endrun()
    end if
 
-!dir$ concurrent
-!cdir nodep
    do f = 1, fn
       p = filterp(f)
       c = pcolumn(p)
@@ -673,8 +761,6 @@ contains
 
    ! Make copies so that array sections are not passed in function calls to friction velocity
    
-!dir$ concurrent
-!cdir nodep
    do f = 1, fn
       p = filterp(f)
       displa_loc(p) = displa(p)
@@ -695,8 +781,6 @@ contains
                              obu, itlef+1, ur, um, ustar, &
                              temp1, temp2, temp12m, temp22m, fm)
 
-!dir$ concurrent
-!cdir nodep
       do f = 1, fn
          p = filterp(f)
          c = pcolumn(p)
@@ -759,8 +843,6 @@ contains
       call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, dayl_factor, phase='sun')
       call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, dayl_factor, phase='sha')
 
-!dir$ concurrent
-!cdir nodep
       do f = 1, fn
          p = filterp(f)
          c = pcolumn(p)
@@ -942,8 +1024,6 @@ contains
 
       itlef = itlef+1
       if (itlef > itmin) then
-!dir$ concurrent
-!cdir nodep
          do f = 1, fn
             p = filterp(f)
             dele(p) = abs(efe(p)-efeb(p))
@@ -966,8 +1046,6 @@ contains
    fn = fnorig
    filterp(1:fn) = fporig(1:fn)
 
-!dir$ concurrent
-!cdir nodep
    do f = 1, fn
       p = filterp(f)
       c = pcolumn(p)
@@ -1258,8 +1336,6 @@ contains
 
      act25 = act25 * 1000.0_r8 / 60.0_r8
 
-!dir$ concurrent
-!cdir nodep
      do f = 1, fn
         p = filterp(f)
         c = pcolumn(p)
@@ -1318,70 +1394,6 @@ contains
 
            ! ci iteration for 'actual' photosynthesis
 
-#if (defined NEC_SX)
-!NEC NEC NEC
-           !
-           ! ITER = 1
-           !
-           wj = max(ci(p)-cp,0._r8)*j/(ci(p)+2._r8*cp)*c3psn(ivt(p)) + j*(1._r8-c3psn(ivt(p)))
-           wc = max(ci(p)-cp,0._r8)*vcmx(p)/(ci(p)+awc)*c3psn(ivt(p)) + vcmx(p)*(1._r8-c3psn(ivt(p)))
-           we = 0.5_r8*vcmx(p)*c3psn(ivt(p)) + 4000._r8*vcmx(p)*ci(p)/forc_pbot(g)*(1._r8-c3psn(ivt(p))) 
-           psn(p) = min(wj,wc,we) 
-           cs = max( co2(p)-1.37_r8*rb(p)*forc_pbot(g)*psn(p), mpe )
-           atmp = mp(ivt(p))*psn(p)*forc_pbot(g)*cea / (cs*ei(p)) + bp
-           btmp = ( mp(ivt(p))*psn(p)*forc_pbot(g)/cs + bp ) * rb(p) - 1._r8
-           ctmp = -rb(p)
-           if (btmp >= 0._r8) then
-              q = -0.5_r8*( btmp + sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-           else
-              q = -0.5_r8*( btmp - sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-           end if
-           r1 = q/atmp
-           r2 = ctmp/q
-           rs(p) = max(r1,r2)
-           ci(p) = max( cs-psn(p)*forc_pbot(g)*1.65_r8*rs(p), 0._r8 )
-           !
-           ! ITER = 2
-           !
-           wj = max(ci(p)-cp,0._r8)*j/(ci(p)+2._r8*cp)*c3psn(ivt(p)) + j*(1._r8-c3psn(ivt(p)))
-           wc = max(ci(p)-cp,0._r8)*vcmx(p)/(ci(p)+awc)*c3psn(ivt(p)) + vcmx(p)*(1._r8-c3psn(ivt(p)))
-           we = 0.5_r8*vcmx(p)*c3psn(ivt(p)) + 4000._r8*vcmx(p)*ci(p)/forc_pbot(g)*(1._r8-c3psn(ivt(p))) 
-           psn(p) = min(wj,wc,we) 
-           cs = max( co2(p)-1.37_r8*rb(p)*forc_pbot(g)*psn(p), mpe )
-           atmp = mp(ivt(p))*psn(p)*forc_pbot(g)*cea / (cs*ei(p)) + bp
-           btmp = ( mp(ivt(p))*psn(p)*forc_pbot(g)/cs + bp ) * rb(p) - 1._r8
-           ctmp = -rb(p)
-           if (btmp >= 0._r8) then
-              q = -0.5_r8*( btmp + sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-           else
-              q = -0.5_r8*( btmp - sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-           end if
-           r1 = q/atmp
-           r2 = ctmp/q
-           rs(p) = max(r1,r2)
-           ci(p) = max( cs-psn(p)*forc_pbot(g)*1.65_r8*rs(p), 0._r8 )
-           !
-           ! ITER = 3
-           !
-           wj = max(ci(p)-cp,0._r8)*j/(ci(p)+2._r8*cp)*c3psn(ivt(p)) + j*(1._r8-c3psn(ivt(p)))
-           wc = max(ci(p)-cp,0._r8)*vcmx(p)/(ci(p)+awc)*c3psn(ivt(p)) + vcmx(p)*(1._r8-c3psn(ivt(p)))
-           we = 0.5_r8*vcmx(p)*c3psn(ivt(p)) + 4000._r8*vcmx(p)*ci(p)/forc_pbot(g)*(1._r8-c3psn(ivt(p))) 
-           psn(p) = min(wj,wc,we) 
-           cs = max( co2(p)-1.37_r8*rb(p)*forc_pbot(g)*psn(p), mpe )
-           atmp = mp(ivt(p))*psn(p)*forc_pbot(g)*cea / (cs*ei(p)) + bp
-           btmp = ( mp(ivt(p))*psn(p)*forc_pbot(g)/cs + bp ) * rb(p) - 1._r8
-           ctmp = -rb(p)
-           if (btmp >= 0._r8) then
-              q = -0.5_r8*( btmp + sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-           else
-              q = -0.5_r8*( btmp - sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-           end if
-           r1 = q/atmp
-           r2 = ctmp/q
-           rs(p) = max(r1,r2)
-           ci(p) = max( cs-psn(p)*forc_pbot(g)*1.65_r8*rs(p), 0._r8 )
-!NEC NEC NEC
-#else
            do iter = 1, niter
               wj = max(ci(p)-cp,0._r8)*j/(ci(p)+2._r8*cp)*c3psn(ivt(p)) + j*(1._r8-c3psn(ivt(p)))
               wc = max(ci(p)-cp,0._r8)*vcmx(p)/(ci(p)+awc)*c3psn(ivt(p)) + vcmx(p)*(1._r8-c3psn(ivt(p)))
@@ -1401,7 +1413,6 @@ contains
               rs(p) = max(r1,r2)
               ci(p) = max( cs-psn(p)*forc_pbot(g)*1.65_r8*rs(p), 0._r8 )
            end do
-#endif
 
            ! rs, rb:  s m**2 / umol -> s/m 
 

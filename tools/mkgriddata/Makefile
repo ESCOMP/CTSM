@@ -53,7 +53,7 @@ ifneq ($(strip $(SMP)),)
   SMP := FALSE
 endif
 
-CPPDEF := -DNO_SHR_VMATH -DOFFLINE $(USER_CPPDEFS)
+CPPDEF := -DNO_SHR_VMATH $(USER_CPPDEFS)
 
 ifeq ($(OPT),TRUE)
    CPPDEF += -DOPT
@@ -143,11 +143,13 @@ ifeq ($(strip $(USER_CC)),)
   CC := gcc
 endif
 
-CFLAGS  := -g -O2 $(CPPDEF)
-CPPDEF  += -DFORTRAN_SAME -DSYSDARWIN -DDarwin
+CFLAGS  := -g -O2
+CPPDEF  += -DSYSDARWIN -DDarwin -DLINUX
+LDFLAGS :=
 
 ifeq ($(FC),g95)
 
+   CPPDEF   += -DFORTRAN_SAME
    CPPDEF   += -DG95
    FFLAGS   := -c -fno-second-underscore $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF)
    ifeq ($(OPT),TRUE)
@@ -158,31 +160,67 @@ ifeq ($(FC),g95)
 
 endif
 
-ifeq ($(FC),xlf90)
+ifeq ($(FC),gfortran)
 
-    CPPDEF += -DAIX
-    cpre = $(null)-WF,-D$(null)
-    FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
-    CFLAGS  := -I/usr/include -I/usr/include/malloc -g -O2 $(CPPDEF)
-    FC      = xlf90
-    FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
-	      -WF,-DAIX -g -qfullpath -qhalt=e $(FPPFLAGS) -I.
-    ifneq ($(OPT),TRUE)
-       FFLAGS  += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
-    else
-       FFLAGS  += -qmaxmem=5000
-    endif
+   CPPDEF   += -DG95
+   CPPDEF   += -DFORTRAN_SAME
+   FFLAGS   := -c -fno-second-underscore $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF) \
+               -fno-range-check
+   ifeq ($(OPT),TRUE)
+     FFLAGS += -O2
+   else
+     FFLAGS += -g -fbounds-check
+   endif
 
 endif
 
-ifeq ($(CC),gcc)
-   CFLAGS     := $(cpp_path) -O2 $(CPPDEF)
-endif
-ifeq ($(CC),xlc)
-   CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
+ifeq ($(FC),ifort)
+
+  CPPDEF  += -DFORTRANUNDERSCORE
+  FFLAGS  += -c -ftz -g -fp-model precise $(CPPDEF) $(cpp_path) \
+             -convert big_endian -assume byterecl -traceback -FR
+  LDFLAGS += -m64
+
+  ifneq ($(OPT),TRUE)
+     FFLAGS    += -CB -O0
+  else
+     FFLAGS    += -O2
+  endif
+  ifeq ($(SMP),TRUE)
+    FFLAGS    += -openmp
+    LDFLAGS   += -openmp
+  endif
 endif
 
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
+ifeq ($(FC),pgf90)
+
+  CPPDEF  += -DFORTRANUNDERSCORE
+  FFLAGS  += -c $(CPPDEF) $(cpp_path)
+  ifneq ($(OPT),TRUE)
+    FFLAGS += -g -Ktrap=fp -Mbounds -Kieee
+  else
+    FFLAGS += -fast -Kieee
+  endif
+
+  ifeq ($(SMP),TRUE)
+    FFLAGS   += -mp
+    LDFLAGS  += -mp
+  endif
+
+endif
+
+ifeq ($(CC),icc)
+   CFLAGS     += -m64 -g
+   ifeq ($(SMP),TRUE)
+     CFLAGS    += -openmp
+   endif
+endif
+ifeq ($(CC),pgcc)
+  CFLAGS     += -g -fast
+endif
+
+CFLAGS  += $(CPPDEF) $(cpp_path)
+LDFLAGS += -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
 
 endif
 
@@ -192,10 +230,10 @@ endif
 
 ifeq ($(UNAMES),Linux)
   ifeq ($(USER_FC),$(null))
-    FC      := pgf90
+    FC    := pgf90
     FCTYP   := pgf90
   else 
-    ifeq ($(USER_FC),ftn)
+  ifeq ($(USER_FC),ftn)
       ifneq ($(USER_FCTYP),$(null))
          FCTYP := $(USER_FCTYP)
       else

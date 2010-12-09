@@ -1,3 +1,32 @@
+module mkfmaxMod
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: mkfmaxMod
+!
+! !DESCRIPTION:
+! Make fmax for surface dataset
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!-----------------------------------------------------------------------
+! !USES:
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_flush
+
+  implicit none
+  private
+
+! !PUBLIC MEMBER FUNCTIONS:
+  public mkfmax   ! Make percent fmax
+
+!EOP
+!-----------------------------------------------------------------------
+contains
+!-----------------------------------------------------------------------
+
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -10,8 +39,6 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
 ! make percent fmax
 !
 ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
@@ -250,3 +277,6 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
 
 end subroutine mkfmax
 
+!-----------------------------------------------------------------------
+
+end module mkfmaxMod

@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CNVegStructUpdateMod
 
 #ifdef CN
@@ -43,7 +40,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_atmlnd   , only: clm_a2l
-   use pftvarcon    , only: noveg, ncorn, nwheat, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+   use pftvarcon    , only: noveg, nc3crop, nirrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
    use shr_const_mod, only: SHR_CONST_PI
    use clm_time_manager , only : get_rad_step_size
 !
@@ -189,7 +186,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
           ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
           ! dt and dividing by dtsmonth (seconds in average 30 day month)
           ! tsai_min scaled by 0.5 to match MODIS satellite derived values
-          if (ivt(p) == ncorn .or. ivt(p) == nwheat ) then    ! crops (corn, wheat in CLM)
+          if (ivt(p) == nc3crop .or. ivt(p) == nirrig) then ! generic crops
 
              tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
              tsai_min = 0.1_r8

@@ -56,6 +56,7 @@ OPTIONS
      -infile "filepath"       Specify a file containing namelists to read values from.
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
+     -irrig                   Seek surface datasets with irrigation turned on.
      -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
                               (if different than resolution coupling to atmosphere)
                               Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
@@ -70,6 +71,7 @@ OPTIONS
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
+     -rtm_res "resolution"    Specify river transport model resolution.
      -s                       Turns on silent mode - only fatal messages issued.
      -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
@@ -155,7 +157,9 @@ my %opts = ( config                => $cfg_cache,
 	     rcp                   => "default",
              sim_year              => "default",
 	     drv_drydep            => 0,
+             irrig                 => undef,
 	     res                   => "default",
+	     rtm_res               => "default",
 	     lnd_res               => "default",
 	     silent                => 0,
              datm_source           => "default",
@@ -179,6 +183,7 @@ GetOptions(
     "datm_presaero=s"           => \$opts{'datm_presaero'},
     "drv_drydep"                => \$opts{'drv_drydep'},
     "glc_grid=s"                => \$opts{'glc_grid'},
+    "irrig"                     => \$opts{'irrig'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
     "lnd_res=s"                 => \$opts{'lnd_res'},
@@ -189,6 +194,7 @@ GetOptions(
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
+    "rtm_res=s"                 => \$opts{'rtm_res'},
     "rcp=s"                     => \$opts{'rcp'},
     "drv_runlength=s"           => \$opts{'drv_runlength'},
     "s|silent"                  => \$opts{'silent'},
@@ -425,6 +431,7 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    }
 }
 
+
 # mask
 $var = "mask";
 if ( $opts{$var} ne "default" ) {
@@ -461,6 +468,22 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
 }
 if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
+
+# irrigation
+$var = "irrig";
+if ( ! defined($opts{$var}) ) {
+    $val = $defaults->get_value($var);
+} else {
+    $val = ".true.";
+}
+my $irrig = $val;
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "Irrigation $irrig $eol"; }
 
 # representative concentration pathway
 $var = "rcp";
@@ -552,6 +575,27 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are:
 @valid_values\n";
+}
+
+# RTM resolution
+my $rtm     = $cfg->get('rtm');
+my $rtm_res;
+if ( $rtm eq "on" ) {
+   $var = "rtm_res";
+   if ( $opts{$var} ne "default" ) {
+       $val = $opts{$var};
+   } else {
+       $val= $defaults->get_value($var);
+   }
+   $rtm_res = $val;
+   if ($print>=2) { print "CLM river transport model resolution is $rtm_res $eol"; }
+   $opts{$var} = $val;
+   $val = &quote_string( $rtm_res );
+   $group = $definition->get_group_name($var);
+   if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   }
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -776,6 +820,10 @@ if ($mode eq "clm_stndln") {
                  " can be set to true.\n";
           }
    }
+   # Budgets
+   add_default($nl, 'do_budgets'  );
+   add_default($nl, 'budget_inst'  );
+
 }
 
 ############################
@@ -986,10 +1034,9 @@ add_default($nl, 'urban_traffic');
 #
 
 # If River Transport Model turned on
-my $rtm = $cfg->get('rtm');
 if ( $rtm eq "on" ) {
-   add_default($nl, 'frivinp_rtm');
-   add_default($nl, 'ice_runoff', 'hgrid'=>$res );
+   add_default($nl, 'frivinp_rtm', 'rtm_res'=>$rtm_res );
+   add_default($nl, 'ice_runoff',  'hgrid'=>$res );
 }
 
 if ( $rtm eq "off" ) {
@@ -1020,6 +1067,7 @@ $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
+$settings{'irrig'}          = $irrig;
 $settings{'rcp'}            = $rcp;
 my $demand           = $nl->get_value('clm_demand');
 $demand              =~ s/\'//g;   # Remove quotes
@@ -1040,7 +1088,7 @@ $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/'//;
 $fpftdyn =~ s/"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year );
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'irrig'=>$irrig );
 my $fsurdat = $nl->get_value( 'fsurdat' );
 
 # Initial conditions
@@ -1063,15 +1111,18 @@ if (not defined $nl->get_value('finidat')) {
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
+                    'irrig'=>$irrig );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
+                    'irrig'=>$irrig );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
+                    'irrig'=>$irrig );
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
@@ -1079,6 +1130,11 @@ if (not defined $nl->get_value('finidat')) {
        $nl->set_variable_value($group, $var, "' '" );
     }
 }
+
+#
+# Create crop land unit
+#
+add_default($nl, 'create_crop_landunit', 'irrig'=>$irrig );
 
 #
 # Nitrogen deposition for bgc=CN

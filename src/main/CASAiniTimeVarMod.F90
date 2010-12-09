@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CASAiniTimeVarMod
 
 #if (defined CASA) && (defined CLAMP)
@@ -139,8 +136,6 @@ subroutine CASAiniTimeVar()
    ! initialize column-level variables
 
    ! initialize pft-level variables
-!dir$ concurrent
-!cdir nodep
    do p = begp, endp
       casa_agnpp(p) = 0._r8
       casa_ar(p) = 0._r8

@@ -1,6 +1,3 @@
-#include <misc.h> 
-#include <preproc.h>
-
 Module DryDepVelocity                                              
 
   !-----------------------------------------------------------------------  
@@ -89,7 +86,8 @@ CONTAINS
                                    nbrdlf_dcd_tmp_tree,       nbrdlf_dcd_brl_tree,  &
                                    nbrdlf_evr_shrub,          nbrdlf_dcd_tmp_shrub, &
                                    nbrdlf_dcd_brl_shrub,      nc3_arctic_grass,     &
-                                   nc3_nonarctic_grass,       nc4_grass, ncorn, nwheat
+                                   nc3_nonarctic_grass,       nc4_grass, nc3crop,   &
+                                   nirrig
 
     implicit none 
 
@@ -275,8 +273,8 @@ CONTAINS
           if (clmveg == nc3_arctic_grass    ) wesveg = 3 
           if (clmveg == nc3_nonarctic_grass ) wesveg = 3 
           if (clmveg == nc4_grass           ) wesveg = 3 
-          if (clmveg == ncorn               ) wesveg = 2 
-          if (clmveg == nwheat              ) wesveg = 2 
+          if (clmveg == nc3crop             ) wesveg = 2 
+          if (clmveg == nirrig              ) wesveg = 2 
           if (wesveg == wveg_unset )then
              write(iulog,*) 'clmveg = ', clmveg, 'itypelun = ', itypelun(l)
              call endrun( subname//': Not able to determine Wesley vegetation type')

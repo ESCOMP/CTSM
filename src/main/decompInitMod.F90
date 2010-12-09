@@ -306,9 +306,7 @@ contains
     ! Write out clump and proc info, one pe at a time, 
     ! barrier to control pes overwriting each other on stdout
 
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
     call mpi_barrier(mpicom,ier)
      npmin = 0
      npmax = npes-1
@@ -339,14 +337,10 @@ contains
                ' atm nlseg   = ',mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
        end if
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
        call mpi_barrier(mpicom,ier)
     end do
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
 
   end subroutine decompInit_atm
 
@@ -541,9 +535,7 @@ contains
        write(iulog,*)
     end if
 
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
 
   end subroutine decompInit_lnd
 
@@ -928,9 +920,7 @@ contains
     ! Write out clump and proc info, one pe at a time, 
     ! barrier to control pes overwriting each other on stdout
 
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
     call mpi_barrier(mpicom,ier)
      npmin = 0
      npmax = npes-1
@@ -1014,14 +1004,10 @@ contains
                   ' total pfts per clump     = ',clumps(cid)%npfts
           end do
        end if
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
        call mpi_barrier(mpicom,ier)
     end do
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
 
   end subroutine decompInit_glcp
 

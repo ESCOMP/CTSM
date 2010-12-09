@@ -769,7 +769,7 @@ contains
     character(len=32) :: subname='restFile_close' ! subroutine name
 !-----------------------------------------------------------------------
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
   end subroutine restFile_close
 

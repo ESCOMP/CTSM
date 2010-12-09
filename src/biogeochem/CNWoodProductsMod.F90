@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CNWoodProductsMod
 #ifdef CN
 
@@ -79,8 +76,6 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
 	kprod10 = 7.2e-9
 	kprod100 = 7.2e-10
 
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -100,8 +95,6 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
 
    ! update wood product state variables
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 

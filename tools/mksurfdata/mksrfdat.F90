@@ -17,13 +17,17 @@ program mksrfdat
     use shr_timer_mod
     use fileutils   , only : getfil, putfil, opnfil, getavu, get_filename
     use mklaiMod    , only : mklai
-    use mkpftMod    , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride
-    use mksoitexMod , only : soil_sand, soil_clay, mksoitex, mksoitexInit
-    use mksoicolMod , only : soil_color, mksoicol, mksoicolInit
-    use mkglcmecMod , only : nglcec, mkglcmec, mkglcmecInit
+    use mkpftMod    , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride, &
+                             mkirrig
+    use mksoilMod   , only : soil_sand, soil_clay, mksoitex, mksoitexInit, &
+                             soil_color, mksoicol, mksoicolInit, mkorganic
+    use mkvocefMod  , only : mkvocef
+    use mklanwatMod , only : mklanwat
+    use mkfmaxMod   , only : mkfmax
+    use mkglcmecMod , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
     use mkharvestMod, only : mkharvest, mkharvest_init, mkharvest_fieldname, &
                              mkharvest_numtypes, mkharvest_parse_oride
-    use mkurbanparMod, only : mkurbanpar
+    use mkurbanparMod, only : mkurban, mkurbanpar, mkelev
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
@@ -322,13 +326,6 @@ program mksrfdat
     write(6,*) ' timer_a1 init-----'
     call shr_timer_print(t1)
 
-    ! Make soil texture [sand3d, clay3d] from IGBP 5 minute data [fsoitex]
-
-    call mksoitex (lsmlon, lsmlat, mksrf_fsoitex, ndiag, pctgla, sand3d, clay3d)
-
-    write(6,*) ' timer_e mksoitex-----'
-    call shr_timer_print(t1)
-
     ! Make irrigated area fraction [pctirr] from [firrig] dataset if requested in namelist
 
     if (mksrf_firrig /= ' ') then
@@ -345,6 +342,7 @@ program mksrfdat
 
     ! Make PFTs [pctpft] from dataset [fvegtyp] (1/2 degree PFT data)
 
+    nullify(pctpft_i)
     call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, mksrf_firrig, ndiag, pctlnd_pft, &
                pctirr, pctpft, pctpft_i)
 
@@ -361,12 +359,18 @@ program mksrfdat
 
     ! Make glacier fraction [pctgla] from [fglacier] dataset
 
-    call mkglacier (lsmlon, lsmlat, mksrf_fglacier, all_urban.or.all_veg, &
-                    ndiag, pctgla)
+    call mkglacier (lsmlon, lsmlat, mksrf_fglacier, ndiag, all_urban.or.all_veg, &
+                    pctgla)
 
     write(6,*) ' timer_d mkglacier-----'
     call shr_timer_print(t1)
 
+    ! Make soil texture [sand3d, clay3d] from IGBP 5 minute data [fsoitex]
+
+    call mksoitex (lsmlon, lsmlat, mksrf_fsoitex, ndiag, pctgla, sand3d, clay3d)
+
+    write(6,*) ' timer_e mksoitex-----'
+    call shr_timer_print(t1)
     ! Make soil color classes [soic2d] from BATS T42 data [fsoicol]
 
     call mksoicol (lsmlon, lsmlat, mksrf_fsoicol, ndiag, pctgla, soic2d, nsoicol)
@@ -634,7 +638,7 @@ program mksrfdat
     call check_ret(nf_close(ncid), subname)
 
     write (6,'(72a1)') ("-",i=1,60)
-    write (6,'(a52,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
+    write (6,'(a,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
          360._r8/lsmlon,' by ',180._r8/lsmlat,' grid'
 
     ! ----------------------------------------------------------------------

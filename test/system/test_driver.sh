@@ -381,49 +381,50 @@ export MPICH_PTL_SEND_CREDITS=-1
 export MPICH_ENV_DISPLAY=1
 export MPICH_VERSION_DISPLAY=1
 
-# These environment variables were suggested by Helen He to help get around compiler issues
-# with pgi9
-export MALLOC_MMAP_MAX_=0
-export MALLOC_TRIM_THRESHOLD_=536870912
-
 # The environment variables below produce corefiles and maybe (?) should be
 # moved to DEBUG mode at some point
 export MPICH_DBMASK=0x200
-
-# The environment variable below increase the stack size, which is necessary for
-# CICE to run threaded on this machine.  
-export MPSTKZ=64M
 
 #-------------------------------------------------------------------------------
 # Modules
 #-------------------------------------------------------------------------------
 
-alias module=/opt/modules/3.1.6.5/bin/modulecmd
+alias modulecmd=/opt/modules/3.1.6.5/bin/modulecmd
+source /opt/modules/default/init/$shell
 
-if [ "\$CLM_FC" = "GENPATH" ]; then
-   module $shell remove PrgEnv-pgi
-   module $shell remove pgi
-   module $shell load pathscale
-   module $shell load PrgEnv-pathscale
-   module $shell load netcdf/4.0.1.3
+if [ "\$CLM_FC" = "PATH" ]; then
+   modulecmd $shell remove PrgEnv-pgi
+   modulecmd $shell remove pgi
+   modulecmd $shell purge
+   modulecmd $shell load pathscale
+   modulecmd $shell load PrgEnv-pathscale
+   modulecmd $shell load netcdf/4.0.1.3
+   modulecmd $shell load torque
    export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pathscale
-   export CESM_MACH="generic_linux_pathscale"
-   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_FCTYP=pathf90 "
-   export MAKE_CMD="gmake -j 2"   ##using hyper-threading on lynx
+   export CESM_MACH="lynx_pathscale"
+   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+   export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
+elif [ "\$CLM_FC" = "INTEL" ]; then
+   modulecmd $shell remove PrgEnv-pgi
+   modulecmd $shell remove pgi
+   modulecmd $shell load intel
+   modulecmd $shell load PrgEnv-intel
+   modulecmd $shell load netcdf/4.0.1.3
+   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-intel
+   export CESM_MACH="lynx_intel"
+   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+   export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 elif [ "\$CLM_FC" = "GENXT" ]; then
-   #module $shell switch pgi       pgi/10.3.0        
-   #module $shell switch xt-mpt    xt-mpt/4.0.3     
-   #module $shell switch xt-libsci xt-libsci/10.4.3 
-   module $shell load netcdf/4.0.1.3
+   modulecmd $shell load netcdf/4.0.1.3
    export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
    export CESM_MACH="generic_xt"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 else
-   module $shell switch pgi       pgi/10.3.0        
-   module $shell switch xt-mpt    xt-mpt/4.0.3     
-   module $shell switch xt-libsci xt-libsci/10.4.3 
-   module $shell load netcdf/4.0.1.3
+   modulecmd $shell switch pgi       pgi/10.3.0        
+   modulecmd $shell switch xt-mpt    xt-mpt/4.0.3     
+   modulecmd $shell switch xt-libsci xt-libsci/10.4.3 
+   modulecmd $shell load netcdf/4.0.1.3
    export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
    export CESM_MACH="lynx_pgi"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
@@ -509,12 +510,13 @@ source /opt/modules/default/init/sh
 
 if [ "\$CLM_FC" = "GENXT" ]; then
   module remove netcdf
-  module load   netcdf
+  module load   netcdf/3.6.2
   export CESM_MACH="generic_xt"
 else
   module load pgi/9.0.2                     # 9.0.2 tested for bfb on 2009-sep-25
   module load xt-mpt/3.2.0                  # 3.2.0  is default on 2009-sep-25
   module load xt-libsci/10.3.5              # 10.3.5 is default on 2009-sep-25
+  module remove netcdf
   module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
   export CESM_MACH="jaguar"
 fi
@@ -541,7 +543,8 @@ export MALLOC_TRIM_THRESHOLD_=536870912
 # moved to DEBUG mode at some point
 export MPICH_DBMASK=0x200
 
-export NETCDF_PATH=\${CRAY_NETCDF_DIR}/netcdf-pgi
+#export NETCDF_PATH=\${CRAY_NETCDF_DIR}/netcdf-pgi  # For NetCDF4
+export NETCDF_PATH=\${NETCDF_DIR}
 export LIB_NETCDF=\${NETCDF_PATH}/lib
 export INC_NETCDF=\${NETCDF_PATH}/include
 export MOD_NETCDF=\${NETCDF_PATH}/include
@@ -593,8 +596,11 @@ if [ "\$CLM_FC" = "PGI" ]; then
 else
    export CESM_MACH="generic_darwin_intel"
    export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
+   export MPICH_PATH=/usr/local/mpich2-1.3.1-intel-11.1
+   export PATH="\$MPICH_PATH/bin:$PATH"
    export CFG_STRING=""
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CC=icc "
+   export DYLD_LIBRARY_PATH=/opt/intel/Compiler/11.1/067/lib
 fi
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
@@ -603,9 +609,9 @@ export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/cgd/tss";
-dataroot="$HOME"
+dataroot="/fis/cgd/cseg/csm"
 echo_arg=""
-input_file="tests_posttag_spot1"
+input_file="tests_posttag_yong"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -1003,7 +1009,7 @@ case $hostname in
 
     #default
     * )
-    echo "no submission capability on this machine"
+    echo "no submission capability on this machine use the interactive option: -i"
     exit 0
     ;;
 

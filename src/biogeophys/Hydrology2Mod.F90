@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module Hydrology2Mod
 
 !-----------------------------------------------------------------------
@@ -11,6 +8,9 @@ module Hydrology2Mod
 ! !DESCRIPTION:
 ! Calculation of soil/snow hydrology.
 !
+! !USES:
+   use clm_varctl, only : iulog
+   use abortutils, only : endrun
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -149,6 +149,7 @@ contains
     real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_infl(:)     ! infiltration (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    ! qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_irrig(:)    ! irrigation flux (mm H2O /s)
     real(r8), pointer :: qflx_runoff(:)   ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
     real(r8), pointer :: qflx_runoff_u(:) ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
     real(r8), pointer :: qflx_runoff_r(:) ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
@@ -264,6 +265,7 @@ contains
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
     qflx_infl         => clm3%g%l%c%cwf%qflx_infl
     qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
     bsw2              => clm3%g%l%c%cps%bsw2
@@ -495,6 +497,7 @@ contains
        if (ityplun(l)==istwet .or. ityplun(l)==istice      &
                               .or. ityplun(l)==istice_mec) then
           qflx_drain(c) = 0._r8
+          qflx_irrig(c) = 0._r8
           qflx_surf(c)  = 0._r8
           qflx_infl(c)  = 0._r8
           qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
@@ -538,10 +541,13 @@ contains
        endif   ! istice_mec
 
        qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
+       if (ityplun(l)==istsoil .and. clm3%g%l%c%wtgcell(c) > 0.0_r8 ) then
+          qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
+       end if
        if (ityplun(l)==isturb) then
-         qflx_runoff_u(c) = qflx_drain(c) + qflx_surf(c)
+         qflx_runoff_u(c) = qflx_runoff(c)
        else if (ityplun(l)==istsoil) then
-         qflx_runoff_r(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
+         qflx_runoff_r(c) = qflx_runoff(c)
        end if
     end do
 

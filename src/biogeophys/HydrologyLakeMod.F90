@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module HydrologyLakeMod
 
 !-----------------------------------------------------------------------
@@ -91,6 +88,7 @@ contains
     real(r8), pointer :: qflx_snomelt(:)  !snow melt (mm H2O /s)
     real(r8), pointer :: qflx_surf(:)     !surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_drain(:)    !sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_irrig(:)    !irrigation flux (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    !qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_runoff(:)   !total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_ice(:)!excess snowfall due to snow capping (mm H2O /s) [+]`
@@ -143,6 +141,7 @@ contains
     qflx_runoff    => clm3%g%l%c%cwf%qflx_runoff
     qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_drain     => clm3%g%l%c%cwf%qflx_drain
+    qflx_irrig     => clm3%g%l%c%cwf%qflx_irrig
     qflx_infl      => clm3%g%l%c%cwf%qflx_infl
     rootr_column   => clm3%g%l%c%cps%rootr_column
     h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
@@ -238,6 +237,7 @@ contains
        qflx_snomelt(c)   = qmelt(c)
        qflx_surf(c)      = 0._r8
        qflx_drain(c)     = 0._r8
+       qflx_irrig(c)     = 0._r8
        rootr_column(c,:) = spval
        snowice(c)        = spval
        snowliq(c)        = spval

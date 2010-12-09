@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 module CNDecompMod
 #ifdef CN
 
@@ -333,17 +330,12 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    nlevdecomp=5
    allocate(fr(lbc:ubc,nlevdecomp))
    do j=1,nlevdecomp
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          frw(c) = frw(c) + dz(c,j)
       end do
    end do
    do j = 1,nlevdecomp
-!dir$ concurrent
-!dir$ prefervector
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          if (frw(c) /= 0._r8) then
@@ -364,8 +356,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    ! the base rates at 25 C, which are calibrated from microcosm studies.
    t_scalar(:) = 0._r8
    do j = 1,nlevdecomp
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          t_scalar(c)=t_scalar(c) + (1.5**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
@@ -383,8 +373,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    minpsi = -10.0_r8;
    w_scalar(:) = 0._r8
    do j = 1,nlevdecomp
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          maxpsi = psisat(c,j)
@@ -414,8 +402,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
 
    ! column loop to calculate potential decomp rates and total immobilization
    ! demand.
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -562,8 +548,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
 
    dnp = 0.01_r8
 
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 

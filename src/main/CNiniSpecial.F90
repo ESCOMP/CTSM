@@ -1,6 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -126,8 +123,6 @@ subroutine CNiniSpecial ()
    ! have to be in place for SurfaceAlbedo and biogeophysics
    ! also set pcf%psnsun and pcf%psnsha to 0 (not included in CNSetPcf())
 
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_specialp
       p = specialp(fp)
       clm3%g%l%c%p%pps%tlai(p) = 0._r8
@@ -151,8 +146,6 @@ subroutine CNiniSpecial ()
       
    end do
 
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_specialc
       c = specialc(fc)
       clm3%g%l%c%ccf%pcf_a%psnsun(c) = 0._r8

@@ -280,9 +280,7 @@ subroutine mct_aVect_info(flag,aVect,comm,pe,fld,istr)
 
    endif
 
-#ifndef UNICOSMP
    call shr_sys_flush(iulog)
-#endif
 
 end subroutine mct_aVect_info
 
@@ -612,15 +610,8 @@ subroutine mct_aVect_accum(aVin, rList, TrList, iList, TiList, aVout)
       call SharedAttrIndexList(aVin, aVout, data_flag, num_indices, &
                                 aVinindices, aVoutindices)
       if (num_indices .gt. 0) then
-#ifdef CPP_VECTOR
-         do j=1,num_indices
-!CDIR SELECT(VECTOR)
-!DIR$ CONCURRENT
-         do i=1,lsize(aVin)
-#else
          do i=1,lsize(aVin)
          do j=1,num_indices
-#endif
             aVout%rAttr(aVoutindices(j),i)= &
             & aVout%rAttr(aVoutindices(j),i)+aVin%rAttr(aVinindices(j),i)
          enddo
@@ -633,15 +624,8 @@ subroutine mct_aVect_accum(aVin, rList, TrList, iList, TiList, aVout)
       call SharedAttrIndexList(aVin, aVout, data_flag, num_indices, &
                                 aVinindices, aVoutindices)
       if (num_indices .gt. 0) then
-#ifdef CPP_VECTOR
-         do j=1,num_indices
-!CDIR SELECT(VECTOR)
-!DIR$ CONCURRENT
-         do i=1,lsize(aVin)
-#else
          do i=1,lsize(aVin)
          do j=1,num_indices
-#endif
             aVout%iAttr(aVoutindices(j),i)= &
             & aVout%iAttr(aVoutindices(j),i)+aVin%iAttr(aVinindices(j),i)
          enddo

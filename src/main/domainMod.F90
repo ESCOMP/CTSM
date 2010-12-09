@@ -75,7 +75,6 @@ module domainMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
   public domain_clean         ! deallocates domain types
-  public domain_setsame          ! copy one domain to another
   public domain_setptrs       ! sets external pointer arrays into domain
   public domain_check         ! write out domain info
   public latlon_init          ! allocates/nans domain types
@@ -237,63 +236,6 @@ end subroutine domain_init
     domain%areaset    = .false.
 
 end subroutine domain_clean
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: domain_setsame
-!
-! !INTERFACE:
-  subroutine domain_setsame(domain1,domain2)
-!
-! !DESCRIPTION:
-! This subroutine copies parts of domain2 = domain1 specifically for
-! setting a finemesh lats/lons to coarsemesh grid
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(domain_type),intent(in)    :: domain1        ! domain datatype
-    type(domain_type),intent(inout) :: domain2        ! domain datatype
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer ier
-!
-!------------------------------------------------------------------------------
-    if (domain1%ni /= domain2%ni .or. domain1%nj /= domain2%nj) then
-       write(iulog,*) 'domain_setsame: error on size',domain1%ni,domain1%nj,domain2%ni,domain2%nj
-       call endrun()
-    endif
-
-    if (masterproc) then
-       write(iulog,*) 'domain_setsame: copying ',domain1%ni,domain1%nj
-    endif
-    !!! Don't copy mask, frac, topo, pftm, nara, ntop or gatm
-!   domain2%mask     = domain1%mask
-!   domain2%frac     = domain1%frac
-!   domain2%topo     = domain1%topo
-!   domain2%pftm     = domain1%pftm
-!   domain2%nara     = domain1%nara
-!   domain2%ntop     = domain1%ntop
-!   domain2%asca     = domain1%asca
-!   domain2%gatm     = domain1%gatm
-
-    domain2%latc     = domain1%latc
-    domain2%lonc     = domain1%lonc
-    domain2%area     = domain1%area
-
-    domain2%set      = domain1%set
-    domain2%regional = domain1%regional
-    domain2%areaset  = domain1%areaset 
-    domain2%decomped = domain1%decomped
-   domain2%glcmask   = domain1%glcmask
-
-end subroutine domain_setsame
 !------------------------------------------------------------------------------
 !BOP
 !

@@ -113,7 +113,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use pftvarcon, only : noveg, ncorn, nbrdlf_dcd_brl_shrub
+    use pftvarcon, only : noveg, nc3crop, nbrdlf_dcd_brl_shrub
 !
 ! !ARGUMENTS:
     implicit none
@@ -180,8 +180,6 @@ contains
        plai    => clm3%g%l%c%p%pps%plai
 #endif
 
-!dir$ concurrent
-!cdir nodep
        do fp = 1, num_nolakep
           p = filter_nolakep(fp)
           c = pcolumn(p)
@@ -212,7 +210,7 @@ contains
           !! can also choose to use default tlai instead of plai - need option
           ! 03/03/11: don't reset lai of crops - use default lsm tlai/elai
 
-          if (ivt(p) > noveg .and. ivt(p) < ncorn ) tlai(p) = plai(p)
+          if (ivt(p) > noveg .and. ivt(p) < nc3crop) tlai(p) = plai(p)
 #endif
 
           ! adjust lai and sai for burying by snow. if exposed lai and sai
@@ -331,6 +329,7 @@ contains
     use decompMod   , only : get_proc_bounds
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
+    use shr_scam_mod, only : shr_scam_getCloseLatLon
 
     implicit none
 
@@ -378,8 +377,7 @@ contains
     call check_dim(ncid, 'lsmpft', numpft+1)
 
     if (single_column) then
-       call scam_setlatlonidx(ncid, scmlat, scmlon,&
-            closelat, closelon, closelatidx, closelonidx)
+       call shr_scam_getCloseLatLon(locfn,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
     endif
 
     do k=1,12   !! loop over months and read vegetated data
@@ -408,7 +406,7 @@ contains
 
     enddo ! months loop
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
     deallocate(mlai)
 
@@ -431,6 +429,11 @@ contains
     use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
+    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
+    use clm_time_manager, only : get_nstep
+    use ncdio_pio   , only : ncd_io
+    use shr_scam_mod, only : shr_scam_getCloseLatLon
+    use netcdf
 !
 ! !ARGUMENTS:
     implicit none
@@ -492,7 +495,7 @@ contains
        call check_dim(ncid, 'lsmlat', lsmlat)
        call check_dim(ncid, 'lsmpft', numpft+1)
     else
-       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+       call shr_scam_getCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
     endif
     
     do k=1,2   !loop over months and read vegetated data
@@ -540,7 +543,7 @@ contains
 
     end do   ! end of loop over months
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
     if (masterproc) then
        k = 2

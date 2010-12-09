@@ -72,7 +72,7 @@ module ncdio_pio
   public file_desc_t
   public var_desc_t
   public PIO_noerr, pio_seterrorhandling, pio_inq_dimid, pio_inq_varid, &
-         pio_closefile, pio_get_var, pio_put_var, pio_inq_dimlen, PIO_GLOBAL, &
+         pio_get_var, pio_put_var, pio_inq_dimlen, PIO_GLOBAL, &
          pio_def_dim, pio_double, pio_unlimited, pio_write, &
          pio_internal_error, pio_bcast_error
 !
@@ -266,6 +266,8 @@ contains
     end if
 
   end subroutine ncd_pio_createfile
+
+  !=======================================================================
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1241,6 +1243,7 @@ contains
     integer :: start(2), count(2)   ! output bounds
     integer :: status               ! error code
     logical :: varpresent           ! if true, variable is on tape
+    logical :: found                ! if true, found lat/lon dims on file
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_real_var1_nf'
@@ -1251,8 +1254,12 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count)
-             status = pio_get_var(ncid, varid, start, count, data)
+             call scam_field_offsets(ncid,'undefined',start,count,found)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, data)
+             else
+                status = pio_get_var(ncid, varid, data)
+             end if
           else
              status = pio_get_var(ncid, varid, data)
           endif
@@ -2376,7 +2383,7 @@ contains
 ! !IROUTINE: subroutine scam_field_offsets
 !
 ! !INTERFACE:
-  subroutine scam_field_offsets(ncid,dim1name,start,count)
+  subroutine scam_field_offsets(ncid,dim1name,start,count,found)
 !
 ! !DESCRIPTION: 
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
@@ -2385,6 +2392,7 @@ contains
     use clm_varpar  , only : maxpatch
     use clm_varctl  , only : scmlon,scmlat,single_column
     use nanMod      , only : nan
+    use shr_scam_mod, only : shr_scam_getCloseLatLon
 !
 ! !ARGUMENTS:
     implicit none
@@ -2392,6 +2400,9 @@ contains
     character(len=*)  , intent(in)    :: dim1name ! dimension 1 name
     integer           , intent(inout) :: start(:) ! start index
     integer           , intent(inout) :: count(:) ! count to retrieve
+    logical, optional , intent(out)   :: found    ! if present return true if found
+                                                  ! dimensions on file else false
+                                                  ! if NOT present abort if can't find
 !
 ! !CALLED FROM: subroutine inicfields
 !
@@ -2422,7 +2433,12 @@ contains
 
     ! find closest land grid cell for this point
 
-    call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+    if ( present(found) )then
+       call shr_scam_getCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx,found)
+       if ( .not. found ) return
+    else
+       call shr_scam_getCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+    end if
      
     if (dim1name == 'column') then
 

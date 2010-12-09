@@ -754,7 +754,7 @@ contains
 
        ! Close netcdf file
 
-       call pio_closefile(ncid)
+       call ncd_pio_closefile(ncid)
 
        ! Deallocate dynamic memory
 
@@ -1102,7 +1102,7 @@ contains
     deallocate(histo)
     deallocate(histi)
 
-    call pio_closefile(ncid)
+    call ncd_pio_closefile(ncid)
 
   end subroutine casa_write_cpool
 
