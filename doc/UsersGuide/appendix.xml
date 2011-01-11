@@ -77,6 +77,13 @@ to see how to add files to the database. The script runs &clm; only using OpenMP
 threading and as such can be run interactively, but it can also be submitted to the
 batch que.
 </para>
+<warning>
+<para>
+There is a known problem running <filename>runinit_ibm.csh</filename>. You will
+need to fix this before using it. See the <filename>KnownBugs</filename> file
+for bug # 1258. It gives changes that you need to make to get it to work.
+</para>
+</warning>
 </appendix>
 
 <appendix id="testing">
@@ -113,7 +120,7 @@ the I1850CN compset on bluefire you do the following.
 > ./create_test -testname ERI.f19_g16.I1850CN.bluefire
 > cd ERI.f19_g16.I1850CN.bluefire.$id
 > ./ERI.f19_g16.I1850CN.bluefire.$id.build
-> bsub &lt; ERI.f19_g16.I1850CN.bluefire.$id.test
+> ERI.f19_g16.I1850CN.bluefire.$id.submit
 </screen>
 When the test is done it will update the file <filename>TestStatus</filename> with
 either a PASS or FAIL message.

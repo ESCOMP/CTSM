@@ -27,7 +27,7 @@ The <ulink url="&cesmwebmodelrel;cesm">
 a case. That is the document to give you the details on using the &cesm; scripts. The purpose 
 of this document is to give you the details when using &cesm; with &clm; on how to customize
 and use advanced features in &clm;. You should be familiar with the &cesm; User's Guide and
-how to setup cases with &cesm1; before referring to this document.
+how to setup cases with &cesmrel; before referring to this document.
 </para>
 <para>
 In this chapter we deal with three different ways of customizing a case: Choosing a compset,
@@ -562,7 +562,6 @@ functionality and we recommend that users stick with the &CLMQIAN; mode of opera
 <envar>DATM_PRESAERO</envar> sets the prescribed aerosol mode for the data atmosphere
 model. The list of valid options include:
 <simplelist>
-<member><literal>none</literal> = do NOT send aerosols from datm read them in &clm;</member>
 <member><literal>clim_1850</literal> = constant year 1850 conditions</member>
 <member><literal>clim_2000</literal> = constant year 2000 conditions</member>
 <member><literal>trans_1850-2000</literal> = transient 1850 to year 2000 conditions</member>
@@ -650,9 +649,11 @@ Many of these items are things that you would NOT change, but looking through th
 list gives you the valid options, and a good description of each. Below we repeat 
 the <filename>config_definition.xml</filename> files contents:
 </para>
+<!--
 <sect3 id="clm_config_definition">
 &cfgdfntbl;
 </sect3>
+-->
 
 <sect3 id="clm_configure_help">
 <title>Help on &clm; &configure;</title>
@@ -771,11 +772,9 @@ appear in your clm namelist.
 '$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'
  fsurdat    =
 '$DIN_LOC_ROOT/lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c091006.nc'
- hist_crtinic	= 'NONE'
  outnc_large_files    = .true.
  urban_hac    = 'ON_WASTEHEAT'
  urban_traffic	  = .false.
- use_ndepstream	  = .true.
 /
 &amp;ndepdyn_nml
  stream_fldfilename_ndep    =

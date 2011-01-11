@@ -18,6 +18,7 @@
 <li><a href="ChangeLog">ChangeLog</a> -- Description of Changes
 <li><a href="ChangeSum">ChangeSum</a> -- One Line Summary of Changes
 <li><a href="KnownBugs">KnownBugs</a> -- Known bugs in CLM
+<li><a href="KnownLimitations">KnownLimitations</a> -- Known limitations in CLM
 <li><a href="Quickstart.userdatasets">Quickstart.userdatasets</a> -- Quickstart to Using User
 Supplied Datasets in CLM
 </ul>

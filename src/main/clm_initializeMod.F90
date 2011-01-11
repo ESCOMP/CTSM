@@ -440,7 +440,7 @@ contains
     use ndepStreamMod   , only : ndep_init, ndep_interp
 #endif
 #if (defined CNDV)
-    use pftdynMod             , only : pftwt_init, pftwt_interp
+    use pftdynMod             , only : pftwt_init
     use CNDVEcosystemDyniniMod, only : CNDVEcosystemDynini
 #endif
     use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
@@ -796,7 +796,12 @@ contains
     call t_startf('init_filters')
 
     call allocFilters()
-    call setFilters()
+    nclumps = get_proc_clumps()
+!$OMP PARALLEL DO PRIVATE (nc)
+    do nc = 1, nclumps
+       call setFilters(nc)
+    end do
+!$OMP END PARALLEL DO
 
     call t_stopf('init_filters')
 

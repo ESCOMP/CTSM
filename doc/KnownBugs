@@ -1,5 +1,18 @@
-Known Bugs in CLM4.0    		                          Aug/03/2010
+Known Bugs in CLM4.0    		                          Jan/10/2011
 
+====================================================================================
+Bug Number: 1168
+Transient use-cases with CLM when RUN_TYPE=branch have both finidat and nrevsn
+
+When you use a transient use-case with CLM and set RUNTYPE to branch, you end
+up with both finidat and nrevsn files in your namelist. Dave Bailey found this
+problem with the following case....
+
+/blhome/dbailey/ccsm_runs/b40.20th.1deg.005b
+
+The problem is that the transient use-cases assign the default clm_start_type,
+and then use it instead of the start type input on the command line (since the
+use-case precedence is higher).
 
 ====================================================================================
 Bug Number: 1165
@@ -132,12 +145,5 @@ set_dgvm_filename
 changed to allow 5 or 6 digit years rather than just 4-digit ones.
 
 scripts, drv, and csm_share also have problems with Y10K as well.
-
-====================================================================================
-Bug Number: 498
-problems creating .1 degree surface dataset
-
-mksurfdata can NOT create surface datasets at .1 degree resolution or higher. We've
-been successful with 0.23x0.31, but NOT higher resolutions.
 
 ====================================================================================

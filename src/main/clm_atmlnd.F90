@@ -74,7 +74,7 @@ module clm_atmlnd
      real(r8), pointer :: eflx_lh_tot(:)  !total latent HF (W/m**2)  [+ to atm]
      real(r8), pointer :: eflx_sh_tot(:)  !total sensible HF (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_lwrad_out(:) !IR (longwave) radiation (W/m**2)
-     real(r8), pointer :: qflx_evap_tot(:)!qflx_evap(_soi + _veg) + qflx_tran_veg
+     real(r8), pointer :: qflx_evap_tot(:)!qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: fsa(:)          !solar rad absorbed (total) (W/m**2)
      real(r8), pointer :: nee(:)          !net CO2 flux (kg CO2/m**2/s) [+ to atm]
      real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)

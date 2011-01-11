@@ -1,4 +1,4 @@
-Known Limitations in CLM4.0    		                          Sep/09/2010
+Known Limitations in CLM4.0.14 		                          Jan/10/2011
 
 As opposed to the KnownBugs file where we expect that eventually we will find a 
 fix, these are limitations that we do NOT have plans to fix. They are simply known
@@ -8,18 +8,6 @@ reference "bug numbers" in this list, but these are things where those "bugs"
 were closed out with a "will-not-fix".
 
 ====================================================================================
-Bug Number: 12??
-Can't cycle over a single year of datm forcing for CPLHIST mode
-
-This problem was discovered by Zack Subin and is described as follows...
-
-I have a similar problem now in clm_4_0_09 when using CPLHIST mode for
-an 1850 run (with data I generated), that occurs only at the beginning /
-end of the calendar year (or when the stream data cycles; I'm trying to
-cycle with one year).  It crashes on the second timestep if I start on
-Jan 1; if I start the run on Jan 2, it runs until Dec 31.
-
-====================================================================================
 Bug Number: 1147
 mkgriddata regional grids can't straddle over Greenwich
 
@@ -27,6 +15,33 @@ mkgriddata is not able to run for any domain that has Eastern edge > Western
 edge, because it straddles across the 0 degree longitude line. 
 
 The workaround is to divide the domain into two and run two regional grids.
+
+====================================================================================
+Bug Number: 1110
+dtlimit error with datm8 when a full year isn't available
+
+datm8 dies with a dtlimit error as follows when your atm forcing data doesn't
+include an entire year (such as the MexicoCity and Vancouver urban test sites).
+
+(shr_dmodel_readLBUB) reading file:
+/fs/cgd/csm/inputdata/atm/datm7/CLM1PT_data/mexicocityMEX.c080124/clm1pt-1993-12.nc
+    160
+(datm_comp_run) atm: model date 19931207   57600s
+(shr_dmodel_readLBUB) reading file:
+/fs/cgd/csm/inputdata/atm/datm7/CLM1PT_data/mexicocityMEX.c080124/clm1pt-1993-12.nc
+      1
+ (shr_strdata_advance) ERROR: dt limit1  358.375011574074051
+0.416666666666666297E-01 1.50000000000000000
+ (shr_strdata_advance) ERROR: dt limit2  19931207 61199 19941201 7200
+(shr_sys_abort) ERROR: (shr_strdata_advance) ERROR dt limit
+(shr_sys_abort) WARNING: calling shr_mpi_abort() and stopping
+
+This is because the model runs out of data and loops around to the beginning of the
+year, and hence has a large time-step difference to the rest of the data when it
+loops around. You can remove this problem if you increase dtlimit (normally 1.5 and
+represents the ratio of the largest allowed relative difference in time intervals
+for the data). Or you just make sure that your input data doesn't have these type
+of abnormal jumps of missing data.
 
 ====================================================================================
 Bug Number: 1100

@@ -117,15 +117,16 @@ end subroutine CNZeroFluxes
 ! !IROUTINE: CNZeroFluxes_dwt
 !
 ! !INTERFACE:
-subroutine CNZeroFluxes_dwt()
+subroutine CNZeroFluxes_dwt( begc, endc, begp, endp )
 !
 ! !DESCRIPTION:
 !
 ! !USES:
-    use decompMod   , only : get_proc_bounds
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(IN)  :: begc, endc    ! proc beginning and ending column indices
+    integer, intent(IN)  :: begp, endp    ! proc beginning and ending pft indices
 !
 ! !CALLED FROM:
 ! subroutine clm_driver1
@@ -144,16 +145,11 @@ subroutine CNZeroFluxes_dwt()
 !
 !
 ! !OTHER LOCAL VARIABLES:
-    integer  :: begp, endp    ! proc beginning and ending pft indices
-    integer  :: begc, endc    ! proc beginning and ending column indices
-    integer  :: begl, endl    ! proc beginning and ending landunit indices
-    integer  :: begg, endg    ! proc beginning and ending gridcell indices
     integer  :: c, p          ! indices
     type(column_type),   pointer :: cptr         ! pointer to column derived subtype
 !EOP
 !-----------------------------------------------------------------------
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     cptr => clm3%g%l%c
     ! set column-level conversion and product pool fluxes
     ! to 0 at the beginning of every timestep

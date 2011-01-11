@@ -31,7 +31,6 @@
 ## Configuration settings:
 set spmd     = off      # settings are [on   | off         ] (default is on) (off for interactive)
 set smp      = on       # settings are [on   | off         ] (default is off)
-set supln    = off      # settings are [on   | off         ] (default is off)
 set dust     = on       # settings are [on   | off         ] (default is off)
 set seaslt   = on       # settings are [on   | off         ] (default is off)
 set voc      = off      # settings are [on   | off         ] (default is off)   
@@ -109,8 +108,7 @@ date
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #------------------ Loop over different and configuration types -------------------------
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#foreach bgc ( "none" "cn" )
-foreach bgc ( "cn" )
+foreach bgc ( "none" "cn" )
    set maxpft   = "numpft+1"
    if (      "$bgc" == "none" )then
       set compset = "IQ"
@@ -124,8 +122,8 @@ foreach bgc ( "cn" )
    mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
    ## Build (or re-build) executable
-   set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust "
-   set flags = "$flags -prog_seasalt $seaslt -mach $cesm_mach -cesm_bld on -mode clm_stndln"
+   set flags = "-maxpft $maxpft -bgc $bgc -voc $voc -rtm $rtm -dust $dust "
+   set flags = "$flags -progsslt $seaslt -mach $cesm_mach -cesm_bld on -mode clm_stndln"
    if ($spmd == on ) set flags = "$flags -spmd"
    if ($spmd == off) set flags = "$flags -nospmd"
    if ($smp  == on ) set flags = "$flags -smp"

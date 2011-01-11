@@ -1,4 +1,185 @@
 ===============================================================
+Tag name:  clm4_0_20
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Jan 11 11:18:30 MST 2011
+One-line Summary: Update for ESMF metadata, update doc. from release branch, 
+                  bug fixes (doc of qflx_evap_tot, threading CNDV, aer/ndepregrid)
+
+Purpose of changes:
+
+Update externals, fix in datm speeds up single-point simulations, update for esmf
+metadata capability. Update documentation from Release branch (cesm1_0_rel07_clm4_0_14). 
+Fix documentation of qflx_evap_tot. Fix ndepregrid/aerdepregrid scripts. Fix threading 
+problem with CNDV.
+
+Bugs fixed (include bugzilla ID):
+                                1266 (Threading problem with CNDV)
+                                1265 (Fix ndep/aerdepregrid.ncl)
+                                1264 (Incorrect doc of qflx_evap_tot in the code)
+                                1258 (runinit_ibm.csh needs to be updated)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1110 (dtlimit error when a full year isn't available)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes:
+    Small section of clm_driver was moved to a OMP loop. This should
+    improve threading performance slightly.
+
+Code reviewed by: self, doc of qflx_evap_tot by Keith Oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, 
+     stubs, datm, csm_share, timing
+
+    scripts   to scripts4_110108
+    drv       to drvseq3_1_47
+    sice      to stubs1_2_03
+    socn      to stubs1_2_03
+    sglc      to stubs1_2_03
+    datm      to datm8_110106
+    csm_share to share3_101231
+    timing    to timing_101215
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>> Fix deposition regrid scripts so they will work (from crop04)
+  M  models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Fix XML queries so will
+        work, using the datm_internal namelist now
+  M  models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Fix XML queries so will
+        work, using stream_fldfilename_ndep in the ndepdyn_nml namelist.
+
+>>>>>>>>> Fix so will work (from rel07)
+  M  models/lnd/clm/tools/interpinic/runinit_ibm.csh - Fix config options so will work
+  M  models/lnd/clm/bld/config_files/config_definition.xsl ---- Remove extra empty rows
+  M  models/lnd/clm/bld/namelist_files/namelist_definition.xsl  Fix missing ">"
+
+>>>>>>>>> Update documentation (from rel07)
+  M  models/lnd/clm/doc/UsersGuide/single_point.xml - Change how supported single-point
+          cases are handled and add documentation on setting start/stop times
+  M  models/lnd/clm/doc/UsersGuide/tools.xml -------- Add new options to mksurfdata.pl
+          add notes about bugs, add notes that aer/ndepregid is optional
+  M  models/lnd/clm/doc/UsersGuide/preface.xml ------ Update what_is_new section
+  M  models/lnd/clm/doc/UsersGuide/clm_ug.xml ------- Add more versions in quicklist
+  M  models/lnd/clm/doc/UsersGuide/appendix.xml ----- Add note about runinit_ibm.csh
+          problem
+  M  models/lnd/clm/doc/UsersGuide/custom.xml ------- Remove DATM_PRESAERO=none option,
+          remove hist_crtinic, and use_ndepstream namelist settings
+
+>>>>>>>>> Update documentation (from rel07)
+  M  models/lnd/clm/doc/KnownLimitations - Add doc on dtlimit error
+  M  models/lnd/clm/doc/KnownBugs -------- Add bug 1168, remove bug 498
+  M  models/lnd/clm/doc/README ----------- Rework what's new
+  M  models/lnd/clm/doc/index.shtml ------ Add link to KnownLimitations
+  M  README ------------------------------ Rework what's new
+
+>>>>>>>>> Fix threading problem with CNDV, by adding an OMP loop in a section
+>>>>>>>>> in clm_driver that didn't have one, pass down beg/end c|g|p indices
+>>>>>>>>> as needed
+  M  models/lnd/clm/src/biogeochem/CNSetValueMod.F90 - Pass in begc/endc, begp/endp
+  M  models/lnd/clm/src/main/clm_initializeMod.F90 --- Add OMP loop over setFilters
+  M  models/lnd/clm/src/main/pftdynMod.F90 ----------- Pass down beg/end indices as needed
+        pftdyn_wbal_init, pftdyn_cnbal, pftwt_interp, 
+  M  models/lnd/clm/src/main/filterMod.F90 ----------- Pass clump index down to setFilters
+        remove OMP from inside
+  M  models/lnd/clm/src/main/clm_driver.F90 ---------- Add OMP loop around section that
+        wasn't inside an OMP loop
+
+>>>>>>>>> Fix the documentation of the qflx_evap_tot field
+  M  models/lnd/clm/src/main/clmtype.F90 -------------------- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/main/clm_atmlnd.F90 ----------------- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/main/histFldsMod.F90 ---------------- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ------ Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 ---- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90 ---- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 -------- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/BiogeophysicsLakeMod.F90 - Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/UrbanMod.F90 ------------- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/HydrologyLakeMod.F90 ----- Fix qflx_evap_tot doc
+  M  models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 -- Fix qflx_evap_tot doc
+
+>>>>>>>>> Add component meta-data for ESMF
+  M  models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90 - Add meta-data description
+        of CLM
+  M  models/lnd/clm/src/main/cpl_esmf/lnd_comp_mct.F90 -- Add more arguments to 
+        lnd_register method
+
+Summary of testing:
+
+  bluefire: All PASS except...
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+059 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+060 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+061 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+062 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS
+  bluefire/CESM testing: All PASS
+  bluefire/PTCLM testing: All PASS
+  jaguar interactive testing: All PASS except (up to 017 brJ74)...
+011 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic
+.............FAIL! rc= 10
+012 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic
+...........FAIL! rc= 5
+013 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+  up to....
+
+017 brJ74 TBR.sh 4p_nrcasasc_ds clm_std^nl_urb_br 10001230:3600 1x1_tropicAtl test -3+-3 arb_ic .PASS
+  edinburgh/lf95 interactive testing: All PASS except...
+005 smAL4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ....................FAIL! rc= 10
+  edinburgh/PTCLM testing: All PASS up to ...
+myPTCLMtests_US-Ha1_I_1850.PTCLM    FAIL 0
+  mirage,storm/ifort interactive testing: All PASS except...
+017 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:1800 10x15 USGS@1850 10+38 cold .........FAIL! rc= 13
+018 brR53 TBR.sh 17p_cnc13sc_do clm_std^nl_urb_br 20020115:1800 10x15 USGS@1850 72+72 cold ......FAIL! rc= 11
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+021 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 10+38 arb_ic ...........FAIL! rc= 5
+022 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+025 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 13
+026 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 11
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_19
+
+Changes answers relative to baseline: bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_19
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Dec  8 22:20:30 MST 2010
@@ -45,6 +226,10 @@ Known bugs (include bugzilla ID):
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1258 (runinit_ibm.csh needs to be updated)
+                                 1264 (Incorrect doc of qflx_evap_tot in the code)
+                                 1265 (Fix ndep/aerdepregrid.ncl)
+                                 1266 (Threading problem with CNDV)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -387,6 +572,10 @@ Known bugs (include bugzilla ID):
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1238 (PST test fails)
                                  1249 (problem in mksurfdata for PFT override mode)
+                                 1258 (runinit_ibm.csh needs to be updated)
+                                 1264 (Incorrect doc of qflx_evap_tot in the code)
+                                 1265 (Fix ndep/aerdepregrid.ncl)
+                                 1266 (Threading problem with CNDV)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -476,6 +665,10 @@ Known bugs (include bugzilla ID):
                                  1239 (ESMF build fails)
                                  1240 (lynx_pgi build fails)
                                  1249 (problem in mksurfdata for PFT override mode)
+                                 1258 (runinit_ibm.csh needs to be updated)
+                                 1264 (Incorrect doc of qflx_evap_tot in the code)
+                                 1265 (Fix ndep/aerdepregrid.ncl)
+                                 1266 (Threading problem with CNDV)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -722,6 +915,10 @@ Known bugs (include bugzilla ID):
                                  1165 (Restart trouble for scaled harvest test on mirage)
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1249 (problem in mksurfdata for PFT override mode)
+                                 1258 (runinit_ibm.csh needs to be updated)
+                                 1264 (Incorrect doc of qflx_evap_tot in the code)
+                                 1265 (Fix ndep/aerdepregrid.ncl)
+                                 1266 (Threading problem with CNDV)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -801,6 +998,10 @@ Known bugs (include bugzilla ID):
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1230 (Subtle roundoff level difference with clm4_0_15 in scaling of fields when samegrids is on)
                                  1249 (problem in mksurfdata for PFT override mode)
+                                 1258 (runinit_ibm.csh needs to be updated)
+                                 1264 (Incorrect doc of qflx_evap_tot in the code)
+                                 1265 (Fix ndep/aerdepregrid.ncl)
+                                 1266 (Threading problem with CNDV)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -977,6 +1178,10 @@ Known bugs (include bugzilla ID):
                                  1165 (Restart trouble for scaled harvest test on gust)
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1249 (problem in mksurfdata for PFT override mode)
+                                 1258 (runinit_ibm.csh needs to be updated)
+                                 1264 (Incorrect doc of qflx_evap_tot in the code)
+                                 1265 (Fix ndep/aerdepregrid.ncl)
+                                 1266 (Threading problem with CNDV)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

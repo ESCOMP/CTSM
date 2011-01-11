@@ -18,7 +18,6 @@
     <table border="1" cellpadding="10">
     <caption><font size="larger"><bold>Physics Configurations</bold></font></caption>
     <tr>
-    <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>
       <th>Description</th>
@@ -26,13 +25,11 @@
     <tr>
       <th>Valid Values</th>
     </tr>
-    </tr>
       <xsl:apply-templates select="entry[@category='physics']"/>
     </table>
 
     <table border="1" cellpadding="10">
     <caption><font size="larger"><bold>Biogeochemistry Configurations</bold></font></caption>
-    <tr>
     <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>
@@ -40,7 +37,6 @@
     </tr>
     <tr>
       <th>Valid Value</th>
-    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='bgc']"/>
     </table>
@@ -48,14 +44,12 @@
     <table border="1" cellpadding="10">
     <caption><font size="larger"><bold>Configuration Directories</bold></font></caption>
     <tr>
-    <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>
       <th>Description</th>
     </tr>
     <tr>
       <th>Valid Value</th>
-    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='directories']"/>
     </table>
@@ -63,14 +57,12 @@
     <table border="1" cellpadding="10">
     <caption><font size="larger"><bold>Configuration Machine Options</bold></font></caption>
     <tr>
-    <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>
       <th>Description</th>
     </tr>
     <tr>
       <th>Valid Value</th>
-    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='mach_options']"/>
     </table>
@@ -79,14 +71,12 @@
     <caption><font size="larger">
 <bold>Configuration Standalone CLM Testing Options (NOT used by normal CESM scripts)</bold></font></caption>
     <tr>
-    <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>
       <th>Description</th>
     </tr>
     <tr>
       <th>Valid Value</th>
-    </tr>
     </tr>
       <xsl:apply-templates select="entry[@category='standalone_test']"/>
     </table>

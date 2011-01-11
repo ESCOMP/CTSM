@@ -39,12 +39,15 @@ contains
 
 !===============================================================================
 
-subroutine lnd_register(lnd_petlist)
+subroutine lnd_register(lnd_petlist, ccsmComp, localComp)
 
    implicit none
 
-   integer, pointer :: lnd_petlist(:)
-   integer          :: rc
+   integer, pointer                  :: lnd_petlist(:)
+   type(ESMF_CplComp)                :: ccsmComp
+   type(ESMF_GridComp),intent(inout) :: localComp
+
+   integer            :: rc
 
    lnd_comp = ESMF_GridCompCreate(name="lnd_comp", petList=lnd_petlist, rc=rc)
    if(rc /= 0) call shr_sys_abort('failed to create lnd comp')
@@ -54,6 +57,10 @@ subroutine lnd_register(lnd_petlist)
    if(rc /= 0) call shr_sys_abort('failed to create import lnd state')
    export_state = ESMF_StateCreate("lnd export", ESMF_STATE_EXPORT, rc=rc)
    if(rc /= 0) call shr_sys_abort('failed to create export lnd state')
+
+   call ESMF_AttributeLink(ccsmComp, lnd_comp, rc=rc)
+
+   localComp = lnd_comp
 
 end subroutine
 

@@ -53,14 +53,6 @@ begin
      sim_year_range = "constant";       ; Input/Output simulation year range: constant, 1850-2000, 1850-2100, or 2000-2100
   end if
 
-  ; Figure out file type from sim-year
-
-  if ( sim_year_range .eq. "1850-2000" .or. sim_year_range .eq. "1850-2100" .or. sim_year_range .eq. "2000-2100")then
-     filetype = "fndepdyn"
-  else
-     filetype = "fndepdat"
-  end if
-
   ; END OF SECTION TO EDIT
   ; ===========================================================================================================
   ;
@@ -70,11 +62,6 @@ begin
      rcpmsg = "";
   else
      rcpmsg = "rcp"+rcp+"_";
-  end if
-  if ( filetype .eq. "fndepdyn" )then
-     ftype    = "fndep_clm_"+rcpmsg+"simyr";
-  else
-     ftype    = "ndep_clm_"+rcpmsg+"simyr";
   end if
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
@@ -92,15 +79,15 @@ begin
   sdate     = systemfunc( "date +%y%m%d" );
   ldate     = systemfunc( "date" );
   print( "query string="+querynml )
-  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype );
+  filename    = systemfunc( querynml+" -res "+resin+" -var stream_fldfilename_ndep -namelist ndepdyn_nml" );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
   if ( gridfile .eq. "default" )then
      gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
   end if
   if ( sim_year_range .eq. "constant" ) then
-     filenameout = ftype+sim_year+"_"+res+"_c"+sdate+".nc";
+     filenameout = "fndep_clm_"+rcpmsg+"simyr"+sim_year+"_"+res+"_c"+sdate+".nc";
   else
-     filenameout = ftype+sim_year_range+"_"+res+"_c"+sdate+".nc";
+     filenameout = "fndep_clm_"+rcpmsg+"simyr"+sim_year_range+"_"+res+"_c"+sdate+".nc";
   end if
   ;
   ; Open files
@@ -135,16 +122,16 @@ begin
   longg = ncg->LONGXY(lsmlat|0,lsmlon|:);
   nlat  = dimsizes( latgg );
   nlon  = dimsizes( longg );
-  if ( isfilevardim( nc, "NDEP_year", "time" ) )then
-     dimnames = (/ "time", "lat", "lon" /);
-     ntime     = dimsizes( nc->YEAR );
-     dsizes   = (/ ntime, nlat,  nlon /);
-     is_unlim = (/ True, False, False /);
+  dimnames = (/ "time", "lat", "lon" /);
+  if ( sim_year_range .eq. "constant" ) then
+     ntime0 = 0;
+     ntime  = 1;
   else
-     dimnames = (/ "lat", "lon" /);
-     dsizes    = (/ nlat, nlon /);
-     is_unlim  = (/ False, False /);
+     ntime0 = 0;
+     ntime  = dimsizes( nc->YEAR );
   end if
+  dsizes   = (/ ntime-ntime0, nlat,  nlon /);
+  is_unlim = (/ True, False, False /);
   filedimdef( nco, dimnames, dsizes, is_unlim );
   ;
   ; Define vars and add attributes from original file
@@ -173,16 +160,21 @@ begin
   ;
   ; Copy coordinate variables over
   ;
-  ; For climatology files...
-  if ( filetype .eq. "fndepdat" )then
-     if ( isfilevar( nc, "month" ) ) then
-        nco->month = (/nc->month/);
-     end if
   ; for yearly dynamic files...
-  else
-     nco->YEAR = (/nc->YEAR/);
-     nco->time = (/nc->time/);
+  if ( sim_year_range .eq. "constant" ) then
+     ntime0 = closest_val( toint(sim_year), (/nc->YEAR/) );
+     if ( ntime0 .lt. 0 .or. ntime0 .gt. dimsizes(nc->YEAR) )then
+        print( "ntime0 is out of range = "+ntime0+" sim_year is = "+toint(sim_year) );
+        exit
+     end if
+     ntime  = ntime0 + 1;
   end if
+  ntimef = ntime-1
+  print( "Time range: "+ntime0+" to "+ntimef );
+  nco->YEAR = (/nc->YEAR(ntime0:ntimef) /);
+  nco->time = (/nc->time(ntime0:ntimef) /);
+  print( "Years = " );
+  print( nco->YEAR );
   nco->lon= doubletofloat( (/longg/) );
   nco->lat= doubletofloat( (/latgg/) );
   lat     = (/ nc->lat  /);
@@ -235,8 +227,9 @@ begin
        ; If time dimension
        ;
        if ( vardimnames(0) .eq. "time" )then
-          do t = 0, ntime-1
-             vart  = (/nc->$vars(i)$(time|t,lat|:,lon|:)/);
+          nt = 0
+          do t = ntime0, ntimef
+             vart  = (/nc->$vars(i)$(t,:,:)/);
              if ( any(ismissing(vart)) )then
                 print( "There are some missing values on input" );
                 exit
@@ -250,10 +243,11 @@ begin
                 print( "There are some missing values on output no="+num(ismissing(varto)) );
                 exit
              end if
-             nco->$vars(i)$(time|t,lat|:,lon|:) = (/varto/);
+             nco->$vars(i)$(nt,:,:) = (/varto/);
              vart  = vart*areai;
              varto = varto*areao;
-             print( "Year: "+nco->YEAR(t)+" Input w-sum: "+sum(vart)+" Output: "+sum(varto) );
+             print( "Year: "+nco->YEAR(nt)+" Input w-sum: "+sum(vart)+" Output: "+sum(varto) );
+             nt = nt + 1
           end do
        ;
        ; without time dimension

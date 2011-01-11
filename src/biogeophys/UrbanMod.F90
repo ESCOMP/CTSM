@@ -2620,7 +2620,7 @@ contains
     real(r8), pointer :: qflx_evap_soi(:) ! soil evaporation (mm H2O/s) (+ = to atm)
     real(r8), pointer :: qflx_tran_veg(:) ! vegetation transpiration (mm H2O/s) (+ = to atm)
     real(r8), pointer :: qflx_evap_veg(:) ! vegetation evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: t_ref2m(:)       ! 2 m height surface air temperature (K)
     real(r8), pointer :: q_ref2m(:)       ! 2 m height surface specific humidity (kg/kg)
     real(r8), pointer :: t_ref2m_u(:)     ! Urban 2 m height surface air temperature (K)

@@ -174,7 +174,7 @@ contains
     real(r8), pointer :: eflx_lh_tot_u(:) !urban total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_lh_tot_r(:) !rural total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_sh_veg(:)   !sensible heat flux from leaves (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_tot(:) !qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:) !qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: qflx_evap_veg(:) !vegetation evaporation (mm H2O/s) (+ = to atm)
     real(r8), pointer :: qflx_tran_veg(:) !vegetation transpiration (mm H2O/s) (+ = to atm)
     real(r8), pointer :: cgrnd(:)         !deriv. of soil energy flux wrt to soil temp [w/m2/k]

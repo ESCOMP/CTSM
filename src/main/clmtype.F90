@@ -669,7 +669,7 @@ type, public :: pft_wflux_type
    real(r8), pointer :: qflx_tran_veg(:)  !vegetation transpiration (mm H2O/s) (+ = to atm)
    real(r8), pointer :: qflx_evap_can(:)  !evaporation from leaves and stems 
    real(r8), pointer :: qflx_evap_soi(:)  !soil evaporation (mm H2O/s) (+ = to atm)
-   real(r8), pointer :: qflx_evap_tot(:)  !qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+   real(r8), pointer :: qflx_evap_tot(:)  !qflx_evap_soi + qflx_evap_can + qflx_tran_veg
    real(r8), pointer :: qflx_evap_grnd(:) !ground surface evaporation rate (mm H2O/s) [+]
    real(r8), pointer :: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
    real(r8), pointer :: qflx_sub_snow(:)  !sublimation rate from snow pack (mm H2O /s) [+]

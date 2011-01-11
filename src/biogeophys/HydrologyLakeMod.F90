@@ -71,7 +71,7 @@ contains
     real(r8), pointer :: t_grnd(:)        !ground temperature (Kelvin)
     real(r8), pointer :: qmelt(:)         !snow melt [mm/s]
     real(r8), pointer :: qflx_evap_soi(:) !soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_tot(:) !qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:) !qflx_evap_soi + qflx_evap_can + qflx_tran_veg
 !
 ! local pointers to implicit inout arrays
 !

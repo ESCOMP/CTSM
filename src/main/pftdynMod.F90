@@ -573,7 +573,7 @@ contains
 ! !ROUTINE: pftdyn_wbal_init
 !
 ! !INTERFACE:
-  subroutine pftdyn_wbal_init()
+  subroutine pftdyn_wbal_init( begc, endc )
 !
 ! !DESCRIPTION:
 ! initialize the column-level mass-balance correction term.
@@ -583,14 +583,11 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(IN)  :: begc, endc    ! proc beginning and ending column indices
 !
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer  :: begp, endp    ! proc beginning and ending pft indices
-    integer  :: begc, endc    ! proc beginning and ending column indices
-    integer  :: begl, endl    ! proc beginning and ending landunit indices
-    integer  :: begg, endg    ! proc beginning and ending gridcell indices
     integer  :: c             ! indices
     type(column_type),   pointer :: cptr         ! pointer to column derived subtype
 !-----------------------------------------------------------------------
@@ -598,10 +595,6 @@ contains
     ! Set pointers into derived type
 
     cptr => clm3%g%l%c
-
-    ! Get relevant sizes
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     ! set column-level canopy water mass balance correction flux
     ! term to 0 at the beginning of every timestep
@@ -743,7 +736,7 @@ contains
 ! !ROUTINE: pftdyn_cnbal
 !
 ! !INTERFACE:
-  subroutine pftdyn_cnbal()
+  subroutine pftdyn_cnbal( begc, endc, begp, endp )
 !
 ! !DESCRIPTION:
 ! modify pft-level state and flux variables to maintain carbon and nitrogen balance with
@@ -762,14 +755,12 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(IN)  :: begp, endp    ! proc beginning and ending pft indices
+    integer, intent(IN)  :: begc, endc    ! proc beginning and ending column indices
 !
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer  :: begp, endp    ! proc beginning and ending pft indices
-    integer  :: begc, endc    ! proc beginning and ending column indices
-    integer  :: begl, endl    ! proc beginning and ending landunit indices
-    integer  :: begg, endg    ! proc beginning and ending gridcell indices
     integer  :: pi,p,c,l,g    ! indices
     integer  :: ier           ! error code
     real(r8) :: dwt           ! change in pft weight (relative to column)
@@ -853,10 +844,6 @@ contains
     lptr => clm3%g%l
     cptr => clm3%g%l%c
     pptr => clm3%g%l%c%p
-
-    ! Get relevant sizes
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     ! Allocate pft-level mass loss arrays
     allocate(dwt_leafc_seed(begp:endp), stat=ier)
@@ -2495,7 +2482,7 @@ end subroutine pftdyn_cnbal
 ! !ROUTINE: pftwt_interp
 !
 ! !INTERFACE:
-  subroutine pftwt_interp()
+  subroutine pftwt_interp( begp, endp )
 !
 ! !DESCRIPTION:
 ! Time interpolate cndv pft weights from annual to time step
@@ -2508,6 +2495,7 @@ end subroutine pftdyn_cnbal
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(IN)  :: begp,endp                ! beg/end indices for land pfts
 !
 !EOP
 !
@@ -2521,7 +2509,6 @@ end subroutine pftdyn_cnbal
     integer  :: mon                ! month (1, ..., 12) at nstep + 1
     integer  :: day                ! day of month (1, ..., 31) at nstep + 1
     integer  :: sec                ! seconds into current date at nstep + 1
-    integer  :: begp,endp                ! beg/end indices for land pfts
     type(landunit_type), pointer :: lptr ! pointer to landunit derived subtype
     type(pft_type)     , pointer :: pptr ! ...     to pft derived subtype
     character(len=32) :: subname='pftwt_interp' ! subroutine name
@@ -2534,8 +2521,6 @@ end subroutine pftdyn_cnbal
 
     lptr => clm3%g%l
     pptr => clm3%g%l%c%p
-
-    call get_proc_bounds(begp=begp,endp=endp)
 
     ! Interpolate pft weight to current time step
     ! Map interpolated pctpft to subgrid weights

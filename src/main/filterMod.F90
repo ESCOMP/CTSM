@@ -179,18 +179,19 @@ contains
 ! !IROUTINE: setFilters
 !
 ! !INTERFACE:
-  subroutine setFilters()
+  subroutine setFilters( nc )
 !
 ! !DESCRIPTION:
 ! Set CLM filters.
 !
 ! !USES:
     use clmtype
-    use decompMod , only : get_proc_clumps, get_clump_bounds
+    use decompMod , only : get_clump_bounds
     use clm_varcon, only : istsoil, isturb, icol_road_perv, istice_mec
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(IN) :: nc          ! clump index
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -201,9 +202,7 @@ contains
 !
 ! LOCAL VARAIBLES:
     integer , pointer :: ctype(:) ! column type
-    integer :: nc          ! clump index
     integer :: c,l,p       ! column, landunit, pft indices
-    integer :: nclumps     ! total number of clumps on this processor
     integer :: fl          ! lake filter index
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
@@ -216,157 +215,148 @@ contains
 
     ctype => clm3%g%l%c%itype
 
-    ! Loop over clumps on this processor
+    ! Determine clump boundaries
 
-    nclumps = get_proc_clumps()
-!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp,f,fn,fl,fnl,fnlu,fs,p,c,l)
-    do nc = 1,nclumps
+    call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
-       ! Determine clump boundaries
+    ! Create lake and non-lake filters at column-level 
 
-       call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
+    fl = 0
+    fnl = 0
+    do c = begc,endc
+       l = clm3%g%l%c%landunit(c)
+       if (clm3%g%l%lakpoi(l)) then
+          fl = fl + 1
+          filter(nc)%lakec(fl) = c
+       else
+          fnl = fnl + 1
+          filter(nc)%nolakec(fnl) = c
+       end if
+    end do
+    filter(nc)%num_lakec = fl
+    filter(nc)%num_nolakec = fnl
 
-       ! Create lake and non-lake filters at column-level 
+    ! Create lake and non-lake filters at pft-level 
+    ! Filter will only be active if weight of pft wrt gcell is nonzero
 
-       fl = 0
-       fnl = 0
-       do c = begc,endc
-          l = clm3%g%l%c%landunit(c)
-          if (clm3%g%l%lakpoi(l)) then
+    fl = 0
+    fnl = 0
+    fnlu = 0
+    do p = begp,endp
+       l = clm3%g%l%c%p%landunit(p)
+       if (clm3%g%l%c%p%wtgcell(p) > 0._r8    &
+                   .or.                       &
+           clm3%g%l%itype(l)==istice_mec) then  ! some glacier_mec columns have zero weight
+
+          l = clm3%g%l%c%p%landunit(p)
+          if (clm3%g%l%lakpoi(l) ) then
              fl = fl + 1
-             filter(nc)%lakec(fl) = c
+             filter(nc)%lakep(fl) = p
           else
              fnl = fnl + 1
-             filter(nc)%nolakec(fnl) = c
-          end if
-       end do
-       filter(nc)%num_lakec = fl
-       filter(nc)%num_nolakec = fnl
-
-       ! Create lake and non-lake filters at pft-level 
-       ! Filter will only be active if weight of pft wrt gcell is nonzero
-
-       fl = 0
-       fnl = 0
-       fnlu = 0
-       do p = begp,endp
-          l = clm3%g%l%c%p%landunit(p)
-          if (clm3%g%l%c%p%wtgcell(p) > 0._r8    &
-                      .or.                       &
-              clm3%g%l%itype(l)==istice_mec) then  ! some glacier_mec columns have zero weight
-
-             l = clm3%g%l%c%p%landunit(p)
-             if (clm3%g%l%lakpoi(l) ) then
-                fl = fl + 1
-                filter(nc)%lakep(fl) = p
-             else
-                fnl = fnl + 1
-                filter(nc)%nolakep(fnl) = p
-                if (clm3%g%l%itype(l) /= isturb) then
-                   fnlu = fnlu + 1
-                   filter(nc)%nolakeurbanp(fnlu) = p
-                end if
+             filter(nc)%nolakep(fnl) = p
+             if (clm3%g%l%itype(l) /= isturb) then
+                fnlu = fnlu + 1
+                filter(nc)%nolakeurbanp(fnlu) = p
              end if
           end if
-       end do
-       filter(nc)%num_lakep = fl
-       filter(nc)%num_nolakep = fnl
-       filter(nc)%num_nolakeurbanp = fnlu
+       end if
+    end do
+    filter(nc)%num_lakep = fl
+    filter(nc)%num_nolakep = fnl
+    filter(nc)%num_nolakeurbanp = fnlu
 
-       ! Create soil filter at column-level
+    ! Create soil filter at column-level
 
-       fs = 0
-       do c = begc,endc
-          l = clm3%g%l%c%landunit(c)
+    fs = 0
+    do c = begc,endc
+       l = clm3%g%l%c%landunit(c)
+       if (clm3%g%l%itype(l) == istsoil) then
+          fs = fs + 1
+          filter(nc)%soilc(fs) = c
+       end if
+    end do
+    filter(nc)%num_soilc = fs
+
+    ! Create soil filter at pft-level
+    ! Filter will only be active if weight of pft wrt gcell is nonzero
+
+    fs = 0
+    do p = begp,endp
+       if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+          l = clm3%g%l%c%p%landunit(p)
           if (clm3%g%l%itype(l) == istsoil) then
              fs = fs + 1
-             filter(nc)%soilc(fs) = c
+             filter(nc)%soilp(fs) = p
           end if
-       end do
-       filter(nc)%num_soilc = fs
-
-       ! Create soil filter at pft-level
-       ! Filter will only be active if weight of pft wrt gcell is nonzero
-
-       fs = 0
-       do p = begp,endp
-          if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
-             l = clm3%g%l%c%p%landunit(p)
-             if (clm3%g%l%itype(l) == istsoil) then
-                fs = fs + 1
-                filter(nc)%soilp(fs) = p
-             end if
-          end if
-       end do
-       filter(nc)%num_soilp = fs
-
-       ! Create column-level hydrology filter (soil and Urban pervious road cols) 
-
-       f = 0
-       do c = begc,endc
-          l = clm3%g%l%c%landunit(c)
-          if (clm3%g%l%itype(l) == istsoil .or. ctype(c) == icol_road_perv ) then
-             f = f + 1
-             filter(nc)%hydrologyc(f) = c
-          end if
-       end do
-       filter(nc)%num_hydrologyc = f
-
-       ! Create landunit-level urban and non-urban filters
-
-       f = 0
-       fn = 0
-       do l = begl,endl
-          if (clm3%g%l%itype(l) == isturb) then
-             f = f + 1
-             filter(nc)%urbanl(f) = l
-          else
-             fn = fn + 1
-             filter(nc)%nourbanl(fn) = l
-          end if
-       end do
-       filter(nc)%num_urbanl = f
-       filter(nc)%num_nourbanl = fn
-
-       ! Create column-level urban and non-urban filters
-
-       f = 0
-       fn = 0
-       do c = begc,endc
-          l = clm3%g%l%c%landunit(c)
-          if (clm3%g%l%itype(l) == isturb) then
-             f = f + 1
-             filter(nc)%urbanc(f) = c
-          else
-             fn = fn + 1
-             filter(nc)%nourbanc(fn) = c
-          end if
-       end do
-       filter(nc)%num_urbanc = f
-       filter(nc)%num_nourbanc = fn
-
-       ! Create pft-level urban and non-urban filters
-
-       f = 0
-       fn = 0
-       do p = begp,endp
-          l = clm3%g%l%c%p%landunit(p)
-          if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%wtgcell(p) > 0._r8) then
-             f = f + 1
-             filter(nc)%urbanp(f) = p
-          else
-             fn = fn + 1
-             filter(nc)%nourbanp(fn) = p 
-          end if
-       end do
-       filter(nc)%num_urbanp = f
-       filter(nc)%num_nourbanp = fn
-
-       ! Note: snow filters are reconstructed each time step in Hydrology2
-       ! Note: CNDV "pft present" filter is reconstructed each time CNDV is run
-
+       end if
     end do
-!$OMP END PARALLEL DO
+    filter(nc)%num_soilp = fs
+
+    ! Create column-level hydrology filter (soil and Urban pervious road cols) 
+
+    f = 0
+    do c = begc,endc
+       l = clm3%g%l%c%landunit(c)
+       if (clm3%g%l%itype(l) == istsoil .or. ctype(c) == icol_road_perv ) then
+          f = f + 1
+          filter(nc)%hydrologyc(f) = c
+       end if
+    end do
+    filter(nc)%num_hydrologyc = f
+
+    ! Create landunit-level urban and non-urban filters
+
+    f = 0
+    fn = 0
+    do l = begl,endl
+       if (clm3%g%l%itype(l) == isturb) then
+          f = f + 1
+          filter(nc)%urbanl(f) = l
+       else
+          fn = fn + 1
+          filter(nc)%nourbanl(fn) = l
+       end if
+    end do
+    filter(nc)%num_urbanl = f
+    filter(nc)%num_nourbanl = fn
+
+    ! Create column-level urban and non-urban filters
+
+    f = 0
+    fn = 0
+    do c = begc,endc
+       l = clm3%g%l%c%landunit(c)
+       if (clm3%g%l%itype(l) == isturb) then
+          f = f + 1
+          filter(nc)%urbanc(f) = c
+       else
+          fn = fn + 1
+          filter(nc)%nourbanc(fn) = c
+       end if
+    end do
+    filter(nc)%num_urbanc = f
+    filter(nc)%num_nourbanc = fn
+
+    ! Create pft-level urban and non-urban filters
+
+    f = 0
+    fn = 0
+    do p = begp,endp
+       l = clm3%g%l%c%p%landunit(p)
+       if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+          f = f + 1
+          filter(nc)%urbanp(f) = p
+       else
+          fn = fn + 1
+          filter(nc)%nourbanp(fn) = p 
+       end if
+    end do
+    filter(nc)%num_urbanp = f
+    filter(nc)%num_nourbanp = fn
+
+    ! Note: snow filters are reconstructed each time step in Hydrology2
+    ! Note: CNDV "pft present" filter is reconstructed each time CNDV is run
 
   end subroutine setFilters
 

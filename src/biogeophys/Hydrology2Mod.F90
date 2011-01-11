@@ -114,7 +114,7 @@ contains
     real(r8), pointer :: forc_rain(:)     ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)     ! snow rate [mm/s]
     real(r8), pointer :: begwb(:)         ! water mass begining of the time step
-    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: bsw2(:,:)        ! Clapp and Hornberger "b" for CN code
     real(r8), pointer :: psisat(:,:)      ! soil water potential at saturation for CN code (MPa)
     real(r8), pointer :: vwcsat(:,:)      ! volumetric water content at saturation for CN code (m3/m3)

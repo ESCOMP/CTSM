@@ -56,7 +56,7 @@
       <th>Description</th>
       </tr>
       <tr>
-      <th> colspan="1"Valid values</th>
+      <th colspan="1">Valid values</th>
       </tr>
       <xsl:apply-templates select="entry[@category='datasets']"/>
     </table>

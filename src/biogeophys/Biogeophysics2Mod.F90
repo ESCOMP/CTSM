@@ -158,7 +158,7 @@ contains
     real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_sh_tot_u(:)   ! urban total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_sh_tot_r(:)   ! rural total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_lh_tot_u(:)   ! urban total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_lh_tot_r(:)   ! rural total latent heat flux (W/m**2)  [+ to atm]

@@ -4416,7 +4416,7 @@ contains
          ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_veg, default='inactive')
 
     call hist_addfld1d (fname='QFLX_EVAP_TOT', units='mm H2O/s', &
-         avgflag='A', long_name='qflx_evap_soi + qflx_evap_veg + qflx_tran_veg', &
+         avgflag='A', long_name='qflx_evap_soi + qflx_evap_can + qflx_tran_veg', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_tot, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_DEW_GRND', units='mm H2O/s', &

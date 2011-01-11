@@ -338,22 +338,27 @@ See <xref linkend="mksurfdata"></xref> for more information on this.
 </step>
 
 <step performance="optional">
-<title>Interpolate  aerosol deposition datasets (if <envar>DATM_PRESAERO</envar>=none)</title>
+<title>Interpolate  aerosol deposition datasets (optional)</title>
 <para>
 By default the atmosphere model will interpolate
 these datasets on the fly, so you don't normally need to do this step.
-But, if you do, use <command>aerdepregrid.ncl</command> to regrid aerosol deposition 
-datasets to your new resolution using the grid dataset as input.
+A reason you might want to do this is to make the read and interpolation faster,
+by reducing the amount of data read in and removing the need for the interpolation.
+So, if you do, you can use <command>aerdepregrid.ncl</command> to regrid aerosol 
+deposition datasets to your new resolution using the grid dataset as input.
 See <xref linkend="aerdepregrid"></xref> for more information on this.
 </para>
 </step>
 
 <step performance="optional">
-<title>Interpolate Nitrogen deposition datasets (if running &clmcn;)</title>
+<title>Interpolate Nitrogen deposition datasets (optional, but only needed if running &clmcn;)</title>
 <para>
 By default Nitrogen deposition is read in from stream
 files at 2-degree resolution and interpolated to the resolution you are running at,
-so you don't need to do this step. But, if you do use <command>ndepregrid.ncl</command> 
+so you don't need to do this step.  As with aerosol deposition datasets a reason
+you might want to do this is to make the read and interpolation faster,
+by reducing the amount of data read in and removing the need for the interpolation.
+So, if you do you can use <command>ndepregrid.ncl</command> 
 to regrid Nitrogen deposition datasets to your new resolution using the grid dataset 
 as input.
 See <xref linkend="ndepregrid"></xref> for more information on this.
@@ -381,7 +386,7 @@ See <xref linkend="CLMSP_SPINUP"></xref>, <xref linkend="CN_SPINUP"></xref>, or
 </step>
 
 <step performance="optional">
-<title>Use <command>interpinic</command> to create interpolate existing initial
+<title>Use <command>interpinic</command> to interpolate existing initial
 condition datasets</title>
 <para>
 The next option is to interpolate from spunup datasets at a different resolution, using
@@ -643,7 +648,7 @@ land-fractions and topography</member>
 <member><varname>mksrf_fccsmdom</varname> -- &cesm; domain file</member>
 <member><varname>mksrf_fcamtopo</varname> -- <acronym>CAM</acronym> topography file</member>
 <member><varname>mksrf_lsmlon</varname> -- number of longitude for regional grid</member>
-<member><varname>mksrf_lsmlat</varname>number of latitudes for regional grid</member>
+<member><varname>mksrf_lsmlat</varname> -- number of latitudes for regional grid</member>
 <member><varname>mksrf_edgen</varname> -- Northern edge for regional grid</member>
 <member><varname>mksrf_edgee</varname> -- Southern edge for regional grid</member>
 <member><varname>mksrf_edges</varname> -- Eastern edge for regional grid</member>
@@ -900,7 +905,8 @@ Note, that one of the inputs <varname>mksrf_fdynuse</varname> is a filename that
 includes the filepaths to other files. The filepaths in this file will have to
 be changed as well. You also need to make sure that the line lengths remain the same
 as the read is a formatted read, so the placement of the year in the file, must remain
-the same, even with the new filenames.
+the same, even with the new filenames. One advantage of the <command>mksurfdata.pl</command>
+script is that it will create the <varname>mksrf_fdynuse</varname> file for you.
 </para>
 <para>
 We list the namelist items below. Most of the namelist items are filepaths to give to
@@ -945,13 +951,28 @@ set the files will be named according to the number of longitudes by latitudes)<
 <listitem><para><varname>nglcec</varname> number of glacier multiple elevation classes.
 Can be 1, 3, 5, or 10. When using the resulting dataset with &clm; you can then run
 with <varname>glc_nec</varname> of either 0 or this value.
- (default is 10)</para></listitem>
+ (experimental normally not changed from the default of 10)</para></listitem>
 <listitem><para><varname>outnc_large_files</varname> If output should be in &netcdf; large file
 format</para></listitem>
 <listitem><para><varname>outnc_double</varname> If output should be in double
 precision (normally we turn this on)</para></listitem>
+<listitem><para><varname>pft_frc</varname> array of fractions to override PFT
+data with for all gridpoints (experimental mode, normally NOT used).</para></listitem>
+<listitem><para><varname>pft_idx</varname> array of PFT indices to override PFT
+data with for all gridpoints (experimental mode, normally NOT used).</para></listitem>
+<listitem><para><varname>soil_clay</varname> percent clay soil to override
+all gridpoints with (experimental mode, normally NOT used).</para></listitem>
+<listitem><para><varname>soil_color</varname> Soil color to override
+all gridpoints with (experimental mode, normally NOT used).</para></listitem>
+<listitem><para><varname>soil_sand</varname> percent sandy soil to
+override all gridpoints with (experimental mode, normally NOT used).</para></listitem>
 </orderedlist>
 </para>
+<caution>
+<para>
+Bug 1549 in the KnownBugs file talks about a problem with the pft_frc/pft_idx mode.
+</para>
+</caution>
 <para>
 After creating your namelist,
 when running on a non <acronym>NCAR</acronym> you will need to get the files
@@ -974,6 +995,8 @@ machine using the <command>check_input_data</command> script</title>
 </screen>
 </example>
 </para>
+<sect4 id="mksurfdata_exp">
+<title>Experimental options to <command>mksurfdata</command></title>
 <para>
 There is one option to <command>mksurfdata</command> that is purely
 experimental, and should NOT be used (changes are NOT implemented in &clm4; to use
@@ -981,6 +1004,15 @@ it yet). This option is: <varname>mksrf_firrig</varname>.
 It separates out crop land-units into irrigated and non-irrigated columns.
 This option is experimental and not even enabled for use with &clm4;.
 </para>
+<para>
+The options: pft_frc, pft_idx, soil_clay, soil_color, and soil_sand are also
+new and considered experimental. They provide a way to override the PFT and soil
+values for all grid points to the given values that you set. This is useful for
+running with single-point tower sites where the soil type and vegetation is known.
+Note that when you use pft_frc, all other landunits will be zeroed out, and the
+sum of your pft_frc array MUST equal 100.0.
+</para>
+</sect4>
 </sect3>
 
 <sect3 id="mksurfdata_sop">
@@ -1006,8 +1038,8 @@ the same PFT file used in the rest of the namelist (as <varname>mksrf_fvegtyp</v
 The last practice that we always do is to always set <varname>mksrf_ftopo</varname>,
 even though multiple glacier elevation classes are NOT a part of &clm4;. This is
 important in limiting urban areas based on topographic height, and hence is important
-to use all the time. In future versions of &clm; the glacier multiple elevation classes
-will be used as well.
+to use all the time. The glacier multiple elevation classes will be used as well if
+you are running a compset with the active glacier model.
 </para>
 <para>
 There are two other important practices for creating urban single point datasets. The
@@ -1155,6 +1187,12 @@ simulation-year of 1850, you would do the following:
 > env RES=0.9x1.25 SIM_YR=1850 ncl ndepregrid.ncl
 </screen>
 </para>
+<warning>
+<para>
+There is a problem running the ndepregrid.ncl script, see bug 1265 in the
+KnownBugs file.
+</para>
+</warning>
 </sect2>
 
 <sect2 id="aerdepregrid">
@@ -1169,13 +1207,18 @@ It can be used to interpolate either constant datasets (for example:
 <para>
 Interpolating aerosol deposition files is no longer needed, because the datm model can
 read aerosol deposition files at one resolution and interpolate to the resolution the
-model is running at on the fly (when using <envar>DATM_PRESAERO</envar> set to 
-something besides "none"). Interpolating to another
+model is running at on the fly.  Interpolating to another
 resolution is only useful for very course resolutions, if you want to save some computing
 resources in reading larger datasets. For example, this may be useful in obtaining 
 single-point datasets.
 </para>
 </note>
+<warning>
+<para>
+There is a problem running the aerdepregrid.ncl script, see bug 1265 in the
+KnownBugs file.
+</para>
+</warning>
 <para>
 For example, to interpolate to an output resolution of 4x5, for a transient
 simulation-year range of 1850 to 2100 and the rcp of 8.5, you would do the following:
@@ -1196,7 +1239,8 @@ it might be easier to do it one way or the other. In <xref
 linkend="table_required_files"></xref> we list the files that are most likely to be
 customized and the way they might be customized. Of those files, the ones you are most
 likely to customize are: fatmlndfrc, fsurdat, faerdep (for datm), and 
-stream_fldfilename_ndep.  For more information on this also see
+stream_fldfilename_ndep.  Note <command>mksurfdata</command> as documented previously
+has options to overwrite the vegation and soil types. For more information on this also see
 <xref linkend="own_single_point_datasets"></xref> and 
 <xref linkend="own_atm_forcing"></xref>.
 </para>

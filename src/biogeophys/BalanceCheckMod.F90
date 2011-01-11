@@ -218,7 +218,7 @@ contains
     real(r8), pointer :: eflx_dynbal(:)     ! energy conversion flux due to dynamic land cover change(W/m**2) [+ to atm]
     real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m8*2)  [+ to atm]
     real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
-    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: qflx_irrig(:)      ! irrigation flux (mm H2O /s)
     real(r8), pointer :: qflx_surf(:)       ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)      ! qflx_surf at glaciers, wetlands, lakes

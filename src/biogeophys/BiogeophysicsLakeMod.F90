@@ -138,7 +138,7 @@ contains
 !
     real(r8), pointer :: qflx_prec_grnd(:)  ! water onto ground including canopy runoff [kg/(m2 s)]
     real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: qflx_snwcp_liq(:)  ! excess rainfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]

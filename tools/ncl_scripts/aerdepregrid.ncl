@@ -53,10 +53,9 @@ begin
   ;
   ; Use above to get filenames, and various other information needed such as dates
   ;
-  filetype = "faerdep";      ; File type:  faerdep
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
-  querynml = "bld/queryDefaultNamelist.pl -silent -justvalue -namelist clmexp";
+  querynml = "bld/queryDefaultNamelist.pl -silent -justvalue "
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if
@@ -66,10 +65,23 @@ begin
      querynml = clmroot+"/models/lnd/clm*/"+querynml;
   end if
 
+  if ( sim_year_range .eq. "constant" )then
+     datm_presaero = "clim_"+sim_year
+  else
+     if ( rcp .eq. -999.9 ) then
+        datm_presaero = "trans_1850-2000"
+     else
+        datm_presaero = "rcp"+rcp
+        if ( rcp .eq. 6 ) then
+           datm_presaero = datm_presaero+".0"
+        end if
+     end if
+  end if
+
   sdate     = systemfunc( "date +%y%m%d" );
   ldate     = systemfunc( "date" );
   print( "query string="+querynml )
-  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year+",sim_year_range="+sim_year_range+",rcp="+rcp );
+  filename    = systemfunc( querynml+" -res "+resin+" -var datm_file_aero -namelist datm_internal -options datm_presaero="+datm_presaero );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
   if ( gridfile .eq. "default" )then
      gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
@@ -207,7 +219,7 @@ begin
        ;
        if ( vardimnames(0) .eq. "time" )then
           do t = 0, ntime-1
-             vart  = (/nc->$vars(i)$(time|t,lat|:,lon|:)/);
+             vart  = (/nc->$vars(i)$(t,:,:)/);
              varto = linint2 ( lon,  lat,  vart, Cyclic, lono, lato, 0 );
              if ( all(ismissing(varto(nlat-1,:))) )then
                 print( "Copy last latitude over" );

@@ -22,15 +22,17 @@ which was used in our initial versions of this User's Guide.
 <title>Introduction</title>
 
 <para>
-The Community Land Model (&clm;) is the latest in a series of
+The Community Land Model (&clmrel;) is the latest in a series of
 global land models developed by the &cesm; Land Model Working Group
 (<acronym>LMWG</acronym>) and maintained at the National Center for
 Atmospheric Research (<acronym>NCAR</acronym>). This guide is intended to instruct both
-the novice and experienced user on running &clm;. This guide also pertains to the
-latest version of &clmrel; available for download from the public release 
-subversion repository. Documentation may be different if you are using an
+the novice and experienced user on running &clm;. This guide pertains to the
+latest version &clmrel; available for download from the public release 
+subversion repository as a part of &cesmrel;. Documentation may be different if you are using an
 older version, you should either update to the latest version, or use the
-documentation inside your own source tree.
+documentation inside your own source tree. There is information in the 
+<filename>ChangeLog</filename> file and in the <xref linkend="what_is_new"></xref>
+regarding the changes from previous versions of &cesm;.
 </para>
 
 <para>
@@ -65,7 +67,8 @@ all the required UNIX utilities on the system they want to do their work.
 <para>
 Here in the introduction we first give a simple guide to understand the document
 conventions in <xref linkend="how_to"></xref>. The next section <xref linkend="what_is_new"></xref>
-describes the differences between &clmrel; and &clm40; as well as between 
+describes the differences between &clmrel; and &clm40; (for each &cesm; release version
+up to &cesmrel;) as well as between 
 &clm40; and &clm35;, both from a scientific
 as well as a software engineering point of view. It also talks about differences in the
 configuration, namelist, and history fields. The next section <xref linkend="quickstart"></xref>
@@ -235,11 +238,12 @@ provided resolutions to the resolution of interest.  Interpolated initial condit
 files may no longer be in 'reasonable' equilibrium. 
 </para>
 </listitem>
-<listitem><para>Aerosol deposition is a required input to &clm4;.  Simulations without 
-aerosol deposition will exhibit unreasonably high snow albedos. By default the model
-is configured to send aerosol deposition from the atmospheric model (either 
-<acronym>CAM</acronym> or datm) which will be interpolated from 2-degree resolution
-to the resolution the model is running at.
+<listitem><para>Aerosol deposition is a required field to &clm4; sent from the
+atmosphere model.  Simulations without aerosol deposition will exhibit unreasonably 
+high snow albedos. The model sends aerosol deposition from the atmospheric model (either 
+<acronym>CAM</acronym> or datm). When running with prescribed aerosol the atmosphere
+model will interpolate the aerosols from 2-degree resolution to the resolution the 
+atmosphere model is running at.
 </para>
 </listitem>
 </itemizedlist>
@@ -299,31 +303,95 @@ that continues to the following line.
 <title>What is new with &clmrel; since previous public releases?</title>
 <para>
 In this section we list the updates that have occurred to &clm4; since previous
-public releases. In the first section we describe changes in &clmrel; since the &ccsm4; release,
-and in the second one we describe changes from &clm35; to &clm40; release. Note, that
-the changes in the second section do NOT include the more recent changes given in the 
+public releases. In the first sections we describe changes in &clmrel; since the &ccsm4; release,
+and in the last one we describe changes from &clm35; to &clm40; release. Note, that
+the changes in the last section do NOT include the more recent changes given in the 
 first section, but only list the changes from &clm35; to the &clm40; release that
 was part of the &ccsm4; public release. We will describe both the
 changes in the science in the model as the software engineering changes. Software
 engineering changes includes the configure and namelist changes, as well as the new
 history fields.
 </para>
-<sect1 id="since_ccsm4">
-<title>What is new with &clmrel; since the April 1st, 2010 &ccsm4; release?</title>
+<sect1 id="since_clm4_0_10">
+<title>What is new with &clm4014; (in &cesm102;) since the September 17th, 2010 &cesm101; release?</title>
 <para>
-Since, &clm40; in the &ccsm4; release there have been several developments made
-to &clmrel;. A glacier multiple elevation class option was added that allows the
+Since, &clm4010; in the &cesm101; release there have been several developments made
+to &clmrel;.  Several new namelist items were added
+a few new history fields.  There were also some updates for 
+running the model with single-point mode.
+</para>
+<sect2 id="science_since_clm4_0_10">
+<title>What is new with &clm4014; Science since &clm4010;?</title>
+<para>
+A long simulation at the course resolution of T31 (typically used for Paleo-climate
+studies) was done and an spun-up initial condition file is provided for this
+resolution (also by default the namelist variable <literal>ice_runoff</literal> is 
+turned off for T31). Also a new surface dataset and transient land-cover dataset is
+provided for half-degree resolution.
+</para>
+</sect2>
+<sect2 id="software_since_clm4_0_10">
+<title>What is new with &clm4014; Software since &clm4010;?</title>
+<para>
+New configuration options
+<simplelist>
+<member>sitespf_pt</member>
+</simplelist>
+</para>
+<para>
+sitespf_pt is used for single-point/regional mode and is set to the site-name
+that will be used (see the <filename>config_definition.xml</filename> for the
+list of valid options).
+</para>
+<para>
+Configuration options that were renamed:
+<simplelist>
+<member>prog_seasalt => progsslt</member>
+</simplelist>
+</para>
+<para>
+Namelist items removed:
+<simplelist>
+<member>faerdep</member>
+<member>fndepdat</member>
+<member>fndepdyn</member>
+<member>use_ndepstream</member>
+</simplelist>
+</para>
+<para>
+Nitrogen deposition datasets are now only entered through the
+<literal>ndepdyn_nml</literal> namelist (removing <literal>fndepdat, fndepdyn, and
+use_ndepstream</literal>). Aerosol deposition is now a required input from 
+the atmosphere model, hence <literal>faerdep</literal> is removed.
+</para>
+<para>
+New history fields:
+<simplelist>
+<member>U10       10-m wind                                       (m/s)</member>
+<member>U10_DUST  10-m wind for dust model                        (m/s)</member>
+<member>VA        atmospheric wind speed plus convective velocity (m/s)</member>
+<member>VOLR      RTM storage: LIQ                                (m3)</member>
+<member>VOLR_ICE  RTM storage: ICE                                (m3)</member>
+</simplelist>
+</para>
+</sect2>
+
+</sect1>
+<sect1 id="since_ccsm4">
+<title>What was new with &clm4010; (in &cesm101;) since the April 1st, 2010 &ccsm4; release?</title>
+<para>
+From, &clm40; in the &ccsm4; release to &clm4010; there were several developments made
+to &clm;. A glacier multiple elevation class option was added that allows the
 use of &clm4; with a glacier land ice model the Community Ice Sheet Model (CISM).
 A bug-fix for the snow hydrology was added. Several new namelist items were added
 a few new history fields. Also the capability of reading aerosol and nitrogen
 deposition from stream files at one resolution and regridded on the fly rather than
 with datasets at the model resolution was added in. This was important for higher
 resolutions so that large datasets do not have to be created before running the model,
-nor are datasets for every resolution required. There were also some updates for 
-running the model with single-point mode.
+nor are datasets for every resolution required.
 </para>
 <sect2 id="science_since_ccsm4">
-<title>What is new with &clmrel; Science since &ccsm4;?</title>
+<title>What was new with &clm4010; Science since &ccsm4;?</title>
 <para>
 In general, snow layers should not be thinner than
 <screen width="99">
@@ -355,12 +423,14 @@ the land ice sheet model.</member>
 </para>
 </sect2>
 <sect2 id="software_since_ccsm4">
-<title>What is new with &clmrel; Software  since &ccsm4;?</title>
+<title>What was new with &clm4010; Software since &ccsm4;?</title>
 <para>
 New configuration options
 <simplelist>
 <member>glc_nec</member>
 </simplelist>
+</para>
+<para>
 glc_nec can be 1,3,5, or 10 and MUST match the number on the input surface dataset
 the elevation classes themselves are read from the surface dataset
 </para>
@@ -405,15 +475,15 @@ scaled_harvest = If true, harvesting will be scaled according to coefficients
 <para>
 New history fields:
 <simplelist>
-<member>aais_area Antarctic ice area (km^2)</member>
-<member>aais_mask Antarctic mask     (unitless)</member>
-<member>gris_area Greenland ice area (km^2)</member>
-<member>gris_mask Greenland mask     (unitless)</member>
-<member>QICE      ice growth/melt    (mm/s)</member>
-<member>QICEYR    ice growth/melt    (mm/s)</member>
-<member>QTOPSOIL water input to surface      (mm/s)</member>
-<member>VOLR     RTM storage: LIQ  (m3)</member>
-<member>VOLR_ICE RTM storage: ICE  (m3)</member>
+<member>aais_area Antarctic ice area                              (km^2)</member>
+<member>aais_mask Antarctic mask                                  (unitless)</member>
+<member>gris_area Greenland ice area                              (km^2)</member>
+<member>gris_mask Greenland mask                                  (unitless)</member>
+<member>QICE      ice growth/melt                                 (mm/s)</member>
+<member>QICEYR    ice growth/melt                                 (mm/s)</member>
+<member>QTOPSOIL  water input to surface                          (mm/s)</member>
+<member>VOLR      RTM storage: LIQ                                (m3)</member>
+<member>VOLR_ICE  RTM storage: ICE                                (m3)</member>
 </simplelist>
 </para>
 </sect2>
@@ -943,8 +1013,10 @@ The standard version of the model is &clmcn; at 1-degree horizontal resolution (
 validated with long simulations for: fully coupled simulations ("B" cases), coupled to
 atmosphere model <acronym>CAM</acronym> ("F" cases), and stand-alone &clm;
 cases ("I" cases). We've also done both long simulations for 1850 conditions, and transient 20th century simulations from 1850 to 2005 (with
-transient land-use, Nitrogen and Aerosol deposition). To a lesser extent there have also been simulations done at 2-degree horizontal 
-resolution (1.9x2.5), and with &clmsp; for these resolutions. As such we have provided appropriate 1-degree and 2-degree initial condition
+transient land-use, Nitrogen and Aerosol deposition). To a lesser extent there have also
+been simulations done at T31 and 2-degree horizontal 
+resolution (1.9x2.5), and with &clmsp; for these resolutions. As such we have provided
+appropriate 1-degree, 2-degree, and T31 initial condition
 datasets for these configurations. Other resolutions, configurations, and namelist options are less well tested or scientifically validated.
 The further you get away from the standard configurations and resolutions, the more likely you are to run into trouble, and/or need to
 scientifically validate your work.
@@ -1093,13 +1165,13 @@ you find in &cesm1;.
 <sect1 id="CESM_UG">
 <title>The &cesm; User's-Guide</title>
 <para>
-&clm4; is always run from within the standard &cesm1; build and run scripts. Therefore, the
+&clmrel; is always run from within the standard &cesmrel; build and run scripts. Therefore, the
 user of &clm4;
-should familiarize themselves with the &cesm1; scripts and understand how to work with them.
-User's-Guide documentation on the &cesm1; scripts are available from the following web-page. The purpose
-of this &clm4; User's Guide is to give the &clm4; user more complete details on how to work
+should familiarize themselves with the &cesmrel; scripts and understand how to work with them.
+User's-Guide documentation on the &cesmrel; scripts are available from the following web-page. The purpose
+of this &clmrel; User's Guide is to give the &clm4; user more complete details on how to work
 with &clm; and the set of tools that support &clm;, as well as to give examples that are unique to the use
-of &clm;. However, the &cesm1; Scripts User's-Guide remains the primary source to get detailed
+of &clm;. However, the &cesmrel; Scripts User's-Guide remains the primary source to get detailed
 information on how to build and run the &cesm; system.
 <simplelist>
 <member><ulink url="&cesmwebmodelrel;cesm">&cesm1; Scripts

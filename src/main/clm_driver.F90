@@ -364,34 +364,38 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! Initialize h2ocan_loss to zero
   ! ============================================================================
   call t_startf('pftdynwts')
-  call pftdyn_wbal_init()
+!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
+  do nc = 1,nclumps
+     call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
+     call pftdyn_wbal_init( begc, endc )
 
 #if (defined CNDV)
-! if (doalb) then ! Currently CNDV and fpftdyn /= ' ' are incompatible
-     call CNZeroFluxes_dwt()
-     call pftwt_interp()
+     ! NOTE: Currently CNDV and fpftdyn /= ' ' are incompatible
+     call CNZeroFluxes_dwt( begc, endc, begp, endp )
+     call pftwt_interp( begp, endp )
      call pftdyn_wbal( begg, endg, begc, endc, begp, endp )
-     call pftdyn_cnbal()
-     call setFilters()
-! end if
+     call pftdyn_cnbal( begc, endc, begp, endp )
+     call setFilters(nc)
 #else
-  ! ============================================================================
-  ! Update weights and reset filters if dynamic land use
-  ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
-  ! The call to CNZeroFluxes_dwt() is needed regardless of fpftdyn
-  ! ============================================================================
+     ! ============================================================================
+     ! Update weights and reset filters if dynamic land use
+     ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
+     ! The call to CNZeroFluxes_dwt() is needed regardless of fpftdyn
+     ! ============================================================================
 
 #if (defined CN)
-   call CNZeroFluxes_dwt()
+     call CNZeroFluxes_dwt( begc, endc, begp, endp )
 #endif
 
-   if (fpftdyn /= ' ') then
+     if (fpftdyn /= ' ') then
 #if (defined CN)
-     call pftdyn_cnbal()
+        call pftdyn_cnbal( begc, endc, begp, endp )
 #endif
-     call setFilters()
-   end if
+        call setFilters(nc)
+     end if
 #endif
+  end do
+!$OMP END PARALLEL DO
 
 
 #if (defined CN)
@@ -404,7 +408,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   if (stream_year_first_ndep /= stream_year_last_ndep) then
      call ndep_interp()
   end if
-#endif       
+#endif
   call t_stopf('pftdynwts')
 
 !$OMP PARALLEL DO PRIVATE (nc,l,c,begg,endg,begl,endl,begc,endc,begp,endp)
@@ -706,9 +710,9 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)
   ! ============================================================================
 
-    call t_startf('clm_map2gcell')
-    call clm_map2gcell( )
-    call t_stopf('clm_map2gcell')
+  call t_startf('clm_map2gcell')
+  call clm_map2gcell( )
+  call t_stopf('clm_map2gcell')
 
   ! ============================================================================
   ! Write global average diagnostics to standard output

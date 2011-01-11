@@ -207,6 +207,7 @@ end subroutine
     real(R8), pointer :: fptr(:, :)
     character(len=32), parameter :: sub = 'lnd_init_esmf'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
+    character(ESMF_MAXSTR) :: convCIM, purpComp
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein, Fei Liu
@@ -580,6 +581,37 @@ end subroutine
        call memmon_reset_addr()
     endif
 #endif
+
+    convCIM  = "CIM 1.0"
+    purpComp = "Model Component Simulation Description"
+
+    call ESMF_AttributeAdd(comp,  &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+
+    call ESMF_AttributeSet(comp, "ShortName", "CLM", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "LongName", &
+                           "Community Land Model", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "Description", &
+                  "The Community Land Model version 4.0 is " // &
+                  "the land model used in the CESM1.0.  " // &
+                  "More information on the CLM project " // &
+                  "and access to previous CLM model versions and " // &
+                  "documentation can be found via the CLM Web Page.", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ReleaseDate", "2010", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ModelType", "Land", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+
+    call ESMF_AttributeSet(comp, "Name", "Sam Levis", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "EmailAddress", &
+                           "slevis@ucar.edu", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
+    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", &
+                           convention=convCIM, purpose=purpComp, rc=rc)
 
   end subroutine lnd_init_esmf
 
