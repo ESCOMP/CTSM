@@ -27,13 +27,10 @@ module ncdio_pio
 !
 ! !PUBLIC TYPES:
   implicit none
-  include 'netcdf.inc'
-  save
   private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
-  public :: check_ret          ! checks return status of netcdf calls
   public :: check_var          ! determine if variable is on netcdf file
   public :: check_dim          ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
@@ -53,19 +50,17 @@ module ncdio_pio
   public :: ncd_inqvdids       ! inquire variable dimids
   public :: ncd_io             ! write local data
 
-  integer,parameter,public :: ncd_int       = nf_int
-  integer,parameter,public :: ncd_float     = nf_float
-  integer,parameter,public :: ncd_double    = nf_double
-  integer,parameter,public :: ncd_char      = nf_char
-  integer,parameter,public :: ncd_global    = nf_global
-  integer,parameter,public :: ncd_write     = nf_write
-  integer,parameter,public :: ncd_nowrite   = nf_nowrite
-  integer,parameter,public :: ncd_clobber   = nf_clobber
-  integer,parameter,public :: ncd_noclobber = nf_noclobber
-  integer,parameter,public :: ncd_share     = nf_share
-  integer,parameter,public :: ncd_fill      = nf_fill
-  integer,parameter,public :: ncd_nofill    = nf_nofill
-  integer,parameter,public :: ncd_unlimited = nf_unlimited
+  integer,parameter,public :: ncd_int       = pio_int
+  integer,parameter,public :: ncd_float     = pio_real
+  integer,parameter,public :: ncd_double    = pio_double
+  integer,parameter,public :: ncd_char      = pio_char
+  integer,parameter,public :: ncd_global    = pio_global
+  integer,parameter,public :: ncd_write     = pio_write
+  integer,parameter,public :: ncd_nowrite   = pio_nowrite
+  integer,parameter,public :: ncd_clobber   = pio_clobber
+  integer,parameter,public :: ncd_noclobber = pio_noclobber
+  integer,parameter,public :: ncd_nofill    = pio_nofill
+  integer,parameter,public :: ncd_unlimited = pio_unlimited
 
   ! PIO interfaces being used directly elsewhere in CLM
   ! These calls should be changed into ncd_pio calls
@@ -107,6 +102,7 @@ module ncdio_pio
      module procedure ncd_io_real_var2
      module procedure ncd_io_int_var3
      module procedure ncd_io_real_var3
+     module procedure ncd_io_real_var3_nf
   end interface
 
   private :: ncd_inqiodesc      ! inquire variable descriptor
@@ -352,36 +348,6 @@ contains
     end if
 
   end subroutine check_dim
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: check_ret
-!
-! !INTERFACE:
-  subroutine check_ret(ret, cstring)
-!
-! !DESCRIPTION:
-! Check return status from netcdf call
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: ret     ! NetCDF PIO error code
-    character(len=*) :: cstring    ! error character string descriptor
-!
-! !REVISION HISTORY:
-!
-!EOP
-    character(len=*),parameter :: subname='check_ret' ! subroutine name
-!-----------------------------------------------------------------------
-
-    if (ret /= NF_NOERR) then
-       write(iulog,*) subname//' ERROR:: netcdf error from :',trim(cstring),':',trim(NF_STRERROR(ret))
-       call endrun()
-    end if
-
-  end subroutine check_ret
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -778,7 +744,7 @@ contains
 
     value4 = value
 
-    if (xtype == nf_double) then
+    if (xtype == pio_double) then
        status = PIO_put_att(ncid,varid,trim(attrib),value)
     else
        status = PIO_put_att(ncid,varid,trim(attrib),value4)
@@ -2377,6 +2343,78 @@ contains
 
   end subroutine ncd_io_real_var3
 
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_real_var3_nf
+!
+! !INTERFACE:
+  subroutine ncd_io_real_var3_nf(varname, data, flag, ncid, readvar, nt)
+!
+! !DESCRIPTION:
+! netcdf I/O of global real 3D  array
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
+    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
+    character(len=*), intent(in)    :: varname          ! variable name
+    real(r8)        , intent(inout) :: data(:,:,:)        ! raw data
+    logical         , optional, intent(out):: readvar   ! was var read?
+    integer         , optional, intent(in) :: nt        ! time sample index
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: varid                ! netCDF variable id
+    integer :: start(4), count(4)   ! output bounds
+    integer :: status               ! error code
+    logical :: varpresent           ! if true, variable is on tape
+    character(len=32) :: vname      ! variable error checking
+    type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    character(len=*),parameter :: subname='ncd_io_real_var3_nf'
+!-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+
+       call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+       if (varpresent) then
+          if (single_column) then
+             call scam_field_offsets(ncid,'undefined',start,count)
+             status = pio_get_var(ncid, varid, start, count, data)
+          else
+             status = pio_get_var(ncid, varid, data)
+          endif
+       endif
+       if (present(readvar)) readvar = varpresent
+
+    elseif (flag == 'write') then
+
+       if (present(nt))      then
+          start(1) = 1
+          start(2) = 1
+          start(3) = nt
+          count(1) = size(data, dim=1)
+          count(2) = size(data, dim=2)
+          count(3) = 1
+       else
+          start(1) = 1
+          start(2) = 1
+          start(3) = 1
+          count(1) = size(data, dim=1)
+          count(2) = size(data, dim=2)
+          count(3) = 1
+       end if
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
+       status = pio_put_var(ncid, varid, start, count, data)
+
+    endif   
+
+  end subroutine ncd_io_real_var3_nf
+
 !------------------------------------------------------------------------
 !BOP
 !
@@ -2586,11 +2624,11 @@ contains
           endif
        end if
 
-       if (xtype == nf_double ) then
+       if (xtype == pio_double ) then
           basetype = PIO_DOUBLE
-       else if (xtype == nf_float) then
+       else if (xtype == pio_real) then
           basetype  = PIO_DOUBLE
-       else if (xtype == nf_int) then
+       else if (xtype == pio_int) then
           basetype = PIO_INT
        end if
 

@@ -17,7 +17,6 @@ module SNICARMod
   use abortutils    , only : endrun
 
   implicit none
-  include 'netcdf.inc'
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -101,53 +100,53 @@ module SNICARMod
   real(r8) :: ext_cff_mss_snw_dfs(idx_Mie_snw_mx,numrad_snw)
 
   ! hydrophiliic BC
-  real(r8) :: ss_alb_bc1(1,numrad_snw)
-  real(r8) :: asm_prm_bc1(1,numrad_snw)
-  real(r8) :: ext_cff_mss_bc1(1,numrad_snw)
+  real(r8) :: ss_alb_bc1(numrad_snw)
+  real(r8) :: asm_prm_bc1(numrad_snw)
+  real(r8) :: ext_cff_mss_bc1(numrad_snw)
 
   ! hydrophobic BC
-  real(r8) :: ss_alb_bc2(1,numrad_snw)
-  real(r8) :: asm_prm_bc2(1,numrad_snw)
-  real(r8) :: ext_cff_mss_bc2(1,numrad_snw)
+  real(r8) :: ss_alb_bc2(numrad_snw)
+  real(r8) :: asm_prm_bc2(numrad_snw)
+  real(r8) :: ext_cff_mss_bc2(numrad_snw)
 
   ! hydrophobic OC
-  real(r8) :: ss_alb_oc1(1,numrad_snw)
-  real(r8) :: asm_prm_oc1(1,numrad_snw)
-  real(r8) :: ext_cff_mss_oc1(1,numrad_snw)
+  real(r8) :: ss_alb_oc1(numrad_snw)
+  real(r8) :: asm_prm_oc1(numrad_snw)
+  real(r8) :: ext_cff_mss_oc1(numrad_snw)
 
   ! hydrophilic OC
-  real(r8) :: ss_alb_oc2(1,numrad_snw)
-  real(r8) :: asm_prm_oc2(1,numrad_snw)
-  real(r8) :: ext_cff_mss_oc2(1,numrad_snw)
+  real(r8) :: ss_alb_oc2(numrad_snw)
+  real(r8) :: asm_prm_oc2(numrad_snw)
+  real(r8) :: ext_cff_mss_oc2(numrad_snw)
 
   ! dust species 1:
-  real(r8) :: ss_alb_dst1(1,numrad_snw)
-  real(r8) :: asm_prm_dst1(1,numrad_snw)
-  real(r8) :: ext_cff_mss_dst1(1,numrad_snw)
+  real(r8) :: ss_alb_dst1(numrad_snw)
+  real(r8) :: asm_prm_dst1(numrad_snw)
+  real(r8) :: ext_cff_mss_dst1(numrad_snw)
 
   ! dust species 2:
-  real(r8) :: ss_alb_dst2(1,numrad_snw)
-  real(r8) :: asm_prm_dst2(1,numrad_snw)
-  real(r8) :: ext_cff_mss_dst2(1,numrad_snw)
+  real(r8) :: ss_alb_dst2(numrad_snw)
+  real(r8) :: asm_prm_dst2(numrad_snw)
+  real(r8) :: ext_cff_mss_dst2(numrad_snw)
 
   ! dust species 3:
-  real(r8) :: ss_alb_dst3(1,numrad_snw)
-  real(r8) :: asm_prm_dst3(1,numrad_snw)
-  real(r8) :: ext_cff_mss_dst3(1,numrad_snw)
+  real(r8) :: ss_alb_dst3(numrad_snw)
+  real(r8) :: asm_prm_dst3(numrad_snw)
+  real(r8) :: ext_cff_mss_dst3(numrad_snw)
 
   ! dust species 4:
-  real(r8) :: ss_alb_dst4(1,numrad_snw)
-  real(r8) :: asm_prm_dst4(1,numrad_snw)
-  real(r8) :: ext_cff_mss_dst4(1,numrad_snw)
+  real(r8) :: ss_alb_dst4(numrad_snw)
+  real(r8) :: asm_prm_dst4(numrad_snw)
+  real(r8) :: ext_cff_mss_dst4(numrad_snw)
 
   ! best-fit parameters for snow aging defined over:
   !  11 temperatures from 225 to 273 K
   !  31 temperature gradients from 0 to 300 K/m
   !   8 snow densities from 0 to 350 kg/m3
   ! (arrays declared here, but are set in iniTimeConst)
-  real(r8) :: snowage_tau(idx_rhos_max,idx_Tgrd_max,idx_T_max)
-  real(r8) :: snowage_kappa(idx_rhos_max,idx_Tgrd_max,idx_T_max)
-  real(r8) :: snowage_drdt0(idx_rhos_max,idx_Tgrd_max,idx_T_max)
+  real(r8), pointer :: snowage_tau(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
+  real(r8), pointer :: snowage_kappa(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
+  real(r8), pointer :: snowage_drdt0(:,:,:) ! idx_rhos_max,idx_Tgrd_max,idx_T_max)
  
 !
 ! !REVISION HISTORY:
@@ -608,44 +607,44 @@ contains
                 endif
                    
                 ! aerosol species 1 optical properties
-                ss_alb_aer_lcl(1)        = ss_alb_bc1(1,bnd_idx)      
-                asm_prm_aer_lcl(1)       = asm_prm_bc1(1,bnd_idx)
-                ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(1,bnd_idx)
+                ss_alb_aer_lcl(1)        = ss_alb_bc1(bnd_idx)      
+                asm_prm_aer_lcl(1)       = asm_prm_bc1(bnd_idx)
+                ext_cff_mss_aer_lcl(1)   = ext_cff_mss_bc1(bnd_idx)
                 
                 ! aerosol species 2 optical properties
-                ss_alb_aer_lcl(2)        = ss_alb_bc2(1,bnd_idx)      
-                asm_prm_aer_lcl(2)       = asm_prm_bc2(1,bnd_idx)
-                ext_cff_mss_aer_lcl(2)   = ext_cff_mss_bc2(1,bnd_idx)
+                ss_alb_aer_lcl(2)        = ss_alb_bc2(bnd_idx)      
+                asm_prm_aer_lcl(2)       = asm_prm_bc2(bnd_idx)
+                ext_cff_mss_aer_lcl(2)   = ext_cff_mss_bc2(bnd_idx)
                 
                 ! aerosol species 3 optical properties
-                ss_alb_aer_lcl(3)        = ss_alb_oc1(1,bnd_idx)      
-                asm_prm_aer_lcl(3)       = asm_prm_oc1(1,bnd_idx)
-                ext_cff_mss_aer_lcl(3)   = ext_cff_mss_oc1(1,bnd_idx)
+                ss_alb_aer_lcl(3)        = ss_alb_oc1(bnd_idx)      
+                asm_prm_aer_lcl(3)       = asm_prm_oc1(bnd_idx)
+                ext_cff_mss_aer_lcl(3)   = ext_cff_mss_oc1(bnd_idx)
                 
                 ! aerosol species 4 optical properties
-                ss_alb_aer_lcl(4)        = ss_alb_oc2(1,bnd_idx)      
-                asm_prm_aer_lcl(4)       = asm_prm_oc2(1,bnd_idx)
-                ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(1,bnd_idx)
+                ss_alb_aer_lcl(4)        = ss_alb_oc2(bnd_idx)      
+                asm_prm_aer_lcl(4)       = asm_prm_oc2(bnd_idx)
+                ext_cff_mss_aer_lcl(4)   = ext_cff_mss_oc2(bnd_idx)
 
                 ! aerosol species 5 optical properties
-                ss_alb_aer_lcl(5)        = ss_alb_dst1(1,bnd_idx)      
-                asm_prm_aer_lcl(5)       = asm_prm_dst1(1,bnd_idx)
-                ext_cff_mss_aer_lcl(5)   = ext_cff_mss_dst1(1,bnd_idx)
+                ss_alb_aer_lcl(5)        = ss_alb_dst1(bnd_idx)      
+                asm_prm_aer_lcl(5)       = asm_prm_dst1(bnd_idx)
+                ext_cff_mss_aer_lcl(5)   = ext_cff_mss_dst1(bnd_idx)
                 
                 ! aerosol species 6 optical properties
-                ss_alb_aer_lcl(6)        = ss_alb_dst2(1,bnd_idx)      
-                asm_prm_aer_lcl(6)       = asm_prm_dst2(1,bnd_idx)
-                ext_cff_mss_aer_lcl(6)   = ext_cff_mss_dst2(1,bnd_idx)
+                ss_alb_aer_lcl(6)        = ss_alb_dst2(bnd_idx)      
+                asm_prm_aer_lcl(6)       = asm_prm_dst2(bnd_idx)
+                ext_cff_mss_aer_lcl(6)   = ext_cff_mss_dst2(bnd_idx)
                 
                 ! aerosol species 7 optical properties
-                ss_alb_aer_lcl(7)        = ss_alb_dst3(1,bnd_idx)      
-                asm_prm_aer_lcl(7)       = asm_prm_dst3(1,bnd_idx)
-                ext_cff_mss_aer_lcl(7)   = ext_cff_mss_dst3(1,bnd_idx)
+                ss_alb_aer_lcl(7)        = ss_alb_dst3(bnd_idx)      
+                asm_prm_aer_lcl(7)       = asm_prm_dst3(bnd_idx)
+                ext_cff_mss_aer_lcl(7)   = ext_cff_mss_dst3(bnd_idx)
                 
                 ! aerosol species 8 optical properties
-                ss_alb_aer_lcl(8)        = ss_alb_dst4(1,bnd_idx)      
-                asm_prm_aer_lcl(8)       = asm_prm_dst4(1,bnd_idx)
-                ext_cff_mss_aer_lcl(8)   = ext_cff_mss_dst4(1,bnd_idx)
+                ss_alb_aer_lcl(8)        = ss_alb_dst4(bnd_idx)      
+                asm_prm_aer_lcl(8)       = asm_prm_dst4(bnd_idx)
+                ext_cff_mss_aer_lcl(8)   = ext_cff_mss_dst4(bnd_idx)
                 
 
                 ! 1. snow and aerosol layer column mass (L_snw, L_aer [kg/m^2])
@@ -1102,7 +1101,6 @@ contains
     use clm_varcon       , only : spval
     use abortutils       , only : endrun
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
-
     !
     ! !ARGUMENTS:
     implicit none
@@ -1355,213 +1353,147 @@ contains
   end subroutine SnowAge_grain
 
   subroutine SnowOptics_init( )
-   use fileutils       , only : getfil
-   use CLM_varctl      , only : fsnowoptics
-   use spmdMod         , only : mpicom, MPI_REAL8, masterproc
+    use fileutils       , only : getfil
+    use CLM_varctl      , only : fsnowoptics
+    use spmdMod         , only : masterproc
+    use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
+   
+    type(file_desc_t)  :: ncid                        ! netCDF file id
+    character(len=256) :: locfn                       ! local filename
+    character(len= 32) :: subname = 'SnowOptics_init' ! subroutine name
+    integer            :: ier                         ! error status
 
-   integer            :: ncid                        ! netCDF file id
-   character(len=256) :: locfn                       ! local filename
-   character(len= 32) :: subname = 'SnowOptics_init' ! subroutine name
-   integer            :: varid                       ! netCDF id's
-   integer            :: ier                         ! error status
 
-   !
-   ! Open optics file:
-   if (masterproc) then
-      write(iulog,*) 'Attempting to read snow optical properties .....'
-      call getfil (fsnowoptics, locfn, 0)
-      call check_ret(nf_open(locfn, 0, ncid), subname)
-      write(iulog,*) subname,trim(fsnowoptics)
+    !
+    ! Open optics file:
+    if(masterproc) write(iulog,*) 'Attempting to read snow optical properties .....'
+    call getfil (fsnowoptics, locfn, 0)
+    call ncd_pio_openfile(ncid, locfn, 0)
+    if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
 
-      ! direct-beam snow Mie parameters:
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_ice_drc', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_snw_drc), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_ice_drc', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_snw_drc), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_ice_drc', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_snw_drc), subname)
+    ! direct-beam snow Mie parameters:
+    call ncd_io('ss_alb_ice_drc', ss_alb_snw_drc, 'read', ncid)
+    call ncd_io( 'asm_prm_ice_drc',asm_prm_snw_drc, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_ice_drc', ext_cff_mss_snw_drc, 'read', ncid)
 
-      ! diffuse snow Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_ice_dfs', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_snw_dfs), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_ice_dfs', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_snw_dfs), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_ice_dfs', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_snw_dfs), subname)
+    ! diffuse snow Mie parameters
+    call ncd_io( 'ss_alb_ice_dfs', ss_alb_snw_dfs, 'read', ncid)
+    call ncd_io( 'asm_prm_ice_dfs', asm_prm_snw_dfs, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_ice_dfs', ext_cff_mss_snw_dfs, 'read', ncid)
 
-      ! BC species 1 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_bcphil', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_bc1), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_bcphil', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_bc1), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_bcphil', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_bc1), subname)
+    ! BC species 1 Mie parameters
+    call ncd_io( 'ss_alb_bcphil', ss_alb_bc1, 'read', ncid)
+    call ncd_io( 'asm_prm_bcphil', asm_prm_bc1, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_bcphil', ext_cff_mss_bc1, 'read', ncid)
 
-      ! BC species 2 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_bcphob', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_bc2), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_bcphob', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_bc2), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_bcphob', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_bc2), subname)
+    ! BC species 2 Mie parameters
+    call ncd_io( 'ss_alb_bcphob', ss_alb_bc2, 'read', ncid)
+    call ncd_io( 'asm_prm_bcphob', asm_prm_bc2, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid)
 
-      ! OC species 1 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_ocphil', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_oc1), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_ocphil', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_oc1), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_ocphil', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_oc1), subname)
+    ! OC species 1 Mie parameters
+    call ncd_io( 'ss_alb_ocphil', ss_alb_oc1, 'read', ncid)
+    call ncd_io( 'asm_prm_ocphil', asm_prm_oc1, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_ocphil', ext_cff_mss_oc1, 'read', ncid)
 
-      ! OC species 2 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_ocphob', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_oc2), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_ocphob', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_oc2), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_ocphob', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_oc2), subname)
+    ! OC species 2 Mie parameters
+    call ncd_io( 'ss_alb_ocphob', ss_alb_oc2, 'read', ncid)
+    call ncd_io( 'asm_prm_ocphob', asm_prm_oc2, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid)
 
-      ! dust species 1 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_dust01', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_dst1), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_dust01', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_dst1), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_dust01', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_dst1), subname)
+    ! dust species 1 Mie parameters
+    call ncd_io( 'ss_alb_dust01', ss_alb_dst1, 'read', ncid)
+    call ncd_io( 'asm_prm_dust01', asm_prm_dst1, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_dust01', ext_cff_mss_dst1, 'read', ncid)
 
-      ! dust species 2 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_dust02', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_dst2), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_dust02', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_dst2), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_dust02', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_dst2), subname)
+    ! dust species 2 Mie parameters
+    call ncd_io( 'ss_alb_dust02', ss_alb_dst2, 'read', ncid)
+    call ncd_io( 'asm_prm_dust02', asm_prm_dst2, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_dust02', ext_cff_mss_dst2, 'read', ncid)
 
-      ! dust species 3 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_dust03', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_dst3), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_dust03', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_dst3), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_dust03', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_dst3), subname)
+    ! dust species 3 Mie parameters
+    call ncd_io( 'ss_alb_dust03', ss_alb_dst3, 'read', ncid)
+    call ncd_io( 'asm_prm_dust03', asm_prm_dst3, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_dust03', ext_cff_mss_dst3, 'read', ncid)
 
-      ! dust species 4 Mie parameters
-      call check_ret(nf_inq_varid(ncid, 'ss_alb_dust04', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ss_alb_dst4), subname)
-      call check_ret(nf_inq_varid(ncid, 'asm_prm_dust04', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, asm_prm_dst4), subname)
-      call check_ret(nf_inq_varid(ncid, 'ext_cff_mss_dust04', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, ext_cff_mss_dst4), subname)
-   endif
-   call mpi_bcast (ss_alb_snw_dfs,       size(ss_alb_snw_dfs),       MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_snw_dfs,      size(asm_prm_snw_dfs),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_snw_dfs,  size(ext_cff_mss_snw_dfs),  MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_snw_drc,       size(ss_alb_snw_drc),       MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_snw_drc,      size(asm_prm_snw_drc),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_snw_drc,  size(ext_cff_mss_snw_drc),  MPI_REAL8  , 0, mpicom, ier)
+    ! dust species 4 Mie parameters
+    call ncd_io( 'ss_alb_dust04', ss_alb_dst4, 'read', ncid)
+    call ncd_io( 'asm_prm_dust04', asm_prm_dst4, 'read', ncid)
+    call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid)
 
-   call mpi_bcast (ss_alb_bc1,       size(ss_alb_bc1),       MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_bc2,       size(ss_alb_bc2),       MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_oc1,       size(ss_alb_oc1),       MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_oc2,       size(ss_alb_oc2),       MPI_REAL8  , 0, mpicom, ier)
 
-   call mpi_bcast (asm_prm_bc1,      size(asm_prm_bc1),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_bc2,      size(asm_prm_bc2),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_oc1,      size(asm_prm_oc1),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_oc2,      size(asm_prm_oc2),      MPI_REAL8  , 0, mpicom, ier)
+    call ncd_pio_closefile(ncid)
+    if (masterproc) then
 
-   call mpi_bcast (ss_alb_dst1,      size(ss_alb_dst1),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_dst2,      size(ss_alb_dst2),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_dst3,      size(ss_alb_dst3),      MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ss_alb_dst4,      size(ss_alb_dst4),      MPI_REAL8  , 0, mpicom, ier)
-
-   call mpi_bcast (asm_prm_dst1,     size(asm_prm_dst1),     MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_dst2,     size(asm_prm_dst2),     MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_dst3,     size(asm_prm_dst3),     MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (asm_prm_dst4,     size(asm_prm_dst4),     MPI_REAL8  , 0, mpicom, ier)
-
-   call mpi_bcast (ext_cff_mss_bc1,  size(ext_cff_mss_bc1),  MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_bc2,  size(ext_cff_mss_bc2),  MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_oc1,  size(ext_cff_mss_oc1),  MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_oc2,  size(ext_cff_mss_oc2),  MPI_REAL8  , 0, mpicom, ier)
-
-   call mpi_bcast (ext_cff_mss_dst1, size(ext_cff_mss_dst1), MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_dst2, size(ext_cff_mss_dst2), MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_dst3, size(ext_cff_mss_dst3), MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (ext_cff_mss_dst4, size(ext_cff_mss_dst4), MPI_REAL8  , 0, mpicom, ier)
-
-   if (masterproc) then
-      call check_ret(nf_close(ncid), subname)
-      write(iulog,*) 'Successfully read snow optical properties'
-      ! print some diagnostics:
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for direct-beam ice, rds=100um: ', &
-                       ss_alb_snw_drc(71,1), ss_alb_snw_drc(71,2), ss_alb_snw_drc(71,3),     &
-                       ss_alb_snw_drc(71,4), ss_alb_snw_drc(71,5)
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for diffuse ice, rds=100um: ',     &
-                       ss_alb_snw_dfs(71,1), ss_alb_snw_dfs(71,2), ss_alb_snw_dfs(71,3),     &
-                       ss_alb_snw_dfs(71,4), ss_alb_snw_dfs(71,5)
-      if (DO_SNO_OC) then
-         write (iulog,*) 'SNICAR: Including OC aerosols from snow radiative transfer calculations'
-      else
-         write (iulog,*) 'SNICAR: Excluding OC aerosols from snow radiative transfer calculations'
-      endif
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic BC: ', &
-           ss_alb_bc1(1,1), ss_alb_bc1(1,2), ss_alb_bc1(1,3), ss_alb_bc1(1,4), ss_alb_bc1(1,5)
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic BC: ', &
-           ss_alb_bc2(1,1), ss_alb_bc2(1,2), ss_alb_bc2(1,3), ss_alb_bc2(1,4), ss_alb_bc2(1,5)
-      if (DO_SNO_OC) then
-         write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic OC: ', &
-              ss_alb_oc1(1,1), ss_alb_oc1(1,2), ss_alb_oc1(1,3), ss_alb_oc1(1,4), ss_alb_oc1(1,5)
-         write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic OC: ', &
-              ss_alb_oc2(1,1), ss_alb_oc2(1,2), ss_alb_oc2(1,3), ss_alb_oc2(1,4), ss_alb_oc2(1,5)
-      endif
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 1: ', &
-           ss_alb_dst1(1,1), ss_alb_dst1(1,2), ss_alb_dst1(1,3), ss_alb_dst1(1,4), ss_alb_dst1(1,5)
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 2: ', &
-           ss_alb_dst2(1,1), ss_alb_dst2(1,2), ss_alb_dst2(1,3), ss_alb_dst2(1,4), ss_alb_dst2(1,5)
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 3: ', &
-           ss_alb_dst3(1,1), ss_alb_dst3(1,2), ss_alb_dst3(1,3), ss_alb_dst3(1,4), ss_alb_dst3(1,5)
-      write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 4: ', &
-           ss_alb_dst4(1,1), ss_alb_dst4(1,2), ss_alb_dst4(1,3), ss_alb_dst4(1,4), ss_alb_dst4(1,5)
-      write(iulog,*)
-   end if
+       write(iulog,*) 'Successfully read snow optical properties'
+       ! print some diagnostics:
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for direct-beam ice, rds=100um: ', &
+            ss_alb_snw_drc(71,1), ss_alb_snw_drc(71,2), ss_alb_snw_drc(71,3),     &
+            ss_alb_snw_drc(71,4), ss_alb_snw_drc(71,5)
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for diffuse ice, rds=100um: ',     &
+            ss_alb_snw_dfs(71,1), ss_alb_snw_dfs(71,2), ss_alb_snw_dfs(71,3),     &
+            ss_alb_snw_dfs(71,4), ss_alb_snw_dfs(71,5)
+       if (DO_SNO_OC) then
+          write (iulog,*) 'SNICAR: Including OC aerosols from snow radiative transfer calculations'
+       else
+          write (iulog,*) 'SNICAR: Excluding OC aerosols from snow radiative transfer calculations'
+       endif
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic BC: ', &
+            ss_alb_bc1(1), ss_alb_bc1(2), ss_alb_bc1(3), ss_alb_bc1(4), ss_alb_bc1(5)
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic BC: ', &
+            ss_alb_bc2(1), ss_alb_bc2(2), ss_alb_bc2(3), ss_alb_bc2(4), ss_alb_bc2(5)
+       if (DO_SNO_OC) then
+          write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophillic OC: ', &
+               ss_alb_oc1(1), ss_alb_oc1(2), ss_alb_oc1(3), ss_alb_oc1(4), ss_alb_oc1(5)
+          write (iulog,*) 'SNICAR: Mie single scatter albedos for hydrophobic OC: ', &
+               ss_alb_oc2(1), ss_alb_oc2(2), ss_alb_oc2(3), ss_alb_oc2(4), ss_alb_oc2(5)
+       endif
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 1: ', &
+            ss_alb_dst1(1), ss_alb_dst1(2), ss_alb_dst1(3), ss_alb_dst1(4), ss_alb_dst1(5)
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 2: ', &
+            ss_alb_dst2(1), ss_alb_dst2(2), ss_alb_dst2(3), ss_alb_dst2(4), ss_alb_dst2(5)
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 3: ', &
+            ss_alb_dst3(1), ss_alb_dst3(2), ss_alb_dst3(3), ss_alb_dst3(4), ss_alb_dst3(5)
+       write (iulog,*) 'SNICAR: Mie single scatter albedos for dust species 4: ', &
+            ss_alb_dst4(1), ss_alb_dst4(2), ss_alb_dst4(3), ss_alb_dst4(4), ss_alb_dst4(5)
+       write(iulog,*)
+    end if
 
   end subroutine SnowOptics_init
 
   subroutine SnowAge_init( )
    use CLM_varctl      , only : fsnowaging
    use fileutils       , only : getfil
-   use spmdMod         , only : mpicom, MPI_REAL8, masterproc
+   use spmdMod         , only : masterproc
+   use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
 
-   integer            :: ncid                        ! netCDF file id
+   type(file_desc_t)  :: ncid                        ! netCDF file id
    character(len=256) :: locfn                       ! local filename
    character(len= 32) :: subname = 'SnowOptics_init' ! subroutine name
    integer            :: varid                       ! netCDF id's
    integer            :: ier                         ! error status
 
    ! Open snow aging (effective radius evolution) file:
-   if (masterproc) then
-      write(iulog,*) 'Attempting to read snow aging parameters .....'
-      call getfil (fsnowaging, locfn, 0)
-      call check_ret(nf_open(locfn, 0, ncid), subname)
-      write(iulog,*) subname,trim(fsnowaging)
+   allocate(snowage_tau(idx_rhos_max,idx_Tgrd_max,idx_T_max))
+   allocate(snowage_kappa(idx_rhos_max,idx_Tgrd_max,idx_T_max))
+   allocate(snowage_drdt0(idx_rhos_max,idx_Tgrd_max,idx_T_max))
 
-      ! snow aging parameters
-      call check_ret(nf_inq_varid(ncid, 'tau', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, snowage_tau), subname)
-      call check_ret(nf_inq_varid(ncid, 'kappa', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, snowage_kappa), subname)
-      call check_ret(nf_inq_varid(ncid, 'drdsdt0', varid), subname)
-      call check_ret(nf_get_var_double(ncid, varid, snowage_drdt0), subname)
-   endif
+   if(masterproc)  write(iulog,*) 'Attempting to read snow aging parameters .....'
+   call getfil (fsnowaging, locfn, 0)
+   call ncd_pio_openfile(ncid, locfn, 0)
+   if(masterproc) write(iulog,*) subname,trim(fsnowaging)
+   
+    ! snow aging parameters
+   
+   call ncd_io('tau', snowage_tau, 'read', ncid)
+   call ncd_io('kappa', snowage_kappa, 'read', ncid)
+   call ncd_io('drdsdt0', snowage_drdt0, 'read', ncid)
 
-   call mpi_bcast (snowage_tau,   size(snowage_tau),   MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (snowage_kappa, size(snowage_kappa), MPI_REAL8  , 0, mpicom, ier)
-   call mpi_bcast (snowage_drdt0, size(snowage_drdt0), MPI_REAL8  , 0, mpicom, ier)
+   call ncd_pio_closefile(ncid)
    if (masterproc) then
-      call check_ret(nf_close(ncid), subname)
+      
       write(iulog,*) 'Successfully read snow aging properties'
-
+      
       ! print some diagnostics:
       write (iulog,*) 'SNICAR: snowage tau for T=263K, dTdz = 100 K/m, rhos = 150 kg/m3: ', snowage_tau(3,11,9)
       write (iulog,*) 'SNICAR: snowage kappa for T=263K, dTdz = 100 K/m, rhos = 150 kg/m3: ', snowage_kappa(3,11,9)
@@ -1570,16 +1502,5 @@ contains
 
   end subroutine SnowAge_init
 
-  subroutine check_ret(ret, cstring)
-    implicit none
-    integer, intent(in) :: ret
-    character(len=*) :: cstring
-    character(len=*),parameter :: subname='check_ret' ! subroutine name
-
-    if (ret /= NF_NOERR) then
-       write(iulog,*)'netcdf error from check_ret:',trim(cstring),':',trim(NF_STRERROR(ret))
-       call endrun()
-    end if
-  end subroutine check_ret
 
 end module SNICARMod

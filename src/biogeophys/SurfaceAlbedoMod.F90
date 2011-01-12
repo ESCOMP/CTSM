@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 
 module SurfaceAlbedoMod
 
@@ -407,7 +405,6 @@ contains
 
 
 ! If radiative forcing is being calculated, first estimate clean-snow albedo
-! NOTE: To invoke radiative forcing, user must define #SNICAR_FRC in misc.h or cpp
 #if (defined SNICAR_FRC)
 
     ! 1. BC input array:

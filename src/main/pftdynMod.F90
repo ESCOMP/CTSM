@@ -82,7 +82,6 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
 !
 !
 ! !LOCAL VARIABLES:

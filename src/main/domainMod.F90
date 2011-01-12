@@ -138,7 +138,6 @@ contains
     if (domain%set == set) then
        call domain_clean(domain)
     endif
-
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &

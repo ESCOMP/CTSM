@@ -75,7 +75,6 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     character(len=*) , intent(in) :: file            ! output netcdf restart file
     logical,           intent(in) :: nlend	     ! if at the end of the simulation
     character(len=*) , intent(in) :: rdate           ! restart file time stamp for name
@@ -208,7 +207,6 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     character(len=*), intent(in) :: file  ! output netcdf restart file
 !
 ! !CALLED FROM:
@@ -281,7 +279,6 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
     character(len=*), intent(out) :: file  ! name of netcdf restart file
     character(len=*), intent(out) :: path  ! full pathname of netcdf restart file
 !

@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 
 module CNC13FluxMod
 #if (defined CN) && (defined C13)

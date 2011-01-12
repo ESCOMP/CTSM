@@ -20,8 +20,6 @@ II. Notes on the build system for each of the above tools:
 	Filepath ----- List of directories needed to build the tool (some files in ../src directories are required).
 	Makefile ----- GNU Makefile to build the tool (these are almost identical between tools.
 	Srcfiles ----- List of source files that are needed.
-	misc.h ------- CPP preprocessor file required by some files.
-	preproc.h ---- CPP preprocessor file required by some files.
 
     cprnc has it's own standalone Makefile and doesn't use any code outside of it's directory.
 

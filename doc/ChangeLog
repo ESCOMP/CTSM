@@ -1,4 +1,168 @@
 ===============================================================
+Tag name:  clm4_0_21
+Originator(s):  jedwards (Jim Edwards)
+Date: Wed Jan 12 14:50:45 MST 2011
+One-line Summary:  Remove includes, finish PIO transition
+
+Purpose of changes: 
+
+Code cleanup
+
+Remove misc.h/preproc.h, update SNICARMod to use ncdio_pio calls rather than NetCDF
+directly. 
+
+Bugs fixed (include bugzilla ID):
+                                 394 (misc.h and preproc.h NOT used at all anymore)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1110 (dtlimit error when a full year isn't available)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system:  Removed generation of files misc.h and preproc.h
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, Erik K
+
+List any svn externals directories updated (csm_share, mct, etc.):  None
+
+List all files eliminated: misc.h, preproc.h
+
+D       models/lnd/clm/tools/mksurfdata/misc.h
+D       models/lnd/clm/tools/mksurfdata/preproc.h
+D       models/lnd/clm/tools/mkdatadomain/preproc.h
+D       models/lnd/clm/tools/mkdatadomain/misc.h
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+       models/lnd/clm/tools/mkgriddata/README
+       models/lnd/clm/tools/mksurfdata/README
+       models/lnd/clm/tools/mkdatadomain/README
+       models/lnd/clm/tools/README
+       models/lnd/clm/bld/configure
+       models/lnd/clm/bld/clm.cpl7.template	
+       models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90
+       models/lnd/clm/src/biogeochem/CASAPhenologyMod.F90
+       models/lnd/clm/src/biogeochem/CNGapMortalityMod.F90
+       models/lnd/clm/src/biogeochem/CNC13StateUpdate2Mod.F90
+       models/lnd/clm/src/biogeochem/CNGRespMod.F90
+       models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90
+       models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90
+       models/lnd/clm/src/biogeochem/CNNStateUpdate3Mod.F90
+       models/lnd/clm/src/biogeochem/CNFireMod.F90
+       models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90
+       models/lnd/clm/src/biogeochem/CNSummaryMod.F90
+       models/lnd/clm/src/biogeochem/CNDVLightMod.F90
+       models/lnd/clm/src/biogeochem/CNPhenologyMod.F90
+       models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90
+       models/lnd/clm/src/biogeochem/CNCStateUpdate3Mod.F90
+       models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90
+       models/lnd/clm/src/biogeochem/CNC13StateUpdate3Mod.F90
+       models/lnd/clm/src/biogeochem/CNDVEcosystemDynIniMod.F90
+       models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90
+       models/lnd/clm/src/biogeochem/C13SummaryMod.F90
+       models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90
+       models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90
+       models/lnd/clm/src/biogeochem/CNAllocationMod.F90
+       models/lnd/clm/src/biogeochem/CNC13FluxMod.F90
+       models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90
+       models/lnd/clm/src/biogeochem/CNSetValueMod.F90
+       models/lnd/clm/src/biogeochem/CNDVEstablishmentMod.F90
+       models/lnd/clm/src/main/organicFileMod.F90
+       models/lnd/clm/src/main/dynlandMod.F90
+       models/lnd/clm/src/main/accFldsMod.F90
+       models/lnd/clm/src/main/fileutils.F90
+       models/lnd/clm/src/main/pftdynMod.F90
+       models/lnd/clm/src/main/pft2colMod.F90
+       models/lnd/clm/src/main/restFileMod.F90
+       models/lnd/clm/src/main/clm_varsur.F90
+       models/lnd/clm/src/main/controlMod.F90
+       models/lnd/clm/src/main/initSurfAlbMod.F90
+       models/lnd/clm/src/main/filterMod.F90
+       models/lnd/clm/src/main/clm_varorb.F90
+       models/lnd/clm/src/main/initGridCellsMod.F90
+       models/lnd/clm/src/main/pftvarcon.F90
+       models/lnd/clm/src/main/spmdMod.F90
+       models/lnd/clm/src/main/domainMod.F90
+       models/lnd/clm/src/riverroute/RunoffMod.F90
+       models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90
+       models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90
+       models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90
+       models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90
+       models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90
+       models/lnd/clm/src/biogeophys/QSatMod.F90
+       models/lnd/clm/src/biogeophys/clm_driverInitMod.F90
+       models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90
+	
+       models/lnd/clm/src/biogeophys/SNICARMod.F90
+       models/lnd/clm/src/main/ncdio_pio.F90
+
+	Removed reference to preproc.h and misc.h in all files.   Converted snicarmod to use pio 
+	and added support for a 3d non-decomposed real variable in ncdio.
+	
+Summary of testing:
+
+  bluefire: All PASS except...
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+059 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+060 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+061 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+062 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS
+  bluefire/CESM testing: All PASS
+
+  jaguarpf:  All pass except ...
+007 brB91 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 72+72 arb_ic ..................FAIL! rc= 10
+022 erH92 TER.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:1800 4x5 gx3v7@1850-2000 10+38 cold FAIL! rc= 13
+023 brH92 TBR.sh 17p_cnsc_dm clm_ndepdyn^nl_cn_conly 20020101:1800 4x5 gx3v7@1850-2000 72+72 cold FAIL! rc= 11
+038 smLI2 TSM.sh _sc_dm clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+039 erLI2 TER.sh _sc_dm clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+040 brLI2 TBR.sh _sc_dm clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+041 blLI2 TBL.sh _sc_dm clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+042 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 96 arb_ic ....................FAIL! rc= 10
+043 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 72+72 arb_ic .................FAIL! rc= 5
+044 brL58 TBR.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 72+72 arb_ic .................FAIL! rc= 5
+045 blL58 TBL.sh _sc_dh clm_std^nl_crcrop 20020115:1800 10x15 USGS 48 arb_ic ....................FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_19
+
+Changes answers relative to baseline: bit-for-bit
+	
+===============================================================
 Tag name:  clm4_0_20
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Jan 11 11:18:30 MST 2011

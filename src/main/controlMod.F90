@@ -136,7 +136,6 @@ contains
 
     implicit none
 !
-    include 'netcdf.inc'
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein

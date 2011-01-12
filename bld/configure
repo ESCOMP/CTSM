@@ -868,22 +868,12 @@ EOF
 
 my $fp_filename      = 'Filepath';             # name of output filepath file
 my $cpp_filename     = 'CESM_cppdefs';         # name of output file for clm's cppdefs in cesm
-my $misc_filename    = 'misc.h';               # name of output auxiliary cpp tokens file
-my $preproc_filename = 'preproc.h';            # name of output land model cpp tokens file
 
 if ($clm_mode eq "ext_cesm" ) {
 
     # Write the filepath file for cesm.
     write_filepath_cesmbld("$clm_bld/$fp_filename", "clm", $cfg_ref, allowEnv=>1 );
     if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
-
-    # Write the misc.h file 
-    write_misc_h("$clm_bld/$misc_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/$misc_filename\n"; }
-
-    # Write the preproc.h file.
-    write_preproc_h("$clm_bld/$preproc_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/$preproc_filename\n"; }
 
     # Write the file for clm's cppdefs needed in cesm.
     write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
@@ -956,13 +946,6 @@ EOF
     write_filepath_cesmbld("$clm_bld/lnd/$fp_filename", "clm", $cfg_ref);
     if ($print>=2) { print "creating $clm_bld/lnd/$fp_filename\n"; }
 
-    # Write the misc.h file 
-    write_misc_h("$clm_bld/lnd/$misc_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/lnd/$misc_filename\n"; }
-
-    # Write the preproc.h file.
-    write_preproc_h("$clm_bld/lnd/$preproc_filename", $cfg_ref);
-    if ($print>=2) { print "creating $clm_bld/lnd/$preproc_filename\n"; }
 
 } else {
 	die <<"EOF";
@@ -1190,41 +1173,6 @@ EOF
     $fh_in->close;
 
     $fh_out->close;
-}
-
-#-------------------------------------------------------------------------------
-
-sub write_misc_h
-{
-    my ($file, $cfg_ref) = @_;
-    my  $fh = new IO::File;
-
-    $fh->open(">$file") or die "** can't open header file: $file\n";
-
-    print $fh  <<"EOF";
-#ifndef MISC_SET
-#define MISC_SET
-#endif
-EOF
-
-    $fh->close;
-}
-
-#-------------------------------------------------------------------------------
-
-sub write_preproc_h
-{
-    my ($file, $cfg_ref) = @_;
-    my  $fh = new IO::File;
-
-    $fh->open(">$file") or die "** can't open header file: $file\n";
-
-    print $fh  <<"EOF";
-#ifndef PREPROC_SET
-#define PREPROC_SET
-#endif
-EOF
-    $fh->close;
 }
 
 #-------------------------------------------------------------------------------

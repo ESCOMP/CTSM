@@ -174,10 +174,6 @@ set objdir = \$OBJROOT/lnd/obj; cd \$objdir
 # check basic task and thread settings
 #--------------------------------------------------------------------
 
-cp -f \$CASEBUILD/clmconf/misc.h       .tmp
-cmp -s .tmp misc.h       || mv -f .tmp misc.h
-cp -f \$CASEBUILD/clmconf/preproc.h    .tmp
-cmp -s .tmp preproc.h    || mv -f .tmp preproc.h
 cp -f \$CASEBUILD/clmconf/CESM_cppdefs .tmp
 cmp -s .tmp CESM_cppdefs || mv -f .tmp CESM_cppdefs
 

@@ -144,7 +144,6 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    include 'netcdf.inc'
 !
 ! !CALLED FROM:
 ! routine initialize in module initializeMod

@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 
 module CNC13StateUpdate2Mod
 #if (defined CN) && (defined C13)

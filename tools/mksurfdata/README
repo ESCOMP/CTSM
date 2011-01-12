@@ -91,8 +91,6 @@ Important files:
   Makefile ------------------ GNU makefile
   Srcfiles ------------------ List of source files needed (includes files outside this directory)
   Filepath ------------------ Filepath location to source files needed
-  misc.h -------------------- CPP preprocess file required by outside source code
-  preproc.h ----------------- CPP preprocess file required by outside source code
   mksurfdata.pftdyn --------- Sample namelist to create a dynamic PFT surface dataset (PFT changes in time)
   mksurfdata.namelist ------- Sample global grid namelist
   mksurfdata.regional ------- Sample regional grid namelist

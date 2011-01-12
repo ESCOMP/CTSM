@@ -1,5 +1,3 @@
-#include <misc.h>
-#include <preproc.h>
 
 module CNNStateUpdate2Mod
 #ifdef CN
