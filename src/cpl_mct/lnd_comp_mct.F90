@@ -111,12 +111,12 @@ contains
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData, seq_infodata_PutData, &
                                   seq_infodata_start_type_start, seq_infodata_start_type_cont,   &
                                   seq_infodata_start_type_brnch
-    use mct_mod          , only : mct_aVect, mct_gsMap, mct_gGrid, mct_aVect_init, mct_aVect_zero
     use spmdMod          , only : masterproc, spmd_init
-    use seq_flds_mod
-    use seq_flds_indices
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
     use clm_varctl       , only : create_glacier_mec_landunit
+    use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x
+    use seq_flds_mod
+    use mct_mod
     use ESMF_mod
     implicit none
 !
@@ -185,6 +185,10 @@ contains
 
     call seq_cdata_setptrs(cdata_r, &
          gsMap=gsMap_rof, dom=dom_r) 
+
+    ! Determine indices
+
+    call clm_cpl_indices_set()
 
     ! Initialize clm MPI communicator 
 
@@ -345,7 +349,6 @@ contains
     
     ! Create land export state 
     ! If downscale, map this from the clm internal grid (dst) to the clm driver grid (src)
-    ! Reset landfrac on atmosphere grid to have the right domain
 
     if (downscale) then
        call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
@@ -354,9 +357,6 @@ contains
     else
        call lnd_export_mct( clm_l2a, l2x_l, begg_l, endg_l )
     end if
-    do g = begg_a,endg_a
-       l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) = adomain%frac(g)
-    end do
 
 #ifdef RTM
     ! Initialize rof gsMap
@@ -501,15 +501,13 @@ contains
     use seq_infodata_mod,only : seq_infodata_type, seq_infodata_GetData
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
-                                mct_aVect_zero
-    use mct_mod         ,only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
     use clm_varctl      ,only : create_glacier_mec_landunit, downscale
     use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
-    use seq_flds_indices
+    use clm_cpl_indices ,only : nflds_l2x, nflds_x2l
+    use mct_mod
     use ESMF_mod
     implicit none
 !
@@ -695,7 +693,6 @@ contains
        call t_stopf ('clm_run')
 
        ! Map land data type to MCT
-       ! Reset landfrac on atmosphere grid to have the right domain
        
        call t_startf ('lc_lnd_export')
        if (downscale) then
@@ -705,9 +702,6 @@ contains
        else
           call lnd_export_mct( clm_l2a, l2x_l, begg_l, endg_l )
        end if
-       do g = begg_a,endg_a
-          l2x_l%rAttr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
-       end do
        call t_stopf ('lc_lnd_export')
 
        ! Compute snapshot attribute vector for accumulation
@@ -915,7 +909,7 @@ contains
     use clm_atmlnd         , only : lnd2atm_type
     use domainMod          , only : adomain
     use seq_drydep_mod     , only : n_drydep
-    use seq_flds_indices
+    use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
     type(lnd2atm_type), intent(inout) :: l2a     ! clm land to atmosphere exchange data type
@@ -938,7 +932,6 @@ contains
 
     do g = begg,endg
        i = 1 + (g-begg)
-       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  0._r8 ! Will be filled in later
        l2x_l%rAttr(index_l2x_Sl_t,i)        =  l2a%t_rad(g)
        l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
        l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
@@ -955,8 +948,8 @@ contains
        l2x_l%rAttr(index_l2x_Fall_lwup,i)   = -l2a%eflx_lwrad_out(g)
        l2x_l%rAttr(index_l2x_Fall_evap,i)   = -l2a%qflx_evap_tot(g)
        l2x_l%rAttr(index_l2x_Fall_swnet,i)  =  l2a%fsa(g)
-       if (index_l2x_Fall_nee /= 0) then
-          l2x_l%rAttr(index_l2x_Fall_nee,i) = -l2a%nee(g)  
+       if (index_l2x_Fall_fco2_lnd /= 0) then
+          l2x_l%rAttr(index_l2x_Fall_fco2_lnd,i) = -l2a%nee(g)  
        end if
 
        ! optional fields for dust.  The index = 0 is a good way to flag it,
@@ -1013,7 +1006,7 @@ contains
     use abortutils      , only: endrun
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
-    use seq_flds_indices
+    use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
@@ -1394,9 +1387,9 @@ contains
     use clm_varctl  , only : iulog
     use spmdMod     , only : iam
     use mct_mod     , only : mct_gsMap, mct_gGrid, mct_gGrid_importIAttr, &
-                             mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
+                             mct_gGrid_importRAttr, mct_gGrid_init,       &
+                             mct_gsMap_orderedPoints
     use seq_flds_mod
-    use seq_flds_indices
     implicit none
 ! !ARGUMENTS:
     integer        , intent(in)    :: lsize       ! Size of runoff domain information
@@ -1527,7 +1520,7 @@ contains
     use abortutils  , only : endrun
     use clm_varctl  , only : iulog, ice_runoff
     use mct_mod     , only : mct_aVect
-    use seq_flds_indices
+    use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
     type(mct_aVect), intent(inout) :: r2x_r  ! Runoff to coupler export state
@@ -1602,7 +1595,7 @@ contains
 
     use clm_glclnd      , only : lnd2glc_type
     use decompMod       , only : get_proc_bounds_atm
-    use seq_flds_indices
+    use clm_cpl_indices
 
     type(lnd2glc_type), intent(inout) :: s2x
     type(mct_aVect)   , intent(inout) :: s2x_s
@@ -1671,8 +1664,7 @@ contains
     use abortutils      , only: endrun
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
-    use seq_flds_indices
-
+    use clm_cpl_indices
     !
     ! Arguments
     !

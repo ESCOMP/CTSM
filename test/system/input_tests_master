@@ -36,19 +36,19 @@ erAQ4 TER.sh _nrsc_ds clm_drydep^nl_urb    20030214:3600 1x1_brazil navy -5+-5  
 brAQ4 TBR.sh _nrsc_ds clm_drydep^nl_urb_br 20030214:3600 1x1_brazil navy -5+-5  arb_ic
 blAQ4 TBL.sh _nrsc_ds clm_drydep^nl_urb    20030214:3600 1x1_brazil navy -150   arb_ic
 
-smAK4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10   cold
-erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
-brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
-blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10   cold
+smAK4 TSM.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10   cold
+erAK4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
+brAK4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
+blAK4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10   cold
 
-smAK8 TSM.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -10   cold
-erAK8 TER.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
-brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
+smAK8 TSM.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -10   cold
+erAK8 TER.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
+brAK8 TBR.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
 
-smAL4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10   cold
-erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold
-brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold
-blAL4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10   cold
+smAL4 TSM.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10   cold
+erAL4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold
+brAL4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold
+blAL4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10   cold
 
 smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:1200  4x5 gx3v7 144    cold
 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:1200  4x5 gx3v7 72+72  cold

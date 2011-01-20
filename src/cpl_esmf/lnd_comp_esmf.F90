@@ -13,7 +13,7 @@ module lnd_comp_esmf
 ! !DESCRIPTION:
 !
 ! !USES:
-  use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
   use abortutils   , only : endrun
   use esmf_mod
   use esmfshr_mod
@@ -153,7 +153,7 @@ end subroutine
                                   seq_infodata_start_type_brnch, &
 	                          seq_infodata_start_type_start
     use seq_flds_mod
-    use seq_flds_indices
+    use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x, nflds_x2l
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
     use clm_varctl       , only : create_glacier_mec_landunit
     implicit none
@@ -203,7 +203,6 @@ end subroutine
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
     integer :: begg_l, endg_l, begg_a, endg_a
-    type(mct_ggrid)   :: dom_l_mct
     real(R8), pointer :: fptr(:, :)
     character(len=32), parameter :: sub = 'lnd_init_esmf'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
@@ -214,6 +213,10 @@ end subroutine
 !
 !EOP
 !-----------------------------------------------------------------------
+
+    ! Determine indices
+
+    call clm_cpl_indices_set()
 
     rc = ESMF_SUCCESS
  
@@ -543,9 +546,6 @@ end subroutine
     else
        call lnd_export_esmf(clm_l2a, fptr, begg_l, endg_l)
     end if
-    do g = begg_a,endg_a
-       fptr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
-    end do
     
 #ifdef RTM
     call rof_export_esmf( r2x , rc=rc)
@@ -650,7 +650,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
-    use seq_flds_indices
+    use clm_cpl_indices ,only : nflds_l2x, nflds_x2l
     implicit none
 !
 ! !ARGUMENTS:
@@ -867,9 +867,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        else
           call lnd_export_esmf( clm_l2a, fptr, begg_l, endg_l )
        end if
-       do g = begg_a,endg_a
-          fptr(index_l2x_Sl_landfrac,g-begg_a+1) =  adomain%frac(g)
-       end do
        call t_stopf ('lc_lnd_export')
        
        ! Compute snapshot attribute vector for accumulation
@@ -1132,8 +1129,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use clm_atmlnd      , only : lnd2atm_type
     use domainMod       , only : adomain
     use seq_drydep_mod  , only : n_drydep
-    use seq_drydep_mod     , only : n_drydep
-    use seq_flds_indices
+    use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
     type(lnd2atm_type), intent(inout) :: l2a         ! clm land to atmosphere exchange data type
@@ -1155,7 +1151,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
     do g = begg,endg
        i = 1 + (g-begg)
-       fptr(index_l2x_Sl_landfrac,i) =  0.
        fptr(index_l2x_Sl_t,i)        =  l2a%t_rad(g)
        fptr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
        fptr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
@@ -1172,8 +1167,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        fptr(index_l2x_Fall_lwup,i)   = -l2a%eflx_lwrad_out(g)
        fptr(index_l2x_Fall_evap,i)   = -l2a%qflx_evap_tot(g)
        fptr(index_l2x_Fall_swnet,i)  =  l2a%fsa(g)
-       if (index_l2x_Fall_nee /= 0) then
-          fptr(index_l2x_Fall_nee,i) = -l2a%nee(g)  
+       if (index_l2x_Fall_fco2_lnd /= 0) then
+          fptr(index_l2x_Fall_fco2_lnd,i) = -l2a%nee(g)  
        end if
 
        ! optional fields for dust.  The index = 0 is a good way to flag it,
@@ -1230,7 +1225,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     use clm_varctl      , only: iulog
-    use seq_flds_indices
+    use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
     real(r8)          , pointer       :: fptr(:,:)
@@ -1676,7 +1671,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 #ifdef RTM
     use clm_varctl  , only : ice_runoff
 #endif
-    use seq_flds_indices
+    use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
     type(ESMF_Array), intent(inout)            :: r2x_array
@@ -1760,7 +1755,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_glclnd      , only : lnd2glc_type
     use decompMod       , only : get_proc_bounds_atm
-    use seq_flds_indices
+    use clm_cpl_indices
 
     type(lnd2glc_type), intent(inout) :: s2x
     type(ESMF_Array)  , intent(inout) :: s2x_array
@@ -1840,7 +1835,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
     use clm_varctl      , only: iulog
-    use seq_flds_indices
+    use clm_cpl_indices
 
     !
     ! Arguments

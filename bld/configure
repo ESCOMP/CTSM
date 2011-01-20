@@ -1063,16 +1063,16 @@ sub write_filepath_cesmbld
           print $fh "../SourceMods/src.clm\n";
        }
 
-       my @dirs = ( "main", "biogeophys", "biogeochem" );
+       my @dirs = ( "cpl_share", "main", "biogeophys", "biogeochem" );
        if ( $rtm eq "on" ) { 
 	   push( @dirs, "riverroute" );
        }
        if ( $comp_intf eq "MCT" ) { 
-	   push( @dirs, "main/cpl_mct" );
+	   push( @dirs, "cpl_mct" );
        } elsif ( $comp_intf eq "ESMF" ) { 
-	   push( @dirs, "main/cpl_esmf" );
+	   push( @dirs, "cpl_esmf" );
        } else {
-	   push( @dirs, "main/$comp_intf" );
+	   push( @dirs, "$comp_intf" );
        }
        foreach my $dir ( @dirs ) {
 	   if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {

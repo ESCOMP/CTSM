@@ -1372,54 +1372,54 @@ contains
     if(masterproc) write(iulog,*) subname,trim(fsnowoptics)
 
     ! direct-beam snow Mie parameters:
-    call ncd_io('ss_alb_ice_drc', ss_alb_snw_drc, 'read', ncid)
-    call ncd_io( 'asm_prm_ice_drc',asm_prm_snw_drc, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_ice_drc', ext_cff_mss_snw_drc, 'read', ncid)
+    call ncd_io('ss_alb_ice_drc', ss_alb_snw_drc,            'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_ice_drc',asm_prm_snw_drc,          'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_ice_drc', ext_cff_mss_snw_drc, 'read', ncid, posNOTonfile=.true.)
 
     ! diffuse snow Mie parameters
-    call ncd_io( 'ss_alb_ice_dfs', ss_alb_snw_dfs, 'read', ncid)
-    call ncd_io( 'asm_prm_ice_dfs', asm_prm_snw_dfs, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_ice_dfs', ext_cff_mss_snw_dfs, 'read', ncid)
+    call ncd_io( 'ss_alb_ice_dfs', ss_alb_snw_dfs,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_ice_dfs', asm_prm_snw_dfs,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_ice_dfs', ext_cff_mss_snw_dfs, 'read', ncid, posNOTonfile=.true.)
 
     ! BC species 1 Mie parameters
-    call ncd_io( 'ss_alb_bcphil', ss_alb_bc1, 'read', ncid)
-    call ncd_io( 'asm_prm_bcphil', asm_prm_bc1, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_bcphil', ext_cff_mss_bc1, 'read', ncid)
+    call ncd_io( 'ss_alb_bcphil', ss_alb_bc1,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_bcphil', asm_prm_bc1,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_bcphil', ext_cff_mss_bc1, 'read', ncid, posNOTonfile=.true.)
 
     ! BC species 2 Mie parameters
-    call ncd_io( 'ss_alb_bcphob', ss_alb_bc2, 'read', ncid)
-    call ncd_io( 'asm_prm_bcphob', asm_prm_bc2, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid)
+    call ncd_io( 'ss_alb_bcphob', ss_alb_bc2,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_bcphob', asm_prm_bc2,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_bcphob', ext_cff_mss_bc2, 'read', ncid, posNOTonfile=.true.)
 
     ! OC species 1 Mie parameters
-    call ncd_io( 'ss_alb_ocphil', ss_alb_oc1, 'read', ncid)
-    call ncd_io( 'asm_prm_ocphil', asm_prm_oc1, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_ocphil', ext_cff_mss_oc1, 'read', ncid)
+    call ncd_io( 'ss_alb_ocphil', ss_alb_oc1,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_ocphil', asm_prm_oc1,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_ocphil', ext_cff_mss_oc1, 'read', ncid, posNOTonfile=.true.)
 
     ! OC species 2 Mie parameters
-    call ncd_io( 'ss_alb_ocphob', ss_alb_oc2, 'read', ncid)
-    call ncd_io( 'asm_prm_ocphob', asm_prm_oc2, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid)
+    call ncd_io( 'ss_alb_ocphob', ss_alb_oc2,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_ocphob', asm_prm_oc2,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_ocphob', ext_cff_mss_oc2, 'read', ncid, posNOTonfile=.true.)
 
     ! dust species 1 Mie parameters
-    call ncd_io( 'ss_alb_dust01', ss_alb_dst1, 'read', ncid)
-    call ncd_io( 'asm_prm_dust01', asm_prm_dst1, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_dust01', ext_cff_mss_dst1, 'read', ncid)
+    call ncd_io( 'ss_alb_dust01', ss_alb_dst1,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_dust01', asm_prm_dst1,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_dust01', ext_cff_mss_dst1, 'read', ncid, posNOTonfile=.true.)
 
     ! dust species 2 Mie parameters
-    call ncd_io( 'ss_alb_dust02', ss_alb_dst2, 'read', ncid)
-    call ncd_io( 'asm_prm_dust02', asm_prm_dst2, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_dust02', ext_cff_mss_dst2, 'read', ncid)
+    call ncd_io( 'ss_alb_dust02', ss_alb_dst2,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_dust02', asm_prm_dst2,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_dust02', ext_cff_mss_dst2, 'read', ncid, posNOTonfile=.true.)
 
     ! dust species 3 Mie parameters
-    call ncd_io( 'ss_alb_dust03', ss_alb_dst3, 'read', ncid)
-    call ncd_io( 'asm_prm_dust03', asm_prm_dst3, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_dust03', ext_cff_mss_dst3, 'read', ncid)
+    call ncd_io( 'ss_alb_dust03', ss_alb_dst3,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_dust03', asm_prm_dst3,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_dust03', ext_cff_mss_dst3, 'read', ncid, posNOTonfile=.true.)
 
     ! dust species 4 Mie parameters
-    call ncd_io( 'ss_alb_dust04', ss_alb_dst4, 'read', ncid)
-    call ncd_io( 'asm_prm_dust04', asm_prm_dst4, 'read', ncid)
-    call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid)
+    call ncd_io( 'ss_alb_dust04', ss_alb_dst4,           'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'asm_prm_dust04', asm_prm_dst4,         'read', ncid, posNOTonfile=.true.)
+    call ncd_io( 'ext_cff_mss_dust04', ext_cff_mss_dst4, 'read', ncid, posNOTonfile=.true.)
 
 
     call ncd_pio_closefile(ncid)
@@ -1485,9 +1485,9 @@ contains
    
     ! snow aging parameters
    
-   call ncd_io('tau', snowage_tau, 'read', ncid)
-   call ncd_io('kappa', snowage_kappa, 'read', ncid)
-   call ncd_io('drdsdt0', snowage_drdt0, 'read', ncid)
+   call ncd_io('tau', snowage_tau,       'read', ncid, posNOTonfile=.true.)
+   call ncd_io('kappa', snowage_kappa,   'read', ncid, posNOTonfile=.true.)
+   call ncd_io('drdsdt0', snowage_drdt0, 'read', ncid, posNOTonfile=.true.)
 
    call ncd_pio_closefile(ncid)
    if (masterproc) then

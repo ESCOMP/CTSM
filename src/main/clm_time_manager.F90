@@ -43,6 +43,7 @@ module clm_time_manager
       is_end_curr_month,        &! return true on last timestep in current month
       is_last_step,             &! return true on last timestep
       is_perpetual,             &! return true if perpetual calendar is in use
+      is_restart,               &! return true if this is a restart run
       update_rad_dtime           ! track radiation interval via nstep
 
 ! Private module data

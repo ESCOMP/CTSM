@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_22         erik 01/20/2011 Move coupler field indicies to clm, move cpl_* directories up a level, add the cpl_share directory
    clm4_0_21     jedwards 01/12/2011 Remove includes, finish PIO transition
    clm4_0_20         erik 01/11/2011 Update for ESMF metadata, update doc. from release branch, bug fixes (doc of qflx_evap_tot, threading CNDV, aer/ndepregrid)
    clm4_0_19         erik 12/08/2010 Bring irrigation branch to the trunk

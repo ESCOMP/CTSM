@@ -82,12 +82,13 @@ models/lnd/clm/bld/README --------- Description of how to use the template, conf
 Source code directory structure:
 =============================================================================================
 
-models/lnd/clm/src/biogeochem ----- Biogeochemisty
-models/lnd/clm/src/main ----------- Main control and high level code
-models/lnd/clm/src/main/cpl_mct --- Land model high level MCT driver
-models/lnd/clm/src/main/cpl_esmf -- Land model high level ESMF driver
-models/lnd/clm/src/riverroute ----- Riverrouting model (RTM)
-models/lnd/clm/src/biogeophys ----- Biogeophysics (Hydrology)
+models/lnd/clm/src/biogeochem -- Biogeochemisty
+models/lnd/clm/src/main -------- Main control and high level code
+models/lnd/clm/src/cpl_mct ----- Land model high level MCT driver
+models/lnd/clm/src/cpl_esmf ---- Land model high level ESMF driver
+models/lnd/clm/src/cpl_share --- Land model high level driver code shared between MCT/ESMF
+models/lnd/clm/src/riverroute -- Riverrouting model (RTM)
+models/lnd/clm/src/biogeophys -- Biogeophysics (Hydrology)
 
 -------------------------------------- General utility code shared between CESM models
 models/csm_share

@@ -1,4 +1,157 @@
 ===============================================================
+Tag name:  clm4_0_22
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Jan 20 13:17:56 MST 2011
+One-line Summary: Move coupler field indicies to clm, move cpl_* directories up a level, add the cpl_share directory
+
+Purpose of changes:
+
+Move cpl_* directories up a level, add cpl_shr directory. Update driver, move coupler
+field indicies to clm, and allow fields to be passed in driver with just names added to
+namelist. Make is_restart() public in clm_time_manager.F90. Fix PTS_MODE. Don't pass
+Sl_landfrac to driver in run-phase.
+
+Bugs fixed (include bugzilla ID):
+                                 1271 (Problem in PTS_MODE with clm)
+                                 1270 (Make is_restart public in clm_time_manager.F90)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1110 (dtlimit error in datm8 with partial year forcing)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: Change Filepath
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, mvertens (most code changes originate from mvertens)
+   I made some tweaks after the review and added protex header documentation to the 
+   new clm_cpl_indices file.
+
+List any svn externals directories updated (csm_share, mct, etc.): datm, cism
+    datm to datm8_110118
+    cism to cism1_100913
+
+List all files eliminated:
+
+>>>>>>>>> Move to directories up a level
+   D   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90
+   D   models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90
+   D   models/lnd/clm/src/main/cpl_esmf/lnd_comp_mct.F90
+
+List all files added and what they do:
+
+>>>>>>>>> Use this local version of indices rather than seq_indices_mod.F90
+   A   models/lnd/clm/src/cpl_share/clm_cpl_indices.F90
+
+>>>>>>>>> Move to directories up a level, use local version of indices rather
+>>>>>>>>> than seq_* version and remove sending landfrac at run phase.
+   A   models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+   A   models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+   A   models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/doc/README -- Update directory info.
+
+>>>>>>>>> Change pts_mode test so that RTM is not turned on.
+   M   models/lnd/clm/test/system/input_tests_master
+
+>>>>>>>>> Change Filepath
+   M   models/lnd/clm/bld/configure
+
+>>>>>>>>> Make is_restart() method public
+   M   models/lnd/clm/src/main/clm_time_manager.F90
+
+>>>>>>>>> Fix PTS_MODE.
+   M   models/lnd/clm/src/main/pftvarcon.F90 ------- Pass posNOTonfile=.true. down
+          to ncd_io methods so won't check for lat/lon
+   M   models/lnd/clm/src/main/ncdio_pio.F90 ------- Add posNOTonfile option to global
+          reads so that if set, won't try to find nearest lat/lon to PTS_MODE point
+          (for files that are global data NOT spatial).
+   M   models/lnd/clm/src/biogeophys/SNICARMod.F90 - Pass posNOTonfile=.true. down
+          to ncd_io methods so won't check for lat/lon
+
+Summary of testing:
+
+  bluefire: All PASS except...
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+059 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+060 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+061 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+062 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+>>>>>>>> Test was changed to remove RTM
+025 blAK4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10 cold ...............FAIL! rc= 5
+  bluefire/CESM testing: All PASS except...
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_20 
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_20 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_20 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_20 
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_20 
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_20 
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm4_0_20 
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_20 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_20 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare_hist.clm4_0_20 
+FAIL  ERI.f19_g16.IG.bluefire.compare.clm4_0_20 
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_20 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_20 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_20 
+FAIL  PST.f10_f10.I8520CN.bluefire.compare.clm4_0_20 
+FAIL  PET_PT.f10_f10.I8520CN.bluefire.compare.clm4_0_20 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_20 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_20 
+>>>>>>>> Compare tests fail because Sl_landfrac is missing on new case
+>>>>>>>> Everything else is identical
+  bluefire/PTCLM testing: All PASS
+  edinburgh/lf95 interactive testing: All PASS except...
+006 blAL4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 5
+  yong/intel interactive testing:
+006 blAL4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 5
+011 smD94 TSM.sh _persc_ds clm_per^nl_urb 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 10
+012 erD94 TER.sh _persc_ds clm_per^nl_urb 20021231:1200 4x5 gx3v7 72+72 cold ....................FAIL! rc= 5
+013 blD94 TBL.sh _persc_ds clm_per^nl_urb 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 4
+019 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 13
+020 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 11
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_21
+
+Changes answers relative to baseline: bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_21
 Originator(s):  jedwards (Jim Edwards)
 Date: Wed Jan 12 14:50:45 MST 2011
@@ -31,6 +184,7 @@ Known bugs (include bugzilla ID):
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1271 (Problem in PTS_MODE with clm)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -142,7 +296,8 @@ Summary of testing:
 060 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
 061 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
 062 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
-  bluefire interactive testing: All PASS
+  bluefire interactive testing: All PASS except...
+NOTE: pts_mode tests failed... (bug 1271)
   bluefire/CESM testing: All PASS
 
   jaguarpf:  All pass except ...

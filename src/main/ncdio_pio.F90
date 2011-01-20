@@ -987,7 +987,7 @@ contains
 ! !IROUTINE: ncd_io_int_var0_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_int_var0_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_int_var0_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global integer variable
@@ -1000,6 +1000,7 @@ contains
     integer          , intent(inout) :: data      ! raw data
     logical, optional, intent(out)   :: readvar   ! was var read?
     integer, optional, intent(in)    :: nt        ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1011,6 +1012,7 @@ contains
     integer :: status               ! error code
     logical :: varpresent           ! if true, variable is on tape
     integer :: temp(1)              ! temporary
+    logical :: found                ! if true, found lat/lon dims on file
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_int_var0_nf'
@@ -1021,8 +1023,12 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count)
-             status = pio_get_var(ncid, varid, start, count, temp)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, temp)
+             else
+                status = pio_get_var(ncid, varid, temp)
+             end if
              data = temp(1)
           else
              status = pio_get_var(ncid, varid, data)
@@ -1053,7 +1059,7 @@ contains
 ! !IROUTINE: ncd_io_real_var0_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_real_var0_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_real_var0_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global real variable
@@ -1066,6 +1072,7 @@ contains
     real(r8)         , intent(inout) :: data      ! raw data
     logical, optional, intent(out)   :: readvar   ! was var read?
     integer, optional, intent(in)    :: nt        ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1078,6 +1085,7 @@ contains
     logical :: varpresent           ! if true, variable is on tape
     real(r8):: temp(1)              ! temporary                
     character(len=32) :: vname      ! variable error checking
+    logical :: found                ! if true, found lat/lon dims on file
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_real_var0_nf'
 !-----------------------------------------------------------------------
@@ -1087,9 +1095,13 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid, 'undefined', start, count)
-             status = pio_get_var(ncid, vardesc, start, count, temp)
-           data = temp(1)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, temp)
+             else
+                status = pio_get_var(ncid, varid, temp)
+             end if
+             data = temp(1)
           else
              status = pio_get_var(ncid, vardesc, data)
           endif
@@ -1119,7 +1131,7 @@ contains
 ! !IROUTINE: ncd_io_int_var1_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_int_var1_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_int_var1_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global integer array
@@ -1132,6 +1144,7 @@ contains
     integer          , intent(inout) :: data(:)   ! raw data
     logical, optional, intent(out)   :: readvar   ! was var read?
     integer, optional, intent(in)    :: nt        ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1143,6 +1156,7 @@ contains
     integer :: status               ! error code
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
+    logical :: found                ! if true, found lat/lon dims on file
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_int_var1_nf'
 !-----------------------------------------------------------------------
@@ -1152,8 +1166,12 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count)
-             status = pio_get_var(ncid, varid, start, count, data)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, data)
+             else
+                status = pio_get_var(ncid, varid, data)
+             end if
           else
              status = pio_get_var(ncid, varid, data)
           endif
@@ -1186,19 +1204,20 @@ contains
 ! !IROUTINE: ncd_io_real_var1_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_real_var1_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_real_var1_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global real array
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t), intent(inout) :: ncid             ! netcdf file id
-    character(len=*) , intent(in)    :: flag             ! 'read' or 'write'
-    character(len=*) , intent(in)    :: varname          ! variable name
-    real(r8)         , intent(inout) :: data(:)          ! raw data
-    logical          , optional, intent(out):: readvar   ! was var read?
-    integer          , optional, intent(in) :: nt        ! time sample index
+    type(file_desc_t), intent(inout) :: ncid                ! netcdf file id
+    character(len=*) , intent(in)    :: flag                ! 'read' or 'write'
+    character(len=*) , intent(in)    :: varname             ! variable name
+    real(r8)         , intent(inout) :: data(:)             ! raw data
+    logical          , optional, intent(out):: readvar      ! was var read?
+    integer          , optional, intent(in) :: nt           ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1220,7 +1239,7 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
              if ( found )then
                 status = pio_get_var(ncid, varid, start, count, data)
              else
@@ -1258,19 +1277,20 @@ contains
 ! !IROUTINE: ncd_io_int_var2_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_int_var2_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_int_var2_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global integer 2D array
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t), intent(inout) :: ncid             ! netcdf file id
-    character(len=*) , intent(in)    :: flag             ! 'read' or 'write'
-    character(len=*) , intent(in)    :: varname          ! variable name
-    integer          , intent(inout) :: data(:,:)        ! raw data
-    logical          , optional, intent(out):: readvar   ! was var read?
-    integer          , optional, intent(in) :: nt        ! time sample index
+    type(file_desc_t), intent(inout) :: ncid                 ! netcdf file id
+    character(len=*) , intent(in)    :: flag                 ! 'read' or 'write'
+    character(len=*) , intent(in)    :: varname              ! variable name
+    integer          , intent(inout) :: data(:,:)            ! raw data
+    logical          , optional, intent(out):: readvar       ! was var read?
+    integer          , optional, intent(in) :: nt            ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1283,6 +1303,7 @@ contains
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    logical :: found                ! if true, found lat/lon dims on file
     character(len=*),parameter :: subname='ncd_io_int_var2_nf'
 !-----------------------------------------------------------------------
 
@@ -1291,8 +1312,12 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count)
-             status = pio_get_var(ncid, varid, start, count, data)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, data)
+             else
+                status = pio_get_var(ncid, varid, data)
+             end if
           else
              status = pio_get_var(ncid, varid, data)
           endif
@@ -1329,19 +1354,20 @@ contains
 ! !IROUTINE: ncd_io_real_var2_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_real_var2_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_real_var2_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global real 2D  array
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
-    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
-    character(len=*), intent(in)    :: varname          ! variable name
-    real(r8)        , intent(inout) :: data(:,:)        ! raw data
-    logical         , optional, intent(out):: readvar   ! was var read?
-    integer         , optional, intent(in) :: nt        ! time sample index
+    type(file_desc_t),intent(inout) :: ncid                ! netcdf file id
+    character(len=*), intent(in)    :: flag                ! 'read' or 'write'
+    character(len=*), intent(in)    :: varname             ! variable name
+    real(r8)        , intent(inout) :: data(:,:)           ! raw data
+    logical         , optional, intent(out):: readvar      ! was var read?
+    integer         , optional, intent(in) :: nt           ! time sample index
+    logical         , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1354,6 +1380,7 @@ contains
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    logical :: found                ! if true, found lat/lon dims on file
     character(len=*),parameter :: subname='ncd_io_real_var2_nf'
 !-----------------------------------------------------------------------
 
@@ -1362,8 +1389,12 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count)
-             status = pio_get_var(ncid, varid, start, count, data)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, data)
+             else
+                status = pio_get_var(ncid, varid, data)
+             end if
           else
              status = pio_get_var(ncid, varid, data)
           endif
@@ -1400,19 +1431,20 @@ contains
 ! !IROUTINE: ncd_io_char_var2_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_char_var2_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_char_var2_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global character array
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
-    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
-    character(len=*), intent(in)    :: varname          ! variable name
-    character(len=*), intent(inout) :: data(:)          ! raw data
-    logical         , optional, intent(out):: readvar   ! was var read?
-    integer         , optional, intent(in) :: nt        ! time sample index
+    type(file_desc_t),intent(inout) :: ncid                ! netcdf file id
+    character(len=*), intent(in)    :: flag                ! 'read' or 'write'
+    character(len=*), intent(in)    :: varname             ! variable name
+    character(len=*), intent(inout) :: data(:)             ! raw data
+    logical         , optional, intent(out):: readvar      ! was var read?
+    integer         , optional, intent(in) :: nt           ! time sample index
+    logical         , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -1425,6 +1457,7 @@ contains
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    logical :: found                ! if true, found lat/lon dims on file
     character(len=*),parameter :: subname='ncd_io_char_var2_nf'
 !-----------------------------------------------------------------------
 
@@ -1432,7 +1465,16 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          status = pio_get_var(ncid, varid, data)
+          if (single_column) then
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, data)
+             else
+                status = pio_get_var(ncid, varid, data)
+             end if
+          else
+             status = pio_get_var(ncid, varid, data)
+          endif
        endif
        if (present(readvar)) readvar = varpresent
 
@@ -2350,19 +2392,20 @@ contains
 ! !IROUTINE: ncd_io_real_var3_nf
 !
 ! !INTERFACE:
-  subroutine ncd_io_real_var3_nf(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_io_real_var3_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global real 3D  array
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
-    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
-    character(len=*), intent(in)    :: varname          ! variable name
-    real(r8)        , intent(inout) :: data(:,:,:)        ! raw data
-    logical         , optional, intent(out):: readvar   ! was var read?
-    integer         , optional, intent(in) :: nt        ! time sample index
+    type(file_desc_t),intent(inout) :: ncid                ! netcdf file id
+    character(len=*), intent(in)    :: flag                ! 'read' or 'write'
+    character(len=*), intent(in)    :: varname             ! variable name
+    real(r8)        , intent(inout) :: data(:,:,:)           ! raw data
+    logical         , optional, intent(out):: readvar      ! was var read?
+    integer         , optional, intent(in) :: nt           ! time sample index
+    logical         , optional, intent(in) :: posNOTonfile ! position is NOT on this file
 !
 ! !REVISION HISTORY:
 !
@@ -2375,6 +2418,7 @@ contains
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    logical :: found                ! if true, found lat/lon dims on file
     character(len=*),parameter :: subname='ncd_io_real_var3_nf'
 !-----------------------------------------------------------------------
 
@@ -2383,8 +2427,12 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count)
-             status = pio_get_var(ncid, varid, start, count, data)
+             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             if ( found )then
+                status = pio_get_var(ncid, varid, start, count, data)
+             else
+                status = pio_get_var(ncid, varid, data)
+             end if
           else
              status = pio_get_var(ncid, varid, data)
           endif
@@ -2421,7 +2469,7 @@ contains
 ! !IROUTINE: subroutine scam_field_offsets
 !
 ! !INTERFACE:
-  subroutine scam_field_offsets(ncid,dim1name,start,count,found)
+  subroutine scam_field_offsets(ncid,dim1name,start,count,found,posNOTonfile)
 !
 ! !DESCRIPTION: 
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
@@ -2434,13 +2482,14 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t) , intent(inout) :: ncid     ! netcdf file id
-    character(len=*)  , intent(in)    :: dim1name ! dimension 1 name
-    integer           , intent(inout) :: start(:) ! start index
-    integer           , intent(inout) :: count(:) ! count to retrieve
-    logical, optional , intent(out)   :: found    ! if present return true if found
-                                                  ! dimensions on file else false
-                                                  ! if NOT present abort if can't find
+    type(file_desc_t) , intent(inout) :: ncid         ! netcdf file id
+    character(len=*)  , intent(in)    :: dim1name     ! dimension 1 name
+    integer           , intent(inout) :: start(:)     ! start index
+    integer           , intent(inout) :: count(:)     ! count to retrieve
+    logical, optional , intent(out)   :: found        ! if present return true if found
+                                                      ! dimensions on file else false
+                                                      ! if NOT present abort if can't find
+    logical, optional , intent(in)    :: posNOTonfile ! Position is NOT on this file
 !
 ! !CALLED FROM: subroutine inicfields
 !
@@ -2468,6 +2517,16 @@ contains
     real(r8):: closelat,closelon             ! closest latitude and longitude indices
     character(len=32) :: subname = 'scam_field_offsets'
 !------------------------------------------------------------------------
+
+    if ( present(posNOTonfile) )then
+       if ( posNOTonfile )then
+          if ( .not. present(found) )then
+             call endrun( subname//'ERROR: Bad calling structure to this subroutine posNOTonfile sent, but found was NOT!' )
+          end if
+          found = .false.
+          return
+       end if
+    end if
 
     ! find closest land grid cell for this point
 
@@ -2504,7 +2563,7 @@ contains
        end do
        if (ndata == 0) then
           write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
-          call endrun
+          call endrun( subname//'ERROR:: no columns for this position' )
        else
           data_offset=cols(1)
        end if
@@ -2542,7 +2601,7 @@ contains
        end do
        if (ndata == 0) then
           write(iulog,*)'couldnt find any pfts for this latitude ',closelat,' and longitude ',closelon
-          call endrun
+          call endrun( subname//'ERROR:: no PFTs for this position' )
        else
           data_offset=pfts(1)
        end if
