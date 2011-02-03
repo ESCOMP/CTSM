@@ -239,36 +239,40 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            $settings{'sim_year'} = $sim_year;   
            if ( $sim_year ne 1850 && $sim_year ne 2000 && $sim_year > 1800 ) { next YEAR; }
 
-           my @rcps;
-           if ( $sim_year >= 2005 ) {
-             @rcps = $definition->get_valid_values( "rcp", 'noquotes'=>1 )
-           } else {
-             @rcps = ( -999. );
-           }
            my @bgcsettings   = $cfg->get_valid_values( "bgc" );
-           my @glc_meclasses = $cfg->get_valid_values( "glc_nec" );
+           #my @glc_meclasses = $cfg->get_valid_values( "glc_nec" );
+           my @glc_meclasses = ( 0, 10 );
            my @glc_grids     = $definition->get_valid_values( "glc_grid", 'noquotes'=>1 );
+           print "glc_nec = @glc_meclasses bgc=@bgcsettings glc_grids=@glc_grids\n" if $printing;
            #
-           # Loop over all possible rcp's
+           # Loop over all possible BGC settings
            #
-           print "glc_nec = @glc_meclasses bgc=@bgcsettings rcp=@rcps glc_grids=@glc_grids\n" if $printing;
-           foreach my $rcp ( @rcps ) {
-              $settings{'rcp'} = $rcp;
+           foreach my $bgc ( @bgcsettings ) {
+              $settings{'bgc'} = $bgc;
               #
-              # Loop over all possible BGC settings
+              # Loop over all possible glc_nec settings
               #
-              foreach my $bgc ( @bgcsettings ) {
-                 $settings{'bgc'} = $bgc;
+              foreach my $glc_nec ( @glc_meclasses ) {
+                 $settings{'glc_nec'} = $glc_nec;
                  #
-                 # Loop over all possible glc_nec settings
+                 # Loop over all possible glc_grid settings
                  #
-                 foreach my $glc_nec ( @glc_meclasses ) {
-                    $settings{'glc_nec'} = $glc_nec;
+                 my @glcgrds;
+                 if ( $glc_nec == 0 ) { @glcgrds = ( "none" );
+                 } else               { @glcgrds = @glc_grids; } 
+                 foreach my $glc_grid ( @glcgrds ) {
+                    $settings{'glc_grid'} = $glc_grid;
                     #
-                    # Loop over all possible glc_grid settings
+                    # Loop over irrigation settings
                     #
-                    foreach my $glc_grid ( @glc_grids ) {
-                       $settings{'glc_grid'} = $glc_grid;
+                    my @irrigset;
+                    if ( $glc_nec  == 0 && $sim_year == 2000 ) { 
+                       @irrigset= ( ".true.", ".false." );
+                    } else { 
+                       @irrigset= ( ".false." );
+                    }
+                    foreach my $irrig ( @irrigset ) {
+                       $settings{'irrig'}     = $irrig;
                        $inputopts{'namelist'} = "clm_inparm";
                        &GetListofNeededFiles( \%inputopts, \%settings, \%files );
                        if ( $printTimes >= 1 ) {
@@ -276,6 +280,31 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
                        }
                     }
                  }
+              }
+           }
+        }
+        #
+        # Now do sim-year ranges
+        #
+        my @rcps = $definition->get_valid_values( "rcp", 'noquotes'=>1 );
+        $settings{'bgc'}       = "cn";
+        $settings{'irrig'}     = ".false.";
+        $settings{'glc_grid'}  = "none";
+        $inputopts{'namelist'} = "clm_inparm";
+        foreach my $sim_year_range ( $definition->get_valid_values( "sim_year_range", 'noquotes'=>1 ) ) {
+           $settings{'sim_year_range'} = $sim_year_range;
+           if ( $sim_year_range =~ /([0-9]+)-([0-9]+)/ ) {
+              $settings{'sim_year'}  = $1;
+           }
+           #
+           # Loop over all possible rcp's
+           #
+           print "sim_year_range=$sim_year_range rcp=@rcps\n" if $printing;
+           foreach my $rcp ( @rcps ) {
+              $settings{'rcp'}       = $rcp;
+              &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+              if ( $printTimes >= 1 ) {
+                 $inputopts{'printing'} = 0;
               }
            }
         }

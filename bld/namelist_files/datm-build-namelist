@@ -82,10 +82,11 @@ OPTIONS
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, i.e., -d, -sim_year
-      1. values set from a use-case scenario, e.g., -use_case
+      1. datasets found via the -clm_usr_name option
       2. values set on the command-line using the -namelist option,
-      3. values read from the file specified by -infile,
-      4. values from the namelist defaults file.
+      3. values set from a use-case scenario, e.g., -use_case
+      4. values read from the file specified by -infile,
+      5. values from the namelist defaults file.
 EOF
 }
 
@@ -445,33 +446,6 @@ if ($print>=2) { print "sim_year_range is $sim_year_range $eol"; }
 # values to the namelist and not overwrite previously specified specified values which
 # have higher precedence.
 
-# Process the -use_case arg.
-
-if (defined $opts{'use_case'}) {
-
-    # The use case definition is contained in an xml file with the same format as the defaults file.
-    # Create a new NamelistDefaults object.
-    my $uc_defaults = Build::NamelistDefaults->new("$opts{'use_case_dir'}/$opts{'use_case'}.xml", $cfg);
-
-    my %settings;
-    $settings{'res'}            = $res;
-    $settings{'rcp'}            = $rcp;
-    $settings{'mask'}           = $mask;
-    $settings{'sim_year'}       = $sim_year;
-    $settings{'sim_year_range'} = $sim_year_range;
-    # Loop over the variables specified in the use case.
-    # Add each one to the namelist.
-    my @vars = $uc_defaults->get_variable_names();
-    foreach my $var (@vars) {
-        my $val = $uc_defaults->get_value($var, \%settings );
-
-        if ( defined($val) ) {
-            print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
-
-            add_default($nl, $var, 'val'=>$val);
-        }
-    }
-}
 
 # Process the commandline args that provide specific namelist values.
 
@@ -537,18 +511,54 @@ if (defined $opts{'clm_usr_name'}) {
     }
 
     my $nvars = 0;
+    my $nl_arg = Build::Namelist->new($opts{'clm_usr_name'});
     foreach my $var (@vars) {
 	my $val = $uf_defaults->get_usr_file($var, $definition, \%settings);
 
 	if ($val) {
             print "adding clm user file defaults for var $var with val $val \n";
-	    add_default($nl, $var, 'val'=>$val);
+	    add_default($nl_arg, $var, 'val'=>$val);
             $nvars++;
 	}
     }
     if ( $nvars == 0 ) {
          die "$nm setting clm_usr_name -- but did NOT find any user datasets: $opts{'clm_usr_name'}\n";
     }
+    # Merge input values into namelist.  Previously specified values have higher precedence
+    # and are not overwritten.
+    $nl->merge_nl($nl_arg);
+}
+
+# Process the -use_case arg.
+
+if (defined $opts{'use_case'}) {
+
+    # The use case definition is contained in an xml file with the same format as the defaults file.
+    # Create a new NamelistDefaults object.
+    my $uc_defaults = Build::NamelistDefaults->new("$opts{'use_case_dir'}/$opts{'use_case'}.xml", $cfg);
+
+    my %settings;
+    $settings{'res'}            = $res;
+    $settings{'rcp'}            = $rcp;
+    $settings{'mask'}           = $mask;
+    $settings{'sim_year'}       = $sim_year;
+    $settings{'sim_year_range'} = $sim_year_range;
+    # Loop over the variables specified in the use case.
+    # Add each one to the namelist.
+    my $nl_arg = Build::Namelist->new($opts{'namelist'});
+    my @vars = $uc_defaults->get_variable_names();
+    foreach my $var (@vars) {
+        my $val = $uc_defaults->get_value($var, \%settings );
+
+        if ( defined($val) ) {
+            print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
+
+            add_default($nl_arg, $var, 'val'=>$val);
+        }
+    }
+    # Merge input values into namelist.  Previously specified values have higher precedence
+    # and are not overwritten.
+    $nl->merge_nl($nl_arg);
 }
 
 # Add default values for required namelist variables that have not been previously set.

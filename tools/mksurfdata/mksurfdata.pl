@@ -53,6 +53,7 @@ my %opts = (
                debug=>0,
                exedir=>undef,
                years=>"1850,2000",
+               glc_nec=>0,
                help=>0,
                pft_override=>undef,
                pft_frc=>undef,
@@ -82,6 +83,7 @@ OPTIONS
                                    (must be consistent with first year)
      -exedir "directory"           Directory where mksurfdata program is
                                    (by default assume it's in the current directory)
+     -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -180,6 +182,7 @@ sub check_pft {
         "l|dinlc=s"    => \$opts{'csmdata'},
         "p|pftlc=s"    => \$opts{'pftdata'},
         "nomv"         => \$opts{'nomv'},
+        "glc_nec=i"    => \$opts{'glc_nec'},
         "d|debug"      => \$opts{'debug'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
@@ -205,6 +208,8 @@ sub check_pft {
       $CSMDATA = $opts{'csmdata'};
    }
    my $pftdata = $opts{'pftdata'};
+
+   my $glc_nec = $opts{'glc_nec'};
    #
    # Set disk location to send files to, and list resolutions to operate over, 
    # set filenames, and short-date-name
@@ -360,19 +365,24 @@ EOF
                $sim_year = $actual;
             }
             #
+            # Get glacier dataset
+            #
+            my $glcdata = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts -options glc_nec=$glc_nec -res 0.5x0.5 -namelist clmexp -var mksrf_glacier`;
+            #
             # Create namelist file
             #
             my $fh = IO::File->new;
             $fh->open( ">$nl" ) or die "** can't open file: $nl\n";
             print $fh <<"EOF";
 &clmexp
+ nglcec             = $glc_nec
  mksrf_gridnm       = '$res'
  mksrf_fgrid        = '$griddata'
  mksrf_fsoitex      = '$CSMDATA/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
  mksrf_forganic     = '$CSMDATA/lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc'
  mksrf_flanwat      = '$CSMDATA/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
  mksrf_fmax         = '$CSMDATA/lnd/clm2/rawdata/mksrf_fmax.070406.nc'
- mksrf_fglacier     = '$CSMDATA/lnd/clm2/rawdata/mksrf_glacier.060929.nc'
+ mksrf_fglacier     = '$CSMDATA/$glcdata'
  mksrf_fvocef       = '$CSMDATA/lnd/clm2/rawdata/mksrf_vocef.c060502.nc'
  mksrf_ftopo        = '$CSMDATA/lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc'
  mksrf_ffrac        = '$CSMDATA/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'

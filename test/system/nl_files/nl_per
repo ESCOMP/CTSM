@@ -1,0 +1,6 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_inparm
+ hist_fincl1 = 'TSOI', 'TSA'
+/

@@ -104,6 +104,7 @@ contains
     real(r8) :: rmaxlon,rmaxlat       ! local min/max vars
     integer  :: begg, endg            ! clump beg and ending gridcell indices
     integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
+    character(len=32) :: subname = 'initialize1' ! subroutine name
 !-----------------------------------------------------------------------
 
     ! ------------------------------------------------------------------------
@@ -158,7 +159,7 @@ contains
     if (llatlon%ni < alatlon%ni .or. llatlon%nj < alatlon%nj) then
        if (masterproc) write(iulog,*) 'ERROR llatlon size > alatlon size: ', &
           n,llatlon%ni, llatlon%nj, alatlon%ni, alatlon%nj
-       call endrun()
+       call endrun( trim(subname)//'ERROR: bad sizes' )
     endif
 
     !--- check if grids are "close", adjust, continue, or end  ---
@@ -177,25 +178,26 @@ contains
           rmaxlat = max(rmaxlat,abs(alatlon%latc(n)-llatlon%latc(n)))
        enddo
        if (rmaxlon < 0.001_r8 .and. rmaxlat < 0.001_r8) then
-          if (masterproc) write(iulog,*) 'initialize1: set llatlon =~ alatlon', &
+          if (masterproc) write(iulog,*) trim(subname)//': set llatlon =~ alatlon', &
              ':continue',rmaxlon,rmaxlat
           call latlon_setsame(alatlon,llatlon)
           downscale = .false.
        elseif (rmaxlon < 1.0_r8 .and. rmaxlat < 1.0_r8) then
-          if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon mismatch', &
+          if (masterproc) write(iulog,*) trim(subname)//': alatlon/llatlon mismatch', &
              ':error',rmaxlon,rmaxlat
-          call endrun()
+          call endrun( trim(subname) )
        else
-          if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon different', &
+          if (masterproc) write(iulog,*) trim(subname)//': alatlon/llatlon different', &
               ':continue',rmaxlon,rmaxlat
        endif
     else
-       if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon different ', &
+       if (masterproc) write(iulog,*) trim(subname)//': alatlon/llatlon different ', &
           'sizes:continue'
     endif
 
     ! Exit early if no valid land points
     if ( all(amask == 0) )then
+       if (masterproc) write(iulog,*) trim(subname)//': no valid land points do NOT run clm'
        noland = .true.
        return
     end if
@@ -247,10 +249,10 @@ contains
        ! Make sure the glc mask is a subset of the land mask
        do n = begg_atm, endg_atm
           if (adomain%glcmask(n)==1 .and. adomain%mask(n)==0) then
-             write(iulog,*) 'initialize1: landmask/glcmask mismatch'
+             write(iulog,*) 'landmask/glcmask mismatch'
              write(iulog,*) 'glc requires input where landmask = 0, gridcell index', n
              call shr_sys_flush(iulog)
-             call endrun()
+             call endrun( trim(subname)//'ERROR: clm and land-ice masks are mismatched' )
           endif
        enddo
     else
@@ -319,7 +321,7 @@ contains
     !--- overwrite ldomain if same grids -----------------------------------
 
     if (.not. downscale) then
-       if (masterproc) write(iulog,*) 'initialize1: downscale false, set ldomain =~ adomain'
+       if (masterproc) write(iulog,*) trim(subname)//': downscale false, set ldomain =~ adomain'
        ! Don't copy [pftm, topo, mask, frac, nara, ntop]
        ! ldomain%pftm is set above in call to surfrd_get_grid
        ! ldomain%topo is set above in call to surfrd_get_topo
@@ -505,6 +507,7 @@ contains
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinm1              ! solar declination angle in radians for nstep-1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
+    character(len=32) :: subname = 'initialize2' ! subroutine name
 !----------------------------------------------------------------------
 
     call t_startf('clm_init2')
@@ -531,16 +534,16 @@ contains
           nlg = ldecomp%gdc2glo(nl)
           nag = gatm(nlg)
           if (nag <= 0) then
-             write(iulog,*) 'initialize2 nag <= 0 ERROR ',nl,nlg,nag
-             call endrun()
+             write(iulog,*) 'nag <= 0 ERROR ',nl,nlg,nag
+             call endrun( trim(subname)//'ERROR: no grid cells' )
           endif
           na = adecomp%glo2gdc(nag)
           if (nlg < 1        .or. nlg > llatlon%ns .or. &
               nag < 1        .or. nag > alatlon%ns .or. &
               na  < begg_atm .or. na  > endg_atm) then
-             write(iulog,*) 'initialize2 index ERROR ',&
+             write(iulog,*) 'index ERROR ',&
                   nl,nlg,nag,na,llatlon%ns,alatlon%ns,begg_atm,endg_atm
-             call endrun()
+             call endrun( trim(subname)//'ERROR: no grid cells' )
           endif
           ldomain%mask(nl) = 1
           ldomain%frac(nl) = adomain%frac(na) * (ldomain%nara(nl)/ldomain%area(nl))

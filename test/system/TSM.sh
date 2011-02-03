@@ -108,7 +108,7 @@ elif [ "${7%+*}" = "continue" ]; then
 elif [ "${7%+*}" = "branch" ]; then
 
    if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
-       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm3.r.1967-01-01-00000
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm3.r.1967-01-01-00000.nc
    fi
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* $rundir/.
    master_clm_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* \
@@ -202,12 +202,6 @@ rc=$?
 if [ $rc -eq 0 ] && grep -c "SUCCESSFUL TERMINATION" *test.log > /dev/null; then
     echo "TSM.sh: smoke test passed" 
     echo "$status" > TestStatus
-    if [ $CLM_RETAIN_FILES != "TRUE" ]; then
-        echo "TSM.sh: removing some unneeded files to save disc space" 
-        if [ -f "*.clm*.i.*" ]; then
-            rm *.clm*.i.*
-	fi
-    fi
 else
     echo "TSM.sh: error running clm, error= $rc" 
     echo "TSM.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"

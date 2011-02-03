@@ -304,6 +304,11 @@ TRUE if want diagnostic of global radiative temperature written to CLM log file
 Plant Function Type dataset for mksurfdata
 </entry>
 
+<entry id="mksrf_glacier" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Dataset for percent glacier land-unit
+</entry>
+
 <!--                                                   -->
 <!-- mkgriddata namelist                               -->
 <!--                                                   -->
@@ -311,6 +316,7 @@ Plant Function Type dataset for mksurfdata
        input_pathname="abs" group="clmexp" valid_values="" >
 Orography file with surface heights and land area fraction
 </entry>
+
 
 <!--             -->
 <!-- mkghg       -->

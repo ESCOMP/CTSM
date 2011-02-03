@@ -640,19 +640,19 @@ contains
        
     ! Define global attributes
     
-    call ncd_putatt(ncid, PIO_GLOBAL, 'conventions', trim(conventions))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'conventions', trim(conventions))
     call getdatetime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
-    call ncd_putatt(ncid, PIO_GLOBAL, 'history' , trim(str))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'username', trim(username))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'host'    , trim(hostname))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'version' , trim(version))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'source'  , trim(source))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'history' , trim(str))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'username', trim(username))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'host'    , trim(hostname))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'version' , trim(version))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'source'  , trim(source))
     str = '$Id$'
-    call ncd_putatt(ncid, PIO_GLOBAL, 'revision_id'    , trim(str))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'case_title'     , trim(ctitle))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'case_id'        , trim(caseid))
-    call ncd_putatt(ncid, PIO_GLOBAL, 'surface_dataset', trim(fsurdat))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'revision_id'    , trim(str))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
     
   end subroutine restFile_dimset
   

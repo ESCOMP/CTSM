@@ -59,8 +59,10 @@ contains
     call check_ret(nf_def_dim (ncid, 'lsmlat' , lsmlat      , dimid), subname)
     if (.not. dynlanduse) then
        call check_ret(nf_def_dim (ncid, 'nlevsoi',  nlevsoi    , dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'nglcec',   nglcec     , dimid), subname)
-       call check_ret(nf_def_dim (ncid, 'nglcecp1', nglcec+1   , dimid), subname)
+       if ( nglcec > 0 )then
+          call check_ret(nf_def_dim (ncid, 'nglcec',   nglcec     , dimid), subname)
+          call check_ret(nf_def_dim (ncid, 'nglcecp1', nglcec+1   , dimid), subname)
+       end if
     end if
     call check_ret(nf_def_dim (ncid, 'nlevurb', nlevurb     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'numsolar', numsolar     , dimid), subname)
@@ -429,20 +431,25 @@ contains
          long_name='percent glacier', units='unitless')
 
     if (.not. dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='GLC_MEC', xtype=xtype, &
-            dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
-   
-       call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-            long_name='percent for each glacier elevation class', units='unitless')
-   
-       call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-            long_name='mean elevation on glacier elevation classes', units='m')
 
-       call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-            long_name='mean ice sheet thickness on glacier elevation classes', units='m')
+       if ( nglcec > 0 )then
+
+          call ncd_defvar(ncid=ncid, varname='GLC_MEC', xtype=xtype, &
+               dim1name='nglcecp1', long_name='Glacier elevation class', units='m')
+   
+          call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+               long_name='percent for each glacier elevation class', units='unitless')
+   
+          call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+               long_name='mean elevation on glacier elevation classes', units='m')
+
+          call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+               long_name='mean ice sheet thickness on glacier elevation classes', units='m')
+
+       end if
 
        call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', &

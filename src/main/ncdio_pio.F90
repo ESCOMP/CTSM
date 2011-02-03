@@ -62,14 +62,10 @@ module ncdio_pio
   integer,parameter,public :: ncd_nofill    = pio_nofill
   integer,parameter,public :: ncd_unlimited = pio_unlimited
 
-  ! PIO interfaces being used directly elsewhere in CLM
-  ! These calls should be changed into ncd_pio calls
+  ! PIO types needed for ncdio_pio interface calls
   public file_desc_t
   public var_desc_t
-  public PIO_noerr, pio_seterrorhandling, pio_inq_dimid, pio_inq_varid, &
-         pio_get_var, pio_put_var, pio_inq_dimlen, PIO_GLOBAL, &
-         pio_def_dim, pio_double, pio_unlimited, pio_write, &
-         pio_internal_error, pio_bcast_error
+
 !
 ! !REVISION HISTORY:
 !
@@ -93,9 +89,12 @@ module ncdio_pio
      module procedure ncd_io_real_var0_nf
      module procedure ncd_io_int_var1_nf
      module procedure ncd_io_real_var1_nf
+     module procedure ncd_io_char_var1_nf
      module procedure ncd_io_int_var2_nf
      module procedure ncd_io_real_var2_nf
      module procedure ncd_io_char_var2_nf
+     module procedure ncd_io_char_var3_nf
+     module procedure ncd_io_char_varn_strt_nf
      module procedure ncd_io_int_var1
      module procedure ncd_io_real_var1
      module procedure ncd_io_int_var2
@@ -282,7 +281,7 @@ contains
     character(len=*) , intent(in)     :: varname   ! Varible name to check
     type(Var_desc_t) , intent(out)    :: vardesc   ! Output variable descriptor
     logical          , intent(out)    :: readvar   ! If variable exists or not
-    logical, optional, intent(out)    :: print_err ! If should print about error
+    logical, optional, intent(in)     :: print_err ! If should print about error
 !
 ! !REVISION HISTORY:
 !
@@ -382,16 +381,17 @@ contains
 ! !IROUTINE: ncd_inqdid
 !
 ! !INTERFACE:
-  subroutine ncd_inqdid(ncid,name,dimid)
+  subroutine ncd_inqdid(ncid,name,dimid,dimexist)
 !
 ! !DESCRIPTION:
-! enddef netcdf file
+! inquire on a dimension id
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t),intent(in) :: ncid      ! netcdf file id
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf file id
     character(len=*), intent(in) :: name      ! dimension name
     integer         , intent(out):: dimid     ! dimension id
+    logical,optional, intent(out):: dimexist  ! if this dimension exists or not
 !
 ! !REVISION HISTORY:
 !
@@ -401,7 +401,18 @@ contains
     integer :: status
 !-----------------------------------------------------------------------
 
+    if ( present(dimexist) )then
+       call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
+    end if
     status = PIO_inq_dimid(ncid,name,dimid)
+    if ( present(dimexist) )then
+       if ( status == PIO_NOERR)then
+          dimexist = .true.
+       else
+          dimexist = .false.
+       end if
+       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+    end if
 
   end subroutine ncd_inqdid
 
@@ -411,16 +422,17 @@ contains
 ! !IROUTINE: ncd_inqdlen
 !
 ! !INTERFACE:
-  subroutine ncd_inqdlen(ncid,dimid,len)
+  subroutine ncd_inqdlen(ncid,dimid,len,name)
 !
 ! !DESCRIPTION:
 ! enddef netcdf file
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t),intent(in) :: ncid      ! netcdf file id
-    integer         , intent(in) :: dimid     ! dimension id
-    integer         , intent(out):: len       ! dimension len
+    type(file_desc_t), intent(inout) :: ncid       ! netcdf file id
+    integer          , intent(inout) :: dimid      ! dimension id
+    integer          , intent(out)   :: len        ! dimension len
+    character(len=*), optional, intent(in) :: name ! dimension name
 !
 ! !REVISION HISTORY:
 !
@@ -430,6 +442,9 @@ contains
     integer :: status
 !-----------------------------------------------------------------------
 
+    if ( present(name) )then
+       call ncd_inqdid(ncid,name,dimid)
+    end if
     len = -1
     status = PIO_inq_dimlen(ncid,dimid,len)
 
@@ -1022,16 +1037,12 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
-             if ( found )then
-                status = pio_get_var(ncid, varid, start, count, temp)
-             else
-                status = pio_get_var(ncid, varid, temp)
+          status = pio_get_var(ncid, varid, data)
+          if (single_column .and. present(posNOTonfile) ) then
+             if ( .not. posNOTonfile )then
+                call endrun( subname// &
+                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
              end if
-             data = temp(1)
-          else
-             status = pio_get_var(ncid, varid, data)
           endif
        endif
        if (present(readvar)) readvar = varpresent
@@ -1094,16 +1105,12 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
-             if ( found )then
-                status = pio_get_var(ncid, varid, start, count, temp)
-             else
-                status = pio_get_var(ncid, varid, temp)
+          status = pio_get_var(ncid, vardesc, data)
+          if (single_column .and. present(posNOTonfile) ) then
+             if ( .not. posNOTonfile )then
+                call endrun( subname// &
+                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
              end if
-             data = temp(1)
-          else
-             status = pio_get_var(ncid, vardesc, data)
           endif
        endif
        if (present(readvar)) readvar = varpresent
@@ -1165,15 +1172,12 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
-             if ( found )then
-                status = pio_get_var(ncid, varid, start, count, data)
-             else
-                status = pio_get_var(ncid, varid, data)
+          status = pio_get_var(ncid, varid, data)
+          if (single_column .and. present(posNOTonfile) ) then
+             if ( .not. posNOTonfile )then
+                call endrun( subname// &
+                ' ERROR: 1D var is NOT compatable with posNOTonfile = .false.' )
              end if
-          else
-             status = pio_get_var(ncid, varid, data)
           endif
        endif
        if (present(readvar)) readvar = varpresent
@@ -1238,15 +1242,12 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
-             if ( found )then
-                status = pio_get_var(ncid, varid, start, count, data)
-             else
-                status = pio_get_var(ncid, varid, data)
+          status = pio_get_var(ncid, varid, data)
+          if (single_column .and. present(posNOTonfile) ) then
+             if ( .not. posNOTonfile )then
+                call endrun( subname// &
+                ' ERROR: 1D var is NOT compatable with posNOTonfile = .false.' )
              end if
-          else
-             status = pio_get_var(ncid, varid, data)
           endif
        endif
        if (present(readvar)) readvar = varpresent
@@ -1270,6 +1271,75 @@ contains
     endif   ! flag
 
   end subroutine ncd_io_real_var1_nf
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_char_var1_nf
+!
+! !INTERFACE:
+  subroutine ncd_io_char_var1_nf(varname, data, flag, ncid, readvar, nt )
+!
+! !DESCRIPTION:
+! netcdf I/O of global char array
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t), intent(inout) :: ncid             ! netcdf file id
+    character(len=*) , intent(in)    :: flag             ! 'read' or 'write'
+    character(len=*) , intent(in)    :: varname          ! variable name
+    character(len=*) , intent(inout) :: data             ! raw data
+    logical          , optional, intent(out):: readvar   ! was var read?
+    integer          , optional, intent(in) :: nt        ! time sample index
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: varid                   ! netCDF variable id
+    integer :: m                       ! indices
+    integer :: start(2), count(2)      ! output bounds
+    integer :: status                  ! error code
+    logical :: varpresent              ! if true, variable is on tape
+    logical :: found                   ! if true, found lat/lon dims on file
+    character(len=32) :: vname         ! variable error checking
+    character(len=1)  :: tmpString(128)! temp for manipulating output string
+    type(var_desc_t)  :: vardesc       ! local vardesc pointer
+    character(len=*),parameter :: subname='ncd_io_char_var1_nf'
+!-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+
+       call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+       if (varpresent) then
+          status = pio_get_var(ncid, varid, data)
+       endif
+       if (present(readvar)) readvar = varpresent
+
+    elseif (flag == 'write') then
+
+       start(1) = 1
+       if (present(nt))      then
+          start(2) = nt
+       else
+          start(2) = 1
+       end if
+       count(1) = len_trim(data)
+       count(2) = 1
+       if ( count(1) > size(tmpString) )then
+          write(iulog,*) subname//' ERROR: input string size is too large:'//trim(data)
+       end if
+       do m = 1,count(1)
+          tmpString(m:m) = data(m:m)
+       end do
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
+       status = pio_put_var(ncid, varid, start=start, count=count, &
+                            ival=tmpString(1:count(1)) )
+
+    endif   ! flag
+
+  end subroutine ncd_io_char_var1_nf
 
 !------------------------------------------------------------------------
 !BOP
@@ -1501,6 +1571,108 @@ contains
     endif   
 
   end subroutine ncd_io_char_var2_nf
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_char_var3_nf
+!
+! !INTERFACE:
+  subroutine ncd_io_char_var3_nf(varname, data, flag, ncid, readvar, nt )
+!
+! !DESCRIPTION:
+! netcdf I/O of global character array
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
+    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
+    character(len=*), intent(in)    :: varname          ! variable name
+    character(len=*), intent(inout) :: data(:,:)        ! raw data
+    logical         , optional, intent(out):: readvar   ! was var read?
+    integer         , optional, intent(in) :: nt        ! time sample index
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: varid                ! netCDF variable id
+    integer :: start(4), count(4)   ! output bounds
+    integer :: status               ! error code
+    logical :: varpresent           ! if true, variable is on tape
+    character(len=32) :: vname      ! variable error checking
+    type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    character(len=*),parameter :: subname='ncd_io_char_var3_nf'
+!-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+
+       call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+       if (varpresent) then
+          status = pio_get_var(ncid, varid, data)
+       endif
+       if (present(readvar)) readvar = varpresent
+
+    elseif (flag == 'write') then
+
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
+       if (present(nt))      then
+          start(:) = 1
+          start(4) = nt
+          count(1) = size(data,dim=1)
+          count(2) = size(data,dim=2)
+          count(3) = len(data)
+          count(4) = 1
+          status = pio_put_var(ncid, varid, start, count, data)
+       else
+          status = pio_put_var(ncid, varid, data)
+       end if
+
+    endif   
+
+  end subroutine ncd_io_char_var3_nf
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_char_varn_strt_nf
+!
+! !INTERFACE:
+  subroutine ncd_io_char_varn_strt_nf(vardesc, data, flag, ncid, &
+                                      start )
+!
+! !DESCRIPTION:
+! netcdf I/O of global character array with start indices input
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
+    character(len=*), intent(in)    :: flag             ! 'read' or 'write'
+    type(var_desc_t), intent(in)    :: vardesc          ! local vardesc pointer
+    character(len=*), intent(inout) :: data             ! raw data for this index
+    integer         , intent(in)    :: start(:)         ! output bounds
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: status               ! error code
+    character(len=*),parameter :: subname='ncd_io_char_varn_strt_nf'
+!-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+
+       status = pio_get_var(ncid, vardesc, start, data )
+
+    elseif (flag == 'write') then
+
+       status = pio_put_var(ncid, vardesc, start, data )
+
+    endif   
+
+  end subroutine ncd_io_char_varn_strt_nf
 
 !-----------------------------------------------------------------------
 !BOP
@@ -2477,7 +2649,7 @@ contains
 ! !USES:
     use clm_varpar  , only : maxpatch
     use clm_varctl  , only : scmlon,scmlat,single_column
-    use nanMod      , only : nan
+    use nanMod      , only : nan, bigint
     use shr_scam_mod, only : shr_scam_getCloseLatLon
 !
 ! !ARGUMENTS:
@@ -2550,8 +2722,8 @@ contains
        status = pio_inq_varid(ncid, 'cols1d_lat', varid)
        status = pio_get_var(ncid, varid, cols1dlat)
        
-       cols(:)     = nan
-       data_offset = nan
+       cols(:)     = bigint
+       data_offset = bigint
        i = 1
        ndata = 0
        do cc = 1, totcols
@@ -2588,8 +2760,8 @@ contains
        status = pio_inq_varid(ncid, 'pfts1d_lat', varid)
        status = pio_get_var(ncid, varid, pfts1dlat)
        
-       pfts(:)     = nan
-       data_offset = nan
+       pfts(:)     = bigint
+       data_offset = bigint
        i     = 1
        ndata = 0
        do cc = 1, totpfts

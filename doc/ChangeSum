@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_23         erik 02/03/2011 Add in new glacier-MEC use-cases
    clm4_0_22         erik 01/20/2011 Move coupler field indicies to clm, move cpl_* directories up a level, add the cpl_share directory
    clm4_0_21     jedwards 01/12/2011 Remove includes, finish PIO transition
    clm4_0_20         erik 01/11/2011 Update for ESMF metadata, update doc. from release branch, bug fixes (doc of qflx_evap_tot, threading CNDV, aer/ndepregrid)

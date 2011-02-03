@@ -111,10 +111,11 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, i.e., -d, -sim_year
-      1. values set from a use-case scenario, e.g., -use_case
-      2. values set on the command-line using the -namelist option,
-      3. values read from the file specified by -infile,
-      4. values from the namelist defaults file.
+      1. values set on the command-line using the -namelist option,
+      2. values read from the file specified by -infile,
+      3. datasets from the -clm_usr_name option,
+      4. values set from a use-case scenario, e.g., -use_case
+      5. values from the namelist defaults file.
 EOF
 }
 
@@ -598,41 +599,39 @@ if ( $rtm eq "on" ) {
    }
 }
 
+# Get clm run type
+my $var = "clm_start_type";
+if (defined $opts{$var}) { 
+    if ($opts{$var} eq "default" ) {
+       add_default($nl, $var );
+    } else {
+       my $group = $definition->get_group_name($var);
+       $nl->set_variable_value($group, $var, quote_string( $opts{$var} ) );
+    }
+} else {
+    add_default($nl, $var );
+}
+my $clm_start_type = $nl->get_value($var);
+
+# Length of simulation, if clm stand-alone
+if ($mode eq "clm_stndln") {
+   if ( defined $opts{'drv_runlength'} ) {
+       if ( $opts{'drv_runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
+	   my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
+	   add_default($nl, "stop_n"     , 'val'=>$1 );
+	   add_default($nl, "stop_option", 'val'=>$options{$2} );
+       } else {
+	   die "$ProgName ERROR:: bad input to drv_runlength option\n";
+       }
+   }
+}
 #-----------------------------------------------------------------------------------------------
 
 # Process the user input in order of precedence.  At each point we'll only add new
 # values to the namelist and not overwrite previously specified specified values which
 # have higher precedence.
 
-# Process the -use_case arg.
-
-if (defined $opts{'use_case'}) {
-
-    # The use case definition is contained in an xml file with the same format as the defaults file.
-    # Create a new NamelistDefaults object.
-    my $uc_defaults = Build::NamelistDefaults->new("$opts{'use_case_dir'}/$opts{'use_case'}.xml", $cfg);
-
-    my %settings;
-    $settings{'res'}            = $res;
-    $settings{'rcp'}            = $rcp;
-    $settings{'mask'}           = $mask;
-    $settings{'sim_year'}       = $sim_year;
-    $settings{'sim_year_range'} = $sim_year_range;
-    # Loop over the variables specified in the use case.
-    # Add each one to the namelist.
-    my @vars = $uc_defaults->get_variable_names();
-    foreach my $var (@vars) {
-	my $val = $uc_defaults->get_value($var, \%settings );
-
-	if ( defined($val) ) {
-            print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
-
-	    add_default($nl, $var, 'val'=>$val);
-	}
-    }
-}
-
-# Process the commandline args that provide specific namelist values.
+# First process the commandline args that provide specific namelist values.
 
 # Process the -namelist arg.
 
@@ -670,8 +669,6 @@ if (defined $opts{'infile'}) {
     $nl->merge_nl($nl_infile_valid);
 }
 
-#-----------------------------------------------------------------------------------------------
-
 # Process the -clm_usr_name argument
 if (defined $opts{'clm_usr_name'}) {
     # The user files definition is contained in an xml file with the same format as the defaults file.
@@ -696,19 +693,57 @@ if (defined $opts{'clm_usr_name'}) {
     }
 
     my $nvars = 0;
+    my $nl_infile = Build::Namelist->new($opts{'infile'});
     foreach my $var (@vars) {
 	my $val = $uf_defaults->get_usr_file($var, $definition, \%settings);
 
 	if ($val) {
             print "adding clm user file defaults for var $var with val $val \n";
-	    add_default($nl, $var, 'val'=>$val);
+	    add_default($nl_infile, $var, 'val'=>$val);
             $nvars++;
 	}
     }
     if ( $nvars == 0 ) {
          die "$nm setting clm_usr_name -- but did NOT find any user datasets: $opts{'clm_usr_name'}\n";
     }
+    # Merge input values into namelist.  Previously specified values have higher precedence
+    # and are not overwritten.
+    $nl->merge_nl($nl_infile);
 }
+
+# Now process the -use_case arg.
+
+if (defined $opts{'use_case'}) {
+
+    # The use case definition is contained in an xml file with the same format as the defaults file.
+    # Create a new NamelistDefaults object.
+    my $uc_defaults = Build::NamelistDefaults->new("$opts{'use_case_dir'}/$opts{'use_case'}.xml", $cfg);
+
+    my %settings;
+    $settings{'res'}            = $res;
+    $settings{'rcp'}            = $rcp;
+    $settings{'mask'}           = $mask;
+    $settings{'sim_year'}       = $sim_year;
+    $settings{'sim_year_range'} = $sim_year_range;
+    # Loop over the variables specified in the use case.
+    # Add each one to the namelist.
+    my @vars = $uc_defaults->get_variable_names();
+    my $nl_infile = Build::Namelist->new($opts{'infile'});
+    foreach my $var (@vars) {
+	my $val = $uc_defaults->get_value($var, \%settings );
+
+	if ( defined($val) ) {
+            print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
+
+	    add_default($nl_infile, $var, 'val'=>$val);
+	}
+    }
+
+    # Merge input values into namelist.  Previously specified values have higher precedence
+    # and are not overwritten.
+    $nl->merge_nl($nl_infile);
+}
+#-----------------------------------------------------------------------------------------------
 
 # Add default values for required namelist variables that have not been previously set.
 # This is done either by using the namelist default object, or directly with inline logic.
@@ -718,19 +753,6 @@ if (defined $opts{'clm_usr_name'}) {
 # namelist group: seq_infodata_inparm #
 #######################################
 
-# Get clm run type
-my $var = "clm_start_type";
-if (defined $opts{$var}) { 
-    if ($opts{$var} eq "default" ) {
-       add_default($nl, $var );
-    } else {
-       my $group = $definition->get_group_name($var);
-       $nl->set_variable_value($group, $var, quote_string( $opts{$var} ) );
-    }
-} else {
-    add_default($nl, $var );
-}
-my $clm_start_type = $nl->get_value($var);
 
 # Run type for driver namelist - note that arb_ic implies that the run is startup
 my $var = "start_type";
@@ -742,6 +764,11 @@ if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
 
 if ($mode eq "clm_stndln") {
 
+   # stop_option and stop_n
+   add_default($nl, 'stop_option');
+   unless (defined $nl->get_value('stop_ymd')) { 
+     add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask); 
+   }
    # Case name
    if (defined $opts{'drv_case'}) {
        add_default($nl, 'case_name', 'val'=>$opts{'drv_case'});
@@ -867,23 +894,8 @@ if ($mode eq "clm_stndln") {
 # namelist group: seq_timemgr_inparm #
 ######################################
 
-if ($mode eq "clm_stndln") {
-   # Length of simulation
-   if ( defined $opts{'drv_runlength'} ) {
-       if ( $opts{'drv_runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
-	   my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
-	   add_default($nl, "stop_n"     , 'val'=>$1 );
-	   add_default($nl, "stop_option", 'val'=>$options{$2} );
-       } else {
-	   die "$ProgName ERROR:: bad input to drv_runlength option\n";
-       }
-   } else {
-       add_default($nl, 'stop_option');
-       unless (defined $nl->get_value('stop_ymd')) { 
-	   add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask); 
-       }
-   }
 
+if ($mode eq "clm_stndln") {
    # Restart interval
    add_default($nl, 'restart_option');
 
@@ -900,7 +912,7 @@ if ($mode eq "clm_stndln") {
    add_default($nl, 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
 
    # Coupling interval
-   add_default($nl, 'atm_cpl_dt');
+   add_default($nl, 'atm_cpl_dt', 'hgrid'=>$lnd_res);
 }
 
 ##############################
@@ -952,7 +964,7 @@ if ( defined($nsrest) ) {
    }
 }
 
-add_default($nl, 'dtime');
+add_default($nl, 'dtime', 'hgrid'=>$lnd_res);
 
 if ( $my_start_type =~ /branch/ ) {
    if (not defined $nl->get_value('nrevsn')) {
@@ -1623,6 +1635,45 @@ sub valid_option {
 
 #-------------------------------------------------------------------------------
 
+sub check_use_case_name {
+#
+# Check the use-case name and ensure it follows the naming convention.
+#
+  my $use_case = shift;
+
+  my $diestring = "$ProgName - bad use_case name $use_case, follow the conventions " . 
+                  "in namelist_files/use_cases/README\n";
+  my $desc = "[a-zA-Z0-9]*";
+  my $rcp  = "rcp[0-9\.]+";
+  if (      $use_case =~ /^[0-9]+-[0-9]+([a-zA-Z0-9_\.]*)_transient$/ ) {
+    my $string = $1;
+    if (      $string =~ /^_($rcp)_*($desc)$/ ) {
+       # valid name
+    } elsif ( $string =~ /^_*($desc)$/ ) {
+       # valid name
+    } else {
+      die "$diestring";
+    }
+  } elsif ( $use_case =~ /^20thC([a-zA-Z0-9_\.]*)_transient$/ ) {
+    my $string = $1;
+    if (      $string =~ /^_($rcp)_*($desc)$/ ) {
+       # valid name
+    } elsif ( $string =~ /^_*($desc)$/ ) {
+       # valid name
+    } else {
+      die "$diestring";
+    }
+  } elsif ( $use_case =~ /^([0-9]+)_*($desc)_control$/   ) {
+     # valid name
+  } elsif ( $use_case =~ /^($desc)_pd$/   ) {
+     # valid name
+  } else {
+      die "$diestring";
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub validate_options {
 
     my $source = shift;   # text string declaring the source of the options being validated
@@ -1642,6 +1693,7 @@ sub validate_options {
 	   my @files = glob("$opts->{'use_case_dir'}/*.xml");
 	   foreach my $file (@files) {
 	       $file =~ m{.*/(.*)\.xml};
+               &check_use_case_name( $1 );
 	       push @expect, $1;
 	   }
    
@@ -1655,6 +1707,7 @@ sub validate_options {
            foreach my $file( sort( glob($opts{'use_case_dir'}."/*.xml") ) ) {
               my $use_case;
               if ( $file =~ /\/([^\/]+)\.xml$/ ) {
+                 &check_use_case_name( $1 );
                  $use_case = $1;
               } else {
                  die << "EOF";

@@ -2,4 +2,4 @@
 -silent 
 -drv_case clmrun 
 -datm_source CLM_QIAN
--use_case glacier_mec
+-use_case glacierMEC_pd

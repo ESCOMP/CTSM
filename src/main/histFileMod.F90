@@ -127,6 +127,7 @@ module histFileMod
   private :: getname                   ! Retrieve name portion of input "inname"
   private :: getflag                   ! Retrieve flag
   private :: pointer_index             ! Track data pointer indices
+  private :: max_nFields               ! The max number of fields on any tape
 
 ! !PRIVATE TYPES:
 ! Constants
@@ -2005,6 +2006,7 @@ contains
     integer :: dim1id(1)                  ! netCDF dimension id
     integer :: dim2id(2)                  ! netCDF dimension id
     integer :: varid                      ! netCDF variable id
+    type(Var_desc_t) :: vardesc           ! netCDF variable description
     integer :: begp, endp                 ! per-proc beginning and ending pft indices
     integer :: begc, endc                 ! per-proc beginning and ending column indices
     integer :: begl, endl                 ! per-proc beginning and ending landunit indices
@@ -2016,9 +2018,7 @@ contains
     real(r8), pointer :: histo(:,:)       ! temporary
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    integer :: start(2), count(2) 	
     integer :: status
-    character(1), dimension(128) :: tmpString  ! temp for manipulating output string
 
     character(len=*),parameter :: subname = 'htape_timeconst'
 !-----------------------------------------------------------------------
@@ -2120,31 +2120,12 @@ contains
 
        timedata(1) = tape(t)%begtime
        timedata(2) = time
-       start(1) = 1
-       start(2) = tape(t)%ntimes
-       count(1) = 2
-       count(2) = 1
-       status = pio_inq_varid (nfid(t), 'time_bounds', varid)
-       status = pio_put_var(nfid(t), varid, start, count, timedata)
+       call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
 
        call getdatetime (cdate, ctime)
-       start(1) = 1
-       start(2) = tape(t)%ntimes
-       count(2) = 1
+       call ncd_io('date_written', cdate, 'write', nfid(t), nt=tape(t)%ntimes)
 
-       count(1) = len_trim(cdate)
-       do m = 1,count(1)
-          tmpString(m:m) = cdate(m:m)
-       end do
-       status = pio_inq_varid (nfid(t), 'date_written', varid)
-       status = pio_put_var (nfid(t), varid, start=start, count=count, ival=tmpString(1:count(1)))
-
-       count(1) = len_trim(ctime)
-       do m = 1,count(1)
-          tmpString(m:m) = ctime(m:m)
-       end do
-       status = pio_inq_varid (nfid(t), 'time_written', varid)
-       status = pio_put_var (nfid(t), varid, start=start, count=count, ival=tmpString(1:count(1)))
+       call ncd_io('time_written', ctime, 'write', nfid(t), nt=tape(t)%ntimes)
     endif
 
     !-------------------------------------------------------------------------------
@@ -2915,7 +2896,7 @@ contains
              endif
 	     call ncd_pio_closefile(nfid(t))
              if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
-                call ncd_pio_openfile (nfid(t), trim(locfnh(t)), pio_write)
+                call ncd_pio_openfile (nfid(t), trim(locfnh(t)), ncd_write)
              end if
           else
              if (masterproc) then
@@ -2970,7 +2951,7 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: max_nflds	
+    integer :: max_nflds                     ! Max number of fields
     integer :: num1d,beg1d,end1d             ! 1d size, beginning and ending indices
     integer :: num1d_out,beg1d_out,end1d_out ! 1d size, beginning and ending indices
     integer :: num2d                         ! 2d size (e.g. number of vertical levels)
@@ -3005,35 +2986,26 @@ contains
     character(len=8)   :: type2d                 ! history buffer 2d type
     character(len=32)  :: dim1name               ! temporary
     character(len=32)  :: dim2name               ! temporary
-    type(var_desc_t)   :: vdesc
-    type(var_desc_t)   :: nflds_desc
-    type(var_desc_t)   :: ntimes_desc
-    type(var_desc_t)   :: nhtfrq_desc
-    type(var_desc_t)   :: mfilt_desc
-    type(var_desc_t)   :: ncprec_desc
-    type(var_desc_t)   :: begtime_desc
-    type(var_desc_t)   :: name_desc
-    type(var_desc_t)   :: longname_desc
-    type(var_desc_t)   :: units_desc
-    type(var_desc_t)   :: type1d_desc
-    type(var_desc_t)   :: type1d_out_desc
-    type(var_desc_t)   :: type2d_desc
-    type(var_desc_t)   :: avgflag_desc
-    type(var_desc_t)   :: num2d_desc
-    type(var_desc_t)   :: hpindex_desc
-    type(var_desc_t)   :: locfnh_desc
-    type(var_desc_t)   :: locfnhr_desc
-    type(var_desc_t)   :: p2c_scale_type_desc
-    type(var_desc_t)   :: c2l_scale_type_desc
-    type(var_desc_t)   :: l2g_scale_type_desc
-    integer :: status
-    integer :: dimid
-    integer :: start(2), startc(3)
+    type(var_desc_t)   :: name_desc              ! variable descriptor for name
+    type(var_desc_t)   :: longname_desc          ! variable descriptor for long_name
+    type(var_desc_t)   :: units_desc             ! variable descriptor for units
+    type(var_desc_t)   :: type1d_desc            ! variable descriptor for type1d
+    type(var_desc_t)   :: type1d_out_desc        ! variable descriptor for type1d_out
+    type(var_desc_t)   :: type2d_desc            ! variable descriptor for type2d
+    type(var_desc_t)   :: avgflag_desc           ! variable descriptor for avgflag
+    type(var_desc_t)   :: p2c_scale_type_desc    ! variable descriptor for p2c_scale_type
+    type(var_desc_t)   :: c2l_scale_type_desc    ! variable descriptor for c2l_scale_type
+    type(var_desc_t)   :: l2g_scale_type_desc    ! variable descriptor for l2g_scale_type
+    integer :: status                            ! error status
+    integer :: dimid                             ! dimension ID
+    integer :: start(3)                          ! Start array index
     integer :: k                                 ! 1d index
     integer :: t                                 ! tape index
     integer :: f                                 ! field index
+    integer :: varid                             ! variable id
     integer, allocatable :: itemp(:)             ! temporary
     integer, allocatable :: itemp2d(:,:)         ! temporary
+    real(r8),allocatable :: rtemp(:)             ! temporary
     real(r8), pointer :: hbuf(:,:)               ! history buffer
     real(r8), pointer :: hbuf1d(:)               ! 1d history buffer
     integer , pointer :: nacs(:,:)               ! accumulation counter
@@ -3071,10 +3043,7 @@ contains
        ! max_nflds is the maximum number of fields on any tape
        ! max_flds is the maximum number possible number of fields 
 
-       max_nflds = 0
-       do t = 1,ntapes
-          max_nflds = max(max_nflds, tape(t)%nflds)
-       end do
+       max_nflds = max_nFields()
 
        call ncd_defdim( ncid, 'fname_lenp2', max_namlen+2, dimid)
        call ncd_defdim( ncid, 'fname_len'  , max_namlen  , dimid)
@@ -3106,7 +3075,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='is_endhist', xtype=ncd_int, &
             long_name="End of history", units="unitless logical (0 or 1)",     &
             dim1name='ntapes')
-       call ncd_defvar(ncid=ncid, varname='begtime', xtype=pio_double, &
+       call ncd_defvar(ncid=ncid, varname='begtime', xtype=ncd_double, &
             long_name="Beginning time", units="unitless",     &
             dim1name='ntapes')
 
@@ -3159,8 +3128,7 @@ contains
        fincl(:,4) = hist_fincl4(:)
        fincl(:,5) = hist_fincl5(:)
        fincl(:,6) = hist_fincl6(:)
-       status = pio_inq_varid(ncid,'fincl',vdesc)
-       status = pio_put_var(ncid, vdesc, fincl(:,1:ntapes))
+       call ncd_io(varname='fincl', data=fincl(:,1:ntapes), ncid=ncid, flag='write')
 
        fexcl(:,1) = hist_fexcl1(:)
        fexcl(:,2) = hist_fexcl2(:)
@@ -3168,8 +3136,7 @@ contains
        fexcl(:,4) = hist_fexcl4(:)
        fexcl(:,5) = hist_fexcl5(:)
        fexcl(:,6) = hist_fexcl6(:)
-       status = pio_inq_varid(ncid,'fexcl',vdesc)
-       status = pio_put_var(ncid, vdesc, fexcl(:,1:ntapes))
+       call ncd_io(varname='fexcl', data=fexcl(:,1:ntapes), ncid=ncid, flag='write')
 
        allocate(itemp(ntapes))
 
@@ -3177,105 +3144,109 @@ contains
           itemp(t) = 0
           if (tape(t)%is_endhist) itemp(t) = 1
        end do
-       status = pio_inq_varid(ncid,'is_endhist',vdesc)
-       status = pio_put_var(ncid, vdesc, itemp)
+       call ncd_io(varname='is_endhist', data=itemp, ncid=ncid, flag='write')
 
        do t = 1,ntapes
           itemp(t) = 0
           if (tape(t)%dov2xy) itemp(t) = 1
        end do
-       status = pio_inq_varid(ncid,'dov2xy',vdesc)
-       status = pio_put_var(ncid, vdesc, itemp)
+       call ncd_io(varname='dov2xy', data=itemp, ncid=ncid, flag='write')
 
        deallocate(itemp)
 
-       status = pio_inq_varid(ncid,'nflds'  ,nflds_desc)
-       status = pio_inq_varid(ncid,'ntimes' ,ntimes_desc)
-       status = pio_inq_varid(ncid,'nhtfrq' ,nhtfrq_desc)
-       status = pio_inq_varid(ncid,'mfilt'  ,mfilt_desc)
-       status = pio_inq_varid(ncid,'ncprec' ,ncprec_desc)
-       status = pio_inq_varid(ncid,'begtime',begtime_desc)
+       max_nflds = max_nFields()
+
+       allocate(itemp2d(max_nflds,ntapes))
+
+       itemp2d(:,:) = 0
+       do t=1,ntapes
+          do f=1,tape(t)%nflds
+             itemp2d(f,t) = tape(t)%hlist(f)%field%num2d
+          end do
+       end do
+       call ncd_io(varname='num2d', data=itemp2d, ncid=ncid, flag='write')
+
+       itemp2d(:,:) = 0
+       do t=1,ntapes
+          do f=1,tape(t)%nflds
+             itemp2d(f,t) = tape(t)%hlist(f)%field%hpindex
+          end do
+       end do
+       call ncd_io(varname='hpindex', data=itemp2d, ncid=ncid, flag='write')
+
+       deallocate(itemp2d)
 
        do t = 1,ntapes
           start(1)  = t
-          status = pio_put_var(ncid, nflds_desc  ,start,tape(t)%nflds)
-          status = pio_put_var(ncid, ntimes_desc ,start,tape(t)%ntimes)
-          status = pio_put_var(ncid, nhtfrq_desc ,start,tape(t)%nhtfrq)
-          status = pio_put_var(ncid, mfilt_desc  ,start,tape(t)%mfilt)
-          status = pio_put_var(ncid, ncprec_desc ,start,tape(t)%ncprec)
-          status = pio_put_var(ncid, begtime_desc,start,tape(t)%begtime)
+          call ncd_io('nflds',   tape(t)%nflds,   'write', ncid, nt=t)
+          call ncd_io('ntimes',  tape(t)%ntimes,  'write', ncid, nt=t)
+          call ncd_io('nhtfrq',  tape(t)%nhtfrq,  'write', ncid, nt=t)
+          call ncd_io('mfilt',   tape(t)%mfilt,   'write', ncid, nt=t)
+          call ncd_io('ncprec',  tape(t)%ncprec,  'write', ncid, nt=t)
+          call ncd_io('begtime', tape(t)%begtime, 'write', ncid, nt=t)
        end do
 
-       status = pio_inq_varid(ncid,'name'          ,name_desc)
-       status = pio_inq_varid(ncid,'long_name'     ,longname_desc)
-       status = pio_inq_varid(ncid,'units'         ,units_desc)
-       status = pio_inq_varid(ncid,'type1d'        ,type1d_desc)
-       status = pio_inq_varid(ncid,'type1d_out'    ,type1d_out_desc)
-       status = pio_inq_varid(ncid,'type2d'        ,type2d_desc)
-       status = pio_inq_varid(ncid,'avgflag'       ,avgflag_desc)
-       status = pio_inq_varid(ncid,'num2d  '       ,num2d_desc)
-       status = pio_inq_varid(ncid,'hpindex'       ,hpindex_desc)
-       status = pio_inq_varid(ncid,'p2c_scale_type',p2c_scale_type_desc)
-       status = pio_inq_varid(ncid,'c2l_scale_type',c2l_scale_type_desc)
-       status = pio_inq_varid(ncid,'l2g_scale_type',l2g_scale_type_desc)
+       call ncd_inqvid(ncid, 'name',           varid, name_desc)
+       call ncd_inqvid(ncid, 'long_name',      varid, longname_desc)
+       call ncd_inqvid(ncid, 'units',          varid, units_desc)
+       call ncd_inqvid(ncid, 'type1d',         varid, type1d_desc)
+       call ncd_inqvid(ncid, 'type1d_out',     varid, type1d_out_desc)
+       call ncd_inqvid(ncid, 'type2d',         varid, type2d_desc)
+       call ncd_inqvid(ncid, 'avgflag',        varid, avgflag_desc)
+       call ncd_inqvid(ncid, 'p2c_scale_type', varid, p2c_scale_type_desc)
+       call ncd_inqvid(ncid, 'c2l_scale_type', varid, c2l_scale_type_desc)
+       call ncd_inqvid(ncid, 'l2g_scale_type', varid, l2g_scale_type_desc)
 
-       startc(1)=1
+       start(1)=1
        do t = 1,ntapes
-          start(2)  = t
-          startc(3) = t
+          start(3) = t
           do f=1,tape(t)%nflds
-             start(1)  = f
-             startc(2) = f
-             status = pio_put_var(ncid, name_desc           ,startc,tape(t)%hlist(f)%field%name)
-             status = pio_put_var(ncid, longname_desc       ,startc,tape(t)%hlist(f)%field%long_name)
-             status = pio_put_var(ncid, units_desc          ,startc,tape(t)%hlist(f)%field%units)
-             status = pio_put_var(ncid, type1d_desc         ,startc,tape(t)%hlist(f)%field%type1d)
-             status = pio_put_var(ncid, type1d_out_desc     ,startc,tape(t)%hlist(f)%field%type1d_out)
-             status = pio_put_var(ncid, type2d_desc         ,startc,tape(t)%hlist(f)%field%type2d)
-             status = pio_put_var(ncid, p2c_scale_type_desc ,startc,tape(t)%hlist(f)%field%p2c_scale_type)
-             status = pio_put_var(ncid, c2l_scale_type_desc ,startc,tape(t)%hlist(f)%field%c2l_scale_type)
-             status = pio_put_var(ncid, l2g_scale_type_desc ,startc,tape(t)%hlist(f)%field%l2g_scale_type)
-             status = pio_put_var(ncid, avgflag_desc        ,startc,tape(t)%hlist(f)%avgflag)
-             status = pio_put_var(ncid, num2d_desc          ,start ,tape(t)%hlist(f)%field%num2d)
-             status = pio_put_var(ncid, hpindex_desc        ,start ,tape(t)%hlist(f)%field%hpindex)
+             start(2) = f
+             call ncd_io( name_desc,           tape(t)%hlist(f)%field%name,       &
+                          'write', ncid, start )
+             call ncd_io( longname_desc,       tape(t)%hlist(f)%field%long_name,  &
+                          'write', ncid, start )
+             call ncd_io( units_desc,          tape(t)%hlist(f)%field%units,      &
+                          'write', ncid, start )
+             call ncd_io( type1d_desc,         tape(t)%hlist(f)%field%type1d,     &
+                          'write', ncid, start )
+             call ncd_io( type1d_out_desc,     tape(t)%hlist(f)%field%type1d_out, &
+                          'write', ncid, start )
+             call ncd_io( type2d_desc,         tape(t)%hlist(f)%field%type2d,     &
+                          'write', ncid, start )
+             call ncd_io( avgflag_desc,        tape(t)%hlist(f)%avgflag,          &
+                          'write', ncid, start )
+             call ncd_io( p2c_scale_type_desc, tape(t)%hlist(f)%field%p2c_scale_type, &
+                          'write', ncid, start )
+             call ncd_io( c2l_scale_type_desc, tape(t)%hlist(f)%field%c2l_scale_type, &
+                          'write', ncid, start )
+             call ncd_io( l2g_scale_type_desc, tape(t)%hlist(f)%field%l2g_scale_type, &
+                          'write', ncid, start )
           end do
        end do
        
-       status = pio_inq_varid(ncid, 'locfnh' ,locfnh_desc)
-       status = pio_inq_varid(ncid, 'locfnhr',locfnhr_desc)
-
-       startc = 1
        do t = 1,ntapes
-          startc(2) = t
-          status = pio_put_var(ncid, locfnh_desc , startc, trim(locfnh(t)))
+          call ncd_io('locfnh', locfnh(t), 'write', ncid, nt=t)
           write(hnum,'(i1.1)') t
           filename = "./"//trim(caseid)//".clm2.rh"//hnum//"."//trim(rdate)//".nc"
-          status = pio_put_var(ncid, locfnhr_desc, startc, trim(filename))
+          call ncd_io('locfnhr', filename, 'write', ncid, nt=t)
        end do
        
     !================================================
     else if (flag == 'read') then
     !================================================
 
-       status = pio_inq_dimid (ncid, 'ntapes', dimid)
-       status = pio_inq_dimlen (ncid, dimid, ntapes)
-
-       status = pio_inq_dimid (ncid, 'max_nflds', dimid)
-       status = pio_inq_dimlen (ncid, dimid, max_nflds)
-
-       status = pio_inq_varid(ncid, 'locfnhr', vdesc)
-       status = pio_get_var(ncid, vdesc, locfnhr(1:ntapes))
-
-       status = pio_inq_varid(ncid, 'locfnh', vdesc)
-       status = pio_get_var(ncid, vdesc, locfnh(1:ntapes))
+       call ncd_inqdlen(ncid,dimid,ntapes,   name='ntapes')
+       call ncd_inqdlen(ncid,dimid,max_nflds,name='max_nflds')
+       call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
+       call ncd_io('locfnhr', locfnhr(1:ntapes), 'read', ncid )
 
        do t = 1,ntapes
           call strip_null(locfnhr(t))
           call strip_null(locfnh(t))
        end do
 
-       status = pio_inq_varid(ncid,'fincl',vdesc)
-       status = pio_get_var(ncid, vdesc, fincl(:,1:ntapes))
+       call ncd_io(varname='fincl', data=fincl(:,1:ntapes), ncid=ncid, flag='read')
        hist_fincl1(:) = fincl(:,1)
        hist_fincl2(:) = fincl(:,2)
        hist_fincl3(:) = fincl(:,3)
@@ -3283,8 +3254,7 @@ contains
        hist_fincl5(:) = fincl(:,5)
        hist_fincl6(:) = fincl(:,6)
 
-       status = pio_inq_varid(ncid,'fexcl',vdesc)
-       status = pio_get_var(ncid, vdesc, fexcl(:,1:ntapes))
+       call ncd_io(varname='fexcl', data=fexcl(:,1:ntapes), ncid=ncid, flag='read')
        hist_fexcl1(:) = fexcl(:,1)
        hist_fexcl2(:) = fexcl(:,2)
        hist_fexcl3(:) = fexcl(:,3)
@@ -3292,27 +3262,24 @@ contains
        hist_fexcl5(:) = fexcl(:,5)
        hist_fexcl6(:) = fexcl(:,6)
        
-       status = pio_inq_varid(ncid,'nflds'  ,nflds_desc)
-       status = pio_inq_varid(ncid,'ntimes' ,ntimes_desc)
-       status = pio_inq_varid(ncid,'nhtfrq' ,nhtfrq_desc)
-       status = pio_inq_varid(ncid,'mfilt'  ,mfilt_desc)
-       status = pio_inq_varid(ncid,'ncprec' ,ncprec_desc)
-       status = pio_inq_varid(ncid,'begtime',begtime_desc)
-
-       do t = 1,ntapes
-          start(1)  = t
-          status = pio_get_var(ncid, nflds_desc  ,start,tape(t)%nflds)
-          status = pio_get_var(ncid, ntimes_desc ,start,tape(t)%ntimes)
-          status = pio_get_var(ncid, nhtfrq_desc ,start,tape(t)%nhtfrq)
-          status = pio_get_var(ncid, mfilt_desc  ,start,tape(t)%mfilt)
-          status = pio_get_var(ncid, ncprec_desc ,start,tape(t)%ncprec)
-          status = pio_get_var(ncid, begtime_desc,start,tape(t)%begtime)
-       end do
-
        allocate(itemp(ntapes))
+       allocate(rtemp(ntapes))
 
-       status = pio_inq_varid(ncid,'is_endhist',vdesc)
-       status = pio_get_var(ncid, vdesc, itemp)
+       call ncd_io('nflds',   itemp, 'read', ncid )
+       tape(:ntapes)%nflds = itemp(:)
+       call ncd_io('ntimes',  itemp, 'read', ncid )
+       tape(:ntapes)%ntimes = itemp(:)
+       call ncd_io('nhtfrq',  itemp, 'read', ncid )
+       tape(:ntapes)%nhtfrq = itemp(:)
+       call ncd_io('mfilt',   itemp, 'read', ncid )
+       tape(:ntapes)%mfilt = itemp(:)
+       call ncd_io('ncprec',  itemp, 'read', ncid )
+       tape(:ntapes)%ncprec = itemp(:)
+       call ncd_io('begtime', rtemp, 'read', ncid )
+       tape(:ntapes)%begtime = rtemp(:)
+
+
+       call ncd_io(varname='is_endhist', data=itemp, ncid=ncid, flag='read')
        do t = 1,ntapes
           if (itemp(t) == 0) then
              tape(t)%is_endhist = .false.
@@ -3321,8 +3288,7 @@ contains
           end if
        end do
 
-       status = pio_inq_varid(ncid,'dov2xy',vdesc)
-       status = pio_get_var(ncid, vdesc, itemp)
+       call ncd_io(varname='dov2xy', data=itemp, ncid=ncid, flag='read')
        do t = 1,ntapes
           if (itemp(t) == 0) then
              tape(t)%dov2xy = .false.
@@ -3335,16 +3301,14 @@ contains
 
        allocate(itemp2d(max_nflds,ntapes))
 
-       status = pio_inq_varid(ncid, 'num2d', vdesc)
-       status = pio_get_var(ncid, vdesc, itemp2d)
+       call ncd_io(varname='num2d', data=itemp2d, ncid=ncid, flag='read')
        do t=1,ntapes
           do f=1,tape(t)%nflds
              tape(t)%hlist(f)%field%num2d = itemp2d(f,t)
           end do
        end do
 
-       status = pio_inq_varid(ncid, 'hpindex', vdesc)
-       status = pio_get_var(ncid, vdesc, itemp2d)
+       call ncd_io(varname='hpindex', data=itemp2d, ncid=ncid, flag='read')
        do t=1,ntapes
           do f=1,tape(t)%nflds
              tape(t)%hlist(f)%field%hpindex = itemp2d(f,t)
@@ -3353,32 +3317,47 @@ contains
 
        deallocate(itemp2d)
 
-       status = pio_inq_varid(ncid,'name'          ,name_desc)
-       status = pio_inq_varid(ncid,'long_name'     ,longname_desc)
-       status = pio_inq_varid(ncid,'units'         ,units_desc)
-       status = pio_inq_varid(ncid,'type1d'        ,type1d_desc)
-       status = pio_inq_varid(ncid,'type1d_out'    ,type1d_out_desc)
-       status = pio_inq_varid(ncid,'type2d'        ,type2d_desc)
-       status = pio_inq_varid(ncid,'num2d  '       ,num2d_desc)
-       status = pio_inq_varid(ncid,'hpindex'       ,hpindex_desc)
-       status = pio_inq_varid(ncid,'p2c_scale_type',p2c_scale_type_desc)
-       status = pio_inq_varid(ncid,'c2l_scale_type',c2l_scale_type_desc)
-       status = pio_inq_varid(ncid,'l2g_scale_type',l2g_scale_type_desc)
-       status = pio_inq_varid(ncid,'avgflag'       ,avgflag_desc)
+       call ncd_inqvid(ncid, 'name',           varid, name_desc)
+       call ncd_inqvid(ncid, 'long_name',      varid, longname_desc)
+       call ncd_inqvid(ncid, 'units',          varid, units_desc)
+       call ncd_inqvid(ncid, 'type1d',         varid, type1d_desc)
+       call ncd_inqvid(ncid, 'type1d_out',     varid, type1d_out_desc)
+       call ncd_inqvid(ncid, 'type2d',         varid, type2d_desc)
+       call ncd_inqvid(ncid, 'avgflag',        varid, avgflag_desc)
+       call ncd_inqvid(ncid, 'p2c_scale_type', varid, p2c_scale_type_desc)
+       call ncd_inqvid(ncid, 'c2l_scale_type', varid, c2l_scale_type_desc)
+       call ncd_inqvid(ncid, 'l2g_scale_type', varid, l2g_scale_type_desc)
+
+       start(1)=1
+       do t = 1,ntapes
+          start(3) = t
+          do f=1,tape(t)%nflds
+             start(2) = f
+             call ncd_io( name_desc,           tape(t)%hlist(f)%field%name,       &
+                          'read', ncid, start )
+             call ncd_io( longname_desc,       tape(t)%hlist(f)%field%long_name,  &
+                          'read', ncid, start )
+             call ncd_io( units_desc,          tape(t)%hlist(f)%field%units,      &
+                          'read', ncid, start )
+             call ncd_io( type1d_desc,         tape(t)%hlist(f)%field%type1d,     &
+                          'read', ncid, start )
+             call ncd_io( type1d_out_desc,     tape(t)%hlist(f)%field%type1d_out, &
+                          'read', ncid, start )
+             call ncd_io( type2d_desc,         tape(t)%hlist(f)%field%type2d,     &
+                          'read', ncid, start )
+             call ncd_io( avgflag_desc,        tape(t)%hlist(f)%avgflag,          &
+                          'read', ncid, start )
+             call ncd_io( p2c_scale_type_desc, tape(t)%hlist(f)%field%p2c_scale_type,   &
+                          'read', ncid, start )
+             call ncd_io( c2l_scale_type_desc, tape(t)%hlist(f)%field%c2l_scale_type,   &
+                          'read', ncid, start )
+             call ncd_io( l2g_scale_type_desc, tape(t)%hlist(f)%field%l2g_scale_type,   &
+                          'read', ncid, start )
+          end do
+       end do
 
        do t=1,ntapes
           do f=1,tape(t)%nflds
-             status = pio_get_var(ncid,name_desc          , (/1,f,t/), tape(t)%hlist(f)%field%name)
-             status = pio_get_var(ncid,longname_desc      , (/1,f,t/), tape(t)%hlist(f)%field%long_name)
-             status = pio_get_var(ncid,units_desc         , (/1,f,t/), tape(t)%hlist(f)%field%units)
-             status = pio_get_var(ncid,type1d_desc        , (/1,f,t/), tape(t)%hlist(f)%field%type1d)
-             status = pio_get_var(ncid,type1d_out_desc    , (/1,f,t/), tape(t)%hlist(f)%field%type1d_out)
-             status = pio_get_var(ncid,type2d_desc        , (/1,f,t/), tape(t)%hlist(f)%field%type2d)
-             status = pio_get_var(ncid,p2c_scale_type_desc, (/1,f,t/), tape(t)%hlist(f)%field%p2c_scale_type)
-             status = pio_get_var(ncid,c2l_scale_type_desc, (/1,f,t/), tape(t)%hlist(f)%field%c2l_scale_type)
-             status = pio_get_var(ncid,l2g_scale_type_desc, (/1,f,t/), tape(t)%hlist(f)%field%l2g_scale_type)
-             status = pio_get_var(ncid,avgflag_desc       , (/1,f,t/), tape(t)%hlist(f)%avgflag)
-
              call strip_null(tape(t)%hlist(f)%field%name)
              call strip_null(tape(t)%hlist(f)%field%long_name)
              call strip_null(tape(t)%hlist(f)%field%units)
@@ -3504,7 +3483,7 @@ contains
           ! If history file is not full, open it
 
           if (tape(t)%ntimes /= 0) then
-             call ncd_pio_openfile (nfid(t), trim(locfnh(t)), pio_write)
+             call ncd_pio_openfile (nfid(t), trim(locfnh(t)), ncd_write)
           end if
 
        end do  ! end of tapes loop
@@ -3589,14 +3568,14 @@ contains
                 
                 if (dim2name == 'undefined') then
                    if (num2d == 1) then
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, & 
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, & 
                            dim1name=dim1name, &
                            long_name=trim(long_name), units=trim(units))
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
                            dim1name=dim1name, &
                            long_name=trim(long_name_acc), units=trim(units_acc))
                    else
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, &
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
                            dim1name=dim1name, dim2name=type2d, &
                            long_name=trim(long_name), units=trim(units))
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
@@ -3605,14 +3584,14 @@ contains
                    end if
                 else
                    if (num2d == 1) then
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, &
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
                            dim1name=dim1name, dim2name=dim2name, &
                            long_name=trim(long_name), units=trim(units))
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
                            dim1name=dim1name, dim2name=dim2name, &
                            long_name=trim(long_name_acc), units=trim(units_acc))
                    else
-                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=pio_double, &
+                      call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
                            dim1name=dim1name, dim2name=dim2name, dim3name=type2d, &
                            long_name=trim(long_name), units=trim(units))
                       call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
@@ -3674,7 +3653,7 @@ contains
 
           if (.not. tape(t)%is_endhist) then
 
-             call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), pio_write)
+             call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), ncd_write)
           
              do f = 1,tape(t)%nflds
                 name       =  tape(t)%hlist(f)%field%name
@@ -3720,6 +3699,38 @@ contains
     end if
     
   end subroutine hist_restart_ncd
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: max_nFields
+!
+! !INTERFACE:
+integer function max_nFields()
+!
+! !DESCRIPTION:
+! Get the maximum number of fields on all tapes.
+!
+! !ARGUMENTS:
+     implicit none
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  integer :: t  ! index
+  character(len=*),parameter :: subname = 'max_nFields'
+!-----------------------------------------------------------------------
+  max_nFields = 0
+  do t = 1,ntapes
+     max_nFields = max(max_nFields, tape(t)%nflds)
+  end do
+
+  return
+
+end function max_nFields
 
 !-----------------------------------------------------------------------
 !BOP

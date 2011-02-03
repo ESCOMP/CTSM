@@ -284,13 +284,9 @@ subroutine iniTimeConst
      start(1) = closelonidx
      start(2) = closelatidx
   end if
-  ier = pio_inq_varid(ncid, 'mxsoil_color', varid)
-  if (ier == PIO_NOERR) then
-     ier = pio_inq_varid(ncid, 'mxsoil_color', varid)
-     ier = pio_get_var(ncid, varid, mxsoil_color)
-  else
-     mxsoil_color = 8  
-  end if
+  call ncd_io(ncid=ncid, varname='mxsoil_color', flag='read', data=mxsoil_color, &
+              readvar=readvar)
+  if ( .not. readvar ) mxsoil_color = 8  
 
   ! Read fmax
 

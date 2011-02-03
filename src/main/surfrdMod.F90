@@ -99,6 +99,7 @@ contains
     integer :: ier                 ! error status
     type(file_desc_t) :: ncid      ! netcdf id
     type(file_desc_t) :: ncidm     ! netcdf id
+    type(var_desc_t)  :: vardesc   ! variable descriptor
     character(len=256)  :: locfn   ! local file name
     real(r8),pointer :: rdata(:,:) ! temporary data
     integer ,pointer :: idata(:,:)
@@ -106,6 +107,7 @@ contains
     logical :: EDGEset             ! true if EDGE NSEW read from grid file
     logical :: lpftmflag           ! is mask a pft mask, local copy
     logical :: readvar             ! read variable in or not
+    logical :: dimexists           ! if dimension exists or not
     character(len=32) :: subname = 'surfrd_get_latlon'     ! subroutine name
 !DEBUG
     integer :: i,j	
@@ -137,16 +139,15 @@ contains
        ni = lsmlon
        nj = lsmlat
     else
-       call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-       ier = pio_inq_dimid (ncid, 'lon', dimid)
-       if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, ni)
-       ier = pio_inq_dimid (ncid, 'lat', dimid)
-       if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, nj)
-       ier = pio_inq_dimid (ncid, 'lsmlon', dimid)
-       if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, ni)
-       ier = pio_inq_dimid (ncid, 'lsmlat', dimid)
-       if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, nj)
-       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+! Set PIO Mark
+       call ncd_inqdid(ncid,'lon',dimid,dimexists)
+       if (dimexists) call ncd_inqdlen(ncid,dimid,ni)
+       call ncd_inqdid(ncid,'lat',dimid,dimexists)
+       if (dimexists) call ncd_inqdlen(ncid,dimid,nj)
+       call ncd_inqdid(ncid,'lsmlon',dimid,dimexists)
+       if (dimexists) call ncd_inqdlen(ncid,dimid,ni)
+       call ncd_inqdid(ncid,'lsmlat',dimid,dimexists)
+       if (dimexists) call ncd_inqdlen(ncid,dimid,nj)
        if (ni == 0 .or. nj == 0) then
           write(iulog,*) trim(subname),' ERROR: ni or nj not set',ni,nj
           call endrun()
@@ -180,9 +181,8 @@ contains
        latlon%edges(4) = latlon%lonc(1) - 180._r8
     else
        latlon%edges(:) = spval
-       call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-       ier = pio_inq_varid (ncid, 'EDGEN', varid)
-       if (ier == PIO_NOERR) then
+       call ncd_inqvid(ncid,'EDGEN',varid,vardesc,readvar)
+       if (readvar)then
           EDGEset = .true.
           call ncd_io(ncid=ncid,varname='EDGEN',data=latlon%edges(1),flag='read',readvar=readvar)
           call ncd_io(ncid=ncid,varname='EDGEE',data=latlon%edges(2),flag='read',readvar=readvar)
@@ -190,12 +190,10 @@ contains
           call ncd_io(ncid=ncid,varname='EDGEW',data=latlon%edges(4),flag='read',readvar=readvar)
           if (maxval(latlon%edges) > 1.0e35) EDGEset = .false. ! read garbage
        endif
-       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
     endif
 
-    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-    ier = pio_inq_varid (ncid, 'LATN', varid)
-    if (ier == PIO_NOERR) then
+    call ncd_inqvid(ncid,'LATN',varid,vardesc,readvar)
+    if (readvar)then
        NSEWset = .true.
        call ncd_io(ncid=ncid, varname='LATN',data=rdata,flag='read')
        latlon%latn(:) = rdata(1,:)
@@ -206,7 +204,6 @@ contains
        call ncd_io(ncid=ncid, varname='LONW',data=rdata,flag='read')
        latlon%lonw(:) = rdata(:,1)
     endif
-    call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
     
     if (present(mask)) then
        if (present(mfilename)) then
@@ -221,9 +218,8 @@ contains
        endif
        
        mask = 1
-       call pio_seterrorhandling(ncidm, PIO_BCAST_ERROR)
-       ier = pio_inq_varid(ncidm, 'LANDMASK', varid)
-       if (ier == PIO_NOERR) then
+       call ncd_inqvid(ncidm,'LANDMASK',varid,vardesc,readvar)
+       if (readvar)then
 	  ! ASSUME that LANDMASK is 2d here !TODO? talk to jim about this
           call ncd_io(ncid=ncidm, varname='LANDMASK', data=idata, flag='read')
           ! mask = reshape(idata, (/1/)) !TODO? why does this not work?
@@ -234,16 +230,14 @@ contains
           enddo
           enddo
        endif
-       call pio_seterrorhandling(ncidm, PIO_INTERNAL_ERROR)
        
        !--- if this is a pft mask, then modify and look for pftdata_mask array on dataset ---
        if (lpftmflag) then
           do n = 1,ni*nj
              if (mask(n) <= 0) mask(n) = -1
           enddo
-          call pio_seterrorhandling(ncidm, PIO_BCAST_ERROR)
-          ier = pio_inq_varid (ncidm, 'PFTDATA_MASK', varid)
-          if (ier == PIO_NOERR) then
+          call ncd_inqvid(ncidm,'PFTDATA_MASK',varid,vardesc,readvar)
+          if (readvar)then
              call ncd_io(ncid=ncidm, varname='PFTDATA_MASK', data=idata, flag='read')
              do j = 1,nj
              do i = 1,ni
@@ -252,7 +246,6 @@ contains
              enddo
              enddo
           endif
-          call pio_seterrorhandling(ncidm, PIO_INTERNAL_ERROR)
        endif
        
        if (present(mfilename)) then

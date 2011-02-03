@@ -1,4 +1,331 @@
 ===============================================================
+Tag name:  clm4_0_23
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Feb  3 13:42:17 MST 2011
+One-line Summary: Add in new glacier-MEC use-cases
+
+Purpose of changes:
+
+Add in new datasets and use-cases for glc_mec to support glc_nec=10 for 1850, 2000,
+1850-2000, and 1850-2100 for all 4 rcp's. Standardize naming convention for use-cases.
+Use scripts branch that has new compsets in it that access the new use-cases. Make sure
+ncdpio is used for all I/O. Work with PTCLM a bit, and PTCLM testing. Change precedence
+for build-namelist so that use-case is lower after user_nl_clm.
+
+Bugs fixed (include bugzilla ID):
+                                 1273 (fix pts_mode problem on jaguar)
+                                 1256 (fix PTCLM testcases.csh on jaguar to use netcdf/3)
+                                 1254 (PTCLM add .nc and date to pft-physiology file copy)
+                                 1250 (add scratchroot in PTCLM for generic machines)
+                                 1247 (some changes in ncdio_pio) [partial]
+                                 1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
+                                 1168 (Change precedence so user_nl_clm used over use-case)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Change order of precedence so that
+     use_case is AFTER -namelist -infile and clm_usr_name options.
+     Thus values in your user_nl_clm file will be used instead of what's in
+     the use_case.
+
+     New precedence is...
+       1. values set on the command-line using the -namelist option,
+       2. values read from the file specified by -infile,
+       3. datasets from the -clm_usr_name option,
+       4. values set from a use-case scenario, e.g., -use_case
+       5. values from the namelist defaults file.
+List any changes to the defaults for the boundary datasets:
+     New datasets for glc_nec="10"
+               surfdata for 1850@(f09,f19,T31)
+               pftdyn for 1850-2000@(f09,f19,T31)
+               pftdyn for 1850-2100@(f09,f19,T31) rcp (2.6,4.5,6,8.5)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm, cism
+
+      scripts to glccsbr01_scripts4_110111
+      datm    to datm8_110124
+      cism    to cism1_110125
+
+List all files eliminated:
+
+    Rename use-cases to versions with an _pd ending or 2000_*_control form
+
+         models/lnd/clm/bld/namelist_files/use_cases/...
+    D    .../use_cases/stdurbpt.xml ----- rename to stdurbpt_pd
+    D    .../use_cases/glacier_mec.xml -- rename to 2000_glacierMEC_control
+    D    .../use_cases/pergro.xml ------- rename to pergro_pd
+    D    .../use_cases/pergro0.xml ------ rename to pergro0_pd
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>> Add tests for all new glacier-MEC use-cases
+    A    models/lnd/clm/test/system/nl_files/clm_glcmec
+    A    models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp2.6
+    A    models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp4.5
+    A    models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp8.5
+    A    models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp6
+
+    A    models/lnd/clm/test/system/nl_files/nl_per - PERGRO testing namelist
+
+>>>>>>>>>>>>>>
+         models/lnd/clm/bld/namelist_files/use_cases/...
+    A    .../use_cases/pergro_pd.xml -------------- Renamed from pergro
+    A    .../use_cases/2000_glacierMEC_control.xml  Copy of glacier_mec_pd
+    A    .../use_cases/stdurbpt_pd.xml ------------ Renamed from stdurbpt
+    A    .../use_cases/pergro0_pd.xml ------------- Renamed from pergro0
+    A    .../use_cases/README --------------------- Add README file to describe
+             naming convention for use_cases
+
+>>>>>>>>>>>>>> Add new glacier_MEC use_cases
+         models/lnd/clm/bld/namelist_files/use_cases/...
+    A    .../use_cases/1850_glacierMEC_control.xml
+    A    .../use_cases/20thC_glacierMEC_transient.xml
+    A    .../use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+    A    .../use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+    A    .../use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+    A    .../use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+    A    .../use_cases/glacierMEC_pd.xml --- renamed from glacier_mec
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Add some new glacierMEC use-case tests
+    M    models/lnd/clm/test/system/README.testnames ------------- Add n,w,x,y glcMEC resolutions
+    M    models/lnd/clm/test/system/tests_posttag_lynx_nompi
+    M    models/lnd/clm/test/system/tests_pretag_bluefire
+    M    models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+    M    models/lnd/clm/test/system/tests_posttag_kraken
+    M    models/lnd/clm/test/system/tests_posttag_yong
+    M    models/lnd/clm/test/system/tests_pretag_jaguar_nompi
+    M    models/lnd/clm/test/system/tests_posttag_mirage
+    M    models/lnd/clm/test/system/tests_posttag_purempi_regression
+    M    models/lnd/clm/test/system/tests_posttag_hybrid_regression
+    M    models/lnd/clm/test/system/tests_posttag_intrepid_nompi
+    M    models/lnd/clm/test/system/tests_posttag_nompi_regression
+
+>>>>>>>>>>>>>> Get glcmec branch testing to work and pergro testing working with
+>>>>>>>>>>>>>> build-namelist precedence change
+    M    models/lnd/clm/test/system/TBR.sh ------------- Match history files 
+                NOT restart-history files
+    M    models/lnd/clm/test/system/nl_files/clm_per0 -- Change use-case name
+    M    models/lnd/clm/test/system/nl_files/nl_urb_br - Add hist_fincl2 to remove
+                any secondardy history files from use-case
+    M    models/lnd/clm/test/system/nl_files/clm_per --- Change use-case name
+    M    models/lnd/clm/test/system/input_tests_master - Add new tests
+    M    models/lnd/clm/test/system/TSM.sh ------------- Make restart file touched
+           with .nc extension, remove bit about deleting clm.i files
+
+>>>>>>>>>>>>>> Use mksrf_glacier files from XML database, add glc_nec to mksurfdata.pl,
+>>>>>>>>>>>>>> allow glc_nec=0, and don't write out glcmec fields if glc_nec=0.
+    M    models/lnd/clm/tools/mksurfdata/mkfileMod.F90 --- Don't define glc_nec
+               fields if nglcec == 0.
+    M    models/lnd/clm/tools/mksurfdata/mkglcmecMod.F90 - Set nglcec=0 by default, 
+               add ability to handle nglcec=0
+    M    models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ---- Don't write out or call
+               glc-mec stuff if nglcec == 0.
+    M    models/lnd/clm/tools/mksurfdata/mksurfdata.pl --- Add ability to set glc_nec
+               get mksrf_glacier file from XML database
+
+>>>>>>>>>>>>>> Add in new glc_nec=10 datasets, change precedence order in
+>>>>>>>>>>>>>> build-namelist so use_case is AFTER -namelist/-infile/-clm_usr_name.
+>>>>>>>>>>>>>> Add mksrf_glacier files to XML database
+    M    models/lnd/clm/bld/listDefaultNamelist.pl - Make faster and add settings
+               for glc_nec and glc_grid, also add loop over sim_year_range
+    M    models/lnd/clm/bld/build-namelist --------- Change precedence order so
+               that use-cases are after namelist and infile (thus user_nl_clm files
+               are used in place of the use-case. Check that the use-cases follow
+               a strict naming convention (ensures will work with PTCLM.py).
+               This is the new order of precedence
++      1. values set on the command-line using the -namelist option,
++      2. values read from the file specified by -infile,
++      3. datasets from the -clm_usr_name option,
++      4. values set from a use-case scenario, e.g., -use_case
++      5. values from the namelist defaults file.
+
+    M    models/lnd/clm/bld/namelist_files/namelist_definition.xml --------- Add
+               mksrf_glacier file for mksurfdata.pl to XML database
+    M    models/lnd/clm/bld/namelist_files/datm-build-namelist ------------- Change
+               order of precedence so that use_case is after infile and namelist
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ------- New glc datasets
+               surfdata for 1850@(f09,f19,T31)
+               pftdyn for 1850-2000@(f09,f19,T31)
+               pftdyn for 1850-2100@(f09,f19,T31) rcp (2.6,4.5,6,8.5)
+    M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Add
+               mksrf_glacier datasets for glc_nec=0 (previous version), glc_nec=3,5,10 
+               use older glacier dataset that Bill Lipscomb says has better glacier
+               representation over greenland
+>>>>>>>>>>>>>> Remove direct calls to pio -- use ncdio_pio module for all NetCDF
+>>>>>>>>>>>>>> read/write/define/query. Write out at initialization if there is no
+>>>>>>>>>>>>>> land and won't be running CLM.
+    M    models/lnd/clm/src/main/clm_initializeMod.F90 - Set subname and write out
+               if no land exists and clm will NOT be run
+    M    models/lnd/clm/src/main/iniTimeConst.F90 ------ Use ncd_io to read in mxsoil_color
+               (remove direct calls to pio)
+    M    models/lnd/clm/src/main/histFileMod.F90 ------- Use ncd_io to read/write
+               everything (remove direct calls to pio). Add max_nFields function.
+    M    models/lnd/clm/src/main/restFileMod.F90 ------- Change use of PIO_GLOBAL
+               to NCD_GLOBAL
+    M    models/lnd/clm/src/main/ncdio_pio.F90 --------- Remove making pio interfaces
+               public, add new interfaces to ncd_io global, add dimexist as optional
+               argument to ncd_inqdid, and name as optional argument to ncd_inqdlen
+               change ncd_io interfaces that could NOT need to call scam_field_offsets
+               so that they don't. Initialize data_offset and pfts to bigint NOT nan.
+         New interfaces:
++     module procedure ncd_io_char_var1_nf
++     module procedure ncd_io_char_var3_nf
++     module procedure ncd_io_char_varn_strt_nf
+    M    models/lnd/clm/src/main/surfrdMod.F90 --------- Use ncd_inqdid and ncd_inqvid
+              instead of pio interfaces directly.
+
+Summary of testing:
+
+  bluefire: All PASS except...
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+057 blV61 TBL.sh _mec10sc_dh clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ...................FAIL! rc= 7
+061 blVn1 TBL.sh _mec10sc_dh clm_transient_glcMEC_rcp8.5 20331231:1800 1.9x2.5 gx1v6@1850-2100 48 arFAIL! rc= 5
+063 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+064 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+065 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+066 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+
+glcmec TBL tests fail since they didn't exist in previous version
+
+  bluefire interactive testing:
+006 smHS3 TSM.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic ......FAIL! rc= 8
+007 erHS3 TER.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -3+-3 arb_ic ...FAIL! rc= 5
+008 brHS3 TBR.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -3+-3 arb_ic ...FAIL! rc= 5
+009 blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic ......FAIL! rc= 4
+044 blV63 TBL.sh _mec10sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ...................FAIL! rc= 7
+060 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds ....FAIL! rc= 6
+  bluefire/CESM testing: All PASS except... (new compare tests fail since didn't exist before)
+BFAIL ERI.f19_g16.IG1850.bluefire.compare.clm4_0_22 
+BFAIL ERS_D.T31_g37.IGRCP26CN.bluefire.compare.clm4_0_22 
+BFAIL PST.f10_f10.I20TRCN.bluefire.compare.clm4_0_22 
+BFAIL PET_PT.f10_f10.I20TRCN.bluefire.compare.clm4_0_22 
+BFAIL SMS.f10_f10.IRCP45CN.bluefire.compare.clm4_0_22 
+
+PEND  ERS_D.f45_g37.I.bluefire.GC.003008 
+PEND  ERP.T31_g37.IGRCP60CN.bluefire.GC.003008 
+PEND  ERH_D.f10_f10.I1850CN.bluefire.GC.003008 
+PEND  ERS_D.f19_g16.IRCP85CN.bluefire.GC.003008 
+
+  bluefire/CESM Extra testing: 
+PASS  ERI.f19_g16.IG1850.bluefire 
+PASS  ERI.f19_g16.IG1850CN.bluefire 
+PASS  ERS.T31_g37.IGRCP45CN.bluefire 
+PASS  ERS.T31_g37.IGRCP85CN.bluefire 
+
+PASS  ERS_D.T31_g37.IG.bluefire 
+PASS  ERS_D.f19_g16.IGCN.bluefire 
+
+  bluefire/CESM Extra testing for coupled with CAM and CAM/POP: 
+PASS  ERI.f19_g16.BGCN.bluefire 
+PASS  SMS_D.f19_g16.BG1850CN.bluefire 
+PASS  ERP.f09_g16.BG20TRCN.bluefire 
+PASS  ERS.T31_g37.BGRCP26CN.bluefire 
+RUN   ERS_D.T31_g37.BGRCP45CN.bluefire.111336  --- takes too long
+PASS  ERS.T31_g37.BGRCP60CN.bluefire 
+RUN   ERS_D.T31_g37.BGRCP85CN.bluefire.111336  --- takes too long
+FAIL  SMS.f19_f19.EGCN.bluefire  ----------------- seg-fault
+FAIL  SMS.T31_T31.EG1850CN.bluefire  ------------- seg-fault
+PASS  ERI.f09_f09.FGCN.bluefire 
+PASS  SMS.f19_f19.FG1850CN.bluefire 
+PASS  SMS.T31_T31.FG20TRCN.bluefire 
+FAIL  SMS.T31_g37.TG.bluefire
+
+  bluefire/PTCLM testing:
+PTCLM.631306_1x1_mexicocityMEX_ICN.PTCLM          PASS
+PTCLM.631306_1x1_mexicocityMEX_I.PTCLM    PASS
+PTCLM.631306_1x1_mexicocityMEX_I_QIAN.PTCLM       PASS
+PTCLM.631306_US-Ha1_I_1850.PTCLM          PASS
+PTCLM.631306_US-Ha1_I20TR.PTCLM   PASS
+PTCLM.631306_US-Ha1_I20TRCN.PTCLM         PASS
+PTCLM.631306_US-Ha1_ICN.PTCLM     PASS
+PTCLM.631306_US-Ha1_I1850CN.PTCLM         PASS
+PTCLM.631306_US-Ha1_IRCP85CN.PTCLM        PASS
+PTCLM.631306_US-Ha1_I.PTCLM       PASS
+PTCLM.631306_US-Ha1_I_QIAN.PTCLM          PASS
+PTCLM.631306_US-Ha1_I.PTCLM       PASS
+PTCLM.631306_US-UMB_I.PTCLM       PASS
+PTCLM.631306_US-UMB_I_QIAN.PTCLM          PASS
+PTCLM.631306_US-UMB_I.PTCLM       PASS
+US-Ha1_ICN_ad_spinup.PTCLM                PASS
+  jaguar interactive testing: All PASS except...
+011 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+012 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+013 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+014 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+026 blVx3 TBL.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 5
+  jaguar/PTCLM testing:
+PTCLM.4224_1x1_mexicocityMEX_ICN.PTCLM	  PASS
+PTCLM.4224_1x1_mexicocityMEX_I.PTCLM    PASS
+PTCLM.4224_1x1_mexicocityMEX_I_QIAN.PTCLM   PASS
+PTCLM.4224_US-Ha1_I_1850.PTCLM	  FAIL 0
+PTCLM.4224_US-Ha1_I20TR.PTCLM   FAIL 0
+PTCLM.4224_US-Ha1_I20TRCN.PTCLM	  FAIL 0
+PTCLM.4224_US-Ha1_ICN.PTCLM   FAIL 0
+PTCLM.4224_US-Ha1_I1850CN.PTCLM	  FAIL 0
+PTCLM.4224_US-Ha1_IRCP85CN.PTCLM    FAIL 0
+PTCLM.4224_US-Ha1_I.PTCLM   FAIL 0
+PTCLM.4224_US-Ha1_I_QIAN.PTCLM	  FAIL 0
+PTCLM.4224_US-Ha1_I.PTCLM   FAIL 0
+PTCLM.4224_US-UMB_I.PTCLM   FAIL 0
+PTCLM.4224_US-UMB_I_QIAN.PTCLM	  FAIL 0
+PTCLM.4224_US-UMB_I.PTCLM   FAIL 0
+US-Ha1_ICN_ad_spinup.PTCLM      PASS
+  edinburgh/lf95 interactive testing: All PASS up to...
+022 blVx3 TBL.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 5
+  edinburgh/PTCLM testing: Fails because Python is too OLD (2.4 when needs 2.5)
+  yong/intel/PTCLM testing: Following PASS...
+PTCLM.4900_1x1_mexicocityMEX_ICN.PTCLM	  PASS
+PTCLM.4900_1x1_mexicocityMEX_I.PTCLM    PASS
+PTCLM.4900_1x1_mexicocityMEX_I_QIAN.PTCLM   PASS
+PTCLM.4900_US-Ha1_I_1850.PTCLM	  PASS
+PTCLM.4900_US-Ha1_I20TR.PTCLM   PASS
+PTCLM.4900_US-Ha1_I20TRCN.PTCLM	  PASS
+PTCLM.4900_US-Ha1_ICN.PTCLM   PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_22
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_22
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Jan 20 13:17:56 MST 2011
@@ -32,6 +359,7 @@ Known bugs (include bugzilla ID):
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1273 (fix pts_mode problem on jaguar)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

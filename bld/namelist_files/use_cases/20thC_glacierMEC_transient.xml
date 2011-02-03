@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc            >Simulate transient land-use, and aerosol deposition changes from 1850 to 2005</use_case_desc>
+<use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
+<use_case_desc bgc="cndv" >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
+
+<sim_year>1850</sim_year>
+
+<sim_year_range>1850-2000</sim_year_range>
+
+<!-- Right now do a cold-start - in the future use startup when initial conditions are available -->
+<clm_start_type>arb_ic</clm_start_type>
+
+<clm_demand >fpftdyn</clm_demand>
+
+<!-- create_glc_lu and glc_smb will already be set if glc_nec is set, but set explicitly here -->
+<create_glacier_mec_landunit >.true.</create_glacier_mec_landunit>
+<glc_smb                     >.true.</glc_smb>
+
+<hist_fincl2                 >QICEYR</hist_fincl2>
+<hist_mfilt                  >1,1</hist_mfilt>
+<hist_nhtfrq                 >0,-8760</hist_nhtfrq>
+
+<stream_year_first_ndep bgc="cn"   >1850</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cn"   >2005</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cn"   >1850</model_year_align_ndep>
+
+<stream_year_first_ndep bgc="cndv" >1850</stream_year_first_ndep>
+<stream_year_last_ndep  bgc="cndv" >2005</stream_year_last_ndep>
+<model_year_align_ndep  bgc="cndv" >1850</model_year_align_ndep>
+
+<!-- Settings for datm and driver, for stand-alone testing -->
+<datm_presaero       mode="clm_stndln" >trans_1850-2000</datm_presaero>
+<orb_iyear           mode="clm_stndln" >1990</orb_iyear>
+<co2_ppmv            mode="clm_stndln" >368.9</co2_ppmv>
+<datm_cycle_beg_year mode="clm_stndln" >1948</datm_cycle_beg_year>
+<datm_cycle_end_year mode="clm_stndln" >1972</datm_cycle_end_year>
+
+</namelist_defaults>

@@ -61,6 +61,7 @@ K -- 1.9x2.5 with single point mode
 L -- 10x15   with single point mode
 M -- 2.5x3.33
 N -- 1.9x2.5 with transient 1850-2100 for rcp=8.5
+n -- 1.9x2.5 with transient 1850-2100 for rcp=8.5 and glacier-MEC on
 O -- 10x15 with drydep
 P -- 1.9x2.5 with drydep
 Q -- 1x1 brazil with drydep
@@ -68,8 +69,11 @@ R -- 1.9x2.5 with ice_runoff and scaled_harvest
 S -- with CLM_USRDAT_NAME=13x12pt_f19_alaskaUSA 
 V -- 4x5 with drydep
 W -- 10x15 with transient 1850-2100 for rcp=6
+w -- 48x96 with transient 1850-2100 for rcp=6 and glacier-MEC on
 X -- 10x15 with transient 1850-2100 for rcp=4.5
+x -- 48x96 with transient 1850-2100 for rcp=4.5 and glacier-MEC on
 Y -- 10x15 with transient 1850-2100 for rcp=2.6
+y -- 48x96 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
 Z -- 10x15 with irrigation on
 
 i is the specific test (usually this implies...)

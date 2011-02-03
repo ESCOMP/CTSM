@@ -515,17 +515,20 @@ program mksrfdat
        write(6,*) 'sum over domain of pft ',k,suma
     enddo
 
-    ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier,ftopo] dataset
-    ! This call needs to occur after pctgla has been adjusted for the final time
-    allocate ( pctglcmec(lsmlon,lsmlat,nglcec),  &
-               topoglcmec(lsmlon,lsmlat,nglcec), &
-               thckglcmec(lsmlon,lsmlat,nglcec) )
+    if ( nglcec > 0 )then
+       ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier,ftopo] dataset
+       ! This call needs to occur after pctgla has been adjusted for the final time
+       allocate ( pctglcmec(lsmlon,lsmlat,nglcec),  &
+                  topoglcmec(lsmlon,lsmlat,nglcec), &
+                  thckglcmec(lsmlon,lsmlat,nglcec) )
 
-    pctglcmec(:,:,:)  = spval
-    topoglcmec(:,:,:) = spval
-    thckglcmec(:,:,:) = spval
-    call mkglcmec (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, mksrf_fglacier, ndiag, pctgla, &
-                   pctglcmec, topoglcmec, thckglcmec )
+       pctglcmec(:,:,:)  = spval
+       topoglcmec(:,:,:) = spval
+       thckglcmec(:,:,:) = spval
+       call mkglcmec (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, mksrf_fglacier, ndiag, pctgla, &
+                      pctglcmec, topoglcmec, thckglcmec )
+
+    end if
 
     write(6,*) ' timer_d mkglcmec-----'
     call shr_timer_print(t1)
@@ -566,10 +569,12 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_WETLAND' , data=pctwet      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='PCT_GLC_MEC' , data=pctglcmec   , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='GLC_MEC'     , data=elevclass   , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='TOPO_GLC_MEC', data=topoglcmec  , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='THCK_GLC_MEC', data=thckglcmec  , ncid=ncid, flag='write')
+    if ( nglcec > 0 )then
+       call ncd_ioglobal(varname='PCT_GLC_MEC' , data=pctglcmec   , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='GLC_MEC'     , data=elevclass   , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='TOPO_GLC_MEC', data=topoglcmec  , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='THCK_GLC_MEC', data=thckglcmec  , ncid=ncid, flag='write')
+    end if
     call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_PFT'     , data=pctpft      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
@@ -586,7 +591,8 @@ program mksrfdat
     ! Deallocate arrays NOT needed for dynamic-pft section of code
     deallocate ( organic3d )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-    deallocate ( pctglcmec, topoglcmec, thckglcmec, elevclass )
+    if ( nglcec > 0 ) deallocate ( pctglcmec, topoglcmec, thckglcmec, elevclass )
+    deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( sand3d, clay3d )
     deallocate ( soic2d )

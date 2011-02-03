@@ -26,7 +26,7 @@ module mkglcmecMod
 !
 ! !PUBLIC DATA MEMBERS: 
 !
-  integer, public       :: nglcec         = 10   ! number of elevation classes for glaciers
+  integer, public       :: nglcec         =  0   ! number of elevation classes for glaciers
   real(r8), pointer     :: elevclass(:)          ! elevation classes
 !EOP
 !===============================================================
@@ -93,8 +93,10 @@ subroutine mkglcmecInit( elevclass_o )
   else if ( nglcec == 1  )then
      elevclass(1)  =     0.
      elevclass(2)  = 10000.
+  else if ( nglcec == 0  )then
+     elevclass(1)  = 10000.
   else
-     write(6,*) subname//"ERROR:: nglcec must be 1, 3, 5, or 10 to work with CLM: "
+     write(6,*) subname//"ERROR:: nglcec must be 0, 1, 3, 5, or 10 to work with CLM: "
      call abort()
   end if
 
@@ -200,10 +202,16 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   thckglcmec_o = 0.
 
   ! -----------------------------------------------------------------
-  ! Exit early, if no glaciers exist
+  ! Exit early, if no glaciers exist or if nglcec = 0
   ! -----------------------------------------------------------------
   if ( all(pctglac_o < minglac ) )then
      write (6,*) 'No glaciers exist, set glcmec to zero as well'
+     call shr_sys_flush(6)
+     return
+  end if
+
+  if ( nglcec == 0 )then
+     write (6,*) 'Number of glacier elevation classes is zero -- set glcmec to zero as well'
      call shr_sys_flush(6)
      return
   end if

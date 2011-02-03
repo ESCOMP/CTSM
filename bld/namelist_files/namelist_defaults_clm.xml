@@ -170,12 +170,21 @@ ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BC
 </fsurdat>
 
 <!-- Datasets to use with glacier model (when we can accept answers changing these should move to the main version) -->
+
+<!-- Glacier model for present day simulations - year 2000 -->
 <fsurdat hgrid="48x96"     sim_year="2000" glc_nec="10" irrig=".false." >
 lnd/clm2/surfdata/surfdata_48x96_simyr2000_c100505.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" glc_nec="10" irrig=".false." >
 lnd/clm2/surfdata/surfdata_0.9x1.25_simyr2000_c100505.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" glc_nec="10" irrig=".false." >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr2000_c100505.nc</fsurdat>
+<!-- Glacier model for pre-industrial simulations - year 1850 -->
+<fsurdat hgrid="48x96"     sim_year="1850" glc_nec="10" irrig=".false." >
+lnd/clm2/surfdata/surfdata_48x96_simyr1850_c110114.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="1850" glc_nec="10" irrig=".false." >
+lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c110114.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="1850" glc_nec="10" irrig=".false." >
+lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1850_c110114.nc</fsurdat>
 
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="128x256"   sim_year="2000" irrig=".false." >
@@ -269,6 +278,13 @@ lnd/clm2/surfdata/surfdata_10x15_simyr1850_c100202.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
+
+<!-- Datasets to use with glacier model (when we can accept answers changing these should move to the main version) -->
+<fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" glc_nec="10" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_hist_simyr1850-2005_c110114.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" glc_nec="10" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_hist_simyr1850-2005_c110114.nc</fpftdyn>
+<fpftdyn hgrid="48x96"         sim_year_range="1850-2000" glc_nec="10" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_48x96_hist_simyr1850-2005_c110114.nc</fpftdyn>
+
+<!-- Other datasets -->
 <fpftdyn hgrid="10x15"         sim_year_range="1000-1002" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
 <fpftdyn hgrid="0.47x0.63"     sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c100826.nc</fpftdyn>
 <fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c091008.nc</fpftdyn>
@@ -278,7 +294,30 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2005_c091026.nc</fpftdyn>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_testyr1000-1004_c100527.nc</fpftdyn>
 
+
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
+
+<!-- Dynamic PFT for glacier multiple elevation class -->
+<fpftdyn hgrid="0.9x1.25" rcp="2.6" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="2.6" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
+<fpftdyn hgrid="48x96"    rcp="2.6" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_48x96_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
+
+<fpftdyn hgrid="0.9x1.25" rcp="4.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="4.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="48x96"    rcp="4.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_48x96_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
+
+<fpftdyn hgrid="0.9x1.25" rcp="6" glc_nec="10" sim_year_range="1850-2100" irrig=".false."
+>lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="6" glc_nec="10" sim_year_range="1850-2100" irrig=".false."
+>lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="48x96"    rcp="6" glc_nec="10" sim_year_range="1850-2100" irrig=".false."
+>lnd/clm2/surfdata/surfdata.pftdyn_48x96_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
+
+<fpftdyn hgrid="0.9x1.25" rcp="8.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="8.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="48x96"    rcp="8.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_48x96_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
+
+<!-- Other future scenario Dynamic PFT datasets -->
 <fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100319.nc</fpftdyn>
 <fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="2000-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100205.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c100322.nc</fpftdyn>
