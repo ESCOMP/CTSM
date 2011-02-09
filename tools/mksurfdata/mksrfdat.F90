@@ -20,10 +20,10 @@ program mksrfdat
     use mkpftMod    , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride, &
                              mkirrig
     use mksoilMod   , only : soil_sand, soil_clay, mksoitex, mksoitexInit, &
-                             soil_color, mksoicol, mksoicolInit, mkorganic
+                             soil_color, mksoicol, mksoicolInit, mkorganic, &
+                             soil_fmax, mkfmax
     use mkvocefMod  , only : mkvocef
     use mklanwatMod , only : mklanwat
-    use mkfmaxMod   , only : mkfmax
     use mkglcmecMod , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
     use mkharvestMod, only : mkharvest, mkharvest_init, mkharvest_fieldname, &
                              mkharvest_numtypes, mkharvest_parse_oride
@@ -135,6 +135,7 @@ program mksrfdat
          soil_color,               &
          soil_sand,                &
          soil_clay,                &
+         soil_fmax,                &
          pft_idx,                  &
          pft_frc,                  &
          all_urban
@@ -178,6 +179,7 @@ program mksrfdat
     !    all_urban --------- If entire area is urban
     !    soil_color -------- If you want to change the soil_color to this value everywhere
     !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
+    !    soil_fmax --------- If you want to change the soil_fmax  to this value everywhere
     !    soil_sand --------- If you want to change the soil_sand % to this value everywhere
     !    pft_idx ----------- If you want to change to 100% veg covered with given PFT indices
     !    pft_frc ----------- Fractions that correspond to the pft_idx above

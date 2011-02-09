@@ -2,13 +2,11 @@ areaMod.F90
 creategridMod.F90
 domainMod.F90
 mkfileMod.F90
-mkfmaxMod.F90
 mkglcmecMod.F90
 mkharvestMod.F90
 mklaiMod.F90
 mklanwatMod.F90
 mkpftMod.F90
-mkrank.F90
 spmdMod.F90
 clm_varctl.F90
 clm_varpar.F90

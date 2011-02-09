@@ -970,7 +970,12 @@ override all gridpoints with (experimental mode, normally NOT used).</para></lis
 </para>
 <caution>
 <para>
-Bug 1549 in the KnownBugs file talks about a problem with the pft_frc/pft_idx mode.
+Bug 1280 in the <ulink url="../KnownBugs">KnownBugs</ulink> file talks about a problem with the all_urbanmode.
+</para>
+</caution>
+<caution>
+<para>
+Bug 1249 in the <ulink url="../KnownBugs">KnownBugs</ulink> file talks about a problem with the pft_frc/pft_idx mode.
 </para>
 </caution>
 <para>
@@ -1190,7 +1195,7 @@ simulation-year of 1850, you would do the following:
 <warning>
 <para>
 There is a problem running the ndepregrid.ncl script, see bug 1265 in the
-KnownBugs file.
+<ulink url="../KnownBugs">KnownBugs</ulink> file.
 </para>
 </warning>
 </sect2>

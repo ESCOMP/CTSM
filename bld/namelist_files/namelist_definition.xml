@@ -309,6 +309,11 @@ Plant Function Type dataset for mksurfdata
 Dataset for percent glacier land-unit
 </entry>
 
+<entry id="mksrf_flai" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Leaf Area Index dataset for mksurfdata
+</entry>
+
 <!--                                                   -->
 <!-- mkgriddata namelist                               -->
 <!--                                                   -->

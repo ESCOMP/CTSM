@@ -25,6 +25,7 @@ module mkpftMod
   public mkpft             ! Set PFT
   public mkpft_parse_oride ! Parse the string with PFT fraction/index info to override
   public mkirrig           ! Set irrigation
+  public mkpftAtt          ! Write out attributes to output file on pft
 !
 ! !PUBLIC DATA MEMBERS: 
 !
@@ -346,7 +347,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
         pct_pft_i(:,:,:) =  pctpft_i(:,:,:)
   end if
 
-  if ( .not. use_input_pft ) then
+  if ( (.not. use_input_pft) .and. (.not. zero_out) ) then
      ! -----------------------------------------------------------------
      ! Error check
      ! Compare global areas on input and output grids
@@ -796,6 +797,140 @@ subroutine mkirrig(lsmlon, lsmlat, fname, ndiag, irrig_o)
   deallocate ( fld_i, fld_o)
 
 end subroutine mkirrig
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mkpftAtt
+!
+! !INTERFACE:
+subroutine mkpftAtt( ncid, dynlanduse, xtype )
+!
+! !DESCRIPTION:
+! make PFT attributes on the output file
+!
+  use ncdio       , only : check_ret, ncd_defvar
+  use mkvarctl    , only : mksrf_fvegtyp, mksrf_firrig, mksrf_flai
+  use mkvarpar    , only : numpft
+  use fileutils   , only : get_filename
+! !ARGUMENTS:
+  implicit none
+  include 'netcdf.inc'
+  integer, intent(in) :: ncid         ! NetCDF file ID to write out to
+  logical, intent(in) :: dynlanduse   ! if dynamic land-use file
+  integer, intent(in) :: xtype        ! external type to output real data as
+!
+! !CALLED FROM:
+! subroutine mkfile in module mkfileMod
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  integer :: pftsize              ! size of lsmpft dimension
+  integer :: dimid                ! input netCDF id's
+  character(len=256) :: str       ! global attribute string
+  character(len=32) :: subname = 'mkpftAtt'
+
+  ! Define dimensions
+  call check_ret(nf_def_dim (ncid, 'time'   , nf_unlimited, dimid), subname)
+
+  pftsize = numpft + 1
+  call check_ret(nf_def_dim (ncid, 'lsmpft' , pftsize     , dimid), subname)
+
+  ! Add global attributes
+
+  str = get_filename(mksrf_firrig)
+  call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+       'Irrig_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+  if (.not. dynlanduse) then
+     str = get_filename(mksrf_flai)
+     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'Lai_raw_data_file_name', len_trim(str), trim(str)), subname)
+  end if
+
+  if ( use_input_pft ) then
+     str = 'TRUE'
+     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+          'pft_override', len_trim(str), trim(str)), subname)
+  else if ( zero_out )then
+     str = 'TRUE'
+     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+          'zero_out_pft_override', len_trim(str), trim(str)), subname)
+  else
+     str = get_filename(mksrf_fvegtyp)
+     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+       'Vegetation_type_raw_data_filename', len_trim(str), trim(str)), subname)
+  end if
+
+  ! Define variables
+
+  if (mksrf_firrig /= ' ') then
+     call ncd_defvar(ncid=ncid, varname='PCT_IRRIG', xtype=xtype, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='percent irrigated area', units='unitless')
+  endif
+
+  call ncd_defvar(ncid=ncid, varname='LANDFRAC_PFT', xtype=xtype, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='land fraction from pft dataset', units='unitless')
+
+  call ncd_defvar(ncid=ncid, varname='PFTDATA_MASK', xtype=nf_int, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='land mask from pft dataset, indicative of real/fake points', &
+         units='unitless')
+
+  if (.not. dynlanduse) then
+     call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', &
+            long_name='percent plant functional type of gridcell', units='unitless')
+  else
+     call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
+            long_name='percent plant functional type of gridcell', units='unitless')
+  end if
+
+  if (.not. dynlanduse) then
+     call ncd_defvar(ncid=ncid, varname='MONTHLY_LAI', xtype=xtype,  &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
+            long_name='monthly leaf area index', units='unitless')
+
+     call ncd_defvar(ncid=ncid, varname='MONTHLY_SAI', xtype=xtype,  &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
+            long_name='monthly stem area index', units='unitless')
+
+     call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
+            long_name='monthly height top', units='meters')
+
+     call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
+            long_name='monthly height bottom', units='meters')
+  end if
+
+  if (dynlanduse) then
+     call ncd_defvar(ncid=ncid, varname='YEAR', xtype=nf_int,  &
+            dim1name='time', &
+            long_name='Year of PFT data', units='unitless')
+     call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
+            dim1name='time', &
+            long_name='year', units='unitless')
+     call ncd_defvar(ncid=ncid, varname='input_pftdata_filename', xtype=nf_char,  &
+            dim1name='nchar', &
+            dim2name='time',  &
+            long_name='Input filepath for PFT values for this year', units='unitless')
+  else
+     call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
+            dim1name='time', &
+            long_name='Calendar month', units='month')
+  end if
+
+end subroutine mkpftAtt
 
 !-----------------------------------------------------------------------
 

@@ -7,7 +7,7 @@
 #
 # ./test_driver.sh
 #
-# usage on jaguar and lynx: 
+# usage on jaguarpf and lynx: 
 #
 # env CLM_JOBID=1001 ./test_driver.sh -c
 # env CLM_JOBID=1001 ./test_driver.sh
@@ -90,8 +90,6 @@ export CLM_RESTART_THREADS=\$r_threads
 ##mpi tasks
 export CLM_TASKS=96
 export CLM_RESTART_TASKS=46
-
-export CLM_COMPSET="I"
 
 export OBJECT_MODE=64
 export XLSMPOPTS="stack=256000000"
@@ -180,8 +178,6 @@ export CLM_RESTART_THREADS=2
 export CLM_TASKS=2
 export CLM_RESTART_TASKS=1
 
-export CLM_COMPSET="I"
-
 export NETCDF_PATH=/contrib/netcdf-3.6.3/intel-10-64
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
@@ -251,8 +247,6 @@ export CLM_RESTART_THREADS=1
 ##mpi tasks
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=7
-
-export CLM_COMPSET="I"
 
 export PGI=/usr/local/pgi-pgcc-pghf-7.2-5
 export LAHEY=/usr/local/lf6481
@@ -367,8 +361,6 @@ export CLM_RESTART_THREADS=3
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=7
 
-export CLM_COMPSET="I"
-
 #-------------------------------------------------------------------------------
 # Runtime environment variables (from scripts4_100830)
 #-------------------------------------------------------------------------------
@@ -448,9 +440,9 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##jaguar
-    jaguar* ) 
-    submit_script="test_driver_jaguar_${cur_time}.sh"
+    ##jaguarpf
+    jaguarpf* ) 
+    submit_script="test_driver_jaguarpf_${cur_time}.sh"
 
     if [ -z "$CLM_CESMBLD" ]; then
 	export CLM_CESMBLD="TRUE"
@@ -464,7 +456,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=04:00:00,size=528
+#PBS -l walltime=12:00:00,size=1584
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -484,27 +476,25 @@ fi
 echo_arg="-e"
 if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
-    input_file="tests_pretag_jaguar"
+    input_file="tests_pretag_jaguarpf"
 else
     interactive="YES"
-    input_file="tests_pretag_jaguar_nompi"
+    input_file="tests_pretag_jaguarpf_nompi"
     if [ "\$compile_only" = "YES" ]; then
-       input_file="tests_pretag_jaguar"
+       input_file="tests_pretag_jaguarpf"
     fi
 fi
 
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=2
+   export CLM_THREADS=6
 fi
-export CLM_RESTART_THREADS=4
+export CLM_RESTART_THREADS=12
 
 ##mpi tasks
 export CLM_TASKS=264
 export CLM_RESTART_TASKS=129
-
-export CLM_COMPSET="I"
 
 source /opt/modules/default/init/sh
 
@@ -513,15 +503,16 @@ if [ "\$CLM_FC" = "GENXT" ]; then
   module load   netcdf/3.6.2
   export CESM_MACH="generic_xt"
 else
-  module load pgi/9.0.2                     # 9.0.2 tested for bfb on 2009-sep-25
-  module load xt-mpt/3.2.0                  # 3.2.0  is default on 2009-sep-25
-  module load xt-libsci/10.3.5              # 10.3.5 is default on 2009-sep-25
+  module switch pgi       pgi/9.0.4         #  9.0.4 tested for bfb on 2010-mar-12
+  module switch xt-mpt    xt-mpt/3.5.1      #  3.5.1 tested for bfb on 2010-mar-12
+  module switch xt-libsci xt-libsci/10.4.1  # 10.4.1 tested for bfb on 2010-mar-12
+  module swap xt-asyncpe xt-asyncpe/3.7
   module remove netcdf
+  module load p-netcdf/1.1.1
   module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
-  export CESM_MACH="jaguar"
+  export CESM_MACH="jaguarpf"
 fi
 
-module load p-netcdf
 module load   ncl
 module load subversion
 
@@ -552,7 +543,7 @@ export INC_PNETCDF=\${PNETCDF_DIR}/include
 export LIB_PNETCDF=\${PNETCDF_DIR}/lib
 export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
-export MAKE_CMD="gmake -j 9 "
+export MAKE_CMD="gmake -j 25 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/tmp/proj/ccsm/tools/ccsm_cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
@@ -585,8 +576,6 @@ export CLM_RESTART_THREADS=1
 ##mpi tasks
 export CLM_TASKS=2
 export CLM_RESTART_TASKS=1
-
-export CLM_COMPSET="I"
 
 if [ "\$CLM_FC" = "PGI" ]; then
    export CESM_MACH="generic_darwin_pgi"
@@ -649,8 +638,6 @@ export CLM_RESTART_THREADS=2
 ##mpi tasks
 export CLM_TASKS=256
 export CLM_RESTART_TASKS=120
-
-export CLM_COMPSET="I"
 
 export CESM_MACH="intrepid"
 
@@ -971,7 +958,7 @@ case $arg1 in
     echo "usage on bluefire, edinburgh, lynx, mirage, intrepid: "
     echo "./test_driver.sh"
     echo ""
-    echo "usage on jaguar: (compile interactively before submitting)"
+    echo "usage on jaguarpf: (compile interactively before submitting)"
     echo "env CLM_JOBID=1001 ./test_driver.sh -c"
     echo "env CLM_JOBID=1001 ./test_driver.sh"
     echo ""
@@ -1001,8 +988,8 @@ case $hostname in
     ##lynx
     lynx** | l0* )  qsub ${submit_script};;
 
-    ##jaguar
-    jaguar* )  qsub ${submit_script};;
+    ##jaguarpf
+    jaguarpf* )  qsub ${submit_script};;
 
     #intrepid
     login* )  qsub -n 256 -t 60 -q prod-devel --mode script ${submit_script};;

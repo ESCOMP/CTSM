@@ -963,7 +963,9 @@ smZ94 TSMtools.sh mkdatadomain tools__ds namelist
 sm854 TSMtools.sh interpinic   tools__ds runoptions
 sm853 TSMtools.sh interpinic   tools__o  runoptions
 
+sm954 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 sm978 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
+sm9C4 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds
 
 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional

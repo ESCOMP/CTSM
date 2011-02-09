@@ -511,7 +511,7 @@ if (defined $opts{'clm_usr_name'}) {
     }
 
     my $nvars = 0;
-    my $nl_arg = Build::Namelist->new($opts{'clm_usr_name'});
+    my $nl_arg = Build::Namelist->new();
     foreach my $var (@vars) {
 	my $val = $uf_defaults->get_usr_file($var, $definition, \%settings);
 

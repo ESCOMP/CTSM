@@ -8,8 +8,10 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
     use fileutils   , only : get_filename
-    use mkvarpar    , only : nlevsoi, numpft, nlevurb, numsolar, numrad
+    use mkvarpar    , only : nlevurb, numsolar, numrad
     use mkvarctl
+    use mkpftMod    , only : mkpftAtt
+    use mksoilMod   , only : mksoilAtt
     use mkglcmecMod , only : nglcec
     use mkharvestMod, only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
     use ncdio       , only : check_ret, ncd_defvar, ncd_convl2i
@@ -22,7 +24,6 @@ contains
 
     integer :: ncid
     integer :: j                    ! index
-    integer :: pftsize              ! size of lsmpft dimension
     integer :: dimid                ! temporary
     integer :: values(8)            ! temporary
     character(len=256) :: str       ! global attribute string
@@ -54,11 +55,9 @@ contains
 
     ! Define dimensions.
 
-    pftsize = numpft + 1
     call check_ret(nf_def_dim (ncid, 'lsmlon' , lsmlon      , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'lsmlat' , lsmlat      , dimid), subname)
     if (.not. dynlanduse) then
-       call check_ret(nf_def_dim (ncid, 'nlevsoi',  nlevsoi    , dimid), subname)
        if ( nglcec > 0 )then
           call check_ret(nf_def_dim (ncid, 'nglcec',   nglcec     , dimid), subname)
           call check_ret(nf_def_dim (ncid, 'nglcecp1', nglcec+1   , dimid), subname)
@@ -67,8 +66,6 @@ contains
     call check_ret(nf_def_dim (ncid, 'nlevurb', nlevurb     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'numsolar', numsolar     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'numrad', numrad     , dimid), subname)
-    call check_ret(nf_def_dim (ncid, 'lsmpft' , pftsize     , dimid), subname)
-    call check_ret(nf_def_dim (ncid, 'time'   , nf_unlimited, dimid), subname)
     call check_ret(nf_def_dim (ncid, 'nchar'  , 128         , dimid), subname)
 
     ! Create global attributes.
@@ -125,8 +122,11 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Revision_Id', len_trim(str), trim(str)), subname)
 
-    !call check_ret(nf_put_att_int1(ncid, NF_GLOBAL, &
-    !     'all_urban', ncd_convl2i(all_urban)), subname)
+    if ( all_urban )then
+       str = 'TRUE'
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'all_urban', len_trim(str), trim(str)), subname)
+    end if
 
     str = trim(mksrf_fgrid)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -136,28 +136,13 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Input_gridtype', len_trim(str), trim(str)), subname)
 
-    str = get_filename(mksrf_fvegtyp)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Vegetation_type_raw_data_filename', len_trim(str), trim(str)), subname)
-
     if (.not. dynlanduse) then
-       str = get_filename(mksrf_fsoitex)
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-            'Soil_texture_raw_data_file_name', len_trim(str), trim(str)), subname)
-
-       str = get_filename(mksrf_fsoicol)
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-            'Soil_color_raw_data_file_name', len_trim(str), trim(str)), subname)
 
        str = get_filename(mksrf_fvocef)
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
             'VOC_EF_raw_data_file_name', len_trim(str), trim(str)), subname)
     end if
 
-    str = get_filename(mksrf_forganic)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Organic_matter_raw_data_file_name', len_trim(str), trim(str)), subname)
-       
     str = get_filename(mksrf_flanwat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Inland_water_raw_data_file_name', len_trim(str), trim(str)), subname)
@@ -174,23 +159,9 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Fracdata_raw_data_file_name', len_trim(str), trim(str)), subname)
 
-    str = get_filename(mksrf_fmax)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Fmax_raw_data_file_name', len_trim(str), trim(str)), subname)
-
     str = get_filename(mksrf_furban)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_raw_data_file_name', len_trim(str), trim(str)), subname)
-
-    str = get_filename(mksrf_firrig)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Irrig_raw_data_file_name', len_trim(str), trim(str)), subname)
-
-    if (.not. dynlanduse) then
-       str = get_filename(mksrf_flai)
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-            'Lai_raw_data_file_name', len_trim(str), trim(str)), subname)
-    end if
 
     ! ----------------------------------------------------------------------
     ! Define variables
@@ -201,6 +172,9 @@ contains
     else
        xtype = nf_double
     end if
+
+    call mksoilAtt( ncid, dynlanduse, xtype )
+    call mkpftAtt(  ncid, dynlanduse, xtype )
 
     call ncd_defvar(ncid=ncid, varname='EDGEN', xtype=nf_double, &
          long_name='northern edge of surface grid', units='degrees north')
@@ -249,33 +223,12 @@ contains
 !         dim1name='lsmlon', dim2name='lsmlat', &
 !         long_name='land/ocean mask', units='0=ocean and 1=land')
 
-!    call ncd_defvar(ncid=ncid, varname='LANDFRAC', xtype=nf_double, &
+!    call ncd_defvar(ncid=ncid, varname='LANDFRAC', xtype=xtype, &
 !         dim1name='lsmlon', dim2name='lsmlat', &
 !         long_name='land fraction', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='LANDFRAC_PFT', xtype=nf_double, &
-         dim1name='lsmlon', dim2name='lsmlat', &
-         long_name='land fraction from pft dataset', units='unitless')
-
-    call ncd_defvar(ncid=ncid, varname='PFTDATA_MASK', xtype=nf_int, &
-         dim1name='lsmlon', dim2name='lsmlat', &
-         long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
 
     if (.not. dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='mxsoil_color', xtype=nf_int, &
-            long_name='maximum numbers of soil colors', units='unitless')
-
-       call ncd_defvar(ncid=ncid, varname='SOIL_COLOR', xtype=nf_int, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='soil color', units='unitless')
-
-       call ncd_defvar(ncid=ncid, varname='PCT_SAND', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
-            long_name='percent sand', units='unitless')
-       
-       call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
-            long_name='percent clay', units='unitless')
        
        call ncd_defvar(ncid=ncid, varname='EF1_BTR', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', &
@@ -300,11 +253,6 @@ contains
        call ncd_defvar(ncid=ncid, varname='EF1_CRP', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', &
             long_name='EF crp (isoprene)', units='unitless')
-
-       call ncd_defvar(ncid=ncid, varname='ORGANIC', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
-            long_name='organic matter density at soil levels', &
-            units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
 
        call ncd_defvar(ncid=ncid, varname='CANYON_HWR', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', &
@@ -451,71 +399,18 @@ contains
 
        end if
 
-       call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='maximum fractional saturated area', units='unitless')
-
     end if
 
     call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent urban', units='unitless')
 
-    if (mksrf_firrig /= ' ') then
-       call ncd_defvar(ncid=ncid, varname='PCT_IRRIG', xtype=xtype, &
-         dim1name='lsmlon', dim2name='lsmlat', &
-         long_name='percent irrigated area', units='unitless')
-    endif
-
-
-    if (.not. dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', &
-            long_name='percent plant functional type of gridcell', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-            long_name='percent plant functional type of gridcell', units='unitless')
+    if ( dynlanduse) then
        do j = 1, mkharvest_numtypes()
           call ncd_defvar(ncid=ncid, varname=mkharvest_fieldname(j), xtype=xtype, &
                dim1name='lsmlon', dim2name='lsmlat', dim3name='time', &
                long_name=mkharvest_longname(j), units='unitless')
        end do
-    end if
-
-    if (.not. dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_LAI', xtype=xtype,  &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-            long_name='monthly leaf area index', units='unitless')
-       
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_SAI', xtype=xtype,  &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-            long_name='monthly stem area index', units='unitless')
-       
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-            long_name='monthly height top', units='meters')
-       
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
-            dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
-            long_name='monthly height bottom', units='meters')
-    end if
-       
-    if (dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='YEAR', xtype=nf_int,  &
-            dim1name='time', &
-            long_name='Year of PFT data', units='unitless')
-       call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
-            dim1name='time', &
-            long_name='year', units='unitless')
-       call ncd_defvar(ncid=ncid, varname='input_pftdata_filename', xtype=nf_char,  &
-            dim1name='nchar', &
-            dim2name='time',  &
-            long_name='Input filepath for PFT values for this year', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
-            dim1name='time', &
-            long_name='Calendar month', units='month')
     end if
 
     ! End of define mode

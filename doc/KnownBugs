@@ -1,4 +1,86 @@
-Known Bugs in CLM4.0    		                          Jan/10/2011
+Known Bugs in CLM4.0    		                          Feb/07/2011
+
+====================================================================================
+Bug Number: 1282
+Trouble running datm8 to the last time-step for datasets with missing data
+
+The urban single-point sites all have only a portion of a complete year of atm
+forcing data. Hence, all of them abort with a dtlimit error when you try to run
+until the last time-step. This is because it reads in the data for the next
+time-step (thinking it needs to do a time-interpolation) and finds the
+difference in time-step is large (since it's over the part of the year with
+missing data). This is for the 1x1_mexicocityMEX, 1x1_vancouverCAN, and
+1x1_urbanc_alpha sites, but would be the case for other datasets with missing
+time-periods.
+
+The fix is to change the datm namelist to add settings for tintalgo and dtlimit
+in the datm namelist as follows...
+
+ &shr_strdata_nml
+.
+.
+.
+   tintalgo       = 'nearest','linear'
+   dtlimit        = 25000.,1.5
+  /
+
+Thus it will use the nearest point in time, and won't die with a dtlimit error,
+as we are setting the dtlimit to a very high value.
+
+====================================================================================
+Bug Number: 1280
+Bug in mksurfdata for urban_only case
+
+There's a seg-fault that occurs when you run with urban_only=.true.
+
+There is a simple fix for this as follows...
+
+line 338 should be changed from
+
+   if ( .not. use_input_pft ) then
+
+to
+
+   if ( (.not. use_input_pft) .and. (.not. zero_out) ) then
+
+====================================================================================
+Bug Number: 1276
+urbanc_alpha site doesn't work because of bad fracdata 
+
+When you run the urbanc_alpha site the log file for clm will be almost empty without
+showing time-step advancement and there will NOT be any output restart or history
+files for CLM (because CLM won't be run other than part of the initialization).
+
+The fracdata and surfdata datasets for CLM and the domain file for datm is incorrect
+for the urbanc_alpha test site. The land fraction and masks are both zero when they 
+should be one. And the urban surface data information is missing because of this.
+
+Working datasets are:
+
+ fatmlndfrc = $DIN_LOC_ROOT/lnd/clm2/griddata/fracdata_1x1pt_urbanc_alpha_navy_c090715.nc
+
+ domainfile = $DIN_LOC_ROOT/atm/datm7/domain.clm/domain.lnd.1x1pt-urbanc_alpha_test.110201.nc
+
+Changes you should make to the datm namelist are to add settings for tintalgo and dtlimit:
+
+ &shr_strdata_nml
+.
+.
+.
+   tintalgo       = 'nearest','linear'
+   dtlimit        = 25000.,1.5
+  /
+
+(NOTE: This is just the change shown for bug 1282 above).
+
+There is also half-hourly data for this site, so you should make the following
+changes as well:
+
+./xmlchange -file env_conf.xml -id ATM_NCPL -val 48
+./xmlchange -file env_run.xml -id STOP_N -val 22772
+
+And change the clm.buildnml.csh file so that dtime=1800 in the clm_inparm namelist.
+This way it will run both datm and CLM on a half-hourly time-step.
 
 ====================================================================================
 Bug Number: 1168

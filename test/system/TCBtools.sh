@@ -49,7 +49,6 @@ echo "TCBtools.sh: building $1 executable; output in ${CLM_TESTDIR}/${test_name}
 #
 cp $cfgdir/Makefile .
 cp $cfgdir/Srcfiles .
-cp $cfgdir/*.h      .
 #
 # Add cfgdir path to begining of each path in Filepath
 #

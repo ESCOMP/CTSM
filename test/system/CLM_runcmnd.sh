@@ -113,8 +113,8 @@ case $hostname in
 	fi
     fi ;;
 
-    ##jaguarcnl
-    jaguar* | aprunjag* | yodjag* )
+    ##jaguarpf
+    jaguarpf* | aprunjag* )
     ##search config options file for parallelization info; default on XT4 is mpi
     if grep -ic NOUSE_MPISERIAL ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
         if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then

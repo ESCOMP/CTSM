@@ -904,7 +904,7 @@ if ($mode eq "clm_stndln") {
 
    # Start date
    my %opts = ( 'hgrid'=>$lnd_res, 'mask'=>$mask );
-   my $start_ymd = $defaults->get_value('runstart_date', \%opts );
+   my $start_ymd = $defaults->get_value('run_startdate', \%opts );
    $start_ymd =~ s/-//g;
    add_default($nl, 'start_ymd', 'val'=>$start_ymd );
 

@@ -1,4 +1,187 @@
 ===============================================================
+Tag name:  clm4_0_24
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Feb  9 13:20:39 MST 2011
+One-line Summary: Fix mksurfdata and add ability to override soil_fmax
+
+Purpose of changes:
+
+Fix mksurfdata for urban. Add soil_fmx to mksurfdata. Add attributes to suface datasets
+that tell you the special namelist settings (such as all_urban, soil_, pft_). Add -irrig
+as option to mksurfdata.pl. Update datm with new datasets for urbanc_alpha. Add new frac
+dataset for urbanc_alpha. Update documentation to cesm1_0_rel_09_clm4_0_14 tag. Change
+test_driver from jaguar to jaguarpf. Fix bug in build-namelist creating namelist
+with clm_usr_name option.
+
+Bugs fixed (include bugzilla ID):
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1280 (improve modularity of mksurfdata) [partial]
+                                 1276 (urbanc_alpha site does not work)  [partial]
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+    Update frac and domain file for urbanc_alpha site
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+ scripts, drv and csm_share to cesm1_0_beta15 versions
+
+    scripts   to scripts4_110204
+    drv       to drvseq3_1_48
+    csm_share to share3_110201
+    datm      to datm8_110204
+
+List all files eliminated:
+
+   D   models/lnd/clm/tools/mksurfdata/mkfmaxMod.F90 --- Put inside of mksoilMod.F90
+
+   D   models/lnd/clm/test/system/tests_pretag_jaguar ------- rename to jaguarpf
+   D   models/lnd/clm/test/system/tests_pretag_jaguar_nompi - rename to jaguarpf
+
+>>>>>>>>>>>> Remove files that were no longer used 
+>>>>>>>>>>>> (they are already in mksoilMod or mkpftMod)
+   D   models/lnd/clm/tools/mksurfdata/mkorganic.F90
+   D   models/lnd/clm/tools/mksurfdata/mkrank.F90
+   D   models/lnd/clm/tools/mksurfdata/mkirrig.F90
+   D   models/lnd/clm/tools/mksurfdata/mksoicolMod.F90
+
+List all files added and what they do:
+
+>>>>>>>>>>>> Add an irrigation and urban test for mksurfdata
+   A   models/lnd/clm/test/system/nl_files/mksrfdt_10x15_irr_1850
+   A   models/lnd/clm/test/system/nl_files/mksrfdt_1x1_vancouverCAN_2000
+
+   A   models/lnd/clm/test/system/tests_pretag_jaguarpf ------- rename from jaguar
+   A   models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi - rename from jaguar
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>> Add all_urban and irrigation mksurfdata tests
+>>>>>>>>>>>> Update jaguar to jaguarpf
+   M   models/lnd/clm/test/system/tests_posttag_lynx_nompi
+   M   models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M   models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+   M   models/lnd/clm/test/system/tests_posttag_yong
+   M   models/lnd/clm/test/system/tests_pretag_jaguar_nompi
+   M   models/lnd/clm/test/system/input_tests_master
+   M   models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M   models/lnd/clm/test/system/TCBtools.sh ---- Remove copy of *.h files
+   M   models/lnd/clm/test/system/test_driver.sh - change jaguar to jaguarpf, update
+          modules to agree with scripts
+   M   models/lnd/clm/test/system/CLM_runcmnd.sh - change jaguar to jaguarpf
+
+>>>>>>>>>>>> Add soil_fmax option and soil_fmx, soil_col and irrig option to
+>>>>>>>>>>>> mksurfdata.pl. Add attributes to file for override cases.
+>>>>>>>>>>>> Put mkfmax inside of mksoilMod, add mksoilAtt and mkpftAtt methods.
+   M   models/lnd/clm/tools/mksurfdata/Srcfiles -------- Remove unused files
+   M   models/lnd/clm/tools/mksurfdata/mksoilMod.F90 --- Move mkfmax inside here
+          add mksoifmaxInit, mkfmax, and mksoilAtt interfaces, add soil_fmax as
+          an override setting
+   M   models/lnd/clm/tools/mksurfdata/mkpftMod.F90 ---- Fix bug in if statement 
+          (needed to also ask if .not. zerod_out). Create mkpftAtt interface, move
+          settings from mkfileMod.F90 to there.
+   M   models/lnd/clm/tools/mksurfdata/mkfileMod.F90 --- Move soil and pft specific 
+          declarations to either mksoilAtt or mkpftAt interfaces
+          if all_urban is set add all_urban=TRUE attribute to file
+   M   models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ---- Add soil_fmax to namelist
+   M   models/lnd/clm/tools/mksurfdata/mksurfdata.pl --- Add ability to set soil_col,
+          soil_fmax and irrig on command line
+          bring irrigation, setting of numpft and query of lai file from crop branch
+
+>>>>>>>>>>>> Update urbanc_alpha domain/frac files
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml -------- Add mksrf_flai
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml -- Set
+            urbanc_alpha default mask to test
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ----- urbanc_alpha
+            domain file
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ------ urbanc_alpha
+            frac file
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml  Add in 
+            mksrf_flai file
+
+>>>>>>>>>>>> Update to cesm1_0_rel_09_clm4_0_14 documentation (includes info on new bugs)
+   M   models/lnd/clm/doc/UsersGuide/single_point.xml
+   M   models/lnd/clm/doc/UsersGuide/tools.xml
+   M   models/lnd/clm/doc/KnownBugs
+
+Summary of testing:
+
+  bluefire interactive testing:
+009 blHS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic ......FAIL! rc= 5
+  jaguarpf interactive testing:
+011 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+012 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+013 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+014 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+026 blVx3 TBL.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 5
+034 blV63 TBL.sh _mec10sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ...................FAIL! rc= 7
+  edinburgh/lf95 interactive testing:
+022 blVx3 TBL.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 5
+  mirage/intel interactive testing: All PASS except...
+017 erVx3 TER.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -4+-6 aFAIL! rc= 5
+018 brVx3 TBR.sh _mec10sc_do clm_transient_glcMEC_rcp4.5^nl_urb_br 20331231:1800 48x96 gx3v7@1850-21FAIL! rc= 5
+019 blVx3 TBL.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 4
+021 erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:1800 10x15 USGS@1850 10+38 cold .........FAIL! rc= 13
+022 brR53 TBR.sh 17p_cnc13sc_do clm_std^nl_urb_br 20020115:1800 10x15 USGS@1850 72+72 cold ......FAIL! rc= 11
+024 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+025 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 10+38 arb_ic ...........FAIL! rc= 5
+026 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+027 blG53 TBL.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+029 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 13
+030 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 11
+  yong/intel interactive testing:
+011 smD94 TSM.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 10
+012 erD94 TER.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 72+72 cold ....................FAIL! rc= 5
+019 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 13
+020 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 11
+022 smV24 TSM.sh _mec10sc_ds clm_glcmec 19980115:1800 48x96 gx3v7 96 arb_ic .....................FAIL! rc= 10
+023 erV24 TER.sh _mec10sc_ds clm_glcmec 19980115:1800 48x96 gx3v7 10+38 arb_ic ..................FAIL! rc= 5
+024 brV24 TBR.sh _mec10sc_ds clm_glcmec^nl_urb_br 19980115:1800 48x96 gx3v7 72+72 arb_ic ........FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_23
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_23
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Feb  3 13:42:17 MST 2011
@@ -39,6 +222,8 @@ Known bugs (include bugzilla ID):
                                  1251 (PTCLM testcases aborts in I_QIAN case)
                                  1276 (urbanc_alpha site does not work)
                                  1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -360,6 +545,8 @@ Known bugs (include bugzilla ID):
                                  1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
                                  1273 (fix pts_mode problem on jaguar)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -513,6 +700,8 @@ Known bugs (include bugzilla ID):
                                  1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
                                  1271 (Problem in PTS_MODE with clm)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -682,6 +871,8 @@ Known bugs (include bugzilla ID):
                                  1224 (Fix -aerdepgrid/ndepgrid options in PTCLM.py)
                                  1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

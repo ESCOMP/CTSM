@@ -55,18 +55,23 @@ my %opts = (
                years=>"1850,2000",
                glc_nec=>0,
                help=>0,
+               irrig=>undef,
                pft_override=>undef,
                pft_frc=>undef,
                pft_idx=>undef,
                soil_override=>undef,
                soil_cly=>undef,
                soil_snd=>undef,
+               soil_col=>undef,
+               soil_fmx=>undef,
                usrname=>"",
                dynpft=>undef,
                nomv=>undef,
                csmdata=>$CSMDATA,
                pftdata=>$PFTDATA,
            );
+
+my $numpft = 16;
 
 #-----------------------------------------------------------------------------------------------
 sub usage {
@@ -84,6 +89,7 @@ OPTIONS
      -exedir "directory"           Directory where mksurfdata program is
                                    (by default assume it's in the current directory)
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
+     -irrig                        If you want to include irrigated crop in the output file.
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -103,6 +109,8 @@ OPTIONS to override the mapping of the input gridded data with hardcoded input
      -pft_frc "list of fractions"  Comma delimited list of percentages for veg types
      -pft_idx "list of veg index"  Comma delimited veg index for each fraction
      -soil_cly "% of clay"         % of soil that is clay
+     -soil_col "soil color"        Soil color (1 [light] to 20 [dark])
+     -soil_fmx "soil fmax"         Soil maximum saturated fraction (0-1)
      -soil_snd "% of sand"         % of soil that is sand
 
 EOF
@@ -117,14 +125,27 @@ sub check_soil {
         die "ERROR: Soil variables were set, but $type was NOT set\n";
      }
   }
-  #if ( $opts{'soil_col'} < 0 || $opts{'soil_col'} > 20 ) {
-  #   die "ERROR: Soil color is out of range = ".$opts{'soil_col'}."\n";
-  #}
   my $texsum = $opts{'soil_cly'} + $opts{'soil_snd'};
   my $loam   = 100.0 - $texsum;
   if ( $texsum < 0.0 || $texsum > 100.0 ) {
      die "ERROR: Soil textures are out of range: clay = ".$opts{'soil_cly'}.
          " sand = ".$opts{'soil_snd'}." loam = $loam\n";
+  }
+}
+
+sub check_soil_col_fmx {
+#
+# check that the soil color or soil fmax option is set correctly
+#
+  if ( defined($opts{'soil_col'}) ) {
+     if ( $opts{'soil_col'} < 0 || $opts{'soil_col'} > 20 ) {
+        die "ERROR: Soil color is out of range = ".$opts{'soil_col'}."\n";
+     }
+  }
+  if ( defined($opts{'soil_fmx'}) ) {
+     if ( $opts{'soil_fmx'} < 0.0 || $opts{'soil_fmx'} > 1.0 ) {
+        die "ERROR: Soil fmax is out of range = ".$opts{'soil_fmx'}."\n";
+     }
   }
 }
 
@@ -150,7 +171,7 @@ sub check_pft {
   my $sumfrc = 0.0;
   for( my $i = 0; $i <= $#pft_idx; $i++ ) {
      # check index in range
-     if ( $pft_idx[$i] < 0 || $pft_idx[$i] > 16 ) {
+     if ( $pft_idx[$i] < 0 || $pft_idx[$i] > $numpft ) {
          die "ERROR: pft_idx out of range = ".$opts{'pft_idx'}."\n";
      }
      # make sure there are no duplicates
@@ -183,6 +204,7 @@ sub check_pft {
         "p|pftlc=s"    => \$opts{'pftdata'},
         "nomv"         => \$opts{'nomv'},
         "glc_nec=i"    => \$opts{'glc_nec'},
+        "irrig"        => \$opts{'irrig'},
         "d|debug"      => \$opts{'debug'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
@@ -191,6 +213,8 @@ sub check_pft {
         "usrname=s"    => \$opts{'usrname'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
+        "soil_col=i"   => \$opts{'soil_col'},
+        "soil_fmx=f"   => \$opts{'soil_fmx'},
         "soil_cly=f"   => \$opts{'soil_cly'},
         "soil_snd=f"   => \$opts{'soil_snd'},
    ) or usage();
@@ -262,6 +286,7 @@ sub check_pft {
        &check_soil( );
        $opts{'soil_override'} = 1;
    }
+   &check_soil_col_fmx( );
    # Check if pft set
    if ( defined($opts{'pft_frc'}) || defined($opts{'pft_idx'}) ) {
        &check_pft( );
@@ -369,6 +394,15 @@ EOF
             #
             my $glcdata = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts -options glc_nec=$glc_nec -res 0.5x0.5 -namelist clmexp -var mksrf_glacier`;
             #
+            # Irrigation dataset
+            #
+            my $irrig;
+            my $irrdes = "";
+            if ( defined($opts{'irrig'}) ) {
+              $irrig = "mksrf_firrig       = '$CSMDATA/lnd/clm2/rawdata/mksrf_irrig_2160x4320_simyr2000.c090320.nc'";
+              $irrdes = "irrcr_";
+            }
+            #
             # Create namelist file
             #
             my $fh = IO::File->new;
@@ -388,6 +422,7 @@ EOF
  mksrf_ffrac        = '$CSMDATA/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
  outnc_double       = $double
  all_urban          = $all_urb
+ $irrig
 EOF
             my $urbdesc = "urb3den";
             if ( ! $urb_pt ) {
@@ -433,6 +468,7 @@ EOF
             }
             my $strlen = 125;
             my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
+            my $mksrf_flai = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -var mksrf_flai -namelist clmexp`;
             my $pftdyntext_file;
             if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
                $pftdyntext_file = "pftdyn_$desc.txt";
@@ -472,6 +508,16 @@ EOF
                print $fh <<"EOF";
  soil_clay          = $opts{'soil_cly'}
  soil_sand          = $opts{'soil_snd'}
+EOF
+            }
+            if ( defined($opts{'soil_col'}) ) {
+               print $fh <<"EOF";
+ soil_color         = $opts{'soil_col'}
+EOF
+            }
+            if ( defined($opts{'soil_fmx'}) ) {
+               print $fh <<"EOF";
+ soil_fmax          = $opts{'soil_fmx'}
 EOF
             }
             if ( defined($opts{'pft_override'}) ) {
@@ -556,7 +602,7 @@ EOF
                if ( defined($opts{'nomv'}) ) {
                   $outdir = ".";
                }
-               my $ofile = "surfdata_${res}_${desc_yr0}_${sdate}";
+               my $ofile = "surfdata_${res}_${desc_yr0}_${irrdes}${sdate}";
                my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
                print "$mvcmd\n";
                if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {

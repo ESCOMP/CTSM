@@ -447,7 +447,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmlndfrc hgrid="1x1_camdenNJ"        mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_mexicocityMEX"   mask="navy">lnd/clm2/griddata/fracdata_1x1pt_mexicocityMEX_navy_c090715.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_vancouverCAN"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_vancouverCAN_navy_c090715.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1x1_urbanc_alpha"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_urbanc_alpha_navy_c090715.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_urbanc_alpha"    mask="test">lnd/clm2/griddata/fracdata_1x1pt_urbanc_alpha_test_c110201.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_asphaltjungleNJ" mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
