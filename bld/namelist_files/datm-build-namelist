@@ -87,6 +87,7 @@ Note: The precedence for setting the values of namelist variables is (highest to
       3. values set from a use-case scenario, e.g., -use_case
       4. values read from the file specified by -infile,
       5. values from the namelist defaults file.
+
 EOF
 }
 
@@ -706,9 +707,10 @@ $inputopts{'chng_din_lc'} = 1;
 if ( $datm_source ne "CLM_QIAN" ) {
    my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
    add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
-   add_default($nl, 'mapalgo');
+   add_default($nl, 'mapalgo',  'source'=>$datm_source );
    add_default($nl, 'mapmask');
-   add_default($nl, 'tintalgo');
+   add_default($nl, 'tintalgo', 'source'=>$datm_source );
+   add_default($nl, 'taxmode',  'source'=>$datm_source );
    add_default($nl, 'fillalgo');
    add_default($nl, 'fillmask');
     
@@ -727,6 +729,7 @@ if ( $datm_source ne "CLM_QIAN" ) {
    my $omapalgo  = undef;
    my $omapmask  = undef;
    my $otintalgo = undef;
+   my $otaxmode  = undef;
    my $ofillalgo = undef;
    my $ofillmask = undef;
    my $filepath  = $inputopts{'filepath'};
@@ -738,6 +741,7 @@ if ( $datm_source ne "CLM_QIAN" ) {
       my $mapalgo    = $defaults->get_value( 'mapalgo' );
       my $mapmask    = $defaults->get_value( 'mapmask' );
       my $tintalgo   = $defaults->get_value( "tintalgo.$src" );
+      my $taxmode    = $defaults->get_value( "taxmode" );
       my $fillalgo   = $defaults->get_value( 'fillalgo' );
       my $fillmask   = $defaults->get_value( 'fillmask' );
     
@@ -756,6 +760,7 @@ if ( $datm_source ne "CLM_QIAN" ) {
          $omapalgo  = "\'$mapalgo\'";
          $omapmask  = "\'$mapmask\'";
          $otintalgo = "\'$tintalgo\'";
+         $otaxmode  = "\'$taxmode\'";
          $ofillalgo = "\'$fillalgo\'";
          $ofillmask = "\'$fillmask\'";
       } else {
@@ -763,6 +768,7 @@ if ( $datm_source ne "CLM_QIAN" ) {
          $omapalgo  .= ",\'$mapalgo\'";
          $omapmask  .= ",\'$mapmask\'";
          $otintalgo .= ",\'$tintalgo\'";
+         $otaxmode  .= ",\'$taxmode\'";
          $ofillalgo .= ",\'$fillalgo\'";
          $ofillmask .= ",\'$fillmask\'";
       }
@@ -771,57 +777,60 @@ if ( $datm_source ne "CLM_QIAN" ) {
    add_default($nl, 'mapalgo',  'val' => "$omapalgo"  );
    add_default($nl, 'mapmask',  'val' => "$omapmask"  );
    add_default($nl, 'tintalgo', 'val' => "$otintalgo" );
+   add_default($nl, 'taxmode',  'val' => "$otaxmode"  );
    add_default($nl, 'fillalgo', 'val' => "$ofillalgo" );
    add_default($nl, 'fillmask', 'val' => "$ofillmask" );
 }
 
-if ( $datm_presaero ne "none" ) {
-   my %settings;
-   $settings{'hgrid'}         = $res;
-   $settings{'datm_presaero'} = $datm_presaero;
-   $inputopts{'datasource'}   = "presaero";
-   my $file_aero = $defaults->get_value( "datm_file_aero", \%settings );
-   # separate info filename and pathname
-   $file_aero   =~ s!(.*)/!!;
-   if ( $file_aero eq "" ) {
-      die "$ProgName ERROR:: did NOT find an aerosol file for this case.\n";
-   }
-   my $dir_aero = $1;
-   $inputopts{'case'}         = $file_aero;
-   $inputopts{'domain'}       = $inputopts{'case'};
-   $inputopts{'domainpath'}   = "$inputdata_rootdir/$dir_aero";
-   $inputopts{'filepath'}     = $inputopts{'domainpath'};
-   my $outstreams    = "$outdirname/";
-      $outstreams   .= $defaults->get_value( "datm_aero_streams",    \%settings );
-   my $aero_beg_year = $defaults->get_value( "datm_year_first_aero", \%settings );
-   my $aero_end_year = $defaults->get_value( "datm_year_last_aero",  \%settings  );
-   my $aero_algnyear = $defaults->get_value( "datm_year_align_aero", \%settings  );
-   #
-   # Append to streams and other arrays associated with streams
-   #
-   my %streamArrays = ( 
-         fillalgo=>"'nn'", fillmask=>"'nomask'", mapalgo=>"'bilinear'",
-         mapmask=>"'nomask'", tintalgo=>"'linear'", 
-         streams=>"\"$outstreams $aero_algnyear $aero_beg_year $aero_end_year\"" 
-   );
-   foreach my $var ( keys(%streamArrays) ) {
-     my $val     = $nl->get_value($var);
-     my $group   = $definition->get_group_name($var);
-     $val       .= "," . $streamArrays{$var};
-     $nl->set_variable_value($group, $var, $val );
-   }
-    
-   # Read the streams template file
-   my $streams = Streams::Template->new( \%inputopts );
-   my $template = $defaults->get_value( 'streamstemplate' );
-   $streams->Read( "$cfgdir/../../../../$template" );
-       
-   if ( $opts{'test'} ) {
-       $streams->TestFilesExist( "data" );
-       $streams->TestFilesExist( "domain" );
-   }
-   $streams->Write( $outstreams );
+my %settings;
+$settings{'hgrid'}         = $res;
+$settings{'datm_presaero'} = $datm_presaero;
+$inputopts{'datasource'}   = "presaero";
+my $file_aero = $defaults->get_value( "datm_file_aero", \%settings );
+# separate info filename and pathname
+$file_aero   =~ s!(.*)/!!;
+if ( $file_aero eq "" ) {
+   die "$ProgName ERROR:: did NOT find an aerosol file for this case.\n";
 }
+my $dir_aero = $1;
+$inputopts{'case'}         = $file_aero;
+$inputopts{'domain'}       = $inputopts{'case'};
+$inputopts{'domainpath'}   = "$inputdata_rootdir/$dir_aero";
+$inputopts{'filepath'}     = $inputopts{'domainpath'};
+my $outstreams    = "$outdirname/";
+   $outstreams   .= $defaults->get_value( "datm_aero_streams",    \%settings );
+my $aero_beg_year = $defaults->get_value( "datm_year_first_aero", \%settings );
+my $aero_end_year = $defaults->get_value( "datm_year_last_aero",  \%settings  );
+my $aero_algnyear = $defaults->get_value( "datm_year_align_aero", \%settings  );
+my $mapalgo = "bilinear";
+if ( $datm_presaero == "pt1_pt1" ) {
+   $mapalgo = "nn";
+}
+#
+# Append to streams and other arrays associated with streams
+#
+my %streamArrays = ( 
+      fillalgo=>"'nn'", fillmask=>"'nomask'", mapalgo=>"\"$mapalgo\"",
+      mapmask=>"'nomask'", tintalgo=>"'linear'", taxmode=>"'cycle'",
+      streams=>"\"$outstreams $aero_algnyear $aero_beg_year $aero_end_year\"" 
+);
+foreach my $var ( keys(%streamArrays) ) {
+  my $val     = $nl->get_value($var);
+  my $group   = $definition->get_group_name($var);
+  $val       .= "," . $streamArrays{$var};
+  $nl->set_variable_value($group, $var, $val );
+}
+    
+# Read the streams template file
+my $streams = Streams::Template->new( \%inputopts );
+my $template = $defaults->get_value( 'streamstemplate' );
+$streams->Read( "$cfgdir/../../../../$template" );
+       
+if ( $opts{'test'} ) {
+    $streams->TestFilesExist( "data" );
+    $streams->TestFilesExist( "domain" );
+}
+$streams->Write( $outstreams );
 
 #############################
 # namelist group: datm_in    #

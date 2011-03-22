@@ -716,11 +716,11 @@ contains
          ptr_col=clm3%g%l%c%cws%h2osoi_liqice_10cm, set_urb=spval)
 
     call hist_addfld1d (fname='SNOWLIQ',  units='kg/m2',  &
-         avgflag='I', long_name='snow liquid water', &
+         avgflag='A', long_name='snow liquid water', &
          ptr_col=clm3%g%l%c%cws%snowliq)
 
     call hist_addfld1d (fname='SNOWICE',  units='kg/m2',  &
-         avgflag='I', long_name='snow ice', &
+         avgflag='A', long_name='snow ice', &
          ptr_col=clm3%g%l%c%cws%snowice)
 
     call hist_addfld1d (fname='QTOPSOIL',  units='mm/s',  &

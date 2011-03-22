@@ -130,7 +130,7 @@ contains
 #endif
     call accumulRest( ncid, flag='define' )
 
-    call hist_restart_ncd ( ncid, flag='define' )
+    call hist_restart_ncd ( ncid, flag='define', rdate=rdate )
 
     call restFile_enddef( ncid )
 
@@ -158,7 +158,7 @@ contains
 
     call accumulRest( ncid, flag='write' )
     
-    call hist_restart_ncd (ncid, flag='write', rdate=rdate)
+    call hist_restart_ncd (ncid, flag='write' )
 
     ! --------------------------------------------
     ! Close restart file and write restart pointer file

@@ -20,10 +20,14 @@ NOTE: In order to successfully build, some source files are required from
       other clm src directories. See the Filepath for the expected path of
       required files.
 
-      By default code compiles non-optimized so that you can use the debugger,
-      and with bounds-checking, and float trapping on. To speed up do the following...
+      By default code compiles optimized so it's reasonably fast. If you want
+      to use the debugger, with bounds-checking, and float trapping on do the 
+      following:
 
-   gmake OPT=TRUE  
+   gmake OPT=FALSE
+
+See Also: See the models/lnd/clm/tools/README file for notes about setting
+          the path for NetCDF and running with shared-memory parallelism.
 
 3) create namelist file :
    (sample namelists are: mksurfdata.namelist, mksurfdata.regional, or mksurfdata.singlept)

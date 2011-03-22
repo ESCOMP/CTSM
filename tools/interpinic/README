@@ -24,6 +24,9 @@ Options to gmake:
 make OPT=TRUE     # will compile with production compiler options on
 make SMP=TRUE     # will compile with Open-MP parallelism on
 
+See Also: See the models/lnd/clm/tools/README file for more notes about setting
+          the path for NetCDF and running with shared-memory parallelism.
+
 Files:
 
 Makefile ------------------------------------------- GNU makefile

@@ -1,4 +1,245 @@
 ===============================================================
+Tag name:  clm4_0_25
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Mar 22 10:13:08 MDT 2011
+One-line Summary: Always output restart-history files add more meta-data to them, 
+      fix urbanc_alpha and 2.5x3.33 datasets, Changes from Keith O on SNOWLIQ/SNOWICE
+
+Purpose of changes:
+
+Move history namelist information to restart history files and always output them. Add
+attributes and meta-data to the restart history files. Fix urbanc_alpha test site surface
+dataset. Fix datm namelist for urban cases. Use new crop pft-physiology file. Update
+scripts and csm_share. Changes from Keith O on SNOWLIQ/SNOWICE so goes to zero rather
+than missing value. Update 2.5x3.33 datasets. Fix dvolrdt units documentation, call
+mksoifmaxInit.
+
+Bugs fixed (include bugzilla ID):
+                                 1247 (Some changes to ncd_pio in clm)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+    New pft-physiology file with fields for prognostic crop
+    New surface dataset for urbanc_alpha
+    New grid/topo/frac/domain files for 2.5x3.33
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, snowliq/snowice changes by oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm, cism, csm_share
+
+    scripts    to scripts4_110204
+    datm       to datm8_110210
+    cism       to cism1_110220
+    csm_share  to share3_110201
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/test/system/input_tests_master - Change start dates of urban tests
+
+>>>>>>>>>>>> Move mksoil*Init subroutines private to mksoilMod, and call a mksoilInit
+>>>>>>>>>>>> routine from mksrfdata, making sure mksoifmaxInit is called.
+   M   models/lnd/clm/tools/mksurfdata/mksoilMod.F90 - Add mksoilInit to call
+              mksoitexInit/mksoicolInit and mksoifmaxInit (mksoifmaxInit was missing)
+              fix mksoifmaxInit, and make mksoitex/col/fmaxInit routines private
+   M   models/lnd/clm/tools/mksurfdata/mksrfdat.F90 -- Call mksoilInit, 
+              remove mksoicol/texInit
+
+>>>>>>>>>>>> Add notes about setting path to NetCDF, and other gmake options
+   M   models/lnd/clm/tools/mksurfdata/README
+   M   models/lnd/clm/tools/interpinic/README
+   M   models/lnd/clm/tools/mkgriddata/README
+   M   models/lnd/clm/tools/mkdatadomain/README
+
+   M   models/lnd/clm/bld/queryDefaultNamelist.pl - Remove white-space from input options
+   M   models/lnd/clm/bld/listDefaultNamelist.pl -- Also list datm_internal files
+   M   models/lnd/clm/bld/build-namelist ---------- Add drv_final_spinup from PTCLM
+              document precidence of the different env_conf.xml 
+
+>>>>>>>>>>>> Fix 2.5x3.33 and urbanc_alpha files, change some settings for CLM1PT
+>>>>>>>>>>>> or pt1_pt1 resolution, remove ndepsrc.
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml --------- Add
+              taxmode and dtlimit, add 2.5x3.33 resolution
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml --- Add
+              sim_year="2000" sim_year_range="constant" for pft1_pt1 datm_presaero files
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ------ Add
+              1x1_numaIA and 1x1_smallvilleIA domain/preseaero files, update 2.5x3.33 domain
+              make mapalgo nn for CLM1PT, set taxmode and tintalgo appropriately
+              if CLM1PT is set. Add transient presaero file for 1x1_tropicAtl.
+   M   models/lnd/clm/bld/namelist_files/use_cases/stdurbpt_pd.xml ------- Set
+              dtime to 1800 for 1x1_urbanc_alpha
+   M   models/lnd/clm/bld/namelist_files/datm-build-namelist ------------- Set
+              tintalgo, mapalgo by datm_source, and set taxmode as well. Remove
+              option for datm_presaero="none". Set mapalgo=nn for datm_presaero=pt1_pt1.
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ------- Update
+              urbanc_alpha surface dataset, 2.5x3.33 grid/topo/frac datasets
+              Remove ndepsrc="stream" in ndepmapalgo settings as doesn't exist anymore.
+              Use latest pft-physiology file from CROP branch (has extra data needed
+              for prognostic crop)
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml ------- Set
+              atm_cpl_dt=1800 for urbanc_alpha, set stop_option/stop_n for
+              urban sites carefully (add 1 time-step to stop_n, double for urbanc_alpha).
+              Use "test" mask for urbanc_alpha
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml - Remove
+              ndepsrc="stream"
+
+>>>>>>>>>>>> Add meta-data to restart hist files, put history restart data on
+>>>>>>>>>>>> restart hist files and off master restart files (so initial condition
+>>>>>>>>>>>> files aren't cluttered with information only needed for continue runs).
+>>>>>>>>>>>> Some changes to SNOWLIQ/SNOWICE, document dvolrdt units.
+   M   models/lnd/clm/src/main/histFileMod.F90 - Use htape_create for restart_hist
+              files, modify hist_restart_ncd so that namelist vars on one restart
+              history files and they are always output, add more metadata to
+              restart hist files, remove some temp arrays. Restart history files
+              now always needed for continue runs, but not for other run types,
+              and restart history information does not clutter the master restart
+              files. The only history variables on master restart files are the
+              history and restart filenames. Comments on the files make this clear.
+   M   models/lnd/clm/src/main/restFileMod.F90 - Change hist_restart_ncd calls
+   M   models/lnd/clm/src/main/ncdio_pio.F90 --- Add ncd_io_log_var0_nf interface
+              add options for attributes: comment, flag_values, flag_meanings, and
+              nvalid_range for variables., fix an issue in ncd_io_int_var0_nf
+   M   models/lnd/clm/src/main/histFldsMod.F90 - Change default for SNOWLIQ/SNOWICE
+              to "Average" rather than "Instant" (from oleson).
+   M   models/lnd/clm/src/riverroute/RtmMod.F90 ---- Document dvolrdt conversion
+   M   models/lnd/clm/src/riverroute/RunoffMod.F90 - Document dvolrdt units
+              correctly.
+   M   models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 - Initialize snowice/snowliq
+              to zero over lake filter (from oleson).
+
+Summary of testing:
+
+  bluefire: All PASS except TBL tests and...
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+063 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+064 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+065 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+  bluefire interactive testing: All PASS except all TBL tests fail
+  bluefire/CESM testing: All PASS except...
+FAIL  SMS_RLA.f45_f45.I.bluefire.generate.clm4_0_25 
+FAIL  SMS_RLB.f45_f45.I.bluefire.generate.clm4_0_25 
+FAIL  SMS_ROA.f45_f45.I.bluefire.generate.clm4_0_25 
+FAIL  ERS_D.f45_g37.I.bluefire.generate.clm4_0_25 
+BFAIL ERS_D.f45_g37.I.bluefire.compare.clm4_0_23 
+FAIL  PST.f45_g37.I1850.bluefire.generate.clm4_0_25 
+FAIL  PET_PT.f45_g37.I1850.bluefire.generate.clm4_0_25 
+FAIL  ERS_E.f19_g16.I1850.bluefire.generate.clm4_0_25 
+FAIL  ERI.f19_g16.IG1850.bluefire.generate.clm4_0_25 
+FAIL  ERS_D.T31_g37.IGRCP26CN.bluefire.generate.clm4_0_25 
+FAIL  ERP.T31_g37.IGRCP60CN.bluefire.generate.clm4_0_25 
+BFAIL ERP.T31_g37.IGRCP60CN.bluefire.compare.clm4_0_23 
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.generate.clm4_0_25 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm4_0_25 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.generate.clm4_0_25 
+BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_23 
+FAIL  PST.f10_f10.I20TRCN.bluefire.generate.clm4_0_25 
+FAIL  PET_PT.f10_f10.I20TRCN.bluefire.generate.clm4_0_25 
+FAIL  SMS.f10_f10.IRCP45CN.bluefire.generate.clm4_0_25 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.generate.clm4_0_25 
+BFAIL ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_23
+  jaguarpf interactive testing:
+002 erA74 TER.sh _nrsc_ds clm_std^nl_urb 20030101:1800 1x1_brazil navy -5+-5 arb_ic .............FAIL! rc= 13
+003 brA74 TBR.sh _nrsc_ds clm_std^nl_urb_br 20030101:1800 1x1_brazil navy -5+-5 arb_ic ..........FAIL! rc= 11
+006 erAZ3 TER.sh _sc_do clm_irrig 20020401:3600 10x15 USGS -3+-7 cold ...........................FAIL! rc= 13
+007 brAZ3 TBR.sh _sc_do clm_irrig 20020401:3600 10x15 USGS -5+-5 cold ...........................FAIL! rc= 11
+011 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+012 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+013 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+016 erJ74 TER.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:3600 1x1_tropicAtl test -10+-10 arb_ic ..FAIL! rc= 13
+017 brJ74 TBR.sh 4p_nrcasasc_ds clm_std^nl_urb_br 10001230:3600 1x1_tropicAtl test -3+-3 arb_ic .FAIL! rc= 11
+020 erK74 TER.sh 17p_cndvsc_s clm_std 19971231:1800 1x1_brazil navy -334+-336 arb_ic ............FAIL! rc= 13
+021 brK74 TBR.sh 17p_cndvsc_s clm_std 19971231:1800 1x1_brazil navy -334+-336 arb_ic ............FAIL! rc= 11
+024 erVx3 TER.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -4+-6 aFAIL! rc= 13
+025 brVx3 TBR.sh _mec10sc_do clm_transient_glcMEC_rcp4.5^nl_urb_br 20331231:1800 48x96 gx3v7@1850-21FAIL! rc= 11
+028 erHQ4 TER.sh _nrcnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -3+-7 cold ............FAIL! rc= 13
+029 brHQ4 TBR.sh _nrcnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -5+-5 cold ............FAIL! rc= 11
+032 erV63 TER.sh _mec10sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 10+38 arb_ic ................FAIL! rc= 13
+  jaguarpf/CESM testing: All PASS including comparision tests except...
+FAIL  PST.f10_f10.I20TRCN.jaguarpf 
+  edinburgh/lf95 interactive testing:
+002 erA74 TER.sh _nrsc_ds clm_std^nl_urb 20030101:1800 1x1_brazil navy -5+-5 arb_ic .............FAIL! rc= 13
+003 brA74 TBR.sh _nrsc_ds clm_std^nl_urb_br 20030101:1800 1x1_brazil navy -5+-5 arb_ic ..........FAIL! rc= 11
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:1800 1x1_brazil navy -10 arb_ic ...............FAIL! rc= 7
+006 blAL4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 7
+008 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:3600 1x1_camdenNJ navy -45+-45 arb_ic .........FAIL! rc= 13
+009 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:3600 1x1_camdenNJ navy -10+-10 arb_ic ......FAIL! rc= 11
+010 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic .............FAIL! rc= 7
+012 erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:3600 1x1_vancouverCAN navy 115+115 arb_ic FAIL! rc= 13
+013 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:3600 1x1_vancouverCAN navy 72+72 arb_ic FAIL! rc= 11
+014 blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:3600 1x1_vancouverCAN navy 331 arb_ic ...FAIL! rc= 5
+016 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:3600 1x1_mexicocityMEX navy 58+100 arb_ic FAIL! rc= 13
+017 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:3600 1x1_mexicocityMEX navy 72+72 arb_ic FAIL! rc= 11
+018 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:3600 1x1_mexicocityMEX navy 158 arb_ic ..FAIL! rc= 5
+020 erVx3 TER.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -4+-6 aFAIL! rc= 13
+021 brVx3 TBR.sh _mec10sc_do clm_transient_glcMEC_rcp4.5^nl_urb_br 20331231:1800 48x96 gx3v7@1850-21FAIL! rc= 11
+022 blVx3 TBL.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 7
+024 erL74 TER.sh _nrsc_s clm_std^nl_urb 20020101:1800 1x1_brazil navy -5+-5 arb_ic ..............FAIL! rc= 13
+025 brL74 TBR.sh _nrsc_s clm_std^nl_urb_br 20020101:1800 1x1_brazil navy -10+-10 arb_ic .........FAIL! rc= 11
+026 blL74 TBL.sh _nrsc_s clm_std^nl_urb 20020101:1800 1x1_brazil navy -10 arb_ic ................FAIL! rc= 7
+  edinburgh/CESM testing: All PASS including comparision tests
+  yong/intel testing:
+011 smD94 TSM.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 2
+012 erD94 TER.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 72+72 cold ....................FAIL! rc= 5
+019 erH43 TER.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 10+38 cold FAIL! rc= 13
+020 brH43 TBR.sh 17p_cnsc_do clm_std^nl_noicertm_sclharv 20021230:1800 10x15 USGS@2000 72+72 cold FAIL! rc= 11
+022 smV24 TSM.sh _mec10sc_ds clm_glcmec 19980115:1800 48x96 gx3v7 96 arb_ic .....................FAIL! rc= 10
+023 erV24 TER.sh _mec10sc_ds clm_glcmec 19980115:1800 48x96 gx3v7 10+38 arb_ic ..................FAIL! rc= 5
+024 brV24 TBR.sh _mec10sc_ds clm_glcmec^nl_urb_br 19980115:1800 48x96 gx3v7 72+72 arb_ic ........FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_24
+
+Changes answers relative to baseline: answers bit-for-bit, but SNOWLIQ/SNOWICE on history
+   files change.
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_24
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Feb  9 13:20:39 MST 2011
@@ -39,6 +280,11 @@ Known bugs (include bugzilla ID):
                                  1281 (bug in mksurfdata for urban_only case)
                                  1282 (Trouble running to last CLM1PT atm time-step)
                                  1283 (CLM with glacier-MEC fails running on intel)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -224,6 +470,11 @@ Known bugs (include bugzilla ID):
                                  1279 (Latest version of PTCLM requires python2.5)
                                  1281 (bug in mksurfdata for urban_only case)
                                  1282 (Trouble running to last CLM1PT atm time-step)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -547,6 +798,11 @@ Known bugs (include bugzilla ID):
                                  1273 (fix pts_mode problem on jaguar)
                                  1281 (bug in mksurfdata for urban_only case)
                                  1282 (Trouble running to last CLM1PT atm time-step)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -702,6 +958,11 @@ Known bugs (include bugzilla ID):
                                  1271 (Problem in PTS_MODE with clm)
                                  1281 (bug in mksurfdata for urban_only case)
                                  1282 (Trouble running to last CLM1PT atm time-step)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -873,6 +1134,11 @@ Known bugs (include bugzilla ID):
                                  1251 (PTCLM testcases aborts in I_QIAN case)
                                  1281 (bug in mksurfdata for urban_only case)
                                  1282 (Trouble running to last CLM1PT atm time-step)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1068,6 +1334,11 @@ Known bugs (include bugzilla ID):
                                  1264 (Incorrect doc of qflx_evap_tot in the code)
                                  1265 (Fix ndep/aerdepregrid.ncl)
                                  1266 (Threading problem with CNDV)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1414,6 +1685,11 @@ Known bugs (include bugzilla ID):
                                  1264 (Incorrect doc of qflx_evap_tot in the code)
                                  1265 (Fix ndep/aerdepregrid.ncl)
                                  1266 (Threading problem with CNDV)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1304 (bug in interpinic *_var)
+                                 1306 (mksoifmaxInit is NOT called)
+                                 1305 (dvolrdt is documented with the wrong units)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

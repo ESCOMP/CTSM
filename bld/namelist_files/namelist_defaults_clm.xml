@@ -50,7 +50,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon           >lnd/clm2/pftdata/pft-physiology.c101006.nc</fpftcon>
+<fpftcon           >lnd/clm2/pftdata/pft-physiology.c110307.nc</fpftcon>
 
 <!-- Initial condition datasets (relative to {csmdata}) -->
 <finidat hgrid="10x15"         maxpft="4"  mask="USGS" > null </finidat>
@@ -232,7 +232,7 @@ lnd/clm2/surfdata/surfdata_1x1_vancouverCAN_simyr2000_c100409.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" irrig=".false." >
 lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c100409.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" irrig=".false." >
-lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c100409.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c110209.nc</fsurdat>
 <fsurdat hgrid="1x1_asphaltjungleNJ" sim_year="2000" irrig=".false." >
 lnd/clm2/surfdata/surfdata_1x1_asphaltjungleNJ_simyr2000_c100409.nc</fsurdat>
 
@@ -352,7 +352,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmgrid hgrid="0.9x1.25"  >lnd/clm2/griddata/griddata_0.9x1.25_070212.nc</fatmgrid>
 <fatmgrid hgrid="1.9x2.5"   >lnd/clm2/griddata/griddata_1.9x2.5_060404.nc</fatmgrid>
 <fatmgrid hgrid="2.65x3.33" >lnd/clm2/griddata/griddata_2.65x3.33_c080208.nc</fatmgrid>
-<fatmgrid hgrid="2.5x3.33"  >lnd/clm2/griddata/griddata_2.5x3.33_c091012.nc</fatmgrid>
+<fatmgrid hgrid="2.5x3.33"  >lnd/clm2/griddata/griddata_2.5x3.33_c110223.nc</fatmgrid>
 <fatmgrid hgrid="4x5"       >lnd/clm2/griddata/griddata_4x5_060404.nc</fatmgrid>
 <fatmgrid hgrid="10x15"     >lnd/clm2/griddata/griddata_10x15_070212.nc</fatmgrid>
 
@@ -389,7 +389,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <flndtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
 <flndtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
 <flndtopo hgrid="2.65x3.33" >lnd/clm2/griddata/topodata_2.65x3.33_USGS_c080208.nc</flndtopo>
-<flndtopo hgrid="2.5x3.33"  >lnd/clm2/griddata/topodata_2.5x3.33_USGS_c091012.nc</flndtopo>
+<flndtopo hgrid="2.5x3.33"  >lnd/clm2/griddata/topodata_2.5x3.33_c110223.nc</flndtopo>
 <flndtopo hgrid="4x5"       >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</flndtopo>
 <flndtopo hgrid="10x15"     >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
 
@@ -406,7 +406,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</fatmtopo>
 <fatmtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</fatmtopo>
 <fatmtopo hgrid="2.65x3.33" >lnd/clm2/griddata/topodata_2.65x3.33_USGS_c080208.nc</fatmtopo>
-<fatmtopo hgrid="2.5x3.33"  >lnd/clm2/griddata/topodata_2.5x3.33_USGS_c091012.nc</fatmtopo>
+<fatmtopo hgrid="2.5x3.33"  >lnd/clm2/griddata/topodata_2.5x3.33_c110223.nc</fatmtopo>
 <fatmtopo hgrid="4x5"       >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</fatmtopo>
 <fatmtopo hgrid="10x15"     >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</fatmtopo>
 
@@ -436,7 +436,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmlndfrc hgrid="1.9x2.5"   mask="gx1v6"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v6_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1.9x2.5"   mask="tx1v1"  >lnd/clm2/griddata/fracdata_1.9x2.5_tx1v1_c090714.nc</fatmlndfrc>
 <fatmlndfrc hgrid="2.65x3.33" mask="USGS"   >lnd/clm2/griddata/fracdata_2.65x3.33_USGS_c080208.nc</fatmlndfrc>
-<fatmlndfrc hgrid="2.5x3.33"  mask="gx3v7"  >lnd/clm2/griddata/fracdata_2.5x3.33_gx3v7_c100120.nc</fatmlndfrc>
+<fatmlndfrc hgrid="2.5x3.33"  mask="gx3v7"  >lnd/clm2/griddata/fracdata_2.5x3.33_gx3v7_c110223.nc</fatmlndfrc>
 <fatmlndfrc hgrid="4x5"       mask="USGS"   >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="4x5"       mask="gx3v7"  >lnd/clm2/griddata/fracdata_4x5_gx3v7_c091231.nc</fatmlndfrc>
 <fatmlndfrc hgrid="10x15"     mask="USGS"   >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc</fatmlndfrc>
@@ -507,49 +507,49 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cn"   rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep hgrid="1.9x2.5"   bgc="cndv" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100428.nc</stream_fldfilename_ndep>
 
-<ndepmapalgo bgc="cn"   ndepsrc="stream"                             >bilinear</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream"                             >bilinear</ndepmapalgo>
+<ndepmapalgo bgc="cn"                               >bilinear</ndepmapalgo>
+<ndepmapalgo bgc="cndv"                             >bilinear</ndepmapalgo>
 
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_brazil"          >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="5x5_amazon"          >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_brazil"          >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <!-- Create crop on a separate land-unit -->
 <create_crop_landunit irrig=".true."  >.true.</create_crop_landunit>
 <create_crop_landunit irrig=".false." >.false.</create_crop_landunit>
 
-<ndepmapalgo bgc="cn"   ndepsrc="stream"                             >bilinear</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream"                             >bilinear</ndepmapalgo>
+<ndepmapalgo bgc="cn"                               >bilinear</ndepmapalgo>
+<ndepmapalgo bgc="cndv"                             >bilinear</ndepmapalgo>
 
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_brazil"          >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
-<ndepmapalgo bgc="cn"   ndepsrc="stream" hgrid="5x5_amazon"          >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_brazil"          >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
-<ndepmapalgo bgc="cndv" ndepsrc="stream" hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
+<ndepmapalgo bgc="cn"   hgrid="5x5_amazon"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_brazil"          >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
+<ndepmapalgo bgc="cndv" hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <!-- Glacier multiple elevation classes -->
 <create_glacier_mec_landunit glc_nec="1" >.true.</create_glacier_mec_landunit>

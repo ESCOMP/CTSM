@@ -1133,6 +1133,16 @@ Scalar mapping algorithm
 Time interpolation algrorithm method
 </entry>
 
+<entry id="taxmode" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="extend,cycle,limit">
+Time axis mode
+</entry>
+
+<entry id="dtlimit" type="real(30)"  category="datm"
+       group="shr_strdata_nml" >
+Limit of delta-time ratio allowed. Highest time difference over minimum time-difference.
+</entry>
+
 <entry id="streams" type="char*256(30)" category="datm"
        group="shr_strdata_nml" valid_values="">
 Character array of stream description file names
@@ -1250,7 +1260,7 @@ Glacier model grid
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5,0.33x0.33">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5,0.33x0.33">
 Horizontal resolutions
 </entry> 
 

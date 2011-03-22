@@ -21,9 +21,7 @@ module mksoilMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
-  public mksoitexInit  ! Soil texture Initialization
-  public mksoicolInit  ! Soil color Initialization
-  public mksoifmaxInit ! Soil fmax Initialization
+  public mksoilInit    ! Soil Initialization
 
   public mksoilAtt     ! Add attributes to output file
 
@@ -45,11 +43,48 @@ module mksoilMod
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: mkrank
+  private :: mksoitexInit  ! Soil texture Initialization
+  private :: mksoicolInit  ! Soil color Initialization
+  private :: mksoifmaxInit ! Soil fmax Initialization
 
 !EOP
 !===============================================================
 contains
 !===============================================================
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mksoilInit
+!
+! !INTERFACE:
+subroutine mksoilInit( )
+!
+! !DESCRIPTION:
+! Initialize the different soil types
+! !USES:
+!
+! !ARGUMENTS:
+  implicit none
+!
+! !CALLED FROM:
+! subroutine mksrfdat in module mksrfdatMod
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  character(len=32) :: subname = 'mksoilInit'
+!-----------------------------------------------------------------------
+  call mksoitexInit()
+  call mksoicolInit()
+  call mksoifmaxInit()
+
+end subroutine mksoilInit
 
 !-----------------------------------------------------------------------
 !BOP
@@ -65,9 +100,6 @@ subroutine mksoitexInit( )
 !
 ! !ARGUMENTS:
   implicit none
-!
-! !CALLED FROM:
-! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -491,9 +523,6 @@ subroutine mksoicolInit( )
 !
 ! !ARGUMENTS:
   implicit none
-!
-! !CALLED FROM:
-! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -1139,9 +1168,6 @@ subroutine mksoifmaxInit( )
 ! !ARGUMENTS:
   implicit none
 !
-! !CALLED FROM:
-! subroutine mksrfdat in module mksrfdatMod
-!
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
@@ -1153,7 +1179,7 @@ subroutine mksoifmaxInit( )
 !-----------------------------------------------------------------------
 
   ! Error check soil_fmax if it is set
-  if ( soil_color /= unset )then
+  if ( soil_fmax /= unset )then
      if ( soil_fmax < 0.0 .or. soil_fmax > 1.0 )then
         write(6,*)'soil_fmax is out of range = ', soil_fmax
         call abort()

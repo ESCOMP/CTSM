@@ -20,6 +20,9 @@ NOTE: In order to successfully build, some source files are required from
       other clm src directories. See the Filepath for the expected path of
       required files.
 
+See Also: See the models/lnd/clm/tools/README file for notes about setting
+          the path for NetCDF and running with shared-memory parallelism.
+
 3) create namelist file :
    (a sample namelist is: mkdatadomain.namelist
 

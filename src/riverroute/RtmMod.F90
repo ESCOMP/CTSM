@@ -1223,7 +1223,7 @@ contains
 !EOP
     integer  :: i, j, n, ns, nt             !loop indices
     integer  :: ir,jr,nr                    !neighbor indices
-    real(r8) :: dvolrdt                     !change in storage (m3/s)
+    real(r8) :: dvolrdt                     !change in storage in discharge units (m3/s)
     real(r8) :: sumfin(nt_rtm),sumfex(nt_rtm)
     real(r8) :: sumrin(nt_rtm),sumdvt(nt_rtm)
     real(r8) :: sum1,sum2
@@ -1323,6 +1323,7 @@ contains
           elseif (runoff%mask(n) == 2) then
              runoff%runoff(n,nt) = runoff%runoff(n,nt) + dvolrdt
           endif
+          ! Convert local dvolrdt (in m3/s) to output dvolrdt (in mm/s)
           runoff%dvolrdt(n,nt) = runoff%dvolrdt(n,nt) + 1000._r8*dvolrdt/runoff%area(n)
 
        enddo

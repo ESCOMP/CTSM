@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_25         erik 03/22/2011 Always output restart-history files add more meta-data to them, fix urbanc_alpha and 2.5x3.33 datasets, Changes from Keith O on SNOWLIQ/SNOWICE
    clm4_0_24         erik 02/09/2011 Fix mksurfdata and add ability to override soil_fmax
    clm4_0_23         erik 02/03/2011 Add in new glacier-MEC use-cases
    clm4_0_22         erik 01/20/2011 Move coupler field indicies to clm, move cpl_* directories up a level, add the cpl_share directory

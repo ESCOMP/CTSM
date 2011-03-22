@@ -53,6 +53,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="1x1_vancouverCAN"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-vancouverCAN_navy.090715.nc</domainfile>
 <domainfile hgrid="1x1_urbanc_alpha"    mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-urbanc_alpha_test.110201.nc</domainfile>
 <domainfile hgrid="1x1_tropicAtl"       mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
+<domainfile hgrid="1x1_numaIA"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-numaIA_navy.1101106nc</domainfile>
+<domainfile hgrid="1x1_smallvilleIA"    mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-smallvilleIA_test.1101106nc</domainfile>
 <domainfile hgrid="5x5_amazon"          mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.090715.nc</domainfile>
 <domainfile hgrid="360x720"             mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.090106.nc</domainfile>
 
@@ -85,12 +87,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="1.9x2.5"     mask="tx1v1"  >atm/datm7/domain.lnd.fv1.9x2.5_tx1v1_090713.nc</domainfile>
 <domainfile hgrid="2.65x3.33"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.65x3.33_USGS.090106.nc</domainfile>
 <domainfile hgrid="2.5x3.33"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.5x3.33_USGS.091012.nc</domainfile>
-<domainfile hgrid="2.5x3.33"    mask="gx3v7"  >atm/datm7/domain.lnd.fv2.5x3.33_gx3v7.100122.nc</domainfile>
+<domainfile hgrid="2.5x3.33"    mask="gx3v7"  >atm/datm7/domain.lnd.fv2.5x3.33_gx3v7.110223.nc</domainfile>
 <domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.090106.nc</domainfile>
 <domainfile hgrid="4x5"         mask="gx3v7"  >atm/datm7/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
 <domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.090106.nc</domainfile>
 
-<factorfn>null</factorfn>
+<factorfn >null</factorfn>
 
 <vectors  >null</vectors>
 
@@ -98,11 +100,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <iradsw   >1</iradsw>
 
-<tintalgo>linear</tintalgo>
-<fillalgo>nn</fillalgo>
-<fillmask>nomask</fillmask>
-<mapalgo>bilinear</mapalgo>
-<mapmask>nomask</mapmask>
+<fillalgo >nn</fillalgo>
+<fillmask >nomask</fillmask>
+<mapmask  >nomask</mapmask>
+
+<mapalgo  source="CLM1PT"         >nn</mapalgo>
+<mapalgo  datm_presaero="pt1_pt1" >nn</mapalgo>
+<mapalgo                          >bilinear</mapalgo>
+
+<taxmode                  >cycle</taxmode>
+<taxmode  source="CLM1PT" >extend</taxmode>
+<tintalgo                 >linear</tintalgo>
+<tintalgo source="CLM1PT" >nearest</tintalgo>
 
 <!-- Aerosol deposition datasets -->
 
@@ -122,6 +131,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <datm_file_aero hgrid="1x1_urbanc_alpha"    datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_urbanc_alpha_c090716.nc
 </datm_file_aero>
 <datm_file_aero hgrid="5x5_amazon"          datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_5x5_amazon_c090716.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_numaIA"          datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_numaIA_c110124.nc
+</datm_file_aero>
+<datm_file_aero hgrid="1x1_smallvilleIA"    datm_presaero="pt1_pt1">lnd/clm2/snicardata/aerosoldep_2000_mean_1x1_smallvilleIA_c110124.nc
 </datm_file_aero>
 <datm_aero_streams    datm_presaero="pt1_pt1" >clm1pt_preseareo_stream.txt</datm_aero_streams>
 <datm_year_first_aero datm_presaero="pt1_pt1">1</datm_year_first_aero>
@@ -151,6 +164,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <datm_year_align_aero datm_presaero="clim_2000">1</datm_year_align_aero>
 
 <!-- 20th Century transient files -->
+<datm_file_aero       datm_presaero="trans_1850-2000" hgrid="1x1_tropicAtl" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_1x1_tropicAtl_c091026.nc
+</datm_file_aero>
 <datm_file_aero       datm_presaero="trans_1850-2000" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_1.9x2.5_c090803.nc
 </datm_file_aero>
 <datm_aero_streams    datm_presaero="trans_1850-2000" >trans_1850-2000_presaero_stream.txt</datm_aero_streams>

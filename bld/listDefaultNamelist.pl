@@ -313,8 +313,19 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
         #
         my $nml = "shr_strdata_nml";
         print "nml = $nml\n" if $printing;
-        $inputopts{'namelist'} = $nml;
         &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+        #
+        # And the datm internal namelist (mask, resolution and datm_presaero)
+        #
+        my $nml = "datm_internal";
+        print "nml = $nml\n" if $printing;
+        my @pres = $definition->get_valid_values( "datm_presaero", 'noquotes'=>1 );
+        print "datm_presaero=@pres\n" if $printing;
+        $inputopts{'namelist'} = $nml;
+        foreach my $pres ( @pres ) {
+           $settings{'datm_presaero'} = $pres;
+           &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+        }
      }
   }
   #

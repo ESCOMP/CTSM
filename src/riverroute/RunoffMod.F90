@@ -30,31 +30,31 @@ module RunoffMod
      real(r8), pointer :: runoff(:,:)      ! RTM flow (m**3 H2O/s)
      real(r8), pointer :: runofflnd(:,:)   ! runoff masked for land (m**3 H2O/s)
      real(r8), pointer :: runoffocn(:,:)   ! runoff masked for ocn  (m**3 H2O/s)
-     real(r8), pointer :: dvolrdt(:,:)     ! RTM change in storage (m**3/s)
-     real(r8), pointer :: dvolrdtlnd(:,:)  ! dvolrdt masked for land (m**3/s)
-     real(r8), pointer :: dvolrdtocn(:,:)  ! dvolrdt masked for ocn  (m**3/s)
+     real(r8), pointer :: dvolrdt(:,:)     ! RTM change in storage (mm/s)
+     real(r8), pointer :: dvolrdtlnd(:,:)  ! dvolrdt masked for land (mm/s)
+     real(r8), pointer :: dvolrdtocn(:,:)  ! dvolrdt masked for ocn  (mm/s)
      real(r8), pointer :: volr(:,:)        ! RTM storage (m**3)
      real(r8), pointer :: volrlnd(:,:)     ! RTM storage masked for land (m**3)
-     real(r8), pointer :: lonc(:)        ! lon of cell
-     real(r8), pointer :: latc(:)        ! lat of cell
-     real(r8), pointer :: area(:)        ! area of cell
-     integer , pointer :: gindex(:)      ! global index
-     integer , pointer :: mask(:)        ! mask of cell 0=none, 1=lnd, 2=ocn
-     integer , pointer :: dsi(:)         ! downstream index
+     real(r8), pointer :: lonc(:)          ! lon of cell
+     real(r8), pointer :: latc(:)          ! lat of cell
+     real(r8), pointer :: area(:)          ! area of cell
+     integer , pointer :: gindex(:)        ! global index
+     integer , pointer :: mask(:)          ! mask of cell 0=none, 1=lnd, 2=ocn
+     integer , pointer :: dsi(:)           ! downstream index
 !    - global
-     real(r8), pointer :: rlon(:)        ! rtm longitude list, 1d
-     real(r8), pointer :: rlat(:)        ! rtm latitude list, 1d
-     integer , pointer :: num_rtm(:)     ! num of cells on each pe
+     real(r8), pointer :: rlon(:)          ! rtm longitude list, 1d
+     real(r8), pointer :: rlat(:)          ! rtm latitude list, 1d
+     integer , pointer :: num_rtm(:)       ! num of cells on each pe
 !    - local
-     integer           :: begr,endr      ! local start/stop indices
-     integer           :: lnumr          ! rtm gdc local number of cells
-     integer           :: begrl,endrl    ! local start/stop indices
-     integer           :: lnumrl         ! rtm gdc local number of lnd cells
-     integer           :: begro,endro    ! local start/stop indices
-     integer           :: lnumro         ! rtm gdc local number of ocn cells
-     integer           :: numr           ! rtm gdc global number of cells
-     integer           :: numrl          ! rtm gdc global number of lnd cells
-     integer           :: numro          ! rtm gdc global number of ocn cells
+     integer           :: begr,endr        ! local start/stop indices
+     integer           :: lnumr            ! rtm gdc local number of cells
+     integer           :: begrl,endrl      ! local start/stop indices
+     integer           :: lnumrl           ! rtm gdc local number of lnd cells
+     integer           :: begro,endro      ! local start/stop indices
+     integer           :: lnumro           ! rtm gdc local number of ocn cells
+     integer           :: numr             ! rtm gdc global number of cells
+     integer           :: numrl            ! rtm gdc global number of lnd cells
+     integer           :: numro            ! rtm gdc global number of ocn cells
 !    - need 1d field pointers for history files
      real(r8), pointer :: runofflnd_nt1(:)
      real(r8), pointer :: runofflnd_nt2(:)

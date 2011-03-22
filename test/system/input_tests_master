@@ -218,20 +218,20 @@ erCA8 TER.sh _nrsc_ds clm_std^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -
 brCA8 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021230:3600 1x1_asphaltjungleNJ navy -10+-10 arb_ic
 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -90     arb_ic
 
-smCE4 TSM.sh _nrsc_ds clm_urb1pt^nl_urb    00010101:3600 1x1_urbanc_alpha navy -366      arb_ic
-erCE4 TER.sh _nrsc_ds clm_urb1pt^nl_urb    00010101:3600 1x1_urbanc_alpha navy -183+-183 arb_ic
-brCE4 TBR.sh _nrsc_ds clm_urb1pt^nl_urb_br 00010101:3600 1x1_urbanc_alpha navy -10+-10   arb_ic
-blCE4 TBL.sh _nrsc_ds clm_urb1pt^nl_urb    00010101:3600 1x1_urbanc_alpha navy -366       arb_ic
+smCE4 TSM.sh _nrsc_ds clm_urb1pt^nl_urb    00010812:1800 1x1_urbanc_alpha test -475      arb_ic
+erCE4 TER.sh _nrsc_ds clm_urb1pt^nl_urb    00010812:1800 1x1_urbanc_alpha test -183+-183 arb_ic
+brCE4 TBR.sh _nrsc_ds clm_urb1pt^nl_urb_br 00010812:1800 1x1_urbanc_alpha test -10+-10   arb_ic
+blCE4 TBL.sh _nrsc_ds clm_urb1pt^nl_urb    00010812:1800 1x1_urbanc_alpha test -366       arb_ic
 
-smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb    19931201:3600 1x1_mexicocityMEX navy 157     arb_ic
-erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb    19931201:3600 1x1_mexicocityMEX navy 57+100  arb_ic
+smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb    19931201:3600 1x1_mexicocityMEX navy 158     arb_ic
+erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb    19931201:3600 1x1_mexicocityMEX navy 58+100  arb_ic
 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:3600 1x1_mexicocityMEX navy 72+72   arb_ic
-blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb    19931201:3600 1x1_mexicocityMEX navy 157     arb_ic
+blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb    19931201:3600 1x1_mexicocityMEX navy 158     arb_ic
 
-smOC4 TSM.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN navy 330     arb_ic
+smOC4 TSM.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN navy 331     arb_ic
 erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN navy 115+115 arb_ic
 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:3600 1x1_vancouverCAN navy 72+72   arb_ic
-blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN navy 330     arb_ic
+blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN navy 331     arb_ic
 
 smC61 TSM.sh _scnv_dh clm_std^nl_urb    20020101:1800 1.9x2.5 gx1v6 -6    startup
 erC61 TER.sh _scnv_dh clm_std^nl_urb    20020101:1800 1.9x2.5 gx1v6 10+38 startup

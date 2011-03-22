@@ -51,6 +51,7 @@ module ncdio_pio
   public :: ncd_io             ! write local data
 
   integer,parameter,public :: ncd_int       = pio_int
+  integer,parameter,public :: ncd_log       =-pio_int
   integer,parameter,public :: ncd_float     = pio_real
   integer,parameter,public :: ncd_double    = pio_double
   integer,parameter,public :: ncd_char      = pio_char
@@ -85,6 +86,7 @@ module ncdio_pio
   end interface
 
   interface ncd_io 
+     module procedure ncd_io_log_var0_nf
      module procedure ncd_io_int_var0_nf
      module procedure ncd_io_real_var0_nf
      module procedure ncd_io_int_var1_nf
@@ -805,7 +807,8 @@ contains
 ! !INTERFACE:
   subroutine ncd_defvar_bynf(ncid, varname, xtype, ndims, dimid, varid, &
                              long_name, units, cell_method, missing_value, fill_value, &
-                             imissing_value, ifill_value)
+                             imissing_value, ifill_value, comment, flag_meanings, &
+                             flag_values, nvalid_range )
 !
 ! !DESCRIPTION:
 !  Define a netcdf variable
@@ -821,10 +824,14 @@ contains
     character(len=*) , intent(in), optional :: long_name      ! attribute
     character(len=*) , intent(in), optional :: units          ! attribute
     character(len=*) , intent(in), optional :: cell_method    ! attribute
+    character(len=*) , intent(in), optional :: comment        ! attribute
+    character(len=*) , intent(in), optional :: flag_meanings(:) ! attribute
     real(r8)         , intent(in), optional :: missing_value  ! attribute for real
     real(r8)         , intent(in), optional :: fill_value     ! attribute for real
     integer          , intent(in), optional :: imissing_value ! attribute for int
     integer          , intent(in), optional :: ifill_value    ! attribute for int
+    integer          , intent(in), optional :: flag_values(:)  ! attribute for int
+    integer          , intent(in), optional :: nvalid_range(2)  ! attribute for int
 !
 ! !REVISION HISTORY:
 !
@@ -835,6 +842,7 @@ contains
     integer :: ldimid(4)           ! local dimid
     integer :: dimid0(1)           ! local dimid
     integer :: status              ! error status 
+    integer :: lxtype              ! local external type (in case logical variable)
     type(var_desc_t)   :: vardesc  ! local vardesc
     character(len=128) :: dimname  ! temporary
     character(len=256) :: str      ! temporary
@@ -854,8 +862,13 @@ contains
        endif
     endif
        
+    if ( xtype == ncd_log )then
+       lxtype = ncd_int
+    else
+       lxtype = xtype
+    end if
     if (masterproc .and. debug > 1) then
-       write(iulog,*) subname//' ',trim(varname),xtype,ndims,ldimid(1:ndims)
+       write(iulog,*) subname//' ',trim(varname),lxtype,ndims,ldimid(1:ndims)
     endif
     
     if (ndims >  0) then 
@@ -864,14 +877,43 @@ contains
 
     ! Define variable
     if (present(dimid)) then
-       status = PIO_def_var(ncid,trim(varname),xtype,dimid(1:ndims),vardesc)
+       status = PIO_def_var(ncid,trim(varname),lxtype,dimid(1:ndims),vardesc)
     else
-       status = PIO_def_var(ncid,trim(varname),xtype,dimid0        ,vardesc)
+       status = PIO_def_var(ncid,trim(varname),lxtype,dimid0        ,vardesc)
     endif
     varid = vardesc%varid
 
+    !
+    ! Add attributes
+    !
     if (present(long_name)) then
        call ncd_putatt(ncid, varid, 'long_name', trim(long_name))
+    end if
+    if (present(flag_values)) then
+       status = PIO_put_att(ncid,varid,'flag_values',flag_values)
+       if ( .not. present(flag_meanings)) then
+          call endrun( subname//" ERROR:: flag_values set -- but not flag_meanings" )
+       end if
+    end if
+    if (present(flag_meanings)) then
+       str = flag_meanings(1)
+       do n = 2, size(flag_meanings)
+          if ( index(flag_meanings(n), " ") /= 0 )then
+             call endrun( subname//" ERROR:: flag_meanings has an invalid space in it" )
+          end if
+          str = trim(str)//" "//flag_meanings(n)
+       end do
+       write(iulog,*) 'varname=', trim(varname), 'flag_meanings = ', trim(str)
+       status = PIO_put_att(ncid,varid,'flag_meanings', trim(str) )
+       if ( .not. present(flag_values)) then
+          call endrun( subname//" ERROR:: flag_meanings set -- but not flag_values" )
+       end if
+       if ( size(flag_values) /= size(flag_meanings) ) then
+          call endrun( subname//" ERROR:: flag_meanings and flag_values dimension different")
+       end if
+    end if
+    if (present(comment)) then
+       call ncd_putatt(ncid, varid, 'comment', trim(comment))
     end if
     if (present(units)) then
        call ncd_putatt(ncid, varid, 'units', trim(units))
@@ -881,16 +923,24 @@ contains
        call ncd_putatt(ncid, varid, 'cell_methods', trim(str))
     end if
     if (present(fill_value)) then
-       call ncd_putatt(ncid, varid, '_FillValue', fill_value, xtype)
+       call ncd_putatt(ncid, varid, '_FillValue', fill_value, lxtype)
     end if
     if (present(missing_value)) then
-       call ncd_putatt(ncid, varid, 'missing_value', missing_value, xtype)
+       call ncd_putatt(ncid, varid, 'missing_value', missing_value, lxtype)
     end if
     if (present(ifill_value)) then
-       call ncd_putatt(ncid, varid, '_FillValue', ifill_value, xtype)
+       call ncd_putatt(ncid, varid, '_FillValue', ifill_value, lxtype)
     end if
     if (present(imissing_value)) then
-       call ncd_putatt(ncid, varid, 'missing_value', imissing_value, xtype)
+       call ncd_putatt(ncid, varid, 'missing_value', imissing_value, lxtype)
+    end if
+    if (present(nvalid_range)) then
+       status = PIO_put_att(ncid,varid,'valid_range', nvalid_range )
+    end if
+    if ( xtype == ncd_log )then
+       status = PIO_put_att(ncid,varid,'flag_values',     (/0, 1/) )
+       status = PIO_put_att(ncid,varid,'flag_meanings',  "FALSE TRUE" )
+       status = PIO_put_att(ncid,varid,'valid_range',    (/0, 1/) )
     end if
 
   end subroutine ncd_defvar_bynf
@@ -904,7 +954,8 @@ contains
   subroutine ncd_defvar_bygrid(ncid, varname, xtype, &
                                dim1name, dim2name, dim3name, dim4name, dim5name, &
                                long_name, units, cell_method, missing_value, fill_value, &
-                               imissing_value, ifill_value, switchdim)
+                               imissing_value, ifill_value, switchdim, comment, &
+                               flag_meanings, flag_values, nvalid_range )
 !
 ! !DESCRIPTION:
 !  Define a netcdf variable
@@ -922,11 +973,15 @@ contains
     character(len=*), intent(in), optional :: long_name      ! attribute
     character(len=*), intent(in), optional :: units          ! attribute
     character(len=*), intent(in), optional :: cell_method    ! attribute
+    character(len=*), intent(in), optional :: comment        ! attribute
+    character(len=*), intent(in), optional :: flag_meanings(:) ! attribute
     real(r8)        , intent(in), optional :: missing_value  ! attribute for real
     real(r8)        , intent(in), optional :: fill_value     ! attribute for real
     integer         , intent(in), optional :: imissing_value ! attribute for int
     integer         , intent(in), optional :: ifill_value    ! attribute for int
     logical         , intent(in), optional :: switchdim      ! true=> permute dim1 and dim2 for output
+    integer         , intent(in), optional :: flag_values(:)  ! attribute for int
+    integer         , intent(in), optional :: nvalid_range(2)  ! attribute for int
 !
 ! !REVISION HISTORY:
 !
@@ -969,32 +1024,95 @@ contains
        end do
     end if
 
-    call ncd_defvar_bynf(ncid,varname,xtype,ndims,dimid,varid)
-
-    if (present(long_name)) then
-       call ncd_putatt(ncid, varid, 'long_name', trim(long_name))
-    end if
-    if (present(units)) then
-       call ncd_putatt(ncid, varid, 'units', trim(units))
-    end if
-    if (present(cell_method)) then
-       str = 'time: ' // trim(cell_method)
-       call ncd_putatt(ncid, varid, 'cell_methods', trim(str))
-    end if
-    if (present(fill_value)) then
-       call ncd_putatt(ncid, varid, '_FillValue', fill_value, xtype)
-    end if
-    if (present(missing_value)) then
-       call ncd_putatt(ncid, varid, 'missing_value', missing_value, xtype)
-    end if
-    if (present(ifill_value)) then
-       call ncd_putatt(ncid, varid, '_FillValue', ifill_value, xtype)
-    end if
-    if (present(imissing_value)) then
-       call ncd_putatt(ncid, varid, 'missing_value', imissing_value, xtype)
-    end if
+    call ncd_defvar_bynf(ncid,varname,xtype,ndims,dimid,varid, &
+                         long_name=long_name, units=units, cell_method=cell_method, &
+                         missing_value=missing_value, fill_value=fill_value, &
+                         imissing_value=imissing_value, ifill_value=ifill_value, &
+                         comment=comment, flag_meanings=flag_meanings, &
+                         flag_values=flag_values, nvalid_range=nvalid_range )
 
   end subroutine ncd_defvar_bygrid
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_log_var0_nf
+!
+! !INTERFACE:
+  subroutine ncd_io_log_var0_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
+!
+! !DESCRIPTION:
+! netcdf I/O of global integer variable
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t), intent(inout) :: ncid      ! netcdf file id
+    character(len=*) , intent(in)    :: flag      ! 'read' or 'write'
+    character(len=*) , intent(in)    :: varname   ! variable name
+    logical          , intent(inout) :: data      ! raw data
+    logical, optional, intent(out)   :: readvar   ! was var read?
+    integer, optional, intent(in)    :: nt        ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: varid                ! netCDF variable id
+    integer :: start(1), count(1)   ! output bounds
+    integer :: status               ! error code
+    integer :: idata                ! raw integer data
+    logical :: varpresent           ! if true, variable is on tape
+    integer :: temp(1)              ! temporary
+    logical :: found                ! if true, found lat/lon dims on file
+    character(len=32) :: vname      ! variable error checking
+    type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    character(len=*),parameter :: subname='ncd_io_log_var0_nf'
+!-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+
+       call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+       if (varpresent) then
+          if (single_column .and. present(posNOTonfile) ) then
+             if ( .not. posNOTonfile )then
+                call endrun( subname// &
+                ' ERROR: scalar var is NOT compatable with posNOTonfile = .false.' )
+             end if
+          endif
+          status = pio_get_var(ncid, varid, idata)
+          if (      idata == 0 )then
+             data = .false.
+          else if ( idata == 1 )then
+             data = .true.
+          else
+             call endrun( subname// &
+             ' ERROR: bad integer value for logical data' )
+          end if
+       endif
+       if (present(readvar)) readvar = varpresent
+
+    elseif (flag == 'write') then
+
+       if (present(nt))      then
+          start(1) = nt
+          count(1) = 1
+       else
+          start(1) = 1
+          count(1) = 1
+       end if
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
+       if ( data )then
+          temp(1) = 1
+       else
+          temp(1) = 0
+       end if
+       status = pio_put_var(ncid, varid, start, count, temp)
+
+    endif   ! flag
+
+  end subroutine ncd_io_log_var0_nf
 
 !------------------------------------------------------------------------
 !BOP
@@ -1319,23 +1437,24 @@ contains
 
     elseif (flag == 'write') then
 
-       start(1) = 1
-       if (present(nt))      then
-          start(2) = nt
-       else
-          start(2) = 1
-       end if
-       count(1) = len_trim(data)
-       count(2) = 1
-       if ( count(1) > size(tmpString) )then
-          write(iulog,*) subname//' ERROR: input string size is too large:'//trim(data)
-       end if
-       do m = 1,count(1)
-          tmpString(m:m) = data(m:m)
-       end do
        call ncd_inqvid  (ncid, varname, varid, vardesc)
-       status = pio_put_var(ncid, varid, start=start, count=count, &
-                            ival=tmpString(1:count(1)) )
+
+       if (present(nt))      then
+          count(1) = len_trim(data)
+          count(2) = 1
+          do m = 1,count(1)
+             tmpString(m:m) = data(m:m)
+          end do
+          if ( count(1) > size(tmpString) )then
+             write(iulog,*) subname//' ERROR: input string size is too large:'//trim(data)
+          end if
+          start(1) = 1
+          start(2) = nt
+          status = pio_put_var(ncid, varid, start=start, count=count, &
+                               ival=tmpString(1:count(1)) )
+       else
+          status = pio_put_var(ncid, varid, data )
+       end if
 
     endif   ! flag
 
@@ -1550,6 +1669,7 @@ contains
 
     elseif (flag == 'write') then
 
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
        if (present(nt))      then
           start(1) = 1
           start(2) = 1
@@ -1557,16 +1677,10 @@ contains
           count(1) = size(data)
           count(2) = len(data)
           count(3) = 1
+          status = pio_put_var(ncid, varid, start, count, data)
        else
-          start(1) = 1
-          start(2) = 1
-          start(3) = 1
-          count(1) = size(data)
-          count(2) = len(data)
-          count(3) = 1
+          status = pio_put_var(ncid, varid, data)
        end if
-       call ncd_inqvid  (ncid, varname, varid, vardesc)
-       status = pio_put_var(ncid, varid, start, count, data)
 
     endif   
 

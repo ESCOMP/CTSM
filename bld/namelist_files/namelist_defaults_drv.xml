@@ -83,22 +83,23 @@ $URL$
 <!-- ================================================================== -->
 
 <!-- Coupling time step -->
-<atm_cpl_dt>3600</atm_cpl_dt>
+<atm_cpl_dt                          >3600</atm_cpl_dt>
+<atm_cpl_dt hgrid="1x1_urbanc_alpha" >1800</atm_cpl_dt>
 
 <!-- Length of run -->
-<stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
-<stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
-<stop_option hgrid="1x1_urbanc_alpha"  mask="navy" >nsteps</stop_option>
 <stop_option   bgc="cn"           ad_spinup="on"   >nyears</stop_option>
 <stop_option   bgc="cn"         exit_spinup="on"   >nyears</stop_option>
+<stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
+<stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
+<stop_option hgrid="1x1_urbanc_alpha"  mask="test" >nsteps</stop_option>
 <stop_option                   final_spinup="on"   >nyears</stop_option>
 <stop_option                                       >ndays</stop_option>
 
-<stop_n hgrid="1x1_mexicocityMEX" mask="navy" >157</stop_n>
-<stop_n hgrid="1x1_vancouverCAN"  mask="navy" >330</stop_n>
-<stop_n hgrid="1x1_urbanc_alpha"  mask="navy" >11385</stop_n>
 <stop_n   bgc="cn"           ad_spinup="on"   >600</stop_n>
 <stop_n   bgc="cn"         exit_spinup="on"   >  1</stop_n>
+<stop_n hgrid="1x1_mexicocityMEX" mask="navy" >158</stop_n>
+<stop_n hgrid="1x1_vancouverCAN"  mask="navy" >331</stop_n>
+<stop_n hgrid="1x1_urbanc_alpha"  mask="test" >22772</stop_n>
 <stop_n                   final_spinup="on"   > 50</stop_n>
 <stop_n                                       >  1</stop_n>
 
@@ -107,12 +108,12 @@ $URL$
 <!-- Starting date -->
 <run_startdate hgrid="1x1_mexicocityMEX" mask="navy"        >1993-12-01</run_startdate>
 <run_startdate hgrid="1x1_vancouverCAN"  mask="navy"        >1992-08-12</run_startdate>
-<run_startdate hgrid="1x1_urbanc_alpha"  mask="navy"        >0001-08-12</run_startdate>
+<run_startdate hgrid="1x1_urbanc_alpha"  mask="test"        >0001-08-12</run_startdate>
 <run_startdate                                              >0001-01-01</run_startdate>
 
 <start_tod hgrid="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
 <start_tod hgrid="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
-<start_tod hgrid="1x1_urbanc_alpha"  mask="navy"            >46800</start_tod>
+<start_tod hgrid="1x1_urbanc_alpha"  mask="test"            >46800</start_tod>
 <start_tod                                                  >    0</start_tod>
 
 <!-- Length of time for restarts -->

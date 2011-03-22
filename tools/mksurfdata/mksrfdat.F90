@@ -19,9 +19,8 @@ program mksrfdat
     use mklaiMod    , only : mklai
     use mkpftMod    , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride, &
                              mkirrig
-    use mksoilMod   , only : soil_sand, soil_clay, mksoitex, mksoitexInit, &
-                             soil_color, mksoicol, mksoicolInit, mkorganic, &
-                             soil_fmax, mkfmax
+    use mksoilMod   , only : soil_sand, soil_clay, mksoitex, mksoilInit, &
+                             soil_color, mksoicol, mkorganic, soil_fmax, mkfmax
     use mkvocefMod  , only : mkvocef
     use mklanwatMod , only : mklanwat
     use mkglcmecMod , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
@@ -234,11 +233,14 @@ program mksrfdat
     if ( all_urban )then
        write(6,*) 'Output ALL data in file as 100% urban'
     end if
-    call mksoitexInit( )
-    call mksoicolInit( )
+    !
+    ! Call module initialization routines
+    !
+    call mksoilInit( )
     call mkpftInit( all_urban, all_veg )
     allocate ( elevclass(nglcec+1) )
     call mkglcmecInit (elevclass)
+
     if ( all_veg )then
        write(6,*) 'Output ALL data in file as 100% vegetated'
     end if

@@ -159,6 +159,7 @@ EOF
   # Get list of options from command-line into the settings hash
   my %settings;
   if ( defined($opts{'options'}) ) {
+     $opts{'options'} =~ s/\s//g;    # Remove all white-space in options
      my @optionlist = split( ",", $opts{'options'} );
      foreach my $item ( @optionlist ) {
         my ($key,$value) = split( "=", $item );

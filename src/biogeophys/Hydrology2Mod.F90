@@ -403,15 +403,10 @@ contains
     ! Vertically average t_soisno and sum of h2osoi_liq and h2osoi_ice
     ! over all snow layers for history output
 
-    do fc = 1, num_snowc
-       c = filter_snowc(fc)
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
        snowice(c) = 0._r8
        snowliq(c) = 0._r8
-    end do
-    do fc = 1, num_nosnowc
-       c = filter_nosnowc(fc)
-       snowice(c) = spval
-       snowliq(c) = spval
     end do
 
     do j = -nlevsno+1, 0

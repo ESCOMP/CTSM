@@ -90,6 +90,9 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
 
      -drv_case "name"         Case identifier up to 32 characters
      -drv_drydep              Also produce a drydep namelist
+     -drv_final_spinup "mode" If you want to turn on the final_spinup mode to set run length.
+                              Mode is "on" or "off"
+                              Default: off 
      -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
      -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
      -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
@@ -110,11 +113,16 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
 
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
-      0. namelist values set by specific command-line options, i.e., -d, -sim_year
+      0. namelist values set by specific command-line options, like, -d, -sim_year
+             (i.e.  CLM_BLDNML_OPTS env_conf variable)
       1. values set on the command-line using the -namelist option,
+             (i.e. CLM_NAMELIST_OPTS env_conf variable)
       2. values read from the file specified by -infile,
+             (i.e.  user_nl_clm file)
       3. datasets from the -clm_usr_name option,
+             (i.e.  CLM_USRDAT_NAME env_conf variable)
       4. values set from a use-case scenario, e.g., -use_case
+             (i.e.  CLM_NML_USE_CASE env_conf variable)
       5. values from the namelist defaults file.
 EOF
 }
@@ -156,6 +164,7 @@ my %opts = ( config                => $cfg_cache,
              glc_grid              => "default",
 	     dir                   => $outdirname,
 	     rcp                   => "default",
+	     drv_final_spinup      => undef,
              sim_year              => "default",
 	     drv_drydep            => 0,
              irrig                 => undef,
@@ -198,6 +207,7 @@ GetOptions(
     "rtm_res=s"                 => \$opts{'rtm_res'},
     "rcp=s"                     => \$opts{'rcp'},
     "drv_runlength=s"           => \$opts{'drv_runlength'},
+    "drv_final_spinup=s"        => \$opts{'drv_final_spinup'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
     "clm_start_type=s"          => \$opts{'clm_start_type'},
@@ -613,6 +623,7 @@ if (defined $opts{$var}) {
 }
 my $clm_start_type = $nl->get_value($var);
 
+my $drv_final_spinup = "off";
 # Length of simulation, if clm stand-alone
 if ($mode eq "clm_stndln") {
    if ( defined $opts{'drv_runlength'} ) {
@@ -623,6 +634,11 @@ if ($mode eq "clm_stndln") {
        } else {
 	   die "$ProgName ERROR:: bad input to drv_runlength option\n";
        }
+       if ( defined $opts{'drv_final_spinup'} ) {
+	   die "$ProgName ERROR:: can NOT define both drv_runlength and drv_final_spinup\n";
+       }
+   } elsif ( defined $opts{'drv_final_spinup'} ) {
+       $drv_final_spinup = $opts{'drv_final_spinup'};
    }
 }
 #-----------------------------------------------------------------------------------------------
@@ -765,9 +781,11 @@ if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
 if ($mode eq "clm_stndln") {
 
    # stop_option and stop_n
-   add_default($nl, 'stop_option');
+   add_default($nl, 'stop_option', 'hgrid'=>$lnd_res, 'mask'=>$mask,
+               'final_spinup'=>$drv_final_spinup);
    unless (defined $nl->get_value('stop_ymd')) { 
-     add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask); 
+     add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask,
+               'final_spinup'=>$drv_final_spinup);
    }
    # Case name
    if (defined $opts{'drv_case'}) {

@@ -4,7 +4,8 @@
 
 <use_case_desc>Standard Urban Point Namelist Settings</use_case_desc>
 
-<dtime>3600</dtime>
+<dtime hgrid="1x1_urbanc_alpha" >1800</dtime>
+<dtime                          >3600</dtime>
 
 <hist_empty_htapes>.true.</hist_empty_htapes>
 
