@@ -39,6 +39,18 @@ models/utils ---------- CESM utility codes
                         (Earth System Model Framework)
                         (timing -- code timing utility)
 
+Top level documentation:
+
+README ------------------- This file
+README_EXTERNALS --------- Information on how to work with subversion externals for clm
+SVN_EXTERNAL_DIRECTORIES - Subversions externals to use
+Copyright ---------------- CESM Copyright file
+UpDateChangeLog.pl ------- Script to add documentation on a tag to the
+                           ChangeLog/ChangeSum files
+ChangeLog ---------------- Documents different CLM versions
+ChangeSum ---------------- Summary documentation of different CLM versions
+ChangeLog/ChangeSum ------ Also copied to models/lnd/clm/doc
+
 Documentation of Namelist Items: (view the following in a web browser)
 
 models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Definition of all namelist items
@@ -58,7 +70,7 @@ models/lnd/clm/doc/KnownLimitations -------- List of known limitations and worka
 models/lnd/clm/doc/ChangeLog --------------- Detailed list of changes for each model version.
 models/lnd/clm/doc/ChangeSum --------------- Summary one-line list of changes for each 
                                              model version.
-models/lnd/clm/doc/README ------------------ This file
+models/lnd/clm/doc/README ------------------ Documentation similar to this file
 models/lnd/clm/doc/UsersGuide -------------- CLM Users Guide
 models/lnd/clm/doc/CodeReference ----------- CLM Code Reference Guide
 

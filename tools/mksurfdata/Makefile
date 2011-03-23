@@ -40,16 +40,16 @@ MOD_NETCDF := $(LIB_NETCDF)
 endif
 
 # Set user specified Fortran compiler
-ifneq ($(strip $(USER_FC)),)
+ifneq ($(USER_FC),$(null))
   FC := $(USER_FC)
 endif
 # Set user specified C compiler
-ifneq ($(strip $(USER_CC)),)
+ifneq ($(USER_CC),$(null))
   CC := $(USER_CC)
 endif
 
 # Set if Shared memory multi-processing will be used
-ifneq ($(strip $(SMP)),)
+ifeq ($(SMP),$(null))
   SMP := FALSE
 endif
 

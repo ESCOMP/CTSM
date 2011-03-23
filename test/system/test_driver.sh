@@ -139,7 +139,7 @@ export MAKE_CMD="gmake -j 65"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
-CPRNC_EXE="/contrib/newcprnc3.0/bin/newcprnc"
+CPRNC_EXE="/fs/cgd/csm/tools/cprnc/cprnc"
 newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"

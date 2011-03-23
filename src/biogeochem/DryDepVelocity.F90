@@ -78,7 +78,7 @@ CONTAINS
     use seq_drydep_mod    , only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
                                     rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
                                     rgss, rgso
-    use clm_varcon        , only : istsoil
+    use clm_varcon        , only : istsoil, istice, istslak, istdlak, istwet, isturb
     use clm_varctl        , only : iulog
     use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
                                    ndllf_dcd_brl_tree,        nbrdlf_evr_trp_tree,  &
@@ -305,8 +305,19 @@ CONTAINS
           index_season = -1
 
           if ( itypelun(l) /= istsoil )then
-             wesveg       = 8
-             index_season = 4
+             if ( itypelun(l) == istice ) then
+                wesveg       = 8
+                index_season = 4
+             elseif ( itypelun(l) == istdlak .or. itypelun(l) == istslak ) then
+                wesveg       = 7
+                index_season = 4
+             elseif ( itypelun(l) == istwet ) then
+                wesveg       = 9
+                index_season = 2
+             elseif ( itypelun(l) == isturb ) then
+                wesveg       = 1
+                index_season = 2
+             end if
           else if ( snowdp(c) > 0 ) then
              index_season = 4
           else if(elai(pi).gt.0.5_r8*maxlai) then  
@@ -468,7 +479,7 @@ CONTAINS
                    endif
                 endif
 
-                if(rain.gt..0001_r8) then 
+                if(has_rain) then 
                    rlux_o3 = 1._r8/((1._r8/1000._r8)+(1._r8/(3._r8*rlu(index_season,wesveg)))) 
                    if (index_o3 > 0) then
                       rlux(index_o3) = rlux_o3
@@ -502,7 +513,7 @@ CONTAINS
                          rlux(ispec) = 100._r8
                       endif
 
-                      if(rain.gt..0001_r8) then 
+                      if(has_rain) then 
                          rlux(ispec) = 1._r8/((1._r8/5000._r8)+(1._r8/(3._r8*rlu(index_season,wesveg)))) 
                       endif
 
@@ -530,6 +541,13 @@ CONTAINS
              ! 
              rc = 1._r8/((1._r8/rsmx(ispec))+(1._r8/rlux(ispec)) + & 
                         (1._r8/(rdc+rclx(ispec)))+(1._r8/(rac(index_season,wesveg)+rgsx(ispec)))) 
+             rc = max( 10._r8, rc)
+             !
+             ! assume no surface resistance for SO2 over water
+             !
+             if ( drydep_list(ispec) == 'SO2' .and. wesveg == 7 ) then
+               rc = 0._r8
+             end if
 
              select case( drydep_list(ispec) )
              case ( 'SO4' )

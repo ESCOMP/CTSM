@@ -1,4 +1,148 @@
 ===============================================================
+Tag name:  clm4_0_26
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Mar 23 11:43:00 MDT 2011
+One-line Summary: Update externals, driver update changes answers, drydep changes from fvitt, fix bugs
+
+Purpose of changes:
+
+Update externals to latest pre-cesm1_0_beta17 version. driver to beyond cesm1_0_beta16
+version -- so answers change. Always update ndep_interp in clm_driver -- so restarts are
+exact. Bring in Francis Vitt drydep changes. Remove bad T31 pftdyn datasets add in 
+a new T31 rcp2.6 T31 dataset. Fix interpinic _var bug. Remove HIRES from bld. Change 
+tools Makefile's so that you can set env variables. Change test_driver to use newer 
+version of cprnc.
+
+Bugs fixed (include bugzilla ID):
+                                 1284 (Crop restart test fails)
+                                 1304 (bug in interpinic *_var)
+                                 1308 (tools Make doesn't allow setting env vars)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1165 (Restart trouble for scaled harvest test on mirage)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: more fields added for drydep namelist
+
+List any changes to the defaults for the boundary datasets:
+   Remove bad T31 pftdyn datasets 
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self, drydep changes from fvitt and JFL
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, cprnc
+
+   scripts to scripts4_110314
+   drv     to drvseq3_1_51
+   cprnc   to cprnc_110310
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+   A   README_EXTERNALS -- Describes how to work with externals (similar to cam file)
+
+List all existing files that have been modified, and describe the changes:
+
+   M   README - Update with new 
+
+   M   models/lnd/clm/test/system/CLM_compare.sh - Update for latest cprnc which
+           doesn't have a "completed successfully line at the end"
+   M   models/lnd/clm/test/system/test_driver.sh - Use newer cprnc on bluefire
+
+>>>>>>>>>>> Change tools build so that you can set env variables for SMP/USER_FC/CC
+   M   models/lnd/clm/tools/mksurfdata/Makefile -------- Compare to ,null rather than strip
+   M   models/lnd/clm/tools/interpinic/Makefile -------- Compare to ,null rather than strip
+   M   models/lnd/clm/tools/mkgriddata/Makefile -------- Compare to ,null rather than strip
+   M   models/lnd/clm/tools/mkdatadomain/Makefile ------ Compare to ,null rather than strip
+
+   M   models/lnd/clm/tools/interpinic/interpinic.F90 -- Make sure htop_var/fpcgrid_var
+          are initialized to false each time comes into routine (bug 1304)
+
+   M   models/lnd/clm/bld/configure -- Remove HIRES setting for stand-alone testing
+
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New rcp2.6 T31
+          pftdyn dataset remove rcp4.5,6,8.5 T31 pftdyn files as they only go to 2035
+
+   M   models/lnd/clm/src/biogeochem/DryDepVelocity.F90 - Pick wesveg and index_season
+           differently for special landunits, add max for rc, assume no surface
+           resistance for SO2 over water, use has_rain logical (from fvitt)
+   M   models/lnd/clm/src/main/clm_driver.F90 ----------- Always call ndep_interp
+          even if (stream_year_first_ndep /= stream_year_last_ndep) as can change
+          answers if not
+
+Summary of testing:
+
+  bluefire: All PASS except TBL tests and...
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+063 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+064 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+065 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+  bluefire interactive testing: All PASS except TBL tests
+  bluefire/CESM testing: All PASS (even the comparision tests)
+  bluefire/PTCLM testing: All PASS up to...
+US-Ha1_ICN_ad_spinup.PTCLM                PASS
+  edinburgh/lf95 interactive testing: All PASS except...
+021 brVx3 TBR.sh _mec10sc_do clm_transient_glcMEC_rcp4.5^nl_urb_br 20331231:1800 48x96 gx3v7@1850-21FAIL! rc= 10
+  mirage,storm/ifort interactive testing: All PASS except TBL tests and...
+016 smVx3 TSM.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -10 arbFAIL! rc= 10
+017 erVx3 TER.sh _mec10sc_do clm_transient_glcMEC_rcp4.5 20331231:1800 48x96 gx3v7@1850-2100 -4+-6 aFAIL! rc= 5
+018 brVx3 TBR.sh _mec10sc_do clm_transient_glcMEC_rcp4.5^nl_urb_br 20331231:1800 48x96 gx3v7@1850-21FAIL! rc= 5
+024 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+025 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 10+38 arb_ic ...........FAIL! rc= 5
+026 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+ yong/ifort interactive testing: All PASS except...
+011 smD94 TSM.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_25
+
+Changes answers relative to baseline: Yes! Greater than roundoff
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change:(larger than roundoff/same climate
+
+   driver mapping changes, drydep code has changes, ndep_interp is always called
+   which changes answers on some platforms/compilers (such as intel compiler).
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_25
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Mar 22 10:13:08 MDT 2011

@@ -125,8 +125,7 @@ module clm_driver
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
                                    CBalanceCheck, NBalanceCheck
-  use ndepStreamMod       , only : ndep_interp, &
-	                           stream_year_first_ndep, stream_year_last_ndep 
+  use ndepStreamMod       , only : ndep_interp
 #else
   use STATICEcosysDynMod  , only : EcosystemDyn
 #endif
@@ -405,9 +404,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! re-written to go inside.
   ! ============================================================================
   ! PET: switching CN timestep
-  if (stream_year_first_ndep /= stream_year_last_ndep) then
-     call ndep_interp()
-  end if
+  call ndep_interp()
 #endif
   call t_stopf('pftdynwts')
 

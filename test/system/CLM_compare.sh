@@ -22,12 +22,10 @@ cprtype=`tail -1 cprnc.out`
 result_old=`perl -e 'while (my $ll = <>) \
     { if ($ll =~ /(\d+)[^0-9]+compared[^0-9]+(\d+)/) \
     { print "PASS" if $1>0 && $2==0 }}' cprnc.out`
-result_new=`perl -e 'my $fields=0; my $nonzero=0; while (my $ll = <>) \
-    { if ($ll =~ /total number of[^0-9]+(\d+) fields were compared/) { $fields  = $1; }; \
-      if ($ll =~ /       of which[^0-9]+(\d+) has non-zero differe/) { $nonzero = $1; }; \
-    } print "PASS" if $fields >0 && $nonzero==0;' cprnc.out`
-if [ "$cprtype" = "cprnc completed successfully" ]; then
-   result=$result_new
+if grep -c "the two files seem to be IDENTICAL" cprnc.out > /dev/null; then
+   result=PASS
+elif grep -c "the two files seem to be DIFFERENT" cprnc.out > /dev/null; then
+   result=FAIL
 else
    result=$result_old
 fi

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_26         erik 03/23/2011 Update externals, driver update changes answers, drydep changes from fvitt, fix bugs
    clm4_0_25         erik 03/22/2011 Always output restart-history files add more meta-data to them, fix urbanc_alpha and 2.5x3.33 datasets, Changes from Keith O on SNOWLIQ/SNOWICE
    clm4_0_24         erik 02/09/2011 Fix mksurfdata and add ability to override soil_fmax
    clm4_0_23         erik 02/03/2011 Add in new glacier-MEC use-cases

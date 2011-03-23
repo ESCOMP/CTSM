@@ -1165,8 +1165,8 @@ contains
     integer :: num                         ! number of gridcells NOT normalized
     integer :: numgrdso                    ! number of gridcells on output grid
     logical, save         :: initialize = .false.
-    logical :: htop_var    = .false.       !If variable name is == htop/hbot
-    logical :: fpcgrid_var = .false.       !If variable name is == fpcgrid
+    logical :: htop_var                    !If variable name is == htop/hbot
+    logical :: fpcgrid_var                 !If variable name is == fpcgrid
     ! --------------------------------------------------------------------
     allocate (rbufsli(nvec))
     allocate (rbufslo(nveco))
@@ -1175,6 +1175,8 @@ contains
     allocate (wto(nveco))
 
     if (nvec == numpfts) then
+       htop_var    = .false.
+       fpcgrid_var = .false.
        if ( trim(varname) == 'htop'    ) htop_var    = .true.
        if ( trim(varname) == 'hbot'    ) htop_var    = .true.
        if ( trim(varname) == 'fpcgrid' ) fpcgrid_var = .true.
