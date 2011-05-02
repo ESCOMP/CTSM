@@ -48,8 +48,8 @@ module clm_driver
 !                         shaded leaves
 !     -> QSat             recalculation of saturated vapor pressure,
 !                         specific humidity, & derivatives at leaf surface
-!   + DustEmission        Dust mobilization                             [DUST]
-!   + DustDryDep          Dust dry deposition                           [DUST]
+!   + DustEmission        Dust mobilization
+!   + DustDryDep          Dust dry deposition
 !  -> Biogeophysics_Lake  lake temperature and surface fluxes
 !   + VOCEmission         compute VOC emission                          [VOC]
 !  -> Biogeophysics2      soil/snow & ground temp and update surface fluxes
@@ -129,9 +129,7 @@ module clm_driver
 #else
   use STATICEcosysDynMod  , only : EcosystemDyn
 #endif
-#if (defined DUST)
   use DUSTMod             , only : DustDryDep, DustEmission
-#endif
   use VOCEmissionMod      , only : VOCEmission
   use seq_drydep_mod      , only : n_drydep, drydep_method, DD_XLND
   use STATICEcosysDynMod  , only : interpMonthlyVeg
@@ -192,7 +190,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 !  cpp directive SUNSHA is set, for sunlit/shaded canopy radiation.
 ! 4/25/05, Peter Thornton: Made the sun/shade routine the default, no longer
 !  need to have SUNSHA defined.  
-! 10/05 & 07/07 Sam Levis: Starting dates of CNDV work
+! Oct/05 & Jul/07 Sam Levis: Starting dates of CNDV and crop model work
 ! 2/29/08, Dave Lawrence: Revised snow cover fraction according to Niu and Yang, 2007
 ! 3/6/09, Peter Thornton: Added declin as new argument, for daylength control on Vcmax
 ! 2008.11.12  B. Kauffman: morph routine casa() in casa_ecosytemDyn(), so casa
@@ -522,19 +520,17 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call t_stopf('bgplake')
 
      ! ============================================================================
-     ! DUST and VOC emissions (if defined)
+     ! DUST and VOC emissions
      ! ============================================================================
 
      call t_startf('bgc')
 
-#if (defined DUST)
      ! Dust mobilization (C. Zender's modified codes)
      call DustEmission(begp, endp, begc, endc, begl, endl, &
                        filter(nc)%num_nolakep, filter(nc)%nolakep)
 
      ! Dust dry deposition (C. Zender's modified codes)
      call DustDryDep(begp, endp)
-#endif
 
      ! VOC emission (A. Guenther's MEGAN (2006) model)
      call VOCEmission(begp, endp, &
@@ -620,9 +616,11 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 #if (defined CN)
      ! fully prognostic canopy structure and C-N biogeochemistry
      ! - CNDV defined: prognostic biogeography; else prescribed
+     ! - crop model:   crop algorithms called from within CNEcosystemDyn
      call CNEcosystemDyn(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
-                  filter(nc)%soilp, doalb)
+                  filter(nc)%soilp, filter(nc)%num_pcropp, &
+                  filter(nc)%pcropp, doalb)
      call CNAnnualUpdate(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)

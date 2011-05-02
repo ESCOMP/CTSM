@@ -1,7 +1,5 @@
 module DUSTMod
 
-#if (defined DUST)
-
 !----------------------------------------------------------------------- 
 !BOP
 !
@@ -22,6 +20,7 @@ module DUSTMod
   use clmtype
   use clm_varpar  , only : dst_src_nbr, ndst, sz_nbr
   use clm_varcon  , only : grav, istsoil
+  use clm_varcon  , only : istcrop
   use clm_varctl  , only : iulog
   use abortutils  , only : endrun
   use subgridAveMod, only: p2l_1d
@@ -230,7 +229,7 @@ contains
        ! linearly from 1 to 0 as VAI(=tlai+tsai) increases from 0 to vai_mbl_thr
        ! if ice sheet, wetland, or lake, no dust allowed
        
-       if (ityplun(l) == istsoil) then
+       if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
           if (tlai_lu(l) < vai_mbl_thr) then
              lnd_frc_mbl(p) = 1.0_r8 - (tlai_lu(l))/vai_mbl_thr
           else
@@ -904,7 +903,5 @@ contains
     end do
 
   end subroutine Dustini
-
-#endif
 
 end module DUSTMod

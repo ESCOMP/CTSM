@@ -27,6 +27,9 @@ CLM Biogeochemistry mode
    casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
 (CASA is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
+<entry id="crop" valid_values="on,off" value="off">
+Toggle to turn on the prognostic crop model
+</entry>
 <entry id="glc_nec" valid_values="0,1,3,5,10" value="0" category="physics">
 Glacier model number of elevation classes
 (Setting glc_nec to anything other than 0 or 10 is EXPERIMENTAL NOT SUPPORTED!)
@@ -53,9 +56,6 @@ than defining them here.
 Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
-<entry id="dust" valid_values="on,off" value="on" category="physics">
-Toggle to turn on dust module
-</entry>
 <entry id="c13" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
 (C13 is EXPERIMENTAL NOT SUPPORTED!)
@@ -79,10 +79,10 @@ Directory containing NetCDF include and library directories and files.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
 
-<entry id="maxpft"  value="numpft+1" 
-valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,numpft\+1" category="physics">
-Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use all available)
-(Setting maxpft to anything other than numpft+1 is EXPERIMENTAL NOT SUPPORTED!)
+<entry id="maxpft"  value="" 
+valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,21" category="physics">
+Maximum number of plant function types (PFT)  per gridcell
+(Setting maxpft to anything other than 17 (or 21 for CROP) is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
 <entry id="mpi_path" value="" category="standalone_test">
@@ -101,14 +101,14 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scr
 <entry id="pergro" valid_values="on,off" value="off" category="physics">
 Toggle to turn on perturbation error growth test
 </entry>
-<entry id="progsslt" valid_values="on,off" value="on" category="physics">
-Toggle to turn on prognostic sea salt 
-</entry>
 <entry id="rtm" valid_values="on,off" value="on" category="physics">
 Toggle to turn on river transport module, to run global river routing model to ocean
 </entry>
 <entry id="nofire" valid_values="on,off" value="off" category="bgc">
 Toggle to make wild-fires inactive for biogeochemistry=CN mode
+</entry>
+<entry id="noio" valid_values="on,off" value="off" category="physics">
+Toggle to turn all history output completey OFF (possibly used for testing)
 </entry>
 <entry id="target_os" value="" category="mach_options">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"

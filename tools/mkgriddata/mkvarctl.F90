@@ -31,6 +31,7 @@ module mkvarctl
 
   integer           , public :: area_units = 0       ! 0=km2, 1=rad2
   logical           , public :: area_valid = .true.  ! is area read valid
+  integer           , public :: numpft     = 16      ! number of plant types
 
 !
 ! !REVISION HISTORY:

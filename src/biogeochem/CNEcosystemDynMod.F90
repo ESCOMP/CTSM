@@ -1,4 +1,3 @@
-
 module CNEcosystemDynMod
 #ifdef CN
 
@@ -19,7 +18,8 @@ module CNEcosystemDynMod
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNEcosystemDyn   ! Ecosystem dynamics: phenology, vegetation
+  public :: CNEcosystemDynInit   ! Ecosystem dynamics initialization
+  public :: CNEcosystemDyn       ! Ecosystem dynamics: phenology, vegetation
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
@@ -37,11 +37,44 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: CNEcosystemDynInit
+!
+! !INTERFACE:
+  subroutine CNEcosystemDynInit(lbc, ubc, lbp, ubp )
+!
+! !DESCRIPTION:
+! Initialzation of the CN Ecosystem dynamics.
+!
+! !USES:
+    use CNAllocationMod, only : CNAllocationInit
+    use CNPhenologyMod , only : CNPhenologyInit
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: lbc, ubc        ! column bounds
+    integer, intent(in) :: lbp, ubp        ! pft bounds
+!
+! !CALLED FROM:
+!
+! !REVISION HISTORY:
+! 04/05/11, Erik Kluzek creation
+!
+! !LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
+     call CNAllocationInit ( lbc, ubc, lbp, ubp )
+     call CNPhenologyInit  ( lbp, ubp )
+
+  end subroutine CNEcosystemDynInit
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: CNEcosystemDyn
 !
 ! !INTERFACE:
   subroutine CNEcosystemDyn(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-                     num_soilp, filter_soilp, doalb)
+                     num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb)
 !
 ! !DESCRIPTION:
 ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -89,6 +122,8 @@ contains
     integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
     integer, intent(in) :: num_soilp       ! number of soil pfts in filter
     integer, intent(in) :: filter_soilp(ubp-lbp+1) ! filter for soil pfts
+    integer, intent(in) :: num_pcropp      ! number of prog. crop pfts in filter
+    integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
     logical, intent(in) :: doalb           ! true = surface albedo calculation time step
 !
 ! !CALLED FROM:
@@ -123,13 +158,15 @@ contains
 
        call CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
-       call CNDecompAlloc(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
+       call CNDecompAlloc(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
+                          num_soilp, filter_soilp, num_pcropp)
 
-       ! CNphenology needs to be called after CNdecompAlloc, becuase it
+       ! CNphenology needs to be called after CNdecompAlloc, because it
        ! depends on current time-step fluxes to new growth on the last
        ! litterfall timestep in deciduous systems
 
-       call CNPhenology(num_soilc, filter_soilc, num_soilp, filter_soilp)
+       call CNPhenology(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+                        num_pcropp, filter_pcropp, doalb)
 
        call CNGResp(num_soilp, filter_soilp)
        

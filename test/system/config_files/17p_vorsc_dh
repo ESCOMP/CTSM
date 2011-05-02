@@ -1,7 +1,7 @@
 -mode clm_stndln
 -nouse_mpiserial -smp
+-debug
 -maxpft 17
 -rtm on
--dust on
 -voc on
 -s

@@ -13,6 +13,7 @@ module restFileMod
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
+  use surfrdMod   , only : crop_prog
   use ncdio_pio       
 !
 ! !PUBLIC TYPES:
@@ -63,6 +64,7 @@ contains
     use BiogeophysRestMod, only : BiogeophysRest
 #if (defined CN)
     use CNRestMod        , only : CNRest
+    use CropRestMod      , only : CropRest
 #endif
 #if (defined RTM)
     use RtmMod           , only : RTMRest
@@ -121,7 +123,9 @@ contains
     call BiogeophysRest( ncid, flag='define' )
 #if (defined CN)
     call CNRest( ncid, flag='define' )
+    if ( crop_prog ) call CropRest( ncid, flag='define' )
 #endif
+
 #if (defined CASA)
     call CASARest( ncid, flag='define' )
 #endif
@@ -146,6 +150,7 @@ contains
 
 #if (defined CN)
     call CNRest( ncid, flag='write' )
+    if ( crop_prog ) call CropRest( ncid, flag='write' )
 #endif
 
 #if (defined CASA)
@@ -195,6 +200,7 @@ contains
     use BiogeophysRestMod, only : BiogeophysRest
 #if (defined CN)
     use CNRestMod        , only : CNRest
+    use CropRestMod      , only : CropRest
 #endif
 #if (defined RTM)
     use RtmMod           , only : RTMRest
@@ -234,6 +240,7 @@ contains
 
 #if (defined CN)
     call CNRest( ncid, flag='read' )
+    if ( crop_prog ) call CropRest( ncid, flag='read' )
 #endif
 
 #if (defined CASA)
@@ -274,7 +281,8 @@ contains
 ! Determine and obtain netcdf restart file
 !
 ! !USES:
-    use clm_varctl, only : caseid, finidat, nrevsn, nsrest, brnch_retain_casename
+    use clm_varctl, only : caseid, finidat, nrevsn, nsrest, brnch_retain_casename, &
+                           nsrContinue, nsrBranch, nsrStartup
     use fileutils , only : getfil
 !
 ! !ARGUMENTS:
@@ -299,7 +307,7 @@ contains
     ! Continue run:
     ! Restart file pathname is read restart pointer file 
     
-    if (nsrest==1) then
+    if (nsrest==nsrContinue) then
        call restFile_read_pfile( path )
        call getfil( path, file, 0 )
     end if
@@ -309,7 +317,7 @@ contains
     ! Check case name consistency (case name must be different for branch run, 
     ! unless namelist specification states otherwise)
     
-    if (nsrest==3) then
+    if (nsrest==nsrBranch) then
        length = len_trim(nrevsn)
        if (nrevsn(length-2:length) == '.nc') then
           path = trim(nrevsn) 
@@ -335,7 +343,7 @@ contains
     ! Initial run: 
     ! Restart file pathname is obtained from namelist "finidat"
     
-    if (nsrest==0) then
+    if (nsrest==nsrStartup) then
        call getfil( finidat, file, 0 )
     end if
     
@@ -640,7 +648,7 @@ contains
        
     ! Define global attributes
     
-    call ncd_putatt(ncid, NCD_GLOBAL, 'conventions', trim(conventions))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'Conventions', trim(conventions))
     call getdatetime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
     call ncd_putatt(ncid, NCD_GLOBAL, 'history' , trim(str))
@@ -670,7 +678,7 @@ contains
 ! !USES:
     use decompMod,  only : get_proc_bounds, get_proc_global
     use clm_varpar, only : nlevsno, nlevlak, nlevgrnd
-    use clm_varctl, only : single_column, nsrest
+    use clm_varctl, only : single_column, nsrest, nsrStartup
     implicit none
 !
 ! !ARGUMENTS:
@@ -691,7 +699,7 @@ contains
 
     ! Get relevant sizes
 
-    if ( .not. single_column .or. nsrest /= 0 )then
+    if ( .not. single_column .or. nsrest /= nsrStartup )then
        call get_proc_global(numg, numl, numc, nump)
        call check_dim(ncid, 'gridcell', numg)
        call check_dim(ncid, 'landunit', numl)

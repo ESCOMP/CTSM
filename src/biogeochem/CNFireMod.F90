@@ -44,8 +44,9 @@ subroutine CNFireArea (num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size, get_nstep
-   use clm_varpar  , only: max_pft_per_col
+   use clm_time_manager, only: get_step_size, get_nstep, get_days_per_year
+   use clm_varpar      , only: max_pft_per_col
+   use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
    implicit none
@@ -81,7 +82,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    real(r8), pointer :: me(:)               ! column-level moisture of extinction (proportion)
    real(r8), pointer :: fire_prob(:)        ! daily fire probability (0-1)
    real(r8), pointer :: mean_fire_prob(:)   ! e-folding mean of daily fire probability (0-1)
-   real(r8), pointer :: fireseasonl(:)      ! annual fire season length (days, <= 365)
+   real(r8), pointer :: fireseasonl(:)      ! annual fire season length (days, <= days/year)
    real(r8), pointer :: farea_burned(:)     ! fractional area burned in this timestep (proportion)
    real(r8), pointer :: ann_farea_burned(:) ! annual total fractional area burned (proportion)
 !
@@ -102,6 +103,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    real(r8):: m         ! top-layer soil moisture (proportion)
    real(r8):: mep       ! pft-level moisture of extinction [proportion]
    real(r8):: s2        ! (mean_fire_prob - 1.0)
+   real(r8):: dayspyr   ! days per year
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type members (pft-level)
@@ -150,13 +152,14 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    end do
 
    ! Get model step size
-   dt = real( get_step_size(), r8 )
+   dt      = real( get_step_size(), r8 )
 
    ! Set the number of timesteps for e-folding.
    ! When the simulation has run fewer than this number of steps,
    ! re-scale the e-folding time to get a stable early estimate.
-   nstep = get_nstep()
-   nef = (ef_time*365._r8*86400._r8)/dt
+   nstep   = get_nstep()
+   dayspyr = get_days_per_year()
+   nef = (ef_time*dayspyr*secspday)/dt
    ef_nsteps = max(1,min(nstep,nef))
    
    ! test code, added 6/6/05, PET
@@ -199,7 +202,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
       ! ann_farea_burned corresponds to the variable A from Thonicke.
 
       mean_fire_prob(c) = (mean_fire_prob(c)*(ef_nsteps-1._r8) + fire_prob(c))/ef_nsteps
-      fireseasonl(c) = mean_fire_prob(c) * 365._r8
+      fireseasonl(c) = mean_fire_prob(c) * dayspyr
       s2 = mean_fire_prob(c)-1._r8
       ann_farea_burned(c) = mean_fire_prob(c)*exp(s2/(0.45_r8*(s2**3) + 2.83_r8*(s2**2) + 2.96_r8*s2 + 1.04_r8))
 
@@ -208,7 +211,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
       ! fractional area burned from equations above.
 
       if (fireseasonl(c) > 0._r8) then
-         farea_burned(c) = (fire_prob(c)/fireseasonl(c)) * ann_farea_burned(c) * (dt/86400._r8)
+         farea_burned(c) = (fire_prob(c)/fireseasonl(c)) * ann_farea_burned(c) * (dt/secspday)
       else
          farea_burned(c) = 0._r8
       end if

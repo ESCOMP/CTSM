@@ -1,0 +1,1 @@
+-l CSMDATA -p PFTDATA -r 1x1_numaIA -y 2000 -irrig -crop -nomv -exedir EXEDIR

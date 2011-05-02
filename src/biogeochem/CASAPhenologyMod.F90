@@ -83,7 +83,7 @@ contains
 ! !USES:
     use clmtype
     use decompMod , only : get_proc_bounds
-    use clm_varctl, only : nsrest
+    use clm_varctl, only : nsrest, nsrStartup
 !
 ! !ARGUMENTS:
     implicit none
@@ -152,7 +152,7 @@ contains
     do p = begp, endp   
 !      stressT(p)  = 0.0
 !      stressW(p)  = 0.0
-       if (nsrest == 0) then
+       if (nsrest == nsrStartup) then
           if (evergreen(ivt(p)) == 1 ) then
              lgrow(p) = 1._r8
           else
@@ -186,7 +186,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon  , only : tfrz
+    use clm_varcon  , only : tfrz, secspday
     use clm_time_manager, only : get_step_size, get_nstep, get_curr_date
 !
 ! !ARGUMENTS:
@@ -219,8 +219,8 @@ contains
     integer  :: p          ! pft index
     integer  :: f          ! filter index
     integer  :: nstepmin
-    integer  :: mcsec_n    !current seconds of next timestep (0, ..., 86400)
-    integer  :: mcsec      !current seconds of current date (0, ..., 86400)
+    integer  :: mcsec_n    !current seconds of next timestep (0, ..., seconds/day)
+    integer  :: mcsec      !current seconds of current date (0, ..., seconds/day)
     integer  :: kyr        !year
     integer  :: kmo        !month (1, ..., 12)
     integer  :: kda        !day of month (1, ..., 31)
@@ -271,7 +271,7 @@ contains
 
     ! convert ngrowmin (days) to timesteps
 
-    nstepmin = ngrowmin*86400/dtime
+    nstepmin = ngrowmin*secspday/dtime
 
     ! ----------------------------------------------------------------------
     ! initialize arrays at start of the winter season

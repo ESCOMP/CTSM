@@ -35,15 +35,16 @@ contains
 !
 ! !INTERFACE:
 subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
-   num_soilp, filter_soilp)
+   num_soilp, filter_soilp, num_pcropp)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    use clmtype
-   use CNAllocationMod, only: CNAllocation
+   use CNAllocationMod , only: CNAllocation
    use clm_time_manager, only: get_step_size
-   use pft2colMod, only: p2c
+   use pft2colMod      , only: p2c
+   use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
    implicit none
@@ -53,6 +54,7 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+   integer, intent(in) :: num_pcropp      ! number of pfts in prognostic crop filter
 !
 ! !CALLED FROM:
 ! subroutine CNEcosystemDyn in module CNEcosystemDynMod.F90
@@ -263,7 +265,7 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
 
    ! set time steps
    dt = real( get_step_size(), r8 )
-   dtd = dt/86400.0_r8
+   dtd = dt/secspday
 
    ! set soil organic matter compartment C:N ratios (from Biome-BGC v4.2.0)
    cn_s1 = 12.0_r8
@@ -541,7 +543,8 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    ! to resolve the competition between plants and soil heterotrophs
    ! for available soil mineral N resource.
 
-   call CNAllocation(lbp, ubp, lbc,ubc,num_soilc,filter_soilc,num_soilp,filter_soilp)
+   call CNAllocation(lbp, ubp, lbc,ubc,num_soilc,filter_soilc,num_soilp, &
+                     filter_soilp, num_pcropp)
 
    ! column loop to calculate actual immobilization and decomp rates, following
    ! resolution of plant/heterotroph  competition for mineral N

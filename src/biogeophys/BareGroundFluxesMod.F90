@@ -1,4 +1,3 @@
-
 module BareGroundFluxesMod
 
 !------------------------------------------------------------------------------
@@ -45,6 +44,7 @@ contains
     use clm_atmlnd         , only : clm_a2l
     use clm_varpar         , only : nlevgrnd
     use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, istsoil
+    use clm_varcon         , only : istcrop
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use QSatMod            , only : QSat
@@ -397,7 +397,7 @@ contains
 
        rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
 
-       if (ltype(l) == istsoil) then
+       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
          rh_ref2m_r(p) = rh_ref2m(p)
          t_ref2m_r(p) = t_ref2m(p)
        end if

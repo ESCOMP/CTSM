@@ -1,6 +1,3 @@
-#define L2R_Decomp
-#undef  L2R_Decomp
-
 module RtmMod
 
 #if (defined RTM)
@@ -471,45 +468,6 @@ contains
              nop(0:npes-1),nba(0:npes-1),nrs(0:npes-1), &
              rglo2gdc(rtmlon*rtmlat),runoff%num_rtm(0:npes-1))
 
-!------- compute l2r based decomp, comment out to turn off
-#if (defined L2R_Decomp)
-    allocate(basin(rtmlon*rtmlat),basnp(nbas),baslc(nbas))
-
-    ! use pocn as temporary storage
-    pocn = -99
-    basnp = -99
-    igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
-    igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
-    iwgt  = mct_sMat_indexRA(sMat0_l2r,'weight')
-    do n = 1,mct_sMat_lsize(sMat0_l2r)
-       nr = sMat0_l2r%data%iAttr(igrow,n)
-       ns = sMat0_l2r%data%iAttr(igcol,n)
-       if (ldecomp%glo2gdc(ns) > 0)  then
-          pocn(nr) = ns          ! set ocean overlap to one of the lnd cells
-       endif
-    enddo
-
-    n = 0
-    do nr = 1,rtmlon*rtmlat
-       if (nocn(nr) > 0) then
-          n = n + 1
-          if (n > nbas) then
-             write(iulog,*) ' ERROR: basin decomp out of bounds ',n,nbas
-             call endrun()
-          endif
-          basin(nr) = n
-          baslc(n) = pocn(nr)  ! set basin land cell to the oceancell overlap
-       endif
-    enddo
-    if (n /= nbas) then
-       write(iulog,*) ' ERROR: basin decomp sum incorrect ',n,nbas
-       call endrun()
-    endif
-
-    call mct_gsmap_pelocs(gsmap_lnd_gdc2glo,nbas,baslc,basnp)
-    deallocate(baslc)
-#endif
-
     nop = 0
     nba = 0
     nrs = 0
@@ -534,13 +492,6 @@ contains
 !   distribute basins to minimize l2r time, basins put on pes associated 
 !      with lnd forcing, need to know l2r map and lnd decomp
 !
-#if (defined L2R_Decomp)
-!--------------
-! put it on a pe that is associated with the land decomp if valid
-          if (basnp(basin(nr)) >= 0 .and. basnp(basin(nr)) <= npes-1) then
-             baspe = basnp(basin(nr))
-          else
-#endif
 !--------------
 ! find min pe
 !             baspe = 0
@@ -556,9 +507,6 @@ contains
                    maxrtm = max(maxrtm*1.5, maxrtm+1.0)   ! 3 loop, .445 and 1.5 chosen carefully
                 endif
              enddo
-#if (defined L2R_Decomp)
-          endif
-#endif
 !--------------
           if (baspe > npes-1 .or. baspe < 0) then
              write(iulog,*) 'error in decomp for rtm ',nr,npes,baspe
@@ -570,10 +518,6 @@ contains
        endif
     enddo ! nr
     enddo ! nl
-
-#if (defined L2R_Decomp)
-    deallocate(basin,basnp)
-#endif
 
     ! set pocn for land cells, was set for ocean above
     do nr=1,rtmlon*rtmlat
@@ -645,50 +589,6 @@ contains
        endif
     enddo
 
-#if (1 == 0)
-    do n = 0,npes-1
-       if (iam == n) then
-          runoff%begr  = runoff%numr  + 1
-          runoff%begrl = runoff%numrl + 1
-          runoff%begro = runoff%numro + 1
-       endif
-       do nr=1,rtmlon*rtmlat
-          if (pocn(nr) == n .and. nocn(nr) /= 0) then
-             runoff%num_rtm(n) = runoff%num_rtm(n) + nocn(nr)
-             runoff%numr  = runoff%numr  + nocn(nr)
-             runoff%numro = runoff%numro + 1
-             runoff%numrl = runoff%numrl + nocn(nr) - 1
-             k = g
-             if (nocn(nr) == 1) then   ! avoid the double rtm nested loop
-                n2 = nr
-                g = g + 1
-                rglo2gdc(n2) = g
-             else
-                do n2 = 1,rtmlon*rtmlat
-                   if (iocn(n2) == nr) then
-                      g = g + 1
-                      rglo2gdc(n2) = g
-                   endif
-                enddo
-             endif
-             if ((g-k) /= nocn(nr)) then
-                write(iulog,*) 'Rtmini ERROR rtm cell count ',n,nr,k,g,g-k,nocn(nr)
-                call endrun()
-             endif
-             if (iam == n) then
-                runoff%lnumr  = runoff%lnumr  + nocn(nr)
-                runoff%lnumro = runoff%lnumro + 1
-                runoff%lnumrl = runoff%lnumrl + nocn(nr) - 1
-             endif
-          endif
-       enddo
-       if (iam == n) then
-          runoff%endr  = runoff%numr
-          runoff%endro = runoff%begro + runoff%lnumro - 1
-          runoff%endrl = runoff%begrl + runoff%lnumrl - 1
-       endif
-    enddo
-#endif
     deallocate(nop,nba,nrs)
     deallocate(iocn,nocn)
     deallocate(pocn)
@@ -1381,7 +1281,8 @@ contains
 !
 ! !USES:
     use ncdio_pio
-    use decompMod    , only : get_proc_bounds
+    use decompMod       , only : get_proc_bounds
+    use clm_time_manager, only : is_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -1555,39 +1456,6 @@ contains
     runoff%volr_nt2(:) = runoff%volrlnd(:,2)
 
   end subroutine rtm_sethist
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: is_restart
-!
-! !INTERFACE:
-  logical function is_restart( )
-!
-! !DESCRIPTION:
-! Determine if restart run
-!
-! !USES:
-    use clm_varctl, only : nsrest
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
-
-    if (nsrest == 1) then
-       is_restart = .true.
-    else
-       is_restart = .false.
-    end if
-
-  end function is_restart
 
 #endif
 

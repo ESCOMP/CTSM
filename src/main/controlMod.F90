@@ -28,8 +28,7 @@ module controlMod
   use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
 #endif
 #ifdef CN
-  use clm_varctl     , only : scaled_harvest
-  use CNAllocationMod, only : Carbon_only
+  use CNAllocationMod, only : suplnitro
 #endif
   use clm_varctl   , only : create_glacier_mec_landunit, glc_nec, glc_dyntopo, glc_smb, glc_topomax
   use spmdMod      , only : masterproc
@@ -132,7 +131,8 @@ contains
 #endif
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
-    use clm_varctl       , only : clmvarctl_init, set_clmvarctl
+    use clm_varctl       , only : clmvarctl_init, set_clmvarctl, nsrBranch, nsrStartup, &
+                                  nsrContinue
 
     implicit none
 !
@@ -186,7 +186,7 @@ contains
 
 #ifdef CN
     namelist /clm_inparm/  &
-         scaled_harvest, Carbon_only
+         suplnitro
 #endif
 
     namelist /clm_inparm / &
@@ -221,9 +221,10 @@ contains
        write(iulog,*) 'Attempting to initialize run control settings .....'
     endif
 
-    runtyp(0 + 1) = 'initial'
-    runtyp(1 + 1) = 'restart'
-    runtyp(3 + 1) = 'branch '
+    runtyp(:)               = 'missing'
+    runtyp(nsrStartup  + 1) = 'initial'
+    runtyp(nsrContinue + 1) = 'restart'
+    runtyp(nsrBranch   + 1) = 'branch '
 
 #if (defined CASA)
     lnpp = 2
@@ -302,7 +303,7 @@ contains
        ! if the driver is a startup type
        if ( override_nsrest /= nsrest )then
 
-           if ( override_nsrest /= 3 .and. nsrest /= 0 )then
+           if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
               call endrun( subname//' ERROR: can ONLY override clm start-type ' // &
                            'to branch type and ONLY if driver is a startup type' )
            end if
@@ -405,8 +406,7 @@ contains
 
     call mpi_bcast (co2_type, len(co2_type), MPI_CHARACTER, 0, mpicom, ier)
 #ifdef CN
-    call mpi_bcast (scaled_harvest, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (Carbon_only,    1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (suplnitro, len(suplnitro), MPI_CHARACTER, 0, mpicom, ier)
 #endif
 
     ! physics variables
@@ -484,10 +484,10 @@ contains
 !
 ! !USES:
 !
-    use clm_varctl,      only : source, rpntdir, rpntfil
+    use clm_varctl,      only : source, rpntdir, rpntfil, nsrStartup, nsrBranch, &
+                                nsrContinue
 #ifdef CN
-    use clm_varctl,      only : scaled_harvest
-    use CNAllocationMod, only : Carbon_only
+    use CNAllocationMod, only : suplnitro, suplnNon
 #endif
 #ifdef RTM
     use clm_varctl,      only : ice_runoff
@@ -543,13 +543,9 @@ contains
        write(iulog,*) '   atm topographic data = ',trim(fatmtopo)
     end if
 #ifdef CN
-    if (scaled_harvest)then
-        write(iulog,*) '   harvesting will be scaled by coefficients from Johann Feddema'
-    else
-        write(iulog,*) '   harvesting will NOT be scaled'
-    end if
-    if (Carbon_only)then
-        write(iulog,*) '   prognostic Nitrogen model will be turned off'
+    if (suplnitro /= suplnNon)then
+        write(iulog,*) '   Supplemental Nitrogen mode is set to run over PFTs: ', &
+                       trim(suplnitro)
     end if
 #endif
     if (fsnowoptics == ' ') then
@@ -582,9 +578,9 @@ contains
        endif
     endif
 
-    if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
-    if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
-    if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
+    if (nsrest == nsrStartup .and. finidat == ' ') write(iulog,*) '   initial data created by model'
+    if (nsrest == nsrStartup .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
+    if (nsrest /= nsrStartup) write(iulog,*) '   restart data   = ',trim(nrevsn)
     write(iulog,*) '   atmospheric forcing data is from cesm atm model'
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
@@ -620,12 +616,12 @@ contains
        write(iulog,*)'Snow capping will flow out in liquid river runoff'
     endif
 #endif
-    if (nsrest == 1) then
+    if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Namelist should not differ except for ending time step and run type'
     end if
-    if (nsrest == 3) then
+    if (nsrest == nsrBranch) then
        write(iulog,*) 'branch warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'

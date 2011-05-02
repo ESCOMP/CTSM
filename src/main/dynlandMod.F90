@@ -1,4 +1,3 @@
-
 module dynlandMod
 
 !---------------------------------------------------------------------------
@@ -52,6 +51,7 @@ contains
 ! !USES:
 
    use clm_varcon, only : istsoil,istice,istwet,istdlak,istslak,isturb,istice_mec
+   use clm_varcon, only : istcrop
    use clm_varcon, only : icol_road_perv,icol_road_imperv,icol_roof
    use clm_varcon, only : icol_sunwall,icol_shadewall
    use clm_varcon, only : cpice,  cpliq
@@ -157,7 +157,7 @@ contains
             heat  = 0.0_r8
 
             !--- water & ice, above ground only ---
-            if ( (ltype(l) == istsoil                                  )  &
+            if ( (ltype(l) == istsoil .or. ltype(l) == istcrop         )  &
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istice_mec                               )  &           
@@ -176,7 +176,7 @@ contains
             end if
 
             !--- water & ice, below ground only ---
-            if ( (ltype(l) == istsoil                                  )  &
+            if ( (ltype(l) == istsoil .or. ltype(l) == istcrop         )  &
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istice_mec                               )  &           
@@ -188,7 +188,7 @@ contains
             end if
 
             !--- water in aquifer ---
-            if ( (ltype(l) == istsoil                                  )  &
+            if ( (ltype(l) == istsoil .or. ltype(l) == istcrop         )  &
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istice_mec                               )  &           
@@ -197,7 +197,7 @@ contains
             end if
 
             !--- water in canopy (at pft level) ---
-            if (ltype(l) == istsoil) then   ! note: soil specified at LU level
+            if (ltype(l) == istsoil .or. ltype(l) == istcrop) then   ! note: soil specified at LU level
                pi = cptr%pfti(c)
                pf = cptr%pftf(c)
                do p = pi,pf ! loop over pfts

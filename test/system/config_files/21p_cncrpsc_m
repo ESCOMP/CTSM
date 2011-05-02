@@ -1,7 +1,7 @@
 -mode clm_stndln
 -nouse_mpiserial
--maxpft 17
--rtm on
--dust on
--voc on
+-nosmp
+-maxpft 21
+-bgc cn
+-crop on
 -s

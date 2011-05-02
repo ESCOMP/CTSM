@@ -23,6 +23,7 @@ module clmtype
 !   5  => (istwet)  wetland
 !   6  => (isturb)  urban
 !   7  => (istice_mec) land ice (multiple elevation classes) 
+!   7  => (istcrop) crop (only for crop configuration)
 ! -------------------------------------------------------- 
 ! column types can have values of
 ! -------------------------------------------------------- 
@@ -58,8 +59,8 @@ module clmtype
 !   15 => c3_crop
 !   16 => c3_irrigated
 !   17 => corn
-!   18 => spring_wheat
-!   19 => winter_wheat
+!   18 => spring temperate cereal
+!   19 => winter temperate cereal
 !   20 => soybean
 ! -------------------------------------------------------- 
 !
@@ -169,7 +170,33 @@ type, public :: pft_pstate_type
    real(r8), pointer :: forc_hgt_u_pft(:)       !wind forcing height (10m+z0m+d) (m)
    real(r8), pointer :: forc_hgt_t_pft(:)       !temperature forcing height (10m+z0m+d) (m)
    real(r8), pointer :: forc_hgt_q_pft(:)       !specific humidity forcing height (10m+z0m+d) (m)
-   real(r8), pointer :: vds(:) 		        !deposition velocity term (m/s) (for dry dep SO4, NH4NO3)
+   ! Variables for prognostic crop model
+   real(r8), pointer :: hdidx(:)                ! cold hardening index?
+   real(r8), pointer :: cumvd(:)                ! cumulative vernalization d?ependence?
+   real(r8), pointer :: htmx(:)                 ! max hgt attained by a crop during yr (m)
+   real(r8), pointer :: vf(:)                   ! vernalization factor for cereal
+   real(r8), pointer :: gddmaturity(:)          ! growing degree days (gdd) needed to harvest (ddays)
+   real(r8), pointer :: gdd0(:)                 ! growing degree-days base  0C from planting  (ddays)
+   real(r8), pointer :: gdd8(:)                 ! growing degree-days base  8C from planting  (ddays)
+   real(r8), pointer :: gdd10(:)                ! growing degree-days base 10C from planting  (ddays)
+   real(r8), pointer :: gdd020(:)               ! 20-year average of gdd0                     (ddays)
+   real(r8), pointer :: gdd820(:)               ! 20-year average of gdd8                     (ddays)
+   real(r8), pointer :: gdd1020(:)              ! 20-year average of gdd10                    (ddays)
+   real(r8), pointer :: gddplant(:)             ! accum gdd past planting date for crop       (ddays)
+   real(r8), pointer :: gddtsoi(:)              ! growing degree-days from planting (top two soil layers) (ddays)
+   real(r8), pointer :: huileaf(:)              ! heat unit index needed from planting to leaf emergence
+   real(r8), pointer :: huigrain(:)             ! heat unit index needed to reach vegetative maturity
+   real(r8), pointer :: aleafi(:)               ! saved leaf allocation coefficient from phase 2
+   real(r8), pointer :: astemi(:)               ! saved stem allocation coefficient from phase 2
+   real(r8), pointer :: aleaf(:)                ! leaf allocation coefficient
+   real(r8), pointer :: astem(:)                ! stem allocation coefficient
+   logical , pointer :: croplive(:)             ! Flag, true if planted, not harvested
+   logical , pointer :: cropplant(:)            ! Flag, true if planted
+   integer , pointer :: harvdate(:)             ! harvest date
+                                                ! cropplant and harvdate could be 2D to facilitate rotation
+   integer , pointer :: idop(:)                 ! date of planting
+   integer , pointer :: peaklai(:)              ! 1: max allowed lai; 0: not at max
+   real(r8), pointer :: vds(:)                  !deposition velocity term (m/s) (for dry dep SO4, NH4NO3)
    ! new variables for CN code
    real(r8), pointer :: slasun(:)     !specific leaf area for sunlit canopy, projected area basis (m^2/gC)
    real(r8), pointer :: slasha(:)     !specific leaf area for shaded canopy, projected area basis (m^2/gC)
@@ -247,7 +274,6 @@ type, public :: pft_pstate_type
    real(r8), pointer :: nstepbeg(:)  ! nstep at start of growing season
    real(r8), pointer :: lgrow(:)     ! growing season index (0 or 1) to be
                                      ! passed daily to CASA to get NPP
-#if (defined CLAMP)
    ! Summary variables added for the C-LAMP Experiments
    real(r8), pointer :: casa_agnpp(:)        ! above-ground net primary production [gC/m2/s]
    real(r8), pointer :: casa_ar(:)           ! autotrophic respiration [gC/m2/s]
@@ -276,7 +302,6 @@ type, public :: pft_pstate_type
    real(r8), pointer :: casa_woodc_alloc(:)  ! wood C allocation [gC/m2/s]
    real(r8), pointer :: casa_woodc_loss(:)   ! wood C loss [gC/m2/s]
 #endif
-#endif
 end type pft_pstate_type
 
 !----------------------------------------------------
@@ -291,7 +316,6 @@ type, public :: pft_epc_type
    real(r8), pointer :: foln(:)                 !foliage nitrogen (%)
    real(r8), pointer :: dleaf(:)                !characteristic leaf dimension (m)
    real(r8), pointer :: c3psn(:)                !photosynthetic pathway: 0. = c4, 1. = c3
-   real(r8), pointer :: vcmx25(:)               !max rate of carboxylation at 25C (umol CO2/m**2/s)
    real(r8), pointer :: mp(:)                   !slope of conductance-to-photosynthesis relationship
    real(r8), pointer :: qe25(:)                 !quantum efficiency at 25C (umol CO2 / umol photon)
    real(r8), pointer :: xl(:)                   !leaf/stem orientation index
@@ -315,6 +339,7 @@ type, public :: pft_epc_type
    real(r8), pointer :: frootcn(:)      !fine root C:N (gC/gN)
    real(r8), pointer :: livewdcn(:)     !live wood (phloem and ray parenchyma) C:N (gC/gN)
    real(r8), pointer :: deadwdcn(:)     !dead wood (xylem and heartwood) C:N (gC/gN)
+   real(r8), pointer :: graincn(:)      !grain C:N (gC/gN) for prognostic crop model
    real(r8), pointer :: froot_leaf(:)   !allocation parameter: new fine root C per new leaf C (gC/gC)
    real(r8), pointer :: stem_leaf(:)    !allocation parameter: new stem c per new leaf C (gC/gC)
    real(r8), pointer :: croot_stem(:)   !allocation parameter: new coarse root C per new stem C (gC/gC)
@@ -326,8 +351,6 @@ type, public :: pft_epc_type
    real(r8), pointer :: fr_flab(:)      !fine root litter labile fraction
    real(r8), pointer :: fr_fcel(:)      !fine root litter cellulose fraction
    real(r8), pointer :: fr_flig(:)      !fine root litter lignin fraction
-   real(r8), pointer :: dw_fcel(:)      !dead wood cellulose fraction
-   real(r8), pointer :: dw_flig(:)      !dead wood lignin fraction
    real(r8), pointer :: leaf_long(:)    !leaf longevity (yrs)
    real(r8), pointer :: evergreen(:)    !binary flag for evergreen leaf habit (0 or 1)
    real(r8), pointer :: stress_decid(:) !binary flag for stress-deciduous leaf habit (0 or 1)
@@ -346,13 +369,6 @@ type, public :: pft_dgvepc_type
    real(r8), pointer :: tcmax(:)           !maximum coldest monthly mean temperature [units?]
    real(r8), pointer :: gddmin(:)          !minimum growing degree days (at or above 5 C)
    real(r8), pointer :: twmax(:)           !upper limit of temperature of the warmest month [units?]
-   real(r8), pointer :: lm_sapl(:)         ! ecophys const - leaf mass of sapling
-   real(r8), pointer :: sm_sapl(:)         ! ecophys const - stem mass of sapling
-   real(r8), pointer :: hm_sapl(:)         ! ecophys const - heartwood mass of sapling 
-   real(r8), pointer :: rm_sapl(:)         ! ecophys const - root mass of sapling 
-   logical , pointer :: tree(:)            ! flag if tree PFT or not
-   logical , pointer :: summergreen(:)     ! ecophys const
-   logical , pointer :: raingreen(:)       ! ecophys const
    real(r8), pointer :: reinickerp(:)      !parameter in allometric equation
    real(r8), pointer :: allom1(:)          !parameter in allometric
    real(r8), pointer :: allom2(:)          !parameter in allometric
@@ -437,6 +453,9 @@ type, public :: pft_estate_type
    real(r8), pointer :: t_ref2m_min_inst_r(:) !Rural instantaneous daily min of average 2 m height surface air temp (K)
    real(r8), pointer :: t_ref2m_max_inst_u(:) !Urban instantaneous daily max of average 2 m height surface air temp (K)
    real(r8), pointer :: t_ref2m_max_inst_r(:) !Rural instantaneous daily max of average 2 m height surface air temp (K)
+   real(r8), pointer :: a10tmin(:)            ! 10-day running mean of min 2-m temperature
+   real(r8), pointer :: a5tmin(:)             ! 5-day running mean of min 2-m temperature
+   real(r8), pointer :: t10(:)                !10-day running mean of the 2 m temperature (K)
    real(r8), pointer :: rh_ref2m(:)           !2 m height surface relative humidity (%)
    real(r8), pointer :: rh_ref2m_u(:)         !Urban 2 m height surface relative humidity (%)
    real(r8), pointer :: rh_ref2m_r(:)         !Rural 2 m height surface relative humidity (%)
@@ -456,6 +475,11 @@ end type pft_wstate_type
 !----------------------------------------------------
 type, public :: pft_cstate_type
    real(r8), pointer :: leafcmax(:)           ! (gC/m2) ann max leaf C
+   ! variables for prognostic crop model
+   real(r8), pointer :: grainc(:)             ! (gC/m2) grain C
+   real(r8), pointer :: grainc_storage(:)     ! (gC/m2) grain C storage
+   real(r8), pointer :: grainc_xfer(:)        ! (gC/m2) grain C transfer
+   !
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
    real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
@@ -484,8 +508,7 @@ type, public :: pft_cstate_type
    real(r8), pointer :: storvegc(:)           ! (gC/m2) stored vegetation carbon, excluding cpool
    real(r8), pointer :: totvegc(:)            ! (gC/m2) total vegetation carbon, excluding cpool
    real(r8), pointer :: totpftc(:)            ! (gC/m2) total pft-level carbon, including cpool
-#if (defined CLAMP) && (defined CN)
-   ! CLAMP summary (diagnostic) variable
+#if (defined CN)
    real(r8), pointer :: woodc(:)              ! (gC/m2) wood C
 #endif
 end type pft_cstate_type
@@ -494,6 +517,11 @@ end type pft_cstate_type
 ! pft nitrogen state variables structure
 !----------------------------------------------------
 type, public :: pft_nstate_type
+   ! variables for prognostic crop model
+   real(r8), pointer :: grainn(:)             ! (gN/m2) grain N 
+   real(r8), pointer :: grainn_storage(:)     ! (gN/m2) grain N storage
+   real(r8), pointer :: grainn_xfer(:)        ! (gN/m2) grain N transfer
+   !
    real(r8), pointer :: leafn(:)              ! (gN/m2) leaf N 
    real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
    real(r8), pointer :: leafn_xfer(:)         ! (gN/m2) leaf N transfer
@@ -544,7 +572,6 @@ end type pft_vstate_type
 type, public :: pft_dgvstate_type
    real(r8), pointer :: agddtw(:)              !accumulated growing degree days above twmax
    real(r8), pointer :: agdd(:)                !accumulated growing degree days above 5
-   real(r8), pointer :: t10(:)                 !10-day running mean of the 2 m temperature (K)
    real(r8), pointer :: t_mo(:)                !30-day average temperature (Kelvin)
    real(r8), pointer :: t_mo_min(:)            !annual min of t_mo (Kelvin)
    real(r8), pointer :: prec365(:)             !365-day running mean of tot. precipitation
@@ -753,6 +780,7 @@ type, public :: pft_cflux_type
    real(r8), pointer :: m_gresp_storage_to_fire(:)           ! growth respiration storage fire loss (gC/m2/s)
    real(r8), pointer :: m_gresp_xfer_to_fire(:)              ! growth respiration transfer fire loss (gC/m2/s)
    ! phenology fluxes from transfer pools                     
+   real(r8), pointer :: grainc_xfer_to_grainc(:)             ! grain C growth from storage for prognostic crop(gC/m2/s)
    real(r8), pointer :: leafc_xfer_to_leafc(:)               ! leaf C growth from storage (gC/m2/s)
    real(r8), pointer :: frootc_xfer_to_frootc(:)             ! fine root C growth from storage (gC/m2/s)
    real(r8), pointer :: livestemc_xfer_to_livestemc(:)       ! live stem C growth from storage (gC/m2/s)
@@ -762,6 +790,8 @@ type, public :: pft_cflux_type
    ! leaf and fine root litterfall                           
    real(r8), pointer :: leafc_to_litter(:)                   ! leaf C litterfall (gC/m2/s)
    real(r8), pointer :: frootc_to_litter(:)                  ! fine root C litterfall (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litter(:)               ! live stem C litterfall (gC/m2/s)
+   real(r8), pointer :: grainc_to_food(:)                    ! grain C to food for prognostic crop(gC/m2/s)
    ! maintenance respiration fluxes                          
    real(r8), pointer :: leaf_mr(:)                           ! leaf maintenance respiration (gC/m2/s)
    real(r8), pointer :: froot_mr(:)                          ! fine root maintenance respiration (gC/m2/s)
@@ -780,6 +810,8 @@ type, public :: pft_cflux_type
    real(r8), pointer :: psnshade_to_cpool(:)                 ! C fixation from shaded canopy (gC/m2/s)
    ! allocation fluxes, from current GPP                     
    real(r8), pointer :: cpool_to_xsmrpool(:)                 ! allocation to maintenance respiration storage pool (gC/m2/s)
+   real(r8), pointer :: cpool_to_grainc(:)                   ! allocation to grain C for prognostic crop(gC/m2/s)
+   real(r8), pointer :: cpool_to_grainc_storage(:)           ! allocation to grain C storage for prognostic crop(gC/m2/s)
    real(r8), pointer :: cpool_to_leafc(:)                    ! allocation to leaf C (gC/m2/s)
    real(r8), pointer :: cpool_to_leafc_storage(:)            ! allocation to leaf C storage (gC/m2/s)
    real(r8), pointer :: cpool_to_frootc(:)                   ! allocation to fine root C (gC/m2/s)
@@ -794,6 +826,7 @@ type, public :: pft_cflux_type
    real(r8), pointer :: cpool_to_deadcrootc_storage(:)       ! allocation to dead coarse root C storage (gC/m2/s)
    real(r8), pointer :: cpool_to_gresp_storage(:)            ! allocation to growth respiration storage (gC/m2/s)
    ! growth respiration fluxes                               
+   real(r8), pointer :: xsmrpool_to_atm(:)                   ! excess MR pool harvest mortality (gC/m2/s)
    real(r8), pointer :: cpool_leaf_gr(:)                     ! leaf growth respiration (gC/m2/s)
    real(r8), pointer :: cpool_leaf_storage_gr(:)             ! leaf growth respiration to storage (gC/m2/s)
    real(r8), pointer :: transfer_leaf_gr(:)                  ! leaf growth respiration from storage (gC/m2/s)
@@ -812,7 +845,12 @@ type, public :: pft_cflux_type
    real(r8), pointer :: cpool_deadcroot_gr(:)                ! dead coarse root growth respiration (gC/m2/s)
    real(r8), pointer :: cpool_deadcroot_storage_gr(:)        ! dead coarse root growth respiration to storage (gC/m2/s)
    real(r8), pointer :: transfer_deadcroot_gr(:)             ! dead coarse root growth respiration from storage (gC/m2/s)
+   ! growth respiration for prognostic crop model
+   real(r8), pointer :: cpool_grain_gr(:)                    ! grain growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_grain_storage_gr(:)            ! grain growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: transfer_grain_gr(:)                 ! grain growth respiration from storage (gC/m2/s)
    ! annual turnover of storage to transfer pools            
+   real(r8), pointer :: grainc_storage_to_xfer(:)            ! grain C shift storage to transfer for prognostic crop model (gC/m2/s)
    real(r8), pointer :: leafc_storage_to_xfer(:)             ! leaf C shift storage to transfer (gC/m2/s)
    real(r8), pointer :: frootc_storage_to_xfer(:)            ! fine root C shift storage to transfer (gC/m2/s)
    real(r8), pointer :: livestemc_storage_to_xfer(:)         ! live stem C shift storage to transfer (gC/m2/s)
@@ -840,7 +878,7 @@ type, public :: pft_cflux_type
    real(r8), pointer :: wood_harvestc(:)  ! (gC/m2/s) pft-level wood harvest (to product pools)
    real(r8), pointer :: pft_cinputs(:)    ! (gC/m2/s) pft-level carbon inputs (for balance checking)
    real(r8), pointer :: pft_coutputs(:)   ! (gC/m2/s) pft-level carbon outputs (for balance checking)
-#if (defined CLAMP) && (defined CN)
+#if (defined CN)
    ! CLAMP summary (diagnostic) variables, not involved in mass balance
    real(r8), pointer :: frootc_alloc(:)   ! (gC/m2/s) pft-level fine root C alloc
    real(r8), pointer :: frootc_loss(:)    ! (gC/m2/s) pft-level fine root C loss
@@ -922,6 +960,7 @@ type, public :: pft_nflux_type
    real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)        ! dead coarse root N transfer fire loss (gN/m2/s)
    real(r8), pointer :: m_retransn_to_fire(:)               ! retranslocated N pool fire loss (gN/m2/s)
    ! phenology fluxes from transfer pool                     
+   real(r8), pointer :: grainn_xfer_to_grainn(:)            ! grain N growth from storage for prognostic crop model (gN/m2/s)
    real(r8), pointer :: leafn_xfer_to_leafn(:)              ! leaf N growth from storage (gN/m2/s)
    real(r8), pointer :: frootn_xfer_to_frootn(:)            ! fine root N growth from storage (gN/m2/s)
    real(r8), pointer :: livestemn_xfer_to_livestemn(:)      ! live stem N growth from storage (gN/m2/s)
@@ -929,12 +968,16 @@ type, public :: pft_nflux_type
    real(r8), pointer :: livecrootn_xfer_to_livecrootn(:)    ! live coarse root N growth from storage (gN/m2/s)
    real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)    ! dead coarse root N growth from storage (gN/m2/s)
    ! litterfall fluxes
+   real(r8), pointer :: livestemn_to_litter(:)              ! livestem N to litter (gN/m2/s)
+   real(r8), pointer :: grainn_to_food(:)                   ! grain N to food for prognostic crop (gN/m2/s)
    real(r8), pointer :: leafn_to_litter(:)                  ! leaf N litterfall (gN/m2/s)
    real(r8), pointer :: leafn_to_retransn(:)                ! leaf N to retranslocated N pool (gN/m2/s)
    real(r8), pointer :: frootn_to_litter(:)                 ! fine root N litterfall (gN/m2/s)
    ! allocation fluxes
    real(r8), pointer :: retransn_to_npool(:)                ! deployment of retranslocated N (gN/m2/s)       
    real(r8), pointer :: sminn_to_npool(:)                   ! deployment of soil mineral N uptake (gN/m2/s)
+   real(r8), pointer :: npool_to_grainn(:)                  ! allocation to grain N for prognostic crop (gN/m2/s)
+   real(r8), pointer :: npool_to_grainn_storage(:)          ! allocation to grain N storage for prognostic crop (gN/m2/s)
    real(r8), pointer :: npool_to_leafn(:)                   ! allocation to leaf N (gN/m2/s)
    real(r8), pointer :: npool_to_leafn_storage(:)           ! allocation to leaf N storage (gN/m2/s)
    real(r8), pointer :: npool_to_frootn(:)                  ! allocation to fine root N (gN/m2/s)
@@ -948,6 +991,7 @@ type, public :: pft_nflux_type
    real(r8), pointer :: npool_to_deadcrootn(:)              ! allocation to dead coarse root N (gN/m2/s)
    real(r8), pointer :: npool_to_deadcrootn_storage(:)      ! allocation to dead coarse root N storage (gN/m2/s)
    ! annual turnover of storage to transfer pools           
+   real(r8), pointer :: grainn_storage_to_xfer(:)           ! grain N shift storage to transfer for prognostic crop (gN/m2/s)
    real(r8), pointer :: leafn_storage_to_xfer(:)            ! leaf N shift storage to transfer (gN/m2/s)
    real(r8), pointer :: frootn_storage_to_xfer(:)           ! fine root N shift storage to transfer (gN/m2/s)
    real(r8), pointer :: livestemn_storage_to_xfer(:)        ! live stem N shift storage to transfer (gN/m2/s)
@@ -1096,7 +1140,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: me(:)                 !moisture of extinction (proportion) 
    real(r8), pointer :: fire_prob(:)          !daily fire probability (0-1) 
    real(r8), pointer :: mean_fire_prob(:)     !e-folding mean of daily fire probability (0-1) 
-   real(r8), pointer :: fireseasonl(:)        !annual fire season length (days, <= 365) 
+   real(r8), pointer :: fireseasonl(:)        !annual fire season length (days, <= days/year) 
    real(r8), pointer :: farea_burned(:)       !timestep fractional area burned (proportion) 
    real(r8), pointer :: ann_farea_burned(:)   !annual total fractional area burned (proportion)
    real(r8), pointer :: albsnd_hst(:,:)       ! snow albedo, direct, for history files (col,bnd) [frc]
@@ -1421,12 +1465,19 @@ type, public :: column_cflux_type
    real(r8), pointer :: m_litr3c_to_fire(:)               ! litter 3 C fire loss (gC/m2/s)
    real(r8), pointer :: m_cwdc_to_fire(:)                 ! coarse woody debris C fire loss (gC/m2/s)
    ! litterfall fluxes
+   real(r8), pointer :: livestemc_to_litr1c(:)            ! livestem C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr2c(:)            ! livestem C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr3c(:)            ! livestem C litterfall to litter 3 C (gC/m2/s)
    real(r8), pointer :: leafc_to_litr1c(:)                ! leaf C litterfall to litter 1 C (gC/m2/s)
    real(r8), pointer :: leafc_to_litr2c(:)                ! leaf C litterfall to litter 2 C (gC/m2/s)
    real(r8), pointer :: leafc_to_litr3c(:)                ! leaf C litterfall to litter 3 C (gC/m2/s)
    real(r8), pointer :: frootc_to_litr1c(:)               ! fine root C litterfall to litter 1 C (gC/m2/s)
    real(r8), pointer :: frootc_to_litr2c(:)               ! fine root C litterfall to litter 2 C (gC/m2/s)
    real(r8), pointer :: frootc_to_litr3c(:)               ! fine root C litterfall to litter 3 C (gC/m2/s)
+   ! litterfall fluxes for prognostic crop model
+   real(r8), pointer :: grainc_to_litr1c(:)               ! grain C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr2c(:)               ! grain C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr3c(:)               ! grain C litterfall to litter 3 C (gC/m2/s)
    ! decomposition fluxes
    real(r8), pointer :: cwdc_to_litr2c(:)     ! decomp. of coarse woody debris C to litter 2 C (gC/m2/s)
    real(r8), pointer :: cwdc_to_litr3c(:)     ! decomp. of coarse woody debris C to litter 3 C (gC/m2/s)
@@ -1478,7 +1529,7 @@ type, public :: column_cflux_type
    real(r8), pointer :: col_cinputs(:)   ! (gC/m2/s) total column-level carbon inputs (for balance check)
    real(r8), pointer :: col_coutputs(:)  ! (gC/m2/s) total column-level carbon outputs (for balance check) 
 
-#if (defined CLAMP) && (defined CN)
+#if (defined CN)
    ! CLAMP summary (diagnostic) flux variables, not involved in mass balance
    real(r8), pointer :: cwdc_hr(:)       ! (gC/m2/s) col-level coarse woody debris C heterotrophic respiration
    real(r8), pointer :: cwdc_loss(:)     ! (gC/m2/s) col-level coarse woody debris C loss
@@ -1555,12 +1606,19 @@ type, public :: column_nflux_type
    real(r8), pointer :: m_litr3n_to_fire(:)                ! litter 3 N fire loss (gN/m2/s)
    real(r8), pointer :: m_cwdn_to_fire(:)                  ! coarse woody debris N fire loss (gN/m2/s)
    ! litterfall fluxes
+   real(r8), pointer :: livestemn_to_litr1n(:)   ! livestem N litterfall to litter 1 N (gN/m2/s)
+   real(r8), pointer :: livestemn_to_litr2n(:)   ! livestem N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: livestemn_to_litr3n(:)   ! livestem N litterfall to litter 3 N (gN/m2/s)
    real(r8), pointer :: leafn_to_litr1n(:)       ! leaf N litterfall to litter 1 N (gN/m2/s)
    real(r8), pointer :: leafn_to_litr2n(:)       ! leaf N litterfall to litter 2 N (gN/m2/s)
    real(r8), pointer :: leafn_to_litr3n(:)       ! leaf N litterfall to litter 3 N (gN/m2/s)
    real(r8), pointer :: frootn_to_litr1n(:)      ! fine root N litterfall to litter 1 N (gN/m2/s)
    real(r8), pointer :: frootn_to_litr2n(:)      ! fine root N litterfall to litter 2 N (gN/m2/s)
    real(r8), pointer :: frootn_to_litr3n(:)      ! fine root N litterfall to litter 3 N (gN/m2/s)
+   ! litterfall fluxes for prognostic crop model
+   real(r8), pointer :: grainn_to_litr1n(:)      ! grain N litterfall to litter 1 N (gN/m2/s)
+   real(r8), pointer :: grainn_to_litr2n(:)      ! grain N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: grainn_to_litr3n(:)      ! grain N litterfall to litter 3 N (gN/m2/s)
    ! decomposition fluxes
    real(r8), pointer :: cwdn_to_litr2n(:)        ! decomp. of coarse woody debris N to litter 2 N (gN/m2/s)
    real(r8), pointer :: cwdn_to_litr3n(:)        ! decomp. of coarse woody debris N to litter 3 N (gN/m2/s)

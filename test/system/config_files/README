@@ -1,6 +1,5 @@
 vo    => voc                    is on
 nv    => voc                    is off
-ds    => dust                   is on
 r     => rtm                    is on
 per   => pergro                 is on
 sc    => standalone clm         is on
@@ -14,6 +13,7 @@ _cn   => bgc is in cn   mode
 _cndv => bgc is in cndv mode
 _cnc13=> bgc is in cn   mode with C13 on as well
 _casa => bgc is in casa mode
+_cncrp=> bgc is in cn   model with crop on
 
 _dh   => debug on, hybrid   on
 _dm   => debug on, mpi only on 

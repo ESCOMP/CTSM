@@ -53,9 +53,15 @@ module clm_varpar
 ! maxpatch_glacier = max number of glacier pfts (columns) in glacier landunit
 ! maxpatch_glcmec  = max number of glacier_mec pfts (columns) in glacier_mec landunit
 
-  integer, parameter :: numpft         = 16     ! actual # of pfts (without bare)
+  integer, parameter :: mxpft          = 20     ! maximum number of PFT's for any mode
+  integer, parameter :: numveg         = 16     ! number of veg types (without specific crop)
+#if (defined CROP)
+  integer, parameter :: numpft         = mxpft  ! actual # of pfts (without bare)
+  integer, parameter :: numcft         =  6     ! actual # of crops
+#else
+  integer, parameter :: numpft         = numveg ! actual # of pfts (without bare)
   integer, parameter :: numcft         =  2     ! actual # of crops
-  integer, parameter :: numveg         = numpft ! number of veg types (without specific crop)
+#endif
   integer, parameter :: maxpatch_urb   = 5
   integer            :: maxpatch_pft
 #if defined(GLC_NEC_10)
@@ -78,7 +84,11 @@ module clm_varpar
 
 ! clm_varpar_init seems to do something similar; less prone to error to move
 ! these three lines there? (slevis)
+#if (defined CROP)
+  integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + maxpatch_glcmec
+#else
   integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + numcft + maxpatch_glcmec
+#endif
   integer, parameter :: max_pft_per_lu    = max(numpft+1, numcft, maxpatch_urb)
   integer, parameter :: max_pft_per_col   = max(numpft+1, numcft, maxpatch_urb)
 

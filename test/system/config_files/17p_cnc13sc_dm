@@ -1,7 +1,7 @@
 -mode clm_stndln
 -nouse_mpiserial -nosmp
 -debug
--maxpft numpft+1
+-maxpft 17
 -bgc cn
 -c13 on
 -s

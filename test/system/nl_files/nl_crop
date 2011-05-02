@@ -1,0 +1,15 @@
+ &drv_in
+ orb_iyear      = 1950
+ brnch_retain_casename=.true.
+ /
+ &clm_inparm
+ wrtdia         = .true.
+ hist_dov2xy    = .true.,.false.
+ hist_ndens     = 1,1
+ hist_fincl1    = 'GDD0', 'GDD8', 'GDD10', 
+                  'GDD020', 'GDD820', 'GDD1020',
+                  'GDDPLANT', 'GDDTSOI', 'A5TMIN', 'A10TMIN'
+ /
+ ! Adding the following variable causes the model to abort in debug mode
+ ! with multiplying by a NaN, bugzilla bug 1325. EBK Apr/28/2011
+                  'GDDHARV'

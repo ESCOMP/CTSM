@@ -52,7 +52,10 @@ contains
                               denice, denh2o, spval, sb, icol_road_perv, &
                               icol_road_imperv, icol_roof, icol_sunwall, &
                               icol_shadewall
+    use clm_varcon   , only : istcrop
     use clm_varcon   , only : istice_mec, h2osno_max
+    use clm_varctl   , only : iulog, pertlim
+    use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
     use SNICARMod    , only : snw_rds_min
 
@@ -476,7 +479,7 @@ contains
        if (.not. lakpoi(l)) then  !not lake
 
           ! volumetric water
-          if (ltype(l) == istsoil) then
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
              nlevs = nlevgrnd
              do j = 1, nlevs
                 if (j > nlevsoi) then
@@ -525,7 +528,7 @@ contains
 #if (defined CN) || (defined CASA)
           ! soil water potential (added 10/21/03, PET)
           ! required for CN and CASA code
-          if (ltype(l) == istsoil) then
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
              nlevs = nlevgrnd
              do j = 1, nlevs
                 if (h2osoi_liq(c,j) > 0._r8) then

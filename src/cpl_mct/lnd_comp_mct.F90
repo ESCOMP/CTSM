@@ -113,7 +113,8 @@ contains
                                   seq_infodata_start_type_brnch
     use spmdMod          , only : masterproc, spmd_init
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
-    use clm_varctl       , only : create_glacier_mec_landunit
+    use clm_varctl       , only : create_glacier_mec_landunit, nsrStartup, &
+                                  nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x
     use seq_flds_mod
     use mct_mod
@@ -251,11 +252,11 @@ contains
                            stop_tod_in=stop_tod,  perpetual_run_in=perpetual_run,                &
                            perpetual_ymd_in=perpetual_ymd )
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
-       nsrest = 0
+       nsrest = nsrStartup
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
-       nsrest = 1
+       nsrest = nsrContinue
     else if (trim(starttype) == trim(seq_infodata_start_type_brnch)) then
-       nsrest = 3
+       nsrest = nsrBranch
     else
        call endrun( sub//' ERROR: unknown starttype' )
     end if

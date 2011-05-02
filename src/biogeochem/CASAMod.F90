@@ -16,6 +16,7 @@ module CASAMod
   use clmtype
   use clm_atmlnd  , only : clm_a2l
   use clm_varcon  , only : denh2o, hvap, istsoil, tfrz, spval
+  use clm_varcon  , only : istcrop
   use clm_varpar  , only : numpft, nlevsoi, nlevgrnd
   use clm_varctl  , only : iulog
   use spmdMod     , only : masterproc
@@ -33,7 +34,7 @@ module CASAMod
 
   ! Namelist parameters for CASA
 
-  integer  :: spunup        ! 0=no, 1=yes (used with nsrest/=1 only)
+  integer  :: spunup        ! 0=no, 1=yes (used with runtype non Continue only)
   integer  :: lalloc        ! 0=fixed allocation, 1=dynamic allocation
   integer  :: lnpp          ! 1=gpp*gppfact,2=fn(lgrow)*gppfact
   real(r8) :: q10
@@ -276,11 +277,11 @@ contains
     use fileutils    , only : getfil
     use shr_const_mod, only : SHR_CONST_CDAY
     use decompMod    , only : get_proc_bounds, get_proc_global
-    use clm_varctl   , only : nsrest
+    use clm_varctl   , only : nsrest, nsrStartup, nsrContinue
     use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
     use spmdMod      , only : masterproc
     use clm_time_manager , only : get_step_size
-    use pftvarcon    , only : noveg, nc3_nonarctic_grass
+    use pftvarcon    , only : noveg, nc3_nonarctic_grass, nc3crop, nirrig
     use ncdio_pio    
 !
 ! !ARGUMENTS:
@@ -488,7 +489,7 @@ contains
        fact_soilmic(m) = 0.0_r8
        fact_slow(m)    = 0.0_r8
        fact_passive(m) = 0.0_r8
-       if(m == 15 .or. m == 16)then    ! crops (corn, wheat in CLM)
+       if(m == nc3crop .or. m == nirrig)then    ! crops (corn, wheat in CLM)
           fact_soilmic(m) = 1.25_r8
           fact_slow(m)    = 1.50_r8
           fact_passive(m) = 1.50_r8
@@ -539,7 +540,7 @@ contains
 
        plai(p) = 0.0_r8
 
-       if (ltype(l) == istsoil) then
+       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
           plai(p) = plai_min_ic
 
           ! CHECK !!!
@@ -586,11 +587,11 @@ contains
 
     ! Initialize Pool Sizes to 0.0 or to spun up data (Tpool_C only)
     !!! 04/01/15 JJ
-    !!! modify to set Tpool = 0 on initial start (nsrest=0)
-    !!! BUT, if SPUNPUP=1 and nsrest ne 1, then read in initial pool size data 
+    !!! modify to set Tpool = 0 on initial start (Startup)
+    !!! BUT, if SPUNPUP=1 and runtype NOT Continue, then read in initial pool size data 
     !!! ie on initial or branch run, if SPUNUP=1, use initial pool data.
 
-    if (nsrest == 0 .and. .not. cpool_inic) then
+    if (nsrest == nsrStartup .and. .not. cpool_inic) then
        if (masterproc) &
           write(iulog,*)'WARNING: Initializing Tpool_C and XSCpool to 0.0'
        do n = 1, npools
@@ -606,7 +607,7 @@ contains
 !!!  read spun up Tpool if available (use only for initial or branch runs)
 !!!  don't overwrite restart values 
 
-    if (SPUNUP == 1 .and. nsrest /= 1) then
+    if (SPUNUP == 1 .and. nsrest /= nsrContinue) then
 
        ! Allocate dynamic memory
 
@@ -775,7 +776,7 @@ contains
     ! Initialize watdry, watopt, sz and watdryc, watoptc, szc
     do p = begp,endp
        l = plandunit(p)
-       if (ltype(l) == istsoil) then
+       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
 
           ! top 30cm
           watdry(p)  = 0._r8
@@ -794,7 +795,7 @@ contains
        do p = begp,endp
           c = pcolumn(p)
           l = plandunit(p)
-          if (ltype(l) == istsoil) then
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
 
              ! top 30cm
              if (z(c,j)+0.5_r8*dz(c,j) <= z30) then
@@ -813,7 +814,7 @@ contains
 
     do p = begp,endp
        l = plandunit(p)
-       if (ltype(l) == istsoil) then
+       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
 
           ! top 30cm
           watdry(p)  = watdry(p)/sz(p)
@@ -830,7 +831,7 @@ contains
  !    fcap = field capacity (mm3/mm3)
  !   do p = begp, endp
  !      l = plandunit(p)
- !      if (ltype(l) == istsoil) then
+ !      if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
  !        sand1 = sand(p)         ! already in pct
  !        clay1 = clay(p)         ! already in pct
  !        sand2 = sand1 * sand1
@@ -1187,9 +1188,8 @@ contains
        !  fnpp (gC/m2/sec), Cflux (gC/m2/sec), co2flux (gC/m2/sec)
        call casa_bgfluxes(begp, endp, num_soilp, filter_soilp)
 
-#if (defined CLAMP)
        call CASASummary(begp, endp, num_soilp, filter_soilp )
-#endif
+
     end if
 
   end subroutine casa_ecosystemDyn
@@ -2104,7 +2104,7 @@ contains
 
     do p = lbp, ubp
        l = plandunit(p)
-       if (ltype(l) == istsoil) then
+       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
           litterscalar(p) = 1.0_r8
           rootlitscalar(p) = 1.0_r8
        else
@@ -2417,6 +2417,7 @@ contains
 ! !USES:
     use clmtype
     use ncdio_pio
+    use clm_time_manager, only : is_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -2682,41 +2683,6 @@ contains
 
   end subroutine CASARest
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: is_restart
-!
-! !INTERFACE:
-  logical function is_restart( )
-!
-! !DESCRIPTION:
-! Determine if restart run
-!
-! !USES:
-    use clm_varctl, only : nsrest
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
-
-    if (nsrest == 1) then
-       is_restart = .true.
-    else
-       is_restart = .false.
-    end if
-
-  end function is_restart
-
-#if (defined CLAMP)
 !===============================================================================
 !BOP
 !
@@ -2901,6 +2867,7 @@ subroutine CASASummary(lbp, ubp, num_soilp, filter_soilp)
 
 end subroutine CASASummary
 !===============================================================================
+
 #endif
-#endif
+
 end module CASAMod

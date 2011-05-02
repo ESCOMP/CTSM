@@ -1,4 +1,3 @@
-
 module CNPrecisionControlMod
 
 #ifdef CN
@@ -43,6 +42,8 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    use clmtype
    use abortutils,   only: endrun
    use clm_varctl,   only: iulog
+   use pftvarcon,    only: nc3crop
+   use surfrdMod,    only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none
@@ -110,6 +111,10 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
    real(r8), pointer :: livestemc_xfer(:)     ! (gC/m2) live stem C transfer
    real(r8), pointer :: pft_ctrunc(:)         ! (gC/m2) pft-level sink for C truncation
+   real(r8), pointer :: xsmrpool(:)           ! (gC/m2) execss maint resp C pool
+   real(r8), pointer :: grainc(:)             ! (gC/m2) grain C
+   real(r8), pointer :: grainc_storage(:)     ! (gC/m2) grain C storage
+   real(r8), pointer :: grainc_xfer(:)        ! (gC/m2) grain C transfer
 #if (defined C13)
    real(r8), pointer :: c13_cpool(:)              ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: c13_deadcrootc(:)         ! (gC/m2) dead coarse root C
@@ -149,12 +154,16 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: livecrootn(:)         ! (gN/m2) live coarse root N
    real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
    real(r8), pointer :: livecrootn_xfer(:)    ! (gN/m2) live coarse root N transfer
+   real(r8), pointer :: grainn(:)             ! (gC/m2) grain N
+   real(r8), pointer :: grainn_storage(:)     ! (gC/m2) grain N storage
+   real(r8), pointer :: grainn_xfer(:)        ! (gC/m2) grain N transfer
    real(r8), pointer :: livestemn(:)          ! (gN/m2) live stem N
    real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
    real(r8), pointer :: livestemn_xfer(:)     ! (gN/m2) live stem N transfer
    real(r8), pointer :: npool(:)              ! (gN/m2) temporary plant N pool
    real(r8), pointer :: pft_ntrunc(:)         ! (gN/m2) pft-level sink for N truncation
    real(r8), pointer :: retransn(:)           ! (gN/m2) plant pool of retranslocated N
+   integer , pointer :: ivt(:)                ! pft vegetation type
 !
 ! local pointers to implicit in/out scalars
 !
@@ -206,6 +215,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil4n                         => clm3%g%l%c%cns%soil4n
 
     ! assign local pointers at the pft level
+    ivt                            => clm3%g%l%c%p%itype
     cpool                          => clm3%g%l%c%p%pcs%cpool
     deadcrootc                     => clm3%g%l%c%p%pcs%deadcrootc
     deadcrootc_storage             => clm3%g%l%c%p%pcs%deadcrootc_storage
@@ -228,6 +238,10 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     livestemc_storage              => clm3%g%l%c%p%pcs%livestemc_storage
     livestemc_xfer                 => clm3%g%l%c%p%pcs%livestemc_xfer
     pft_ctrunc                     => clm3%g%l%c%p%pcs%pft_ctrunc
+    xsmrpool                       => clm3%g%l%c%p%pcs%xsmrpool
+    grainc                         => clm3%g%l%c%p%pcs%grainc
+    grainc_storage                 => clm3%g%l%c%p%pcs%grainc_storage
+    grainc_xfer                    => clm3%g%l%c%p%pcs%grainc_xfer
 #if (defined C13)
     c13_cpool                          => clm3%g%l%c%p%pc13s%cpool
     c13_deadcrootc                     => clm3%g%l%c%p%pc13s%deadcrootc
@@ -267,6 +281,9 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     livecrootn                     => clm3%g%l%c%p%pns%livecrootn
     livecrootn_storage             => clm3%g%l%c%p%pns%livecrootn_storage
     livecrootn_xfer                => clm3%g%l%c%p%pns%livecrootn_xfer
+    grainn                         => clm3%g%l%c%p%pns%grainn
+    grainn_storage                 => clm3%g%l%c%p%pns%grainn_storage
+    grainn_xfer                    => clm3%g%l%c%p%pns%grainn_xfer
     livestemn                      => clm3%g%l%c%p%pns%livestemn
     livestemn_storage              => clm3%g%l%c%p%pns%livestemn_storage
     livestemn_xfer                 => clm3%g%l%c%p%pns%livestemn_xfer
@@ -364,6 +381,32 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 #endif
           pn = pn + frootn_xfer(p)
           frootn_xfer(p) = 0._r8
+      end if
+          
+      if ( crop_prog .and. ivt(p) >= nc3crop )then
+         ! grain C and N
+         if (abs(grainc(p)) < ccrit) then
+             pc = pc + grainc(p)
+             grainc(p) = 0._r8
+             pn = pn + grainn(p)
+             grainn(p) = 0._r8
+         end if
+   
+         ! grain storage C and N
+         if (abs(grainc_storage(p)) < ccrit) then
+             pc = pc + grainc_storage(p)
+             grainc_storage(p) = 0._r8
+             pn = pn + grainn_storage(p)
+             grainn_storage(p) = 0._r8
+         end if
+             
+         ! grain transfer C and N
+         if (abs(grainc_xfer(p)) < ccrit) then
+             pc = pc + grainc_xfer(p)
+             grainc_xfer(p) = 0._r8
+             pn = pn + grainn_xfer(p)
+             grainn_xfer(p) = 0._r8
+         end if
       end if
           
       ! livestem C and N
@@ -538,6 +581,14 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
           pc13 = pc13 + c13_cpool(p)
           c13_cpool(p) = 0._r8
 #endif
+      end if
+          
+      if ( ivt(p) >= nc3crop )then
+         ! xsmrpool (C only)
+         if (abs(xsmrpool(p)) < ccrit) then
+             pc = pc + xsmrpool(p)
+             xsmrpool(p) = 0._r8
+         end if
       end if
           
       ! retransn (N only)

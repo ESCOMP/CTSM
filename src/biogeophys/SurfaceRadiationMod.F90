@@ -62,6 +62,7 @@ contains
      use clm_varpar      , only : numrad
      use clm_varcon      , only : spval, istsoil, degpsec, isecspday
      use clm_varcon      , only : istice_mec
+     use clm_varcon      , only : istcrop
      use clm_time_manager, only : get_curr_date, get_step_size
      use clm_varpar      , only : nlevsno
      use SNICARMod       , only : DO_SNO_OC
@@ -388,7 +389,7 @@ contains
            sabv(p)       = 0._r8
            fsa(p)        = 0._r8
            l = plandunit(p)
-           if (ityplun(l)==istsoil) then
+           if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
              fsa_r(p)      = 0._r8
            end if
            sabg_lyr(p,:) = 0._r8
@@ -468,7 +469,7 @@ contains
               sabv(p) = sabv(p) + cad(p,ib) + cai(p,ib)
               fsa(p)  = fsa(p)  + cad(p,ib) + cai(p,ib)
               l = plandunit(p)
-              if (ityplun(l)==istsoil) then
+              if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
                 fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
               end if
               
@@ -482,7 +483,7 @@ contains
               absrad  = trd(p,ib)*(1._r8-albgrd(c,ib)) + tri(p,ib)*(1._r8-albgri(c,ib))
               sabg(p) = sabg(p) + absrad
               fsa(p)  = fsa(p)  + absrad
-              if (ityplun(l)==istsoil) then
+              if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
                 fsa_r(p)  = fsa_r(p)  + absrad
               end if
 

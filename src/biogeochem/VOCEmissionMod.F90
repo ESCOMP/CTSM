@@ -71,7 +71,6 @@ contains
     use clm_atmlnd   , only : clm_a2l
     use clmtype
     use clm_varpar   , only : nvoc, numpft
-    use clm_varpar   , only : nvoc, numpft
     use clm_atmlnd   , only : clm_a2l
     use shr_const_mod, only : SHR_CONST_RGAS
     use clm_varcon   , only : denice

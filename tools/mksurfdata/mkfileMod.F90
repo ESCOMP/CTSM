@@ -8,7 +8,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
     use fileutils   , only : get_filename
-    use mkvarpar    , only : nlevurb, numsolar, numrad
+    use mkvarpar    , only : nlevsoi, nlevurb, numsolar, numrad
     use mkvarctl
     use mkpftMod    , only : mkpftAtt
     use mksoilMod   , only : mksoilAtt
@@ -162,6 +162,16 @@ contains
     str = get_filename(mksrf_furban)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_firrig)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Irrig_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    if (.not. dynlanduse) then
+       str = get_filename(mksrf_flai)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'Lai_raw_data_file_name', len_trim(str), trim(str)), subname)
+    end if
 
     ! ----------------------------------------------------------------------
     ! Define variables

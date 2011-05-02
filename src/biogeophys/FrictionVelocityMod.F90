@@ -118,12 +118,10 @@ contains
    integer :: pp                           ! pfti,pftf index
    real(r8):: zldis(lbn:ubn)               ! reference height "minus" zero displacement heght [m]
    real(r8):: zeta(lbn:ubn)                ! dimensionless height used in Monin-Obukhov theory
-#if (defined DUST)
    real(r8) :: tmp1,tmp2,tmp3,tmp4         ! Used to diagnose the 10 meter wind
    real(r8) :: fmnew                       ! Used to diagnose the 10 meter wind
    real(r8) :: fm10                        ! Used to diagnose the 10 meter wind
    real(r8) :: zeta10                      ! Used to diagnose the 10 meter wind
-#endif
    real(r8) :: vds_tmp                     ! Temporary for dry deposition velocity
 !------------------------------------------------------------------------------
 
@@ -373,7 +371,6 @@ contains
          end if
       end if
 
-#if (defined DUST)
       ! diagnose 10-m wind for dust model (dstmbl.F)
       ! Notes from C. Zender's dst.F:
       ! According to Bon96 p. 62, the displacement height d (here displa) is
@@ -424,7 +421,6 @@ contains
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)
       end if
-#endif
 
    end do
 #endif
@@ -555,7 +551,6 @@ contains
       else
          temp22m(n)=vkc/log(obu(n)/z0q(n))
       end if
-#if (defined DUST)
       ! diagnose 10-m wind for dust model (dstmbl.F)
       ! Notes from C. Zender's dst.F:
       ! According to Bon96 p. 62, the displacement height d (here displa) is
@@ -606,7 +601,6 @@ contains
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)
       end if
-#endif
    end do
 
 #endif

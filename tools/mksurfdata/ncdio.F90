@@ -51,10 +51,12 @@ module ncdio
   public :: nf_inq_dimlen
   public :: nf_inq_varid
   public :: nf_get_att_text
+  public :: nf_get_att_double
   public :: nf_get_var_double
   public :: nf_get_vara_double
   public :: nf_get_var_int
   public :: nf_get_vara_int
+  public :: nf_get_var_text
   public :: nf_put_var_double
   public :: nf_put_vara_double
   public :: nf_put_var_int

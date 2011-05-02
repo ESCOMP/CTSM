@@ -25,18 +25,19 @@ subroutine iniTimeConst
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry, secspday
-  use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
+  use clm_varctl  , only : fsurdat,scmlon,scmlat,single_column
   use clm_varctl  , only : iulog
   use pftvarcon   , only : noveg, ntree, roota_par, rootb_par,  &
                            smpso, smpsc, fnitr, nbrdlf_dcd_brl_shrub, &
                            z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
-                           qe25, vcmx25, mp, c3psn, slatop, dsladlai, leafcn, flnr, woody, &
+                           qe25, mp, c3psn, slatop, dsladlai, leafcn, flnr, woody, &
                            lflitcn, frootcn, livewdcn, deadwdcn, froot_leaf, stem_leaf, croot_stem, &
                            flivewd, fcur, lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig, &
-                           dw_fcel, dw_flig, leaf_long, evergreen, stress_decid, season_decid, &
+                           leaf_long, evergreen, stress_decid, season_decid, &
                            resist, pftpar20, pftpar28, pftpar29, pftpar30, pftpar31, &
                            allom1s, allom2s, &
                            allom1 , allom2 , allom3  , reinickerp, dwood
+  use pftvarcon       , only : graincn
   use clm_time_manager, only : get_step_size
   use abortutils      , only : endrun
   use fileutils       , only : getfil
@@ -399,7 +400,6 @@ subroutine iniTimeConst
          pftcon%taus(m,ib) = taus(m,ib)
       end do
       pftcon%qe25(m) = qe25(m)
-      pftcon%vcmx25(m) = vcmx25(m)
       pftcon%mp(m) = mp(m)
       pftcon%c3psn(m) = c3psn(m)
       pftcon%slatop(m) = slatop(m)
@@ -414,6 +414,7 @@ subroutine iniTimeConst
       pftcon%frootcn(m) = frootcn(m)
       pftcon%livewdcn(m) = livewdcn(m)
       pftcon%deadwdcn(m) = deadwdcn(m)
+      pftcon%graincn(m) = graincn(m)
       pftcon%froot_leaf(m) = froot_leaf(m)
       pftcon%stem_leaf(m) = stem_leaf(m)
       pftcon%croot_stem(m) = croot_stem(m)
@@ -425,8 +426,6 @@ subroutine iniTimeConst
       pftcon%fr_flab(m) = fr_flab(m)
       pftcon%fr_fcel(m) = fr_fcel(m)
       pftcon%fr_flig(m) = fr_flig(m)
-      pftcon%dw_fcel(m) = dw_fcel(m)
-      pftcon%dw_flig(m) = dw_flig(m)
       pftcon%leaf_long(m) = leaf_long(m)
       pftcon%evergreen(m) = evergreen(m)
       pftcon%stress_decid(m) = stress_decid(m)
@@ -691,7 +690,7 @@ subroutine iniTimeConst
             watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
             !! added by K.Sakaguchi for beta from Lee and Pielke, 1992
             ! water content at field capacity, defined as hk = 0.1 mm/day
-            ! used eqn (7.70) in CLM3 technote with k = 0.1 (mm/day) / 86400 (day/sec)
+            ! used eqn (7.70) in CLM3 technote with k = 0.1 (mm/day) / secspday (day/sec)
             watfc(c,lev) = watsat(c,lev) * (0.1_r8 / (hksat(c,lev)*secspday))**(1._r8/(2._r8*bsw(c,lev)+3._r8))
          end do
          !

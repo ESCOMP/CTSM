@@ -431,9 +431,9 @@ export INC_MPI=""
 export LIB_MPI=""
 export MACH_WORKSPACE="/ptmp/\$USER"
 export CPRNC_EXE=/ptmp/csm/tools/cprnc/cprnc
-export DATM_QIAN_DATA_DIR="/ptmp/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
+export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/glade/proj2/cgd/tss/"
-dataroot="/ptmp/csm"
+dataroot="/glade/proj3/cseg"
 echo_arg="-e"
 
 EOF
@@ -579,7 +579,7 @@ export CLM_RESTART_TASKS=1
 
 if [ "\$CLM_FC" = "PGI" ]; then
    export CESM_MACH="generic_darwin_pgi"
-   export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
+   export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-10.9
    export CFG_STRING=""
    export TOOLS_MAKE_STRING=""
 else
@@ -596,7 +596,7 @@ export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="make -j 4"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=$HOME/bin/newcprnc
-export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/cgd/tss";
 dataroot="/fis/cgd/cseg/csm"
 echo_arg=""

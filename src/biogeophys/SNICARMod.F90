@@ -993,48 +993,6 @@ contains
              flx_abs(c_idx,i,2) = flx_sum / sum(flx_wgt(nir_bnd_bgn:nir_bnd_end))          
           end do
 
-
-          ! Write diagnostics, if desired. (default is to not compile this)
-#if 0
-             write(iulog,*) "SNICAR STATS: NSTEP= ", nstep
-             write(iulog,*) "SNICAR STATS: Col: ", c_idx
-             write(iulog,*) "SNICAR STATS: snl(c)= ",snl_lcl
-             write(iulog,*) "SNICAR STATS: cosine zenith= ", coszen(c_idx)
-             write(iulog,*) "SNICAR STATS: h2osno(c): ", h2osno_lcl
-
-             write(iulog,*) "SNICAR STATS: albout_lcl(1): ", albout_lcl(1)
-             write(iulog,*) "SNICAR STATS: albout_lcl(2): ", albout_lcl(2)
-             write(iulog,*) "SNICAR STATS: albout_lcl(3): ", albout_lcl(3)
-             write(iulog,*) "SNICAR STATS: albout_lcl(4): ", albout_lcl(4) 
-             write(iulog,*) "SNICAR STATS: albout_lcl(5): ", albout_lcl(5)
-             write(iulog,*) "SNICAR STATS: albout(1): ", albout(c_idx,1)
-             write(iulog,*) "SNICAR STATS: albout(2): ", albout(c_idx,2)
-
-             write(iulog,*) "SNICAR STATS: NIR flx_abs(-4): ", flx_abs(c_idx,-4,2)
-             write(iulog,*) "SNICAR STATS: NIR flx_abs(-3): ", flx_abs(c_idx,-3,2)
-             write(iulog,*) "SNICAR STATS: NIR flx_abs(-2): ", flx_abs(c_idx,-2,2)
-             write(iulog,*) "SNICAR STATS: NIR flx_abs(-1): ", flx_abs(c_idx,-1,2) 
-             write(iulog,*) "SNICAR STATS: NIR flx_abs(0): ", flx_abs(c_idx,0,2)
-
-             write(iulog,*) "SNICAR STATS: TOPLYR ABS, BND 1= ", flx_abs_lcl(snl_top,1)
-             write(iulog,*) "SNICAR STATS: TOPLYR ABS, BND 2= ", flx_abs_lcl(snl_top,2)
-             write(iulog,*) "SNICAR STATS: TOPLYR ABS, BND 3= ", flx_abs_lcl(snl_top,3)
-             write(iulog,*) "SNICAR STATS: TOPLYR ABS, BND 4= ", flx_abs_lcl(snl_top,4)
-             write(iulog,*) "SNICAR STATS: TOPLYR ABS, BND 5= ", flx_abs_lcl(snl_top,5)
-
-             write (iulog,*) "SNICAR STATS: L_snw(-4)= ", L_snw(-4)
-             write (iulog,*) "SNICAR STATS: L_snw(-3)= ", L_snw(-3)
-             write (iulog,*) "SNICAR STATS: L_snw(-2)= ", L_snw(-2)
-             write (iulog,*) "SNICAR STATS: L_snw(-1)= ", L_snw(-1)
-             write (iulog,*) "SNICAR STATS: L_snw(0)= ", L_snw(0)
-
-             write (iulog,*) "SNICAR STATS: snw_rds(-4)= ", snw_rds(c_idx,-4)
-             write (iulog,*) "SNICAR STATS: snw_rds(-3)= ", snw_rds(c_idx,-3)
-             write (iulog,*) "SNICAR STATS: snw_rds(-2)= ", snw_rds(c_idx,-2)
-             write (iulog,*) "SNICAR STATS: snw_rds(-1)= ", snw_rds(c_idx,-1)
-             write (iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
-#endif
-
        ! If snow < minimum_snow, but > 0, and there is sun, set albedo to underlying surface albedo
        elseif ( (coszen(c_idx) > 0._r8) .and. (h2osno_lcl < min_snw) .and. (h2osno_lcl > 0._r8) ) then
           albout(c_idx,1) = albsfc(c_idx,1)

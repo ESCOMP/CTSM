@@ -67,7 +67,7 @@ if [ ! -f ${CLM_SCRIPTDIR}/config_files/$2 ]; then
 fi
 
 ##construct string of args to configure
-config_string=$TOOLS_MAKE_STRING
+config_string="$TOOLS_MAKE_STRING TOOLROOT=$cfgdir "
 while read config_arg; do
     config_string="${config_string}${config_arg} "
 done < ${CLM_SCRIPTDIR}/config_files/$2

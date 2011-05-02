@@ -50,15 +50,16 @@ subroutine lnd_register(lnd_petlist, ccsmComp, localComp)
    integer            :: rc
 
    lnd_comp = ESMF_GridCompCreate(name="lnd_comp", petList=lnd_petlist, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to create lnd comp')
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to create lnd comp')
    call ESMF_GridCompSetServices(lnd_comp, lnd_register_esmf, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to register lnd comp')
-   import_state = ESMF_StateCreate("lnd import", ESMF_STATE_IMPORT, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to create import lnd state')
-   export_state = ESMF_StateCreate("lnd export", ESMF_STATE_EXPORT, rc=rc)
-   if(rc /= 0) call shr_sys_abort('failed to create export lnd state')
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to register lnd comp')
+   import_state = ESMF_StateCreate(name="lnd import", statetype=ESMF_STATE_IMPORT, rc=rc)
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to create import lnd state')
+   export_state = ESMF_StateCreate(name="lnd export", statetype=ESMF_STATE_EXPORT, rc=rc)
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to create export lnd state')
 
    call ESMF_AttributeLink(ccsmComp, lnd_comp, rc=rc)
+   if(rc /= ESMF_SUCCESS) call shr_sys_abort('failed to link attributes')
 
    localComp = lnd_comp
 

@@ -43,6 +43,7 @@ module spmdMod
   public :: MPI_SUM
   public :: MPI_MIN
   public :: MPI_MAX
+  public :: MPI_LOR
   public :: MPI_STATUS_SIZE
   public :: MPI_ANY_SOURCE
   public :: MPI_CHARACTER

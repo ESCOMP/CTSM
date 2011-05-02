@@ -53,6 +53,7 @@ contains
     use clm_atmlnd   , only : clm_a2l
     use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, isturb, &
                               icol_roof, icol_sunwall, icol_shadewall
+    use clm_varcon   , only : istcrop
     use FracWetMod   , only : FracWet
     use clm_time_manager , only : get_step_size
     use subgridAveMod, only : p2c
@@ -263,9 +264,8 @@ contains
        ! Canopy interception and precipitation onto ground surface
        ! Add precipitation to leaf water
 
-       ! Add '.or. ltype(l)==istcrop' here when getting on the trunk
-       if (ltype(l)==istsoil .or. ltype(l)==istwet .or. ltype(l)==isturb) then
-
+       if (ltype(l)==istsoil .or. ltype(l)==istwet .or. ltype(l)==isturb .or. &
+           ltype(l)==istcrop) then
           qflx_candrip(p) = 0._r8      ! rate of canopy runoff
           qflx_through_snow(p) = 0._r8 ! rain precipitation direct through canopy
           qflx_through_rain(p) = 0._r8 ! snow precipitation direct through canopy

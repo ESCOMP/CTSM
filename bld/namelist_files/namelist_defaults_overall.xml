@@ -29,6 +29,8 @@ determine default values for namelists.
 <res sitespf_pt="1x1_mexicocityMEX"  >1x1_mexicocityMEX</res>
 <res sitespf_pt="1x1_asphaltjungleNJ">1x1_asphaltjungleNJ</res>
 <res sitespf_pt="1x1_urbanc_alpha"   >1x1_urbanc_alpha</res>
+<res sitespf_pt="1x1_numaIA"         >1x1_numaIA</res>
+<res sitespf_pt="1x1_smallvilleIA"   >1x1_smallvilleIA</res>
 
 <!-- Default simulation year -->
 <sim_year>2000</sim_year>
@@ -71,6 +73,8 @@ determine default values for namelists.
 <mask hgrid="1x1_asphaltjungleNJ" >navy</mask>
 <mask hgrid="1x1_brazil"          >navy</mask>
 <mask hgrid="1x1_urbanc_alpha"    >test</mask>
+<mask hgrid="1x1_numaIA"          >navy</mask>
+<mask hgrid="1x1_smallvilleIA"    >test</mask>
 <mask                             >gx1v6</mask>
 
 <!-- Default glacier model grid/resolution -->

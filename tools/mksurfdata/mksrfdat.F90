@@ -30,7 +30,7 @@ program mksrfdat
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
-    use mkvarpar    , only : numpft, nlevsoi, elev_thresh
+    use mkvarpar    , only : nlevsoi, elev_thresh
     use mkvarsur    , only : spval, ldomain
     use mkvarctl
     use areaMod
@@ -130,6 +130,7 @@ program mksrfdat
          mksrf_fdynuse,            &
          outnc_large_files,        &
          outnc_double,             &
+         numpft,                   &
          nglcec,                   &
          soil_color,               &
          soil_sand,                &
@@ -183,6 +184,7 @@ program mksrfdat
     !    pft_idx ----------- If you want to change to 100% veg covered with given PFT indices
     !    pft_frc ----------- Fractions that correspond to the pft_idx above
     ! ==================
+    !    numpft            (if different than default of 16)
     ! ======================================================================
 
     call shr_timer_init()
@@ -347,8 +349,8 @@ program mksrfdat
     ! Make PFTs [pctpft] from dataset [fvegtyp] (1/2 degree PFT data)
 
     nullify(pctpft_i)
-    call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, mksrf_firrig, ndiag, pctlnd_pft, &
-               pctirr, pctpft, pctpft_i)
+    call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, mksrf_firrig, ndiag, &
+               pctlnd_pft, pctirr, pctpft, pctpft_i)
 
     write(6,*) ' timer_b mkpft-----'
     call shr_timer_print(t1)
@@ -595,7 +597,7 @@ program mksrfdat
     ! Deallocate arrays NOT needed for dynamic-pft section of code
     deallocate ( organic3d )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-    if ( nglcec > 0 ) deallocate ( pctglcmec, topoglcmec, thckglcmec, elevclass )
+    if ( nglcec > 0 ) deallocate ( pctglcmec, topoglcmec, thckglcmec )
     deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( sand3d, clay3d )
@@ -713,7 +715,8 @@ program mksrfdat
 
           ! Create pctpft data at model resolution
 
-          call mkpft(lsmlon, lsmlat, fname, mksrf_firrig, ndiag, pctlnd_pft_dyn, pctirr, pctpft)
+          call mkpft(lsmlon, lsmlat, fname, mksrf_firrig, ndiag, &
+                     pctlnd_pft_dyn, pctirr, pctpft)
 
           ! Create harvesting data at model resolution
 

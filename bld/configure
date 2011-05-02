@@ -21,10 +21,6 @@
 # that the root of the source tree can be derived from the location of this
 # script.
 #
-# configure has an optional test mode to check that the Fortran90 compiler
-# works and that external references to the netCDF and MPI libraries can be
-# resolved at link time.
-#
 #-----------------------------------------------------------------------------------------------
 
 use strict;
@@ -36,6 +32,11 @@ use English;
 use Getopt::Long;
 use IO::File;
 use IO::Handle;
+
+my $crpmode = "nocrop";
+my %maxpatchpft;
+$maxpatchpft{'crop'}   = 21;
+$maxpatchpft{'nocrop'} = 17;
 #-----------------------------------------------------------------------------------------------
 
 sub usage {
@@ -50,30 +51,31 @@ OPTIONS
 
      -ad_spinup <name>   Turn on AD_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -bgc <name>         Build CLM with bgc package [ none | cn | casa | cndv ] (default is none).
-                         NOTE: When set to cn or casa -- also turns on the CLAMP CPP macro.
      -c13 <name>         Turn on C13 mode for bgc setting of CN [on | off] (default is off).
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
      -clm_root <dir>     Root directory of clm source code (default: directory above location of this script)
      -cppdefs <string>   A string of user specified CPP defines.  Appended to
                          Makefile defaults.  E.g. -cppdefs '-DVAR1 -DVAR2'
+     -crop <name>        Toggle for prognostic crop model. [on | off] (default is off) 
+                         (can ONLY be turned on when BGC type is CN or CNDV)
      -comp_intf <name>   Component interface to use (ESMF, MCT or cpl_\$COMP) (default MCT)
      -defaults <file>    Specify full path to a configuration file which will be used to supply defaults instead of
                          the defaults in bld/config_files.  This file is used to specify model
                          configuration parameters only.  Parameters relating to the build which
                          are system dependent will be ignored.
-     -dust <name>        Turn on DUST [on | off] (default is on).
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -glc_nec <name>     Glacier number of elevation classes [0 | 3 | 5 | 10] (default is 0)
      -help [or -h]       Print usage to STDOUT.
      -mach <name>        Machine name to use for CESM build.
-     -maxpft <n>         Value of maxpatch_pft (default is numpft+1) 
-                         (required to be numpft+1 for CN or CNDV or transient cases)
+     -maxpft <n>         Value of maxpatch_pft (default is $maxpatchpft{$crpmode}) 
+                         (required to be $maxpatchpft{'nocrop'} for CN or CNDV or transient cases without crop)
+                         (required to be $maxpatchpft{'crop'} when crop is on)
      -mode <name>        CLM mode [clm_stndln | ext_cesm]
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
+     -noio               Turn history output completely off (typically for testing).
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
-     -progsslt <name>    Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off] (default is on)
-     -rtm <name>         Turn on RTM  [on | off] (default is on)
+     -rtm <name>         Turn on River Transport Model (RTM)  [on | off] (default is on)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] (default is off)
      -target_os          Override the os setting for cross platform compilation [aix | darwin | dec_osf | irix | 
@@ -134,6 +136,7 @@ my $commandline = "$cfgdir/configure @ARGV";
 my %opts = (
 	    cache       => "config_cache.xml",
             nofire      => undef,
+            noio        => undef,
             nc_path     => undef,
             mpi_path    => undef,
             glc_nec     => undef,
@@ -152,7 +155,6 @@ GetOptions(
     "comp_intf=s"               => \$opts{'comp_intf'},
     "debug"                     => \$opts{'debug'},
     "defaults=s"                => \$opts{'defaults'},
-    "dust=s"                    => \$opts{'dust'}, 
     "exit_spinup=s"             => \$opts{'exit_spinup'}, 
     "glc_nec=i"                 => \$opts{'glc_nec'},
     "mach=s"                    => \$opts{'mach'},
@@ -161,11 +163,11 @@ GetOptions(
     "mode=s"                    => \$opts{'mode'},
     "nadv=s"                    => \$opts{'nadv'},
     "nofire"                    => \$opts{'nofire'},
+    "noio"                      => \$opts{'noio'},
     "nc_path=s"                 => \$opts{'nc_path'},
     "mpi_path=s"                => \$opts{'mpi_path'},
     "pergro=s"                  => \$opts{'pergro'}, 
     "snicar_frc=s"              => \$opts{'snicar_frc'}, 
-    "progsslt=s"                => \$opts{'progsslt'}, 
     "rtm=s"                     => \$opts{'rtm'}, 
     "s|silent"                  => \$opts{'silent'},
     "smp!"                      => \$opts{'smp'},
@@ -176,6 +178,7 @@ GetOptions(
     "v|verbose"                 => \$opts{'verbose'},
     "version"                   => \$opts{'version'},
     "voc=s"                     => \$opts{'voc'}, 
+    "crop=s"                    => \$opts{'crop'}, 
 )  or usage();
 
 # Give usage message.
@@ -388,7 +391,21 @@ if( defined($opts{'sitespf_pt'}) ) {
   $cfg_ref->set('sitespf_pt', $opts{'sitespf_pt'});
 }
 my $sitespf_pt = $cfg_ref->get('sitespf_pt');
-if ($print>=2) { print "Using $sitespf_pt for urban single point configuration.$eol"; }
+if ($print>=2) { 
+   if( defined($opts{'sitespf_pt'}) ) { 
+      print "Using $sitespf_pt for urban single point configuration.$eol"; 
+   }
+}
+
+#-----------------------------------------------------------------------------------------------
+# NOIO option
+if (defined $opts{'noio'}) {
+    $cfg_ref->set('noio', "on" );
+}
+my $noio = $cfg_ref->get('noio');
+if ($print>=2) { 
+   if ( $noio eq "on") { print "ALL history output is turned OFF.$eol";       }
+}
 
 #-----------------------------------------------------------------------------------------------
 # BGC option
@@ -471,6 +488,8 @@ if ($print>=2) { print "Using $c13 for c13 for cn mode.$eol"; }
 # RTM option
 if (defined $opts{'rtm'}) {
     $cfg_ref->set('rtm', $opts{'rtm'});
+} elsif( defined($opts{'sitespf_pt'}) ) {
+    $cfg_ref->set('rtm', "off");
 }
 my $rtm = $cfg_ref->get('rtm');
 if ($print>=2) { print "Using $rtm for rtm.$eol"; }
@@ -482,14 +501,6 @@ if (defined $opts{'comp_intf'}) {
 }
 my $comp_intf = $cfg_ref->get('comp_intf');
 if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
-
-#-----------------------------------------------------------------------------------------------
-# DUST option
-if (defined $opts{'dust'}) {
-    $cfg_ref->set('dust', $opts{'dust'});
-}
-my $dust = $cfg_ref->get('dust');
-if ($print>=2) { print "Using $dust for dust.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # VOC option
@@ -507,30 +518,64 @@ EOF
 if ($print>=2) { print "Using $voc for passing voc to driver.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# MAXPFT option
-if (defined $opts{'maxpft'}) {
-    $cfg_ref->set('maxpft', $opts{'maxpft'});
+# CROP option
+if (defined $opts{'crop'}) {
+    $cfg_ref->set('crop', $opts{'crop'});
 }
-my $maxpft = $cfg_ref->get('maxpft');
-if ( (($bgc_mode eq "cn") || ($bgc_mode eq "cndv")) && ($maxpft ne "numpft+1") ) {
+my $crop = $cfg_ref->get('crop');
+if ( $crop eq "on" ) {
+  $crpmode = "crop";
+}
+if ( ($crop eq "on" ) && ($bgc_mode ne "cn") && ($bgc_mode ne "cndv") ) {
    die <<"EOF";
-** For CN or CNDV BGC mode you MUST set max patch PFT's to "numpft+1"
+** Cannot turn crop mode on -- without some form of cn for bgc mode** 
 ** 
-** Set the bgc mode and maxpft by the following means from highest to lowest precedence:
-** * by the command-line options -bgc and -maxpft
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line options -bgc cn
 ** * by a default configuration file, specified by -defaults 
 EOF
 }
-if ($print>=2) { print "Using $maxpft for maxpft.$eol"; }
-#-----------------------------------------------------------------------------------------------
-
-# PROGSSLT option
-if (defined $opts{'progsslt'}) {
-    $cfg_ref->set('progsslt', $opts{'progsslt'});
+if ( ($c13 eq "on" ) && ($crop eq "on") ) {
+   die <<"EOF";
+** Cannot turn crop mode on -- AND C13 mode on at the same time**
+** 
+** Set the crop and C13 modes by the following means from highest to lowest precedence:
+** * by the command-line options -crop and -c13
+** * by a default configuration file, specified by -defaults 
+EOF
 }
-my $progsslt = $cfg_ref->get('progsslt');
-if ($print>=2) { print "Using $progsslt for progsslt.$eol"; }
+if ($print>=2) { print "Using $crop for crop.$eol"; }
 
+#-----------------------------------------------------------------------------------------------
+# MAXPFT option
+if (defined $opts{'maxpft'}) {
+    $cfg_ref->set('maxpft', $opts{'maxpft'});
+} else {
+    $cfg_ref->set('maxpft', $maxpatchpft{$crpmode} );
+}
+my $maxpft = $cfg_ref->get('maxpft');
+if ( (($bgc_mode eq "cn") || ($bgc_mode eq "cndv")) && ($maxpft != $maxpatchpft{$crpmode}) ) {
+   die <<"EOF";
+** For CN or CNDV BGC mode you MUST set max patch PFT's to $maxpatchpft{$crpmode}
+** 
+** When the crop model is on then it must be set to $maxpatchpft{'crop'} otherwise to $maxpatchpft{'nocrop'}
+** Set the bgc mode, crop and maxpft by the following means from highest to lowest precedence:
+** * by the command-line options -bgc, -crop and -maxpft
+** * by a default configuration file, specified by -defaults 
+**
+EOF
+}
+if ( $maxpft > $maxpatchpft{$crpmode} ) {
+   die <<"EOF";
+** Max patch PFT's can NOT exceed $maxpatchpft{$crpmode}
+** 
+** Set maxpft by the following means from highest to lowest precedence:
+** * by the command-line options -maxpft
+** * by a default configuration file, specified by -defaults 
+**
+EOF
+}
+if ($print>=2) { print "Using $maxpft for maxpft.$eol"; }
 #-----------------------------------------------------------------------------------------------
 # PERGRO option
 if (defined $opts{'pergro'}) {
@@ -656,29 +701,29 @@ if ( $clm_mode ne "ext_cesm" && $cesm_bld ne "on" ) {
 
 $cfg_cppdefs .= " -DMAXPATCH_PFT=$maxpft";
 
-if ( $progsslt eq 'on') { 
-    $cfg_cppdefs .= " -DPROGSSLT";
-}
 if ($rtm eq 'on') { 
     $cfg_cppdefs .= " -DRTM";
-}
-if ($dust eq 'on') { 
-    $cfg_cppdefs .= " -DDUST";
 }
 if ($voc eq 'on') { 
     $cfg_cppdefs .= " -DVOC";
 }
 if ($bgc_mode eq 'cn') { 
-    $cfg_cppdefs .= " -DCN -DCLAMP";
+    $cfg_cppdefs .= " -DCN";
+}
+if ($crop eq 'on') { 
+    $cfg_cppdefs .= " -DCROP";
 }
 if ($bgc_mode eq 'cndv') { 
     $cfg_cppdefs .= " -DCNDV -DCN";
 }
 if ($bgc_mode eq 'casa') { 
-    $cfg_cppdefs .= " -DCASA -DCLAMP";
+    $cfg_cppdefs .= " -DCASA";
 }
 if ($nofire eq 'on') {
     $cfg_cppdefs .= " -DNOFIRE";
+}
+if ($noio eq 'on') {
+    $cfg_cppdefs .= " -D_NOIO";
 }
 if ($ad_spinup eq 'on') { 
     $cfg_cppdefs .= " -DAD_SPINUP";

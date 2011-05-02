@@ -30,7 +30,10 @@ module clm_varctl
 !
   character(len=256), public :: caseid  = ' '                            ! case id
   character(len=256), public :: ctitle  = ' '                            ! case title
-  integer, public :: nsrest             = iundef                         ! 0: initial run. 1: restart: 3: branch
+  integer, public :: nsrest             = iundef                         ! Type of run
+  integer, public, parameter :: nsrStartup  = 0                          ! Startup from initial conditions
+  integer, public, parameter :: nsrContinue = 1                          ! Continue from restart files
+  integer, public, parameter :: nsrBranch   = 2                          ! Branch from restart files
   logical, public :: brnch_retain_casename = .false.                     ! true => allow case name to remain the same for branch run
                                                                          ! by default this is not allowed
   logical, public :: noland = .false.                                    ! true => no valid land points -- do NOT run
@@ -75,10 +78,6 @@ module clm_varctl
 ! BGC logic and datasets
 !
   character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
-#ifdef CN
-  logical,           public :: scaled_harvest = .false. ! true => scale CN harvesting according to coefficients determined 
-                                                        ! by Johann Feddema, circa 2009
-#endif
 !
 ! Physics
 !
@@ -220,6 +219,11 @@ contains
        allocate_all_vegpfts = .true.
     else
        allocate_all_vegpfts = .false.
+#ifdef CROP
+       write(iulog,*)'maxpatch_pft = ',maxpatch_pft,' does NOT equal numpft+1 = ', &
+                      numpft+1
+       call shr_sys_abort( subname//' ERROR:: Can NOT turn CROP on without all PFTs' )
+#endif
     end if
 
     if (masterproc) then
@@ -283,7 +287,7 @@ contains
        ! Check on run type
 
        if (nsrest == iundef) call shr_sys_abort( subname//' ERROR:: must set nsrest' )
-       if (nsrest == 3 .and. nrevsn == ' ') &
+       if (nsrest == nsrBranch .and. nrevsn == ' ') &
           call shr_sys_abort( subname//' ERROR: need to set restart data file name' )
 
        ! Model physics
@@ -291,8 +295,10 @@ contains
        if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) ) &
           call shr_sys_abort( subname//' ERROR: co2_ppmv is out of a reasonable range' )
 
-       if (nsrest == 0) nrevsn = ' '
-       if (nsrest == 1) nrevsn = 'set by restart pointer file file'
+       if (nsrest == nsrStartup ) nrevsn = ' '
+       if (nsrest == nsrContinue) nrevsn = 'set by restart pointer file file'
+       if (nsrest /= nsrStartup .and. nsrest /= nsrContinue .and. nsrest /= nsrBranch ) &
+          call shr_sys_abort( subname//' ERROR: nsrest NOT set to a valid value' )
 
        if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) &
           call shr_sys_abort( subname//' ERROR:: single column mode on -- but scmlat and scmlon are NOT set' )

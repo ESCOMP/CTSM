@@ -1,4 +1,3 @@
-
 module accFldsMod
 
 !-----------------------------------------------------------------------
@@ -29,6 +28,7 @@ module accFldsMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils,   only: endrun
   use clm_varctl,   only: iulog
+  use surfrdMod,    only: crop_prog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -153,6 +153,17 @@ contains
          accum_type='runmean', accum_period=1, &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
+#if (defined CNDV) || (defined CROP)
+    ! The following is a running mean.
+    ! The accumulation period is set to -10 for a 10-day running mean.
+
+    call init_accum_field (name='T10', units='K', &
+         desc='10-day running mean of 2-m temperature', &
+         accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
+
+#endif
+
 #if (defined CNDV)
     ! 30-day average of 2m temperature.
 
@@ -162,12 +173,7 @@ contains
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
     ! The following are running means.
-    ! The accumulation period is set to 10 days for a 10-day running mean.
-
-    call init_accum_field (name='T10', units='K', &
-         desc='10-day running mean of 2-m temperature', &
-         accum_type='runmean', accum_period=-10, &
-         subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
+    ! The accumulation period is set to -365 for a 365-day running mean.
 
     call init_accum_field (name='PREC365', units='MM H2O/S', &
          desc='365-day running mean of total precipitation', &
@@ -189,6 +195,50 @@ contains
          accum_type='runaccum', accum_period=not_used,  &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 #endif
+
+    if ( crop_prog )then
+       ! 10-day average of min 2m temperature.
+
+       call init_accum_field (name='TDM10', units='K', &
+            desc='10-day running mean of min 2-m temperature', &
+            accum_type='runmean', accum_period=-10, &
+            subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
+
+       ! 5-day average of min 2m temperature.
+
+       call init_accum_field (name='TDM5', units='K', &
+            desc='5-day running mean of min 2-m temperature', &
+            accum_type='runmean', accum_period=-5, &
+            subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
+
+       ! All GDD summations are relative to the planting date
+       ! (Kucharik & Brye 2003)
+
+       call init_accum_field (name='GDD0', units='K', &
+            desc='growing degree-days base 0C from planting', &
+            accum_type='runaccum', accum_period=not_used, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+
+       call init_accum_field (name='GDD8', units='K', &
+            desc='growing degree-days base 8C from planting', &
+            accum_type='runaccum', accum_period=not_used, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+
+       call init_accum_field (name='GDD10', units='K', &
+            desc='growing degree-days base 10C from planting', &
+            accum_type='runaccum', accum_period=not_used,  &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+
+       call init_accum_field (name='GDDPLANT', units='K', &
+            desc='growing degree-days from planting', &
+            accum_type='runaccum', accum_period=not_used,  &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+
+       call init_accum_field (name='GDDTSOI', units='K', &
+            desc='growing degree-days from planting (top two soil layers)', &
+            accum_type='runaccum', accum_period=not_used,  &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+    end if
 
     ! Print output of accumulated fields
 
@@ -215,6 +265,8 @@ contains
     use shr_const_mod, only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod   , only : update_accum_field, extract_accum_field
+    use pftvarcon    , only : nwcereal, mxtmp, baset
+    use clm_time_manager , only : get_start_date
     use pftvarcon    , only : ndllf_dcd_brl_tree
 !
 ! !ARGUMENTS:
@@ -238,6 +290,17 @@ contains
     logical , pointer :: urbpoi(:)           ! true => landunit is an urban point
     logical , pointer :: ifspecial(:)        ! true => landunit is not vegetated
     integer , pointer :: plandunit(:)        ! landunit index associated with each pft
+    real(r8), pointer :: vf(:)               ! vernalization factor
+    real(r8), pointer :: t_soisno(:,:)       ! soil temperature (K)
+    real(r8), pointer :: h2osoi_liq(:,:)     ! liquid water (kg/m2)
+    real(r8), pointer :: watsat(:,:)         ! volumetric soil water at saturation (porosity) (nlevgrnd)
+    real(r8), pointer :: dz(:,:)             ! layer thickness depth (m)
+    real(r8), pointer :: latdeg(:)           ! latitude (radians)
+    logical , pointer :: croplive(:)         ! Flag, true if planted, not harvested
+    integer , pointer :: pcolumn(:)          ! index into column level quantities
+!
+! local pointers to implicit out arguments
+!
     ! heald (04/06): variables to be accumulated for VOC emissions
     real(r8), pointer :: t_veg(:)            ! pft vegetation temperature (Kelvin) 
     real(r8), pointer :: forc_solad(:,:)     ! direct beam radiation (visible only)
@@ -267,8 +330,8 @@ contains
     real(r8), pointer :: t_ref2m_min_inst_r(:) ! Rural instantaneous daily min of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_u(:) ! Urban instantaneous daily max of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_r(:) ! Rural instantaneous daily max of average 2 m height surface air temp (K)
-#if (defined CNDV)
     real(r8), pointer :: t10(:)              ! 10-day running mean of the 2 m temperature (K)
+#if (defined CNDV)
     real(r8), pointer :: t_mo(:)             ! 30-day average temperature (Kelvin)
     real(r8), pointer :: t_mo_min(:)         ! annual min of t_mo (Kelvin)
     real(r8), pointer :: prec365(:)          ! 365-day running mean of tot. precipitation
@@ -276,6 +339,13 @@ contains
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
     real(r8), pointer :: twmax(:)            ! upper limit of temperature of the warmest month
 #endif
+    real(r8), pointer :: gdd0(:)             ! growing degree-days base 0C'
+    real(r8), pointer :: gdd8(:)             ! growing degree-days base 8C from planting
+    real(r8), pointer :: gdd10(:)            ! growing degree-days base 10C from planting
+    real(r8), pointer :: gddplant(:)         ! growing degree-days from planting
+    real(r8), pointer :: gddtsoi(:)          ! growing degree-days from planting (top two soil layers)
+    real(r8), pointer :: a10tmin(:)          ! 10-day running mean of min 2-m temperature
+    real(r8), pointer :: a5tmin(:)           ! 5-day running mean of min 2-m temperature
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -333,15 +403,30 @@ contains
     t_ref2m_min_inst_u => clm3%g%l%c%p%pes%t_ref2m_min_inst_u
     t_ref2m_min_inst_r => clm3%g%l%c%p%pes%t_ref2m_min_inst_r
     plandunit        => clm3%g%l%c%p%landunit
+    t10              => clm3%g%l%c%p%pes%t10
+    a10tmin          => clm3%g%l%c%p%pes%a10tmin
+    a5tmin           => clm3%g%l%c%p%pes%a5tmin
 #if (defined CNDV)
     t_mo             => clm3%g%l%c%p%pdgvs%t_mo
     t_mo_min         => clm3%g%l%c%p%pdgvs%t_mo_min
-    t10              => clm3%g%l%c%p%pdgvs%t10
     prec365          => clm3%g%l%c%p%pdgvs%prec365
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
     twmax            => dgv_pftcon%twmax
 #endif
+    gdd0             => clm3%g%l%c%p%pps%gdd0
+    gdd8             => clm3%g%l%c%p%pps%gdd8
+    gdd10            => clm3%g%l%c%p%pps%gdd10
+    gddplant         => clm3%g%l%c%p%pps%gddplant
+    gddtsoi          => clm3%g%l%c%p%pps%gddtsoi
+    vf               => clm3%g%l%c%p%pps%vf
+    t_soisno         => clm3%g%l%c%ces%t_soisno
+    h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
+    watsat           => clm3%g%l%c%cps%watsat
+    dz               => clm3%g%l%c%cps%dz
+    latdeg           => clm3%g%latdeg
+    croplive         => clm3%g%l%c%p%pps%croplive
+    pcolumn          => clm3%g%l%c%p%column
     t_veg24          => clm3%g%l%c%p%pvs%t_veg24           ! (heald 04/06)
     t_veg240         => clm3%g%l%c%p%pvs%t_veg240          ! (heald 04/06)
     fsd24            => clm3%g%l%c%p%pvs%fsd24             ! (heald 04/06)
@@ -505,6 +590,14 @@ contains
     call update_accum_field  ('LAIP', rbufslp, nstep)
     call extract_accum_field ('LAIP', elai_p, nstep)
 
+#if (defined CNDV) || (defined CROP)
+    ! Accumulate and extract T10
+    !(acumulates TSA as 10-day running mean)
+
+    call update_accum_field  ('T10', t_ref2m, nstep)
+    call extract_accum_field ('T10', t10, nstep)
+#endif
+
 #if (defined CNDV)
     ! Accumulate and extract TDA
     ! (accumulates TBOT as 30-day average)
@@ -520,12 +613,6 @@ contains
        t_mo(p) = rbufslp(p)
        t_mo_min(p) = min(t_mo_min(p), rbufslp(p))
     end do
-
-    ! Accumulate and extract T10
-    !(acumulates TSA as 10-day running mean)
-
-    call update_accum_field  ('T10', t_ref2m, nstep)
-    call extract_accum_field ('T10', t10, nstep)
 
     ! Accumulate and extract PREC365
     ! (accumulates total precipitation as 365-day running mean)
@@ -548,7 +635,6 @@ contains
                     * dtime/SHR_CONST_CDAY)
        if (month==1 .and. day==1 .and. secs==int(dtime)) rbufslp(p) = -99999._r8
     end do
-
     call update_accum_field  ('AGDDTW', rbufslp, nstep)
     call extract_accum_field ('AGDDTW', agddtw, nstep)
 
@@ -560,8 +646,119 @@ contains
     end do
     call update_accum_field  ('AGDD', rbufslp, nstep)
     call extract_accum_field ('AGDD', agdd, nstep)
-
 #endif
+
+    if ( crop_prog )then
+       ! Accumulate and extract TDM10
+
+       do p = begp,endp
+          rbufslp(p) = min(t_ref2m_min(p),t_ref2m_min_inst(p)) !slevis: ok choice?
+          if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
+       end do                                         !'min_inst' not initialized?
+       call update_accum_field  ('TDM10', rbufslp, nstep)
+       call extract_accum_field ('TDM10', a10tmin, nstep)
+
+       ! Accumulate and extract TDM5
+
+       do p = begp,endp
+          rbufslp(p) = min(t_ref2m_min(p),t_ref2m_min_inst(p)) !slevis: ok choice?
+          if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
+       end do                                         !'min_inst' not initialized?
+       call update_accum_field  ('TDM5', rbufslp, nstep)
+       call extract_accum_field ('TDM5', a5tmin, nstep)
+
+       ! Accumulate and extract GDD0
+
+       do p = begp,endp
+          itypveg = itype(p)
+          g = pgridcell(p)
+          if (month==1 .and. day==1 .and. secs==int(dtime)) then
+             rbufslp(p) = -99999._r8 ! reset gdd
+          else if (( month > 3 .and. month < 10 .and. latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. latdeg(g) <  0._r8)     ) then
+             rbufslp(p) = max(0._r8, min(26._r8, t_ref2m(p)-SHR_CONST_TKFRZ)) &
+                          * dtime/SHR_CONST_CDAY
+          else
+             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          end if
+       end do
+       call update_accum_field  ('GDD0', rbufslp, nstep)
+       call extract_accum_field ('GDD0', gdd0, nstep)
+
+       ! Accumulate and extract GDD8
+
+       do p = begp,endp
+          itypveg = itype(p)
+          g = pgridcell(p)
+          if (month==1 .and. day==1 .and. secs==int(dtime)) then
+             rbufslp(p) = -99999._r8 ! reset gdd
+          else if (( month > 3 .and. month < 10 .and. latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. latdeg(g) <  0._r8)     ) then
+             rbufslp(p) = max(0._r8, min(30._r8, &
+                                         t_ref2m(p)-(SHR_CONST_TKFRZ + 8._r8))) &
+                          * dtime/SHR_CONST_CDAY
+          else
+             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          end if
+       end do
+       call update_accum_field  ('GDD8', rbufslp, nstep)
+       call extract_accum_field ('GDD8', gdd8, nstep)
+
+       ! Accumulate and extract GDD10
+
+       do p = begp,endp
+          itypveg = itype(p)
+          g = pgridcell(p)
+          if (month==1 .and. day==1 .and. secs==int(dtime)) then
+             rbufslp(p) = -99999._r8 ! reset gdd
+          else if (( month > 3 .and. month < 10 .and. latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. latdeg(g) <  0._r8)     ) then
+             rbufslp(p) = max(0._r8, min(30._r8, &
+                                         t_ref2m(p)-(SHR_CONST_TKFRZ + 10._r8))) &
+                          * dtime/SHR_CONST_CDAY
+          else
+             rbufslp(p) = 0._r8      ! keeps gdd unchanged at other times (eg, through Dec in NH)
+          end if
+       end do
+       call update_accum_field  ('GDD10', rbufslp, nstep)
+       call extract_accum_field ('GDD10', gdd10, nstep)
+
+       ! Accumulate and extract GDDPLANT
+
+       do p = begp,endp
+          if (croplive(p)) then ! relative to planting date
+             itypveg = itype(p)
+             rbufslp(p) = max(0._r8, min(mxtmp(itypveg), &
+                                         t_ref2m(p)-(SHR_CONST_TKFRZ + baset(itypveg)))) &
+                          * dtime/SHR_CONST_CDAY
+             if (itypveg == nwcereal) rbufslp(p) = rbufslp(p)*vf(p)
+          else
+             rbufslp(p) = -99999._r8
+          end if
+       end do
+       call update_accum_field  ('GDDPLANT', rbufslp, nstep)
+       call extract_accum_field ('GDDPLANT', gddplant, nstep)
+
+       ! Accumulate and extract GDDTSOI
+       ! In agroibis this variable is calculated
+       ! to 0.05 m, so here we use the top two soil layers
+   
+       do p = begp,endp
+          if (croplive(p)) then ! relative to planting date
+             itypveg = itype(p)
+             c = pcolumn(p)
+             rbufslp(p) = max(0._r8, min(mxtmp(itypveg), &
+              ((t_soisno(c,1)*dz(c,1)+t_soisno(c,2)*dz(c,2))/(dz(c,1)+dz(c,2))) - &
+              (SHR_CONST_TKFRZ + baset(itypveg)))) * dtime/SHR_CONST_CDAY
+             if (itypveg == nwcereal) rbufslp(p) = rbufslp(p)*vf(p)
+          else
+             rbufslp(p) = -99999._r8
+          end if
+       end do
+       call update_accum_field  ('GDDTSOI', rbufslp, nstep)
+       call extract_accum_field ('GDDTSOI', gddtsoi, nstep)
+
+    end if
 
     ! Deallocate dynamic memory
 
@@ -591,7 +788,7 @@ contains
     use decompMod   , only : get_proc_bounds, get_proc_global
     use accumulMod  , only : extract_accum_field
     use clm_time_manager, only : get_nstep
-    use clm_varctl  , only : nsrest
+    use clm_varctl  , only : nsrest, nsrStartup
     use clm_varcon  , only : spval
 !
 ! !ARGUMENTS:
@@ -618,13 +815,20 @@ contains
     real(r8), pointer :: t_ref2m_min_inst_r(:) ! Rural instantaneous daily min of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_u(:) ! Urban instantaneous daily max of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_r(:) ! Rural instantaneous daily max of average 2 m height surface air temp (K)
-#ifdef CNDV
     real(r8), pointer :: t10(:)              ! 10-day running mean of the 2 m temperature (K)
+#ifdef CNDV
     real(r8), pointer :: t_mo(:)             ! 30-day average temperature (Kelvin)
     real(r8), pointer :: prec365(:)          ! 365-day running mean of tot. precipitation
     real(r8), pointer :: agddtw(:)           ! accumulated growing degree days above twmax
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
 #endif
+    real(r8), pointer :: gdd0(:)             ! growing degree-days base 0C'
+    real(r8), pointer :: gdd8(:)             ! growing degree-days base 8C from planting
+    real(r8), pointer :: gdd10(:)            ! growing degree-days base 10C from planting
+    real(r8), pointer :: gddplant(:)         ! growing degree-days from planting
+    real(r8), pointer :: gddtsoi(:)          ! growing degree-days from planting (top two soil layers)
+    real(r8), pointer :: a10tmin(:)          ! 10-day running mean of min 2-m temperature
+    real(r8), pointer :: a5tmin(:)           ! 5-day running mean of min 2-m temperature
     ! heald (04/06): accumulated variables for VOC emissions
     real(r8), pointer :: t_veg24(:)          ! 24hr average vegetation temperature (K)
     real(r8), pointer :: t_veg240(:)         ! 240hr average vegetation temperature (Kelvin)
@@ -666,13 +870,20 @@ contains
     t_ref2m_max_r      => clm3%g%l%c%p%pes%t_ref2m_max_r
     t_ref2m_min_u      => clm3%g%l%c%p%pes%t_ref2m_min_u
     t_ref2m_min_r      => clm3%g%l%c%p%pes%t_ref2m_min_r
+    t10              => clm3%g%l%c%p%pes%t10
+    a10tmin          => clm3%g%l%c%p%pes%a10tmin
+    a5tmin           => clm3%g%l%c%p%pes%a5tmin
 #if (defined CNDV)
-    t10              => clm3%g%l%c%p%pdgvs%t10
     t_mo             => clm3%g%l%c%p%pdgvs%t_mo
     prec365          => clm3%g%l%c%p%pdgvs%prec365
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
 #endif
+    gdd0             => clm3%g%l%c%p%pps%gdd0
+    gdd8             => clm3%g%l%c%p%pps%gdd8
+    gdd10            => clm3%g%l%c%p%pps%gdd10
+    gddplant         => clm3%g%l%c%p%pps%gddplant
+    gddtsoi          => clm3%g%l%c%p%pps%gddtsoi
     ! heald (04/06): accumulated variables for VOC emissions
     t_veg24          => clm3%g%l%c%p%pvs%t_veg24
     t_veg240         => clm3%g%l%c%p%pvs%t_veg240
@@ -694,7 +905,7 @@ contains
 
     ! Initialize 2m ref temperature max and min values
 
-    if (nsrest == 0) then ! Why not restart&branch? These vars are not in clmr.
+    if (nsrest == nsrStartup) then ! Why not restart&branch? These vars are not in clmr.
        do p = begp,endp
           t_ref2m_max(p) = spval
           t_ref2m_min(p) = spval
@@ -766,11 +977,54 @@ contains
        elai_p(p) = rbufslp(p)
     end do
 
-#if (defined CNDV)
+    if ( crop_prog )then
+
+       call extract_accum_field ('GDD0', rbufslp, nstep)
+       do p = begp,endp
+          gdd0(p) = rbufslp(p)
+       end do
+   
+       call extract_accum_field ('GDD8', rbufslp, nstep)
+       do p = begp,endp
+          gdd8(p) = rbufslp(p)
+       end do
+
+       call extract_accum_field ('GDD10', rbufslp, nstep)
+       do p = begp,endp
+          gdd10(p) = rbufslp(p)
+       end do
+
+       call extract_accum_field ('GDDPLANT', rbufslp, nstep)
+       do p = begp,endp
+          gddplant(p) = rbufslp(p)
+       end do
+
+       call extract_accum_field ('GDDTSOI', rbufslp, nstep)
+       do p = begp,endp
+          gddtsoi(p) = rbufslp(p)
+       end do
+
+       call extract_accum_field ('TDM10', rbufslp, nstep)
+       do p = begp,endp
+          a10tmin(p) = rbufslp(p)
+       end do
+
+       call extract_accum_field ('TDM5', rbufslp, nstep)
+       do p = begp,endp
+          a5tmin(p) = rbufslp(p)
+       end do
+
+    end if
+
+#if (defined CNDV) || (defined CROP)
+
     call extract_accum_field ('T10', rbufslp, nstep)
     do p = begp,endp
        t10(p) = rbufslp(p)
     end do
+#endif
+
+#if (defined CNDV)
 
     call extract_accum_field ('TDA', rbufslp, nstep)
     do p = begp,endp
@@ -793,7 +1047,6 @@ contains
     end do
 
 #endif
-
     deallocate(rbufslp)
 
   end subroutine initAccClmtype

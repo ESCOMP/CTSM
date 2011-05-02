@@ -1,4 +1,3 @@
-
 module SnowHydrologyMod
 
 !-----------------------------------------------------------------------
@@ -662,6 +661,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon, only : istsoil, isturb
+    use clm_varcon, only : istcrop
 !
 ! !ARGUMENTS:
     implicit none
@@ -768,7 +768,7 @@ contains
        l = clandunit(c)
        do j = msn_old(c)+1,0
           if (h2osoi_ice(c,j) <= .1_r8) then
-             if (ltype(l) == istsoil .or. ltype(l)==isturb) then
+             if (ltype(l) == istsoil .or. ltype(l)==isturb .or. ltype(l) == istcrop) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
 
@@ -790,7 +790,7 @@ contains
                    mss_dst4(c,j+1)  = mss_dst4(c,j+1) + mss_dst4(c,j)
                 end if
 
-             else if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. j /= 0) then
+             else if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. ltype(l) /= istcrop .and. j /= 0) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
                 dz(c,j+1) = dz(c,j+1) + dz(c,j)
@@ -871,7 +871,7 @@ contains
           mss_dst4(c,:)  = 0._r8
 
           if (h2osno(c) <= 0._r8) snowdp(c) = 0._r8
-          if (ltype(l) == istsoil .or. ltype(l) == isturb) then
+          if (ltype(l) == istsoil .or. ltype(l) == isturb .or. ltype(l) == istcrop) then
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + zwliq(c)
           end if
        end if

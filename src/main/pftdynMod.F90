@@ -41,13 +41,12 @@ module pftdynMod
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
-! slevis modified to handle CNDV
+! slevis modified to handle CNDV and crop model
 ! 19 May 2009: PET - modified to handle harvest fluxes
 !
 !EOP
 !
 ! ! PRIVATE TYPES
-  real(r8), parameter :: days_per_year = 365._r8
   integer , pointer   :: yearspft(:)
   real(r8), pointer   :: wtpft1(:,:)   
   real(r8), pointer   :: wtpft2(:,:)
@@ -280,9 +279,11 @@ contains
 ! the dynpft time series.
 !
 ! !USES:
-    use clm_time_manager, only : get_curr_date, get_curr_calday
-    use clm_varcon  , only : istsoil
-    use clm_varpar  , only : numpft
+    use clm_time_manager, only : get_curr_date, get_curr_calday, &
+                                 get_days_per_year
+    use clm_varcon      , only : istsoil
+    use clm_varcon      , only : istcrop
+    use clm_varpar      , only : numpft
     implicit none
 !
 !
@@ -300,6 +301,7 @@ contains
     integer  :: day              ! day of month (1, ..., 31) for nstep+1
     integer  :: sec              ! seconds into current date for nstep+1
     real(r8) :: cday             ! current calendar day (1.0 = 0Z on Jan 1)
+    real(r8) :: days_per_year    ! days per year
     integer  :: ier              ! error status
     integer  :: lbc,ubc
     real(r8) :: wt1              ! time interpolation weights
@@ -380,7 +382,8 @@ contains
 
     ! Interpolate pft weight to current time
 
-    cday = get_curr_calday() 
+    cday          = get_curr_calday() 
+    days_per_year = get_days_per_year()
 
     wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
 
@@ -388,7 +391,7 @@ contains
        c = pptr%column(p)
        g = pptr%gridcell(p)
        l = pptr%landunit(p)
-       if (lptr%itype(l) == istsoil) then
+       if (lptr%itype(l) == istsoil .or. lptr%itype(l) == istcrop) then
           m = pptr%itype(p)
           wtcol_old(p)      = pptr%wtcol(p)
 !         --- recoded for roundoff performance, tcraig 3/07 from k.lindsay
@@ -409,7 +412,7 @@ contains
        c = pptr%column(p)
        g = pptr%gridcell(p)
        l = pptr%landunit(p)
-       if (lptr%itype(l) == istsoil) then
+       if (lptr%itype(l) == istsoil .or. lptr%itype(l) == istcrop) then
           if (wtpfttot2(c) .ne. 0) then
              pptr%wtgcell(p)   = (wtpfttot1(c)/wtpfttot2(c))*pptr%wtgcell(p)
              pptr%wtlunit(p)   = pptr%wtgcell(p) / lptr%wtgcell(l)
@@ -502,7 +505,6 @@ contains
 ! Obtain harvest data 
 !
 ! !USES:
-    use clm_varctl  , only : scaled_harvest
 !
 ! !ARGUMENTS:
     implicit none
@@ -528,38 +530,22 @@ contains
     call ncd_io(ncid=ncid, varname= 'HARVEST_VH2', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_VH2 not on pftdyn file' )
-    if ( scaled_harvest )then
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.05_r8
-    else
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
-    end if
+    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH1', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH1 not on pftdyn file' )
-    if ( scaled_harvest )then
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.60_r8
-    else
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
-    endif
+    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH2', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH2 not on pftdyn file' )
-    if ( scaled_harvest )then
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.60_r8
-    else
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
-    endif
+    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
     
     call ncd_io(ncid=ncid, varname= 'HARVEST_SH3', flag='read', data=arrayl, dim1name=grlnd, &
          nt=ntime, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: HARVEST_SH3 not on pftdyn file' )
-    if ( scaled_harvest )then
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)*0.05_r8
-    else
-       harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
-    endif
+    harvest(begg:endg) = harvest(begg:endg) + arrayl(begg:endg)
 
     deallocate(arrayl)
 
@@ -620,6 +606,7 @@ contains
 !
 ! !USES:
     use clm_varcon  , only : istsoil
+    use clm_varcon  , only : istcrop
     use clm_time_manager, only : get_step_size
 !
 ! !ARGUMENTS:
@@ -674,7 +661,7 @@ contains
        l = pptr%landunit(p)
        loss_h2ocan(p) = 0._r8
 
-       if (lptr%itype(l) == istsoil) then ! CNDV incompatible with dynLU
+       if (lptr%itype(l) == istsoil .or. lptr%itype(l) == istcrop) then
 
           ! calculate the change in weight for the timestep
           dwt = pptr%wtcol(p)-wtcol_old(p)
@@ -746,7 +733,9 @@ contains
     use shr_const_mod,only : SHR_CONST_PDB
     use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil
+    use clm_varcon  , only : istcrop
     use clm_varpar  , only : numveg, numpft
+    use pftvarcon   , only : pconv, pprod10, pprod100
 #if (defined C13)
     use clm_varcon  , only : c13ratio
 #endif
@@ -815,34 +804,19 @@ contains
         real(r8) :: leafc13_seed, deadstemc13_seed
 #endif
     real(r8), pointer :: dwt_ptr0, dwt_ptr1, dwt_ptr2, dwt_ptr3, ptr
-    real(r8) :: pconv(0:numpft)    ! proportion of deadstem to conversion flux
-    real(r8) :: pprod10(0:numpft)  ! proportion of deadstem to 10-yr product pool
-    real(r8) :: pprod100(0:numpft) ! proportion of deadstem to 100-yr product pool
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(column_type),   pointer :: cptr         ! pointer to column derived subtype
     type(pft_type)   ,   pointer :: pptr         ! pointer to pft derived subtype
+    integer          , pointer   :: pcolumn(:)   ! column of corresponding pft
     character(len=32) :: subname='pftdyn_cbal' ! subroutine name
 !-----------------------------------------------------------------------
     
-    ! (dangerous hardwiring) (should put this into pftphysiology file)
-    ! set deadstem proportions
-    ! veg type:      0       1       2       3       4       5       6       7       8       9      10      11      12     &
-    !                13      14      15      16
-    pconv(0:numveg)   = &
-                 (/0.0_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.8_r8, 0.8_r8, 0.8_r8, 1.0_r8, &
-                   1.0_r8, 1.0_r8, 1.0_r8, 1.0_r8/)
-    pprod10(0:numveg) = &
-                 (/0.0_r8, 0.3_r8, 0.3_r8, 0.3_r8, 0.4_r8, 0.3_r8, 0.4_r8, 0.3_r8, 0.3_r8, 0.2_r8, 0.2_r8, 0.2_r8, 0.0_r8, &
-                   0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8/)
-    pprod100(0:numveg) = &
-                 (/0.0_r8, 0.1_r8, 0.1_r8, 0.1_r8, 0.0_r8, 0.1_r8, 0.0_r8, 0.1_r8, 0.1_r8, 0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8, &
-                   0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8/)
-    
     ! Set pointers into derived type
 
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
+    lptr    => clm3%g%l
+    cptr    => clm3%g%l%c
+    pptr    => clm3%g%l%c%p
+    pcolumn => pptr%column
 
     ! Allocate pft-level mass loss arrays
     allocate(dwt_leafc_seed(begp:endp), stat=ier)
@@ -954,6 +928,7 @@ contains
     dt = real( get_step_size(), r8 )
 
 	do p = begp,endp
+                c = pcolumn(p)
 		! initialize all the pft-level local flux arrays
 		dwt_leafc_seed(p) = 0._r8
 		dwt_leafn_seed(p) = 0._r8
@@ -989,8 +964,7 @@ contains
 		prod100_nflux(p) = 0._r8
        
 		l = pptr%landunit(p)
-		c = pptr%column(p)
-		if (lptr%itype(l) == istsoil) then ! CNDV incompatible with dynLU
+		if (lptr%itype(l) == istsoil .or. lptr%itype(l) == istcrop) then
 
 			! calculate the change in weight for the timestep
 			dwt = pptr%wtcol(p)-wtcol_old(p)
@@ -2442,7 +2416,7 @@ end subroutine pftdyn_cnbal
 ! Initialize time interpolation of cndv pft weights from annual to time step
 !
 ! !USES:
-  use clm_varctl, only : nsrest
+  use clm_varctl, only : nsrest, nsrStartup
 !
 ! !ARGUMENTS:
     implicit none
@@ -2466,7 +2440,7 @@ end subroutine pftdyn_cnbal
        call endrun()
     end if
 
-    if (nsrest == 0) then
+    if (nsrest == nsrStartup) then
        do p = begp,endp
           pptr%pdgvs%fpcgrid(p) = pptr%wtcol(p)
           pptr%pdgvs%fpcgridold(p) = pptr%wtcol(p)
@@ -2487,7 +2461,8 @@ end subroutine pftdyn_cnbal
 ! Time interpolate cndv pft weights from annual to time step
 !
 ! !USES:
-    use clm_time_manager, only : get_curr_calday, get_curr_date
+    use clm_time_manager, only : get_curr_calday, get_curr_date, &
+                                 get_days_per_year
     use clm_time_manager, only : get_step_size, get_nstep
     use clm_varcon      , only : istsoil ! CNDV incompatible with dynLU
     use clm_varctl      , only : finidat
@@ -2503,6 +2478,7 @@ end subroutine pftdyn_cnbal
     real(r8) :: cday               ! current calendar day (1.0 = 0Z on Jan 1)
     real(r8) :: wt1                ! time interpolation weights
     real(r8) :: dtime              ! model time step
+    real(r8) :: days_per_year      ! days per year
     integer  :: nstep              ! time step number
     integer  :: year               ! year (0, ...) at nstep + 1
     integer  :: mon                ! month (1, ..., 12) at nstep + 1
@@ -2526,9 +2502,10 @@ end subroutine pftdyn_cnbal
     ! assumes maxpatch_pft = numpft + 1, each landunit has 1 column, 
     ! SCAM not defined and create_croplandunit = .false.
 
-    nstep = get_nstep()
-    dtime = get_step_size()
-    cday = get_curr_calday(offset=-int(dtime))
+    nstep         = get_nstep()
+    dtime         = get_step_size()
+    cday          = get_curr_calday(offset=-int(dtime))
+    days_per_year = get_days_per_year()
 
     wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
 
@@ -2538,7 +2515,7 @@ end subroutine pftdyn_cnbal
        g = pptr%gridcell(p)
        l = pptr%landunit(p)
 
-       if (lptr%itype(l) == istsoil) then ! CNDV incompatible with dynLU
+       if (lptr%itype(l) == istsoil .and. lptr%wtgcell(l) > 0._r8) then ! CNDV incompatible with dynLU
           wtcol_old(p)    = pptr%wtcol(p)
           pptr%wtcol(p)   = pptr%pdgvs%fpcgrid(p) + &
                      wt1 * (pptr%pdgvs%fpcgridold(p) - pptr%pdgvs%fpcgrid(p))
@@ -2568,7 +2545,9 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use pftvarcon, only : noveg, nbrdlf_evr_shrub
+   use pftvarcon       , only : noveg, nbrdlf_evr_shrub, pprodharv10
+   use clm_varcon      , only : secspday
+   use clm_time_manager, only : get_days_per_year
 !
 ! !ARGUMENTS:
    implicit none
@@ -2682,7 +2661,7 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer :: fp                        ! pft filter index
    real(r8):: am                        ! rate for fractional harvest mortality (1/yr)
    real(r8):: m                         ! rate for fractional harvest mortality (1/s)
-   real(r8) :: pprod10(1:8)   ! proportion of deadstem to 10-yr product pool  (for tree pfts - 1 through 8)
+   real(r8):: days_per_year             ! days per year
 !EOP
 !-----------------------------------------------------------------------
 
@@ -2773,10 +2752,8 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
    hrv_livecrootn_xfer_to_litter    => clm3%g%l%c%p%pnf%hrv_livecrootn_xfer_to_litter
    hrv_deadcrootn_xfer_to_litter    => clm3%g%l%c%p%pnf%hrv_deadcrootn_xfer_to_litter
 
-   ! set deadstem proportions to 10-year product pool. 
-   ! remainder (1-pprod10) is assumed to go to 100-year product pool
-   ! veg type:       1        2        3       4        5       6        7        8      
-   pprod10 =    (/0.75_r8, 0.75_r8, 0.75_r8, 1.0_r8, 0.75_r8, 1.0_r8, 0.75_r8, 0.75_r8/)
+
+   days_per_year = get_days_per_year()
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2790,7 +2767,7 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
          if (do_harvest) then
             am = harvest(g)
-            m  = am/(365._r8 * 86400._r8)
+            m  = am/(days_per_year * secspday)
          else
             m = 0._r8
          end if   
@@ -2800,8 +2777,10 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
          hrv_leafc_to_litter(p)               = leafc(p)               * m
          hrv_frootc_to_litter(p)              = frootc(p)              * m
          hrv_livestemc_to_litter(p)           = livestemc(p)           * m
-         hrv_deadstemc_to_prod10c(p)          = deadstemc(p)           * m * pprod10(ivt(p))
-         hrv_deadstemc_to_prod100c(p)         = deadstemc(p)           * m * (1.0_r8 - pprod10(ivt(p)))
+         hrv_deadstemc_to_prod10c(p)          = deadstemc(p)           * m * &
+                                                pprodharv10(ivt(p))
+         hrv_deadstemc_to_prod100c(p)         = deadstemc(p)           * m * &
+                                                (1.0_r8 - pprodharv10(ivt(p)))
          hrv_livecrootc_to_litter(p)          = livecrootc(p)          * m
          hrv_deadcrootc_to_litter(p)          = deadcrootc(p)          * m
          hrv_xsmrpool_to_atm(p)               = xsmrpool(p)            * m
@@ -2829,8 +2808,10 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
          hrv_leafn_to_litter(p)               = leafn(p)               * m
          hrv_frootn_to_litter(p)              = frootn(p)              * m
          hrv_livestemn_to_litter(p)           = livestemn(p)           * m
-         hrv_deadstemn_to_prod10n(p)          = deadstemn(p)           * m * pprod10(ivt(p))
-         hrv_deadstemn_to_prod100n(p)         = deadstemn(p)           * m * (1.0_r8 - pprod10(ivt(p)))
+         hrv_deadstemn_to_prod10n(p)          = deadstemn(p)           * m * &
+                                                pprodharv10(ivt(p))
+         hrv_deadstemn_to_prod100n(p)         = deadstemn(p)           * m * &
+                                                (1.0_r8 - pprodharv10(ivt(p)))
          hrv_livecrootn_to_litter(p)          = livecrootn(p)          * m
          hrv_deadcrootn_to_litter(p)          = deadcrootn(p)          * m
          hrv_retransn_to_litter(p)            = retransn(p)            * m

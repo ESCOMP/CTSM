@@ -95,6 +95,7 @@ contains
 !    *%luni, *%lunf, *%lunn
 !
 ! !USES:
+    use abortutils, only : endrun
     use decompMod , only : get_proc_bounds, get_proc_global
 !
 ! !ARGUMENTS:
@@ -114,6 +115,7 @@ contains
     integer :: numl         ! total number of landunits across all processors
     integer :: numc         ! total number of columns across all processors
     integer :: nump         ! total number of pfts across all processors
+    character(len=32), parameter :: subname = "initClmtype"
 !------------------------------------------------------------------------
 
     ! Determine necessary indices
@@ -199,6 +201,9 @@ contains
     ! Adding isotope code
     call init_pft_cstate_type(begp, endp, clm3%g%l%c%p%pc13s)
     call init_pft_cstate_type(begc, endc, clm3%g%l%c%cc13s%pcs_a)
+#ifdef CROP
+    call endrun( trim(subname)//" ERROR:: CROP and C13 can NOT be on at the same time" )
+#endif
 #endif
 
     ! pft nitrogen state variables at the pft level and averaged to the column
@@ -689,7 +694,6 @@ contains
     allocate(pftcon%foln(0:numpft))
     allocate(pftcon%dleaf(0:numpft))
     allocate(pftcon%c3psn(0:numpft))
-    allocate(pftcon%vcmx25(0:numpft))
     allocate(pftcon%mp(0:numpft))
     allocate(pftcon%qe25(0:numpft))
     allocate(pftcon%xl(0:numpft))
@@ -711,6 +715,7 @@ contains
     allocate(pftcon%frootcn(0:numpft))
     allocate(pftcon%livewdcn(0:numpft))
     allocate(pftcon%deadwdcn(0:numpft))
+    allocate(pftcon%graincn(0:numpft))
     allocate(pftcon%froot_leaf(0:numpft))
     allocate(pftcon%stem_leaf(0:numpft))
     allocate(pftcon%croot_stem(0:numpft))
@@ -722,8 +727,6 @@ contains
     allocate(pftcon%fr_flab(0:numpft))
     allocate(pftcon%fr_fcel(0:numpft))
     allocate(pftcon%fr_flig(0:numpft))
-    allocate(pftcon%dw_fcel(0:numpft))
-    allocate(pftcon%dw_flig(0:numpft))
     allocate(pftcon%leaf_long(0:numpft))
     allocate(pftcon%evergreen(0:numpft))
     allocate(pftcon%stress_decid(0:numpft))
@@ -739,7 +742,6 @@ contains
     pftcon%foln(:) = nan
     pftcon%dleaf(:) = nan
     pftcon%c3psn(:) = nan
-    pftcon%vcmx25(:) = nan
     pftcon%mp(:) = nan
     pftcon%qe25(:) = nan
     pftcon%xl(:) = nan
@@ -761,6 +763,7 @@ contains
     pftcon%frootcn(:) = nan
     pftcon%livewdcn(:) = nan
     pftcon%deadwdcn(:) = nan
+    pftcon%graincn(:) = nan
     pftcon%froot_leaf(:) = nan
     pftcon%stem_leaf(:) = nan
     pftcon%croot_stem(:) = nan
@@ -772,8 +775,6 @@ contains
     pftcon%fr_flab(:) = nan
     pftcon%fr_fcel(:) = nan
     pftcon%fr_flig(:) = nan
-    pftcon%dw_fcel(:) = nan
-    pftcon%dw_flig(:) = nan
     pftcon%leaf_long(:) = nan
     pftcon%evergreen(:) = nan
     pftcon%stress_decid(:) = nan
@@ -840,6 +841,7 @@ contains
 !
 ! !USES:
     use clm_varcon, only : spval
+    use surfrdMod , only : crop_prog
 #if (defined CASA)
     use CASAMod   , only : npools, nresp_pools, nlive, npool_types
 #endif
@@ -893,6 +895,32 @@ contains
     allocate(pps%va(beg:end))
     allocate(pps%fv(beg:end))
     allocate(pps%ram1(beg:end))
+    if ( crop_prog )then
+       allocate(pps%hdidx(beg:end))
+       allocate(pps%cumvd(beg:end))
+       allocate(pps%htmx(beg:end))
+       allocate(pps%vf(beg:end))
+       allocate(pps%gddmaturity(beg:end))
+       allocate(pps%gdd0(beg:end))
+       allocate(pps%gdd8(beg:end))
+       allocate(pps%gdd10(beg:end))
+       allocate(pps%gdd020(beg:end))
+       allocate(pps%gdd820(beg:end))
+       allocate(pps%gdd1020(beg:end))
+       allocate(pps%gddplant(beg:end))
+       allocate(pps%gddtsoi(beg:end))
+       allocate(pps%huileaf(beg:end))
+       allocate(pps%huigrain(beg:end))
+       allocate(pps%aleafi(beg:end))
+       allocate(pps%astemi(beg:end))
+       allocate(pps%aleaf(beg:end))
+       allocate(pps%astem(beg:end))
+       allocate(pps%croplive(beg:end))
+       allocate(pps%cropplant(beg:end)) !,numpft)) ! make 2-D if using
+       allocate(pps%harvdate(beg:end))  !,numpft)) ! crop rotation
+       allocate(pps%idop(beg:end))
+       allocate(pps%peaklai(beg:end))
+    end if
     allocate(pps%vds(beg:end))
     allocate(pps%slasun(beg:end))
     allocate(pps%slasha(beg:end))
@@ -974,7 +1002,6 @@ contains
     allocate(pps%nstepbeg(beg:end)) ! nstep at start of growing season
     allocate(pps%lgrow(beg:end))    ! growing season index (0 or 1) to be
                                     ! passed daily to CASA to get NPP
-#if (defined CLAMP)
     ! Summary variables added for the C-LAMP Experiments
     allocate(pps%casa_agnpp(beg:end))
     allocate(pps%casa_ar(beg:end))
@@ -1002,7 +1029,6 @@ contains
     allocate(pps%casa_woodc(beg:end))
     allocate(pps%casa_woodc_alloc(beg:end))
     allocate(pps%casa_woodc_loss(beg:end))
-#endif
 #endif
 
     pps%frac_veg_nosno(beg:end) = bigint
@@ -1044,6 +1070,32 @@ contains
     pps%va(beg:end) = nan
     pps%fv(beg:end) = nan
     pps%ram1(beg:end) = nan
+    if ( crop_prog )then
+       pps%hdidx(beg:end)       = nan
+       pps%cumvd(beg:end)       = nan
+       pps%htmx(beg:end)        = 0.0_r8
+       pps%vf(beg:end)          = 0.0_r8
+       pps%gddmaturity(beg:end) = spval
+       pps%gdd0(beg:end)        = spval
+       pps%gdd8(beg:end)        = spval
+       pps%gdd10(beg:end)       = spval
+       pps%gdd020(beg:end)      = spval
+       pps%gdd820(beg:end)      = spval
+       pps%gdd1020(beg:end)     = spval
+       pps%gddplant(beg:end)    = spval
+       pps%gddtsoi(beg:end)     = spval
+       pps%huileaf(beg:end)     = nan
+       pps%huigrain(beg:end)    = nan
+       pps%aleafi(beg:end)      = nan
+       pps%astemi(beg:end)      = nan
+       pps%aleaf(beg:end)       = nan
+       pps%astem(beg:end)       = nan
+       pps%croplive(beg:end)    = .false.
+       pps%cropplant(beg:end)   = .false.
+       pps%harvdate(beg:end)    = bigint
+       pps%idop(beg:end)        = bigint
+       pps%peaklai(beg:end)     = 0
+    end if
     pps%vds(beg:end) = nan
     pps%slasun(beg:end) = nan
     pps%slasha(beg:end) = nan
@@ -1076,7 +1128,7 @@ contains
     pps%Ctrans(beg:end,:npool_types) = spval   !init w/ spval the variables that
     pps%Resp_C(beg:end,:npools) = nan    !go to history, because CASA
     pps%Tpool_C(beg:end,:npools) = spval !routines do not get called on
-    pps%livefr(beg:end,:nlive) = spval   !first timestep of nsrest=0 and
+    pps%livefr(beg:end,:nlive) = spval   !first timestep of nsrest=nsrStartup and
     pps%pet(beg:end) = spval             !history would get nans
     pps%co2flux(beg:end) = nan           !in the first timestep
     pps%fnpp(beg:end) = nan
@@ -1112,8 +1164,6 @@ contains
     pps%tday(beg:end) = nan
     pps%tcount(beg:end) = nan
     pps%ndegday(beg:end) = nan
-#if (defined CLAMP)
-    ! Summary variables added for the C-LAMP Experiments
     pps%casa_agnpp(beg:end) = nan
     pps%casa_ar(beg:end) = nan
     pps%casa_bgnpp(beg:end) = nan
@@ -1140,7 +1190,6 @@ contains
     pps%casa_woodc_alloc(beg:end) = nan
     pps%casa_woodc_loss(beg:end) = nan
 #endif
-#endif
 
   end subroutine init_pft_pstate_type
 
@@ -1155,6 +1204,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft ecophysiological variables
 !
+! !USES:
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1288,6 +1338,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft DGVM state variables
 !
+! !USES:
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1301,7 +1352,6 @@ contains
 
     allocate(pdgvs%agddtw(beg:end))
     allocate(pdgvs%agdd(beg:end))
-    allocate(pdgvs%t10(beg:end))
     allocate(pdgvs%t_mo(beg:end))
     allocate(pdgvs%t_mo_min(beg:end))
     allocate(pdgvs%prec365(beg:end))
@@ -1319,7 +1369,6 @@ contains
 
     pdgvs%agddtw(beg:end)           = nan
     pdgvs%agdd(beg:end)             = nan
-    pdgvs%t10(beg:end)              = nan
     pdgvs%t_mo(beg:end)             = nan
     pdgvs%t_mo_min(beg:end)         = nan
     pdgvs%prec365(beg:end)          = nan
@@ -1394,7 +1443,10 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft energy state
 !
-! !ARGUMENTS:
+! !USES:
+    use clm_varcon, only : spval
+    use surfrdMod, only : crop_prog
+! !AGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
     type (pft_estate_type), intent(inout):: pes
@@ -1403,7 +1455,7 @@ contains
 ! Created by Mariana Vertenstein
 !
 !EOP
-!------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
     allocate(pes%t_ref2m(beg:end))
     allocate(pes%t_ref2m_min(beg:end))
@@ -1421,6 +1473,13 @@ contains
     allocate(pes%t_ref2m_min_inst_r(beg:end))
     allocate(pes%t_ref2m_max_inst_u(beg:end))
     allocate(pes%t_ref2m_max_inst_r(beg:end))
+#if (defined CNDV) || (defined CROP)
+    allocate(pes%t10(beg:end))
+#endif
+    if ( crop_prog )then
+       allocate(pes%a10tmin(beg:end))
+       allocate(pes%a5tmin(beg:end))
+    end if
     allocate(pes%rh_ref2m(beg:end))
     allocate(pes%rh_ref2m_u(beg:end))
     allocate(pes%rh_ref2m_r(beg:end))
@@ -1443,6 +1502,13 @@ contains
     pes%t_ref2m_min_inst_r(beg:end) = nan
     pes%t_ref2m_max_inst_u(beg:end) = nan
     pes%t_ref2m_max_inst_r(beg:end) = nan
+#if (defined CNDV) || (defined CROP)
+    pes%t10(beg:end)                = spval
+#endif
+    if ( crop_prog )then
+       pes%a10tmin(beg:end)     = spval
+       pes%a5tmin(beg:end)      = spval
+    end if
     pes%rh_ref2m(beg:end) = nan
     pes%rh_ref2m_u(beg:end) = nan
     pes%rh_ref2m_r(beg:end) = nan
@@ -1489,6 +1555,8 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft carbon state
 !
+! !USES:
+    use surfrdMod, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1528,8 +1596,12 @@ contains
     allocate(pcs%totvegc(beg:end))
     allocate(pcs%totpftc(beg:end))
     allocate(pcs%leafcmax(beg:end))
-#if (defined CLAMP) && (defined CN)
-    !CLAMP
+    if ( crop_prog )then
+       allocate(pcs%grainc(beg:end))
+       allocate(pcs%grainc_storage(beg:end))
+       allocate(pcs%grainc_xfer(beg:end))
+    end if
+#ifdef CN
     allocate(pcs%woodc(beg:end))
 #endif
 
@@ -1561,8 +1633,12 @@ contains
     pcs%totvegc(beg:end) = nan
     pcs%totpftc(beg:end) = nan
     pcs%leafcmax(beg:end) = nan
-#if (defined CLAMP) && (defined CN)
-    !CLAMP
+    if ( crop_prog )then
+       pcs%grainc(beg:end)         = nan
+       pcs%grainc_storage(beg:end) = nan
+       pcs%grainc_xfer(beg:end)    = nan
+    end if
+#ifdef CN
     pcs%woodc(beg:end) = nan
 #endif
 
@@ -1579,6 +1655,8 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft nitrogen state
 !
+! !USES:
+    use surfrdMod, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1590,6 +1668,11 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
+    if ( crop_prog )then
+       allocate(pns%grainn(beg:end))
+       allocate(pns%grainn_storage(beg:end))
+       allocate(pns%grainn_xfer(beg:end))
+    end if
     allocate(pns%leafn(beg:end))
     allocate(pns%leafn_storage(beg:end))
     allocate(pns%leafn_xfer(beg:end))
@@ -1616,6 +1699,11 @@ contains
     allocate(pns%totvegn(beg:end))
     allocate(pns%totpftn(beg:end))
 
+    if ( crop_prog )then
+       pns%grainn(beg:end)         = nan
+       pns%grainn_storage(beg:end) = nan
+       pns%grainn_xfer(beg:end)    = nan
+    end if
     pns%leafn(beg:end) = nan
     pns%leafn_storage(beg:end) = nan
     pns%leafn_xfer(beg:end) = nan
@@ -1923,6 +2011,8 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft carbon flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2083,8 +2173,19 @@ contains
     allocate(pcf%pft_cinputs(beg:end))
     allocate(pcf%pft_coutputs(beg:end))
     allocate(pcf%pft_fire_closs(beg:end))
-#if (defined CLAMP) && (defined CN)
-    !CLAMP
+    if ( crop_prog )then
+       allocate(pcf%xsmrpool_to_atm(beg:end))
+       allocate(pcf%grainc_xfer_to_grainc(beg:end))
+       allocate(pcf%livestemc_to_litter(beg:end))
+       allocate(pcf%grainc_to_food(beg:end))
+       allocate(pcf%cpool_to_grainc(beg:end))
+       allocate(pcf%cpool_to_grainc_storage(beg:end))
+       allocate(pcf%cpool_grain_gr(beg:end))
+       allocate(pcf%cpool_grain_storage_gr(beg:end))
+       allocate(pcf%transfer_grain_gr(beg:end))
+       allocate(pcf%grainc_storage_to_xfer(beg:end))
+    end if
+#ifdef CN
     allocate(pcf%frootc_alloc(beg:end))
     allocate(pcf%frootc_loss(beg:end))
     allocate(pcf%leafc_alloc(beg:end))
@@ -2242,8 +2343,19 @@ contains
     pcf%pft_cinputs(beg:end) = nan
     pcf%pft_coutputs(beg:end) = nan
     pcf%pft_fire_closs(beg:end) = nan
-#if (defined CLAMP) && (defined CN)
-    !CLAMP
+    if ( crop_prog )then
+       pcf%xsmrpool_to_atm(beg:end)         = nan
+       pcf%grainc_xfer_to_grainc(beg:end)   = nan
+       pcf%livestemc_to_litter(beg:end)     = nan
+       pcf%grainc_to_food(beg:end)          = nan
+       pcf%cpool_to_grainc(beg:end)         = nan
+       pcf%cpool_to_grainc_storage(beg:end) = nan
+       pcf%cpool_grain_gr(beg:end)          = nan
+       pcf%cpool_grain_storage_gr(beg:end)  = nan
+       pcf%transfer_grain_gr(beg:end)       = nan
+       pcf%grainc_storage_to_xfer(beg:end)  = nan
+    end if
+#if (defined CN)
     pcf%frootc_alloc(beg:end) = nan
     pcf%frootc_loss(beg:end) = nan
     pcf%leafc_alloc(beg:end) = nan
@@ -2265,6 +2377,8 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft nitrogen flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2374,6 +2488,14 @@ contains
     allocate(pnf%pft_noutputs(beg:end))
     allocate(pnf%wood_harvestn(beg:end))
     allocate(pnf%pft_fire_nloss(beg:end))
+    if ( crop_prog )then
+       allocate(pnf%grainn_xfer_to_grainn(beg:end))
+       allocate(pnf%livestemn_to_litter(beg:end))
+       allocate(pnf%grainn_to_food(beg:end))
+       allocate(pnf%npool_to_grainn(beg:end))
+       allocate(pnf%npool_to_grainn_storage(beg:end))
+       allocate(pnf%grainn_storage_to_xfer(beg:end))
+    end if
 
     pnf%m_leafn_to_litter(beg:end) = nan
     pnf%m_frootn_to_litter(beg:end) = nan
@@ -2473,6 +2595,14 @@ contains
     pnf%pft_noutputs(beg:end) = nan
     pnf%wood_harvestn(beg:end) = nan
     pnf%pft_fire_nloss(beg:end) = nan
+    if ( crop_prog )then
+       pnf%grainn_xfer_to_grainn(beg:end)   = nan
+       pnf%livestemn_to_litter(beg:end)     = nan
+       pnf%grainn_to_food(beg:end)          = nan
+       pnf%npool_to_grainn(beg:end)         = nan
+       pnf%npool_to_grainn_storage(beg:end) = nan
+       pnf%grainn_storage_to_xfer(beg:end)  = nan
+    end if
 
   end subroutine init_pft_nflux_type
 
@@ -3277,6 +3407,8 @@ contains
 ! !DESCRIPTION:
 ! Initialize column carbon flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -3343,6 +3475,14 @@ contains
     allocate(ccf%m_litr2c_to_fire(beg:end))
     allocate(ccf%m_litr3c_to_fire(beg:end))
     allocate(ccf%m_cwdc_to_fire(beg:end))
+    if ( crop_prog )then
+       allocate(ccf%grainc_to_litr1c(beg:end))
+       allocate(ccf%grainc_to_litr2c(beg:end))
+       allocate(ccf%grainc_to_litr3c(beg:end))
+       allocate(ccf%livestemc_to_litr1c(beg:end))
+       allocate(ccf%livestemc_to_litr2c(beg:end))
+       allocate(ccf%livestemc_to_litr3c(beg:end))
+    end if
     allocate(ccf%leafc_to_litr1c(beg:end))
     allocate(ccf%leafc_to_litr2c(beg:end))
     allocate(ccf%leafc_to_litr3c(beg:end))
@@ -3397,8 +3537,7 @@ contains
     allocate(ccf%col_coutputs(beg:end))
     allocate(ccf%col_fire_closs(beg:end))
 
-#if (defined CLAMP) && (defined CN)
-    !CLAMP
+#if (defined CN)
     allocate(ccf%cwdc_hr(beg:end))
     allocate(ccf%cwdc_loss(beg:end))
     allocate(ccf%litterc_loss(beg:end))
@@ -3447,6 +3586,14 @@ contains
     ccf%hrv_deadstemc_storage_to_litr1c(beg:end)  = nan 
     ccf%hrv_livecrootc_storage_to_litr1c(beg:end) = nan
     ccf%hrv_deadcrootc_storage_to_litr1c(beg:end) = nan
+    if ( crop_prog )then
+       ccf%grainc_to_litr1c(beg:end)    = nan
+       ccf%grainc_to_litr2c(beg:end)    = nan
+       ccf%grainc_to_litr3c(beg:end)    = nan
+       ccf%livestemc_to_litr1c(beg:end) = nan
+       ccf%livestemc_to_litr2c(beg:end) = nan
+       ccf%livestemc_to_litr3c(beg:end) = nan
+    end if
     ccf%hrv_gresp_storage_to_litr1c(beg:end)      = nan     
     ccf%hrv_leafc_xfer_to_litr1c(beg:end)         = nan        
     ccf%hrv_frootc_xfer_to_litr1c(beg:end)        = nan       
@@ -3513,8 +3660,7 @@ contains
     ccf%col_coutputs(beg:end)                     = nan
     ccf%col_fire_closs(beg:end)                   = nan
 
-#if (defined CLAMP) && (defined CN)
-    !CLAMP
+#if (defined CN)
     ccf%cwdc_hr(beg:end)                          = nan
     ccf%cwdc_loss(beg:end)                        = nan
     ccf%litterc_loss(beg:end)                     = nan
@@ -3533,6 +3679,8 @@ contains
 ! !DESCRIPTION:
 ! Initialize column nitrogen flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -3599,6 +3747,14 @@ contains
     allocate(cnf%m_litr2n_to_fire(beg:end))
     allocate(cnf%m_litr3n_to_fire(beg:end))
     allocate(cnf%m_cwdn_to_fire(beg:end))
+    if ( crop_prog )then
+       allocate(cnf%grainn_to_litr1n(beg:end))
+       allocate(cnf%grainn_to_litr2n(beg:end))
+       allocate(cnf%grainn_to_litr3n(beg:end))
+       allocate(cnf%livestemn_to_litr1n(beg:end))
+       allocate(cnf%livestemn_to_litr2n(beg:end))
+       allocate(cnf%livestemn_to_litr3n(beg:end))
+    end if
     allocate(cnf%leafn_to_litr1n(beg:end))
     allocate(cnf%leafn_to_litr2n(beg:end))
     allocate(cnf%leafn_to_litr3n(beg:end))
@@ -3709,6 +3865,14 @@ contains
     cnf%m_litr2n_to_fire(beg:end) = nan
     cnf%m_litr3n_to_fire(beg:end) = nan
     cnf%m_cwdn_to_fire(beg:end) = nan
+    if ( crop_prog )then
+       cnf%grainn_to_litr1n(beg:end)    = nan
+       cnf%grainn_to_litr2n(beg:end)    = nan
+       cnf%grainn_to_litr3n(beg:end)    = nan
+       cnf%livestemn_to_litr1n(beg:end) = nan
+       cnf%livestemn_to_litr2n(beg:end) = nan
+       cnf%livestemn_to_litr3n(beg:end) = nan
+    end if
     cnf%leafn_to_litr1n(beg:end) = nan
     cnf%leafn_to_litr2n(beg:end) = nan
     cnf%leafn_to_litr3n(beg:end) = nan

@@ -106,8 +106,10 @@ subroutine CNNFixation(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: iulog
-   use shr_sys_mod, only: shr_sys_flush
+   use clm_varctl      , only: iulog
+   use clm_time_manager, only: get_days_per_year
+   use shr_sys_mod     , only: shr_sys_flush
+   use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
    implicit none
@@ -135,6 +137,7 @@ subroutine CNNFixation(num_soilc, filter_soilc)
 ! !OTHER LOCAL VARIABLES:
    integer  :: c,fc                  ! indices
    real(r8) :: t                     ! temporary
+   real(r8) :: dayspyr               ! days per year
 
 !EOP
 !-----------------------------------------------------------------------
@@ -144,6 +147,8 @@ subroutine CNNFixation(num_soilc, filter_soilc)
    ! Assign local pointers to derived type arrays (out)
    nfix_to_sminn => clm3%g%l%c%cnf%nfix_to_sminn
 
+   dayspyr = get_days_per_year()
+
    ! Loop through columns
    do fc = 1,num_soilc
       c = filter_soilc(fc)
@@ -151,12 +156,12 @@ subroutine CNNFixation(num_soilc, filter_soilc)
       ! the value 0.001666 is set to give 100 TgN/yr when global
       ! NPP = 60 PgC/yr.  (Cleveland et al., 1999)
       ! Convert from gN/m2/yr -> gN/m2/s
-      !t = cannsum_npp(c) * 0.001666_r8 / (86400._r8 * 365._r8)
-      t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * cannsum_npp(c))))/(86400._r8 * 365._r8)
+      !t = cannsum_npp(c) * 0.001666_r8 / (secspday * dayspyr)
+      t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * cannsum_npp(c))))/(secspday * dayspyr)
       nfix_to_sminn(c) = max(0._r8,t)
       ! PET 2/14/05: commenting out the dependence on NPP, and
       ! forcing Nfix to global constant = 0.4 gN/m2/yr
-      !nfix_to_sminn(c) = 0.4 / (86400._r8*365._r8)
+      !nfix_to_sminn(c) = 0.4 / (secspday*dayspyr)
 
    end do
 

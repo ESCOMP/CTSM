@@ -10,7 +10,6 @@ module clm_atmlnd
 !
 ! !USES:
   use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins.
-                                          !only used # ifdef DUST
   use clm_varcon  , only : rair, grav, cpair, hfus, tfrz
   use clm_varctl  , only : iulog
   use decompMod   , only : get_proc_bounds, get_proc_bounds_atm
@@ -511,7 +510,6 @@ subroutine clm_downscale_a2l(a2l_src, a2l_dst)
         ns = dst(n)
         nd = src(n)
         !tcx DOWNSCALING turn off precip disaggr completely
-#if (1 == 1)
         if (pchance(nd) < mu) then
            !--- rain/snow refractionation
            !--- set to 100% snow < -5C and 100% rain > 0C
@@ -531,7 +529,6 @@ subroutine clm_downscale_a2l(a2l_src, a2l_dst)
            a2l_dst%forc_rain(nd) = 0._r8
            a2l_dst%forc_snow(nd) = 0._r8
         endif
-#endif
         rain_l(ns) = rain_l(ns) + a2l_dst%forc_rain(nd) * wts(n)
         snow_l(ns) = snow_l(ns) + a2l_dst%forc_snow(nd) * wts(n)
      enddo
@@ -711,15 +708,13 @@ subroutine clm_map2gcell(init)
 !
 ! !LOCAL VARIABLES:
 !EOP
-  integer :: g                          ! indices
-  type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-  type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-  type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-  type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
-#if (defined DUST)
-  type(pft_dflux_type),pointer :: pdf   ! local pointer to derived subtype
-  integer n
-#endif
+  integer :: g                           ! indices
+  type(gridcell_type), pointer :: gptr   ! pointer to gridcell derived subtype
+  type(landunit_type), pointer :: lptr   ! pointer to landunit derived subtype
+  type(column_type)  , pointer :: cptr   ! pointer to column derived subtype
+  type(pft_type)     , pointer :: pptr   ! pointer to pft derived subtype
+  type(pft_dflux_type),pointer :: pdf    ! local pointer to derived subtype
+  integer             :: n               ! Loop index over nmap
   real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
   real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
   real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -844,7 +839,6 @@ subroutine clm_map2gcell(init)
      end do
 #endif
 
-#if (defined DUST || defined  PROGSSLT )
       call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
            pptr%pps%fv, clm_l2a%fv, &
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
@@ -852,13 +846,10 @@ subroutine clm_map2gcell(init)
       call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
            pptr%pps%ram1, clm_l2a%ram1, &
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-#endif
 
-#if (defined DUST )
       call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
            pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-#endif
 
       call p2g(begp, endp, begc, endc, begl, endl, begg, endg, nvoc, &
            pptr%pvf%vocflx, clm_l2a%flxvoc, &

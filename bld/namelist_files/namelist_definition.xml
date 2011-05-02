@@ -33,14 +33,14 @@ Visible and Near-infrared albedo's for glacier ice
 If true, river runoff will be split up into liquid and ice streams, otherwise ice runoff will be zero and all runoff directed to liquid stream
 </entry>
 
-<entry id="carbon_only" type="logical" category="clm_physics"
-       group="clm_inparm">
-If true, and CLMCN carbon-nitrogen model is on, Nitrogen is unlimited rather than prognosed and vegetation will be overproductive
-</entry>
-
-<entry id="scaled_harvest" type="logical" category="clm_physics"
-       group="clm_inparm">
-If true, harvesting will be scaled according to coeffecients determined by Johann Feddema, 2009
+<entry id="suplnitro" type="char*15" category="clm_physics"
+       group="clm_inparm" valid_values="NONE,PROG_CROP_ONLY,ALL" >
+Supplemental Nitrogen mode and what type of PFT's it's turned on. In this mode Nitrogen
+is unlimited rather than prognosed and in general vegetation is overproductive.
+It does act as a proxy for fertilization for crops however.
+    NONE           = No PFT's get supplemental Nitrogen
+    PROG_CROP_ONLY = Supplemental Nitrogen is only active for prognostic Crops
+    ALL            = Supplemental Nitrogen is active for all PFT's
 </entry>
 
 <entry id="create_crop_landunit" type="logical" category="clm_physics"
@@ -688,122 +688,122 @@ Tolerance to match land and atmospheric grid areas
 
 <!-- Task/Thread layouts -->
 
-<entry id="atm_pestride" type="integer"  catagory="driver"
+<entry id="atm_pestride" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the atm communicator group.
 </entry>
 
-<entry id="atm_rootpe" type="integer"  catagory="driver"
+<entry id="atm_rootpe" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Root process of the atm communicator group.
 </entry>
 
-<entry id="atm_ntasks" type="integer"  catagory="driver"
+<entry id="atm_ntasks" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of atm tasks.
 </entry>
 
-<entry id="atm_nthreads" type="integer"  catagory="driver"
+<entry id="atm_nthreads" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of threads in each atm task.
 </entry>
 
-<entry id="lnd_pestride" type="integer"  catagory="driver"
+<entry id="lnd_pestride" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the lnd communicator group.
 </entry>
 
-<entry id="lnd_rootpe" type="integer"  catagory="driver"
+<entry id="lnd_rootpe" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Root process of the lnd communicator group.
 </entry>
 
-<entry id="lnd_ntasks" type="integer"  catagory="driver"
+<entry id="lnd_ntasks" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of lnd tasks.
 </entry>
 
-<entry id="lnd_nthreads" type="integer"  catagory="driver"
+<entry id="lnd_nthreads" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of threads in each lnd task.
 </entry>
 
-<entry id="ice_pestride" type="integer"  catagory="driver"
+<entry id="ice_pestride" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the ice communicator group.
 </entry>
 
-<entry id="ice_rootpe" type="integer"  catagory="driver"
+<entry id="ice_rootpe" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Root process of the ice communicator group.
 </entry>
 
-<entry id="ice_ntasks" type="integer"  catagory="driver"
+<entry id="ice_ntasks" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of ice tasks.
 </entry>
 
-<entry id="ice_nthreads" type="integer"  catagory="driver"
+<entry id="ice_nthreads" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of threads in each ice task.
 </entry>
 
-<entry id="ocn_pestride" type="integer"  catagory="driver"
+<entry id="ocn_pestride" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the ocn communicator group.
 </entry>
 
-<entry id="ocn_rootpe" type="integer"  catagory="driver"
+<entry id="ocn_rootpe" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Root process of the ocn communicator group.
 </entry>
 
-<entry id="ocn_ntasks" type="integer"  catagory="driver"
+<entry id="ocn_ntasks" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of ocn tasks.
 </entry>
 
-<entry id="ocn_nthreads" type="integer"  catagory="driver"
+<entry id="ocn_nthreads" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of threads in each ocn task.
 </entry>
 
-<entry id="glc_pestride" type="integer"  catagory="driver"
+<entry id="glc_pestride" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the glc communicator group.
 </entry>
 
-<entry id="glc_rootpe" type="integer"  catagory="driver"
+<entry id="glc_rootpe" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Root process of the glc communicator group.
 </entry>
 
-<entry id="glc_ntasks" type="integer"  catagory="driver"
+<entry id="glc_ntasks" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of glc tasks.
 </entry>
 
-<entry id="glc_nthreads" type="integer"  catagory="driver"
+<entry id="glc_nthreads" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of threads in each glc task.
 </entry>
 
-<entry id="cpl_pestride" type="integer"  catagory="driver"
+<entry id="cpl_pestride" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the cpl communicator group.
 </entry>
 
-<entry id="cpl_rootpe" type="integer"  catagory="driver"
+<entry id="cpl_rootpe" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Root process of the cpl communicator group.
 </entry>
 
-<entry id="cpl_ntasks" type="integer"  catagory="driver"
+<entry id="cpl_ntasks" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of cpl tasks.
 </entry>
 
-<entry id="cpl_nthreads" type="integer"  catagory="driver"
+<entry id="cpl_nthreads" type="integer"  category="driver"
        group="ccsm_pes" valid_values="" >
 Number of threads in each cpl task.
 </entry>
@@ -874,14 +874,14 @@ Controls phasing of the coupling with the ocean model. (seconds)
 <entry id="ref_tod" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Reference time-of-day expressed as seconds past midnight.  Used in
-conjuction with <varname>ref_ymd</varname> to set the reference time.
+conjunction with <varname>ref_ymd</varname> to set the reference time.
 </entry>
 
 <entry id="ref_ymd" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Reference date encoded in an integer as (year*1000 + month*100 + day).
 Used in
-conjuction with <varname>ref_tod</varname> to set the reference time which
+conjunction with <varname>ref_tod</varname> to set the reference time which
 is used to define a time coordinate for the output history files.  The
 convention for the unit string of a time coordinate is of the form
 "time-unit since reference-time", for example, "days since 1990-01-01
@@ -899,7 +899,7 @@ by <varname>restart_option</varname>.
        group="seq_timemgr_inparm" valid_values="none,nsteps,ndays,nmonths,nyears,monthly,yearly,end" >
 Set the interval between writing restart files
 using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjuction
+'ndays', 'nmonths', or 'nyears', in conjunction
 with <varname>stop_n</varname> to set the number of time units.
 A convenience option allows specifying that restart files be written at the
 end of each month or at the end of each year by using the options
@@ -911,7 +911,7 @@ written only at the end of the run via the option 'end'.
 <entry id="start_tod" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Start time-of-day expressed as seconds past midnight.  Used in
-conjuction with <varname>start_ymd</varname> to set the start time.
+conjunction with <varname>start_ymd</varname> to set the start time.
 </entry>
 
 <entry id="run_startdate" type="char*10"  category="time_mgr"
@@ -928,7 +928,7 @@ Run stop date encoded as YYYY-MM-DD
        group="seq_timemgr_inparm" valid_values="" >
 Start date encoded in an integer as (year*1000 + month*100 + day).
 Used in
-conjuction with <varname>start_tod</varname> to set the start date of
+conjunction with <varname>start_tod</varname> to set the start date of
 the simulation.
 </entry>
 
@@ -941,10 +941,10 @@ by <varname>stop_option</varname>.
 <entry id="stop_option" type="char*8"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="nsteps,ndays,nmonths,nyears,date" >
 Set the length of run as an elapsed time using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjuction
+'ndays', 'nmonths', or 'nyears', in conjunction
 with <varname>stop_n</varname> to set the number of elapsed time units.
 Alternatively, set the final simulation time in absolute terms by using the
-option 'date' in conjuction with <varname>stop_ymd</varname>,
+option 'date' in conjunction with <varname>stop_ymd</varname>,
 and <varname>stop_tod</varname> to specify a date and time of day at which
 the simulation should stop.
 </entry>
@@ -952,13 +952,13 @@ the simulation should stop.
 <entry id="stop_tod" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Stop time-of-day expressed as seconds past midnight.  Used in
-conjuction with <varname>stop_ymd</varname> to set the stop time.
+conjunction with <varname>stop_ymd</varname> to set the stop time.
 </entry>
 
 <entry id="stop_ymd" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Stop date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjuction with <varname>stop_tod</varname> to set the stop date of
+Used in conjunction with <varname>stop_tod</varname> to set the stop date of
 the simulation.
 </entry>
 
@@ -1004,92 +1004,92 @@ integer indicating which timer to use. As defined in gptl.inc.
 
 <!-- PIO namelist -->
 
-<entry id="pio_async_interface" type="logical"  catagory="driver"
+<entry id="pio_async_interface" type="logical"  category="driver"
        group="pio_inparm" valid_values="" >
 If you want to use PIO asynchronously
 </entry>
 
-<entry id="pio_debug_level" type="integer"  catagory="driver"
+<entry id="pio_debug_level" type="integer"  category="driver"
        group="pio_inparm" valid_values="0,1,2,3" >
 Debug printing level for PIO
 </entry>
 
-<entry id="pio_stride" type="integer"  catagory="driver"
+<entry id="pio_stride" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Stride to use for PIO tasks
 </entry>
 
-<entry id="pio_root" type="integer"  catagory="driver"
+<entry id="pio_root" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Root PE for PIO output processing
 </entry>
 
-<entry id="pio_numtasks" type="integer"  catagory="driver"
+<entry id="pio_numtasks" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for PIO
 </entry>
 
-<entry id="pio_typename" type="char*80"  catagory="driver"
+<entry id="pio_typename" type="char*80"  category="driver"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
 Type of output files for PIO
 </entry>
 
-<entry id="cpl_pio_stride" type="integer"  catagory="driver"
+<entry id="cpl_pio_stride" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Stride to use for coupler PIO tasks
 </entry>
 
-<entry id="cpl_pio_root" type="integer"  catagory="driver"
+<entry id="cpl_pio_root" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Root PE for coupler PIO output processing
 </entry>
 
-<entry id="cpl_pio_numtasks" type="integer"  catagory="driver"
+<entry id="cpl_pio_numtasks" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for coupler PIO
 </entry>
 
-<entry id="cpl_pio_typename" type="char*80"  catagory="driver"
+<entry id="cpl_pio_typename" type="char*80"  category="driver"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
 Type of output files for coupler PIO
 </entry>
 
-<entry id="lnd_pio_stride" type="integer"  catagory="driver"
+<entry id="lnd_pio_stride" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Stride to use for CLM PIO tasks
 </entry>
 
-<entry id="lnd_pio_root" type="integer"  catagory="driver"
+<entry id="lnd_pio_root" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Root PE for CLM PIO output processing
 </entry>
 
-<entry id="lnd_pio_numtasks" type="integer"  catagory="driver"
+<entry id="lnd_pio_numtasks" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for CLM PIO
 </entry>
 
-<entry id="lnd_pio_typename" type="char*80"  catagory="driver"
+<entry id="lnd_pio_typename" type="char*80"  category="driver"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
 Type of output files for CLM PIO
 </entry>
 
-<entry id="atm_pio_stride" type="integer"  catagory="driver"
+<entry id="atm_pio_stride" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Stride to use for datm PIO tasks
 </entry>
 
-<entry id="atm_pio_root" type="integer"  catagory="driver"
+<entry id="atm_pio_root" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Root PE for datm PIO output processing
 </entry>
 
-<entry id="atm_pio_numtasks" type="integer"  catagory="driver"
+<entry id="atm_pio_numtasks" type="integer"  category="driver"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for datm PIO
 </entry>
 
-<entry id="atm_pio_typename" type="char*80"  catagory="driver"
+<entry id="atm_pio_typename" type="char*80"  category="driver"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
 Type of output files for datm PIO
 </entry>
@@ -1130,7 +1130,7 @@ Scalar mapping algorithm
 
 <entry id="tintalgo" type="char*256(30)"  category="datm"
        group="shr_strdata_nml" valid_values="coszen,nearest,linear,lower,upper">
-Time interpolation algrorithm method
+Time interpolation algorithm method
 </entry>
 
 <entry id="taxmode" type="char*256(30)"  category="datm"
@@ -1260,7 +1260,7 @@ Glacier model grid
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,0.5x0.5,0.33x0.33">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,0.33x0.33">
 Horizontal resolutions
 </entry> 
 

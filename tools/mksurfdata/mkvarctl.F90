@@ -10,7 +10,6 @@ module mkvarctl
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use mkvarpar    , only: numpft
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -37,6 +36,7 @@ module mkvarctl
   character(len=256), public :: mksrf_flai     = ' '  ! lai data filename
   character(len=256), public :: mksrf_fdynuse  = ' '  ! ascii file containing names of dynamic land use files
   character(len=256), public :: mksrf_fvocef   = ' '  ! VOC Emission Factor data file name
+  integer           , public :: numpft         = 16   ! number of plant types
 !
 ! Variables to override data read in with
 ! (This is mostly for single-point mode, but could be used for sensitivity studies)

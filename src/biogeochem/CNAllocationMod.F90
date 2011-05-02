@@ -1,4 +1,3 @@
-
 module CNAllocationMod
 #ifdef CN
 
@@ -13,15 +12,32 @@ module CNAllocationMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use abortutils  , only: endrun
   implicit none
   save
   private
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNAllocation
+  public :: CNAllocationInit    ! Initialization
+  public :: CNAllocation        ! run method
 
 ! !PUBLIC DATA MEMBERS:
-  logical, public :: Carbon_only = .false. ! Carbon only mode 
-                                           ! (Nitrogen is prescribed NOT prognostic)
+   character(len=*), parameter, public :: suplnAll=& ! Supplemental Nitrogen for all PFT's
+                     'ALL'
+   character(len=*), parameter, public :: suplnCrp=& ! Supplemental Nitrogen for prognostic Crop
+                     'PROG_CROP_ONLY'
+   character(len=*), parameter, public :: suplnNon=& ! No supplemental Nitrogen
+                     'NONE'
+   character(len=15), public :: suplnitro = suplnNon ! Supplemental Nitrogen mode
+! !PRIVATE DATA MEMBERS:
+   real(r8):: dt                            !decomp timestep (seconds)
+   real(r8):: bdnr                          !bulk denitrification rate (1/s)
+   real(r8):: dayscrecover                  !number of days to recover negative cpool
+   real(r8), pointer :: arepr(:)            !reproduction allocation coefficient
+   real(r8), pointer :: aroot(:)            !root allocation coefficient
+   real(r8), pointer:: col_plant_ndemand(:) !column-level plant N demand
+   logical :: Carbon_only = .false.         ! Carbon only mode 
+                                            ! (Nitrogen is prescribed NOT prognostic)
+   logical :: crop_supln  = .false.         ! Prognostic crop receives supplemental Nitrogen
 !
 ! !REVISION HISTORY:
 ! 8/5/03: Created by Peter Thornton
@@ -34,11 +50,83 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: CNAllocationInit
+!
+! !INTERFACE:
+subroutine CNAllocationInit ( lbc, ubc, lbp, ubp )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use clm_varcon      , only: secspday
+   use clm_time_manager, only: get_step_size
+   use surfrdMod       , only: crop_prog
+   use clm_varctl      , only: iulog
+   use nanMod          , only: nan
+! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: lbc, ubc        ! column-index bounds
+   integer, intent(in) :: lbp, ubp        ! pft-index bounds
+!
+! !CALLED FROM:
+!
+! !REVISION HISTORY:
+! 4/6/11: Created by Erik Kluzek
+!
+! !LOCAL VARIABLES:
+    character(len=32) :: subname = 'CNAllocationInit'
+!EOP
+!-----------------------------------------------------------------------
+   if ( crop_prog )then
+      allocate(arepr(lbp:ubp))
+      allocate(aroot(lbp:ubp))
+      arepr(:) = nan
+      aroot(:) = nan
+   end if
+   allocate(col_plant_ndemand(lbc:ubc))
+   col_plant_ndemand(:) = nan
+
+   ! set time steps
+   dt = real( get_step_size(), r8 )
+
+   ! set some space-and-time constant parameters 
+   bdnr         = 0.5_r8 * (dt/secspday)
+   dayscrecover = 30.0_r8
+
+   ! Change namelist settings into private logical variables
+   select case(suplnitro)
+      case(suplnNon)
+         Carbon_only = .false.
+         crop_supln  = .false.
+      case(suplnCrp)
+         Carbon_only = .false.
+         crop_supln  = .true.
+         if ( .not. crop_prog )then
+            call endrun( trim(subname)//'ERROR: '//trim(suplnCrp)// &
+                         ' can NOT be on when crop is NOT' )
+         end if
+      case(suplnAll)
+         Carbon_only = .true.
+         crop_supln  = .false.
+      case default
+         write(iulog,*) 'Supplemental Nitrogen flag (suplnitro) can only be: ', &
+                        suplnNon, ",", suplnCrp, ', or ', suplnAll
+         call endrun( trim(subname)//'ERROR: supplemental Nitrogen flag is not correct' )
+   end select
+
+end subroutine CNAllocationInit
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: CNAllocation
 !
 ! !INTERFACE:
 subroutine CNAllocation (lbp, ubp, lbc, ubc, &
-       num_soilc, filter_soilc, num_soilp, filter_soilp)
+       num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_pcropp )
 !
 ! !DESCRIPTION:
 !
@@ -46,8 +134,11 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    use clmtype
    use clm_varctl, only: iulog
    use shr_sys_mod, only: shr_sys_flush
-   use clm_time_manager, only: get_step_size
    use pft2colMod, only: p2c
+   use pftvarcon , only: npcropmin, declfact, bfact, aleaff, arootf, astemf, &
+                         arooti, fleafi, allconsl, allconss, grperc, grpnow
+   use clm_varcon, only: secspday, istsoil, istcrop
+   use clm_varpar, only: max_pft_per_col
 !
 ! !ARGUMENTS:
    implicit none
@@ -57,6 +148,7 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+   integer, intent(in) :: num_pcropp      ! number of pfts in prognostic crop filter
 !
 ! !CALLED FROM:
 ! subroutine CNdecompAlloc in module CNdecompMod.F90
@@ -71,6 +163,7 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    ! pft level
    integer , pointer :: ivt(:)        ! pft vegetation type
    integer , pointer :: pcolumn(:)    ! pft's column index
+   integer , pointer :: pfti(:)       ! initial pft index in landunit
    real(r8), pointer :: lgsf(:)       ! long growing season factor [0-1]
    real(r8), pointer :: xsmrpool(:)      ! (kgC/m2) temporary photosynthate C pool
    real(r8), pointer :: retransn(:)   ! (kgN/m2) plant pool of retranslocated N
@@ -110,6 +203,18 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    integer, pointer :: plandunit(:)   ! index into landunit level quantities
    integer, pointer :: clandunit(:)   ! index into landunit level quantities
    integer , pointer :: itypelun(:)   ! landunit type
+   logical , pointer :: croplive(:)   ! flag, true if planted, not harvested
+   integer , pointer :: peaklai(:)    ! 1: max allowed lai; 0: not at max
+   real(r8), pointer :: gddmaturity(:)! gdd needed to harvest
+   real(r8), pointer :: huileaf(:)    ! heat unit index needed from planting to leaf emergence
+   real(r8), pointer :: huigrain(:)   ! same to reach vegetative maturity
+   real(r8), pointer :: hui(:)        ! =gdd since planting (gddplant)
+   real(r8), pointer :: leafout(:)    ! =gdd from top soil layer temperature
+   real(r8), pointer :: aleafi(:)     ! saved allocation coefficient from phase 2
+   real(r8), pointer :: astemi(:)     ! saved allocation coefficient from phase 2
+   real(r8), pointer :: aleaf(:)      ! leaf allocation coefficient
+   real(r8), pointer :: astem(:)      ! stem allocation coefficient
+   real(r8), pointer :: graincn(:)    ! grain C:N (gC/gN)
 !
 ! local pointers to implicit in/out arrays
 !
@@ -149,13 +254,17 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    real(r8), pointer :: cpool_to_livecrootc_storage(:)
    real(r8), pointer :: cpool_to_deadcrootc(:)
    real(r8), pointer :: cpool_to_deadcrootc_storage(:)
-   real(r8), pointer :: cpool_to_gresp_storage(:)
-   real(r8), pointer :: retransn_to_npool(:)
-   real(r8), pointer :: sminn_to_npool(:)
-   real(r8), pointer :: npool_to_leafn(:)
-   real(r8), pointer :: npool_to_leafn_storage(:)
-   real(r8), pointer :: npool_to_frootn(:)
-   real(r8), pointer :: npool_to_frootn_storage(:)
+   real(r8), pointer :: cpool_to_gresp_storage(:)         ! allocation to growth respiration storage (gC/m2/s)
+   real(r8), pointer :: retransn_to_npool(:)              ! deployment of retranslocated N (gN/m2/s)
+   real(r8), pointer :: sminn_to_npool(:)                 ! deployment of soil mineral N uptake (gN/m2/s)
+   real(r8), pointer :: cpool_to_grainc(:)                ! allocation to grain C (gC/m2/s)
+   real(r8), pointer :: cpool_to_grainc_storage(:)        ! allocation to grain C storage (gC/m2/s)
+   real(r8), pointer :: npool_to_grainn(:)                ! allocation to grain N (gN/m2/s)
+   real(r8), pointer :: npool_to_grainn_storage(:)        ! allocation to grain N storage (gN/m2/s)
+   real(r8), pointer :: npool_to_leafn(:)                 ! allocation to leaf N (gN/m2/s)
+   real(r8), pointer :: npool_to_leafn_storage(:)         ! allocation to leaf N storage (gN/m2/s)
+   real(r8), pointer :: npool_to_frootn(:)                ! allocation to fine root N (gN/m2/s)
+   real(r8), pointer :: npool_to_frootn_storage(:)        ! allocation to fine root N storage (gN/m2/s)
    real(r8), pointer :: npool_to_livestemn(:)
    real(r8), pointer :: npool_to_livestemn_storage(:)
    real(r8), pointer :: npool_to_deadstemn(:)
@@ -165,8 +274,8 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    real(r8), pointer :: npool_to_deadcrootn(:)
    real(r8), pointer :: npool_to_deadcrootn_storage(:)
    ! column level
-   real(r8), pointer :: fpi(:) ! fraction of potential immobilization (no units)
-   real(r8), pointer :: fpg(:) ! fraction of potential gpp (no units)
+   real(r8), pointer :: fpi(:)                          ! fraction of potential immobilization (no units)
+   real(r8), pointer :: fpg(:)                          ! fraction of potential gpp (no units)
    real(r8), pointer :: potential_immob(:)
    real(r8), pointer :: actual_immob(:)
    real(r8), pointer :: sminn_to_plant(:)
@@ -177,23 +286,22 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
 !
 !
 ! !OTHER LOCAL VARIABLES:
-   integer :: c,p                  !indices
+   integer :: c,p,l,pi             !indices
    integer :: fp                   !lake filter pft index
    integer :: fc                   !lake filter column index
-   real(r8):: dt                   !decomp timestep (seconds)
    integer :: nlimit               !flag for N limitation
-   real(r8), pointer:: col_plant_ndemand(:)    !column-level plant N demand
-   real(r8):: dayscrecover         !number of days to recover negative cpool
    real(r8):: mr                   !maintenance respiration (gC/m2/s)
    real(r8):: f1,f2,f3,f4,g1,g2    !allocation parameters
    real(r8):: cnl,cnfr,cnlw,cndw   !C:N ratios for leaf, fine root, and wood
-   real(r8):: grperc, grpnow       !growth respirarion parameters
    real(r8):: fcur                 !fraction of current psn displayed as growth
    real(r8):: sum_ndemand          !total column N demand (gN/m2/s)
    real(r8):: gresp_storage        !temporary variable for growth resp to storage
    real(r8):: nlc                  !temporary variable for total new leaf carbon allocation
-   real(r8):: bdnr                 !bulk denitrification rate (1/s)
    real(r8):: curmr, curmr_ratio   !xsmrpool temporary variables
+   real(r8) f5                     !grain allocation parameter
+   real(r8) cng                    !C:N ratio for grain (= cnlw for now; slevis)
+   real(r8) fleaf                  !fraction allocated to leaf
+
 
 !EOP
 !-----------------------------------------------------------------------
@@ -202,6 +310,7 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    pcolumn                     => clm3%g%l%c%p%column
    plandunit                   => clm3%g%l%c%p%landunit
    clandunit                   => clm3%g%l%c%landunit
+   pfti                        => clm3%g%l%c%pfti
    itypelun                    => clm3%g%l%itype
    lgsf                        => clm3%g%l%c%p%pepv%lgsf
    xsmrpool                    => clm3%g%l%c%p%pcs%xsmrpool
@@ -237,6 +346,14 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    livewdcn                    => pftcon%livewdcn
    deadwdcn                    => pftcon%deadwdcn
    fcur2                       => pftcon%fcur
+   gddmaturity                 => clm3%g%l%c%p%pps%gddmaturity
+   huileaf                     => clm3%g%l%c%p%pps%huileaf
+   huigrain                    => clm3%g%l%c%p%pps%huigrain
+   hui                         => clm3%g%l%c%p%pps%gddplant
+   leafout                     => clm3%g%l%c%p%pps%gddtsoi
+   croplive                    => clm3%g%l%c%p%pps%croplive
+   peaklai                     => clm3%g%l%c%p%pps%peaklai
+   graincn                     => pftcon%graincn
    ! Assign local pointers to derived type arrays (out)
    gpp                         => clm3%g%l%c%p%pepv%gpp
    availc                      => clm3%g%l%c%p%pepv%availc
@@ -274,6 +391,10 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    cpool_to_deadcrootc         => clm3%g%l%c%p%pcf%cpool_to_deadcrootc
    cpool_to_deadcrootc_storage => clm3%g%l%c%p%pcf%cpool_to_deadcrootc_storage
    cpool_to_gresp_storage      => clm3%g%l%c%p%pcf%cpool_to_gresp_storage
+   cpool_to_grainc             => clm3%g%l%c%p%pcf%cpool_to_grainc
+   cpool_to_grainc_storage     => clm3%g%l%c%p%pcf%cpool_to_grainc_storage
+   npool_to_grainn             => clm3%g%l%c%p%pnf%npool_to_grainn
+   npool_to_grainn_storage     => clm3%g%l%c%p%pnf%npool_to_grainn_storage
    retransn_to_npool           => clm3%g%l%c%p%pnf%retransn_to_npool
    sminn_to_npool              => clm3%g%l%c%p%pnf%sminn_to_npool
    npool_to_leafn              => clm3%g%l%c%p%pnf%npool_to_leafn
@@ -295,15 +416,10 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    sminn_to_plant              => clm3%g%l%c%cnf%sminn_to_plant
    sminn_to_denit_excess       => clm3%g%l%c%cnf%sminn_to_denit_excess
    supplement_to_sminn         => clm3%g%l%c%cnf%supplement_to_sminn
-
-   ! set time steps
-   dt = real( get_step_size(), r8 )
-
-   ! set some space-and-time constant parameters 
-   dayscrecover = 30.0_r8
-   grperc = 0.3_r8
-   grpnow = 1.0_r8
-   bdnr = 0.5_r8 * (dt/86400._r8)
+   aleafi                      => clm3%g%l%c%p%pps%aleafi
+   astemi                      => clm3%g%l%c%p%pps%astemi
+   aleaf                       => clm3%g%l%c%p%pps%aleaf
+   astem                       => clm3%g%l%c%p%pps%astem
 
    ! loop over pfts to assess the total plant N demand
    do fp=1,num_soilp
@@ -337,6 +453,8 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
       mr = leaf_mr(p) + froot_mr(p)
       if (woody(ivt(p)) == 1.0_r8) then
          mr = mr + livestem_mr(p) + livecroot_mr(p)
+      else if (ivt(p) >= npcropmin)then
+         if (croplive(p)) mr = mr + livestem_mr(p)
       end if
 
       ! carbon flux available for allocation
@@ -345,10 +463,11 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
       ! new code added for isotope calculations, 7/1/05, PET
       ! If mr > gpp, then some mr comes from gpp, the rest comes from
       ! cpool (xsmr)
-      curmr_ratio = 1._r8
       if (mr > 0._r8 .and. availc(p) < 0._r8) then
          curmr = gpp(p)
          curmr_ratio = curmr / mr
+      else
+         curmr_ratio = 1._r8
       end if
       leaf_curmr(p) = leaf_mr(p) * curmr_ratio
       leaf_xsmr(p) = leaf_mr(p) - leaf_curmr(p)
@@ -368,7 +487,7 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          ! some availc from this timestep accumulate in xsmrpool.
          ! Determine rate of recovery for xsmrpool deficit
 
-         xsmrpool_recover(p) = -xsmrpool(p)/(dayscrecover*86400.0_r8)
+         xsmrpool_recover(p) = -xsmrpool(p)/(dayscrecover*secspday)
          if (xsmrpool_recover(p) < availc(p)) then
              ! available carbon reduced by amount for xsmrpool recovery
              availc(p) = availc(p) - xsmrpool_recover(p)
@@ -395,16 +514,110 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
       end if
       
       f4 = flivewd(ivt(p))
-      g1 = grperc
-      g2 = grpnow
+      g1 = grperc(ivt(p))
+      g2 = grpnow(ivt(p))
       cnl = leafcn(ivt(p))
       cnfr = frootcn(ivt(p))
       cnlw = livewdcn(ivt(p))
       cndw = deadwdcn(ivt(p))
 
+      ! calculate f1 to f5 for prog crops following AgroIBIS subr phenocrop
+
+      f5 = 0._r8 ! continued intializations from above
+
+      if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+
+         if (croplive(p)) then
+            ! same phases appear in subroutine CropPhenology
+
+            ! Phase 1 completed:
+            ! ==================
+            ! if hui is less than the number of gdd needed for filling of grain
+            ! leaf emergence also has to have taken place for lai changes to occur
+            ! and carbon assimilation
+            ! Next phase: leaf emergence to start of leaf decline
+
+            if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
+
+               ! allocation rules for crops based on maturity and linear decrease
+               ! of amount allocated to roots over course of the growing season
+   
+               if (peaklai(p) == 1) then ! lai at maximum allowed
+                  arepr(p) = 0._r8
+                  aleaf(p) = 1.e-5_r8
+                  astem(p) = 0._r8
+                  aroot(p) = 1._r8 - arepr(p) - aleaf(p) - astem(p)
+               else
+                  arepr(p) = 0._r8
+                  aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) -   &
+                                 (arooti(ivt(p)) - arootf(ivt(p))) *  &
+                                 min(1._r8, hui(p)/gddmaturity(p))))
+                  fleaf = fleafi(ivt(p)) * (exp(-bfact(ivt(p))) -         &
+                                exp(-bfact(ivt(p))*hui(p)/huigrain(p))) / &
+                                (exp(-bfact(ivt(p)))-1) ! fraction alloc to leaf (from J Norman alloc curve)
+                  aleaf(p) = max(1.e-5_r8, (1._r8 - aroot(p)) * fleaf)
+                  astem(p) = 1._r8 - arepr(p) - aleaf(p) - aroot(p)
+               end if
+   
+               ! AgroIBIS included here an immediate adjustment to aleaf & astem if the 
+               ! predicted lai from the above allocation coefficients exceeded laimx.
+               ! We have decided to live with lais slightly higher than laimx by
+               ! enforcing the cap in the following tstep through the peaklai logic above.
+
+               astemi(p) = astem(p) ! save for use by equations after shift
+               aleafi(p) = aleaf(p) ! to reproductive phenology stage begins
+
+               ! Phase 2 completed:
+               ! ==================
+               ! shift allocation either when enough gdd are accumulated or maximum number
+               ! of days has elapsed since planting
+
+            else if (hui(p) >= huigrain(p)) then
+   
+               aroot(p) = max(0._r8, min(1._r8, arooti(ivt(p)) - &
+                         (arooti(ivt(p)) - arootf(ivt(p))) * min(1._r8, hui(p)/gddmaturity(p))))
+               if (astemi(p) > astemf(ivt(p))) then
+                  astem(p) = max(0._r8, max(astemf(ivt(p)), astem(p) * &
+                                 (1._r8 - min((hui(p)-                 &
+                                 huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
+                                 huigrain(p)),1._r8)**allconss(ivt(p)) )))
+               end if
+               if (aleafi(p) > aleaff(ivt(p))) then
+                  aleaf(p) = max(1.e-5_r8, max(aleaff(ivt(p)), aleaf(p) * &
+                                 (1._r8 - min((hui(p)-                    &
+                                 huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
+                                 huigrain(p)),1._r8)**allconsl(ivt(p)) )))
+               end if
+               arepr(p) = 1._r8 - aroot(p) - astem(p) - aleaf(p)
+               astem(p) = astem(p)+arepr(p)
+               arepr(p) = 0._r8
+
+            else                   ! pre emergence
+               aleaf(p) = 1.e-5_r8 ! allocation coefficients should be irrelevant
+               astem(p) = 0._r8    ! because crops have no live carbon pools;
+               aroot(p) = 0._r8    ! this applies to this "else" and to the "else"
+            end if                 ! a few lines down
+
+            f1 = aroot(p) / aleaf(p)
+            f3 = astem(p) / aleaf(p)
+            f5 = arepr(p) / aleaf(p)
+            g1 = 0.25_r8
+
+         else   ! .not croplive
+            f1 = 0._r8
+            f3 = 0._r8
+            f5 = 0._r8
+            g1 = 0.25_r8
+         end if
+      end if
+
       ! based on available C, use constant allometric relationships to
       ! determine N requirements
       if (woody(ivt(p)) == 1.0_r8) then
+         c_allometry(p) = (1._r8+g1)*(1._r8+f1+f3*(1._r8+f2))
+         n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
+                       (f3*(1._r8-f4)*(1._r8+f2))/cndw
+      else if (ivt(p) >= npcropmin) then ! skip generic crops
          c_allometry(p) = (1._r8+g1)*(1._r8+f1+f3*(1._r8+f2))
          n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
                        (f3*(1._r8-f4)*(1._r8+f2))/cndw
@@ -446,12 +659,12 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    end do ! end pft loop
 
    ! now use the p2c routine to get the column-averaged plant_ndemand
-   allocate(col_plant_ndemand(lbc:ubc))
    call p2c(num_soilc,filter_soilc,plant_ndemand,col_plant_ndemand)
 
    ! column loop to resolve plant/heterotroph competition for mineral N
    do fc=1,num_soilc
       c = filter_soilc(fc)
+      l = clandunit(c)
 
       sum_ndemand = col_plant_ndemand(c) + potential_immob(c)
 
@@ -469,7 +682,9 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          ! proportion lost in the decomposition pathways
 
          sminn_to_denit_excess(c) = bdnr*((sminn(c)/dt) - sum_ndemand)
-      else if ( .not. Carbon_only )then
+      else if ( ((.not. Carbon_only) .and.  (.not. crop_supln)) .or. &
+                (crop_supln .and. ( (itypelun(l) /= istcrop)  .or. &
+                ((itypelun(l) == istcrop) .and. (ivt(pfti(c)) < npcropmin) )) ) )then
 
          ! N availability can not satisfy the sum of immobilization and
          ! plant growth demands, so these two demands compete for available
@@ -489,11 +704,13 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          end if
 
          sminn_to_plant(c) = (sminn(c)/dt) - actual_immob(c)
-      else
+      else if ( Carbon_only .or. &
+               (crop_supln .and. (itypelun(l) == istcrop) .and. &
+                (ivt(pfti(c)) >= npcropmin)) )then
          ! this code block controls the addition of N to sminn pool
          ! to eliminate any N limitation, when Carbon_Only is set.  This lets the
          ! model behave essentially as a carbon-only model, but with the
-         ! benefit of keeping trrack of the N additions needed to
+         ! benefit of keeping track of the N additions needed to
          ! eliminate N limitations, so there is still a diagnostic quantity
          ! that describes the degree of N limitation at steady-state.
 
@@ -502,6 +719,8 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          actual_immob(c) = potential_immob(c)
          sminn_to_plant(c) = col_plant_ndemand(c)
          supplement_to_sminn(c) = sum_ndemand - (sminn(c)/dt)
+      else
+         call endrun( 'This else should NOT be able to happen' )
       end if
 
       ! calculate the fraction of potential growth that can be
@@ -541,16 +760,30 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
       end if
       
       f4 = flivewd(ivt(p))
-      g1 = grperc
-      g2 = grpnow
+      g1 = grperc(ivt(p))
+      g2 = grpnow(ivt(p))
       cnl = leafcn(ivt(p))
       cnfr = frootcn(ivt(p))
       cnlw = livewdcn(ivt(p))
       cndw = deadwdcn(ivt(p))
       fcur = fcur2(ivt(p))
 
+      if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (croplive(p)) then
+            f1 = aroot(p) / aleaf(p)
+            f3 = astem(p) / aleaf(p)
+            f5 = arepr(p) / aleaf(p)
+            g1 = 0.25_r8
+         else
+            f1 = 0._r8
+            f3 = 0._r8
+            f5 = 0._r8
+            g1 = 0.25_r8
+         end if
+      end if
+
       ! increase fcur linearly with ndays_active, until fcur reaches 1.0 at
-      ! ndays_active = 365.  This prevents the continued storage of C and N.
+      ! ndays_active = days/year.  This prevents the continued storage of C and N.
       ! turning off this correction (PET, 12/11/03), instead using bgtr in
       ! phenology algorithm.
       !fcur = fcur + (1._r8 - fcur)*lgsf(p)
@@ -598,6 +831,18 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
          cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
       end if
+      if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
+         cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
+         cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
+         cpool_to_deadstemc_storage(p)  = nlc * f3 * (1._r8 - f4) * (1._r8 - fcur)
+         cpool_to_livecrootc(p)         = nlc * f2 * f3 * f4 * fcur
+         cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
+         cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
+         cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+         cpool_to_grainc(p)             = nlc * f5 * fcur
+         cpool_to_grainc_storage(p)     = nlc * f5 * (1._r8 -fcur)
+      end if
 
       ! corresponding N fluxes
       npool_to_leafn(p)          = (nlc / cnl) * fcur
@@ -613,6 +858,19 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
          npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
          npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+      end if
+      if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         cng = graincn(ivt(p))
+         npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
+         npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
+         npool_to_deadstemn(p)          = (nlc * f3 * (1._r8 - f4) / cndw) * fcur
+         npool_to_deadstemn_storage(p)  = (nlc * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+         npool_to_livecrootn(p)         = (nlc * f2 * f3 * f4 / cnlw) * fcur
+         npool_to_livecrootn_storage(p) = (nlc * f2 * f3 * f4 / cnlw) * (1._r8 - fcur)
+         npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
+         npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
+         npool_to_grainn(p)             = (nlc * f5 / cng) * fcur
+         npool_to_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
       end if
 
       ! Calculate the amount of carbon that needs to go into growth
@@ -631,11 +889,13 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
          gresp_storage = gresp_storage + cpool_to_livecrootc_storage(p)
          gresp_storage = gresp_storage + cpool_to_deadcrootc_storage(p)
       end if
+      if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
+         gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
+      end if
       cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
    end do ! end pft loop
-
-   deallocate(col_plant_ndemand)
 
 end subroutine CNAllocation
 

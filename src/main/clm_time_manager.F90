@@ -28,6 +28,7 @@ module clm_time_manager
       get_curr_date,            &! return date components at end of current timestep
       get_prev_date,            &! return date components at beginning of current timestep
       get_start_date,           &! return components of the start date
+      get_driver_start_ymd,     &! return year/month/day (as integer in YYYYMMDD format) of driver start date
       get_ref_date,             &! return components of the reference date
       get_perp_date,            &! return components of the perpetual date, and current time of day
       get_curr_time,            &! return components of elapsed time since reference date at end of current timestep
@@ -341,13 +342,9 @@ subroutine init_clock( start_date, ref_date, curr_date, stop_date )
 
   ! Initialize the clock
 
-#ifdef COUP_WRF
-  rc = -100  ! kaboom
-#else
-  tm_clock = ESMF_ClockCreate("CLM Time-manager clock", step_size, start_date, &
+  tm_clock = ESMF_ClockCreate(name="CLM Time-manager clock", timeStep=step_size, startTime=start_date, &
        stopTime=stop_date, refTime=ref_date, rc=rc)
   call chkrc(rc, sub//': error return from ESMF_ClockSetup')
-#endif
 
   ! Advance clock to the current time (in case of a restart)
 
@@ -761,11 +758,6 @@ subroutine init_calendar( )
   integer :: rc                              ! return code
   !---------------------------------------------------------------------------------
 
-#ifdef COUP_WRF
-  rc = -200  ! kaboom
-  call chkrc(rc, sub//': error return from ESMF_CalendarSet')
-  write(iulog,*)'initialized EMSF calendar'
-#else
   caltmp = to_upper(calendar)
   if ( trim(caltmp) == 'NO_LEAP' ) then
      cal_type = ESMF_CAL_NOLEAP
@@ -777,7 +769,6 @@ subroutine init_calendar( )
   end if
   tm_cal = ESMF_CalendarCreate( name=caltmp, calendarType=cal_type, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_CalendarSet')
-#endif
 end subroutine init_calendar
 
 !=========================================================================================
@@ -1132,6 +1123,38 @@ subroutine get_start_date(yr, mon, day, tod)
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
 
 end subroutine get_start_date
+
+!=========================================================================================
+
+integer function get_driver_start_ymd( tod )
+
+! Return date of start of simulation from driver (i.e. NOT from restart file)
+! Note: get_start_date gets you the date from the beginning of the simulation
+!       on the restart file.
+
+! Arguments
+   integer, optional, intent(out) ::&
+      tod     ! time of day (seconds past 0Z)
+
+! Local variables
+   character(len=*), parameter :: sub = 'clm::get_driver_start_ymd'
+!-----------------------------------------------------------------------------------------
+
+   if ( start_ymd == uninit_int )then
+      call endrun( sub//': error driver start date is NOT set yet' )
+   end if
+   if ( start_ymd < 101 .or. start_ymd > 99991231 )then
+      call endrun( sub//': error driver start date is invalid' )
+   end if
+   if ( present(tod) )then
+      tod = start_tod
+      if ( (tod < 0) .or. (tod > isecspday) )then
+         call endrun( sub//': error driver start tod is invalid' )
+      end if
+   end if
+   get_driver_start_ymd = start_ymd
+
+end function get_driver_start_ymd
 
 !=========================================================================================
 
@@ -1577,8 +1600,8 @@ end function to_upper
 
 logical function is_restart( )
   ! Determine if restart run
-  use clm_varctl, only : nsrest
-  if (nsrest == 1) then
+  use clm_varctl, only : nsrest, nsrContinue
+  if (nsrest == nsrContinue) then
      is_restart = .true.
   else
      is_restart = .false.

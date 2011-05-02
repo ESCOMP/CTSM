@@ -1,4 +1,3 @@
-
 module CNSummaryMod
 
 #ifdef CN
@@ -13,6 +12,8 @@ module CNSummaryMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
+    use pftvarcon   , only: npcropmin, nc3crop
+    use surfrdMod   , only: crop_prog
     implicit none
     save
     private
@@ -61,6 +62,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
+   integer , pointer :: ivt(:)                ! pft vegetation type
    real(r8), pointer :: col_fire_closs(:)     ! (gC/m2/s) total column-level fire C loss
    real(r8), pointer :: er(:)                 ! (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
    real(r8), pointer :: hr(:)                 ! (gC/m2/s) total heterotrophic respiration
@@ -109,26 +111,37 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
    real(r8), pointer :: agnpp(:)              ! (gC/m2/s) aboveground NPP
    real(r8), pointer :: ar(:)                 ! (gC/m2/s) autotrophic respiration (MR + GR)
-   real(r8), pointer :: bgnpp(:)              ! (gC/m2/s) belowground NPP
-   real(r8), pointer :: cpool_deadcroot_gr(:)        
-   real(r8), pointer :: cpool_deadcroot_storage_gr(:)
-   real(r8), pointer :: cpool_deadstem_gr(:)         
-   real(r8), pointer :: cpool_deadstem_storage_gr(:) 
-   real(r8), pointer :: cpool_froot_gr(:)            
-   real(r8), pointer :: cpool_froot_storage_gr(:)    
-   real(r8), pointer :: cpool_leaf_gr(:)             
-   real(r8), pointer :: cpool_leaf_storage_gr(:)     
-   real(r8), pointer :: cpool_livecroot_gr(:)        
-   real(r8), pointer :: cpool_livecroot_storage_gr(:)
-   real(r8), pointer :: cpool_livestem_gr(:)         
-   real(r8), pointer :: cpool_livestem_storage_gr(:) 
-   real(r8), pointer :: cpool_to_deadcrootc(:)        
-   real(r8), pointer :: cpool_to_deadstemc(:)         
-   real(r8), pointer :: cpool_to_frootc(:)            
-   real(r8), pointer :: cpool_to_leafc(:)             
-   real(r8), pointer :: cpool_to_livecrootc(:)        
-   real(r8), pointer :: cpool_to_livestemc(:)         
-   real(r8), pointer :: current_gr(:)         ! (gC/m2/s) growth resp for new growth displayed in this timestep
+   real(r8), pointer :: bgnpp(:)                  ! (gC/m2/s) belowground NPP
+   real(r8), pointer :: xsmrpool_to_atm(:)        ! excess MR pool harvest mortality (gC/m2/s)
+   real(r8), pointer :: cpool_grain_gr(:)         ! grain growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_grain_storage_gr(:) ! grain growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_to_grainc(:)        ! allocation to grain C storage (gC/m2/s)
+   real(r8), pointer :: grainc_xfer_to_grainc(:)  ! grain C growth from storage (gC/m2/s)
+   real(r8), pointer :: transfer_grain_gr(:)      ! grain growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: grainc_to_food(:)         ! grain C to food (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litter(:)    ! live stem C litterfall (gC/m2/s)
+   real(r8), pointer :: grainc(:)                 ! (gC/m2) grain C
+   real(r8), pointer :: grainc_storage(:)         ! (gC/m2) grain C storage
+   real(r8), pointer :: grainc_xfer(:)            ! (gC/m2) grain C transfer
+   real(r8), pointer :: cpool_deadcroot_gr(:)     ! dead coarse root growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_deadcroot_storage_gr(:) ! dead coarse root growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_deadstem_gr(:)          ! dead stem growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_deadstem_storage_gr(:)  ! dead stem growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_froot_gr(:)             ! fine root growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_froot_storage_gr(:)     ! fine root  growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_leaf_gr(:)              ! leaf growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_leaf_storage_gr(:)      ! leaf growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_livecroot_gr(:)         ! live coarse root growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_livecroot_storage_gr(:) ! live coarse root growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_livestem_gr(:)          ! live stem growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_livestem_storage_gr(:)  ! live stem growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: cpool_to_deadcrootc(:)        ! allocation to dead coarse root C (gC/m2/s)
+   real(r8), pointer :: cpool_to_deadstemc(:)         ! allocation to dead stem C (gC/m2/s)
+   real(r8), pointer :: cpool_to_frootc(:)            ! allocation to fine root C (gC/m2/s)
+   real(r8), pointer :: cpool_to_leafc(:)             ! allocation to leaf C (gC/m2/s)
+   real(r8), pointer :: cpool_to_livecrootc(:)        ! allocation to live coarse root C (gC/m2/s)
+   real(r8), pointer :: cpool_to_livestemc(:)         ! allocation to live stem C (gC/m2/s)
+   real(r8), pointer :: current_gr(:)                 ! (gC/m2/s) growth resp for new growth displayed in this timestep
    real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
    real(r8), pointer :: deadstemc_xfer_to_deadstemc(:) 
    real(r8), pointer :: frootc_to_litter(:)
@@ -269,9 +282,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: prod100c(:)           ! (gC/m2) wood product C pool, 100-year lifespan
    real(r8), pointer :: totprodc(:)           ! (gC/m2) total wood product C
 
-
-#if (defined CLAMP)
-   ! CLAMP
    real(r8), pointer :: frootc_alloc(:)       ! fine root C allocation (gC/m2/s)
    real(r8), pointer :: frootc_loss(:)        ! fine root C loss (gC/m2/s)
    real(r8), pointer :: leafc_alloc(:)        ! leaf C allocation (gC/m2/s)
@@ -285,10 +295,8 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: litr1c_to_soil1c(:)   ! litter1 C loss to soil1 (gC/m2/s)
    real(r8), pointer :: litr2c_to_soil2c(:)   ! litter2 C loss to soil2 (gC/m2/s)
    real(r8), pointer :: litr3c_to_soil3c(:)   ! litter3 C loss to soil3 (gC/m2/s)
-   !  Added for CLAMP
    real(r8), pointer :: cwdc_to_litr2c(:)     ! cwdc C to soil2 (gC/m2/s)
    real(r8), pointer :: cwdc_to_litr3c(:)     ! cwdc C to soil3 (gC/m2/s)
-#endif
 !
 !
 ! local pointers to implicit in/out scalars
@@ -304,6 +312,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers
+    ivt                            => clm3%g%l%c%p%itype
     col_fire_closs                 => clm3%g%l%c%ccf%col_fire_closs
     er                             => clm3%g%l%c%ccf%er
     hr                             => clm3%g%l%c%ccf%hr
@@ -316,15 +325,11 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     m_litr1c_to_fire               => clm3%g%l%c%ccf%m_litr1c_to_fire
     m_litr2c_to_fire               => clm3%g%l%c%ccf%m_litr2c_to_fire
     m_litr3c_to_fire               => clm3%g%l%c%ccf%m_litr3c_to_fire
-#if (defined CLAMP)
-    !  Added for CLAMP
     cwdc_to_litr2c                 => clm3%g%l%c%ccf%cwdc_to_litr2c
     cwdc_to_litr3c                 => clm3%g%l%c%ccf%cwdc_to_litr3c
-    ! CLAMP
     litr1c_to_soil1c               => clm3%g%l%c%ccf%litr1c_to_soil1c
     litr2c_to_soil2c               => clm3%g%l%c%ccf%litr2c_to_soil2c
     litr3c_to_soil3c               => clm3%g%l%c%ccf%litr3c_to_soil3c
-#endif
     nee                            => clm3%g%l%c%ccf%nee
     nep                            => clm3%g%l%c%ccf%nep
     nbp                            => clm3%g%l%c%ccf%nbp
@@ -344,11 +349,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     somhr                          => clm3%g%l%c%ccf%somhr
     sr                             => clm3%g%l%c%ccf%sr
     totfire                        => clm3%g%l%c%ccf%totfire
-#if (defined CLAMP)
     cwdc_hr                        => clm3%g%l%c%ccf%cwdc_hr
     cwdc_loss                      => clm3%g%l%c%ccf%cwdc_loss
     litterc_loss                   => clm3%g%l%c%ccf%litterc_loss
-#endif
     ! dynamic landcover pointers
     dwt_closs                      => clm3%g%l%c%ccf%dwt_closs
     landuseflux                    => clm3%g%l%c%ccf%landuseflux
@@ -382,6 +385,17 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     agnpp                          => clm3%g%l%c%p%pcf%agnpp
     ar                             => clm3%g%l%c%p%pcf%ar
     bgnpp                          => clm3%g%l%c%p%pcf%bgnpp
+    xsmrpool_to_atm                => clm3%g%l%c%p%pcf%xsmrpool_to_atm
+    cpool_grain_gr                 => clm3%g%l%c%p%pcf%cpool_grain_gr
+    cpool_grain_storage_gr         => clm3%g%l%c%p%pcf%cpool_grain_storage_gr
+    cpool_to_grainc                => clm3%g%l%c%p%pcf%cpool_to_grainc
+    grainc_xfer_to_grainc          => clm3%g%l%c%p%pcf%grainc_xfer_to_grainc
+    transfer_grain_gr              => clm3%g%l%c%p%pcf%transfer_grain_gr
+    grainc_to_food                 => clm3%g%l%c%p%pcf%grainc_to_food
+    livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
+    grainc                         => clm3%g%l%c%p%pcs%grainc
+    grainc_storage                 => clm3%g%l%c%p%pcs%grainc_storage
+    grainc_xfer                    => clm3%g%l%c%p%pcs%grainc_xfer
     cpool_deadcroot_gr             => clm3%g%l%c%p%pcf%cpool_deadcroot_gr
     cpool_deadcroot_storage_gr     => clm3%g%l%c%p%pcf%cpool_deadcroot_storage_gr
     cpool_deadstem_gr              => clm3%g%l%c%p%pcf%cpool_deadstem_gr
@@ -497,15 +511,12 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     transfer_livestem_gr           => clm3%g%l%c%p%pcf%transfer_livestem_gr
     vegfire                        => clm3%g%l%c%p%pcf%vegfire
     wood_harvestc                  => clm3%g%l%c%p%pcf%wood_harvestc
-#if (defined CLAMP)
-    !CLAMP
     frootc_alloc                   => clm3%g%l%c%p%pcf%frootc_alloc
     frootc_loss                    => clm3%g%l%c%p%pcf%frootc_loss
     leafc_alloc                    => clm3%g%l%c%p%pcf%leafc_alloc
     leafc_loss                     => clm3%g%l%c%p%pcf%leafc_loss
     woodc_alloc                    => clm3%g%l%c%p%pcf%woodc_alloc
     woodc_loss                     => clm3%g%l%c%p%pcf%woodc_loss
-#endif
     cpool                          => clm3%g%l%c%p%pcs%cpool
     xsmrpool                       => clm3%g%l%c%p%pcs%xsmrpool
 	pft_ctrunc                     => clm3%g%l%c%p%pcs%pft_ctrunc
@@ -533,9 +544,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     storvegc                       => clm3%g%l%c%p%pcs%storvegc
     totpftc                        => clm3%g%l%c%p%pcs%totpftc
     totvegc                        => clm3%g%l%c%p%pcs%totvegc
-#if (defined CLAMP)
     woodc                          => clm3%g%l%c%p%pcs%woodc
-#endif
     tempsum_npp                    => clm3%g%l%c%p%pepv%tempsum_npp
 #if (defined CNDV)
     tempsum_litfall                => clm3%g%l%c%p%pepv%tempsum_litfall
@@ -594,7 +603,11 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          storage_gr(p)
 
       ! autotrophic respiration (AR)
-      ar(p) = mr(p) + gr(p)
+      if ( ivt(p) >= npcropmin )then
+         ar(p) = mr(p) + gr(p) + xsmrpool_to_atm(p) ! xsmr... is -ve (slevis)
+      else
+         ar(p) = mr(p) + gr(p)
+      end if
 
       ! root respiration (RR)
       rr(p) = &
@@ -748,13 +761,32 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          gresp_storage(p)      + &
          gresp_xfer(p)
 
+      if ( crop_prog .and. ivt(p) >= nc3crop )then
+         current_gr(p) = current_gr(p) + &
+            cpool_grain_gr(p)
+         storvegc(p) = storvegc(p) + &
+            grainc_storage(p)  + &
+            grainc_xfer(p)
+         transfer_gr(p) = transfer_gr(p) + &
+            transfer_grain_gr(p)
+         storage_gr(p) = storage_gr(p) + &
+            cpool_grain_storage_gr(p)
+         agnpp(p) = agnpp(p) + &
+            cpool_to_grainc(p)           + &
+            grainc_xfer_to_grainc(p)
+         litfall(p) = litfall(p) + &
+            livestemc_to_litter(p)           + &
+            grainc_to_food(p)
+         dispvegc(p) = dispvegc(p) + &
+            grainc(p)
+      end if
+
       ! total vegetation carbon, excluding cpool (TOTVEGC)
       totvegc(p) = dispvegc(p) + storvegc(p)
 
       ! total pft-level carbon, including xsmrpool, ctrunc
       totpftc(p) = totvegc(p) + xsmrpool(p) + pft_ctrunc(p)
       
-#if (defined CLAMP)
       ! new summary variables for CLAMP
       
       ! (FROOTC_ALLOC) - fine root C allocation
@@ -822,7 +854,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
         hrv_deadcrootc_to_litter(p)        + &
         hrv_deadcrootc_storage_to_litter(p)+ &
         hrv_deadcrootc_xfer_to_litter(p)   
-#endif
 
    end do  ! end of pfts loop
 
@@ -945,7 +976,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 		   seedc(c) + &
 		   col_ctrunc(c)
 
-#if (defined CLAMP)
       ! new summary variables for CLAMP
       
       ! (CWDC_HR) - coarse woody debris heterotrophic respiration
@@ -966,7 +996,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
         litr1c_to_soil1c(c) + &
         litr2c_to_soil2c(c) + &
         litr3c_to_soil3c(c)
-#endif
       
    end do ! end of columns loop
 
@@ -1005,6 +1034,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
+   integer , pointer :: ivt(:)            ! pft vegetation type
    real(r8), pointer :: col_fire_nloss(:) ! (gN/m2/s) total column-level fire N loss
    real(r8), pointer :: col_wood_harvestn(:)
    real(r8), pointer :: denit(:)
@@ -1078,6 +1108,9 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: livecrootn(:)         ! (gN/m2) live coarse root N
    real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
    real(r8), pointer :: livecrootn_xfer(:)    ! (gN/m2) live coarse root N transfer
+   real(r8), pointer :: grainn(:)             ! (gN/m2) grain N
+   real(r8), pointer :: grainn_storage(:)     ! (gN/m2) grain N storage
+   real(r8), pointer :: grainn_xfer(:)        ! (gN/m2) grain N transfer
    real(r8), pointer :: livestemn(:)          ! (gN/m2) live stem N
    real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
    real(r8), pointer :: livestemn_xfer(:)     ! (gN/m2) live stem N transfer
@@ -1110,6 +1143,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
     ! assign local pointers
+    ivt                            => clm3%g%l%c%p%itype
     col_fire_nloss                 => clm3%g%l%c%cnf%col_fire_nloss
     denit                          => clm3%g%l%c%cnf%denit
     m_cwdn_to_fire                 => clm3%g%l%c%cnf%m_cwdn_to_fire
@@ -1182,6 +1216,9 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     livecrootn                     => clm3%g%l%c%p%pns%livecrootn
     livecrootn_storage             => clm3%g%l%c%p%pns%livecrootn_storage
     livecrootn_xfer                => clm3%g%l%c%p%pns%livecrootn_xfer
+    grainn                         => clm3%g%l%c%p%pns%grainn
+    grainn_storage                 => clm3%g%l%c%p%pns%grainn_storage
+    grainn_xfer                    => clm3%g%l%c%p%pns%grainn_xfer
     livestemn                      => clm3%g%l%c%p%pns%livestemn
     livestemn_storage              => clm3%g%l%c%p%pns%livestemn_storage
     livestemn_xfer                 => clm3%g%l%c%p%pns%livestemn_xfer
@@ -1268,11 +1305,20 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 		 npool(p)              + &
          retransn(p)
 
+      if ( crop_prog .and. ivt(p) >= nc3crop )then
+         dispvegn(p) = dispvegn(p) + &
+            grainn(p)
+          storvegn(p) = storvegn(p) + &
+             grainn_storage(p)     + &
+             grainn_xfer(p)
+      end if
+
       ! total vegetation nitrogen (TOTVEGN)
       totvegn(p) = dispvegn(p) + storvegn(p)
 
       ! total pft-level carbon (add pft_ntrunc)
       totpftn(p) = totvegn(p) + pft_ntrunc(p)
+
 
    end do  ! end of pfts loop
 

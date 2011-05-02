@@ -249,6 +249,12 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            #
            foreach my $bgc ( @bgcsettings ) {
               $settings{'bgc'} = $bgc;
+              my @crop_vals;
+              if ( $bgc =~ /^cn/ ) {
+                 @crop_vals = ( "on", "off" );
+              } else {
+                 @crop_vals = ( "off" );
+              }
               #
               # Loop over all possible glc_nec settings
               #
@@ -263,20 +269,26 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
                  foreach my $glc_grid ( @glcgrds ) {
                     $settings{'glc_grid'} = $glc_grid;
                     #
-                    # Loop over irrigation settings
+                    # Loop over all possible crop settings
                     #
-                    my @irrigset;
-                    if ( $glc_nec  == 0 && $sim_year == 2000 ) { 
-                       @irrigset= ( ".true.", ".false." );
-                    } else { 
-                       @irrigset= ( ".false." );
-                    }
-                    foreach my $irrig ( @irrigset ) {
-                       $settings{'irrig'}     = $irrig;
-                       $inputopts{'namelist'} = "clm_inparm";
-                       &GetListofNeededFiles( \%inputopts, \%settings, \%files );
-                       if ( $printTimes >= 1 ) {
-                          $inputopts{'printing'} = 0;
+                    foreach my $crop ( @crop_vals ) {
+                       $settings{'crop'} = $crop;
+                       my @irrigset;
+                       if ( $glc_nec  == 0 && $sim_year == 2000 ) { 
+                          @irrigset= ( ".true.", ".false." );
+                       } else { 
+                          @irrigset= ( ".false." );
+                       }
+                       #
+                       # Loop over irrigation settings
+                       #
+                       foreach my $irrig ( @irrigset ) {
+                          $settings{'irrig'}     = $irrig;
+                          $inputopts{'namelist'} = "clm_inparm";
+                          &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+                          if ( $printTimes >= 1 ) {
+                             $inputopts{'printing'} = 0;
+                          }
                        }
                     }
                  }

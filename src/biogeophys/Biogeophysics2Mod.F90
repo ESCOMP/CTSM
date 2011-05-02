@@ -1,4 +1,3 @@
-
 module Biogeophysics2Mod
 
 !-----------------------------------------------------------------------
@@ -76,6 +75,7 @@ contains
     use clm_time_manager  , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb, &
                                    isturb, icol_roof, icol_sunwall, icol_shadewall, istsoil
+    use clm_varcon        , only : istcrop
     use clm_varpar        , only : nlevsno, nlevgrnd, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature
     use subgridAveMod     , only : p2c
@@ -368,7 +368,7 @@ contains
                               + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
                               - emg(c)*sb*tssbef(c,j)**3*(tssbef(c,j) + 4._r8*tinc(c)) &
                               - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c))
-          if (ltype(l) == istsoil) then
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
             eflx_soil_grnd_r(p) = eflx_soil_grnd(p)
           end if
        else
@@ -391,7 +391,7 @@ contains
        eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
        qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
        eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
-       if (ltype(l) == istsoil) then
+       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
          eflx_lh_tot_r(p)= eflx_lh_tot(p)
          eflx_sh_tot_r(p)= eflx_sh_tot(p)
        else if (ltype(l) == isturb) then
@@ -484,7 +484,7 @@ contains
                               + (1-frac_veg_nosno(p))*emg(c)*sb*tssbef(c,j)**4 &
                               + 4.*emg(c)*sb*tssbef(c,j)**3*tinc(c)
           eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(g)
-          if (ltype(l) == istsoil) then
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
             eflx_lwrad_net_r(p) = eflx_lwrad_out(p) - forc_lwrad(g)
           end if
        else

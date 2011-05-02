@@ -1,6 +1,6 @@
 module CASAiniTimeVarMod
 
-#if (defined CASA) && (defined CLAMP)
+#if (defined CASA)
 
 !-----------------------------------------------------------------------
 !BOP

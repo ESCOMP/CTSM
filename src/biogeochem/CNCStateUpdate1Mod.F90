@@ -1,4 +1,3 @@
-
 module CNCStateUpdate1Mod
 #ifdef CN
 
@@ -103,6 +102,8 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
+   use pftvarcon , only: npcropmin, nc3crop
+   use surfrdMod , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none
@@ -121,30 +122,38 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in arrays
 !
-   real(r8), pointer :: woody(:)       ! binary flag for woody lifeform (1=woody, 0=not woody)
-   real(r8), pointer :: cwdc_to_litr2c(:)
-   real(r8), pointer :: cwdc_to_litr3c(:)
-   real(r8), pointer :: frootc_to_litr1c(:)
-   real(r8), pointer :: frootc_to_litr2c(:)
-   real(r8), pointer :: frootc_to_litr3c(:)
-   real(r8), pointer :: leafc_to_litr1c(:)
-   real(r8), pointer :: leafc_to_litr2c(:)
-   real(r8), pointer :: leafc_to_litr3c(:)
-   real(r8), pointer :: litr1_hr(:)
-   real(r8), pointer :: litr1c_to_soil1c(:)
-   real(r8), pointer :: litr2_hr(:)
-   real(r8), pointer :: litr2c_to_soil2c(:)
-   real(r8), pointer :: litr3_hr(:)
-   real(r8), pointer :: litr3c_to_soil3c(:)
-   real(r8), pointer :: soil1_hr(:)
-   real(r8), pointer :: soil1c_to_soil2c(:)
-   real(r8), pointer :: soil2_hr(:)
-   real(r8), pointer :: soil2c_to_soil3c(:)
-   real(r8), pointer :: soil3_hr(:)
-   real(r8), pointer :: soil3c_to_soil4c(:)
-   real(r8), pointer :: soil4_hr(:)
-   real(r8), pointer :: col_ctrunc(:)    ! (gC/m2) column-level sink for C truncation
-   integer , pointer :: ivt(:)           ! pft vegetation type
+   real(r8), pointer :: woody(:)                ! binary flag for woody lifeform (1=woody, 0=not woody)
+   real(r8), pointer :: cwdc_to_litr2c(:)       ! decomp. of coarse woody debris C to litter 2 C (gC/m2/s)
+   real(r8), pointer :: cwdc_to_litr3c(:)       ! decomp. of coarse woody debris C to litter 3 C (gC/m2/s)
+   integer , pointer :: harvdate(:)             ! harvest date
+   real(r8), pointer :: xsmrpool_to_atm(:)      ! excess MR pool harvest mortality (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr1c(:)     ! grain C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr2c(:)     ! grain C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr3c(:)     ! grain C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr1c(:)  ! livestem C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr2c(:)  ! livestem C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr3c(:)  ! livestem C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: frootc_to_litr1c(:)     ! fine root C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: frootc_to_litr2c(:)     ! fine root C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: frootc_to_litr3c(:)     ! fine root C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: leafc_to_litr1c(:)      ! leaf C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: leafc_to_litr2c(:)      ! leaf C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: leafc_to_litr3c(:)      ! leaf C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: litr1_hr(:)             ! het. resp. from litter 1 C (gC/m2/s)
+   real(r8), pointer :: litr1c_to_soil1c(:)     ! decomp. of litter 1 C to SOM 1 C (gC/m2/s)
+   real(r8), pointer :: litr2_hr(:)             ! het. resp. from litter 2 C (gC/m2/s)
+   real(r8), pointer :: litr2c_to_soil2c(:)     ! decomp. of litter 2 C to SOM 2 C (gC/m2/s)
+   real(r8), pointer :: litr3_hr(:)             ! het. resp. from litter 3 C (gC/m2/s)
+   real(r8), pointer :: litr3c_to_soil3c(:)     ! decomp. of litter 3 C to SOM 3 C (gC/m2/s)
+   real(r8), pointer :: soil1_hr(:)             ! het. resp. from SOM 1 C (gC/m2/s)
+   real(r8), pointer :: soil1c_to_soil2c(:)     ! decomp. of SOM 1 C to SOM 2 C (gC/m2/s)
+   real(r8), pointer :: soil2_hr(:)             ! het. resp. from SOM 2 C (gC/m2/s)
+   real(r8), pointer :: soil2c_to_soil3c(:)     ! decomp. of SOM 2 C to SOM 3 C (gC/m2/s)
+   real(r8), pointer :: soil3_hr(:)             ! het. resp. from SOM 3 C (gC/m2/s)
+   real(r8), pointer :: soil3c_to_soil4c(:)     ! decomp. of SOM 3 C to SOM 4 C (gC/m2/s)
+   real(r8), pointer :: soil4_hr(:)             ! het. resp. from SOM 4 C (gC/m2/s)
+   real(r8), pointer :: col_ctrunc(:)           ! (gC/m2) column-level sink for C truncation
+   integer , pointer :: ivt(:)                  ! pft vegetation type
    real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
    real(r8), pointer :: deadstemc_xfer_to_deadstemc(:)
    real(r8), pointer :: frootc_xfer_to_frootc(:)
@@ -198,24 +207,36 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: cpool_leaf_storage_gr(:)
    real(r8), pointer :: cpool_livecroot_gr(:)
    real(r8), pointer :: cpool_livecroot_storage_gr(:)
-   real(r8), pointer :: cpool_livestem_gr(:)
-   real(r8), pointer :: cpool_livestem_storage_gr(:)
-   real(r8), pointer :: transfer_deadcroot_gr(:)
-   real(r8), pointer :: transfer_deadstem_gr(:)
-   real(r8), pointer :: transfer_froot_gr(:)
-   real(r8), pointer :: transfer_leaf_gr(:)
-   real(r8), pointer :: transfer_livecroot_gr(:)
-   real(r8), pointer :: transfer_livestem_gr(:)
+   real(r8), pointer :: cpool_livestem_gr(:)         ! live stem growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_livestem_storage_gr(:) ! live stem growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: transfer_deadcroot_gr(:)     ! dead coarse root growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: transfer_deadstem_gr(:)      ! dead stem growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: transfer_froot_gr(:)         ! fine root  growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: transfer_leaf_gr(:)          ! leaf growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: transfer_livecroot_gr(:)     ! live coarse root growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: transfer_livestem_gr(:)      ! live stem growth respiration from storage (gC/m2/s)
+   real(r8), pointer :: cpool_to_grainc(:)           ! allocation to grain C (gC/m2/s)
+   real(r8), pointer :: cpool_to_grainc_storage(:)   ! allocation to grain C storage (gC/m2/s)
+   real(r8), pointer :: grainc_storage_to_xfer(:)    ! grain C shift storage to transfer (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litter(:)       ! live stem C litterfall (gC/m2/s)
+   real(r8), pointer :: grainc_to_food(:)            ! grain C to food (gC/m2/s)
+   real(r8), pointer :: grainc_xfer_to_grainc(:)     ! grain C growth from storage (gC/m2/s)
+   real(r8), pointer :: cpool_grain_gr(:)            ! grain growth respiration (gC/m2/s)
+   real(r8), pointer :: cpool_grain_storage_gr(:)    ! grain growth respiration to storage (gC/m2/s)
+   real(r8), pointer :: transfer_grain_gr(:)         ! grain growth respiration from storage (gC/m2/s)
 !
 ! local pointers to implicit in/out arrays
-   real(r8), pointer :: cwdc(:)          ! (gC/m2) coarse woody debris C
-   real(r8), pointer :: litr1c(:)        ! (gC/m2) litter labile C
-   real(r8), pointer :: litr2c(:)        ! (gC/m2) litter cellulose C
-   real(r8), pointer :: litr3c(:)        ! (gC/m2) litter lignin C
-   real(r8), pointer :: soil1c(:)        ! (gC/m2) soil organic matter C (fast pool)
-   real(r8), pointer :: soil2c(:)        ! (gC/m2) soil organic matter C (medium pool)
-   real(r8), pointer :: soil3c(:)        ! (gC/m2) soil organic matter C (slow pool)
-   real(r8), pointer :: soil4c(:)        ! (gC/m2) soil organic matter C (slowest pool)
+   real(r8), pointer :: grainc(:)             ! grain C:N (gC/gN)
+   real(r8), pointer :: grainc_storage(:)     ! (gC/m2) grain C storage
+   real(r8), pointer :: grainc_xfer(:)        ! (gC/m2) grain C transfer
+   real(r8), pointer :: cwdc(:)               ! (gC/m2) coarse woody debris C
+   real(r8), pointer :: litr1c(:)             ! (gC/m2) litter labile C
+   real(r8), pointer :: litr2c(:)             ! (gC/m2) litter cellulose C
+   real(r8), pointer :: litr3c(:)             ! (gC/m2) litter lignin C
+   real(r8), pointer :: soil1c(:)             ! (gC/m2) soil organic matter C (fast pool)
+   real(r8), pointer :: soil2c(:)             ! (gC/m2) soil organic matter C (medium pool)
+   real(r8), pointer :: soil3c(:)             ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)             ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: cpool(:)              ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: xsmrpool(:)           ! (gC/m2) execss maint resp C pool
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
@@ -270,6 +291,12 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     leafc_to_litr1c                => clm3%g%l%c%ccf%leafc_to_litr1c
     leafc_to_litr2c                => clm3%g%l%c%ccf%leafc_to_litr2c
     leafc_to_litr3c                => clm3%g%l%c%ccf%leafc_to_litr3c
+    grainc_to_litr1c               => clm3%g%l%c%ccf%grainc_to_litr1c
+    grainc_to_litr2c               => clm3%g%l%c%ccf%grainc_to_litr2c
+    grainc_to_litr3c               => clm3%g%l%c%ccf%grainc_to_litr3c
+    livestemc_to_litr1c            => clm3%g%l%c%ccf%livestemc_to_litr1c
+    livestemc_to_litr2c            => clm3%g%l%c%ccf%livestemc_to_litr2c
+    livestemc_to_litr3c            => clm3%g%l%c%ccf%livestemc_to_litr3c
     litr1_hr                       => clm3%g%l%c%ccf%litr1_hr
     litr1c_to_soil1c               => clm3%g%l%c%ccf%litr1c_to_soil1c
     litr2_hr                       => clm3%g%l%c%ccf%litr2_hr
@@ -365,6 +392,20 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     transfer_leaf_gr               => clm3%g%l%c%p%pcf%transfer_leaf_gr
     transfer_livecroot_gr          => clm3%g%l%c%p%pcf%transfer_livecroot_gr
     transfer_livestem_gr           => clm3%g%l%c%p%pcf%transfer_livestem_gr
+    harvdate                       => clm3%g%l%c%p%pps%harvdate
+    xsmrpool_to_atm                => clm3%g%l%c%p%pcf%xsmrpool_to_atm
+    cpool_grain_gr                 => clm3%g%l%c%p%pcf%cpool_grain_gr
+    cpool_grain_storage_gr         => clm3%g%l%c%p%pcf%cpool_grain_storage_gr
+    cpool_to_grainc                => clm3%g%l%c%p%pcf%cpool_to_grainc
+    cpool_to_grainc_storage        => clm3%g%l%c%p%pcf%cpool_to_grainc_storage
+    livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
+    grainc_storage_to_xfer         => clm3%g%l%c%p%pcf%grainc_storage_to_xfer
+    grainc_to_food                 => clm3%g%l%c%p%pcf%grainc_to_food
+    grainc_xfer_to_grainc          => clm3%g%l%c%p%pcf%grainc_xfer_to_grainc
+    transfer_grain_gr              => clm3%g%l%c%p%pcf%transfer_grain_gr
+    grainc                         => clm3%g%l%c%p%pcs%grainc
+    grainc_storage                 => clm3%g%l%c%p%pcs%grainc_storage
+    grainc_xfer                    => clm3%g%l%c%p%pcs%grainc_xfer
     cpool                          => clm3%g%l%c%p%pcs%cpool
     xsmrpool                          => clm3%g%l%c%p%pcs%xsmrpool
     deadcrootc                     => clm3%g%l%c%p%pcs%deadcrootc
@@ -407,12 +448,22 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
        litr1c(c) = litr1c(c) + frootc_to_litr1c(c)*dt
        litr2c(c) = litr2c(c) + frootc_to_litr2c(c)*dt
        litr3c(c) = litr3c(c) + frootc_to_litr3c(c)*dt
+       if ( crop_prog )then
+          ! livestem litter
+          litr1c(c) = litr1c(c) + livestemc_to_litr1c(c)*dt
+          litr2c(c) = litr2c(c) + livestemc_to_litr2c(c)*dt
+          litr3c(c) = litr3c(c) + livestemc_to_litr3c(c)*dt
+          ! grain litter
+          litr1c(c) = litr1c(c) + grainc_to_litr1c(c)*dt
+          litr2c(c) = litr2c(c) + grainc_to_litr2c(c)*dt
+          litr3c(c) = litr3c(c) + grainc_to_litr3c(c)*dt
+       end if
        
        ! seeding fluxes, from dynamic landcover
-	    seedc(c) = seedc(c) - dwt_seedc_to_leaf(c) * dt
-	    seedc(c) = seedc(c) - dwt_seedc_to_deadstem(c) * dt
-	   
-	    ! fluxes into litter and CWD, from dynamic landcover
+       seedc(c) = seedc(c) - dwt_seedc_to_leaf(c) * dt
+       seedc(c) = seedc(c) - dwt_seedc_to_deadstem(c) * dt
+   
+       ! fluxes into litter and CWD, from dynamic landcover
        litr1c(c) = litr1c(c) + dwt_frootc_to_litr1c(c)*dt
        litr2c(c) = litr2c(c) + dwt_frootc_to_litr2c(c)*dt
        litr3c(c) = litr3c(c) + dwt_frootc_to_litr3c(c)*dt
@@ -471,6 +522,13 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            deadcrootc(p)      = deadcrootc(p)          + deadcrootc_xfer_to_deadcrootc(p)*dt
            deadcrootc_xfer(p) = deadcrootc_xfer(p) - deadcrootc_xfer_to_deadcrootc(p)*dt
        end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           ! lines here for consistency; the transfer terms are zero
+           livestemc(p)       = livestemc(p)      + livestemc_xfer_to_livestemc(p)*dt
+           livestemc_xfer(p)  = livestemc_xfer(p) - livestemc_xfer_to_livestemc(p)*dt
+           grainc(p)          = grainc(p)         + grainc_xfer_to_grainc(p)*dt
+           grainc_xfer(p)     = grainc_xfer(p)    - grainc_xfer_to_grainc(p)*dt
+       end if
  
        ! phenology: litterfall fluxes
        leafc(p) = leafc(p) - leafc_to_litter(p)*dt
@@ -483,6 +541,10 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            livecrootc(p) = livecrootc(p) - livecrootc_to_deadcrootc(p)*dt
            deadcrootc(p) = deadcrootc(p) + livecrootc_to_deadcrootc(p)*dt
        end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           livestemc(p)  = livestemc(p)  - livestemc_to_litter(p)*dt
+           grainc(p)     = grainc(p)     - grainc_to_food(p)*dt
+       end if
  
        ! maintenance respiration fluxes from cpool
        cpool(p) = cpool(p) - cpool_to_xsmrpool(p)*dt
@@ -492,6 +554,9 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            cpool(p) = cpool(p) - livestem_curmr(p)*dt
            cpool(p) = cpool(p) - livecroot_curmr(p)*dt
        end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           cpool(p) = cpool(p) - livestem_curmr(p)*dt
+       end if
 
        ! maintenance respiration fluxes from xsmrpool
        xsmrpool(p) = xsmrpool(p) + cpool_to_xsmrpool(p)*dt
@@ -500,6 +565,13 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
        if (woody(ivt(p)) == 1._r8) then
            xsmrpool(p) = xsmrpool(p) - livestem_xsmr(p)*dt
            xsmrpool(p) = xsmrpool(p) - livecroot_xsmr(p)*dt
+       end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           xsmrpool(p) = xsmrpool(p) - livestem_xsmr(p)*dt
+           if (harvdate(p) < 999) then ! beginning at harvest, send to atm
+              xsmrpool_to_atm(p) = xsmrpool_to_atm(p) + xsmrpool(p)/dt
+              xsmrpool(p) = xsmrpool(p) - xsmrpool_to_atm(p)*dt
+           end if
        end if
  
        ! allocation fluxes
@@ -529,6 +601,16 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            cpool(p)               = cpool(p)              - cpool_to_deadcrootc_storage(p)*dt
            deadcrootc_storage(p)  = deadcrootc_storage(p) + cpool_to_deadcrootc_storage(p)*dt
        end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           cpool(p)               = cpool(p)              - cpool_to_livestemc(p)*dt
+           livestemc(p)           = livestemc(p)          + cpool_to_livestemc(p)*dt
+           cpool(p)               = cpool(p)              - cpool_to_livestemc_storage(p)*dt
+           livestemc_storage(p)   = livestemc_storage(p)  + cpool_to_livestemc_storage(p)*dt
+           cpool(p)               = cpool(p)              - cpool_to_grainc(p)*dt
+           grainc(p)              = grainc(p)             + cpool_to_grainc(p)*dt
+           cpool(p)               = cpool(p)              - cpool_to_grainc_storage(p)*dt
+           grainc_storage(p)      = grainc_storage(p)     + cpool_to_grainc_storage(p)*dt
+       end if
  
        ! growth respiration fluxes for current growth
        cpool(p) = cpool(p) - cpool_leaf_gr(p)*dt
@@ -538,6 +620,10 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            cpool(p) = cpool(p) - cpool_deadstem_gr(p)*dt
            cpool(p) = cpool(p) - cpool_livecroot_gr(p)*dt
            cpool(p) = cpool(p) - cpool_deadcroot_gr(p)*dt
+       end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           cpool(p) = cpool(p) - cpool_livestem_gr(p)*dt
+           cpool(p) = cpool(p) - cpool_grain_gr(p)*dt
        end if
  
        ! growth respiration for transfer growth
@@ -549,6 +635,10 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            gresp_xfer(p) = gresp_xfer(p) - transfer_livecroot_gr(p)*dt
            gresp_xfer(p) = gresp_xfer(p) - transfer_deadcroot_gr(p)*dt
        end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           gresp_xfer(p) = gresp_xfer(p) - transfer_livestem_gr(p)*dt
+           gresp_xfer(p) = gresp_xfer(p) - transfer_grain_gr(p)*dt
+       end if
  
        ! growth respiration at time of storage
        cpool(p) = cpool(p) - cpool_leaf_storage_gr(p)*dt
@@ -558,6 +648,10 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            cpool(p) = cpool(p) - cpool_deadstem_storage_gr(p)*dt
            cpool(p) = cpool(p) - cpool_livecroot_storage_gr(p)*dt
            cpool(p) = cpool(p) - cpool_deadcroot_storage_gr(p)*dt
+       end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           cpool(p) = cpool(p) - cpool_livestem_storage_gr(p)*dt
+           cpool(p) = cpool(p) - cpool_grain_storage_gr(p)*dt
        end if
  
        ! growth respiration stored for release during transfer growth
@@ -580,6 +674,13 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
            deadcrootc_xfer(p)    = deadcrootc_xfer(p) + deadcrootc_storage_to_xfer(p)*dt
            gresp_storage(p)      = gresp_storage(p)       - gresp_storage_to_xfer(p)*dt
            gresp_xfer(p)         = gresp_xfer(p)      + gresp_storage_to_xfer(p)*dt
+       end if
+       if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           ! lines here for consistency; the transfer terms are zero
+           livestemc_storage(p)  = livestemc_storage(p) - livestemc_storage_to_xfer(p)*dt
+           livestemc_xfer(p)     = livestemc_xfer(p)    + livestemc_storage_to_xfer(p)*dt
+           grainc_storage(p)     = grainc_storage(p)    - grainc_storage_to_xfer(p)*dt
+           grainc_xfer(p)        = grainc_xfer(p)       + grainc_storage_to_xfer(p)*dt
        end if
  
     end do ! end of pft loop

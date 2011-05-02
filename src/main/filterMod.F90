@@ -1,4 +1,3 @@
-
 module filterMod
 
 !-----------------------------------------------------------------------
@@ -27,6 +26,10 @@ module filterMod
      integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (pfts)
      integer :: num_natvegp              ! number of pfts in nat-vegetated filter
 #endif
+     integer, pointer :: pcropp(:)       ! prognostic crop filter (pfts)
+     integer :: num_pcropp               ! number of pfts in prognostic crop filter
+     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (pfts)
+     integer :: num_soilnopcropp         ! number of pfts in soil w/o prog crops
 
      integer, pointer :: lakep(:)        ! lake filter (pfts)
      integer :: num_lakep                ! number of pfts in lake filter
@@ -166,6 +169,8 @@ contains
        allocate(filter(nc)%urbanl(endl-begl+1))
        allocate(filter(nc)%nourbanl(endl-begl+1))
 
+       allocate(filter(nc)%pcropp(endp-begp+1))
+       allocate(filter(nc)%soilnopcropp(endp-begp+1))
     end do
 !$OMP END PARALLEL DO
 
@@ -185,7 +190,9 @@ contains
 ! !USES:
     use clmtype
     use decompMod , only : get_clump_bounds
+    use pftvarcon , only : npcropmin
     use clm_varcon, only : istsoil, isturb, icol_road_perv, istice_mec
+    use clm_varcon, only : istcrop
 !
 ! !ARGUMENTS:
     implicit none
@@ -269,7 +276,7 @@ contains
     fs = 0
     do c = begc,endc
        l = clm3%g%l%c%landunit(c)
-       if (clm3%g%l%itype(l) == istsoil) then
+       if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
           fs = fs + 1
           filter(nc)%soilc(fs) = c
        end if
@@ -283,7 +290,7 @@ contains
     do p = begp,endp
        if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
           l = clm3%g%l%c%p%landunit(p)
-          if (clm3%g%l%itype(l) == istsoil) then
+          if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
              fs = fs + 1
              filter(nc)%soilp(fs) = p
           end if
@@ -296,12 +303,35 @@ contains
     f = 0
     do c = begc,endc
        l = clm3%g%l%c%landunit(c)
-       if (clm3%g%l%itype(l) == istsoil .or. ctype(c) == icol_road_perv ) then
+       if (clm3%g%l%itype(l) == istsoil .or. ctype(c) == icol_road_perv .or. &
+           clm3%g%l%itype(l) == istcrop) then
           f = f + 1
           filter(nc)%hydrologyc(f) = c
        end if
     end do
     filter(nc)%num_hydrologyc = f
+
+    ! Create prognostic crop and soil w/o prog. crop filters at pft-level
+    ! according to where the crop model should be used
+
+    fl  = 0
+    fnl = 0
+    do p = begp,endp
+       if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+          if (clm3%g%l%c%p%itype(p) >= npcropmin) then !skips 2 generic crop types
+             fl = fl + 1
+             filter(nc)%pcropp(fl) = p
+          else
+             l = clm3%g%l%c%p%landunit(p)
+             if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
+                fnl = fnl + 1
+                filter(nc)%soilnopcropp(fnl) = p
+             end if
+          end if
+       end if
+    end do
+    filter(nc)%num_pcropp   = fl
+    filter(nc)%soilnopcropp = fnl   ! This wasn't being set before...
 
     ! Create landunit-level urban and non-urban filters
 

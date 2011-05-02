@@ -42,6 +42,9 @@ module surfrdMod
   public :: surfrd_get_topo    ! Read topography into domain
   public :: surfrd             ! Read surface dataset and determine subgrid weights
 !
+! !PUBLIC DATA MEMBERS:
+  logical, public :: crop_prog = .false. ! If prognostic crops is turned on
+!
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 ! Updated by T Craig
@@ -256,20 +259,6 @@ contains
     deallocate(rdata)
     if(associated(idata)) deallocate(idata)
         
-!tcx fix, this or a test/abort should be added so overlaps can be computed
-!tcx fix, this is demonstrated not bfb in cam bl311 test.
-!tcx fix, see also lat_o_local in areaMod.F90
-#if (defined TCX_REMOVE_SEE_NOTES_ABOVE)
-    ! Check lat limited to -90,90
-    if (minval(latlon%latc) < -90.0_r8 .or. &
-        maxval(latlon%latc) >  90.0_r8) then
-       write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
-            minval(latlon%latc),maxval(latlon%latc)
-       where (latlon%latc < -90.0_r8) latlon%latc = -90.0_r8
-       where (latlon%latc >  90.0_r8) latlon%latc =  90.0_r8
-    endif
-#endif
-
     call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_latlon
@@ -398,20 +387,6 @@ contains
     call ncd_io(ncid=ncid, varname= 'PFTDATA_MASK', flag='read', data=domain%pftm, &
          dim1name=clmlevel, readvar=readvar)
 
-!tcx fix, this or a test/abort should be added so overlaps can be computed
-!tcx fix, this is demonstrated not bfb in cam bl311 test.
-!tcx fix, see also lat_o_local in areaMod.F90
-#if (defined TCX_REMOVE_SEE_NOTES_ABOVE)
-    ! Check lat limited to -90,90
-    if (minval(domain%latc) < -90.0_r8 .or. &
-         maxval(domain%latc) >  90.0_r8) then
-       write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
-            minval(domain%latc),maxval(domain%latc)
-       where (domain%latc < -90.0_r8) domain%latc = -90.0_r8
-       where (domain%latc >  90.0_r8) domain%latc =  90.0_r8
-    endif
-#endif
-
     call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_grid
@@ -485,7 +460,7 @@ contains
     if (masterproc) then
        write(iulog,*) 'Attempting to read surface boundary data .....'
        if (lfsurdat == ' ') then
-          write(iulog,*)'lfsurdat must be specified'; call endrun()
+          call endrun( trim(subname)//' ERROR: lfsurdat must be specified' )
        endif
     endif
 
@@ -510,6 +485,20 @@ contains
        call surfrd_wtxy_veg_all(ncid, domain)
     else
        call surfrd_wtxy_veg_rank(ncid, domain)
+    end if
+#endif
+
+#ifdef CROP
+    if ( .not. crop_prog )then
+       call endrun( trim(subname)//' ERROR: surface dataset MUST have '// & 
+                    'prognostic crop on it if CROP #ifdef is set'//       &
+                    ' -- use a different surface dataset' )
+    end if
+#else
+    if ( crop_prog )then
+       call endrun( trim(subname)//' ERROR: surface dataset can NOT have '// & 
+                    'prognostic crop on it if CROP #ifdef is NOT set'//      &
+                    ' -- use a different surface dataset' )
     end if
 #endif
 
@@ -1384,7 +1373,8 @@ contains
 ! !USES:
     use domainMod   , only : domain_type
     use clm_varctl  , only : create_crop_landunit
-    use pftvarcon   , only : nirrig
+    use pftvarcon   , only : nirrig, npcropmin
+    use spmdMod     , only : mpicom, MPI_LOGICAL, MPI_LOR
 !
 ! !ARGUMENTS:
     implicit none
@@ -1410,6 +1400,7 @@ contains
     real(r8),allocatable :: pctpft(:,:)        ! percent of vegetated gridcell area for PFTs
     real(r8),pointer :: arrayl(:,:)            ! local array
     real(r8) :: numpftp1data(0:numpft)         
+    logical  :: crop = .false.                 ! if crop data on this section of file
     character(len=32) :: subname = 'surfrd_wtxy_veg_all'  ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -1439,21 +1430,24 @@ contains
                 sumpct = sumpct + pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
                 if (m == nirrig .and. .not. create_crop_landunit) then
                    if (pctpft(nl,m) > 0._r8) then
-                      write(iulog,*) 'ERROR surfrdMod: pft irrigated crop requires create_crop_landunit=.true. to be irrigated'
-                      call endrun()
+                      call endrun( trim(subname)//' ERROR surfrdMod: irrigated crop'// &
+                                   ' PFT requires create_crop_landunit=.true.' )
                    end if
                 end if
              end do
              if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
-                write(iulog,*)'surfrdMod error: sum(pct) over numpft+1 is not = 100.'
+                write(iulog,*) trim(subname)//' ERROR: sum(pct) over numpft+1 is not = 100.'
                 write(iulog,*) sumpct, sumpct-100._r8, nl
                 call endrun()
              end if
              if (sumpct < -0.000001_r8) then
-                write(iulog,*)'surfrdMod error: sum(pct) over numpft+1 is < 0.'
+                write(iulog,*) trim(subname)//' ERROR: sum(pct) over numpft+1 is < 0.'
                 write(iulog,*) sumpct, nl
                 call endrun()
              end if
+             do m = npcropmin, numpft
+                if ( pctpft(nl,m) > 0.0_r8 ) crop = .true.
+             end do
           end if
 
           ! Set weight of each pft wrt gridcell (note that maxpatch_pft = numpft+1 here)
@@ -1465,6 +1459,15 @@ contains
 
        end if
     end do
+    call mpi_allreduce(crop,crop_prog,1,MPI_LOGICAL,MPI_LOR,mpicom,ier)
+    if (ier /= 0) then
+       write(iulog,*) trim(subname)//' mpi_allreduce error = ',ier
+       call endrun( trim(subname)//' ERROR: error in reduce of crop_prog' )
+    endif
+    if (crop_prog .and. .not. create_crop_landunit) then
+       call endrun( trim(subname)//' ERROR: prognostic crop '// &
+                    'PFTs requires create_crop_landunit=.true.' )
+    end if
 
     deallocate(pctpft)
 

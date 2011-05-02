@@ -13,7 +13,7 @@ module clm_initializeMod
   use spmdMod         , only : masterproc
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, downscale
+  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, downscale
   use clm_varctl      , only : iulog
   use clm_varctl      , only : create_glacier_mec_landunit
   use clm_varsur      , only : wtxy,vegxy
@@ -439,7 +439,8 @@ contains
     use mkarbinitMod    , only : mkarbinit
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
 #ifdef CN
-    use ndepStreamMod   , only : ndep_init, ndep_interp
+    use ndepStreamMod    , only : ndep_init, ndep_interp
+    use CNEcosystemDynMod, only : CNEcosystemDynInit
 #endif
 #if (defined CNDV)
     use pftdynMod             , only : pftwt_init
@@ -447,15 +448,11 @@ contains
 #endif
     use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
     use STATICEcosysDynMod , only : interpMonthlyVeg
-#if (defined DUST) 
     use DustMod         , only : Dustini
-#endif
 #if (defined CASA)
     use CASAMod         , only : initCASA
     use CASAPhenologyMod, only : initCASAPhenology
-#if (defined CLAMP)
     use CASAiniTimeVarMod,only : CASAiniTimeVar
-#endif
 #endif
 #if (defined RTM) 
     use RtmMod          , only : Rtmini
@@ -623,11 +620,9 @@ contains
 
     ! Initialize dust emissions model 
 
-#if (defined DUST) 
     call t_startf('init_dust')
     call Dustini()
     call t_stopf('init_dust')
-#endif
 
     ! ------------------------------------------------------------------------
     ! Initialize time constant urban variables
@@ -650,7 +645,7 @@ contains
     ! Initialize time manager
     ! ------------------------------------------------------------------------
 
-    if (nsrest == 0) then  
+    if (nsrest == nsrStartup) then  
        call timemgr_init()
     else
        call restFile_open( flag='read', file=fnamer, ncid=ncid )
@@ -659,6 +654,13 @@ contains
        call timemgr_restart()
     end if
     call t_stopf('init_io1')
+
+    ! ------------------------------------------------------------------------
+    ! Initialize CN Ecosystem Dynamics (must be after time-manager initialization)
+    ! ------------------------------------------------------------------------
+#if (defined CN) || (defined CNDV)
+    call CNEcosystemDynInit( begc, endc, begp, endp )
+#endif
 
     ! --------------------------------------------------------------
     ! Initialize river routing model
@@ -692,16 +694,14 @@ contains
     
 #if (defined CN)
     call t_startf('init_cninitim')
-    if (nsrest == 0) then
+    if (nsrest == nsrStartup) then
        call CNiniTimeVar()
     end if
     call t_stopf('init_cninitim')
 #elif (defined CASA)
-#if (defined CLAMP)
     call t_startf('init_casainitim')
     call CASAiniTimeVar()
     call t_stopf('init_casainitim')
-#endif
 #endif
 
     ! ------------------------------------------------------------------------
@@ -734,7 +734,7 @@ contains
     if (do_restread()) then
        if (masterproc) write(iulog,*)'reading restart file ',fnamer
        call restFile_read( fnamer )
-    else if (nsrest == 0 .and. finidat == ' ') then
+    else if (nsrest == nsrStartup .and. finidat == ' ') then
        call mkarbinit()
        call UrbanInitTimeVar( )
     end if
@@ -779,7 +779,7 @@ contains
     ! restart data read above. Note that routine hist_htapes_build needs time manager 
     ! information, so this call must be made after the restart information has been read.
 
-    if (nsrest == 0 .or. nsrest == 3) call hist_htapes_build()
+    if (nsrest == nsrStartup .or. nsrest == nsrBranch) call hist_htapes_build()
 
     ! Initialize clmtype variables that are obtained from accumulated fields.
     ! This routine is called in an initial run at nstep=0
@@ -833,7 +833,7 @@ contains
     call t_startf('init_wlog')
     if (masterproc) then
        write(iulog,*) 'Successfully initialized the land model'
-       if (nsrest == 0) then
+       if (nsrest == nsrStartup) then
           write(iulog,*) 'begin initial run at: '
        else
           write(iulog,*) 'begin continuation run at:'
@@ -847,7 +847,7 @@ contains
     endif
     call t_stopf('init_wlog')
 
-    if (get_nstep() == 0 .or. nsrest == 0) then
+    if (get_nstep() == 0 .or. nsrest == nsrStartup) then
        ! Initialize albedos (correct pft filters are needed)
 
        if (finidat == ' ' .or. do_initsurfalb) then
@@ -944,10 +944,10 @@ contains
 !-----------------------------------------------------------------------
 
     do_restread = .false.
-    if (nsrest == 0 .and. finidat /= ' ') then
+    if (nsrest == nsrStartup .and. finidat /= ' ') then
        do_restread = .true.
     end if
-    if (nsrest == 1 .or. nsrest == 3) then
+    if (nsrest == nsrContinue .or. nsrest == nsrBranch) then
        do_restread = .true.
     end if
   end function do_restread

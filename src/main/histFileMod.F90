@@ -453,6 +453,7 @@ contains
 !
 ! !USES:
     use clm_time_manager, only: get_prev_time
+    use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
     implicit none
@@ -518,7 +519,7 @@ contains
 
     do t=1,ntapes
        tape(t)%ntimes = 0
-       tape(t)%begtime = day + sec/86400._r8
+       tape(t)%begtime = day + sec/secspday
        tape(t)%dov2xy = hist_dov2xy(t)
        tape(t)%nhtfrq = hist_nhtfrq(t)
        if (hist_nhtfrq(t) == 0) hist_mfilt(t) = 1
@@ -1761,7 +1762,7 @@ contains
     ! about the data set. Global attributes are information about the
     ! data set as a whole, as opposed to a single variable
 
-    call ncd_putatt(lnfid, ncd_global, 'conventions', trim(conventions))
+    call ncd_putatt(lnfid, ncd_global, 'Conventions', trim(conventions))
     call getdatetime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
     call ncd_putatt(lnfid, ncd_global, 'history' , trim(str))
@@ -2011,7 +2012,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon   , only : zsoi, zlak
+    use clm_varcon   , only : zsoi, zlak, secspday
     use domainMod    , only : ldomain,llatlon,adomain,alatlon,gatm
 #if (defined RTM)
     use RunoffMod    , only : runoff
@@ -2156,7 +2157,7 @@ contains
        call ncd_io('mscur' , mscur , 'write', nfid(t), nt=tape(t)%ntimes)
        call ncd_io('nstep' , nstep , 'write', nfid(t), nt=tape(t)%ntimes)
 
-       time = mdcur + mscur/86400._r8
+       time = mdcur + mscur/secspday
        call ncd_io('time'  , time  , 'write', nfid(t), nt=tape(t)%ntimes)
 
        timedata(1) = tape(t)%begtime
@@ -2545,8 +2546,10 @@ contains
           call ncd_defvar(varname='land1d_jxy', xtype=ncd_int, dim1name='landunit', &
                long_name='2d latitude index of corresponding landunit', ncid=ncid)
 
-          call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
-               long_name='1d grid index of corresponding landunit', ncid=ncid)
+          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+          !call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
+          !     long_name='1d grid index of corresponding landunit', ncid=ncid)
+          ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name='landunit', &
                long_name='landunit weight relative to corresponding gridcell', ncid=ncid)
@@ -2569,11 +2572,13 @@ contains
           call ncd_defvar(varname='cols1d_jxy', xtype=ncd_int, dim1name='column', &
                long_name='2d latitude index of corresponding column', ncid=ncid)
 
-          call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
-               long_name='1d grid index of corresponding column', ncid=ncid)
+          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+          !call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
+          !     long_name='1d grid index of corresponding column', ncid=ncid)
 
-          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
-               long_name='1d landunit index of corresponding column', ncid=ncid)
+          !call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
+          !     long_name='1d landunit index of corresponding column', ncid=ncid)
+          ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name='column', &
                long_name='column weight relative to corresponding gridcell', ncid=ncid)
@@ -2599,14 +2604,16 @@ contains
           call ncd_defvar(varname='pfts1d_jxy', xtype=ncd_int, dim1name='pft', &
                long_name='2d latitude index of corresponding pft', ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
-               long_name='1d grid index of corresponding pft', ncid=ncid)
+          ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+          !call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
+          !     long_name='1d grid index of corresponding pft', ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
-               long_name='1d landunit index of corresponding pft', ncid=ncid)
+          !call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
+          !     long_name='1d landunit index of corresponding pft', ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
-               long_name='1d column index of corresponding pft', ncid=ncid)
+          !call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
+          !     long_name='1d column index of corresponding pft', ncid=ncid)
+          ! ----------------------------------------------------------------
 
           call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name='pft', &
                long_name='pft weight relative to corresponding gridcell', ncid=ncid)
@@ -2674,7 +2681,9 @@ contains
          ilarr(l) = (ldecomp%gdc2glo(lptr%gridcell(l))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
-       call ncd_io(varname='land1d_gi'       , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag='write')
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
+       !call ncd_io(varname='land1d_gi'       , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag='write')
+       ! ----------------------------------------------------------------
        call ncd_io(varname='land1d_wtgcell'  , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lptr%itype   , dim1name=namel, ncid=ncid, flag='write')
 
@@ -2696,8 +2705,10 @@ contains
          icarr(c) = (ldecomp%gdc2glo(cptr%gridcell(c))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
-       call ncd_io(varname='cols1d_gi'     , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag='write')
-       call ncd_io(varname='cols1d_li'     , data=cptr%landunit, dim1name=namec, ncid=ncid, flag='write')
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 Bug 1310
+       !call ncd_io(varname='cols1d_gi'     , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag='write')
+       !call ncd_io(varname='cols1d_li'     , data=cptr%landunit, dim1name=namec, ncid=ncid, flag='write')
+       ! ----------------------------------------------------------------
        call ncd_io(varname='cols1d_wtgcell', data=cptr%wtgcell , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_wtlunit', data=cptr%wtlunit , dim1name=namec, ncid=ncid, flag='write')
        do c=begc,endc
@@ -2723,9 +2734,11 @@ contains
          iparr(p) = (ldecomp%gdc2glo(pptr%gridcell(p))-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
-       call ncd_io(varname='pfts1d_gi'       , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag='write')
-       call ncd_io(varname='pfts1d_li'       , data=pptr%landunit, dim1name=namep, ncid=ncid, flag='write')
-       call ncd_io(varname='pfts1d_ci'       , data=pptr%column  , dim1name=namep, ncid=ncid, flag='write')
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_io(varname='pfts1d_gi'       , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag='write')
+       !call ncd_io(varname='pfts1d_li'       , data=pptr%landunit, dim1name=namep, ncid=ncid, flag='write')
+       !call ncd_io(varname='pfts1d_ci'       , data=pptr%column  , dim1name=namep, ncid=ncid, flag='write')
+       ! ----------------------------------------------------------------
        call ncd_io(varname='pfts1d_wtgcell'  , data=pptr%wtgcell , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtlunit'  , data=pptr%wtlunit , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtcol'    , data=pptr%wtcol   , dim1name=namep, ncid=ncid, flag='write')
@@ -2774,7 +2787,7 @@ contains
 ! !USES:
     use fileutils       , only : set_filename, putfil
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
-    use shr_const_mod   , only : SHR_CONST_CDAY
+    use clm_varcon      , only : secspday
     use clmtype
 !
 ! !ARGUMENTS:
@@ -2817,7 +2830,7 @@ contains
 
     call get_curr_date (yr, mon, day, mcsec)
     call get_curr_time (mdcur, mscur)
-    time = mdcur + mscur/86400._r8
+    time = mdcur + mscur/secspday
 
     ! Set calendar for current for previous time step
 
@@ -2972,7 +2985,7 @@ contains
 ! A new history file is used on a branch run.
 !
 ! !USES:
-    use clm_varctl, only : nsrest, caseid
+    use clm_varctl, only : nsrest, caseid, nsrStartup, nsrBranch
     use fileutils , only : set_filename, getfil
     use domainMod , only : ldomain,llatlon,adomain,alatlon
     use clm_varpar, only : nlevgrnd, nlevlak, numrad, rtmlon, rtmlat
@@ -3054,14 +3067,14 @@ contains
     ! If branch run, initialize file times and return
 
     if (flag == 'read') then
-       if (nsrest == 3) then
+       if (nsrest == nsrBranch) then
           do t = 1,ntapes
              tape(t)%ntimes = 0
           end do
           RETURN
        end if
        ! If startup run just return
-       if (nsrest == 0) then
+       if (nsrest == nsrStartup) then
           RETURN
        end if
     endif

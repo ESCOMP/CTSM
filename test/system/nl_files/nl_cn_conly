@@ -3,7 +3,7 @@
  brnch_retain_casename=.true.
  /
  &clm_inparm
- carbon_only    = .true.
+ suplnitro      = 'ALL'
  wrtdia         = .true.
  hist_dov2xy    = .true.,.false.
  hist_ndens     = 1,1

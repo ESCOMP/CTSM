@@ -66,6 +66,7 @@ contains
                                  istice, istwet, istsoil, isturb, istice_mec, &
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall
+    use clm_varcon      , only : istcrop
     use clm_varcon      , only : istice_mec
     use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi
@@ -463,7 +464,7 @@ contains
        if (ityplun(l)==isturb) then
          t_grnd_u(c) = t_soisno(c,snl(c)+1)
        end if
-       if (ityplun(l)==istsoil) then
+       if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          t_grnd_r(c) = t_soisno(c,snl(c)+1)
        end if
        if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
@@ -541,7 +542,7 @@ contains
        end if
        if (ityplun(l)==isturb) then
          qflx_runoff_u(c) = qflx_runoff(c)
-       else if (ityplun(l)==istsoil) then
+       else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          qflx_runoff_r(c) = qflx_runoff(c)
        end if
     end do

@@ -2,6 +2,6 @@
 -smp 
 -use_mpiserial
 -debug
--maxpft numpft+1
+-maxpft 17
 -bgc cndv
 -s

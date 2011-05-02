@@ -24,8 +24,9 @@ module accumulMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use abortutils,   only: endrun
-  use clm_varctl,   only: iulog
+  use abortutils  , only: endrun
+  use clm_varctl  , only: iulog
+  use nanMod      , only: bigint
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -218,7 +219,6 @@ contains
 !
 ! !USES:
     use spmdMod, only : masterproc
-    use nanMod, only : bigint
 !
 ! !ARGUMENTS:
     implicit none
@@ -651,6 +651,7 @@ contains
 ! Read/write accumulation restart data
 !
 ! !USES:
+    use clm_time_manager, only : is_restart
     use ncdio_pio
 !
 ! !ARGUMENTS:
@@ -717,7 +718,8 @@ contains
        varname = trim(accum(nf)%name) // '_PERIOD'
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
-               long_name='', units='time steps')
+               long_name='', units='time steps', imissing_value=bigint, &
+               ifill_value=bigint)
        else if (flag == 'read' .or. flag == 'write') then
           call ncd_io(varname=varname, data=accum(nf)%period, &
                ncid=ncid, flag=flag, readvar=readvar)
@@ -729,39 +731,5 @@ contains
     end do
 
   end subroutine accumulRest
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: is_restart
-!
-! !INTERFACE:
-  logical function is_restart( )
-!
-! !DESCRIPTION:
-! Determine if restart run
-!
-! !USES:
-    use clm_varctl, only : nsrest
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
-
-    if (nsrest == 1) then
-       is_restart = .true.
-    else
-       is_restart = .false.
-    end if
-
-  end function is_restart
 
 end module accumulMod

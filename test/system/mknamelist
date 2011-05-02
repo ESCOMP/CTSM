@@ -51,6 +51,7 @@ restart_file=" "
 restfilm=" "
 restfils=" "
 nrevsnfile=" "
+finidfile=" "
 logfile=" "
 atm_cpl_dt=" "
 #
@@ -68,7 +69,14 @@ if [ "$6" = "branch" ]; then
      restfils="restfils='$datm_restfils'"
   fi 
 fi
-
+#
+# For startup if an input if an initial file exists use it
+#
+if [ "$6" = "startup" ]; then
+  if [ -f "$finidat" ]; then
+      finidfile="finidat='$finidat'"
+  fi
+fi
 #
 # For sequential-CCSM -- always do the following...
 #
@@ -113,4 +121,4 @@ env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $s
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
                                   &seq_infodata_inparm $restart_file $logfile / \
                                   &datm_nml $restfilm $restfils / \
-                                  &clm_inparm dtime=$dtime $hist_samp $nrevsnfile $hist_freq /"
+                                  &clm_inparm dtime=$dtime $hist_samp $nrevsnfile $finidfile $hist_freq /"

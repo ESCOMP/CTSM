@@ -148,7 +148,7 @@ case $hostname in
 	    cmnd="mpirun -n ${CLM_TASKS} "
         elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -n ${CLM_TASKS} -d ${CLM_THREADS}"
+	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -n ${CLM_TASKS} "
         else
             ##mpi only
 	    cmnd="mpirun -n ${CLM_TASKS} "

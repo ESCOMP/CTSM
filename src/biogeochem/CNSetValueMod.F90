@@ -1,4 +1,3 @@
-
 module CNSetValueMod
 
 #if (defined CN)
@@ -360,6 +359,8 @@ subroutine CNSetPcs (num, filter, val, pcs)
 ! !DESCRIPTION:
 ! Set pft carbon state variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -407,12 +408,13 @@ subroutine CNSetPcs (num, filter, val, pcs)
       pcs%storvegc(i) = val
       pcs%totvegc(i) = val
       pcs%totpftc(i) = val
-
-#if (defined CLAMP)
-      ! CLAMP variables
       pcs%woodc(i) = val
-#endif
 
+      if ( crop_prog )then
+         pcs%grainc(i)         = val
+         pcs%grainc_storage(i) = val
+         pcs%grainc_xfer(i)    = val
+      end if
    end do
 
 end subroutine CNSetPcs
@@ -429,6 +431,8 @@ subroutine CNSetPns(num, filter, val, pns)
 ! !DESCRIPTION:
 ! Set pft nitrogen state variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -474,6 +478,11 @@ subroutine CNSetPns(num, filter, val, pns)
       pns%storvegn(i) = val
       pns%totvegn(i) = val
       pns%totpftn(i) = val
+      if ( crop_prog )then
+         pns%grainn(i)         = val
+         pns%grainn_storage(i) = val
+         pns%grainn_xfer(i)    = val
+      end if
    end do
 
 end subroutine CNSetPns
@@ -490,6 +499,8 @@ subroutine CNSetPcf(num, filter, val, pcf)
 ! !DESCRIPTION:
 ! Set pft carbon flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -654,16 +665,24 @@ subroutine CNSetPcf(num, filter, val, pcf)
       pcf%pft_cinputs(i) = val
       pcf%pft_coutputs(i) = val
       pcf%pft_fire_closs(i) = val
-
-#if (defined CLAMP)
-      !CLAMP
       pcf%frootc_alloc(i) = val
       pcf%frootc_loss(i) = val
       pcf%leafc_alloc(i) = val
       pcf%leafc_loss(i) = val
       pcf%woodc_alloc(i) = val
       pcf%woodc_loss(i) = val
-#endif
+      if ( crop_prog )then
+         pcf%xsmrpool_to_atm(i)         = val
+         pcf%livestemc_to_litter(i)     = val
+         pcf%grainc_to_food(i)          = val
+         pcf%grainc_xfer_to_grainc(i)   = val
+         pcf%cpool_to_grainc(i)         = val
+         pcf%cpool_to_grainc_storage(i) = val
+         pcf%cpool_grain_gr(i)          = val
+         pcf%cpool_grain_storage_gr(i)  = val
+         pcf%transfer_grain_gr(i)       = val
+         pcf%grainc_storage_to_xfer(i)  = val
+      end if
    end do
 
 end subroutine CNSetPcf
@@ -680,6 +699,8 @@ subroutine CNSetPnf(num, filter, val, pnf)
 ! !DESCRIPTION:
 ! Set pft nitrogen flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -798,6 +819,14 @@ subroutine CNSetPnf(num, filter, val, pnf)
       pnf%pft_noutputs(i) = val
       pnf%wood_harvestn(i) = val
       pnf%pft_fire_nloss(i) = val
+      if ( crop_prog )then
+         pnf%livestemn_to_litter(i)     = val
+         pnf%grainn_to_food(i)          = val
+         pnf%grainn_xfer_to_grainn(i)   = val
+         pnf%npool_to_grainn(i)         = val
+         pnf%npool_to_grainn_storage(i) = val
+         pnf%grainn_storage_to_xfer(i)  = val
+      end if
    end do
 
 end subroutine CNSetPnf
@@ -974,6 +1003,8 @@ subroutine CNSetCcf(num, filter, val, ccf)
 ! !DESCRIPTION:
 ! Set column carbon flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -1035,6 +1066,14 @@ subroutine CNSetCcf(num, filter, val, ccf)
       ccf%hrv_deadstemc_storage_to_litr1c(i)  = val 
       ccf%hrv_livecrootc_storage_to_litr1c(i) = val
       ccf%hrv_deadcrootc_storage_to_litr1c(i) = val
+      if ( crop_prog )then
+         ccf%livestemc_to_litr1c(i) = val
+         ccf%livestemc_to_litr2c(i) = val
+         ccf%livestemc_to_litr3c(i) = val
+         ccf%grainc_to_litr1c(i)    = val
+         ccf%grainc_to_litr2c(i)    = val
+         ccf%grainc_to_litr3c(i)    = val
+      end if
       ccf%hrv_gresp_storage_to_litr1c(i)      = val
       ccf%hrv_leafc_xfer_to_litr1c(i)         = val
       ccf%hrv_frootc_xfer_to_litr1c(i)        = val
@@ -1087,13 +1126,9 @@ subroutine CNSetCcf(num, filter, val, ccf)
       ccf%col_cinputs(i)                      = val
       ccf%col_coutputs(i)                     = val
       ccf%col_fire_closs(i)                   = val
-
-#if (defined CLAMP)
-      !CLAMP
       ccf%cwdc_hr(i)                          = val
       ccf%cwdc_loss(i)                        = val
       ccf%litterc_loss(i)                     = val
-#endif
 
   end do
 
@@ -1111,6 +1146,8 @@ subroutine CNSetCnf(num, filter, val, cnf)
 ! !DESCRIPTION:
 ! Set column nitrogen flux variables
 !
+! !USES:
+    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -1189,6 +1226,14 @@ subroutine CNSetCnf(num, filter, val, cnf)
       cnf%prod10n_loss(i) = val
       cnf%prod100n_loss(i) = val
       cnf%product_nloss(i) = val
+      if ( crop_prog )then
+         cnf%grainn_to_litr1n(i)    = val
+         cnf%grainn_to_litr2n(i)    = val
+         cnf%grainn_to_litr3n(i)    = val
+         cnf%livestemn_to_litr1n(i) = val
+         cnf%livestemn_to_litr2n(i) = val
+         cnf%livestemn_to_litr3n(i) = val
+      end if
       cnf%leafn_to_litr1n(i) = val
       cnf%leafn_to_litr2n(i) = val
       cnf%leafn_to_litr3n(i) = val

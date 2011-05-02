@@ -50,15 +50,18 @@ contains
     use clmtype
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
+    use clm_varcon      , only : istcrop
     use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, &
                                  istsoil, pondmx, watmin, spval
     use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn,    &
-                                 pertlim, iulog
+                                 pertlim, iulog, nsrContinue, nsrStartup,  &
+                                 nsrBranch
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
     use SNICARMod       , only : snw_rds_min
     use shr_infnan_mod  , only : shr_infnan_isnan
     use mkarbinitMod    , only : perturbIC
+    use clm_time_manager, only : is_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -104,10 +107,14 @@ contains
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
     real(r8), pointer   :: temp2d(:,:)    ! temporary for zisno
     real(r8), parameter :: adiff = 5.e-04_r8   ! tolerance of acceptible difference
-    character(len=7), parameter :: filetypes(0:3) = (/ "finidat", "restart", "missing", "nrevsn " /)
+    character(len=7)  :: filetypes(0:3)
     character(len=32) :: fileusing
     character(len=*), parameter :: sub="BiogeophysRest"
 !-----------------------------------------------------------------------
+    filetypes(:)           = "missing"
+    filetypes(nsrStartup)  = "finidat"
+    filetypes(nsrContinue) = "restart"
+    filetypes(nsrBranch)   = "nrevsn"
 
     ! Set pointers into derived type
 
@@ -200,7 +207,7 @@ contains
           !
           ! Note: Do not compare weights if restart or if dynamic-pft branch
           !
-          if ( nsrest == 1 .or. fpftdyn /= ' ' )then
+          if ( nsrest == nsrContinue .or. fpftdyn /= ' ' )then
              ! Do NOT do any testing for restart or a pftdyn case
           !
           ! Otherwise test and make sure weights agree to reasonable tolerence
@@ -720,7 +727,7 @@ contains
           if (is_restart()) then
              call endrun()
           else
-             if (nsrest == 0) do_initsurfalb = .true.
+             if (nsrest == nsrStartup) do_initsurfalb = .true.
           end if
        end if
     end if
@@ -738,7 +745,7 @@ contains
           if (is_restart()) then
              call endrun()
           else
-             if (nsrest == 0) do_initsurfalb = .true.
+             if (nsrest == nsrStartup) do_initsurfalb = .true.
           end if
        end if
     end if
@@ -1604,7 +1611,7 @@ contains
              end if
              do j = 1,nlevs
                 l = clandunit(c)
-                if (ltype(l) == istsoil) then
+                if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
                    cptr%cws%h2osoi_liq(c,j) = max(0._r8,cptr%cws%h2osoi_liq(c,j))
                    cptr%cws%h2osoi_ice(c,j) = max(0._r8,cptr%cws%h2osoi_ice(c,j))
                    cptr%cws%h2osoi_vol(c,j) = cptr%cws%h2osoi_liq(c,j)/(cptr%cps%dz(c,j)*denh2o) &
@@ -1862,7 +1869,7 @@ contains
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
           ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-          if (nsrest == 0) do_initsurfalb = .true.
+          if (nsrest == nsrStartup) do_initsurfalb = .true.
        end if
     end if
 
@@ -1878,7 +1885,7 @@ contains
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
           ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-          if (nsrest == 0) do_initsurfalb = .true.
+          if (nsrest == nsrStartup) do_initsurfalb = .true.
        end if
     end if
 
@@ -1894,7 +1901,7 @@ contains
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
           ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-          if (nsrest == 0) do_initsurfalb = .true.
+          if (nsrest == nsrStartup) do_initsurfalb = .true.
        end if
     end if
 
@@ -1910,7 +1917,7 @@ contains
        if (flag == 'read' .and. .not. readvar) then
           if (is_restart()) call endrun()
           ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
-          if (nsrest == 0) do_initsurfalb = .true.
+          if (nsrest == nsrStartup) do_initsurfalb = .true.
        end if
     end if
 
@@ -1996,40 +2003,6 @@ contains
 
 
   end subroutine BiogeophysRest
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: is_restart
-!
-! !INTERFACE:
-  logical function is_restart( )
-!
-! !DESCRIPTION:
-! Determine if restart run
-!
-! !USES:
-    use clm_varctl, only : nsrest
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
-
-    if (nsrest == 1) then
-       is_restart = .true.
-    else
-       is_restart = .false.
-    end if
-
-  end function is_restart
 
 !-----------------------------------------------------------------------
 !BOP

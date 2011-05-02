@@ -41,6 +41,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_time_manager, only: get_days_per_year
+   use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
    implicit none
@@ -277,7 +278,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
       end if
 #endif
 
-      m  = am/(get_days_per_year() * 86400._r8)
+      m  = am/(get_days_per_year() * secspday)
 
       ! pft-level gap mortality carbon fluxes
       ! displayed pools

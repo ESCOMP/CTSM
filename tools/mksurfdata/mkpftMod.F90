@@ -14,7 +14,8 @@ module mkpftMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use mkvarpar    , only : numpft
+  use mkvarctl    , only : numpft
+
   implicit none
 
   private           ! By default make data private
@@ -37,10 +38,11 @@ module mkpftMod
   ! the fraction in pft_frc. Only the first few points are used until pft_frc = 0.0.
   !
   integer            :: m                     ! index
-  integer, public    :: pft_idx(0:numpft) = & ! PFT vegetation index to override with
-                             (/ ( -1,  m = 0, numpft )   /)
-  real(r8), public   :: pft_frc(0:numpft) = & ! PFT vegetation fraction to override with
-                             (/ ( 0.0, m = 0, numpft ) /)
+  integer, parameter :: maxpft = 20           ! maximum # of PFT
+  integer, public    :: pft_idx(0:maxpft) = & ! PFT vegetation index to override with
+                             (/ ( -1,  m = 0, maxpft )   /)
+  real(r8), public   :: pft_frc(0:maxpft) = & ! PFT vegetation fraction to override with
+                             (/ ( 0.0, m = 0, maxpft ) /)
 !
 ! !PRIVATE DATA MEMBERS:
 !
@@ -50,7 +52,7 @@ module mkpftMod
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
-  private mkpft_check_oride  ! Check the pft_frc and pft_idx values for correctness
+  private :: mkpft_check_oride  ! Check the pft_frc and pft_idx values for correctness
 !EOP
 !===============================================================
 contains
@@ -89,6 +91,10 @@ subroutine mkpftInit( zero_out_l, all_veg )
 
   call mkpft_check_oride( )
   if ( use_input_pft ) then
+     if ( maxpft < numpft ) then
+        write(6,*) subname//'number PFT is > max allowed!'
+        call abort()
+     end if
      write(6,*) 'Set PFT fraction to : ', pft_frc(0:nzero-1)
      write(6,*) 'With PFT index      : ', pft_idx(0:nzero-1)
   end if
@@ -123,7 +129,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
 ! area-averaging from the input (1/2 degree) grid to the models grid.
 !
 ! !USES:
-  use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
@@ -178,27 +183,11 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   integer  :: k,n,m                           ! indices
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
+  integer  :: indxcrop                        ! input grid index for crop
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
   character(len=256) locfn                    ! local dataset file name
 
   character(len=35)  veg(0:numpft)            ! vegetation types
-  data veg( 0) /'not vegetated'                      /
-  data veg( 1) /'needleleaf evergreen temperate tree'/
-  data veg( 2) /'needleleaf evergreen boreal tree'   /
-  data veg( 3) /'needleleaf deciduous boreal tree'   /
-  data veg( 4) /'broadleaf evergreen tropical tree'  /
-  data veg( 5) /'broadleaf evergreen temperate tree' /
-  data veg( 6) /'broadleaf deciduous tropical tree'  /
-  data veg( 7) /'broadleaf deciduous temperate tree' /
-  data veg( 8) /'broadleaf deciduous boreal tree'    /
-  data veg( 9) /'broadleaf evergreen shrub'          /
-  data veg(10) /'broadleaf deciduous temperate shrub'/
-  data veg(11) /'broadleaf deciduous boreal shrub'   /
-  data veg(12) /'c3 arctic grass'                    /
-  data veg(13) /'c3 non-arctic grass'                /
-  data veg(14) /'c4 grass'                           /
-  data veg(15) /'corn'                               /
-  data veg(16) /'wheat'                              /
   integer :: nonIrrigIdx = 15
   integer :: IrrigIdx    = 16
   character(len=32) :: subname = 'mkpft'
@@ -206,6 +195,39 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
 
   write (6,*) 'Attempting to make PFTs .....'
   call shr_sys_flush(6)
+
+  ! -----------------------------------------------------------------
+  ! Set the vegetation types
+  ! -----------------------------------------------------------------
+  if ( numpft >= numstdpft )then
+     veg(0:numstdpft) = (/                                &
+                   'not vegetated                      ', &
+                   'needleleaf evergreen temperate tree', &
+                   'needleleaf evergreen boreal tree   ', &
+                   'needleleaf deciduous boreal tree   ', &
+                   'broadleaf evergreen tropical tree  ', &
+                   'broadleaf evergreen temperate tree ', &
+                   'broadleaf deciduous tropical tree  ', &
+                   'broadleaf deciduous temperate tree ', &
+                   'broadleaf deciduous boreal tree    ', &
+                   'broadleaf evergreen shrub          ', &
+                   'broadleaf deciduous temperate shrub', &
+                   'broadleaf deciduous boreal shrub   ', &
+                   'c3 arctic grass                    ', &
+                   'c3 non-arctic grass                ', &
+                   'c4 grass                           ', &
+                   'c3_crop                            ', &
+                   'c4_crop                            ' /)
+     indxcrop = 15   ! c3_crop is active generic crop type
+  end if
+  if (      numpft == numstdpft )then
+     write(6,*)'Creating surface datasets with the standard # of PFTs =', numpft
+  else if ( numpft > numstdpft )then
+     write(6,*)'Creating surface datasets with extra types for crops; total pfts =', numpft
+  else
+     write(6,*) subname//': parameter numpft is NOT set to a known value (should be 16 or more) =',numpft
+     call abort()
+  end if
 
   ! -----------------------------------------------------------------
   ! Read input PFT file
@@ -224,7 +246,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
      call check_ret(nf_inq_dimlen (ncid, dimid, numpft_i), subname)
 
      if (numpft_i .ne. numpft+1) then
-        write(6,*)'MKPFT: parameter numpft+1= ',numpft+1, &
+        write(6,*) subname//': parameter numpft+1= ',numpft+1, &
              'does not equal input dataset numpft= ',numpft_i
         call abort()
      endif
@@ -322,7 +344,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
            wst_sum = wst_sum + pctpft_o(io,jo,m)
         enddo
         if (abs(wst_sum-100.) > 0.000001_r8) then
-           write (6,*) 'MKPFT error: pft = ', &
+           write (6,*) subname//'error: pft = ', &
                 (pctpft_o(io,jo,m), m = 0, numpft), &
                 ' do not sum to 100. at column, row = ',io,jo, &
                 ' but to ', wst_sum
@@ -813,7 +835,6 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
 !
   use ncdio       , only : check_ret, ncd_defvar
   use mkvarctl    , only : mksrf_fvegtyp, mksrf_firrig, mksrf_flai
-  use mkvarpar    , only : numpft
   use fileutils   , only : get_filename
 ! !ARGUMENTS:
   implicit none

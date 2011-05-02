@@ -1,0 +1,7 @@
+-mode clm_stndln
+-smp -use_mpiserial
+-debug
+-maxpft 17
+-rtm on
+-voc on
+-s

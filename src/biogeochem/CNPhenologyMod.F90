@@ -1,4 +1,3 @@
-
 module CNPhenologyMod
 #ifdef CN
 
@@ -14,19 +13,55 @@ module CNPhenologyMod
 ! !USES:
   use clmtype
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varcon  , only: tfrz
+  use clm_varctl  , only: iulog
+  use clm_varpar  , only: numpft
+  use shr_sys_mod , only: shr_sys_flush
+  use abortutils  , only: endrun
   implicit none
   save
   private
 
-! local variables to the whole module
-
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNPhenology
+  public :: CNPhenologyInit      ! Initialization
+  public :: CNPhenology          ! Update
 !
 ! !REVISION HISTORY:
 ! 8/1/03: Created by Peter Thornton
 ! 10/23/03, Peter Thornton: migrated all routines to vector data structures
-!
+! 2/4/08,  slevis: adding crop phenology from AgroIBIS
+
+! !PRIVATE DATA MEMBERS:
+
+  real(r8)           :: dt              ! radiation time step delta t (seconds)
+  real(r8)           :: fracday         ! dtime as a fraction of day
+  real(r8)           :: crit_dayl       ! critical daylength for offset (seconds)
+  real(r8)           :: ndays_on        ! number of days to complete onset
+  real(r8)           :: ndays_off       ! number of days to complete offset
+  real(r8)           :: fstor2tran      ! fraction of storage to move to transfer on each onset
+  real(r8)           :: crit_onset_fdd  ! critical number of freezing days
+  real(r8)           :: crit_onset_swi  ! water stress days for offset trigger
+  real(r8)           :: soilpsi_on      ! water potential for onset trigger (MPa)
+  real(r8)           :: crit_offset_fdd ! critical number of freezing degree days
+                                        ! to trigger offset
+  real(r8)           :: crit_offset_swi ! water stress days for offset trigger
+  real(r8)           :: soilpsi_off     ! water potential for offset trigger (MPa)
+  real(r8)           :: lwtop           ! live wood turnover proportion (annual fraction)
+  !
+  ! CropPhenology variables and constants
+  !
+  real(r8)           :: p1d, p1v            ! photoperiod factor constants for crop vernalization
+  real(r8)           :: hti                 ! cold hardening index threshold for vernalization
+  real(r8)           :: tbase               ! base temperature for vernalization
+  integer, parameter :: NOT_Planted   = 999 ! If not planted   yet in year
+  integer, parameter :: NOT_Harvested = 999 ! If not harvested yet in year
+  integer, parameter :: inNH       = 1      ! Northern Hemisphere
+  integer, parameter :: inSH       = 2      ! Southern Hemisphere
+  integer, pointer   :: inhemi(:)           ! Hemisphere that pft is in
+  integer            :: minplantjday(0:numpft,inSH) ! minimum planting julian day
+  integer            :: maxplantjday(0:numpft,inSH) ! maximum planting julian day
+  integer            :: jdayyrstart(inSH)           ! julian day of start of year
+
 !EOP
 !-----------------------------------------------------------------------
 
@@ -38,7 +73,8 @@ contains
 ! !IROUTINE: CNPhenology
 !
 ! !INTERFACE:
-subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
+subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp, &
+                        num_pcropp, filter_pcropp, doalb)
 !
 ! !DESCRIPTION:
 ! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
@@ -51,6 +87,9 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+   integer, intent(in) :: num_pcropp      ! number of prog. crop pfts in filter
+   integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
+   logical, intent(in) :: doalb           ! true if time for sfc albedo calc
 !
 ! !CALLED FROM:
 ! subroutine CNEcosystemDyn in module CNEcosystemDynMod.F90
@@ -76,13 +115,15 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
    ! each of the following phenology type routines includes a filter
    ! to operate only on the relevant pfts
 
-   call CNPhenologyClimate(num_soilp, filter_soilp)
+   call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp)
    
    call CNEvergreenPhenology(num_soilp, filter_soilp)
 
    call CNSeasonDecidPhenology(num_soilp, filter_soilp)
 
    call CNStressDecidPhenology(num_soilp, filter_soilp)
+
+   if (doalb .and. num_pcropp > 0 ) call CropPhenology(num_pcropp, filter_pcropp)
 
    ! the same onset and offset routines are called regardless of
    ! phenology type - they depend only on onset_flag, offset_flag, bglfr, and bgtr
@@ -101,6 +142,96 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
    call CNLitterToColumn(num_soilc, filter_soilc)
 
 end subroutine CNPhenology
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: CNPhenologyInit
+!
+! !INTERFACE:
+subroutine CNPhenologyInit( begp, endp )
+!
+! !DESCRIPTION:
+! Initialization of CNPhenology. Must be called after time-manager is
+! initialized, and after pftcon file is read in.
+!
+! !USES:
+   use clm_time_manager, only: get_step_size
+   use surfrdMod       , only: crop_prog
+   use clm_varcon      , only: secspday
+!
+! !ARGUMENTS:
+   implicit none
+   integer, intent(IN) :: begp, endp ! Beginning and ending PFT index
+! !CALLED FROM:
+! subroutine initialize2 in module clm_initializeMod.F90
+!
+! !REVISION HISTORY:
+! 3/28/11: Created by Erik Kluzek
+!
+! !LOCAL VARIABLES:
+!EOP
+!------------------------------------------------------------------------
+
+    !
+    ! Get time-step and what fraction of a day it is
+    !
+    dt      = real( get_step_size(), r8 )
+    fracday = dt/secspday
+
+    ! set some local parameters - these will be moved into
+    ! parameter file after testing
+
+    ! -----------------------------------------
+    ! Constants for CNSeasonDecidPhenology
+    ! -----------------------------------------
+    !
+    ! critical daylength from Biome-BGC, v4.1.2
+    crit_dayl = 39300._r8
+
+    ! -----------------------------------------
+    ! Constants for CNSeasonDecidPhenology and CNStressDecidPhenology
+    ! -----------------------------------------
+    ndays_on  = 30._r8
+    ndays_off = 15._r8
+
+    ! transfer parameters
+    fstor2tran = 0.5_r8
+    ! -----------------------------------------
+    ! Constants for CNStressDecidPhenology
+    ! -----------------------------------------
+
+    ! onset parameters
+    crit_onset_fdd = 15.0_r8
+    ! critical onset gdd now being calculated as a function of annual
+    ! average 2m temp.
+    ! crit_onset_gdd = 150.0 ! c3 grass value
+    ! crit_onset_gdd = 1000.0   ! c4 grass value
+    crit_onset_swi = 15.0_r8
+    soilpsi_on     = -2.0_r8
+
+    ! offset parameters
+    crit_offset_fdd = 15.0_r8
+    crit_offset_swi = 15.0_r8
+    soilpsi_off     = -2.0_r8
+
+    ! -----------------------------------------
+    ! Constants for CNLivewoodTurnover
+    ! -----------------------------------------
+
+    ! set the global parameter for livewood turnover rate
+    ! define as an annual fraction (0.7), and convert to fraction per second
+    lwtop = 0.7_r8 / 31536000.0_r8
+
+    ! -----------------------------------------
+    ! Call any subroutine specific initialization routines
+    ! -----------------------------------------
+
+    if ( crop_prog ) call CropPhenologyInit( begp, endp )
+
+end subroutine CNPhenologyInit
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -109,17 +240,21 @@ end subroutine CNPhenology
 ! !IROUTINE: CNPhenologyClimate
 !
 ! !INTERFACE:
-subroutine CNPhenologyClimate (num_soilp, filter_soilp)
+subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp)
 !
 ! !DESCRIPTION:
 ! For coupled carbon-nitrogen code (CN).
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_days_per_year
+   use clm_time_manager, only: get_curr_date
+   use CropRestMod     , only: CropRestYear, CropRestIncYear
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+   integer, intent(in) :: num_pcropp      ! number of prognostic crops in filter
+   integer, intent(in) :: filter_pcropp(:)! filter for prognostic crop pfts
 !
 ! !CALLED FROM:
 ! subroutine CNPhenology
@@ -130,10 +265,17 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
 !
-   integer , pointer :: ivt(:)       ! pft vegetation type
+   integer , pointer :: ivt(:)             ! pft vegetation type
    ! ecophysiological constants
-   real(r8), pointer :: t_ref2m(:)            ! 2m air temperature (K)
+   real(r8), pointer :: t_ref2m(:)         ! 2m air temperature (K)
    real(r8), pointer :: tempavg_t2m(:)     ! temp. avg 2m air temperature (K)
+   real(r8), pointer :: gdd0(:)            ! growing deg. days base 0 deg C (ddays)
+   real(r8), pointer :: gdd8(:)            !    "     "    "    "   8  "  "    "
+   real(r8), pointer :: gdd10(:)           !    "     "    "    "  10  "  "    "
+   real(r8), pointer :: gdd020(:)          ! 20-yr mean of gdd0 (ddays)
+   real(r8), pointer :: gdd820(:)          ! 20-yr mean of gdd8 (ddays)
+   real(r8), pointer :: gdd1020(:)         ! 20-yr mean of gdd10 (ddays)
+   integer , pointer :: pgridcell(:)       ! pft's gridcell index
 !
 ! local pointers to implicit in/out scalars
 !
@@ -141,25 +283,75 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
 ! local pointers to implicit out scalars
 !
 ! !OTHER LOCAL VARIABLES:
-   integer :: p                      ! indices
-   integer :: fp             !lake filter pft index
-   real(r8):: dt             !radiation time step delta t (seconds)
-   real(r8):: fracday        !dtime as a fraction of day
+   integer :: p                    ! indices
+   integer :: fp                   ! lake filter pft index
+   integer, save :: nyrs = -999    ! number of years prognostic crop has run
+   real(r8):: dayspyr              ! days per year (days)
+   integer kyr                     ! current year
+   integer kmo                     !         month of year  (1, ..., 12)
+   integer kda                     !         day of month   (1, ..., 31)
+   integer mcsec                   !         seconds of day (0, ..., seconds/day)
+   real(r8), parameter :: yravg   = 20.0_r8      ! length of years to average for gdd
+   real(r8), parameter :: yravgm1 = yravg-1.0_r8 ! minus 1 of above
 !EOP
 !-----------------------------------------------------------------------
 
    ! assign local pointers to derived type arrays
-   ivt       => clm3%g%l%c%p%itype
+   ivt                           => clm3%g%l%c%p%itype
    t_ref2m                       => clm3%g%l%c%p%pes%t_ref2m
    tempavg_t2m                   => clm3%g%l%c%p%pepv%tempavg_t2m
 
+   gdd0                          => clm3%g%l%c%p%pps%gdd0
+   gdd8                          => clm3%g%l%c%p%pps%gdd8
+   gdd10                         => clm3%g%l%c%p%pps%gdd10
+   gdd020                        => clm3%g%l%c%p%pps%gdd020
+   gdd820                        => clm3%g%l%c%p%pps%gdd820
+   gdd1020                       => clm3%g%l%c%p%pps%gdd1020
+   pgridcell                     => clm3%g%l%c%p%gridcell
+
    ! set time steps
-   dt = real( get_step_size(), r8 )
-   fracday = dt/86400.0_r8
+
+   dayspyr = get_days_per_year()
 
    do fp = 1,num_soilp
       p = filter_soilp(fp)
-	  tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/365._r8)
+      tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/dayspyr)
+   end do
+
+   !
+   ! The following crop related steps are done here rather than CropPhenology
+   ! so that they will be completed each time-step rather than with doalb.
+   !
+   ! The following lines come from ibis's climate.f + stats.f
+   ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
+
+   if ( num_pcropp > 0 )then
+      ! get time-related info
+      call get_curr_date (   kyr, kmo, kda, mcsec)
+      if ( nyrs == -999 ) then
+         nyrs = CropRestYear()
+      else
+         if (kmo == 1 .and. kda == 1 .and. mcsec == 0) call CropRestIncYear( nyrs )
+      end if
+   end if
+
+   do fp = 1,num_pcropp
+      p = filter_pcropp(fp)
+      if (kmo == 1 .and. kda == 1 .and. nyrs == 0) then ! YR 1:
+         gdd020(p)  = 0._r8                             ! set gdd..20 variables to 0
+         gdd820(p)  = 0._r8                             ! and crops will not be planted
+         gdd1020(p) = 0._r8
+      end if
+      if (kmo == 1 .and. kda == 1 .and. mcsec == 0) then        ! <-- END of EVERY YR:
+         if (nyrs  == 1) then                                   ! <-- END of YR 1
+            gdd020(p)  = gdd0(p)                                ! <-- END of YR 1
+            gdd820(p)  = gdd8(p)                                ! <-- END of YR 1
+            gdd1020(p) = gdd10(p)                               ! <-- END of YR 1
+         end if                                                 ! <-- END of YR 1
+         gdd020(p)  = (yravgm1* gdd020(p)  + gdd0(p))  / yravg  ! gdd..20 must be long term avgs
+         gdd820(p)  = (yravgm1* gdd820(p)  + gdd8(p))  / yravg  ! so ignore results for yrs 1 & 2
+         gdd1020(p) = (yravgm1* gdd1020(p) + gdd10(p)) / yravg 
+      end if
    end do
 
 end subroutine CNPhenologyClimate
@@ -177,6 +369,8 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
 ! For coupled carbon-nitrogen code (CN).
 !
 ! !USES:
+   use clm_varcon      , only: secspday
+   use clm_time_manager, only: get_days_per_year
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -205,6 +399,7 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
 ! local pointers to implicit out scalars
 !
 ! !OTHER LOCAL VARIABLES:
+   real(r8):: dayspyr                ! Days per year
    integer :: p                      ! indices
    integer :: fp                     ! lake filter pft index
 !EOP
@@ -217,11 +412,12 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
    bglfr     => clm3%g%l%c%p%pepv%bglfr
    bgtr      => clm3%g%l%c%p%pepv%bgtr
    lgsf      => clm3%g%l%c%p%pepv%lgsf
+   dayspyr   = get_days_per_year()
 
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       if (evergreen(ivt(p)) == 1._r8) then
-          bglfr(p) = 1._r8/(leaf_long(ivt(p))*365._r8*86400._r8)
+          bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
           bgtr(p)  = 0._r8
           lgsf(p)  = 0._r8
       end if
@@ -244,8 +440,8 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! deciduous vegetation that has only one growing season per year).
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
-   use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
+   use shr_const_mod   , only: SHR_CONST_TKFRZ, SHR_CONST_PI
+   use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -347,17 +543,11 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,p            !indices
    integer :: fp             !lake filter pft index
-   real(r8):: dt             !radiation time step delta t (seconds)
-   real(r8):: fracday        !dtime as a fraction of day
-   real(r8):: crit_dayl      !critical daylength for offset (seconds)
    real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
    real(r8):: crit_onset_gdd !critical onset growing degree-day sum
-   real(r8):: ndays_on       !number of days to complete onset
-   real(r8):: ndays_off      !number of days to complete offset
    real(r8):: soilt
    real(r8):: lat            !latitude (radians)
    real(r8):: temp           !temporary variable for daylength calculation
-   real(r8):: fstor2tran     !fraction of storage to move to transfer on each onset
 
 !EOP
 !-----------------------------------------------------------------------
@@ -441,18 +631,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 #if (defined CNDV)
    pftmayexist                   => clm3%g%l%c%p%pdgvs%pftmayexist
 #endif
-
-   ! set time steps
-   dt = real( get_step_size(), r8 )
-   fracday = dt/86400.0_r8
-
-   ! critical daylength from Biome-BGC, v4.1.2
-   crit_dayl = 39300._r8
-   ndays_on = 30._r8
-   ndays_off = 15._r8
-
-   ! transfer parameters
-   fstor2tran = 0.5_r8
 
    ! start pft loop
    do fp = 1,num_soilp
@@ -594,7 +772,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
                dormant_flag(p) = 0.0_r8
                onset_gddflag(p) = 0.0_r8
                onset_gdd(p) = 0.0_r8
-               onset_counter(p) = ndays_on * 86400.0_r8
+               onset_counter(p) = ndays_on * secspday
 
                ! move all the storage pools into transfer pools,
                ! where they will be transfered to displayed growth over the onset period.
@@ -638,7 +816,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
             ! only begin to test for offset daylength once past the summer sol
             if (ws_flag == 0._r8 .and. dayl(p) < crit_dayl) then
                offset_flag(p) = 1._r8
-               offset_counter(p) = ndays_off * 86400.0_r8
+               offset_counter(p) = ndays_off * secspday
                prev_leafc_to_litter(p) = 0._r8
                prev_frootc_to_litter(p) = 0._r8
             end if
@@ -671,8 +849,9 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 ! per year.
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
-   use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
+   use clm_time_manager, only: get_days_per_year
+   use clm_varcon      , only: secspday
+   use shr_const_mod   , only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -777,26 +956,15 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 !
 !
 ! !OTHER LOCAL VARIABLES:
+   real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
    integer :: c,p             ! indices
    integer :: fp              ! lake filter pft index
-   real(r8):: fracday         ! dtime as a fraction of day
-   real(r8):: dt              ! radiation time step delta t (seconds)
-   real(r8):: crit_onset_fdd  ! critical number of freezing days
+   real(r8):: dayspyr         ! days per year
    real(r8):: crit_onset_gdd  ! degree days for onset trigger
-   real(r8):: crit_offset_fdd ! critical number of freezing degree days
-                              ! to trigger offset
-   real(r8):: crit_onset_swi  ! water stress days for offset trigger
-   real(r8):: crit_offset_swi ! water stress days for offset trigger
-   real(r8):: soilpsi_on      ! water potential for onset trigger (MPa)
-   real(r8):: soilpsi_off     ! water potential for offset trigger (MPa)
-   real(r8):: ndays_on        ! number of days to complete onset
-   real(r8):: ndays_off       ! number of days to complete offset
    real(r8):: soilt           ! temperature of top soil layer
    real(r8):: psi             ! water stress of top soil layer
    real(r8):: lat             !latitude (radians)
    real(r8):: temp            !temporary variable for daylength calculation
-   real(r8):: fstor2tran      ! fraction of storage to move to transfer
-                              ! on each onset
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
@@ -883,30 +1051,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
     deadcrootn_storage_to_xfer     => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
 
    ! set time steps
-   dt = real( get_step_size(), r8 )
-   fracday = dt/86400.0_r8
-
-   ! set some local parameters - these will be moved into
-   ! parameter file after testing
-
-   ! onset parameters
-   crit_onset_fdd = 15.0_r8
-   ! critical onset gdd now being calculated as a function of annual
-   ! average 2m temp.
-   ! crit_onset_gdd = 150.0 ! c3 grass value
-   ! crit_onset_gdd = 1000.0   ! c4 grass value
-   crit_onset_swi = 15.0_r8
-   soilpsi_on = -2.0_r8
-   ndays_on = 30.0_r8
-
-   ! offset parameters
-   crit_offset_fdd = 15.0_r8
-   crit_offset_swi = 15.0_r8
-   soilpsi_off = -2.0_r8
-   ndays_off = 15.0_r8
-
-   ! transfer parameters
-   fstor2tran = 0.5_r8
+   dayspyr = get_days_per_year()
 
    do fp = 1,num_soilp
       p = filter_soilp(fp)
@@ -1041,7 +1186,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
             end if
             
             ! only allow onset if dayl > 6hrs
-            if (onset_flag(p) == 1._r8 .and. dayl(p) <= 21600._r8) then
+            if (onset_flag(p) == 1._r8 .and. dayl(p) <= secspqtrday) then
                 onset_flag(p) = 0._r8
             end if
 
@@ -1055,7 +1200,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
                onset_fdd(p) = 0._r8
                onset_gdd(p) = 0._r8
                onset_swi(p) = 0._r8
-               onset_counter(p) = ndays_on * 86400._r8
+               onset_counter(p) = ndays_on * secspday
 
                ! call subroutine to move all the storage pools into transfer pools,
                ! where they will be transfered to displayed growth over the onset period.
@@ -1123,8 +1268,8 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
             end if
             
             ! force offset if daylength is < 6 hrs
-            if (dayl(p) <= 21600._r8) then
-            	offset_flag(p) = 1._r8
+            if (dayl(p) <= secspqtrday) then
+               offset_flag(p) = 1._r8
             end if
 
             ! if this is the beginning of the offset period
@@ -1132,7 +1277,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
             if (offset_flag(p) == 1._r8) then
                offset_fdd(p) = 0._r8
                offset_swi(p) = 0._r8
-               offset_counter(p) = ndays_off * 86400._r8
+               offset_counter(p) = ndays_off * secspday
                prev_leafc_to_litter(p) = 0._r8
                prev_frootc_to_litter(p) = 0._r8
             end if
@@ -1147,8 +1292,8 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 
          ! calculate long growing season factor (lgsf)
          ! only begin to calculate a lgsf greater than 0.0 once the number
-         ! of days active exceeds 365.
-         lgsf(p) = max(min((days_active(p)-365._r8)/365._r8, 1._r8),0._r8)
+         ! of days active exceeds days/year.
+         lgsf(p) = max(min((days_active(p)-dayspyr)/dayspyr, 1._r8),0._r8)
 
          ! set background litterfall rate, when not in the phenological offset period
          if (offset_flag(p) == 1._r8) then
@@ -1157,7 +1302,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
             ! calculate the background litterfall rate (bglfr)
             ! in units 1/s, based on leaf longevity (yrs) and correction for long growing season
 
-            bglfr(p) = (1._r8/(leaf_long(ivt(p))*365._r8*86400._r8))*lgsf(p)
+            bglfr(p) = (1._r8/(leaf_long(ivt(p))*dayspyr*secspday))*lgsf(p)
          end if
 
          ! set background transfer rate when active but not in the phenological onset period
@@ -1168,7 +1313,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
             ! in complete turnover of the storage pools in one year at steady state,
             ! once lgsf has reached 1.0 (after 730 days active).
 
-            bgtr(p) = (1._r8/(365._r8*86400._r8))*lgsf(p)
+            bgtr(p) = (1._r8/(dayspyr*secspday))*lgsf(p)
 
             ! set carbon fluxes for shifting storage pools to transfer pools
 
@@ -1203,6 +1348,706 @@ end subroutine CNStressDecidPhenology
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: CropPhenology
+!
+! !INTERFACE:
+subroutine CropPhenology(num_pcropp, filter_pcropp)
+
+! !DESCRIPTION:
+! Code from AgroIBIS to determine crop phenology and code from CN to
+! handle CN fluxes during the phenological onset & offset periods.
+
+! !USES:
+  use clm_time_manager, only : get_curr_date, get_curr_calday, get_days_per_year
+  use pftvarcon       , only : ncorn, nscereal, nwcereal, nsoybean, gddmin, hybgdd, &
+                               lfemerg, grnfill, mxmat, minplanttemp, planttemp
+  use clm_varcon      , only : spval, secspday
+
+! !ARGUMENTS:
+  integer, intent(in) :: num_pcropp       ! number of prog crop pfts in filter
+  integer, intent(in) :: filter_pcropp(:) ! filter for prognostic crop pfts
+
+! !CALLED FROM:
+! subroutine CNPhenology
+!
+! !REVISION HISTORY:
+! 2/5/08:  slevis created according to AgroIBIS subroutines of Kucharik et al.
+! 7/14/08: slevis adapted crop cycles to southern hemisphere
+! 3/29/11: ekluzek simply logic using pftvarcon arrays
+
+!EOP
+
+! LOCAL VARAIBLES:
+      integer kyr       ! current year
+      integer kmo       !         month of year  (1, ..., 12)
+      integer kda       !         day of month   (1, ..., 31)
+      integer mcsec     !         seconds of day (0, ..., seconds/day)
+      integer jday      ! julian day of the year
+      integer fp,p      ! pft indices
+      integer c         ! column indices
+      integer g         ! gridcell indices
+      integer h         ! hemisphere indices
+      integer idpp      ! number of days past planting
+      integer pmmin     ! earliest month to plant winter temperate cereal
+      integer pdmin     ! earliest day in earliest month to plant
+      integer pmmax     ! latest possible month (month) and
+      integer pdmax     ! latest day in latest month to plant
+      real(r8) dayspyr  ! days per year
+      real(r8) crmcorn  ! ??
+
+! local pointers to implicit in scalars
+
+      integer , pointer :: pgridcell(:)! pft's gridcell index
+      integer , pointer :: pcolumn(:)  ! pft's column index
+      integer , pointer :: ivt(:)      ! pft
+      real(r8), pointer :: hui(:)      ! =gdd since planting (gddplant)
+      real(r8), pointer :: leafout(:)  ! =gdd from top soil layer temperature
+      real(r8), pointer :: tlai(:)     ! one-sided leaf area index, no burying by snow
+      real(r8), pointer :: gdd020(:)   ! 20 yr mean of gdd0
+      real(r8), pointer :: gdd820(:)   ! 20 yr mean of gdd8
+      real(r8), pointer :: gdd1020(:)  ! 20 yr mean of gdd10
+      real(r8), pointer :: a5tmin(:)   ! 5-day running mean of min 2-m temperature
+      real(r8), pointer :: a10tmin(:)  ! 10-day running mean of min 2-m temperature
+      real(r8), pointer :: t10(:)      ! 10-day running mean of the 2 m temperature (K)
+      real(r8), pointer :: t_ref2m_min(:)    !daily minimum of average 2 m height surface air temperature (K)
+      real(r8), pointer :: bgtr(:)           ! background transfer growth rate (1/s)
+      real(r8), pointer :: lgsf(:)           ! long growing season factor [0-1]
+      real(r8), pointer :: offset_flag(:)    ! offset flag
+      real(r8), pointer :: offset_counter(:) ! offset counter
+      real(r8), pointer :: leaf_long(:)      ! leaf longevity (yrs)
+      real(r8), pointer :: leafcn(:)         ! leaf C:N (gC/gN)
+! local pointers to implicit out scalars
+      integer , pointer :: idop(:)           ! date of planting
+      integer , pointer :: harvdate(:)       ! harvest date
+      logical , pointer :: croplive(:)       ! Flag, true if planted, not harvested
+      logical , pointer :: cropplant(:)      ! Flag, true if crop may be planted
+      real(r8), pointer :: cumvd(:)          ! cumulative vernalization d?ependence?
+      real(r8), pointer :: hdidx(:)          ! cold hardening index?
+      real(r8), pointer :: vf(:)             ! vernalization factor
+      real(r8), pointer :: gddmaturity(:)    ! gdd needed to harvest
+      real(r8), pointer :: bglfr(:)          ! background litterfall rate (1/s)
+      real(r8), pointer :: huileaf(:)        ! heat unit index needed from planting to leaf emergence
+      real(r8), pointer :: huigrain(:)       ! same to reach vegetative maturity
+      real(r8), pointer :: onset_flag(:)     ! onset flag
+      real(r8), pointer :: onset_counter(:)  ! onset counter
+      real(r8), pointer :: leafc_xfer(:)     ! (gC/m2) leaf C transfer
+      real(r8), pointer :: leafn_xfer(:)     ! (gN/m2) leaf N transfer
+      real(r8), pointer :: dwt_seedc_to_leaf(:) ! (gC/m2/s) seed source to PFT-level
+      real(r8), pointer :: dwt_seedn_to_leaf(:) ! (gN/m2/s) seed source to PFT-level
+!------------------------------------------------------------------------
+
+      pgridcell      => clm3%g%l%c%p%gridcell
+      pcolumn        => clm3%g%l%c%p%column
+      ivt            => clm3%g%l%c%p%itype
+      idop           => clm3%g%l%c%p%pps%idop
+      harvdate       => clm3%g%l%c%p%pps%harvdate
+      croplive       => clm3%g%l%c%p%pps%croplive
+      cropplant      => clm3%g%l%c%p%pps%cropplant
+      gddmaturity    => clm3%g%l%c%p%pps%gddmaturity
+      huileaf        => clm3%g%l%c%p%pps%huileaf
+      huigrain       => clm3%g%l%c%p%pps%huigrain
+      hui            => clm3%g%l%c%p%pps%gddplant
+      leafout        => clm3%g%l%c%p%pps%gddtsoi
+      tlai           => clm3%g%l%c%p%pps%tlai
+      gdd020         => clm3%g%l%c%p%pps%gdd020
+      gdd820         => clm3%g%l%c%p%pps%gdd820
+      gdd1020        => clm3%g%l%c%p%pps%gdd1020
+      a5tmin         => clm3%g%l%c%p%pes%a5tmin
+      a10tmin        => clm3%g%l%c%p%pes%a10tmin
+      t10            => clm3%g%l%c%p%pes%t10
+      cumvd          => clm3%g%l%c%p%pps%cumvd
+      hdidx          => clm3%g%l%c%p%pps%hdidx
+      vf             => clm3%g%l%c%p%pps%vf
+      t_ref2m_min    => clm3%g%l%c%p%pes%t_ref2m_min
+      bglfr          => clm3%g%l%c%p%pepv%bglfr
+      bgtr           => clm3%g%l%c%p%pepv%bgtr
+      lgsf           => clm3%g%l%c%p%pepv%lgsf
+      onset_flag     => clm3%g%l%c%p%pepv%onset_flag
+      offset_flag    => clm3%g%l%c%p%pepv%offset_flag
+      onset_counter  => clm3%g%l%c%p%pepv%onset_counter
+      offset_counter => clm3%g%l%c%p%pepv%offset_counter
+      leafc_xfer     => clm3%g%l%c%p%pcs%leafc_xfer
+      leafn_xfer     => clm3%g%l%c%p%pns%leafn_xfer
+      leaf_long      => pftcon%leaf_long
+      leafcn         => pftcon%leafcn
+      dwt_seedc_to_leaf => clm3%g%l%c%ccf%dwt_seedc_to_leaf
+      dwt_seedn_to_leaf => clm3%g%l%c%cnf%dwt_seedn_to_leaf
+! ---------------------------------------
+
+      ! get time info
+      dayspyr = get_days_per_year()
+      jday    = get_curr_calday()
+      call get_curr_date(kyr, kmo, kda, mcsec)
+
+      do fp = 1, num_pcropp
+         p = filter_pcropp(fp)
+         c = pcolumn(p)
+         g = pgridcell(p)
+         h = inhemi(p)
+
+         ! background litterfall and transfer rates; long growing season factor
+
+         bglfr(p) = 0._r8 ! this value changes later in a crop's life cycle
+         bgtr(p)  = 0._r8
+         lgsf(p)  = 0._r8
+
+         ! ---------------------------------
+         ! from AgroIBIS subroutine planting
+         ! ---------------------------------
+
+         ! in order to allow a crop to be planted only once each year
+         ! initialize cropplant = .false., but hold it = .true. through the end of the year
+
+         ! initialize other variables that are calculated for crops
+         ! on an annual basis in cropresidue subroutine
+
+         if ( jday == jdayyrstart(h) .and. mcsec == 0 )then
+
+            ! make sure variables aren't changed at beginning of the year
+            ! for a crop that is currently planted (e.g. winter temperate cereal)
+
+            if (.not. croplive(p))  then
+               cropplant(p) = .false.
+               idop(p)      = NOT_Planted
+
+               ! keep next for continuous, annual winter temperate cereal type crop;
+               ! if we removed elseif,
+               ! winter cereal grown continuously would amount to a cereal/fallow
+               ! rotation because cereal would only be planted every other year
+
+            else if (croplive(p) .and. ivt(p) == nwcereal) then
+               cropplant(p) = .false.
+!           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
+            end if
+
+         end if
+
+         if ( (.not. croplive(p)) .and. (.not. cropplant(p)) ) then
+
+            ! gdd needed for * chosen crop and a likely hybrid (for that region) *
+            ! to reach full physiological maturity
+
+            ! based on accumulated seasonal average growing degree days from
+            ! April 1 - Sept 30 (inclusive)
+            ! for corn and soybeans in the United States -
+            ! decided upon by what the typical average growing season length is
+            ! and the gdd needed to reach maturity in those regions
+
+            ! first choice is used for spring temperate cereal and/or soybeans and maize
+
+            ! slevis: ibis reads xinpdate in io.f from control.crops.nc variable name 'plantdate'
+            !         According to Chris Kucharik, the dataset of
+            !         xinpdate was generated from a previous model run at 0.5 deg resolution
+
+            ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
+
+            if (ivt(p) == nwcereal) then
+
+               ! add check to only plant winter cereal after other crops (soybean, maize)
+               ! have been harvested
+
+               ! *** remember order of planting is crucial - in terms of which crops you want
+               ! to be grown in what order ***
+
+               ! in this case, corn or soybeans are assumed to be planted before
+               ! cereal would be in any particular year that both pfts are allowed
+               ! to grow in the same grid cell (e.g., double-cropping)
+
+               ! slevis: harvdate below needs cropplant(p) above to be cropplant(p,ivt(p))
+               !         where ivt(p) has rotated to winter cereal because
+               !         cropplant through the end of the year for a harvested crop.
+               !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
+               !         updated on Jan 1st instead of at harvest (slevis)
+               if (a5tmin(p)             /= spval                  .and. &
+                   a5tmin(p)             <= minplanttemp(ivt(p))   .and. &
+                   jday                  >= minplantjday(ivt(p),h) .and. &
+                   (gdd020(p)            /= spval                  .and. &
+                   gdd020(p)             >= gddmin(ivt(p)))) then
+
+                  cumvd(p)       = 0._r8
+                  hdidx(p)       = 0._r8
+                  vf(p)          = 0._r8
+                  croplive(p)    = .true.
+                  cropplant(p)   = .true.
+                  idop(p)        = jday
+                  harvdate(p)    = NOT_Harvested
+                  gddmaturity(p) = hybgdd(ivt(p))
+                  leafc_xfer(p)  = 1._r8 ! initial seed at planting to appear
+                  leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
+                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+
+                  ! latest possible date to plant winter cereal and after all other 
+                  ! crops were harvested for that year
+
+               else if (jday       >=  maxplantjday(ivt(p),h) .and. &
+                        gdd020(p)  /= spval                   .and. &
+                        gdd020(p)  >= gddmin(ivt(p))) then
+
+                  cumvd(p)       = 0._r8
+                  hdidx(p)       = 0._r8
+                  vf(p)          = 0._r8
+                  croplive(p)    = .true.
+                  cropplant(p)   = .true.
+                  idop(p)        = jday
+                  harvdate(p)    = NOT_Harvested
+                  gddmaturity(p) = hybgdd(ivt(p))
+                  leafc_xfer(p)  = 1._r8 ! initial seed at planting to appear
+                  leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
+                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+               else
+                  gddmaturity(p) = 0._r8
+               end if
+
+            else ! not winter cereal... slevis: added distinction between NH and SH
+               ! slevis: The idea is that jday will equal idop sooner or later in the year
+               !         while the gdd part is either true or false for the year.
+               if (t10(p) /= spval.and. a10tmin(p) /= spval   .and. &
+                   t10(p)     > planttemp(ivt(p))             .and. &
+                   a10tmin(p) > minplanttemp(ivt(p))          .and. &
+                   jday       >= minplantjday(ivt(p),h)       .and. &
+                   jday       <= maxplantjday(ivt(p),h)       .and. &
+                   t10(p) /= spval .and. a10tmin(p) /= spval  .and. &
+                   gdd820(p) /= spval                         .and. &
+                   gdd820(p) >= gddmin(ivt(p))) then
+
+                  ! impose limit on growing season length needed
+                  ! for crop maturity - for cold weather constraints
+                  croplive(p)  = .true.
+                  cropplant(p) = .true.
+                  idop(p)      = jday
+                  harvdate(p)  = NOT_Harvested
+
+                  ! go a specified amount of time before/after
+                  ! climatological date
+                  if (ivt(p)==nsoybean) gddmaturity(p)=min(gdd1020(p),hybgdd(ivt(p)))
+                  if (ivt(p)==ncorn) then
+                     gddmaturity(p)=max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+                     gddmaturity(p)=max(950._r8, min(gddmaturity(p)+150._r8,1850._r8))
+                  end if
+                  if (ivt(p)==nscereal) gddmaturity(p)=min(gdd020(p),hybgdd(ivt(p)))
+
+                  leafc_xfer(p) = 1._r8 ! initial seed at planting to appear
+                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
+                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+
+               ! If hit the max planting julian day -- go ahead and plant
+               else if (jday == maxplantjday(ivt(p),h) .and. gdd820(p) > 0._r8 .and. &
+                        gdd820(p) /= spval ) then
+                  croplive(p)  = .true.
+                  cropplant(p) = .true.
+                  idop(p)      = jday
+                  harvdate(p)  = NOT_Harvested
+
+                  if (ivt(p)==nsoybean) gddmaturity(p)=min(gdd1020(p),hybgdd(ivt(p)))
+                  if (ivt(p)==ncorn) gddmaturity(p)=max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+                  if (ivt(p)==nscereal) gddmaturity(p)=min(gdd020(p),hybgdd(ivt(p)))
+
+                  leafc_xfer(p) = 1._r8 ! initial seed at planting to appear
+                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
+                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) + leafc_xfer(p)/dt
+                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) + leafn_xfer(p)/dt
+
+               else
+                  gddmaturity(p) = 0._r8
+               end if
+            end if ! crop pft distinction
+
+            ! crop phenology (gdd thresholds) controlled by gdd needed for
+            ! maturity (physiological) which is based on the average gdd
+            ! accumulation and hybrids in United States from April 1 - Sept 30
+
+            ! calculate threshold from phase 1 to phase 2:
+            ! threshold for attaining leaf emergence (based on fraction of
+            ! gdd(i) -- climatological average)
+            ! Hayhoe and Dwyer, 1990, Can. J. Soil Sci 70:493-497
+            ! Carlson and Gage, 1989, Agric. For. Met., 45: 313-324
+            ! J.T. Ritchie, 1991: Modeling Plant and Soil systems
+
+            huileaf(p) = lfemerg(ivt(p)) * gddmaturity(p) ! 3-7% in cereal
+
+            ! calculate threshhold from phase 2 to phase 3:
+            ! from leaf emergence to beginning of grain-fill period
+            ! this hypothetically occurs at the end of tassling, not the beginning
+            ! tassel initiation typically begins at 0.5-0.55 * gddmaturity
+
+            ! calculate linear relationship between huigrain fraction and relative
+            ! maturity rating for maize
+
+            if (ivt(p) == ncorn) then
+               crmcorn = max(73._r8, min(135._r8, (gddmaturity(p)+ 53.683_r8)/13.882_r8))
+               huigrain(p) = -0.002_r8  * (crmcorn - 73._r8) + grnfill(ivt(p))
+               huigrain(p) = min(max(huigrain(p), grnfill(ivt(p))-0.1_r8), grnfill(ivt(p)))
+               huigrain(p) = huigrain(p) * gddmaturity(p)     ! Cabelguenne et
+            else
+               huigrain(p) = grnfill(ivt(p)) * gddmaturity(p) ! al. 1999
+            end if
+
+         end if ! crop not live nor planted
+
+         ! ----------------------------------
+         ! from AgroIBIS subroutine phenocrop
+         ! ----------------------------------
+
+         ! all of the phenology changes are based on the total number of gdd needed
+         ! to change to the next phase - based on fractions of the total gdd typical
+         ! for  that region based on the April 1 - Sept 30 window of development
+
+         ! crop phenology (gdd thresholds) controlled by gdd needed for
+         ! maturity (physiological) which is based on the average gdd
+         ! accumulation and hybrids in United States from April 1 - Sept 30
+         
+         ! Phase 1: Planting to leaf emergence (now in CNAllocation)
+         ! Phase 2: Leaf emergence to beginning of grain fill (general LAI accumulation)
+         ! Phase 3: Grain fill to physiological maturity and harvest (LAI decline)
+         ! Harvest: if gdd past grain fill initiation exceeds limit
+         ! or number of days past planting reaches a maximum, the crop has
+         ! reached physiological maturity and plant is harvested;
+         ! crop could be live or dead at this stage - these limits
+         ! could lead to reaching physiological maturity or determining
+         ! a harvest date for a crop killed by an early frost (see next comments)
+         ! --- --- ---
+         ! keeping comments without the code (slevis):
+         ! if minimum temperature, t_ref2m_min <= freeze kill threshold, tkill
+         ! for 3 consecutive days and lai is above a minimum,
+         ! plant will be damaged/killed. This function is more for spring freeze events
+         ! or for early fall freeze events
+
+         ! spring temperate cereal is affected by this, winter cereal kill function
+         ! is determined in crops.f - is a more elaborate function of
+         ! cold hardening of the plant
+
+         ! currently simulates too many grid cells killed by freezing temperatures
+
+         ! removed on March 12 2002 - C. Kucharik
+         ! until it can be a bit more refined, or used at a smaller scale.
+         ! we really have no way of validating this routine
+         ! too difficult to implement on 0.5 degree scale grid cells
+         ! --- --- ---
+
+         onset_flag(p)  = 0._r8 ! CN terminology to trigger certain
+         offset_flag(p) = 0._r8 ! carbon and nitrogen transfers
+
+         if (croplive(p)) then
+
+            ! call vernalization if winter temperate cereal planted, living, and the
+            ! vernalization factor is not 1;
+            ! vf affects the calculation of gddtsoi & gddplant
+
+            if (t_ref2m_min(p) < 1.e30_r8 .and. vf(p) /= 1._r8 .and. ivt(p) == nwcereal) then
+               call vernalization(p)
+            end if
+
+            ! days past planting may determine harvest
+
+            if (jday >= idop(p)) then
+               idpp = jday - idop(p)
+            else
+               idpp = int(dayspyr) + jday - idop(p)
+            end if
+
+            ! onset_counter initialized to zero when .not. croplive
+            ! offset_counter relevant only at time step of harvest
+
+            onset_counter(p) = onset_counter(p) - dt
+
+            ! enter phase 2 onset for one time step:
+            ! transfer seed carbon to leaf emergence
+
+            if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
+               if (abs(onset_counter(p)) > 1.e-6_r8) then
+                  onset_flag(p)    = 1._r8
+                  onset_counter(p) = dt
+               else
+                  onset_counter(p) = dt ! ensure no re-entry to onset of phase2
+               end if
+
+            ! enter harvest for one time step:
+            ! - transfer live biomass to litter and to crop yield
+            ! - send xsmrpool to the atmosphere
+            ! if onset and harvest needed to last longer than one timestep
+            ! the onset_counter would change from dt and you'd need to make
+            ! changes to the offset subroutine below
+
+            else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
+               if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
+               croplive(p) = .false.     ! no re-entry in greater if-block
+               if (tlai(p) > 0._r8) then ! plant had emerged before harvest
+                  offset_flag(p) = 1._r8
+                  offset_counter(p) = dt
+               else                      ! plant never emerged from the ground
+                  dwt_seedc_to_leaf(c) = dwt_seedc_to_leaf(c) - leafc_xfer(p)/dt
+                  dwt_seedn_to_leaf(c) = dwt_seedn_to_leaf(c) - leafn_xfer(p)/dt
+                  leafc_xfer(p) = 0._r8  ! revert planting transfers
+                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
+               end if
+
+            ! enter phase 3 while previous criteria fail and next is true;
+            ! in terms of order, phase 3 occurs before harvest, but when
+            ! harvest *can* occur, we want it to have first priority.
+            ! AgroIBIS uses a complex formula for lai decline.
+            ! Use CN's simple formula at least as a place holder (slevis)
+
+            else if (hui(p) >= huigrain(p)) then
+               bglfr(p) = 1._r8/(leaf_long(ivt(p))*dayspyr*secspday)
+            end if
+
+         else   ! crop not live
+            onset_counter(p) = 0._r8
+            leafc_xfer(p) = 0._r8
+            leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p))
+         end if ! croplive
+
+      end do ! prognostic crops loop
+
+end subroutine CropPhenology
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: CropPhenologyInit
+!
+! !INTERFACE:
+subroutine CropPhenologyInit( begp, endp )
+
+! !DESCRIPTION:
+! Initialization of CropPhenology. Must be called after time-manager is
+! initialized, and after pftcon file is read in.
+!
+! !USES:
+   use pftvarcon       , only: nwcereal, nsoybean, ncorn, nscereal,    &
+                               npcropmin, npcropmax, mnNHplantdate,  &
+                               mnSHplantdate, mxNHplantdate,         &
+                               mxSHplantdate
+   use clm_time_manager, only: get_calday
+   use nanmod          , only: bigint
+!
+! !ARGUMENTS:
+   implicit none
+   integer, intent(IN) :: begp, endp ! Beginning and ending PFT index
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+
+! LOCAL VARAIBLES:
+   real(r8), pointer :: latdeg(:)                   ! latitude (radians)
+   integer , pointer :: pgridcell(:)                ! pft's gridcell index
+   integer           :: p,g,n,i                     ! indices
+!------------------------------------------------------------------------
+   latdeg         => clm3%g%latdeg
+   pgridcell      => clm3%g%l%c%p%gridcell
+
+   allocate( inhemi(begp:endp) )
+
+   ! Julian day for the start of the year (mid-winter)
+   jdayyrstart(inNH) =   1
+   jdayyrstart(inSH) = 182
+
+   ! Convert planting dates into julian day
+   minplantjday(:,:) = bigint
+   maxplantjday(:,:) = bigint
+   do n = npcropmin, npcropmax
+      minplantjday(n,inNH) = int( get_calday( mnNHplantdate(n), 0 ) )
+      maxplantjday(n,inNH) = int( get_calday( mxNHplantdate(n), 0 ) )
+   end do
+   do n = npcropmin, npcropmax
+      minplantjday(n,inSH) = int( get_calday( mnSHplantdate(n), 0 ) )
+      maxplantjday(n,inSH) = int( get_calday( mxSHplantdate(n), 0 ) )
+   end do
+
+   ! Figure out what hemisphere each PFT is in
+   do p = begp, endp
+      g = pgridcell(p)
+      ! Northern hemisphere
+      if ( latdeg(g) > 0.0_r8 )then
+         inhemi(p) = inNH
+      else
+         inhemi(p) = inSH
+      end if
+   end do
+
+   !
+   ! Constants for Crop vernalization
+   !
+
+   ! photoperiod factor calculation
+   ! genetic constant - can be modified
+
+   p1d = 0.004_r8  ! average for genotypes from Ritchey, 1991.
+                   ! Modeling plant & soil systems: Wheat phasic developmt
+   p1v = 0.003_r8  ! average for genotypes from Ritchey, 1991.
+
+   hti   = 1._r8
+   tbase = 0._r8
+
+end subroutine CropPhenologyInit
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: vernalization
+!
+! !INTERFACE:
+  subroutine vernalization(p)
+!
+! !DESCRIPTION:
+!
+! * * * only call for winter temperate cereal * * *
+!
+! subroutine calculates vernalization and photoperiod effects on
+! gdd accumulation in winter temperate cereal varieties. Thermal time accumulation
+! is reduced in 1st period until plant is fully vernalized. During this
+! time of emergence to spikelet formation, photoperiod can also have a
+! drastic effect on plant development.
+!
+! !ARGUMENTS:
+      implicit none
+      integer, intent(in) :: p    ! PFT index running over
+!
+! !REVISION HISTORY:
+! Created by Sam Levis from AGROIBIS
+!
+!EOP
+
+! LOCAL VARAIBLES:
+      real(r8) tcrown                     ! ?
+      real(r8) vd, vd1, vd2               ! vernalization dependence
+      real(r8) tkil                       ! Freeze kill threshold
+      integer  c,g                        ! indices
+! local pointers to implicit in scalars
+      integer , pointer :: pcolumn(:)     ! pft's column index
+      logical , pointer :: croplive(:)    ! Flag, true if planted, not harvested
+      real(r8), pointer :: tlai(:)        ! one-sided leaf area index, no burying by snow
+      real(r8), pointer :: t_ref2m(:)     ! 2 m height surface air temperature (K)
+      real(r8), pointer :: t_ref2m_min(:) !daily minimum of average 2 m height surface air temperature (K)
+      real(r8), pointer :: t_ref2m_max(:) !daily maximum of average 2 m height surface air temperature (K)
+      real(r8), pointer :: snowdp(:)      ! snow height (m)
+! local pointers to implicit out scalars
+      real(r8), pointer :: vf(:)          ! vernalization factor for cereal
+      real(r8), pointer :: cumvd(:)       ! cumulative vernalization d?ependence?
+      real(r8), pointer :: gddmaturity(:) ! gdd needed to harvest
+      real(r8), pointer :: huigrain(:)    ! heat unit index needed to reach vegetative maturity
+      real(r8), pointer :: hdidx(:)       ! cold hardening index?
+!------------------------------------------------------------------------
+
+        pcolumn     => clm3%g%l%c%p%column
+        croplive    => clm3%g%l%c%p%pps%croplive
+        hdidx       => clm3%g%l%c%p%pps%hdidx
+        cumvd       => clm3%g%l%c%p%pps%cumvd
+        vf          => clm3%g%l%c%p%pps%vf
+        gddmaturity => clm3%g%l%c%p%pps%gddmaturity
+        huigrain    => clm3%g%l%c%p%pps%huigrain
+        tlai        => clm3%g%l%c%p%pps%tlai
+        t_ref2m     => clm3%g%l%c%p%pes%t_ref2m
+        t_ref2m_min => clm3%g%l%c%p%pes%t_ref2m_min
+        t_ref2m_max => clm3%g%l%c%p%pes%t_ref2m_max
+        snowdp      => clm3%g%l%c%cps%snowdp
+
+        c = pcolumn(p)
+
+        ! for all equations - temperatures must be in degrees (C)
+        ! calculate temperature of crown of crop (e.g., 3 cm soil temperature)
+        ! snow depth in centimeters
+
+        if (t_ref2m(p) < tfrz) then !slevis: t_ref2m inst of td=daily avg (K)
+           tcrown = 2._r8 + (t_ref2m(p) - tfrz) * (0.4_r8 + 0.0018_r8 * &
+                    (min(snowdp(c)*100._r8, 15._r8) - 15._r8)**2)
+        else !slevis: snowdp inst of adsnod=daily average (m)
+           tcrown = t_ref2m(p) - tfrz
+        end if
+
+        ! vernalization factor calculation
+        ! if vf(p) = 1.  then plant is fully vernalized - and thermal time
+        ! accumulation in phase 1 will be unaffected
+        ! refers to gddtsoi & gddplant, defined in the accumulation routines (slevis)
+        ! reset vf, cumvd, and hdidx to 0 at planting of crop (slevis)
+
+        if (t_ref2m_max(p) > tfrz) then
+           if (t_ref2m_min(p) <= tfrz+15._r8) then
+             vd1      = 1.4_r8 - 0.0778_r8 * tcrown
+             vd2      = 0.5_r8 + 13.44_r8 / ((t_ref2m_max(p)-t_ref2m_min(p)+3._r8)**2) * tcrown
+             vd       = max(0._r8, min(1._r8, vd1, vd2))
+             cumvd(p) = cumvd(p) + vd
+           end if
+
+           if (cumvd(p) < 10._r8 .and. t_ref2m_max(p) > tfrz+30._r8) then
+             cumvd(p) = cumvd(p) - 0.5_r8 * (t_ref2m_max(p) - tfrz - 30._r8)
+           end if
+           cumvd(p) = max(0._r8, cumvd(p))       ! must be > 0
+
+           vf(p) = 1._r8 - p1v * (50._r8 - cumvd(p))
+           vf(p) = max(0._r8, min(vf(p), 1._r8)) ! must be between 0 - 1
+        end if
+
+        ! calculate cold hardening of plant
+        ! determines for winter cereal varieties whether the plant has completed
+        ! a period of cold hardening to protect it from freezing temperatures. If
+        ! not, then exposure could result in death or killing of plants.
+
+        ! there are two distinct phases of hardening
+
+        if (t_ref2m_min(p) <= tfrz-3._r8 .or. hdidx(p) /= 0._r8) then
+           if (hdidx(p) >= hti) then   ! done with phase 1
+              hdidx(p) = hdidx(p) + 0.083_r8
+              hdidx(p) = min(hdidx(p), hti*2._r8)
+           end if
+
+           if (t_ref2m_max(p) >= tbase + tfrz + 10._r8) then
+              hdidx(p) = hdidx(p) - 0.02_r8 * (t_ref2m_max(p)-tbase-tfrz-10._r8)
+              if (hdidx(p) > hti) hdidx(p) = hdidx(p) - 0.02_r8 * (t_ref2m_max(p)-tbase-tfrz-10._r8)
+              hdidx(p) = max(0._r8, hdidx(p))
+           end if
+
+        else if (tcrown >= tbase-1._r8) then
+           if (tcrown <= tbase+8._r8) then
+              hdidx(p) = hdidx(p) + 0.1_r8 - (tcrown-tbase+3.5_r8)**2 / 506._r8
+              if (hdidx(p) >= hti .and. tcrown <= tbase + 0._r8) then
+                 hdidx(p) = hdidx(p) + 0.083_r8
+                 hdidx(p) = min(hdidx(p), hti*2._r8)
+              end if
+           end if
+
+           if (t_ref2m_max(p) >= tbase + tfrz + 10._r8) then
+              hdidx(p) = hdidx(p) - 0.02_r8 * (t_ref2m_max(p)-tbase-tfrz-10._r8)
+              if (hdidx(p) > hti) hdidx(p) = hdidx(p) - 0.02_r8 * (t_ref2m_max(p)-tbase-tfrz-10._r8)
+              hdidx(p) = max(0._r8, hdidx(p))
+           end if
+        end if
+
+        ! calculate what the cereal killing temperature
+        ! there is a linear inverse relationship between
+        ! hardening of the plant and the killing temperature or
+        ! threshold that the plant can withstand
+        ! when plant is fully-hardened (hdidx = 2), the killing threshold is -18 C
+
+        ! will have to develop some type of relationship that reduces LAI and
+        ! biomass pools in response to cold damaged crop
+
+        if (t_ref2m_min(p) <= tfrz - 6._r8) then
+           tkil = (tbase - 6._r8) - 6._r8 * hdidx(p)
+           if (tkil >= tcrown) then
+              if ((0.95_r8 - 0.02_r8 * (tcrown - tkil)**2) >= 0.02_r8) then
+                 write (iulog,*)  'crop damaged by cold temperatures at p,c =', p,c
+              else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1
+                 gddmaturity(p) = 0._r8      !         by forcing through
+                 huigrain(p)    = 0._r8      !         harvest
+                 write (iulog,*)  '95% of crop killed by cold temperatures at p,c =', p,c
+              end if
+           end if
+        end if
+
+  end subroutine vernalization
+
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: CNOnsetGrowth
 !
 ! !INTERFACE:
@@ -1213,7 +2058,6 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 ! pools during the phenological onset period.
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -1266,7 +2110,6 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   real(r8):: dt           ! radiation time step delta t (seconds)
    real(r8):: t1           ! temporary variable
 
 !EOP
@@ -1303,9 +2146,6 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
     deadstemn_xfer_to_deadstemn    => clm3%g%l%c%p%pnf%deadstemn_xfer_to_deadstemn
     livecrootn_xfer_to_livecrootn  => clm3%g%l%c%p%pnf%livecrootn_xfer_to_livecrootn
     deadcrootn_xfer_to_deadcrootn  => clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn
-
-   ! set time steps
-   dt = real( get_step_size(), r8 )
 
    ! pft loop
    do fp = 1,num_soilp
@@ -1378,7 +2218,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 ! pools during the phenological offset period.
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
+   use pftvarcon       , only: npcropmin
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -1398,8 +2238,15 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
    real(r8), pointer :: offset_counter(:)        ! offset days counter
    real(r8), pointer :: leafc(:)                 ! (kgC/m2) leaf C
    real(r8), pointer :: frootc(:)                ! (kgC/m2) fine root C
-   real(r8), pointer :: cpool_to_leafc(:)
-   real(r8), pointer :: cpool_to_frootc(:)
+   real(r8), pointer :: cpool_to_leafc(:)        ! allocation to leaf C (gC/m2/s)
+   real(r8), pointer :: cpool_to_frootc(:)       ! allocation to fine root C (gC/m2/s)
+!  integer , pointer :: pcolumn(:)               ! pft's column index
+   real(r8), pointer :: grainc(:)                ! (kgC/m2) grain C
+   real(r8), pointer :: livestemc(:)             ! (kgC/m2) livestem C
+   real(r8), pointer :: cpool_to_grainc(:)       ! allocation to grain C (gC/m2/s)
+   real(r8), pointer :: cpool_to_livestemc(:)    ! allocation to live stem C (gC/m2/s)
+   real(r8), pointer :: livewdcn(:)              ! live wood C:N (gC/gN)
+   real(r8), pointer :: graincn(:)               ! grain C:N (gC/gN)
    real(r8), pointer :: leafcn(:)                ! leaf C:N (gC/gN)
    real(r8), pointer :: lflitcn(:)               ! leaf litter C:N (gC/gN)
    real(r8), pointer :: frootcn(:)               ! fine root C:N (gC/gN)
@@ -1408,11 +2255,15 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 !
    real(r8), pointer :: prev_leafc_to_litter(:)  ! previous timestep leaf C litterfall flux (gC/m2/s)
    real(r8), pointer :: prev_frootc_to_litter(:) ! previous timestep froot C litterfall flux (gC/m2/s)
-   real(r8), pointer :: leafc_to_litter(:)
-   real(r8), pointer :: frootc_to_litter(:)
-   real(r8), pointer :: leafn_to_litter(:)
-   real(r8), pointer :: leafn_to_retransn(:)
-   real(r8), pointer :: frootn_to_litter(:)
+   real(r8), pointer :: leafc_to_litter(:)       ! leaf C litterfall (gC/m2/s)
+   real(r8), pointer :: frootc_to_litter(:)      ! fine root C litterfall (gC/m2/s)
+   real(r8), pointer :: leafn_to_litter(:)       ! leaf N litterfall (gN/m2/s)
+   real(r8), pointer :: leafn_to_retransn(:)     ! leaf N to retranslocated N pool (gN/m2/s)
+   real(r8), pointer :: frootn_to_litter(:)      ! fine root N litterfall (gN/m2/s)
+   real(r8), pointer :: livestemc_to_litter(:)   ! live stem C litterfall (gC/m2/s)
+   real(r8), pointer :: grainc_to_food(:)        ! grain C to food (gC/m2/s)
+   real(r8), pointer :: livestemn_to_litter(:)   ! livestem N to litter (gN/m2/s)
+   real(r8), pointer :: grainn_to_food(:)        ! grain N to food (gN/m2/s)
 !
 ! local pointers to implicit out scalars
 !
@@ -1420,7 +2271,6 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p, c         ! indices
    integer :: fp           ! lake filter pft index
-   real(r8):: dt           ! radiation time step delta t (seconds)
    real(r8):: t1           ! temporary variable
 
 !EOP
@@ -1431,23 +2281,30 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
     offset_counter                 => clm3%g%l%c%p%pepv%offset_counter
     leafc                          => clm3%g%l%c%p%pcs%leafc
     frootc                         => clm3%g%l%c%p%pcs%frootc
+    grainc                         => clm3%g%l%c%p%pcs%grainc
+    livestemc                      => clm3%g%l%c%p%pcs%livestemc
+    cpool_to_grainc                => clm3%g%l%c%p%pcf%cpool_to_grainc
+    cpool_to_livestemc             => clm3%g%l%c%p%pcf%cpool_to_livestemc
     cpool_to_leafc                 => clm3%g%l%c%p%pcf%cpool_to_leafc
     cpool_to_frootc                => clm3%g%l%c%p%pcf%cpool_to_frootc
     leafcn                         => pftcon%leafcn
     lflitcn                        => pftcon%lflitcn
     frootcn                        => pftcon%frootcn
+    livewdcn                       => pftcon%livewdcn
+    graincn                        => pftcon%graincn
 
    ! assign local pointers to derived type arrays (out)
     prev_leafc_to_litter           => clm3%g%l%c%p%pepv%prev_leafc_to_litter
     prev_frootc_to_litter          => clm3%g%l%c%p%pepv%prev_frootc_to_litter
     leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
     frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
+    livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
+    grainc_to_food                 => clm3%g%l%c%p%pcf%grainc_to_food
+    livestemn_to_litter            => clm3%g%l%c%p%pnf%livestemn_to_litter
+    grainn_to_food                 => clm3%g%l%c%p%pnf%grainn_to_food
     leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
     leafn_to_retransn              => clm3%g%l%c%p%pnf%leafn_to_retransn
     frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
-
-   ! set time steps
-   dt = real( get_step_size(), r8 )
 
    ! The litterfall transfer rate starts at 0.0 and increases linearly
    ! over time, with displayed growth going to 0.0 on the last day of litterfall
@@ -1462,6 +2319,12 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
              t1 = 1.0_r8 / dt
              leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
              frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
+             ! this assumes that offset_counter == dt for crops
+             ! if this were ever changed, we'd need to add code to the "else"
+             if (ivt(p) >= npcropmin) then
+                grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) 
+                livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)
+             end if
          else
              t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
              leafc_to_litter(p)  = prev_leafc_to_litter(p)  + t1*(leafc(p)  - prev_leafc_to_litter(p)*offset_counter(p))
@@ -1474,6 +2337,11 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 
          ! calculate fine root N litterfall (no retranslocation of fine root N)
          frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
+
+         if (ivt(p) >= npcropmin) then
+            livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
+            grainn_to_food(p) = grainc_to_food(p) / graincn(ivt(p))
+         end if
 
          ! save the current litterfall fluxes
          prev_leafc_to_litter(p)  = leafc_to_litter(p)
@@ -1499,7 +2367,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 ! pools as the result of background litter fall.
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -1539,7 +2406,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   real(r8):: dt           ! decomp timestep (seconds)
 
 !EOP
 !-----------------------------------------------------------------------
@@ -1558,9 +2424,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
     leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
     leafn_to_retransn              => clm3%g%l%c%p%pnf%leafn_to_retransn
     frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
-
-   ! set time steps
-   dt = real( get_step_size(), r8 )
 
    ! pft loop
    do fp = 1,num_soilp
@@ -1599,7 +2462,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 ! dead wood pools, for stem and coarse root.
 !
 ! !USES:
-   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -1640,8 +2502,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   real(r8):: dt           ! decomp timestep (seconds)
-   real(r8):: lwtop        ! live wood turnover proportion (annual fraction)
    real(r8):: ctovr        ! temporary variable for carbon turnover
    real(r8):: ntovr        ! temporary variable for nitrogen turnover
 
@@ -1664,13 +2524,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
     livestemn_to_retransn          => clm3%g%l%c%p%pnf%livestemn_to_retransn
     livecrootn_to_deadcrootn       => clm3%g%l%c%p%pnf%livecrootn_to_deadcrootn
     livecrootn_to_retransn         => clm3%g%l%c%p%pnf%livecrootn_to_retransn
-
-   ! set time steps
-   dt = real( get_step_size(), r8 )
-
-   ! set the global parameter for livewood turnover rate
-   ! define as an annual fraction (0.7), and convert to fraction per second
-   lwtop = 0.7_r8 / 31536000.0_r8
 
    ! pft loop
    do fp = 1,num_soilp
@@ -1716,6 +2569,7 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 !
 ! !USES:
   use clm_varpar, only : max_pft_per_col
+  use pftvarcon , only : npcropmin
 !
 ! !ARGUMENTS:
   integer, intent(in) :: num_soilc       ! number of soil columns in filter
@@ -1733,10 +2587,14 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
    real(r8), pointer :: pwtgcell(:)     ! weight of pft relative to corresponding gridcell
-   real(r8), pointer :: leafc_to_litter(:)
-   real(r8), pointer :: frootc_to_litter(:)
-   real(r8), pointer :: leafn_to_litter(:)
-   real(r8), pointer :: frootn_to_litter(:)
+   real(r8), pointer :: leafc_to_litter(:)     ! leaf C litterfall (gC/m2/s)
+   real(r8), pointer :: frootc_to_litter(:)    ! fine root N litterfall (gN/m2/s)
+   real(r8), pointer :: livestemc_to_litter(:) ! live stem C litterfall (gC/m2/s)
+   real(r8), pointer :: grainc_to_food(:)      ! grain C to food (gC/m2/s)
+   real(r8), pointer :: livestemn_to_litter(:) ! livestem N to litter (gN/m2/s)
+   real(r8), pointer :: grainn_to_food(:)      ! grain N to food (gN/m2/s)
+   real(r8), pointer :: leafn_to_litter(:)     ! leaf N litterfall (gN/m2/s)
+   real(r8), pointer :: frootn_to_litter(:)    ! fine root N litterfall (gN/m2/s)
    real(r8), pointer :: lf_flab(:)      ! leaf litter labile fraction
    real(r8), pointer :: lf_fcel(:)      ! leaf litter cellulose fraction
    real(r8), pointer :: lf_flig(:)      ! leaf litter lignin fraction
@@ -1748,24 +2606,36 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 !
 ! local pointers to implicit in/out scalars
 !
-   real(r8), pointer :: leafc_to_litr1c(:)
-   real(r8), pointer :: leafc_to_litr2c(:)
-   real(r8), pointer :: leafc_to_litr3c(:)
-   real(r8), pointer :: frootc_to_litr1c(:)
-   real(r8), pointer :: frootc_to_litr2c(:)
-   real(r8), pointer :: frootc_to_litr3c(:)
-   real(r8), pointer :: leafn_to_litr1n(:)
-   real(r8), pointer :: leafn_to_litr2n(:)
-   real(r8), pointer :: leafn_to_litr3n(:)
-   real(r8), pointer :: frootn_to_litr1n(:)
-   real(r8), pointer :: frootn_to_litr2n(:)
-   real(r8), pointer :: frootn_to_litr3n(:)
+   real(r8), pointer :: leafc_to_litr1c(:)     ! leaf C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: leafc_to_litr2c(:)     ! leaf C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: leafc_to_litr3c(:)     ! leaf C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: frootc_to_litr1c(:)    ! fine root C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: frootc_to_litr2c(:)    ! fine root C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: frootc_to_litr3c(:)    ! fine root C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr1c(:) ! livestem C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr2c(:) ! livestem C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: livestemc_to_litr3c(:) ! livestem C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: livestemn_to_litr1n(:) ! livestem N litterfall to litter 1 N (gN/m2/s)
+   real(r8), pointer :: livestemn_to_litr2n(:) ! livestem N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: livestemn_to_litr3n(:) ! livestem N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: grainc_to_litr1c(:)    ! grain C litterfall to litter 1 C (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr2c(:)    ! grain C litterfall to litter 2 C (gC/m2/s)
+   real(r8), pointer :: grainc_to_litr3c(:)    ! grain C litterfall to litter 3 C (gC/m2/s)
+   real(r8), pointer :: grainn_to_litr1n(:)    ! grain N litterfall to litter 1 N (gN/m2/s)
+   real(r8), pointer :: grainn_to_litr2n(:)    ! grain N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: grainn_to_litr3n(:)    ! grain N litterfall to litter 3 N (gN/m2/s)
+   real(r8), pointer :: leafn_to_litr1n(:)     ! leaf N litterfall to litter 1 N (gN/m2/s)
+   real(r8), pointer :: leafn_to_litr2n(:)     ! leaf N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: leafn_to_litr3n(:)     ! leaf N litterfall to litter 3 N (gN/m2/s)
+   real(r8), pointer :: frootn_to_litr1n(:)    ! fine root N litterfall to litter 1 N (gN/m2/s)
+   real(r8), pointer :: frootn_to_litr2n(:)    ! fine root N litterfall to litter 2 N (gN/m2/s)
+   real(r8), pointer :: frootn_to_litr3n(:)    ! fine root N litterfall to litter 3 N (gN/m2/s)
 !
 ! local pointers to implicit out scalars
 !
 !
 ! !OTHER LOCAL VARIABLES:
-    integer :: fc,c,pi,p
+    integer :: fc,c,pi,p        ! indices
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
@@ -1774,6 +2644,10 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
     pwtgcell                       => clm3%g%l%c%p%wtgcell  
     leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
     frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
+    livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
+    grainc_to_food                 => clm3%g%l%c%p%pcf%grainc_to_food
+    livestemn_to_litter            => clm3%g%l%c%p%pnf%livestemn_to_litter
+    grainn_to_food                 => clm3%g%l%c%p%pnf%grainn_to_food
     leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
     frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
     npfts                          => clm3%g%l%c%npfts
@@ -1792,6 +2666,18 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
     frootc_to_litr1c               => clm3%g%l%c%ccf%frootc_to_litr1c
     frootc_to_litr2c               => clm3%g%l%c%ccf%frootc_to_litr2c
     frootc_to_litr3c               => clm3%g%l%c%ccf%frootc_to_litr3c
+    grainc_to_litr1c               => clm3%g%l%c%ccf%grainc_to_litr1c
+    grainc_to_litr2c               => clm3%g%l%c%ccf%grainc_to_litr2c
+    grainc_to_litr3c               => clm3%g%l%c%ccf%grainc_to_litr3c
+    livestemc_to_litr1c            => clm3%g%l%c%ccf%livestemc_to_litr1c
+    livestemc_to_litr2c            => clm3%g%l%c%ccf%livestemc_to_litr2c
+    livestemc_to_litr3c            => clm3%g%l%c%ccf%livestemc_to_litr3c
+    livestemn_to_litr1n            => clm3%g%l%c%cnf%livestemn_to_litr1n
+    livestemn_to_litr2n            => clm3%g%l%c%cnf%livestemn_to_litr2n
+    livestemn_to_litr3n            => clm3%g%l%c%cnf%livestemn_to_litr3n
+    grainn_to_litr1n               => clm3%g%l%c%cnf%grainn_to_litr1n
+    grainn_to_litr2n               => clm3%g%l%c%cnf%grainn_to_litr2n
+    grainn_to_litr3n               => clm3%g%l%c%cnf%grainn_to_litr3n
     leafn_to_litr1n                => clm3%g%l%c%cnf%leafn_to_litr1n
     leafn_to_litr2n                => clm3%g%l%c%cnf%leafn_to_litr2n
     leafn_to_litr3n                => clm3%g%l%c%cnf%leafn_to_litr3n
@@ -1827,6 +2713,32 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
                frootn_to_litr2n(c) = frootn_to_litr2n(c) + frootn_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p)
                frootn_to_litr3n(c) = frootn_to_litr3n(c) + frootn_to_litter(p) * fr_flig(ivt(p)) * wtcol(p)
 
+
+               ! agroibis puts crop stem litter together with leaf litter
+               ! so I've used the leaf lf_f* parameters instead of making
+               ! new ones for now (slevis)
+               ! also for simplicity I've put "food" into the litter pools
+               if (ivt(p) >= npcropmin) then ! add livestemc to litter
+                  ! stem litter carbon fluxes
+                  livestemc_to_litr1c(c) = livestemc_to_litr1c(c) + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p)
+                  livestemc_to_litr2c(c) = livestemc_to_litr2c(c) + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p)
+                  livestemc_to_litr3c(c) = livestemc_to_litr3c(c) + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p)
+
+                  ! stem litter nitrogen fluxes
+                  livestemn_to_litr1n(c) = livestemn_to_litr1n(c) + livestemn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p)
+                  livestemn_to_litr2n(c) = livestemn_to_litr2n(c) + livestemn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p)
+                  livestemn_to_litr3n(c) = livestemn_to_litr3n(c) + livestemn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p)
+
+                  ! grain litter carbon fluxes
+                  grainc_to_litr1c(c) = grainc_to_litr1c(c) + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p)
+                  grainc_to_litr2c(c) = grainc_to_litr2c(c) + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p)
+                  grainc_to_litr3c(c) = grainc_to_litr3c(c) + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p)
+
+                  ! grain litter nitrogen fluxes
+                  grainn_to_litr1n(c) = grainn_to_litr1n(c) + grainn_to_food(p) * lf_flab(ivt(p)) * wtcol(p)
+                  grainn_to_litr2n(c) = grainn_to_litr2n(c) + grainn_to_food(p) * lf_fcel(ivt(p)) * wtcol(p)
+                  grainn_to_litr3n(c) = grainn_to_litr3n(c) + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p)
+               end if
             end if
          end if
 

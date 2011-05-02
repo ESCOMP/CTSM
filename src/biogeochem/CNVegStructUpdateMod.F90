@@ -41,6 +41,9 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    use clmtype
    use clm_atmlnd   , only: clm_a2l
    use pftvarcon    , only: noveg, nc3crop, nirrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+   use pftvarcon    , only: ncorn, npcropmin, ztopmx, laimx
+   use clm_varctl   , only: iulog
+   use shr_sys_mod  , only: shr_sys_flush
    use shr_const_mod, only: SHR_CONST_PI
    use clm_time_manager , only : get_rad_step_size
 !
@@ -88,6 +91,9 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    real(r8), pointer :: hbot(:) !canopy bottom (m)
    real(r8), pointer :: elai(:)     ! one-sided leaf area index with burying by snow
    real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
+   real(r8), pointer :: htmx(:)     ! max hgt attained by a crop during yr (m)
+   integer , pointer :: peaklai(:)  ! 1: max allowed lai; 0: not at max
+   integer , pointer :: harvdate(:) ! harvest date
 !
 ! local pointers to implicit out scalars
 !
@@ -147,6 +153,9 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     elai                           => clm3%g%l%c%p%pps%elai
     esai                           => clm3%g%l%c%p%pps%esai
     frac_veg_nosno_alb             => clm3%g%l%c%p%pps%frac_veg_nosno_alb
+    htmx                           => clm3%g%l%c%p%pps%htmx
+    peaklai                        => clm3%g%l%c%p%pps%peaklai
+    harvdate                       => clm3%g%l%c%p%pps%harvdate
     forc_hgt_u_pft                 => clm3%g%l%c%p%pps%forc_hgt_u_pft
 
    dt = real( get_rad_step_size(), r8 )
@@ -237,7 +246,30 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
              hbot(p) = max(0._r8, min(3._r8, htop(p)-1._r8))
 
-          else
+          else if (ivt(p) >= npcropmin) then ! prognostic crops
+
+             if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1 ! used in CNAllocation
+
+             if (ivt(p) == ncorn) then
+                tsai(p) = 0.1_r8 * tlai(p)
+             else
+                tsai(p) = 0.2_r8 * tlai(p)
+             end if
+
+             ! "stubble" after harvest
+             if (harvdate(p) < 999 .and. tlai(p) == 0._r8) then
+                tsai(p) = 0.25_r8
+                htmx(p) = 0._r8
+                peaklai(p) = 0
+             end if
+             if (harvdate(p) < 999 .and. tlai(p) > 0._r8) write(iulog,*) 'CNVegStructUpdate: tlai>0 after harvest!' ! remove after initial debugging?
+
+             ! canopy top and bottom heights
+             htop(p) = ztopmx(ivt(p)) * (min(tlai(p)/(laimx(ivt(p))-1._r8),1._r8))**2
+             htmx(p) = max(htmx(p), htop(p))
+             htop(p) = max(0.05_r8, max(htmx(p),htop(p)))
+             hbot(p) = 0.02_r8
+          else ! generic crops and ...
              ! grasses
 
              ! height for grasses depends only on LAI

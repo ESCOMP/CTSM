@@ -16,7 +16,7 @@ module mkvarpar
   save
 !
   integer, parameter :: nlevsoi = 10  ! number of soil layers
-  integer, parameter :: numpft  = 16  ! number of plant types
+  integer, parameter :: numstdpft = 16! number of standard PFT types
   integer, parameter :: noveg   = 0   ! value for non-vegetated pft
   integer, parameter :: nlevurb = 15  ! number of urban layers
   integer, parameter :: numsolar = 2  ! number of solar types (Direct,Diffuse)

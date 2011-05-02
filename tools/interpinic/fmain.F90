@@ -7,7 +7,7 @@ program fmain
 ! This version only needs an input initial file and an output initial file.
 ! Data from the input initial file is mapped into the output initial file.
 
-  use interpinic, only : interp_filei
+  use interpinic, only : override_missing, interp_filei
   implicit none
   include 'netcdf.inc'
 
@@ -42,6 +42,9 @@ program fmain
       n = n + 1
       finidato = trim(arg)
       cmdline = trim(cmdline) // ' -o ' // trim(arg)
+    case ('-a')
+      override_missing = .false.
+      cmdline = trim(cmdline) // ' -a '
     case default
        write (6,*) 'Argument ', arg,' is not known'
        call usage_exit (' ')
@@ -65,7 +68,8 @@ subroutine usage_exit (arg)
   implicit none
   character(len=*) :: arg
   if (arg /= ' ') write (6,*) arg
-  write (6,*) 'Usage: interpinic -i <input initial data file>  -o <output initial data file>'
+  write (6,*) 'Usage: interpinic -i <input initial data file>  -o <output initial data file> [options]'
+  write (6,*) 'options: -a = abort rather than override missing values with closest bare-soil'
   write (6,*) 'Note - the output initial data file will be overwritten with the interpolated values'
   stop 999
 end subroutine

@@ -1,4 +1,505 @@
 ===============================================================
+Tag name:  clm4_0_27
+Originator(s):  erik (Erik Kluzek)
+Date: Mon May  2 09:37:57 MDT 2011
+One-line Summary: Move crop branch over to trunk
+
+Purpose of changes:
+
+Move crop branch to trunk. Add crop and noio options to configure. maxpft option to
+configure can now only be a number (removing numpft+1 option to it). Add datasets for
+crop. Add T31 historical and rcp2.6 transient dynpft datasets. Remove some of the CPP
+tokens (DUST, PROGSSLT, etc.) Bring Marian Vertensteins version of interpinic over to the
+trunk as well. This version is faster and is able to run for higher resolution cases.
+Remove scaled_harvest and carbon_only namelist options and add suplnitro option
+(supplemental Nitrogen which can be: NONE, PROG_CROP_ONLY, or ALL). Add number parameters
+for the different nsrest settings, and have only one copy of is_restart in
+clm_time_manager. Update to ESMF interface from Tony.
+
+Bugs fixed (include bugzilla ID):
+                                 1323 (Remove some unused items)
+                                 1319 (interpinic doesn't interpolate *_PERIOD)
+                                 1318 (interpinic has trouble with new restart files)
+                                 1303 (remove complexity of no-urban in interpinic)
+                                 1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
+                                  901 (remove some CPP tokens)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: Yes
+
+   Add -crop and -noio options to configure, remove -dust and -progsslt options
+   Remove "numpft+1" option to -maxpft. maxpft can go up to 17 without crop and
+   needs to be 21 for crop.
+
+  -crop adds the CROP #ifdef. Removes the DUST, PROGSSLT, CLAMP CPP tokens.
+  Also remove: DISTURB, COUP_WRF, NO_DAYLEN_VCMAX, TCX_REMOVE_SEE_NOTES_ABOVE, and
+  L2R_Decomp, and some testing/debug CPP defines
+
+Describe any changes made to the namelist: Yes
+
+   Remove Carbon_only and scaled_harvest options 
+   Add suplnitro option which can be set to: NONE, PROG_CROP_ONLY, or ALL
+
+   Add new history output variables:
+
+        A5TMIN   5-day running mean of min 2-m temperature                         (K)
+        A10TMIN  10-day running mean of min 2-m temperature                        (K)
+        GDD0     Growing degree days base  0C from planting                        (ddays)
+        GDD8     Growing degree days base  8C from planting                        (ddays)
+        GDD10    Growing degree days base 10C from planting                        (ddays)
+        GDD020   Twenty year average of growing degree days base  0C from planting (ddays)
+        GDD820   Twenty year average of growing degree days base  8C from planting (ddays)
+        GDD1020  Twenty year average of growing degree days base 10C from planting (ddays)
+        GDDPLANT Accumulated growing degree days past planting date for crop       (ddays)
+        GDDHARV  Growing degree days (gdd) needed to harvest                       (ddays)
+        GDDTSOI  Growing degree-days from planting (top two soil layers)           (ddays)
+
+List any changes to the defaults for the boundary datasets:
+   New point mode for crop: 1x1_numaIA and 1x1_smallvilleIA
+   pftcon: pft-physiology.c110425.nc
+   surface datasets for crop mode for: f19, f10, 1x1_numaIA, and 1x1_smallvilleIA
+   (also crop datasets with crop AND irrigation on)
+   finidat file for crop for f19
+   New T31 pftdyn file for historical and rcp2.6
+   Raw veg and lai datasets for mksurfdata for crop
+
+Describe any substantial timing or memory changes: Crop adds some additional variables
+    and if checks that may make small differences in run-time and/or memory
+
+Code reviewed by: self, slevis
+
+List any svn externals directories updated (csm_share, mct, etc.): Almost all
+
+    scripts to scripts4_110421
+    share   to share3_110411
+    drv     to drvseq3_1_53
+    datm    to datm8_110419
+    stubs   to stubs1_2_04
+
+List all files eliminated:
+
+>>>>>>>>>>>>>>> Remove test configs that explicitly have dust
+    D  models/lnd/clm/test/system/config_files/4p_vodsrsc_dh
+    D  models/lnd/clm/test/system/config_files/4p_vodsrsc_dm
+    D  models/lnd/clm/test/system/config_files/4p_vodsrsc_do
+    D  models/lnd/clm/test/system/config_files/4p_vodsrsc_ds
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_h
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_m
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_o
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_dh
+    D  models/lnd/clm/test/system/config_files/4p_vodsnrsc_ds
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_dm
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_do
+    D  models/lnd/clm/test/system/config_files/4p_vodsrsc_h
+    D  models/lnd/clm/test/system/config_files/17p_vodsrsc_ds
+    D  models/lnd/clm/test/system/config_files/4p_vodsrsc_o
+
+>>>>>>>>>>>>>>> Remove test for scaled_harvest namelist item
+    D  models/lnd/clm/test/system/nl_files/nl_noicertm_sclharv
+
+>>>>>>>>>>>>>>> Remove sample namelists and always use mksurfdata.pl script
+    D  models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig
+    D  models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn
+
+>>>>>>>>>>>>>>> Remove these two from changes that mvertens applied
+    D  models/lnd/clm/tools/interpinic/addglobal.F90
+    D  models/lnd/clm/tools/interpinic/wrap_nf.F90
+
+>>>>>>>>>>>>>>> Update sample IC file 
+    D  models/lnd/clm/tools/interpinic/clmi.IQ.1953-01-01_10x15_USGS_simyr2000_c081202.nc
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>> Add crop test configs
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_do
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_s
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_ds
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_dh
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_dm
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_do
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_ds
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_h
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_m
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_o
+    A  models/lnd/clm/test/system/config_files/21p_cndvcrpsc_s
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_h
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_dh
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_m
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_o
+    A  models/lnd/clm/test/system/config_files/21p_cncrpsc_dm
+>>>>>>>>>>>>>>> Add test configs without dust
+    A  models/lnd/clm/test/system/config_files/4p_vorsc_dm
+    A  models/lnd/clm/test/system/config_files/4p_vorsc_do
+    A  models/lnd/clm/test/system/config_files/4p_vorsc_ds
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_h
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_m
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_o
+    A  models/lnd/clm/test/system/config_files/4p_vorsc_h
+    A  models/lnd/clm/test/system/config_files/4p_vorsc_o
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_dm
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_dh
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_do
+    A  models/lnd/clm/test/system/config_files/17p_vorsc_ds
+    A  models/lnd/clm/test/system/config_files/4p_vorsc_dh
+
+>>>>>>>>>>>>>>> Add crop restart variables
+    A  models/lnd/clm/src/biogeochem/CropRestMod.F90
+
+>>>>>>>>>>>>>>> Add namelist for crop, and mksurfdata to create crop single point
+    A  models/lnd/clm/test/system/nl_files/nl_crop
+    A  models/lnd/clm/test/system/nl_files/nl_cn_conly
+    A  models/lnd/clm/test/system/nl_files/clm_stdIgnYr
+    A  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_numaIA_mp20irrcr_2000
+
+    A  models/lnd/clm/test/system/TSMrst_tools.sh - Add test to use finidat files
+            run interpinic on it and then make sure you can startup from the result
+
+>>>>>>>>>>>>>>> Explicitly add csm_share files into interpinic build
+    A  models/lnd/clm/tools/interpinic/Mkdepends
+    A  models/lnd/clm/tools/interpinic/shr_sys_mod.F90
+    A  models/lnd/clm/tools/interpinic/shr_log_mod.F90
+    A  models/lnd/clm/tools/interpinic/shr_kind_mod.F90
+    A  models/lnd/clm/tools/interpinic/shr_const_mod.F90
+
+>>>>>>>>>>>>>>> Add the latest 10x15 initial conditions file to test on
+    A  models/lnd/clm/tools/interpinic/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>> Set maxpft to number
+    M  models/lnd/clm/test/system/config_files/README
+    M  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dh
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_m
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_o
+    M  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dm
+    M  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_do
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_s
+    M  models/lnd/clm/test/system/config_files/_nrmexsc_ds
+    M  models/lnd/clm/test/system/config_files/17p_cnsc_dh
+    M  models/lnd/clm/test/system/config_files/17p_cnsc_m
+    M  models/lnd/clm/test/system/config_files/17p_cnsc_dm
+    M  models/lnd/clm/test/system/config_files/_nrvansc_ds
+    M  models/lnd/clm/test/system/config_files/17p_cnsc_do
+    M  models/lnd/clm/test/system/config_files/17p_cnc13sc_dh
+    M  models/lnd/clm/test/system/config_files/17p_cnc13sc_dm
+    M  models/lnd/clm/test/system/config_files/17p_cnc13sc_do
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_dh
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_dm
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_do
+    M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dh
+    M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dm
+    M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_do
+    M  models/lnd/clm/test/system/config_files/4p_vonrsc_ds
+    M  models/lnd/clm/test/system/config_files/17p_cndvsc_h
+
+>>>>>>>>>>>>>>> Remove some tests add new crop tests
+    M  models/lnd/clm/test/system/README.testnames ----------------
+    M  models/lnd/clm/test/system/tests_posttag_lynx_nompi --------
+    M  models/lnd/clm/test/system/tests_pretag_bluefire -----------
+    M  models/lnd/clm/test/system/tests_pretag_bluefire_nompi -----
+    M  models/lnd/clm/test/system/tests_pretag_edinburgh ----------
+    M  models/lnd/clm/test/system/tests_pretag_edinburgh_nompi ----
+    M  models/lnd/clm/test/system/tests_posttag_yong --------------
+    M  models/lnd/clm/test/system/tests_pretag_jaguarpf -----------
+    M  models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi -----
+    M  models/lnd/clm/test/system/tests_posttag_mirage ------------
+    M  models/lnd/clm/test/system/tests_posttag_purempi_regression
+    M  models/lnd/clm/test/system/tests_posttag_hybrid_regression -
+    M  models/lnd/clm/test/system/tests_posttag_nompi_regression --
+
+    M  models/lnd/clm/test/system/TCBtools.sh ------- Add TOOL_ROOT
+    M  models/lnd/clm/test/system/test_driver.sh ---- Use path to glade, update path
+    M  models/lnd/clm/test/system/mknamelist -------- Add ability to set finidat file on
+         startup
+    M  models/lnd/clm/test/system/input_tests_master  Change out vodsrsc for vorsc,
+         add crop tests, add interpinic restart tests
+    M  models/lnd/clm/test/system/tests_posttag_lynx  Add sm9T4 test
+    M  models/lnd/clm/test/system/CLM_runcmnd.sh ---- Remove -d
+
+    M  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850  Change from 1850-2000
+          to just 1850
+    M  models/lnd/clm/test/system/nl_files/clm_irrig -------------- Use ignore_ic_year
+          instead of ignore_ic_date
+
+>>>>>>>>>>>>>>> Add ability to add crop in, add -crop to mksurfdata.pl which sets the
+>>>>>>>>>>>>>>> numpft=20 namelist item
+    M  models/lnd/clm/tools/mksurfdata/mkvarpar.F90 - Add numstdpft
+    M  models/lnd/clm/tools/mksurfdata/mkvarctl.F90 - Add numpft
+    M  models/lnd/clm/tools/mksurfdata/ncdio.F90 ---- Add nf_get_att_double/nf_get_var_text
+    M  models/lnd/clm/tools/mksurfdata/mklaiMod.F90 - Use numpft
+    M  models/lnd/clm/tools/mksurfdata/mkfileMod.F90  Add mksrf_flai/mksrf_firrig to file
+    M  models/lnd/clm/tools/mksurfdata/areaMod.F90 -- Put numpft in mkvarctl
+    M  models/lnd/clm/tools/mksurfdata/mksrfdat.F90 - Add numpft to namelist
+    M  models/lnd/clm/tools/mksurfdata/mksurfdata.pl  Handle crop and irrig and change 
+         names accordingly
+    M  models/lnd/clm/tools/mksurfdata/mkpftMod.F90 - Add numpft and add to namelist
+         if numpft = 20 add crop in
+
+>>>>>>>>>>>>>>> Bring in interpinic version from Mariana Vertenstein
+>>>>>>>>>>>>>>> Make faster and use less memory, update NetCDF interface, make
+>>>>>>>>>>>>>>> standalone so not dependant on other directories
+    M  models/lnd/clm/tools/interpinic/interpinic.F90 - Make faster by saving indices,
+         use less memory, update to F90 NetCDF interface, make standalone
+    M  models/lnd/clm/tools/interpinic/fmain.F90 ------ Add -a option to NOT override missing
+    M  models/lnd/clm/tools/interpinic/Srcfiles ------- Remove mpi files
+    M  models/lnd/clm/tools/interpinic/Filepath ------- Make standalone
+    M  models/lnd/clm/tools/interpinic/Makefile ------- Use local MkDepends, compare
+           to null, change interface for testing a bit
+    M  models/lnd/clm/tools/interpinic/README --------- Add note about SMP, update clmi file
+    M  models/lnd/clm/tools/interpinic/interpinic.runoptions Use new file
+
+>>>>>>>>>>>>>>> Add numpft
+    M  models/lnd/clm/tools/mkgriddata/mkvarctl.F90
+
+>>>>>>>>>>>>>>> Add crop/noio remove dust and progsslt and CLAMP setting
+    M  models/lnd/clm/bld/configure ------------- Add -crop/-noio remove -dust/-progsslt
+          turn RTM off for sitespf_pt, error check crop, maxpft, remove CLAMP setting
+    M  models/lnd/clm/bld/listDefaultNamelist.pl  Add loop for crop
+    M  models/lnd/clm/bld/build-namelist -------- Sense crop=on/off, add suplnitro remove
+          Carbon_only
+    M  models/lnd/clm/bld/clm.cpl7.template ----- Change order of $CLM_CONFIG_OPTS
+          so will be done last and override other settings
+    M  models/lnd/clm/bld/config_files/config_definition.xml Add crop/noio, remove dust/progsslt
+          have maxpft only allow numbers up to 21
+
+>>>>>>>>>>>>>>>  New files for crop, remove old namelist items add new, add crop datasets
+    M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --------- Remove
+        Carbon_only add suplnitro, remove scaled_harvest, correct spellings
+        1x1_numaIA,1x1_smallvilleIA resolutions
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml --- Add
+        1x1_numaIA,1x1_smallvilleIA
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ------ Add
+        1x1_numaIA,1x1_smallvilleIA
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ------- Add
+       settings for suplnitro, new fpftcon, finidat for crop f19, add crop parameters
+       files for crop for f19,f10,1x1_numaIA,1x1_smallvilleIA, fix T31 files
+       turn create_crop_landunit on for crop
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Add
+       mksrf_flai/mksrf_fvegtyp for crop add crop=on/off for those files
+
+>>>>>>>>>>>>>>> Use nsrest parameters, use secspday/days_per_year, handle prognostic crop
+>>>>>>>>>>>>>>> Remove CLAMP/is_restart/DUST/DISTURB/CLAMP
+>>>>>>>>>>>>>>> if soil also check if crop, use vegetation indices, add initialization
+>>>>>>>>>>>>>>> subroutines, pass crop filters down, suplementatal Nitrogen can be for
+>>>>>>>>>>>>>>> nothing, just for crop, or for all.
+    M  models/lnd/clm/src/biogeochem/CASAPhenologyMod.F90 ----- Use nsrest parameters, secspday
+    M  models/lnd/clm/src/biogeochem/CNGapMortalityMod.F90 ---- Use secspday
+    M  models/lnd/clm/src/biogeochem/CNGRespMod.F90 ----------- Handle crop
+    M  models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90 --- Handle crop
+    M  models/lnd/clm/src/biogeochem/CNFireMod.F90 ------------ Use secspday/days_per_year
+    M  models/lnd/clm/src/biogeochem/CNMRespMod.F90 ----------- If crop add livestem
+    M  models/lnd/clm/src/biogeochem/CASAMod.F90 -------------- Remove CLAMP is_restart
+          if soil or crop, nsrest parameters, use veg indices
+    M  models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90  Handle crop
+    M  models/lnd/clm/src/biogeochem/CNSummaryMod.F90 --------- Remove CLAMP, add crop
+    M  models/lnd/clm/src/biogeochem/DUSTMod.F90 -------------- Remove DUST, if soil or crop
+    M  models/lnd/clm/src/biogeochem/CNPhenologyMod.F90 ------- Add init and crop-Phenology
+    M  models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90 --- Add prog crop
+    M  models/lnd/clm/src/biogeochem/CNDecompMod.F90 ---------- Pass crop filter down
+          use secspday
+    M  models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 ------- Remove extra use
+    M  models/lnd/clm/src/biogeochem/CNrestMod.F90 ------------ Remove is_restart
+    M  models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90 ---- Add CROP #ifdef to CNDV
+    M  models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90 ------- Use dayspyr and secspday
+    M  models/lnd/clm/src/biogeochem/CNAllocationMod.F90 ------ Add init subroutine
+          section for prognostic crop, supplemental Nitrogen can be on for nothing,
+          crop only, or everything
+    M  models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90 ---- Add init subroutine, 
+          add crop filters
+    M  models/lnd/clm/src/biogeochem/CNSetValueMod.F90 -------- Set crop vars remove CLAMP
+    M  models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90 - Add if section for crop
+    M  models/lnd/clm/src/biogeochem/CNDVEstablishmentMod.F90 - Remove DISTURB
+
+>>>>>>>>>>>>>>> Use nsrest parameters, update ESMF interface
+    M  models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 --- Use nsrest parameters
+    M  models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 - Update interface from Tony Craig
+          Use nsrest parameters, use phase as a keyword.
+    M  models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90 -- Update interface from Tony Craig
+          compare success to ESMF_SUCCESS rather than 0.
+
+>>>>>>>>>>>>>>>  Add istcrop and if statements for istsoil also test for istcrop
+>>>>>>>>>>>>>>>  Remove CLAMP/DUST/PROGSSLT/debug ifdef/vcmx25/dw_fcel/dw_flig
+>>>>>>>>>>>>>>>  /scaled_harv/ bad hist indices. Set if prog_crop in surfrdMod
+>>>>>>>>>>>>>>>  Use secspday and days_per_year, more vars on pft-physiology file
+>>>>>>>>>>>>>>>  Add parameters for nsrest settings, new hist vars, error check CROP
+    M  models/lnd/clm/src/main/clm_varcon.F90 -------- Add istcrop
+    M  models/lnd/clm/src/main/clm_varpar.F90 -------- Add numveg and mxpft
+    M  models/lnd/clm/src/main/CNiniTimeVar.F90 ------ Remove CLAMP, if soil or crop
+          also set some crop vars
+    M  models/lnd/clm/src/main/dynlandMod.F90 -------- If soil or crop
+    M  models/lnd/clm/src/main/accumulMod.F90 -------- Remove is_restart, add missing to _PERIOD
+    M  models/lnd/clm/src/main/clm_initializeMod.F90 - Remove CLAMP/DUST, use nsrest parameters
+          add call to CNEcosystemDynInit
+    M  models/lnd/clm/src/main/subgridRestMod.F90 ---- Remove incorrect grid indices (bug 1310)
+    M  models/lnd/clm/src/main/accFldsMod.F90 -------- Add GDD0/8/10/PLANT/HARV/TSOI/TDM5/10
+    M  models/lnd/clm/src/main/clmtypeInitMod.F90 ---- Remove CLAMP
+          CROP & C13 is not valid, add crop vars, remove vcmx25/dw_fcel/dw_flig
+    M  models/lnd/clm/src/main/ndepStreamMod.F90 ----- Use secspday in place of 86400
+    M  models/lnd/clm/src/main/pftdynMod.F90 --------- Use days_per_year in place of 365
+          move pconv/pprod10/pprod100 to pft-physiology file, if soil or crop
+          use nsrest parameters, remove scaled_harvest
+    M  models/lnd/clm/src/main/iniTimeConst.F90 ------ Add graincn, remove: vcmx25/dw_fcel/dw_flig
+    M  models/lnd/clm/src/main/histFileMod.F90 ------- Use secspday in place of 86400
+          fix Conventions, use nsrest parameters, comment out indices (bug 1310)
+    M  models/lnd/clm/src/main/clm_atmlnd.F90 -------- Remove DUST/PROGSSLT/1==1
+    M  models/lnd/clm/src/main/restFileMod.F90 ------- Use nsrest parameters, add CropRest
+          fix Conventions
+    M  models/lnd/clm/src/main/controlMod.F90 -------- Remove scaled_harvest/Carbon_only
+          use nsrest parameters, add suplnitro
+    M  models/lnd/clm/src/main/initSurfAlbMod.F90 ---- if soil or crop, send crop filters
+          to CNEcosystemDyn
+    M  models/lnd/clm/src/main/clm_time_manager.F90 -- Remove COUP_WRF, add get_driver_start_ymd
+    M  models/lnd/clm/src/main/filterMod.F90 --------- Add filter for prognostic-crop
+          if soil or crop
+    M  models/lnd/clm/src/main/clm_varctl.F90 -------- Add parameters for nsrest valid
+           values: nsrStartup, nsrContinue, nsrBranch, remove scaled_harvest
+           make sure crop allocates all PFT's
+    M  models/lnd/clm/src/main/clm_driver.F90 -------- Remove DUST send crop filters
+           to CNEcosystemDyn
+    M  models/lnd/clm/src/main/initGridCellsMod.F90 -- If crop send istcrop to set_landunit_crop_noncompete
+    M  models/lnd/clm/src/main/CASAiniTimeVarMod.F90 - Remove CLAMP
+    M  models/lnd/clm/src/main/pftvarcon.F90 --------- Add crop vars, corn,
+            temperate sping/winter cereal, and soybean, remove vcmx25/dw_flig/dw_fcel
+            add new variables for crop add npcropmin, npcropmax and error checking
+    M  models/lnd/clm/src/main/ncdio_pio.F90 --------- Add logical field support
+    M  models/lnd/clm/src/main/spmdMod.F90 ----------- Add MPI_LOR
+    M  models/lnd/clm/src/main/surfrdMod.F90 --------- Add crop_prog as public module data
+            Remove TCX_REMOVE_SEE_NOTES_ABOVE, error checking if prognostic crops avail
+            and CROP not defined and vice versa
+    M  models/lnd/clm/src/main/clmtype.F90 ----------- New variables for CROP, remove CLAMP
+            Remove dw_fcel, dw_flig, vcmx25
+    M  models/lnd/clm/src/main/histFldsMod.F90 ------- Remove CLAMP and DUST, T10 output
+             for CNDV or CROP, add A5TMIN, A10TMIN, GDD0, GDD8, GDD10, GDD020, GDD820,
+             GDD1020, GDDPLANT, GDDTSOI and GDDHARV for crop (as inactive)
+             
+    M  models/lnd/clm/src/main/mkarbinitMod.F90 ------ If soil or crop
+
+    M  models/lnd/clm/src/riverroute/RtmMod.F90 - Remove L2R_Decomp #ifdef, and #if (1 ==
+          Remove is_restart and use clm_time_manager version.
+0)
+
+>>>>>>>>>>>>>>> Change if statements on "if soil" to "if soil or crop"
+>>>>>>>>>>>>>>> Remove DUST, NO_DAYLEN_VCMAX #ifdefs, is_restart, vcmx25, avcmx, 
+>>>>>>>>>>>>>>> and SNICAR stats. vcmx calc is different for crop and btran for soybean
+    M  models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90 - If soil or crop
+    M  models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 -- If soil or crop
+    M  models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 ---- If soil or crop
+    M  models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 --- If soil or crop
+    M  models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90 --- If soil or crop
+    M  models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90 - Remove DUST #ifdef
+    M  models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 ---- If soil or crop
+    M  models/lnd/clm/src/biogeophys/Hydrology1Mod.F90 ------- If soil, urb, wet or crop
+    M  models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 ------- If soil or crop
+    M  models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 --- Remove is_restart use
+          clm_time_manger version, use nsrest parameters
+    M  models/lnd/clm/src/biogeophys/SNICARMod.F90 ----------- Remove commented out SNICAR stats
+    M  models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 - If soil or crop
+    M  models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90 ----- Remove NO_DAYLEN_VCMAX,
+          and vcmx25,avcmx, vcmx calc different for crop and btran for soybean.
+
+Summary of testing:
+
+  bluefire: All PASS except...
+008 blAZ1 TBL.sh 21p_cncrpsc_dh clm_irrig^nl_crop 20020401:3600 10x15 USGS -10 cold .............FAIL! rc= 5
+015 blE91 TBL.sh 4p_vorsc_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 48 arb_ic ...................FAIL! rc= 5
+020 blF92 TBL.sh 17p_vorsc_dm clm_std^nl_urb 20021230:1800 4x5 gx3v7 48 cold ....................FAIL! rc= 5
+024 blEH1 TBL.sh 4p_vorsc_dh clm_std^nl_urb 20021231:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic ......FAIL! rc= 5
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+037 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic ..............FAIL! rc= 10
+041 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 7
+059 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+060 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+061 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+062 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+032 blF93 TBL.sh 17p_vorsc_do clm_std^nl_urb 20021230:1800 4x5 gx3v7 48 cold ....................FAIL! rc= 5
+056 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+057 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+058 sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_irrig^nl_crop 20000101:1800 1.9x2.5 gx1v6 10FAIL! rc= 4
+  bluefire/CESM testing: All PASS except... (dens, fv and ram1 change)
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_26 
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_26 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_26 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_26 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare_hist.clm4_0_26 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_26 
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_26 
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_26 
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm4_0_26 
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm4_0_26 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare_hist.clm4_0_26 
+FAIL  ERS_E.f19_g16.I1850.bluefire.compare.clm4_0_26 
+FAIL  ERI.f19_g16.IG1850.bluefire.compare.clm4_0_26 
+SFAIL ERS_D.T31_g37.IGRCP26CN.bluefire.GC.231059 
+SFAIL ERP.T31_g37.IGRCP60CN.bluefire.GC.231059 
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm4_0_26 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_26 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_26 
+FAIL  PST.f10_f10.I20TRCN.bluefire.compare.clm4_0_26 
+FAIL  PET_PT.f10_f10.I20TRCN.bluefire.compare.clm4_0_26 
+FAIL  SMS.f10_f10.IRCP45CN.bluefire.compare_hist.clm4_0_26 
+FAIL  SMS.f10_f10.IRCP45CN.bluefire.compare.clm4_0_26 
+  bluefire/PTCLM testing: All PASS up to..
+US-Ha1_ICN_ad_spinup.PTCLM                PASS
+  jaguarpf interactive testing: All PASS up to...
+008 blAZ3 TBL.sh 21p_cncrpsc_do clm_irrig^nl_crop 20020401:3600 10x15 USGS -10 cold .............FAIL! rc= 5
+011 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+012 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+013 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+014 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+035 sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_irrig^nl_crop 20000101:1800 1.9x2.5 gx1v6 10FAIL! rc= 4
+  edinburgh/lf95 interactive testing: All PASS except...
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:1800 1x1_brazil navy -10 arb_ic ...............FAIL! rc= 7
+010 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic .............FAIL! rc= 7
+014 blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:3600 1x1_vancouverCAN navy 331 arb_ic ...FAIL! rc= 7
+018 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:3600 1x1_mexicocityMEX navy 158 arb_ic ..FAIL! rc= 7
+026 blL74 TBL.sh _nrsc_s clm_std^nl_urb 20020101:1800 1x1_brazil navy -10 arb_ic ................FAIL! rc= 7
+  mirage,storm/ifort interactive testing: All PASS except...
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+021 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 10+38 arb_ic ...........FAIL! rc= 5
+022 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_26
+
+Changes answers relative to baseline: no bit-for-bit
+    with the exception that the new crop mode is NOT in previous tags
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_26
 Originator(s):  erik (Erik Kluzek)
 Date: Wed Mar 23 11:43:00 MDT 2011
@@ -41,6 +542,7 @@ Known bugs (include bugzilla ID):
                                  1283 (CLM with glacier-MEC fails running on intel)
                                  1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
                                  1299 (interpinic does NOT work going from non glc_mec)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -187,6 +689,7 @@ Known bugs (include bugzilla ID):
                                  1298 (Can NOT turn RTM off in CLM_CONFIG_OPTS)
                                  1299 (interpinic does NOT work going from non glc_mec)
                                  1304 (bug in interpinic *_var)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -429,6 +932,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -619,6 +1123,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -947,6 +1452,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1107,6 +1613,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1283,6 +1790,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1483,6 +1991,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1834,6 +2343,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1306 (mksoifmaxInit is NOT called)
                                  1305 (dvolrdt is documented with the wrong units)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1927,6 +2437,7 @@ Known bugs (include bugzilla ID):
                                  1264 (Incorrect doc of qflx_evap_tot in the code)
                                  1265 (Fix ndep/aerdepregrid.ncl)
                                  1266 (Threading problem with CNDV)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -2177,6 +2688,7 @@ Known bugs (include bugzilla ID):
                                  1264 (Incorrect doc of qflx_evap_tot in the code)
                                  1265 (Fix ndep/aerdepregrid.ncl)
                                  1266 (Threading problem with CNDV)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -2260,6 +2772,7 @@ Known bugs (include bugzilla ID):
                                  1264 (Incorrect doc of qflx_evap_tot in the code)
                                  1265 (Fix ndep/aerdepregrid.ncl)
                                  1266 (Threading problem with CNDV)
+                                 1318 (interpinic has trouble with new restart files)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

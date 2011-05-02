@@ -1,4 +1,3 @@
-
 module initGridCellsMod
 
 !-----------------------------------------------------------------------
@@ -62,8 +61,10 @@ contains
     use decompMod   , only : ldecomp, adecomp, get_proc_global, get_proc_bounds
     use clm_varcon  , only : istsoil, istice, istwet, istdlak, isturb, istice_mec
     use clm_varctl  , only : create_glacier_mec_landunit
+    use clm_varcon  , only : istcrop
     use subgridMod  , only : subgrid_get_gcellinfo
     use shr_const_mod,only : SHR_CONST_PI
+    use surfrdMod   , only : crop_prog
 !
 ! !ARGUMENTS:
     implicit none
@@ -76,6 +77,7 @@ contains
 !EOP
     integer :: li,ci,pi,m,na,gdc,gsn,glo    ! indices
     integer :: nveg           ! number of pfts in naturally vegetated landunit
+    integer :: ltype          ! landunit type
     real(r8):: wtveg          ! weight (gridcell) of naturally veg landunit
     integer :: ncrop          ! number of crop pfts in crop landunit
     real(r8):: wtcrop         ! weight (gridcell) of crop landunit
@@ -123,6 +125,12 @@ contains
     ci    = begc-1
     pi    = begp-1
 
+    if ( crop_prog )then
+       ltype = istcrop
+    else
+       ltype = istsoil
+    end if
+
     !----- Set clm3 variables -----
     do gdc = begg,endg
 
@@ -143,7 +151,7 @@ contains
        ! Determine crop landunit
 
        call set_landunit_crop_noncompete(           &
-            ltype=istsoil, &
+            ltype=ltype, &
             nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        ! Determine urban landunit

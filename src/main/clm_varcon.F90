@@ -117,13 +117,14 @@ module clm_varcon
   !   6     urban
   !   7     land ice (glacier) with multiple elevation classes
 
-  integer :: istsoil = 1  !soil         landunit type
-  integer :: istice  = 2  !land ice     landunit type
-  integer :: istdlak = 3  !deep lake    landunit type
-  integer :: istslak = 4  !shallow lake landunit type
-  integer :: istwet  = 5  !wetland      landunit type
-  integer :: isturb  = 6  !urban        landunit type
-  integer :: istice_mec = 7 !land ice (multiple elevation classes) landunit type
+  integer :: istsoil    = 1  !soil         landunit type
+  integer :: istice     = 2  !land ice     landunit type
+  integer :: istdlak    = 3  !deep lake    landunit type
+  integer :: istslak    = 4  !shallow lake landunit type
+  integer :: istwet     = 5  !wetland      landunit type
+  integer :: isturb     = 6  !urban        landunit type
+  integer :: istice_mec = 7  !land ice (multiple elevation classes) landunit type
+  integer :: istcrop    = 8  !crop         landunit type
 
   ! urban column types
 

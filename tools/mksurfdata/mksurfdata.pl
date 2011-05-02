@@ -52,6 +52,8 @@ my %opts = (
                rcp=>"-999.9", 
                debug=>0,
                exedir=>undef,
+               crop=>undef,
+               irrig=>undef, 
                years=>"1850,2000",
                glc_nec=>0,
                help=>0,
@@ -79,6 +81,7 @@ sub usage {
 SYNOPSIS
      $ProgName [options]
 OPTIONS
+     -crop                         Add in crop datasets
      -dinlc [or -l]                Enter the directory location for inputdata 
                                    (default $opts{'csmdata'})
      -debug [or -d]                Don't actually run -- just print out what 
@@ -199,6 +202,8 @@ sub check_pft {
    my $cmdline = "@ARGV";
    GetOptions(
         "r|res=s"      => \$opts{'hgrid'},
+        "crop"         => \$opts{'crop'},
+        "irrig"        => \$opts{'irrig'},
         "c|rcp=s"      => \$opts{'rcp'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "p|pftlc=s"    => \$opts{'pftdata'},
@@ -288,6 +293,7 @@ sub check_pft {
    }
    &check_soil_col_fmx( );
    # Check if pft set
+   if ( defined($opts{'crop'}) ) { $numpft = 20; }   # First set numpft if crop is on
    if ( defined($opts{'pft_frc'}) || defined($opts{'pft_idx'}) ) {
        &check_pft( );
        $opts{'pft_override'} = 1;
@@ -334,6 +340,12 @@ EOF
       # Query the XML default file database to get the appropriate griddata file
       #
       my $queryopts = "-res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue";
+      my $mkcrop = "";
+      my $setnumpft = "";
+      if ( defined($opts{'crop'}) ) {
+         $mkcrop    = ",crop='on'";
+         $setnumpft = "numpft = $numpft"
+      }
       my $usrnam    = "";
       if ( $opts{'usrname'} ne "" && $res eq $opts{'usrname'} ) {
          $usrnam    = "-usrname ".$opts{'usrname'};
@@ -422,7 +434,7 @@ EOF
  mksrf_ffrac        = '$CSMDATA/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
  outnc_double       = $double
  all_urban          = $all_urb
- $irrig
+$irrig
 EOF
             my $urbdesc = "urb3den";
             if ( ! $urb_pt ) {
@@ -457,8 +469,12 @@ EOF
                $sim_yr0 = $1;
                $sim_yrn = $2;
             }
-            my $vegtyp = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$sim_yr0 -var mksrf_fvegtyp -namelist clmexp`;
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=${sim_yr0}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $vegtyp = `$cmd`;
             chomp( $vegtyp );
+            if ( $vegtyp eq "" ) {
+               die "** trouble getting vegtyp file with: $cmd\n";
+            }
             if ( $rcp == -999.9 ) {
                $desc     = sprintf( "hist_simyr%4.4d-%4.4d", $sim_yr0, $sim_yrn );
                $desc_yr0 = sprintf( "simyr%4.4d",            $sim_yr0  );
@@ -468,7 +484,13 @@ EOF
             }
             my $strlen = 125;
             my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
-            my $mksrf_flai = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -var mksrf_flai -namelist clmexp`;
+            my $options = "";
+            my $crpdes  = "";
+            if ( $mkcrop ne "" ) { 
+               $options = "-options $mkcrop";
+               $crpdes  = "mp20_";
+            }
+            my $mksrf_flai = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol $options -var mksrf_flai -namelist clmexp`;
             my $pftdyntext_file;
             if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
                $pftdyntext_file = "pftdyn_$desc.txt";
@@ -476,7 +498,7 @@ EOF
                $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
                print "Writing out pftdyn text file: $pftdyntext_file\n";
                for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-                 my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=$rcp -var mksrf_fvegtyp -namelist clmexp`;
+                 my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=${rcp}$mkcrop -var mksrf_fvegtyp -namelist clmexp`;
                  chomp( $vegtypyr );
                  $vegtypyr =~ s#^$PFTDATA#$pftdata#;
                  printf $fhpftdyn $dynpft_format, $vegtypyr, $yr;
@@ -530,8 +552,9 @@ EOF
             print $fh <<"EOF";
  mksrf_fvegtyp      = '$vegtyp'
  mksrf_fsoicol      = '$pftdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
- mksrf_flai         = '$pftdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_lai_global_c090506.nc'
+ mksrf_flai         = '$mksrf_flai'
  mksrf_fdynuse      = '$pftdyntext_file'
+ $setnumpft
 /
 EOF
             $fh->close;
@@ -602,7 +625,7 @@ EOF
                if ( defined($opts{'nomv'}) ) {
                   $outdir = ".";
                }
-               my $ofile = "surfdata_${res}_${desc_yr0}_${irrdes}${sdate}";
+               my $ofile = "surfdata_${res}_${crpdes}${desc_yr0}_${irrdes}${sdate}";
                my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
                print "$mvcmd\n";
                if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {

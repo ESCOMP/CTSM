@@ -425,13 +425,6 @@ contains
              fpc_total(g) = fpc_total(g) + fpcgrid(p)
           end if
        end if
-#ifdef DISTURB
-       present(p) = .false.
-       nind(p) = 0._r8
-       fpcgrid(p) = 0._r8
-       if (ivt(p) == noveg) fpcgrid(p) = 1._r8
-       fpc_total(g) = 1._r8
-#endif
     end do   ! end of pft-loop
 
     ! Adjustment of fpc_total > 1 due to grasses (ivt >= nc3_arctic_grass)

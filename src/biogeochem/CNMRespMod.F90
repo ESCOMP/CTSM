@@ -41,6 +41,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
+   use pftvarcon    , only : npcropmin
 !
 ! !ARGUMENTS:
    implicit none
@@ -75,6 +76,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer , pointer :: itypelun(:)   ! landunit type
    ! ecophysiological constants
    real(r8), pointer :: woody(:)      ! binary flag for woody lifeform (1=woody, 0=not woody)
+   logical , pointer :: croplive(:)   ! Flag, true if planted, not harvested
 !
 ! local pointers to implicit in/out arrays
 !
@@ -113,6 +115,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    clandunit      => clm3%g%l%c%landunit
    itypelun       => clm3%g%l%itype
    woody          => pftcon%woody
+   croplive       => clm3%g%l%c%p%pps%croplive
 
    ! base rate for maintenance respiration is from:
    ! M. Ryan, 1991. Effects of climate change on plant respiration.
@@ -151,6 +154,8 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
       if (woody(ivt(p)) == 1) then
          livestem_mr(p) = livestemn(p)*br*tc
          livecroot_mr(p) = livecrootn(p)*br*tc
+      else if (ivt(p) >= npcropmin) then
+         livestem_mr(p) = livestemn(p)*br*tc
       end if
    end do
 

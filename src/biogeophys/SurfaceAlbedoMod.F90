@@ -1,4 +1,3 @@
-
 module SurfaceAlbedoMod
 
 !-----------------------------------------------------------------------
@@ -12,6 +11,7 @@ module SurfaceAlbedoMod
 ! !PUBLIC TYPES:
   use clm_varcon  , only : istsoil
   use clm_varpar  , only : numrad
+  use clm_varcon , only : istcrop
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar  , only : nlevsno
   use SNICARMod   , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
@@ -82,7 +82,7 @@ contains
     integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
     integer , intent(in) :: num_nourbanp               ! number of pfts in non-urban filter
     integer , intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
-    real(r8), intent(in) :: nextsw_cday                   ! calendar day at Greenwich (1.00, ..., 365.99)
+    real(r8), intent(in) :: nextsw_cday                   ! calendar day at Greenwich (1.00, ..., days/year)
     real(r8), intent(in) :: declinp1                   ! declination angle (radians) for next time step
 !
 ! !CALLED FROM:
@@ -572,7 +572,8 @@ contains
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
           if (coszen_pft(p) > 0._r8) then
-             if (itypelun(plandunit(p)) == istsoil  &
+             if ((itypelun(plandunit(p)) == istsoil .or.  &
+                  itypelun(plandunit(p)) == istcrop     ) &
                  .and. (elai(p) + esai(p)) > 0._r8        &
                  .and. pwtgcell(p) > 0._r8) then
                 num_vegsol = num_vegsol + 1
@@ -721,7 +722,7 @@ contains
           if (coszen(c) > 0._r8) then
              l = clandunit(c)
 
-             if (ltype(l) == istsoil)  then             ! soil
+             if (ltype(l) == istsoil .or. ltype(l) == istcrop)  then ! soil
                 inc    = max(0.11_r8-0.40_r8*h2osoi_vol(c,1), 0._r8)
                 soilcol = isoicol(c)
                 ! changed from local variable to clm_type:

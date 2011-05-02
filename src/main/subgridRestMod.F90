@@ -124,8 +124,10 @@ contains
             dim1name='landunit', long_name='2d longitude index of corresponding landunit')
        call ncd_defvar(ncid=ncid, varname='land1d_jxy', xtype=ncd_int,  &
             dim1name='landunit', long_name='2d latitude index of corresponding landunit')
-       call ncd_defvar(ncid=ncid, varname='land1d_gi', xtype=ncd_int,  &
-            dim1name='landunit', long_name='1d grid index of corresponding landunit')
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_defvar(ncid=ncid, varname='land1d_gi', xtype=ncd_int,  &
+       !     dim1name='landunit', long_name='1d grid index of corresponding landunit')
+       ! ----------------------------------------------------------------
        call ncd_defvar(ncid=ncid, varname='land1d_wtxy', xtype=ncd_double,  &
             dim1name='landunit', long_name='landunit weight relative to corresponding gridcell')
        call ncd_defvar(ncid=ncid, varname='land1d_ityplun', xtype=ncd_int,  &
@@ -149,7 +151,9 @@ contains
        call ncd_io(varname='land1d_jxy'    , data=ilarr        , dim1name=namel, ncid=ncid, flag=flag)
        call ncd_io(varname='land1d_wtxy'   , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag=flag)
        call ncd_io(varname='land1d_ityplun', data=lptr%itype   , dim1name=namel, ncid=ncid, flag=flag)
-       call ncd_io(varname='land1d_gi'     , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag=flag)
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_io(varname='land1d_gi'     , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag=flag)
+       ! ----------------------------------------------------------------
     end if
 
     ! Write column info
@@ -163,10 +167,12 @@ contains
             dim1name='column', long_name='2d longitude index of corresponding column')
        call ncd_defvar(ncid=ncid, varname='cols1d_jxy', xtype=ncd_int,   &
             dim1name='column', long_name='2d latitude index of corresponding column')
-       call ncd_defvar(ncid=ncid, varname='cols1d_gi', xtype=ncd_int,   &
-            dim1name='column', long_name='1d grid index of corresponding column')
-       call ncd_defvar(ncid=ncid, varname='cols1d_li', xtype=ncd_int,   &
-            dim1name='column', long_name='1d landunit index of corresponding column')
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_defvar(ncid=ncid, varname='cols1d_gi', xtype=ncd_int,   &
+       !     dim1name='column', long_name='1d grid index of corresponding column')
+       !call ncd_defvar(ncid=ncid, varname='cols1d_li', xtype=ncd_int,   &
+       !     dim1name='column', long_name='1d landunit index of corresponding column')
+       ! ----------------------------------------------------------------
        call ncd_defvar(ncid=ncid, varname='cols1d_wtxy', xtype=ncd_double,   &
             dim1name='column', long_name='column weight relative to corresponding gridcell')
        call ncd_defvar(ncid=ncid, varname='cols1d_wtlnd', xtype=ncd_double,   &
@@ -195,8 +201,10 @@ contains
        call ncd_io(varname='cols1d_jxy'  , data=icarr        , dim1name=namec, ncid=ncid, flag=flag)
        call ncd_io(varname='cols1d_wtxy' , data=cptr%wtgcell , dim1name=namec, ncid=ncid, flag=flag)
        call ncd_io(varname='cols1d_wtlnd', data=cptr%wtlunit , dim1name=namec, ncid=ncid, flag=flag)
-       call ncd_io(varname='cols1d_gi'   , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag=flag)
-       call ncd_io(varname='cols1d_li'   , data=cptr%landunit, dim1name=namec, ncid=ncid, flag=flag)
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_io(varname='cols1d_gi'   , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag=flag)
+       !call ncd_io(varname='cols1d_li'   , data=cptr%landunit, dim1name=namec, ncid=ncid, flag=flag)
+       ! ----------------------------------------------------------------
        do c=begc,endc
           icarr(c) = lptr%itype(cptr%landunit(c))
        enddo
@@ -218,10 +226,12 @@ contains
             dim1name='pft', long_name='2d longitude index of corresponding pft')
        call ncd_defvar(ncid=ncid, varname='pfts1d_jxy', xtype=ncd_int,  &
             dim1name='pft', long_name='2d latitude index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_gi', xtype=ncd_int,  &
-            dim1name='pft', long_name='1d grid index of corresponding pft')
-       call ncd_defvar(ncid=ncid, varname='pfts1d_li', xtype=ncd_int,  &
-            dim1name='pft', long_name='1d landunit index of corresponding pft')
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_defvar(ncid=ncid, varname='pfts1d_gi', xtype=ncd_int,  &
+       !     dim1name='pft', long_name='1d grid index of corresponding pft')
+       !call ncd_defvar(ncid=ncid, varname='pfts1d_li', xtype=ncd_int,  &
+       !     dim1name='pft', long_name='1d landunit index of corresponding pft')
+       ! ----------------------------------------------------------------
        call ncd_defvar(ncid=ncid, varname='pfts1d_ci', xtype=ncd_int,  &
             dim1name='pft', long_name='1d column index of corresponding pft')
        call ncd_defvar(ncid=ncid, varname='pfts1d_wtxy', xtype=ncd_double,  &
@@ -255,9 +265,11 @@ contains
        call ncd_io(varname='pfts1d_wtlnd'  , data=pptr%wtlunit , dim1name=namep, ncid=ncid, flag=flag)
        call ncd_io(varname='pfts1d_wtcol'  , data=pptr%wtcol   , dim1name=namep, ncid=ncid, flag=flag)
        call ncd_io(varname='pfts1d_itypveg', data=pptr%itype   , dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_io(varname='pfts1d_gi'     , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_io(varname='pfts1d_li'     , data=pptr%landunit, dim1name=namep, ncid=ncid, flag=flag)
-       call ncd_io(varname='pfts1d_ci'     , data=pptr%column  , dim1name=namep, ncid=ncid, flag=flag)
+       ! --- EBK Do NOT write out indices that are incorrect 4/1/2011 --- Bug 1310
+       !call ncd_io(varname='pfts1d_gi'     , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag=flag)
+       !call ncd_io(varname='pfts1d_li'     , data=pptr%landunit, dim1name=namep, ncid=ncid, flag=flag)
+       !call ncd_io(varname='pfts1d_ci'     , data=pptr%column  , dim1name=namep, ncid=ncid, flag=flag)
+       ! ----------------------------------------------------------------
        do p=begp,endp
           iparr(p) = lptr%itype(pptr%landunit(p))
        enddo

@@ -21,8 +21,12 @@ interpinic -i <input initial data file>  -o <output initial data file>
 
 Options to gmake:
 
-make OPT=TRUE     # will compile with production compiler options on
-make SMP=TRUE     # will compile with Open-MP parallelism on
+gmake OPT=TRUE     # will compile with production compiler options on
+gmake SMP=TRUE     # will compile with Open-MP parallelism on
+
+If SMP is TRUE, then should invoke interpic as follows:
+
+env OMP_NUM_THREADS <numthreads> interpinic -i <input initial data file>  -o <output initial data file>
 
 See Also: See the models/lnd/clm/tools/README file for more notes about setting
           the path for NetCDF and running with shared-memory parallelism.
@@ -30,11 +34,17 @@ See Also: See the models/lnd/clm/tools/README file for more notes about setting
 Files:
 
 Makefile ------------------------------------------- GNU makefile
+
 Srcfiles ------------------------------------------- List of source files needed 
                                                      (includes files outside this directory)
+
 Filepath ------------------------------------------- Filepath location to source files needed
-clmi.IQ.1953-01-01_10x15_USGS_simyr2000_c081202.nc-- Sample 10x15 resolution dataset that                                                      you can interpolate to
+
+clmi.IQ.1953-01-01_10x15_USGS_simyr2000_c081202.nc-- Sample 10x15 resolution dataset that
+                                                     you can interpolate to
+
 interpinic.runoptions ------------------------------ Example runoptions using the above file.
+
 runinit_ibm.csh ------------------------------------ Script to run interpinic for multiple
                                                      resolutions, also runs clm to create
                                                      template files to do so.

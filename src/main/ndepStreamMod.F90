@@ -161,6 +161,7 @@ contains
    !-----------------------------------------------------------------------
    use decompMod       , only : get_proc_bounds
    use clm_time_manager, only : get_curr_date, get_days_per_year
+   use clm_varcon      , only : secspday
    use clm_atmlnd      , only : clm_a2l
 
    ! Local variables
@@ -184,7 +185,7 @@ contains
    dayspyr = get_days_per_year( )
    do g = begg,endg
       ig = ig+1
-      clm_a2l%forc_ndep(g) = sdat%avs(1)%rAttr(1,ig) / (86400._r8 * dayspyr)
+      clm_a2l%forc_ndep(g) = sdat%avs(1)%rAttr(1,ig) / (secspday * dayspyr)
    end do
    
  end subroutine ndep_interp

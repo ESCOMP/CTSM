@@ -1,4 +1,3 @@
-
 module Biogeophysics1Mod
 
 !------------------------------------------------------------------------------
@@ -69,6 +68,7 @@ contains
                                     zlnd, zsno, tfrz, &
                                     icol_roof, icol_sunwall, icol_shadewall,     &
                                     icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
+    use clm_varcon         , only : istcrop
     use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, max_pft_per_gcell, nlevsoi
     use QSatMod            , only : QSat
     use shr_const_mod      , only : SHR_CONST_PI
@@ -334,7 +334,7 @@ contains
        qred = 1._r8
        if (ityplun(l)/=istwet .AND. ityplun(l)/=istice  &
                               .AND. ityplun(l)/=istice_mec) then
-          if (ityplun(l) == istsoil) then
+          if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
              wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)
              fac  = min(1._r8, wx/watsat(c,1))
              fac  = max( fac, 0.01_r8 )
@@ -459,13 +459,13 @@ contains
        l = plandunit(p)
        if (ityplun(l) == isturb) then
          eflx_sh_tot_u(p) = 0._r8
-       else if (ityplun(l) == istsoil) then 
+       else if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then 
          eflx_sh_tot_r(p) = 0._r8
        end if
        eflx_lh_tot(p) = 0._r8
        if (ityplun(l) == isturb) then
          eflx_lh_tot_u(p) = 0._r8
-       else if (ityplun(l) == istsoil) then 
+       else if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then 
          eflx_lh_tot_r(p) = 0._r8
        end if
        eflx_sh_veg(p) = 0._r8
@@ -504,7 +504,7 @@ contains
             ! Note: Some glacier_mec pfts may have zero weight  
             if (pwtgcell(p) > 0._r8 .or. ityplun(l)==istice_mec) then 
               c = pcolumn(p)
-              if (ityplun(l) == istsoil) then
+              if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
                 if (frac_veg_nosno(p) == 0) then
                   forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
                   forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c) + displa(p)

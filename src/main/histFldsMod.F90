@@ -45,7 +45,6 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon , only : spval
-    use clm_varctl , only : nsrest
     use clm_atmlnd , only : clm_a2l, atm_a2l, &
 	                    adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux
     use clm_varctl , only : create_glacier_mec_landunit, downscale
@@ -54,6 +53,7 @@ contains
 #endif
     use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
                             hist_printflds
+    use surfrdMod  , only : crop_prog
 #if (defined CASA)
     use CASAMod    , only : nlive, npools, npool_types
 #endif
@@ -512,7 +512,6 @@ contains
          avgflag='A', long_name='photosynthesis', &
          ptr_pft=clm3%g%l%c%p%pcf%fpsn, set_lake=0._r8, set_urb=0._r8)
 
-#if (defined DUST)
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
          avgflag='A', long_name='total surface dust emission', &
          ptr_pft=clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot, set_lake=0._r8, set_urb=0._r8)
@@ -528,7 +527,6 @@ contains
     call hist_addfld1d (fname='DPVLTRB4', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 4', &
          ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4, default='inactive')
-#endif
 
     call hist_addfld1d (fname='VOCFLXT', units='uGC/M2/H',  &
          avgflag='A', long_name='total VOC flux into atmosphere', &
@@ -1023,14 +1021,16 @@ contains
          avgflag='A', long_name='atmospheric pressure', &
          ptr_lnd=clm_a2l%forc_pbot)
 
+#if (defined CNDV) || (defined CROP)
+    call hist_addfld1d (fname='T10', units='K',  &
+         avgflag='A', long_name='10-day running mean of 2-m temperature', &
+         ptr_pft=clm3%g%l%c%p%pes%t10)
+#endif
+
 #if (defined CNDV)
     call hist_addfld1d (fname='TDA', units='K',  &
          avgflag='A', long_name='daily average 2-m temperature', &
          ptr_pft=clm3%g%l%c%p%pdgvs%t_mo)
-
-    call hist_addfld1d (fname='T10', units='K',  &
-         avgflag='A', long_name='10-day running mean of 2-m temperature', &
-         ptr_pft=clm3%g%l%c%p%pdgvs%t10)
 
     call hist_addfld1d (fname='AGDD', units='K',  &
          avgflag='A', long_name='growing degree-days base 5C', &
@@ -1045,17 +1045,27 @@ contains
 
 #if (defined CN)
     ! add history fields for all CN variables, always set as default='inactive'
+
+    if ( crop_prog )then
+
+       call hist_addfld1d (fname='A5TMIN', units='K',  &
+            avgflag='A', long_name='5-day running mean of min 2-m temperature', &
+            ptr_pft=clm3%g%l%c%p%pes%a5tmin, default='inactive')
+
+       call hist_addfld1d (fname='A10TMIN', units='K',  &
+            avgflag='A', long_name='10-day running mean of min 2-m temperature', &
+            ptr_pft=clm3%g%l%c%p%pes%a10tmin, default='inactive')
+
+    end if
     
     !-------------------------------
     ! C state variables - native to PFT 
     !-------------------------------
-#if (defined CLAMP)
     ! add history fields for all CLAMP CN variables
 
     call hist_addfld1d (fname='WOODC', units='gC/m^2', &
              avgflag='A', long_name='wood C', &
              ptr_pft=clm3%g%l%c%p%pcs%woodc)
-#endif
     
     call hist_addfld1d (fname='LEAFC', units='gC/m^2', &
          avgflag='A', long_name='leaf C', &
@@ -1282,7 +1292,6 @@ contains
     !-------------------------------
     ! C state variables - native to column
     !-------------------------------
-#if (defined CLAMP)
      ! add history fields for all CLAMP CN variables
      call hist_addfld1d (fname='SOILC', units='gC/m^2', &
           avgflag='A', long_name='soil C', &
@@ -1291,7 +1300,6 @@ contains
      call hist_addfld1d (fname='LITTERC', units='gC/m^2', &
           avgflag='A', long_name='litter C', &
           ptr_col=clm3%g%l%c%ccs%totlitc)
-#endif
     
     call hist_addfld1d (fname='CWDC', units='gC/m^2', &
          avgflag='A', long_name='coarse woody debris C', &
@@ -1620,7 +1628,6 @@ contains
     ! C flux variables - native to PFT
     !-------------------------------
 
-#if (defined CLAMP)
      ! add history fields for all CLAMP CN variables
 
      call hist_addfld1d (fname='WOODC_ALLOC', units='gC/m^2/s', &
@@ -1646,7 +1653,6 @@ contains
      call hist_addfld1d (fname='FROOTC_ALLOC', units='gC/m^2/s', &
           avgflag='A', long_name='fine root C allocation', &
           ptr_pft=clm3%g%l%c%p%pcf%frootc_alloc)
-#endif
 
     call hist_addfld1d (fname='PSNSUN', units='umolCO2/m^2/s', &
          avgflag='A', long_name='sunlit leaf photosynthesis', &
@@ -2557,7 +2563,6 @@ contains
     !-------------------------------
     ! C flux variables - native to column 
     !-------------------------------
-#if (defined CLAMP)
     ! add history fields for all CLAMP CN variables
 
     call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
@@ -2583,8 +2588,6 @@ contains
     call hist_addfld1d (fname='SOILC_LOSS', units='gC/m^2/s', &
          avgflag='A', long_name='soil C loss', &
          ptr_col=clm3%g%l%c%ccf%somhr)
-
-#endif
 
     call hist_addfld1d (fname='M_LEAFC_TO_LITR1C', units='gC/m^2/s', &
          avgflag='A', long_name='leaf C mortality to litter 1 C', &
@@ -4207,6 +4210,46 @@ contains
          avgflag='A', long_name='fraction shade canopy absorbed indirect from indirect', &
          ptr_pft=clm3%g%l%c%p%pps%sha_faii, default='inactive')
 
+    if ( crop_prog )then
+
+        call hist_addfld1d (fname='GDD0', units='ddays', &
+             avgflag='A', long_name='Growing degree days base  0C from planting', &
+             ptr_pft=clm3%g%l%c%p%pps%gdd0, default='inactive')
+
+        call hist_addfld1d (fname='GDD8', units='ddays', &
+             avgflag='A', long_name='Growing degree days base  8C from planting', &
+             ptr_pft=clm3%g%l%c%p%pps%gdd8, default='inactive')
+
+        call hist_addfld1d (fname='GDD10', units='ddays', &
+             avgflag='A', long_name='Growing degree days base 10C from planting', &
+             ptr_pft=clm3%g%l%c%p%pps%gdd10, default='inactive')
+
+        call hist_addfld1d (fname='GDD020', units='ddays', &
+             avgflag='A', long_name='Twenty year average of growing degree days base  0C from planting', &
+             ptr_pft=clm3%g%l%c%p%pps%gdd020, default='inactive')
+
+        call hist_addfld1d (fname='GDD820', units='ddays', &
+             avgflag='A', long_name='Twenty year average of growing degree days base  8C from planting', &
+             ptr_pft=clm3%g%l%c%p%pps%gdd820, default='inactive')
+
+        call hist_addfld1d (fname='GDD1020', units='ddays', &
+             avgflag='A', long_name='Twenty year average of growing degree days base 10C from planting', &
+             ptr_pft=clm3%g%l%c%p%pps%gdd1020, default='inactive')
+
+        call hist_addfld1d (fname='GDDPLANT', units='ddays', &
+             avgflag='A', long_name='Accumulated growing degree days past planting date for crop', &
+             ptr_pft=clm3%g%l%c%p%pps%gddplant, default='inactive')
+
+        call hist_addfld1d (fname='GDDHARV', units='ddays', &
+             avgflag='A', long_name='Growing degree days (gdd) needed to harvest', &
+             ptr_pft=clm3%g%l%c%p%pps%gddmaturity, default='inactive')
+
+        call hist_addfld1d (fname='GDDTSOI', units='ddays', &
+             avgflag='A', long_name='Growing degree-days from planting (top two soil layers)', &
+             ptr_pft=clm3%g%l%c%p%pps%gddtsoi, default='inactive')
+
+    end if
+
     !-------------------------------
     ! Column physical state variables not already defined by default
     !-------------------------------
@@ -4546,7 +4589,6 @@ contains
         avgflag='A', long_name='Total Carbon for pool', &
         ptr_pft=clm3%g%l%c%p%pps%Tpool_C, set_lake=0._r8)
 
-#if (defined CLAMP)
    ! Summary variables added for the C-LAMP Experiments
 
     call hist_addfld1d (fname='AGNPP', units='gC/m2/s',  &
@@ -4653,7 +4695,6 @@ contains
          avgflag='A', long_name='wood C loss', &
          ptr_pft=clm3%g%l%c%p%pps%casa_woodc_loss, set_lake=0._r8)
 
-#endif
 #endif
 
     call hist_addfld1d (fname='SNORDSL', units='m^-6', &

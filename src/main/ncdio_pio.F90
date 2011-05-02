@@ -90,6 +90,7 @@ module ncdio_pio
      module procedure ncd_io_int_var0_nf
      module procedure ncd_io_real_var0_nf
      module procedure ncd_io_int_var1_nf
+     module procedure ncd_io_log_var1_nf
      module procedure ncd_io_real_var1_nf
      module procedure ncd_io_char_var1_nf
      module procedure ncd_io_int_var2_nf
@@ -98,6 +99,7 @@ module ncdio_pio
      module procedure ncd_io_char_var3_nf
      module procedure ncd_io_char_varn_strt_nf
      module procedure ncd_io_int_var1
+     module procedure ncd_io_log_var1
      module procedure ncd_io_real_var1
      module procedure ncd_io_int_var2
      module procedure ncd_io_real_var2
@@ -868,6 +870,7 @@ contains
        lxtype = xtype
     end if
     if (masterproc .and. debug > 1) then
+       write(iulog,*) 'Error in defining variable = ', trim(varname)
        write(iulog,*) subname//' ',trim(varname),lxtype,ndims,ldimid(1:ndims)
     endif
     
@@ -892,25 +895,28 @@ contains
     if (present(flag_values)) then
        status = PIO_put_att(ncid,varid,'flag_values',flag_values)
        if ( .not. present(flag_meanings)) then
+          write(iulog,*) 'Error in defining variable = ', trim(varname)
           call endrun( subname//" ERROR:: flag_values set -- but not flag_meanings" )
        end if
     end if
     if (present(flag_meanings)) then
-       str = flag_meanings(1)
-       do n = 2, size(flag_meanings)
-          if ( index(flag_meanings(n), " ") /= 0 )then
-             call endrun( subname//" ERROR:: flag_meanings has an invalid space in it" )
-          end if
-          str = trim(str)//" "//flag_meanings(n)
-       end do
-       write(iulog,*) 'varname=', trim(varname), 'flag_meanings = ', trim(str)
-       status = PIO_put_att(ncid,varid,'flag_meanings', trim(str) )
        if ( .not. present(flag_values)) then
+          write(iulog,*) 'Error in defining variable = ', trim(varname)
           call endrun( subname//" ERROR:: flag_meanings set -- but not flag_values" )
        end if
        if ( size(flag_values) /= size(flag_meanings) ) then
+          write(iulog,*) 'Error in defining variable = ', trim(varname)
           call endrun( subname//" ERROR:: flag_meanings and flag_values dimension different")
        end if
+       str = flag_meanings(1)
+       do n = 1, size(flag_meanings)
+          if ( index(flag_meanings(n), ' ') /= 0 )then
+             write(iulog,*) 'Error in defining variable = ', trim(varname)
+             call endrun( subname//" ERROR:: flag_meanings has an invalid space in it" )
+          end if
+          if ( n > 1 ) str = trim(str)//" "//flag_meanings(n)
+       end do
+       status = PIO_put_att(ncid,varid,'flag_meanings', trim(str) )
     end if
     if (present(comment)) then
        call ncd_putatt(ncid, varid, 'comment', trim(comment))
@@ -1319,6 +1325,91 @@ contains
     endif   ! flag
 
   end subroutine ncd_io_int_var1_nf
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_log_var1_nf
+!
+! !INTERFACE:
+  subroutine ncd_io_log_var1_nf(varname, data, flag, ncid, readvar, nt, posNOTonfile)
+!
+! !DESCRIPTION:
+! netcdf I/O of global integer array
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t), intent(inout) :: ncid      ! netcdf file id
+    character(len=*) , intent(in)    :: flag      ! 'read' or 'write'
+    character(len=*) , intent(in)    :: varname   ! variable name
+    logical          , intent(inout) :: data(:)   ! raw data
+    logical, optional, intent(out)   :: readvar   ! was var read?
+    integer, optional, intent(in)    :: nt        ! time sample index
+    logical          , optional, intent(in) :: posNOTonfile ! position is NOT on this file
+!
+! !REVISION HISTORY:
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    integer :: varid                ! netCDF variable id
+    integer :: start(2), count(2)   ! output bounds
+    integer :: status               ! error code
+    integer, pointer :: idata(:)    ! Temporary integer data to send to file
+    logical :: varpresent           ! if true, variable is on tape
+    character(len=32) :: vname      ! variable error checking
+    logical :: found                ! if true, found lat/lon dims on file
+    type(var_desc_t)  :: vardesc    ! local vardesc pointer
+    character(len=*),parameter :: subname='ncd_io_log_var1_nf'
+!-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+
+       call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+       if (varpresent) then
+          allocate( idata(size(data)) ) 
+          status = pio_get_var(ncid, varid, idata)
+          if (single_column .and. present(posNOTonfile) ) then
+             if ( .not. posNOTonfile )then
+                call endrun( subname// &
+                ' ERROR: 1D var is NOT compatable with posNOTonfile = .false.' )
+             end if
+          endif
+          data = (idata == 1)
+          if ( any(idata /= 0 .and. idata /= 1) )then
+             call endrun( subname// &
+             ' ERROR: read in bad integer value(s) for logical data' )
+          end if
+          deallocate( idata )
+       endif
+       if (present(readvar)) readvar = varpresent
+
+    elseif (flag == 'write') then
+
+       if (present(nt))      then
+          start(1) = 1
+          count(1) = size(data)
+          start(2) = nt
+          count(2) = 1
+       else
+          start(1) = 1
+          count(1) = size(data)
+          start(2) = 1
+          count(2) = 1
+       end if
+       call ncd_inqvid  (ncid, varname, varid, vardesc)
+       allocate( idata(size(data)) ) 
+       where( data )
+          idata = 1
+       else where
+          idata = 0
+       end where
+       status = pio_put_var(ncid, varid, start, count, idata)
+       deallocate( idata )
+
+    endif   ! flag
+
+  end subroutine ncd_io_log_var1_nf
 
 !------------------------------------------------------------------------
 !BOP
@@ -1911,6 +2002,145 @@ contains
     endif
 
   end subroutine ncd_io_int_var1
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_io_log_var1
+!
+! !INTERFACE:
+  subroutine ncd_io_log_var1(varname, data, dim1name, &
+                             flag, ncid, nt, readvar)
+!
+! !DESCRIPTION:
+! I/O for 1d integer field
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(file_desc_t), intent(inout) :: ncid             ! netcdf file id
+    character(len=*) , intent(in)    :: flag             ! 'read' or 'write'
+    character(len=*) , intent(in)    :: varname          ! variable name
+    logical          , pointer       :: data(:)          ! local decomposition data
+    character(len=*) , intent(in)    :: dim1name         ! dimension name
+    integer          , optional, intent(in) :: nt        ! time sample index
+    logical          , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES:
+!EOP
+    character(len=8)  :: clmlevel   ! clmlevel
+    character(len=32) :: dimname    ! temporary
+    integer           :: n          ! index      
+    integer           :: iodnum     ! iodesc num in list
+    integer           :: varid      ! varid
+    integer           :: ndims      ! ndims for var
+    integer           :: ndims_iod  ! ndims iodesc for var
+    integer           :: dims(4)    ! dim sizes       
+    integer           :: dids(4)    ! dim ids
+    integer           :: start(3)   ! netcdf start index
+    integer           :: count(3)   ! netcdf count index
+    integer           :: status     ! error code  
+    integer, pointer :: idata(:)    ! Temporary integer data to send to file
+    logical           :: varpresent ! if true, variable is on tape
+    integer           :: xtype      ! netcdf data type
+    integer                , pointer  :: compDOF(:)
+    type(iodesc_plus_type) , pointer  :: iodesc_plus
+    type(var_desc_t)                  :: vardesc
+    character(len=*),parameter :: subname='ncd_io_log_var1' ! subroutine name
+!-----------------------------------------------------------------------
+
+    if (masterproc .and. debug > 1) then
+       write(iulog,*) subname//' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
+    end if
+
+    clmlevel = dim1name
+
+    if (flag == 'read') then
+
+       call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
+       if (varpresent) then
+          allocate( idata(size(data)) ) 
+          if (single_column) then
+             start(:) = 1
+             count(:) = 1
+             call scam_field_offsets(ncid,clmlevel,start,count)
+             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+                if (present(nt)) start(3) = nt
+             else
+                if (present(nt)) start(2) = nt
+             end if
+             status = pio_get_var(ncid, varid, start, count, idata)
+          else
+             status = pio_inq_varndims(ncid, vardesc, ndims)
+             status = pio_inq_vardimid(ncid, vardesc, dids)
+             status = pio_inq_vartype (ncid, vardesc, xtype)
+             status = pio_inq_dimname(ncid,dids(ndims),dimname)
+             if ('time' == trim(dimname)) then
+                ndims_iod = ndims - 1
+             else
+                ndims_iod = ndims
+             end if
+             do n = 1,ndims_iod
+                status = pio_inq_dimlen(ncid,dids(n),dims(n))
+             enddo
+             call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+             iodesc_plus => iodesc_list(iodnum)
+             if (present(nt)) then
+                call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+             end if
+             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
+          end if
+          data = (idata == 1)
+          if ( any(idata /= 0 .and. idata /= 1) )then
+             call endrun( subname// &
+             ' ERROR: read in bad integer value(s) for logical data' )
+          end if
+          deallocate( idata )
+       end if
+       if (present(readvar)) readvar = varpresent
+
+    elseif (flag == 'write') then
+
+       call ncd_inqvid(ncid, varname ,varid, vardesc)
+       status = pio_inq_varndims(ncid, vardesc, ndims)
+       status = pio_inq_vardimid(ncid, vardesc, dids)
+       status = pio_inq_vartype (ncid, vardesc, xtype)
+       status = pio_inq_dimname(ncid,dids(ndims),dimname)
+       if ('time' == trim(dimname)) then
+          ndims_iod = ndims - 1
+       else
+          ndims_iod = ndims
+       end if
+       do n = 1,ndims_iod
+          status = pio_inq_dimlen(ncid,dids(n),dims(n))
+       enddo
+       call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+       iodesc_plus => iodesc_list(iodnum)
+       if (present(nt)) then
+          call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+       end if
+       allocate( idata(size(data)) ) 
+       where( data )
+          idata = 1
+       else where
+          idata = 0
+       end where
+       call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status, fillval=0)
+       deallocate( idata )
+
+    else
+
+       if (masterproc) then
+          write(iulog,*) subname//' ERROR: unsupported flag ',trim(flag)
+          call endrun()
+       endif
+
+    endif
+
+  end subroutine ncd_io_log_var1
 
 !-----------------------------------------------------------------------
 !BOP

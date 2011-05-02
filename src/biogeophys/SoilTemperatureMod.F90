@@ -1,4 +1,3 @@
-
 module SoilTemperatureMod
 
 !-----------------------------------------------------------------------
@@ -856,6 +855,7 @@ contains
     use clmtype
     use clm_time_manager, only : get_step_size
     use clm_varcon  , only : tfrz, hfus, grav, istsoil, istice_mec, isturb, icol_road_perv
+    use clm_varcon  , only : istcrop
     use clm_varpar  , only : nlevsno, nlevgrnd
 
 !
@@ -1031,7 +1031,7 @@ contains
 
           ! from Zhao (1997) and Koren (1999)
           supercool(c,j) = 0.0_r8
-          if (ltype(l) == istsoil .or. ctype(c) == icol_road_perv) then
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop .or. ctype(c) == icol_road_perv) then
              if(t_soisno(c,j) < tfrz) then
                 smp = hfus*(tfrz-t_soisno(c,j))/(grav*t_soisno(c,j)) * 1000._r8  !(mm)
                 supercool(c,j) = watsat(c,j)*(smp/sucsat(c,j))**(-1._r8/bsw(c,j))
@@ -1190,7 +1190,7 @@ contains
        l = clandunit(c)
        if (ltype(l) == isturb) then
          eflx_snomelt_u(c) = eflx_snomelt(c)
-       else if (ltype(l) == istsoil) then
+       else if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
          eflx_snomelt_r(c) = eflx_snomelt(c)
        end if
     end do

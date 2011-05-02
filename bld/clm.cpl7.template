@@ -22,7 +22,7 @@ setenv COMP "unknown"
 if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
 if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
-set config_opts = "-mode ext_cesm $CLM_CONFIG_OPTS -rtm $rtm -glc_nec $GLC_NEC"
+set config_opts = "-mode ext_cesm -rtm $rtm -glc_nec $GLC_NEC $CLM_CONFIG_OPTS"
 $CODEROOT/lnd/clm*/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------

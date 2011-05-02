@@ -15,6 +15,7 @@ module mklaiMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use areaMod     , only : gridmap_type
+  use mkvarctl    
 
   implicit none
 
@@ -44,9 +45,8 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
-  use mkvarpar	  , only : numpft
   use mkvarsur    , only : ldomain
-  use mkvarctl    
+  use mkvarpar    , only : numstdpft
   use areaMod     , only : areaini,areaave, gridmap_clean, &
                            areaave_pft, areaini_pft
   use ncdio
@@ -210,16 +210,16 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
      beg4d(4) = m ; len4d(4) = 1
 
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_LAI', varid), subname)
-     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mlai_i), subname)
+     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mlai_i(:,:,0:numpft)), subname)
 
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_SAI', varid), subname)
-     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, msai_i), subname)
+     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, msai_i(:,:,0:numpft)), subname)
 
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_HEIGHT_TOP', varid), subname)
-     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mhgtt_i), subname)
+     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mhgtt_i(:,:,0:numpft)), subname)
 
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_HEIGHT_BOT', varid), subname)
-     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mhgtb_i), subname)
+     call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mhgtb_i(:,:,0:numpft)), subname)
 
      mlai_o(:,:,:)  = 0.
      msai_o(:,:,:)  = 0.
@@ -428,7 +428,6 @@ end subroutine mklai
 ! !INTERFACE:
 subroutine pft_laicheck( ni, nj, pctpft_i, laimask )
 ! !USES:
-  use mkvarpar	  , only : numpft
 !
 ! !DESCRIPTION:
 !
@@ -469,6 +468,7 @@ subroutine pft_laicheck( ni, nj, pctpft_i, laimask )
   end do
 
 end subroutine pft_laicheck
-  
 
+!-----------------------------------------------------------------------
+  
 end module mklaiMod

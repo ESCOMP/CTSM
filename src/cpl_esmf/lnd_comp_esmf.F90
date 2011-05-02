@@ -104,13 +104,13 @@ subroutine lnd_register_esmf(comp, rc)
     ! Register the callback routines.
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_SETINIT, &
-      lnd_init_esmf, ESMF_SINGLEPHASE, rc)
+      lnd_init_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_SETRUN, &
-      lnd_run_esmf, ESMF_SINGLEPHASE, rc)
+      lnd_run_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
     call ESMF_GridCompSetEntryPoint(comp, ESMF_SETFINAL, &
-      lnd_final_esmf, ESMF_SINGLEPHASE, rc)
+      lnd_final_esmf, phase=ESMF_SINGLEPHASE, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
 end subroutine
@@ -155,7 +155,8 @@ end subroutine
     use seq_flds_mod
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x, nflds_x2l
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
-    use clm_varctl       , only : create_glacier_mec_landunit
+    use clm_varctl       , only : create_glacier_mec_landunit, nsrStartup, &
+                                  nsrContinue, nsrBranch
     implicit none
 !
 ! !ARGUMENTS:
@@ -315,11 +316,11 @@ end subroutine
                            perpetual_ymd_in=perpetual_ymd )
 
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
-       nsrest = 0
+       nsrest = nsrStartup
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
-       nsrest = 1
+       nsrest = nsrContinue
     else if (trim(starttype) == trim(seq_infodata_start_type_brnch)) then
-       nsrest = 3
+       nsrest = nsrBranch
     else
        call endrun( sub//' ERROR: unknown starttype' )
     end if

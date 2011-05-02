@@ -42,9 +42,10 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_atmlnd, only : clm_a2l
-    use clm_varpar, only : numrad
-    use decompMod , only : get_proc_bounds
+    use clm_atmlnd      , only : clm_a2l
+    use clm_varpar      , only : numrad
+    use decompMod       , only : get_proc_bounds
+    use clm_time_manager, only : is_restart
     use ncdio_pio
 !
 ! !ARGUMENTS:
@@ -2334,40 +2335,6 @@ contains
 #endif
 
   end subroutine CNRest
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: is_restart
-!
-! !INTERFACE:
-  logical function is_restart( )
-!
-! !DESCRIPTION:
-! Determine if restart run
-!
-! !USES:
-    use clm_varctl, only : nsrest
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !CALLED FROM:
-! subroutine initialize in this module
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!-----------------------------------------------------------------------
-
-    if (nsrest == 1) then
-       is_restart = .true.
-    else
-       is_restart = .false.
-    end if
-
-  end function is_restart
 
 #endif
 

@@ -17,11 +17,14 @@ subroutine CNiniTimeVar()
    use clm_atmlnd  , only: clm_a2l
    use shr_kind_mod, only: r8 => shr_kind_r8
    use clm_varcon  , only: istsoil
+   use clm_varcon  , only: istcrop
 #if (defined C13)
    use clm_varcon  , only: c13ratio
 #endif
    use pftvarcon   , only: noveg
+   use pftvarcon   , only: npcropmin
    use decompMod   , only: get_proc_bounds
+   use surfrdMod   , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none
@@ -71,6 +74,9 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
    real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
+   real(r8), pointer :: grainc(:)             ! (gC/m2) grain C
+   real(r8), pointer :: grainc_storage(:)     ! (gC/m2) grain C storage
+   real(r8), pointer :: grainc_xfer(:)        ! (gC/m2) grain C transfer
    real(r8), pointer :: frootc(:)             ! (gC/m2) fine root C
    real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
    real(r8), pointer :: frootc_xfer(:)        ! (gC/m2) fine root C transfer
@@ -93,6 +99,9 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: leafn(:)              ! (gN/m2) leaf N
    real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
    real(r8), pointer :: leafn_xfer(:)         ! (gN/m2) leaf N transfer
+   real(r8), pointer :: grainn(:)             ! (gN/m2) grain N
+   real(r8), pointer :: grainn_storage(:)     ! (gN/m2) grain N storage
+   real(r8), pointer :: grainn_xfer(:)        ! (gN/m2) grain N transfer
    real(r8), pointer :: frootn(:)             ! (gN/m2) fine root N
    real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
    real(r8), pointer :: frootn_xfer(:)        ! (gN/m2) fine root N transfer
@@ -176,7 +185,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: me(:)                 ! moisture of extinction (proportion)
    real(r8), pointer :: fire_prob(:)          ! daily fire probability (0-1)
    real(r8), pointer :: mean_fire_prob(:)     ! e-folding mean of daily fire probability (0-1)
-   real(r8), pointer :: fireseasonl(:)        ! annual fire season length (days, <= 365)
+   real(r8), pointer :: fireseasonl(:)        ! annual fire season length (days, <= days/year)
    real(r8), pointer :: farea_burned(:)       ! timestep fractional area burned (proportion)
    real(r8), pointer :: ann_farea_burned(:)   ! annual total fractional area burned (proportion)
    real(r8), pointer :: col_ctrunc(:)         ! (gC/m2) column-level sink for C truncation
@@ -185,11 +194,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
 
-#if (defined CLAMP)
-   ! new CLAMP state variables
    real(r8), pointer :: woodc(:)              ! (gC/m2) pft-level wood C
-#endif
-
    real(r8), pointer :: col_ntrunc(:)         ! (gN/m2) column-level sink for N truncation
    real(r8), pointer :: totcoln(:)            ! (gN/m2) total column nitrogen, incl veg
    real(r8), pointer :: totecosysn(:)         ! (gN/m2) total ecosystem nitrogen, incl veg
@@ -358,6 +363,9 @@ subroutine CNiniTimeVar()
     leafc                          => clm3%g%l%c%p%pcs%leafc
     leafc_storage                  => clm3%g%l%c%p%pcs%leafc_storage
     leafc_xfer                     => clm3%g%l%c%p%pcs%leafc_xfer
+    grainc                         => clm3%g%l%c%p%pcs%grainc
+    grainc_storage                 => clm3%g%l%c%p%pcs%grainc_storage
+    grainc_xfer                    => clm3%g%l%c%p%pcs%grainc_xfer
     frootc                         => clm3%g%l%c%p%pcs%frootc
     frootc_storage                 => clm3%g%l%c%p%pcs%frootc_storage
     frootc_xfer                    => clm3%g%l%c%p%pcs%frootc_xfer
@@ -378,15 +386,13 @@ subroutine CNiniTimeVar()
     cpool                          => clm3%g%l%c%p%pcs%cpool
     xsmrpool                       => clm3%g%l%c%p%pcs%xsmrpool
     forc_hgt_u_pft                 => clm3%g%l%c%p%pps%forc_hgt_u_pft
-
-#if (defined CLAMP)
-    ! CLAMP variable
     woodc                          => clm3%g%l%c%p%pcs%woodc
-#endif
-
     leafn                          => clm3%g%l%c%p%pns%leafn
     leafn_storage                  => clm3%g%l%c%p%pns%leafn_storage
     leafn_xfer                     => clm3%g%l%c%p%pns%leafn_xfer
+    grainn                         => clm3%g%l%c%p%pns%grainn
+    grainn_storage                 => clm3%g%l%c%p%pns%grainn_storage
+    grainn_xfer                    => clm3%g%l%c%p%pns%grainn_xfer
     frootn                         => clm3%g%l%c%p%pns%frootn
     frootn_storage                 => clm3%g%l%c%p%pns%frootn_storage
     frootn_xfer                    => clm3%g%l%c%p%pns%frootn_xfer
@@ -528,7 +534,7 @@ subroutine CNiniTimeVar()
    ! initialize column-level variables
    do c = begc, endc
       l = clandunit(c)
-      if (itypelun(l) == istsoil) then
+      if (itypelun(l) == istsoil .or. itypelun(l) == istcrop) then
 
          ! column physical state variables
          annsum_counter(c) = 0._r8
@@ -657,7 +663,7 @@ subroutine CNiniTimeVar()
    ! initialize pft-level variables
    do p = begp, endp
       l = plandunit(p)
-      if (itypelun(l) == istsoil) then
+      if (itypelun(l) == istsoil .or. itypelun(l) == istcrop) then
          
          ! carbon state variables
          if (ivt(p) == noveg) then
@@ -667,6 +673,9 @@ subroutine CNiniTimeVar()
             if (evergreen(ivt(p)) == 1._r8) then
                leafc(p) = 1._r8
                leafc_storage(p) = 0._r8
+            else if (ivt(p) >= npcropmin) then ! prognostic crop types
+               leafc(p) = 0._r8
+               leafc_storage(p) = 0._r8
             else
                leafc(p) = 0._r8
                leafc_storage(p) = 1._r8
@@ -674,6 +683,11 @@ subroutine CNiniTimeVar()
          end if
          
          leafc_xfer(p) = 0._r8
+         if ( crop_prog )then
+            grainc(p) = 0._r8
+            grainc_storage(p) = 0._r8
+            grainc_xfer(p) = 0._r8
+         end if
          frootc(p) = 0._r8
          frootc_storage(p) = 0._r8
          frootc_xfer(p) = 0._r8
@@ -715,10 +729,7 @@ subroutine CNiniTimeVar()
             deadcrootc_storage(p) + deadcrootc_xfer(p) + gresp_storage(p) +  &
             gresp_xfer(p) + cpool(p)
 
-#if (defined CLAMP)
-         ! CLAMP variables
          woodc(p)    = 0._r8
-#endif
 
 #if (defined C13)
          ! 4/14/05: PET
@@ -767,6 +778,11 @@ subroutine CNiniTimeVar()
          end if
 
          leafn_xfer(p) = 0._r8
+         if ( crop_prog )then
+            grainn(p) = 0._r8
+            grainn_storage(p) = 0._r8
+            grainn_xfer(p) = 0._r8
+         end if
          frootn(p) = 0._r8
          frootn_storage(p) = 0._r8
          frootn_xfer(p) = 0._r8

@@ -673,7 +673,7 @@ end subroutine gridmap_checkmap
 ! Initialize the Plant function type weights
 !
 ! !USES:
-    use mkvarpar, only: numpft
+    use mkvarctl, only: numpft
 !
 ! !ARGUMENTS:
     type(gridmap_type),intent(inout) :: gridmap                  ! gridmap

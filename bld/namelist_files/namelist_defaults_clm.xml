@@ -28,6 +28,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
 
+<!-- Supplmental Nitrogen mode for prognostic crops -->
+<suplnitro bgc="cn"   crop="on" >PROG_CROP_ONLY</suplnitro>
+<suplnitro bgc="cndv" crop="on" >PROG_CROP_ONLY</suplnitro>
+<suplnitro bgc="cn"   crop="off">NONE</suplnitro>
+<suplnitro bgc="cndv" crop="off">NONE</suplnitro>
+
 <!-- Albedo for glaciers -->
 <albice glc_nec="0" >0.80,0.55</albice>
 <albice glc_nec="1" >0.50,0.50</albice>
@@ -50,133 +56,139 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon           >lnd/clm2/pftdata/pft-physiology.c110307.nc</fpftcon>
+<fpftcon           >lnd/clm2/pftdata/pft-physiology.c110425.nc</fpftcon>
 
 <!-- Initial condition datasets (relative to {csmdata}) -->
 <finidat hgrid="10x15"         maxpft="4"  mask="USGS" > null </finidat>
 
 <!-- Initial files at 0.9x1.25 or 1.9x2.5 native resolution -->
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".true." >lnd/clm2/initdata/clmi.IQirrcr_2000-01-01_1.9x2.5_gx1v6_c101115.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".true." crop="off" >lnd/clm2/initdata/clmi.IQirrcr_2000-01-01_1.9x2.5_gx1v6_c101115.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="04010101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="04010101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="04010101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="04010101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cndv" ic_ymd="04010101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="04010101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cndv" ic_ymd="02010101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.IQCNDV.0201-01-01_1.9x2.5_gx1v6_simyr2000_c100316.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="02010101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.IQCNDV.0201-01-01_1.9x2.5_gx1v6_simyr2000_c100316.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="08630101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="08630101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="08630101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="08630101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cndv" ic_ymd="08630101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="08630101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
 </finidat>
 
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
 </finidat>
 
 <!-- Initial files interpolated from native resolution -->
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
 </finidat>
 
-<finidat hgrid="10x15"     maxpft="numpft+1"  mask="USGS"  bgc="none" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
+<finidat hgrid="10x15"     maxpft="17"  mask="USGS"  bgc="none" ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
 </finidat>
 
-<finidat hgrid="10x15"     maxpft="numpft+1"  mask="USGS"  bgc="cn"   ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
+<finidat hgrid="1.9x2.5"   maxpft="21"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false."  crop="on" >lnd/clm2/initdata/clmi.IQCNCROPmp20_1992-01-01_1.9x2.5_gx1v6_simyr2000_c110427.nc
 </finidat>
 
-<finidat hgrid="10x15"     maxpft="numpft+1"  mask="USGS"  bgc="cndv" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
+<!-- Surface datasets (relative to {csmdata}) -->
+
+<finidat hgrid="10x15"     maxpft="17"  mask="USGS"  bgc="cn"   ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
 </finidat>
 
-<finidat hgrid="4x5"       maxpft="numpft+1"  mask="gx3v7" bgc="none" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.1949-01-01_4x5_gx3v7_simyr1850_c100322.nc
+<finidat hgrid="10x15"     maxpft="17"  mask="USGS"  bgc="cndv" ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
 </finidat>
 
-<finidat hgrid="4x5"       maxpft="numpft+1"  mask="gx3v7" bgc="cn"   ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.1949-01-01_4x5_gx3v7_simyr1850_c100322.nc
+<finidat hgrid="4x5"       maxpft="17"  mask="gx3v7" bgc="none" ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_4x5_gx3v7_simyr1850_c100322.nc
 </finidat>
 
-<finidat hgrid="4x5"       maxpft="numpft+1"  mask="gx3v7" bgc="cndv" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.1949-01-01_4x5_gx3v7_simyr1850_c100322.nc
+<finidat hgrid="4x5"       maxpft="17"  mask="gx3v7" bgc="cn"   ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_4x5_gx3v7_simyr1850_c100322.nc
 </finidat>
 
-<finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="none" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
+<finidat hgrid="4x5"       maxpft="17"  mask="gx3v7" bgc="cndv" ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_4x5_gx3v7_simyr1850_c100322.nc
 </finidat>
 
-<finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cn"   ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
+<finidat hgrid="48x96"     maxpft="17"  mask="gx3v7" bgc="none" ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
-<finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cndv" ic_ymd="18500101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
+<finidat hgrid="48x96"     maxpft="17"  mask="gx3v7" bgc="cn"   ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
-<finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="none" ic_ymd="00510101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+<finidat hgrid="48x96"     maxpft="17"  mask="gx3v7" bgc="cndv" ic_ymd="18500101" 
+ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.0507-01-01_48x96_gx3v7_simyr1850_c101004.nc
 </finidat>
 
-<finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cn"   ic_ymd="00510101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+<finidat hgrid="48x96"     maxpft="17"  mask="gx3v7" bgc="none" ic_ymd="00510101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
 </finidat>
 
-<finidat hgrid="48x96"     maxpft="numpft+1"  mask="gx3v7" bgc="cndv" ic_ymd="00510101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+<finidat hgrid="48x96"     maxpft="17"  mask="gx3v7" bgc="cn"   ic_ymd="00510101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
+</finidat>
+
+<finidat hgrid="48x96"     maxpft="17"  mask="gx3v7" bgc="cndv" ic_ymd="00510101" 
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN_0051-01-01_48x96_gx3v7_simyr2000_c100302.nc
 </finidat>
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
-<fsurdat hgrid="10x15"         sim_year="1000" irrig=".false." >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
+<fsurdat hgrid="10x15"         sim_year="1000" irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
 </fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="1000" irrig=".false." >lnd/clm2/surfdata/surfdata_1x1_tropicAtl_testyr1000_c100527.nc
+<fsurdat hgrid="1x1_tropicAtl" sim_year="1000" irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata_1x1_tropicAtl_testyr1000_c100527.nc
 </fsurdat>
 
 <!-- Datasets to use with glacier model (when we can accept answers changing these should move to the main version) -->
 
 <!-- Glacier model for present day simulations - year 2000 -->
-<fsurdat hgrid="48x96"     sim_year="2000" glc_nec="10" irrig=".false." >
+<fsurdat hgrid="48x96"     sim_year="2000" glc_nec="10" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_48x96_simyr2000_c100505.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="2000" glc_nec="10" irrig=".false." >
+<fsurdat hgrid="0.9x1.25"  sim_year="2000" glc_nec="10" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.9x1.25_simyr2000_c100505.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="2000" glc_nec="10" irrig=".false." >
+<fsurdat hgrid="1.9x2.5"   sim_year="2000" glc_nec="10" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr2000_c100505.nc</fsurdat>
 <!-- Glacier model for pre-industrial simulations - year 1850 -->
 <fsurdat hgrid="48x96"     sim_year="1850" glc_nec="10" irrig=".false." >
@@ -187,152 +199,204 @@ lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c110114.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1850_c110114.nc</fsurdat>
 
 <!-- for present day simulations - year 2000 -->
-<fsurdat hgrid="128x256"   sim_year="2000" irrig=".false." >
+<fsurdat hgrid="128x256"   sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_128x256_simyr2000_c100406.nc</fsurdat>
-<fsurdat hgrid="64x128"    sim_year="2000" irrig=".false." >
+<fsurdat hgrid="64x128"    sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_64x128_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="48x96"     sim_year="2000" irrig=".false." >
+<fsurdat hgrid="48x96"     sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_48x96_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="32x64"     sim_year="2000" irrig=".false." >
+<fsurdat hgrid="32x64"     sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_32x64_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="8x16"      sim_year="2000" irrig=".false." >
+<fsurdat hgrid="8x16"      sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_8x16_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="94x192"    sim_year="2000" irrig=".false." >
+<fsurdat hgrid="94x192"    sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_94x192_urb3den_simyr2000_c091016.nc</fsurdat>
 
-<fsurdat hgrid="0.23x0.31" sim_year="2000" irrig=".false." >
+<fsurdat hgrid="0.23x0.31" sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.23x0.31_simyr2000_c100406.nc</fsurdat>
-<fsurdat hgrid="0.47x0.63" sim_year="2000" irrig=".false." >
+<fsurdat hgrid="0.47x0.63" sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.47x0.63_simyr2000_c091023.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="2000" irrig=".false." >
+<fsurdat hgrid="0.9x1.25"  sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.9x1.25_simyr2000_c091006.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1.9x2.5"   sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr2000_c091005.nc</fsurdat>
-<fsurdat hgrid="2.5x3.33"  sim_year="2000" irrig=".false." >
+<fsurdat hgrid="2.5x3.33"  sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_2.5x3.33_simyr2000_c091023.nc</fsurdat>
-<fsurdat hgrid="2.65x3.33" sim_year="2000" irrig=".false." >
+<fsurdat hgrid="2.65x3.33" sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_2.65x3.33_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="4x5"       sim_year="2000" irrig=".false." >
+<fsurdat hgrid="4x5"       sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_4x5_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="2000" irrig=".false." >
+<fsurdat hgrid="10x15"     sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_10x15_simyr2000_c090928.nc</fsurdat>
+
+<!-- Crop and Irrigation surface datasets -->
+<fsurdat hgrid="1.9x2.5"   sim_year="2000" irrig=".true." crop="on"  >
+lnd/clm2/surfdata/surfdata_1.9x2.5_mp20_simyr2000_irrcr_c110427.nc</fsurdat>
+<fsurdat hgrid="10x15"     sim_year="2000" irrig=".true." crop="on"  >
+lnd/clm2/surfdata/surfdata_10x15_mp20_simyr2000_irrcr_c110427.nc</fsurdat>
+<fsurdat hgrid="1x1_numaIA"       sim_year="2000" irrig=".true." crop="on"  >
+lnd/clm2/surfdata/surfdata_1x1_numaIA_mp20_simyr2000_irrcr_c110427.nc</fsurdat>
  
-<fsurdat hgrid="5x5_amazon"    sim_year="2000" irrig=".false." >
+<!-- Crop only surface datasets -->
+<fsurdat hgrid="1.9x2.5"          sim_year="2000" irrig=".false." crop="on"  >
+lnd/clm2/surfdata/surfdata_1.9x2.5_mp20_simyr2000_c110427.nc</fsurdat>
+<fsurdat hgrid="10x15"            sim_year="2000" irrig=".false." crop="on"  >
+lnd/clm2/surfdata/surfdata_10x15_mp20_simyr2000_c110427.nc</fsurdat>
+<fsurdat hgrid="1x1_numaIA"       sim_year="2000" irrig=".false." crop="on"  >
+lnd/clm2/surfdata/surfdata_1x1_numaIA_mp20_simyr2000_c110427.nc</fsurdat>
+<fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" irrig=".false." crop="on"  >
+lnd/clm2/surfdata/surfdata_1x1_smallvilleIA_mp20_simyr2000_c110427.nc</fsurdat>
+
+<fsurdat hgrid="5x5_amazon"    sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_5x5_amazon_simyr2000_c091026.nc</fsurdat>
-<fsurdat hgrid="1x1_brazil"    sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_brazil"    sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_brazil_simyr2000_c090928.nc</fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr2000_c090923.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
-<fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_camdenNJ_simyr2000_c100407.nc</fsurdat>
-<fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_vancouverCAN_simyr2000_c100409.nc</fsurdat>
-<fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c100409.nc</fsurdat>
-<fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c110209.nc</fsurdat>
-<fsurdat hgrid="1x1_asphaltjungleNJ" sim_year="2000" irrig=".false." >
+<fsurdat hgrid="1x1_asphaltjungleNJ" sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_asphaltjungleNJ_simyr2000_c100409.nc</fsurdat>
 
 <!-- For present day (sim_year=2000) with crop irrigation turned on -->
-<fsurdat hgrid="0.9x1.25"  sim_year="2000" irrig=".true." >
+<fsurdat hgrid="0.9x1.25"  sim_year="2000" irrig=".true." crop="off" >
 lnd/clm2/surfdata/surfdata_0.9x1.25_simyr2000_irrcr_c100916.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="2000" irrig=".true." >
+<fsurdat hgrid="1.9x2.5"   sim_year="2000" irrig=".true." crop="off" >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr2000_irrcr_c100916.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="2000" irrig=".true." >
+<fsurdat hgrid="10x15"     sim_year="2000" irrig=".true." crop="off" >
 lnd/clm2/surfdata/surfdata_10x15_simyr2000_irrcr_c100916.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
-<fsurdat hgrid="512x1024"  sim_year="1850" irrig=".false." >
+<fsurdat hgrid="512x1024"  sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_512x1024_simyr1850_c100315.nc</fsurdat>
-<fsurdat hgrid="128x256"   sim_year="1850" irrig=".false." >
+<fsurdat hgrid="128x256"   sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_128x256_simyr1850_c100406.nc</fsurdat>
-<fsurdat hgrid="64x128"    sim_year="1850" irrig=".false." >
+<fsurdat hgrid="64x128"    sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_64x128_simyr1850_c090928.nc</fsurdat>
-<fsurdat hgrid="48x96"     sim_year="1850" irrig=".false." >
-lnd/clm2/surfdata/surfdata_48x96_simyr1850_c090928.nc</fsurdat>
-<fsurdat hgrid="32x64"     sim_year="1850" irrig=".false." >
+<fsurdat hgrid="48x96"     sim_year="1850" irrig=".false." crop="off" >
+lnd/clm2/surfdata/surfdata_48x96_simyr1850_c110114.nc</fsurdat>
+<fsurdat hgrid="32x64"     sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_32x64_simyr1850_c090928.nc</fsurdat>
-<fsurdat hgrid="8x16"      sim_year="1850" irrig=".false." >
+<fsurdat hgrid="8x16"      sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_8x16_simyr1850_c090928.nc</fsurdat>
 
-<fsurdat hgrid="0.23x0.31" sim_year="1850" irrig=".false." >
+<fsurdat hgrid="0.23x0.31" sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.23x0.31_simyr1850_c100404.nc</fsurdat>
-<fsurdat hgrid="0.47x0.63" sim_year="1850" irrig=".false." >
+<fsurdat hgrid="0.47x0.63" sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.47x0.63_simyr1850_c100826.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="1850" irrig=".false." >
+<fsurdat hgrid="0.9x1.25"  sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c091006.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="1850" irrig=".false." >
+<fsurdat hgrid="1.9x2.5"   sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1850_c091108.nc</fsurdat>
-<fsurdat hgrid="2.5x3.33"  sim_year="1850" irrig=".false." >
+<fsurdat hgrid="2.5x3.33"  sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_2.5x3.33_simyr1850_c091109.nc</fsurdat>
-<fsurdat hgrid="4x5"       sim_year="1850" irrig=".false." >
+<fsurdat hgrid="4x5"       sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_4x5_simyr1850_c090928.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="1850" irrig=".false." >
+<fsurdat hgrid="10x15"     sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_10x15_simyr1850_c100202.nc</fsurdat>
 
 <!-- Single point data for year 1850 -->
-<fsurdat hgrid="1x1_tropicAtl" sim_year="1850" irrig=".false." >
+<fsurdat hgrid="1x1_tropicAtl" sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
 <!-- Datasets to use with glacier model (when we can accept answers changing these should move to the main version) -->
-<fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" glc_nec="10" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_hist_simyr1850-2005_c110114.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" glc_nec="10" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_hist_simyr1850-2005_c110114.nc</fpftdyn>
-<fpftdyn hgrid="48x96"         sim_year_range="1850-2000" glc_nec="10" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_48x96_hist_simyr1850-2005_c110114.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" glc_nec="10" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_hist_simyr1850-2005_c110114.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" glc_nec="10" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_hist_simyr1850-2005_c110114.nc</fpftdyn>
+<fpftdyn hgrid="48x96"         sim_year_range="1850-2000" glc_nec="10"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_48x96_hist_simyr1850-2005_c110114.nc</fpftdyn>
 
 <!-- Other datasets -->
-<fpftdyn hgrid="10x15"         sim_year_range="1000-1002" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
-<fpftdyn hgrid="0.47x0.63"     sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c100826.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c091008.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c091108.nc</fpftdyn>
-<fpftdyn hgrid="2.5x3.33"      sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_2.5x3.33_simyr1850-2005_c091109.nc</fpftdyn>
-<fpftdyn hgrid="10x15"         sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_simyr1850-2005_c100205.nc</fpftdyn>
-<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2005_c091026.nc</fpftdyn>
-<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_testyr1000-1004_c100527.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         sim_year_range="1000-1002" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
+<fpftdyn hgrid="0.47x0.63"     sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c100826.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c091008.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c091108.nc</fpftdyn>
+<fpftdyn hgrid="2.5x3.33"      sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_2.5x3.33_simyr1850-2005_c091109.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_simyr1850-2005_c100205.nc</fpftdyn>
+<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2005_c091026.nc</fpftdyn>
+<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004"
+  irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_testyr1000-1004_c100527.nc</fpftdyn>
+<fpftdyn hgrid="48x96"         sim_year_range="1850-2000"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_48x96_hist_simyr1850-2005_c110114.nc</fpftdyn>
 
 
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 
 <!-- Dynamic PFT for glacier multiple elevation class -->
-<fpftdyn hgrid="0.9x1.25" rcp="2.6" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"  rcp="2.6" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
-<fpftdyn hgrid="48x96"    rcp="2.6" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_48x96_rcp2.6_simyr1850-2100_c110322.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25" rcp="2.6" glc_nec="10" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="2.6" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp2.6_simyr1850-2100_c110124.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25" rcp="4.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"  rcp="4.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25" rcp="4.5" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="4.5" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp4.5_simyr1850-2100_c110125.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25" rcp="6" glc_nec="10" sim_year_range="1850-2100" irrig=".false."
->lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"  rcp="6" glc_nec="10" sim_year_range="1850-2100" irrig=".false."
->lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25" rcp="6" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="6" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp6.0_simyr1850-2100_c110125.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25" rcp="8.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"  rcp="8.5" glc_nec="10" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25" rcp="8.5" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"  rcp="8.5" glc_nec="10" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c110125.nc</fpftdyn>
 
 <!-- Other future scenario Dynamic PFT datasets -->
-<fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100319.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="2000-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100205.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c100322.nc</fpftdyn>
-<fpftdyn hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp8.5_simyr1850-2100_c100202.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100319.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="2000-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100205.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c100322.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100"
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp8.5_simyr1850-2100_c100202.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25"      rcp="6"   sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c100812.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25"      rcp="6"   sim_year_range="2000-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c100812.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       rcp="6"   sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp6.0_simyr1850-2100_c100813.nc</fpftdyn>
-<fpftdyn hgrid="10x15"         rcp="6"   sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp6.0_simyr1850-2100_c100901.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="6"   sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c100812.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="6"   sim_year_range="2000-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp6.0_simyr1850-2100_c100812.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       rcp="6"   sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp6.0_simyr1850-2100_c100813.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         rcp="6"   sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp6.0_simyr1850-2100_c100901.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="2000-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       rcp="4.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp4.5_simyr1850-2100_c100322.nc</fpftdyn>
-<fpftdyn hgrid="10x15"         rcp="4.5" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp4.5_simyr1850-2100_c100322.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="2000-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       rcp="4.5" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp4.5_simyr1850-2100_c100322.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         rcp="4.5" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp4.5_simyr1850-2100_c100322.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25"      rcp="2.6" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25"      rcp="2.6" sim_year_range="2000-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       rcp="2.6" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
-<fpftdyn hgrid="10x15"         rcp="2.6" sim_year_range="1850-2100" irrig=".false." >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="2.6" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="2.6" sim_year_range="2000-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       rcp="2.6" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         rcp="2.6" sim_year_range="1850-2100" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
 
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid hgrid="512x1024"  >lnd/clm2/griddata/griddata_512x1024_c100513.nc</fatmgrid>
@@ -354,6 +418,8 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <fatmgrid hgrid="5x5_amazon"         >lnd/clm2/griddata/griddata_5x5pt_amazon_c090715.nc</fatmgrid>
 <fatmgrid hgrid="1x1_brazil"         >lnd/clm2/griddata/griddata_1x1pt_brazil_c090715.nc</fatmgrid>
+<fatmgrid hgrid="1x1_numaIA"         >lnd/clm2/griddata/griddata_1x1pt_numaIA_c110105.nc</fatmgrid>
+<fatmgrid hgrid="1x1_smallvilleIA"   >lnd/clm2/griddata/griddata_1x1pt_smallvilleIA_c110105.nc</fatmgrid>
 <fatmgrid hgrid="1x1_tropicAtl"      >lnd/clm2/griddata/griddata_1x1pt_tropicAtl_test_070218.nc</fatmgrid>
 <fatmgrid hgrid="1x1_camdenNJ"       >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
 <fatmgrid hgrid="1x1_vancouverCAN"   >lnd/clm2/griddata/griddata_1x1pt_vancouverCAN_c090715.nc</fatmgrid>
@@ -439,6 +505,8 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <fatmlndfrc hgrid="5x5_amazon"          mask="navy">lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_c090715.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_brazil"          mask="navy">lnd/clm2/griddata/fracdata_1x1pt_brazil_navy_c090715.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_numaIA"          mask="navy">lnd/clm2/griddata/fracdata_1x1pt_numaIA_navy_c110105.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_smallvilleIA"    mask="test">lnd/clm2/griddata/fracdata_1x1pt_smallvilleIA_test_c110105.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_tropicAtl"       mask="test">lnd/clm2/griddata/fracdata_1x1pt_tropicAtl_test_070218.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_camdenNJ"        mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_mexicocityMEX"   mask="navy">lnd/clm2/griddata/fracdata_1x1pt_mexicocityMEX_navy_c090715.nc</fatmlndfrc>
@@ -524,8 +592,9 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <ndepmapalgo bgc="cndv" hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
 <!-- Create crop on a separate land-unit -->
-<create_crop_landunit irrig=".true."  >.true.</create_crop_landunit>
-<create_crop_landunit irrig=".false." >.false.</create_crop_landunit>
+<create_crop_landunit irrig=".true."             >.true.</create_crop_landunit>
+<create_crop_landunit crop="on"                  >.true.</create_crop_landunit>
+<create_crop_landunit irrig=".false." crop="off" >.false.</create_crop_landunit>
 
 <ndepmapalgo bgc="cn"                               >bilinear</ndepmapalgo>
 <ndepmapalgo bgc="cndv"                             >bilinear</ndepmapalgo>

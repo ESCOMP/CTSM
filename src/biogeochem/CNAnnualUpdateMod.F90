@@ -1,4 +1,3 @@
-
 module CNAnnualUpdateMod
 #ifdef CN
 
@@ -120,15 +119,15 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
       annsum_counter(c) = annsum_counter(c) + dt
    end do
 
-#if (defined CNDV)
+#if (defined CNDV) || (defined CROP)
    ! In the future -- ONLY use this code and remove the similar part below
-   ! So the #ifdef on CNDV
+   ! So the #ifdef on CNDV and CROP would be removed
    if (annsum_counter(filter_soilc(1)) >= get_days_per_year() * secspday) then ! new (slevis)
 #endif
    ! pft loop
    do fp = 1,num_soilp
       p = filter_soilp(fp)
-#if (!defined CNDV)
+#if (!defined CNDV) && (!defined CROP)
       ! In the future -- REMOVE this code and use the equivalent code above always
       c = pcolumn(p)                                                ! old (slevis)
       if (annsum_counter(c) >= get_days_per_year() * secspday) then ! old (slevis)
@@ -154,7 +153,7 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
          annsum_litfall(p) = tempsum_litfall(p) * dt
          tempsum_litfall(p) = 0._r8
 #endif
-#if (!defined CNDV)
+#if (!defined CNDV) && (!defined CROP)
       end if ! old (slevis)
 #endif
    end do
@@ -162,7 +161,7 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
    ! use p2c routine to get selected column-average pft-level fluxes and states
    call p2c(num_soilc, filter_soilc, annsum_npp, cannsum_npp)
    call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
-#if (defined CNDV)
+#if (defined CNDV) || (defined CROP)
    end if ! new (slevis)
 #endif
 

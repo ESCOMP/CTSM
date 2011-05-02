@@ -1,0 +1,4 @@
+-ignore_ic_year
+-silent 
+-drv_case clmrun 
+-datm_source CLM_QIAN

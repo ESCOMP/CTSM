@@ -1,4 +1,3 @@
-
 module initSurfalbMod
 
 !-----------------------------------------------------------------------
@@ -58,6 +57,7 @@ contains
     use clm_varcon          , only : zlnd, istsoil, isturb, denice, denh2o, &
                                      icol_roof, icol_road_imperv, &
                                      icol_road_perv
+    use clm_varcon          , only : istcrop
     use clm_time_manager        , only : get_step_size
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
@@ -267,7 +267,7 @@ contains
        ! declination for previous timestep
        do c = begc, endc
           l = clandunit(c)
-          if (itypelun(l) == istsoil) then
+          if (itypelun(l) == istsoil .or. itypelun(l) == istcrop) then
              decl(c) = declinm1
           end if
        end do
@@ -276,7 +276,7 @@ contains
        do p = begp, endp
           c = pcolumn(p)
           l = plandunit(p)
-          if (itypelun(l) == istsoil) then
+          if (itypelun(l) == istsoil .or. itypelun(l) == istcrop) then
              lat = latdeg(pgridcell(p)) * SHR_CONST_PI / 180._r8
              temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
              temp = min(1._r8,max(-1._r8,temp))
@@ -287,13 +287,14 @@ contains
        ! declination for current timestep
        do c = begc, endc
           l = clandunit(c)
-          if (itypelun(l) == istsoil) then
+          if (itypelun(l) == istsoil .or. itypelun(l) == istcrop) then
              decl(c) = declin
           end if
        end do
 
        call CNEcosystemDyn(begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
-            filter(nc)%num_soilp, filter(nc)%soilp, doalb=.true.)
+            filter(nc)%num_soilp, filter(nc)%soilp, &
+            filter(nc)%num_pcropp, filter(nc)%pcropp, doalb=.true.)
 #else
        ! this is the default call if CN not set
 

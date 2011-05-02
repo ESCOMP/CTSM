@@ -1,1 +1,1 @@
--i /fs/cgd/csm/inputdata/lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc -o clmi.IQ.1953-01-01_10x15_USGS_simyr2000_c081202.nc
+-i /fs/cgd/csm/inputdata/lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc -o clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc

@@ -564,9 +564,6 @@ contains
       ! calculate dayl_factor as the ratio of (current:max dayl)^2
       ! set a minimum of 0.01 (1%) for the dayl_factor
       dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl*dayl)/(max_dayl(c)*max_dayl(c))))
-#if (defined NO_DAYLEN_VCMAX)
-      dayl_factor(p) = 1.0_r8
-#endif
    end do
 
    rb1(lbp:ubp) = 0._r8
@@ -1164,6 +1161,7 @@ contains
      use clm_atmlnd   , only : clm_a2l
      use spmdMod      , only: masterproc
      use pftvarcon    , only : nbrdlf_dcd_tmp_shrub
+     use pftvarcon    , only : nsoybean, npcropmin
 !
 ! !ARGUMENTS:
      implicit none
@@ -1190,7 +1188,6 @@ contains
      integer , pointer :: pgridcell(:)   ! pft's gridcell index
      integer , pointer :: ivt(:)         ! pft vegetation type
      real(r8), pointer :: qe25(:)        ! quantum efficiency at 25C (umol CO2 / umol photon)
-     real(r8), pointer :: vcmx25(:)      ! max rate of carboxylation at 25C (umol CO2/m**2/s)
      real(r8), pointer :: c3psn(:)       ! photosynthetic pathway: 0. = c4, 1. = c3
      real(r8), pointer :: mp(:)          ! slope of conductance-to-photosynthesis relationship
      real(r8), pointer :: tgcm(:)        ! air temperature at agcm reference height (kelvin)
@@ -1253,7 +1250,6 @@ contains
      real(r8) :: akc     ! q10 for kc25
      real(r8) :: ko25    ! o2 michaelis-menten constant at 25c (pa)
      real(r8) :: ako     ! q10 for ko25
-     real(r8) :: avcmx   ! q10 for vcmx25
      real(r8) :: bp      ! minimum leaf conductance (umol/m**2/s)
      ! additional variables for new treatment of Vcmax, Peter Thornton, 1/26/04
      real(r8) :: act25   ! (umol/mgRubisco/min) Rubisco activity at 25 C
@@ -1310,7 +1306,6 @@ contains
      ! new ecophys constants added 1/26/04
 
      qe25      => pftcon%qe25
-     vcmx25    => pftcon%vcmx25
      c3psn     => pftcon%c3psn
      mp        => pftcon%mp
      leafcn    => pftcon%leafcn
@@ -1323,7 +1318,6 @@ contains
      akc   = 2.1_r8
      ko25  = 30000._r8
      ako   = 1.2_r8
-     avcmx = 2.4_r8
      bp    = 2000._r8
 
      ! New constants for CN code, added 1/26/04
@@ -1367,17 +1361,25 @@ contains
            ! Modification for shrubs proposed by X.D.Z
            ! Why does he prefer this line here instead of in subr.
            ! CanopyFluxes? (slevis)
+           ! Equivalent modification for soy following AgroIBIS
 #if (defined CNDV)
            if (ivt(p) == nbrdlf_dcd_tmp_shrub) btran(p) = min(1._r8, btran(p) * 3.33_r8)
 #endif
+           if (ivt(p) == nsoybean) btran(p) = min(1._r8, btran(p) * 1.25_r8)
            
            ! new calculations for vcmax, 1/26/04
            lnc(p) = 1._r8 / (sla(p) * leafcn(ivt(p)))
 		   act = act25 * f1(q10act,tc)
 #if (defined CN)
-           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * dayl_factor(p)
+           if ( ivt(p) < npcropmin )then
+              vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * &
+                        dayl_factor(p)
+           else
+              vcmx(p) = 101._r8 * f1(q10act,tc) / f2(tc) * btran(p) * dayl_factor(p)
+           end if
 #else
-           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * dayl_factor(p) * fnitr(ivt(p))
+           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * &
+                     dayl_factor(p) * fnitr(ivt(p))
 #endif
            
            ! First guess ci

@@ -2,6 +2,6 @@
 -nouse_mpiserial -smp
 -exit_spinup on
 -debug
--maxpft numpft+1
+-maxpft 17
 -bgc cn
 -s
