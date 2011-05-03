@@ -139,7 +139,7 @@ my $ProgDir = $1;                      # name of directory containing this scrip
 my $cmdline = "@ARGV";                 # Command line arguments to script
 my $cwd = getcwd();                    # current working directory
 my $cfgdir;                            # absolute pathname of directory that contains this script
-my $nm = "$ProgName::";                # name to use if script dies
+my $nm = "${ProgName}::";              # name to use if script dies
 if ($ProgDir) { 
     $cfgdir = absolute_path($ProgDir);
 } else {
@@ -405,6 +405,8 @@ my $bgc = $cfg->get('bgc');
 # Get max number of Plant function types
 my $maxpft = $cfg->get('maxpft');
 
+# crop mode
+my $crop = $cfg->get('crop');
 #-----------------------------------------------------------------------------------------------
 
 # Process the user input in order of precedence.  At each point we'll only add new
@@ -493,6 +495,11 @@ $nl->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ( $irrig =~ /$TRUE/ && $crop eq "on" ) {
+   print "You've turned on both irrigation and crop. Irrigation is only applied to generic crop currently, which negates it's practical usage.\n" . 
+         "We also have a known problem when both are on (see bug 1326 in the models/lnd/clm/doc/KnownBugs file)\n";
+   die "$nm both irrigation and crop should NOT be on.\n";
 }
 if ($print>=2) { print "Irrigation $irrig $eol"; }
 
@@ -965,8 +972,6 @@ if ($mode eq "clm_stndln" ) {
 ##############################
 # namelist group: clm_inparm #
 ##############################
-
-my $crop = $cfg->get('crop');
 
 $var = "start_type";
 my $drv_start_type = $nl->get_value($var);

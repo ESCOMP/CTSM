@@ -1,4 +1,111 @@
 ===============================================================
+Tag name:  clm4_0_28
+Originator(s):  erik (Erik Kluzek)
+Date: Tue May  3 09:14:24 MDT 2011
+One-line Summary: Remove DUST/PROGSSLT in land coupler layer, update driver and scripts
+
+Purpose of changes:
+
+Update drv to branch version, fix ram1/fv issue (remove DUST/PROGSSLT #ifdef's in
+lnd_comp_*). Answers will then be identical to clm4_0_26 (except air density sent to
+cpl). Don't allow both -irrig and -crop to be on at same time in scripts.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): drv, scripts
+     scripts to scripts4_110428a
+     drv     to branch version: t3148b_tags/t3148b02_drvseq3_1_48
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M models/lnd/clm/bld/build-namelist - Don't allow crop and irrig on at same time
+
+   M models/lnd/clm/tools/interpinic/interpinic.F90 -------- Move input read up
+   M models/lnd/clm/tools/interpinic/interpinic.runoptions - Use latest input file
+
+   M models/lnd/clm/test/system/tests_pretag_bluefire -- Remove some tests
+   M models/lnd/clm/test/system/README.testnames ------- Don't mix crop and irrig
+   M models/lnd/clm/test/system/input_tests_master ----- Change irrig+crop tests to
+          just crop
+
+
+>>>>>>>>>> Remove DUST, PROGSSLT and VOC #ifdef's
+   M models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+   M models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+
+Summary of testing:
+
+  bluefire: All PASS except...
+024 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+025 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+026 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+027 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+049 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+050 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+051 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+052 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+058 sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_irrig^nl_crop 20000101:1800 1.9x2.5 gx1v6 10FAIL! rc= 4
+  bluefire/CESM testing: All PASS except... (compare to clm4_0_26 with updated datm)
+SFAIL ERS_D.T31_g37.IGRCP26CN.bluefire.GC.160557 
+SFAIL ERP.T31_g37.IGRCP60CN.bluefire.GC.160557 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_26_datmdens 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_26_datmdens
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_27
+
+Changes answers relative to baseline: No bit-for-bit
+    Although coupler log file will show changes in fv and ram1 to clm4_0_27, but
+    will be identical to clm4_0_26 (although then dens in atm changes)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_27
 Originator(s):  erik (Erik Kluzek)
 Date: Mon May  2 09:37:57 MDT 2011

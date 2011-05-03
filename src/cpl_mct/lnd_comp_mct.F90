@@ -953,27 +953,21 @@ contains
           l2x_l%rAttr(index_l2x_Fall_fco2_lnd,i) = -l2a%nee(g)  
        end if
 
-       ! optional fields for dust.  The index = 0 is a good way to flag it,
-       ! but I have set it up so that l2a doesn't have ram1,fv,flxdst[1-4] if
-       ! progsslt or dust aren't running. 
-#if ( defined DUST || defined PROGSSLT )
-       if (index_l2x_Sl_ram1 /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i) = l2a%ram1(g)
-       if (index_l2x_Sl_fv   /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)   = l2a%fv(g)
-#endif
-#if ( defined DUST )
+       ! Additional fields for DUST, PROGSSLT, dry-deposition and VOC
+       ! These are now standard fields, but the check on the index makes sure the driver handles them
+       if (index_l2x_Sl_ram1      /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i) = l2a%ram1(g)
+       if (index_l2x_Sl_fv        /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)   = l2a%fv(g)
        if (index_l2x_Fall_flxdst1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst1,i)= -l2a%flxdst(g,1)
        if (index_l2x_Fall_flxdst2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst2,i)= -l2a%flxdst(g,2)
        if (index_l2x_Fall_flxdst3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst3,i)= -l2a%flxdst(g,3)
        if (index_l2x_Fall_flxdst4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst4,i)= -l2a%flxdst(g,4)
-#endif
-       if ( index_l2x_Sl_ddvel /= 0 ) l2x_l%rAttr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = l2a%ddvel(g,:n_drydep)
-#ifdef VOC
+       if (index_l2x_Sl_ddvel     /= 0 )  l2x_l%rAttr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) &
+                                                                               = l2a%ddvel(g,:n_drydep)
        if (index_l2x_Fall_flxvoc1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc1,i)= -l2a%flxvoc(g,1)
        if (index_l2x_Fall_flxvoc2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc2,i)= -l2a%flxvoc(g,2)
        if (index_l2x_Fall_flxvoc3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc3,i)= -l2a%flxvoc(g,3)
        if (index_l2x_Fall_flxvoc4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc4,i)= -l2a%flxvoc(g,4)
        if (index_l2x_Fall_flxvoc5 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc5,i)= -l2a%flxvoc(g,5)
-#endif
 
     end do
 

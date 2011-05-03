@@ -766,6 +766,9 @@ contains
     call check_ret(nf90_inq_varid (ncidi, 'cols1d_wtxy', varid))
     call check_ret(nf90_get_var(ncidi, varid, wti))
 
+    call check_ret(nf90_inq_varid( ncidi, 'cols1d_ityp', varid ) )
+    call check_ret(nf90_get_var(ncidi, varid, typei_urb))
+
     ! output
 
     call check_ret(nf90_inq_varid (ncido, 'cols1d_lon', varid))
@@ -779,9 +782,6 @@ contains
 
     call check_ret(nf90_inq_varid (ncido, 'cols1d_wtxy', varid))
     call check_ret(nf90_get_var(ncido, varid, wto))
-
-    call check_ret(nf90_inq_varid( ncidi, 'cols1d_ityp', varid ) )
-    call check_ret(nf90_get_var(ncidi, varid, typei_urb))
 
     call check_ret(nf90_inq_varid( ncido, 'cols1d_ityp', varid ))
     call check_ret(nf90_get_var(ncido, varid, typeo_urb))

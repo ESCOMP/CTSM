@@ -69,7 +69,7 @@ P -- 1.9x2.5 with drydep
 Q -- 1x1 brazil with drydep
 R -- blank
 S -- with CLM_USRDAT_NAME=13x12pt_f19_alaskaUSA 
-T -- 1x1 numaIA with crop and irrigation on
+T -- 1x1 numaIA with crop on
 U -- 1x1 smallvilleIA with crop on
 V -- 4x5 with drydep
 W -- 10x15 with transient 1850-2100 for rcp=6
@@ -78,7 +78,7 @@ X -- 10x15 with transient 1850-2100 for rcp=4.5
 x -- 48x96 with transient 1850-2100 for rcp=4.5 and glacier-MEC on
 Y -- 10x15 with transient 1850-2100 for rcp=2.6
 y -- 48x96 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
-Z -- 10x15 with irrigation and crop on
+Z -- 10x15 with crop on
 
 i is the specific test (usually this implies...)
 

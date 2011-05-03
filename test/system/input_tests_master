@@ -449,35 +449,35 @@ erHV1 TER.sh 17p_cnsc_dh clm_drydep 20000704:1800 4x5 gx3v7@2000 -3+-7 cold
 brHV1 TBR.sh 17p_cnsc_dh clm_drydep 20000704:1800 4x5 gx3v7@2000 -5+-5 cold
 blHV1 TBL.sh 17p_cnsc_dh clm_drydep 20000704:1800 4x5 gx3v7@2000 -90   cold
 
-smAZ1 TSM.sh 21p_cncrpsc_dh clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
-erAZ1 TER.sh 21p_cncrpsc_dh clm_irrig^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
-brAZ1 TBR.sh 21p_cncrpsc_dh clm_irrig^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
-blAZ1 TBL.sh 21p_cncrpsc_dh clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
+smAZ1 TSM.sh 21p_cncrpsc_dh clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
+erAZ1 TER.sh 21p_cncrpsc_dh clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ1 TBR.sh 21p_cncrpsc_dh clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ1 TBL.sh 21p_cncrpsc_dh clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
 
-smAZ2 TSM.sh 21p_cncrpsc_dm clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
-erAZ2 TER.sh 21p_cncrpsc_dm clm_irrig^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
-brAZ2 TBR.sh 21p_cncrpsc_dm clm_irrig^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
-blAZ2 TBL.sh 21p_cncrpsc_dm clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
+smAZ2 TSM.sh 21p_cncrpsc_dm clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
+erAZ2 TER.sh 21p_cncrpsc_dm clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ2 TBR.sh 21p_cncrpsc_dm clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ2 TBL.sh 21p_cncrpsc_dm clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
 
-smAZ3 TSM.sh 21p_cncrpsc_do clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
-erAZ3 TER.sh 21p_cncrpsc_do clm_irrig^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
-brAZ3 TBR.sh 21p_cncrpsc_do clm_irrig^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
-blAZ3 TBL.sh 21p_cncrpsc_do clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
+smAZ3 TSM.sh 21p_cncrpsc_do clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
+erAZ3 TER.sh 21p_cncrpsc_do clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ3 TBR.sh 21p_cncrpsc_do clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ3 TBL.sh 21p_cncrpsc_do clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
 
-smAZ4 TSM.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
-erAZ4 TER.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
-brAZ4 TBR.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
-blAZ4 TBL.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020401:3600 10x15 USGS  -10   cold
+smAZ4 TSM.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
+erAZ4 TER.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -3+-7 cold
+brAZ4 TBR.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -5+-5 cold
+blAZ4 TBL.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS  -10   cold
 
-smAT4 TSM.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -735     cold
-erAT4 TER.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -405+-330 cold
-brAT4 TBR.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -365+-365 cold
-blAT4 TBL.sh 21p_cncrpsc_ds clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -735     cold
+smAT4 TSM.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -735     cold
+erAT4 TER.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -405+-330 cold
+brAT4 TBR.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -365+-365 cold
+blAT4 TBL.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -735     cold
 
-smAT8 TSM.sh 21p_cncrpsc_s clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -735      cold
-erAT8 TER.sh 21p_cncrpsc_s clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -405+-330 cold
-brAT8 TBR.sh 21p_cncrpsc_s clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -365+-365 cold
-blAT8 TBL.sh 21p_cncrpsc_s clm_irrig^nl_crop 20020101:3600 1x1_numaIA navy -735      cold
+smAT8 TSM.sh 21p_cncrpsc_s clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -735      cold
+erAT8 TER.sh 21p_cncrpsc_s clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -405+-330 cold
+brAT8 TBR.sh 21p_cncrpsc_s clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -365+-365 cold
+blAT8 TBL.sh 21p_cncrpsc_s clm_stdIgnYr^nl_crop 20020101:3600 1x1_numaIA navy -735      cold
 
 smAU4 TSM.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020101:3600 1x1_smallvilleIA test -1100     cold
 erAU4 TER.sh 21p_cncrpsc_ds clm_stdIgnYr^nl_crop 20020101:3600 1x1_smallvilleIA test -735+-365 cold
@@ -1013,7 +1013,7 @@ sm893 TSMrst_tools.sh _sc_do         interpinic clm_std^nl_urb    20000101:1800 
 sm857 TSMrst_tools.sh 17p_cnsc_o     interpinic clm_std^nl_urb    18500101:1800 1.9x2.5 gx1v6@1850 10x15 USGS@1850  -1
 sm813 TSMrst_tools.sh 17p_cndvsc_do  interpinic clm_std^nl_urb    18500101:1800 1.9x2.5 gx1v6@1850 48x96 gx3v7@1850 -1
 sm8y3 TSMrst_tools.sh _mec10sc_do    interpinic clm_std^nl_urb    20000101:1800 1.9x2.5 gx1v6      48x96 gx3v7      -1
-sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_irrig^nl_crop 20000101:1800 1.9x2.5 gx1v6      10x15 USGS       -1
+sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6      10x15 USGS       -1
 
 sm954 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
