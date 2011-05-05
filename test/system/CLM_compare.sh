@@ -18,7 +18,6 @@ if [ $rc -ne 0 ]; then
     exit 2
 fi
 
-cprtype=`tail -1 cprnc.out`
 result_old=`perl -e 'while (my $ll = <>) \
     { if ($ll =~ /(\d+)[^0-9]+compared[^0-9]+(\d+)/) \
     { print "PASS" if $1>0 && $2==0 }}' cprnc.out`

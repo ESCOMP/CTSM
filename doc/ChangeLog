@@ -1,4 +1,122 @@
 ===============================================================
+Tag name:  clm4_0_29
+Originator(s):  erik (Erik Kluzek)
+Date: Thu May  5 14:19:04 MDT 2011
+One-line Summary: Backout interpinic changes to one that works
+
+Purpose of changes:
+
+Backout interpinic to Mariana's non2dgrid version. Won't work for new
+files (have to remove fields to get it to work). Adds back in bugs 1318 and 1319.
+Add more comparison tests for tools and add cprnc.pl/ncl scripts to compare files that 
+don't have a time-axis.
+
+Bugs fixed (include bugzilla ID):
+                                 1328 (interpinic gives bad results that can NOT be used!)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1318 (interpinic has trouble with new restart files)
+                                 1319 (interpinic doesn't interpolate *_PERIOD)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>> Add scripts to compare two NetCDF files and report if different
+>>>>>>>>>>>>>> This mimic's the cprnc program, but also works on files without 
+>>>>>>>>>>>>>> a time coordinate. For big files it's considerably slower as well.
+   A   models/lnd/clm/tools/ncl_scripts/cprnc.pl
+   A   models/lnd/clm/tools/ncl_scripts/cprnc.ncl
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Add tool comparison tests, use cprnc.pl for tool comparison
+   M   models/lnd/clm/test/system/input_tests_master - Add TBLtools test for:
+           mkgriddata, mksurfdata, mkdatadomain, and interpinic, remove pftdyn
+           mksurfdata test
+   M   models/lnd/clm/test/system/CLM_compare.sh ----- Remove unused variable
+   M   models/lnd/clm/test/system/TSMtools.sh -------- Copy .txt files over if exist
+   M   models/lnd/clm/test/system/TBLtools.sh -------- Use cprnc.pl in place of cprnc binary
+
+>>>>>>>>>>>>>> Add tool comparison tests
+   M   models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M   models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+   M   models/lnd/clm/test/system/tests_posttag_yong
+   M   models/lnd/clm/test/system/tests_posttag_nompi_regression
+
+>>>>>>>>>>>>>> Add notes on cprnc tools
+   M   models/lnd/clm/tools/ncl_scripts/README
+
+>>>>>>>>>>>>>> Move back to Mariana's version of interpinic in non2dgrid08_clm4_0_26
+>>>>>>>>>>>>>> This means it won't work for new files, but will work for older files
+>>>>>>>>>>>>>> and gives the same answers as the non2dgrid version.
+   M   models/lnd/clm/tools/interpinic/interpinic.F90
+   M   models/lnd/clm/tools/interpinic/Srcfiles
+
+
+Summary of testing:
+
+  bluefire interactive testing: These PASS
+
+002 bl853 TBLtools.sh interpinic tools__o runoptions ............................................PASS (same as non2dgrid08_clm4_0_26)
+001 bl754 TBLtools.sh mksurfdata tools__s namelist ..............................................PASS
+002 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................PASS
+001 bl654 TBLtools.sh mkgriddata tools__ds namelist .............................................PASS
+001 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................PASS
+002 blZ94 TBLtools.sh mkdatadomain tools__ds namelist ...........................................PASS
+
+  yong/ifort interactive testing: These PASS
+
+001 bl853 TBLtools.sh interpinic tools__o runoptions ............................................PASS (same as non2dgrid08_clm4_0_26)
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_28
+
+Changes answers relative to baseline: no bit-for-bit (except interpinic)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_28
 Originator(s):  erik (Erik Kluzek)
 Date: Tue May  3 09:14:24 MDT 2011
@@ -34,6 +152,7 @@ Known bugs (include bugzilla ID):
                                  1283 (CLM with glacier-MEC fails running on intel)
                                  1299 (interpinic does NOT work going from non glc_mec)
                                  1325 (GDDHARV on hist causes model to die in debug)
+                                 1328 (interpinic gives bad results that can NOT be used!)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -153,6 +272,7 @@ Known bugs (include bugzilla ID):
                                  1283 (CLM with glacier-MEC fails running on intel)
                                  1299 (interpinic does NOT work going from non glc_mec)
                                  1325 (GDDHARV on hist causes model to die in debug)
+                                 1328 (interpinic gives bad results that can NOT be used!)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

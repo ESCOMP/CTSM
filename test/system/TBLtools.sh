@@ -48,7 +48,7 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-echo "TBLtools.sh: calling TSMtools.sh to prepare $1 executable" 
+echo "TBLtools.sh: calling TSMtools.sh to run $1 executable" 
 ${CLM_SCRIPTDIR}/TSMtools.sh $1 $2 $3
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -86,7 +86,8 @@ fi
 all_comparisons_good="TRUE"
 for compare_file in ${files_to_compare}; do
 
-    ${CLM_SCRIPTDIR}/CLM_compare.sh \
+    env CPRNC_EXE=${CLM_SCRIPTDIR}/../../tools/ncl_scripts/cprnc.pl \
+        ${CLM_SCRIPTDIR}/CLM_compare.sh \
         ${BL_TESTDIR}/TSMtools.$1.$2.$3/${compare_file} \
         ${CLM_TESTDIR}/TSMtools.$1.$2.$3/${compare_file}
     rc=$?

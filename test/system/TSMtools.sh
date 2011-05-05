@@ -43,6 +43,9 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
+echo "Copy any text files over"
+cp $cfgdir/*.txt $rundir
+
 echo "TSMtools.sh: calling TCBtools.sh to prepare $1 executable" 
 ${CLM_SCRIPTDIR}/TCBtools.sh $1 $2
 rc=$?

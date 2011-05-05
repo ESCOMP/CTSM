@@ -17,6 +17,7 @@ getregional_datasets.pl ----- Extract out regional datasets from global ones and
                               can be used by build-namelist.
 runDepositionRegrid.pl ------ Runs the aerosol and nitrogen deposition regrid scripts for all valid resolutions
                               and simulation years.
+cprnc.pl -------------------- Compare two NetCDF files to see if they are same or different.
 
 NCL Scripts available:
 
@@ -29,6 +30,7 @@ ndeplintInterp.ncl ---------- Create transient ndepdyn dataset from decadal aver
 aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different 
 ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a different
 			      resolution.  Uses bi-linear interpolation.
+cprnc.ncl ------------------- Compare two NetCDF files to see if they are same or different.
 
 pergroPlot.ncl -------------- Plots up ASCII files with RMS differences in them (from
                               one to five different files).
