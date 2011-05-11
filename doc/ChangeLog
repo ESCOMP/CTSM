@@ -1,4 +1,138 @@
 ===============================================================
+Tag name:  clm4_0_30
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 11 14:32:19 MDT 2011
+One-line Summary: New finidat/fsurdat files for T31
+
+Purpose of changes:
+
+Externals update, fix some PTCLM problems. New finidat/fsurdat files for T31, make sure
+works.
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1248 (PTCLM can only go to 2005)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
+                                 1279 (Latest version of PTCLM requires python2.5)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1318 (interpinic has trouble with new restart files)
+                                 1319 (interpinic doesn't interpolate *_PERIOD)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+    New finidat files for T31
+    New fsurdat file for T31@2000
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, mct, pio
+
+    scripts to scripts4_110511
+    mct     to MCT2_7_0_110504a
+    pio     to pio1_3_0
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+   A   models/lnd/clm/test/system/config_files/17p_cnsc_h
+   A   models/lnd/clm/test/system/config_files/17p_cnsc_o
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/test/system/README.testnames --- Add R f19 rcp4.5 resol
+   M   models/lnd/clm/test/system/input_tests_master - Make some tests startup, add
+          some rcp tests, change some tests from T31 to f19
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Add new finidat
+          files for T31@1850/2000, add new surdata file for T31@2000, remove empty
+          half-degree pftdyn file
+
+Summary of testing:
+
+  bluefire: All PASS except...
+024 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 10
+025 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+026 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72 arb_ic ...........FAIL! rc= 5
+027 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144 arb_ic .............FAIL! rc= 4
+049 smLI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+050 erLI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+051 brLI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+052 blLI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+054 erJ61 TER.sh 4p_casasc_dh clm_std^nl_urb 20021230:1800 1.9x2.5 gx1v6 10+38 cold .............FAIL! rc= 5
+055 brJ61 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:1800 1.9x2.5 gx1v6 72+72 cold ..........FAIL! rc= 5
+056 blJ61 TBL.sh 4p_casasc_dh clm_std^nl_urb 20021230:1800 1.9x2.5 gx1v6 48 cold ................FAIL! rc= 4
+  bluefire interactive testing: All PASS
+  bluefire extra interactive testing:
+001 smE13 TSM.sh 17p_vorsc_do clm_std^nl_urb 20021230:1800 48x96 gx3v7 96 startup ...............PASS
+001 smH13 TSM.sh 17p_cnsc_do clm_ndepdyn^nl_cn_conly 20020101:1800 48x96 gx3v7@1850-2000 96 startup PASS
+  bluefire/CESM testing: All PASS except...
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_29 
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_29 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_29 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_29 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare_hist.clm4_0_29 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_29 
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm4_0_29 
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm4_0_29 
+BFAIL ERS_E.T31_g37.I1850.bluefire.compare.clm4_0_29 
+BFAIL ERI.T31_g37.IG1850.bluefire.compare.clm4_0_29 
+BFAIL ERS_D.f19_g16.IGRCP26CN.bluefire.compare.clm4_0_29 
+
+  bluefire/CESM rcps extra testing: All PASS...
+PASS  SMS.f09_g16.IRCP26CN.bluefire 
+PASS  SMS.f09_g16.IRCP45CN.bluefire 
+PASS  SMS.f09_g16.IRCP60CN.bluefire 
+PASS  SMS.f09_g16.IRCP85CN.bluefire 
+PASS  SMS.f09_g16.IGRCP26CN.bluefire 
+PASS  SMS.f09_g16.IGRCP45CN.bluefire 
+PASS  SMS.f09_g16.IGRCP60CN.bluefire 
+PASS  SMS.f09_g16.IGRCP85CN.bluefire 
+PASS  SMS.f19_g16.IRCP26CN.bluefire 
+PASS  SMS.f19_g16.IRCP45CN.bluefire 
+PASS  SMS.f19_g16.IRCP60CN.bluefire 
+PASS  SMS.f19_g16.IGRCP45CN.bluefire 
+PASS  SMS.f19_g16.IGRCP85CN.bluefire 
+
+  bluefire/PTCLM testing: All PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_29
+
+Changes answers relative to baseline: no bit-for-bit (except T31 with new files)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_29
 Originator(s):  erik (Erik Kluzek)
 Date: Thu May  5 14:19:04 MDT 2011

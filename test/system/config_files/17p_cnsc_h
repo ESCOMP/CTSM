@@ -1,0 +1,5 @@
+-mode clm_stndln
+-nouse_mpiserial -smp
+-maxpft 17
+-bgc cn
+-s

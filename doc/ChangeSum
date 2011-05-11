@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_30         erik 05/11/2011 New finidat/fsurdat files for T31
    clm4_0_29         erik 05/05/2011 Backout interpinic changes to one that works
    clm4_0_28         erik 05/03/2011 Remove DUST/PROGSSLT in land coupler layer, update driver and scripts
    clm4_0_27         erik 05/02/2011 Move crop branch over to trunk
