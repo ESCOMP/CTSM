@@ -583,7 +583,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 #endif
       end if
           
-      if ( ivt(p) >= nc3crop )then
+      if ( crop_prog .and. ivt(p) >= nc3crop )then
          ! xsmrpool (C only)
          if (abs(xsmrpool(p)) < ccrit) then
              pc = pc + xsmrpool(p)

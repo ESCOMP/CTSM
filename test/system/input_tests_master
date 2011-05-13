@@ -327,6 +327,26 @@ erG51 TER.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72  arb_
 brG51 TBR.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 72+72  arb_ic
 blG51 TBL.sh 17p_sc_dh clm_pftdyn 10001230:1800 10x15 USGS@1000-1002 144    arb_ic
 
+smH41 TSM.sh 17p_cnsc_dh clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+erH41 TER.sh 17p_cnsc_dh clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -3+-7 startup
+brH41 TBR.sh 17p_cnsc_dh clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -5+-5 startup
+blH41 TBL.sh 17p_cnsc_dh clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+
+smH42 TSM.sh 17p_cnsc_dm clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+erH42 TER.sh 17p_cnsc_dm clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -3+-7 startup
+brH42 TBR.sh 17p_cnsc_dm clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -5+-5 startup
+blH42 TBL.sh 17p_cnsc_dm clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+
+smH43 TSM.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+erH43 TER.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -3+-7 startup
+brH43 TBR.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -5+-5 startup
+blH43 TBL.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+
+smH44 TSM.sh 17p_cnsc_ds clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+erH44 TER.sh 17p_cnsc_ds clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -3+-7 startup
+brH44 TBR.sh 17p_cnsc_ds clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -5+-5 startup
+blH44 TBL.sh 17p_cnsc_ds clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000  -10   startup
+
 smB91 TSM.sh _scsnf_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 144    arb_ic
 erB91 TER.sh _scsnf_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 72+72  arb_ic
 brB91 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:1800 4x5 gx3v7 72+72  arb_ic
@@ -1014,11 +1034,11 @@ sm854 TSMtools.sh interpinic   tools__ds runoptions
 sm853 TSMtools.sh interpinic   tools__o  runoptions
 bl853 TBLtools.sh interpinic   tools__o  runoptions
 
-sm893 TSMrst_tools.sh _sc_do         interpinic clm_std^nl_urb    20000101:1800 1.9x2.5 gx1v6      4x5   gx3v7      -1
-sm857 TSMrst_tools.sh 17p_cnsc_o     interpinic clm_std^nl_urb    18500101:1800 1.9x2.5 gx1v6@1850 10x15 USGS@1850  -1
-sm813 TSMrst_tools.sh 17p_cndvsc_do  interpinic clm_std^nl_urb    18500101:1800 1.9x2.5 gx1v6@1850 48x96 gx3v7@1850 -1
-sm8y3 TSMrst_tools.sh _mec10sc_do    interpinic clm_std^nl_urb    20000101:1800 1.9x2.5 gx1v6      48x96 gx3v7      -1
-sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6      10x15 USGS       -1
+sm893 TSMrst_tools.sh _sc_do         interpinic clm_std^nl_urb       20000101:1800 1.9x2.5  gx1v6      4x5   gx3v7      -1
+sm857 TSMrst_tools.sh 17p_cnsc_o     interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 10x15 USGS@1850  -1
+sm813 TSMrst_tools.sh 17p_cndvsc_do  interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 48x96 gx3v7@1850 -1
+sm8y3 TSMrst_tools.sh _mec10sc_do    interpinic clm_std^nl_urb       18500101:1800 0.9x1.25 gx1v6@1850 48x96 gx3v7      -1
+sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5  gx1v6      10x15 USGS       -1
 
 sm954 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds

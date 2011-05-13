@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_31         erik 05/13/2011 Fix answers for transient_CN, fix interpinic
    clm4_0_30         erik 05/11/2011 New finidat/fsurdat files for T31
    clm4_0_29         erik 05/05/2011 Backout interpinic changes to one that works
    clm4_0_28         erik 05/03/2011 Remove DUST/PROGSSLT in land coupler layer, update driver and scripts

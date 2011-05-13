@@ -5,8 +5,9 @@ module interpinic
   ! to another resolution and/or landmask
   !----------------------------------------------------------------------- 
 
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use shr_sys_mod , only: shr_sys_flush
+  use shr_kind_mod   , only: r8 => shr_kind_r8
+  use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
+  use shr_sys_mod    , only: shr_sys_flush
   implicit none
 
   private
@@ -21,6 +22,17 @@ module interpinic
                                                 ! types with closest bare-soil
                                                 ! Otherwise it will abort.
 
+  ! Private methods
+
+  private :: interp_ml_real
+  private :: interp_sl_real
+  private :: interp_sl_int
+  private :: findMinDistPFTs
+  private :: findMinDistCols
+  private :: findMinDistLDUs
+
+  ! Private data
+ 
   ! Variables read in from input and output initial files
 
   integer :: nlevsno        ! maximum number of snow levels
@@ -48,29 +60,20 @@ module interpinic
   ! Parameters
 
   real(r8), parameter :: spval = 1.e36_r8 ! special value for missing data (ocean)
-  real(R8), parameter :: SHR_CONST_PI = 3.14159265358979323846_R8  ! pi
   real(r8), parameter :: deg2rad = SHR_CONST_PI/180._r8
-  real(R8), parameter :: SHR_CONST_REARTH  = 6.37122e6_R8  ! radius of earth ~ m
   real(r8), parameter :: re = SHR_CONST_REARTH
+  ! These types need to agree with the types in clm_varcon.F90 in the main CLM model code
   integer,  parameter :: croptype     = 15
-  integer,  parameter :: nonveg       = 2
+  integer,  parameter :: istcrop      = 8
+  integer,  parameter :: istsoil      = 1
+  integer,  parameter :: baresoil     = 0
+  integer,  parameter :: nonurbcol    = 1
 
-  ! Private methods
-
-  private :: interp_ml_real
-  private :: interp_sl_real
-  private :: interp_sl_int
-  private :: findMinDistPFTs
-  private :: findMinDistCols
-  private :: findMinDistLDUs
-
-  ! Private data
- 
   logical , save :: allPFTSfromSameGC = .false. ! Get all PFTS from the same gridcells
   logical , save :: noAbortIfDNE      = .false. ! Do NOT abort if some input data does not exist
-  integer , allocatable, save :: colindx(:) 
-  integer , allocatable, save :: pftindx(:) 
-  integer , allocatable, save :: lduindx(:) 
+  integer , allocatable, save :: colindx(:)     ! Column mapping indices
+  integer , allocatable, save :: pftindx(:)     ! PFT mapping indices
+  integer , allocatable, save :: lduindx(:)     ! land-unit mapping indices
 
   SAVE
 
@@ -640,7 +643,7 @@ contains
           do n = 1, numpfts
              if (wti(n)>0. .and. (ltypei(n) == ltypeo(no)) ) then
                 if ( allPFTSfromSameGC .or. &
-                     (ltypeo(no) >= nonveg) .or. &
+                     (ltypeo(no) > istsoil) .or. &
                      (vtypei(n) == vtypeo(no)) )then
                    dy   = abs(lato(no)-lati(n))*re
                    dx   = abs(lono(no)-loni(n))*re * 0.5_r8*(cos_lato(no)+cos_lati(n))
@@ -657,7 +660,7 @@ contains
           if ( override_missing ) then
              if (distmin == spval) then
                 do n = 1, numpfts
-                   if (wti(n) > 0._r8 .and. ltypei(n) == 1 .and. vtypei(n)==0) then
+                   if (wti(n) > 0._r8 .and. ltypei(n) == istsoil .and. vtypei(n)==baresoil) then
                       dy   = abs(lato(no)-lati(n))*re
                       dx   = abs(lono(no)-loni(n))*re * 0.5_r8*(cos_lato(no)+cos_lati(n))
                       dist = dx*dx + dy*dy
@@ -807,7 +810,7 @@ contains
           do n = 1, numcols
              if (wti(n) > 0.0_r8) then
                 calcmin = .false.
-                if (typei_urb(n) == 1) then
+                if (typei_urb(n) == nonurbcol) then
                    if (typei(n) == typeo(no)) calcmin = .true.
                 else
                    if (typei_urb(n) == typeo_urb(no)) calcmin = .true.
@@ -828,7 +831,7 @@ contains
           if ( override_missing ) then
              if ( distmin == spval )then
                 do n = 1, numcols
-                   if (wti(n) > 0._r8 .and. typei(n)==1) then
+                   if (wti(n) > 0._r8 .and. typei(n)==istsoil) then
                       dy = abs(lato(no)-lati(n))*re
                       dx = abs(lono(no)-loni(n))*re * 0.5_r8*(cos_lato(no)+cos_lati(n))
                       dist = dx*dx + dy*dy
@@ -978,7 +981,7 @@ contains
           if ( override_missing ) then
              if ( distmin == spval )then
                 do n = 1, numldus
-                   if (wti(n) > 0._r8 .and. typei(n) == 1) then
+                   if (wti(n) > 0._r8 .and. typei(n) == istsoil) then
                       dy = abs(lato(no)-lati(n))*re
                       dx = abs(lono(no)-loni(n))*re * 0.5_r8*(cos_lato(no)+cos_lati(n))
                       dist = dx*dx + dy*dy
@@ -1208,7 +1211,7 @@ contains
              !
              if ( htop_var )then
                 ! AND this is non-vegetated land-unit -- set to zero
-                if( typeo(no) >= nonveg .and. typeo(no) < 7 )then
+                if( typeo(no) > istsoil .and. typeo(no) < istcrop )then
                    rbufslo(no) = 0.0_r8
                 else
                    ! Otherwise calculate it from the nearest neighbor
@@ -1217,7 +1220,7 @@ contains
                 end if
              else if ( fpcgrid_var )then
                 ! AND this is not naturally vegetated land-unit -- set to zero
-                if( typeo(no) >= nonveg )then
+                if( typeo(no) > istsoil )then
                    if (n > 0) rbufslo(no) = 0.0_r8
                 else
                    ! Otherwise calculate it from the nearest neighbor
@@ -1350,7 +1353,7 @@ contains
              ! If variable-name is present or itypveg 
              ! AND this is crop or non-vegetated land-unit
              if ( (present_var .or. itypveg_var) .and. &
-                  ((vtypeo(no) >= croptype) .or. (typeo(no) >= nonveg)) )then
+                  ((vtypeo(no) >= croptype) .or. (typeo(no) > istsoil)) )then
                 if ( present_var ) ibufslo(no) = 0
                 if ( itypveg_var ) ibufslo(no) = vtypeo(no)
              ! Otherwise calculate it from the nearest neighbor

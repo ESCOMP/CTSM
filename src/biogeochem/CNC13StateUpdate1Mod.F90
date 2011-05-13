@@ -238,7 +238,6 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: livestemc(:)          ! (gC/m2) live stem C
    real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
    real(r8), pointer :: livestemc_xfer(:)     ! (gC/m2) live stem C transfer
-   real(r8), pointer :: pft_ctrunc(:)         ! (gC/m2) pft-level sink for C truncation
 
 ! local pointers for dynamic landcover fluxes and states
    real(r8), pointer :: dwt_seedc_to_leaf(:)
@@ -386,7 +385,6 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     livestemc                      => clm3%g%l%c%p%pc13s%livestemc
     livestemc_storage              => clm3%g%l%c%p%pc13s%livestemc_storage
     livestemc_xfer                 => clm3%g%l%c%p%pc13s%livestemc_xfer
-    pft_ctrunc                     => clm3%g%l%c%p%pc13s%pft_ctrunc
 
     ! set time steps
     dt = real( get_step_size(), r8 )

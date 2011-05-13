@@ -1,15 +1,19 @@
 ===============================================================
-Tag name:  clm4_0_30
+Tag name:  clm4_0_31
 Originator(s):  erik (Erik Kluzek)
-Date: Wed May 11 14:32:19 MDT 2011
-One-line Summary: New finidat/fsurdat files for T31
+Date: Fri May 13 17:11:38 MDT 2011
+One-line Summary: Fix answers for transient_CN, fix interpinic
 
 Purpose of changes:
 
-Externals update, fix some PTCLM problems. New finidat/fsurdat files for T31, make sure
-works.
+Fix interpinic test with finidat files. Fix CNPrecisionControl so answers with transient
+CN are same as clm4_0_26 without crop.
 
 Bugs fixed (include bugzilla ID):
+                                 1335 (transient_CN sometimes different than clm4_0_26)
+                                 1299 (interpinic does NOT work going from non glc_mec)
+                                 1318 (interpinic has trouble with new restart files)
+                                 1319 (interpinic doesn't interpolate *_PERIOD)
 
 Known bugs (include bugzilla ID):
                                   701 (svn keyword)
@@ -24,10 +28,138 @@ Known bugs (include bugzilla ID):
                                  1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
                                  1163 (finidat file has a bunch of NaN's in it)
                                  1164 (Restart trouble for CN13 on mirage...)
-                                 1248 (PTCLM can only go to 2005)
                                  1251 (PTCLM testcases aborts in I_QIAN case)
                                  1276 (urbanc_alpha site does not work)
+                                 1281 (bug in mksurfdata for urban_only case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>> Add transient 20th Century namelist config
+   A   models/lnd/clm/test/system/nl_files/clm_transient_20thC
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Add f19 transient-CN tests that start in 1979 (which showed bug 1335)
+   M   models/lnd/clm/test/system/input_tests_master - Add f19 transient CN tests
+              Also make glc_nec interpinic test run for f09@1850
+   M   models/lnd/clm/test/system/README.testnames --- Add run-4 for f19 transient CN
+   M   models/lnd/clm/test/system/tests_pretag_bluefire_nompi ------ Add f19 transient_CN
+test
+   M   models/lnd/clm/test/system/tests_posttag_purempi_regression - Add f19 transient_CN
+test
+   M   models/lnd/clm/test/system/tests_posttag_hybrid_regression -- Add f19 transient_CN
+test
+   M   models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi ------ Add f19 transient_CN
+test
+   M   models/lnd/clm/test/system/tests_posttag_nompi_regression --- Add f19 transient_CN
+test
+
+>>>>>>>>>>>>>> Put changes from clm4_0_27 back in except those that cause runs to fail
+   M   models/lnd/clm/tools/interpinic/interpinic.F90
+   M   models/lnd/clm/tools/interpinic/Srcfiles ------ Add shr_const_mod.F90 back in
+
+>>>>>>>>>>>>>>
+   M   models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90 - Add if ( crop_prog ) to
+               a crop change that needed it
+   M   models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90 ---- Remove pft_ctrunc not used
+   M   models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90 -- Remove pft_ctrunc not used
+   M   models/lnd/clm/src/biogeochem/DryDepVelocity.F90 -------- Set wesveg for crop_prog
+
+Summary of testing:
+
+  bluefire extra interactive testing:
+001 bl853 TBLtools.sh interpinic tools__o runoptions ............................................PASS
+001 sm893 TSMrst_tools.sh _sc_do interpinic clm_std^nl_urb 20000101:1800 1.9x2.5 gx1v6 4x5 gx3v7 -1 PASS
+001 sm857 TSMrst_tools.sh 17p_cnsc_o interpinic clm_std^nl_urb 18500101:1800 1.9x2.5 gx1v6@1850 10x1PASS
+002 sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6PASS
+003 sm813 TSMrst_tools.sh 17p_cndvsc_do interpinic clm_std^nl_urb 18500101:1800 1.9x2.5 gx1v6@1850 4PASS
+>>>>> This test compares to clm4_0_30 and rightly shows that answers change
+001 blH43 TBL.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000 -10 startup FAIL! rc= 7
+  bluefire/CESM testing: All PASS except... (why did these comparisons PASS in clm4_0_27)
+BFAIL ERP.f19_g16.IGRCP60CN.bluefire.compare.clm4_0_30 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_30 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_30 
+  bluefire/CESM testing compared to cesm1_0_beta19:
+PASS  SMS_D.f09_g16.BRCP45CN.bluefire 
+PASS  SMS_D.f09_g16.BRCP45CN.bluefire.compare_hist.cesm1_0_beta19 
+PASS  SMS_D.f09_g16.BRCP45CN.bluefire.compare.cesm1_0_beta19 
+PASS  ERS.f09_f09.FAMIPCN.bluefire 
+PASS  ERS.f09_f09.FAMIPCN.bluefire.compare_hist.cesm1_0_beta19 
+PASS  ERS.f09_f09.FAMIPCN.bluefire.compare.cesm1_0_beta19 
+PASS  ERS.f19_f19.FAMIPC5.bluefire 
+PASS  ERS.f19_f19.FAMIPC5.bluefire.compare_hist.cesm1_0_beta19 
+PASS  ERS.f19_f19.FAMIPC5.bluefire.compare.cesm1_0_beta19 
+PASS  ERS.f19_f19.FAMIPCN.bluefire 
+PASS  ERS.f19_f19.FAMIPCN.bluefire.compare_hist.cesm1_0_beta19 
+PASS  ERS.f19_f19.FAMIPCN.bluefire.compare.cesm1_0_beta19 
+PASS  ERS.f09_g16.BRCP45CN.lynx_pgi 
+PASS  ERS.f09_g16.BRCP45CN.lynx_pgi.compare_hist.cesm1_0_beta19 
+PASS  ERS.f09_g16.BRCP45CN.lynx_pgi.compare.cesm1_0_beta19 
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_30
+
+Changes answers relative to baseline: Some transient_CN tests are different
+   because of bug 1335 introduced in clm4_0_27
+   
+   With these changes answers are the same as clm4_0_26
+
+===============================================================
+===============================================================
+Tag name:  clm4_0_30
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 11 14:32:19 MDT 2011
+One-line Summary: New finidat/fsurdat files for T31
+
+Purpose of changes:
+
+Externals update, fix some PTCLM problems. New finidat/fsurdat files for T31, make sure
+works.
+
+Bugs fixed (include bugzilla ID):
                                  1279 (Latest version of PTCLM requires python2.5)
+                                 1248 (PTCLM can only go to 2005)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1276 (urbanc_alpha site does not work)
                                  1281 (bug in mksurfdata for urban_only case)
                                  1282 (Trouble running to last CLM1PT atm time-step)
                                  1283 (CLM with glacier-MEC fails running on intel)
@@ -35,6 +167,7 @@ Known bugs (include bugzilla ID):
                                  1318 (interpinic has trouble with new restart files)
                                  1319 (interpinic doesn't interpolate *_PERIOD)
                                  1325 (GDDHARV on hist causes model to die in debug)
+                                 1335 (transient_CN sometimes different than clm4_0_26)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -172,6 +305,7 @@ Known bugs (include bugzilla ID):
                                  1318 (interpinic has trouble with new restart files)
                                  1319 (interpinic doesn't interpolate *_PERIOD)
                                  1325 (GDDHARV on hist causes model to die in debug)
+                                 1335 (transient_CN sometimes different than clm4_0_26)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -287,6 +421,7 @@ Known bugs (include bugzilla ID):
                                  1299 (interpinic does NOT work going from non glc_mec)
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1328 (interpinic gives bad results that can NOT be used!)
+                                 1335 (transient_CN sometimes different than clm4_0_26)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -407,6 +542,7 @@ Known bugs (include bugzilla ID):
                                  1299 (interpinic does NOT work going from non glc_mec)
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1328 (interpinic gives bad results that can NOT be used!)
+                                 1335 (transient_CN sometimes different than clm4_0_26)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
