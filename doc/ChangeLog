@@ -1,4 +1,166 @@
 ===============================================================
+Tag name:  clm4_0_32
+Originator(s):  erik (Erik Kluzek)
+Date: Thu May 19 15:18:49 MDT 2011
+One-line Summary: Make I1850SPINUPCN compset use MOAR data, various bug fixes, work on test lists
+
+Purpose of changes:
+
+Update datm and scripts so can run I1850SPINUPCN compset with MOAR data. Fix CN units.
+Fix some documentation for crop. Add attribute that notes that flux variables are NOT
+multiplied by landfrac. Change align year for I4804 and I4804CN compsets, add append/warn
+option to xmlchange. Some clarifications to clm namelist. build-namelist can run list
+options without a config_cache file. Add comment/title to output files. Remove the
+2.65x3.33 grid, no longer supported. Work on test lists a bit.
+
+Bugs fixed (include bugzilla ID):
+                                 1337 (have ISPINUPCN compset use MOAR data)
+                                 1336 (evaluate CLM testing for release)
+                                 1327 (correct documentation of CN variable units)
+                                 1158 (make 4804 compsets consistent with 1850 etc.)
+                                 1151 (remove co2_ppmv when co2_type is NOT constant)
+                                 1140 (build-namelist -list options die with config file)
+                                 1108 (have append/warn mode for xmlchange)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: 
+
+   I1850SPINUP compset changed to use MOAR data
+
+   DATM_CPL_* variables added to env_conf.xml to set casename, years run over
+   I4804 compsets ALIGN year changed to agree with doc. and I1850 compsets
+
+   New options to xmlchange -- allow you to append (-a) to the end of something already
+   there and another option (-w) warn you and abort if already set.
+
+Describe any changes made to the namelist: Add options to build-namelist
+
+    Add -co2_ppmv and -rtm_tstep options to set co2_ppmv when co2_type is constant
+    and set rtm time-step when RTM is on.
+
+    This way co2_ppmv and rtm_nsteps do NOT show up in the namelist if they aren't needed.
+
+List any changes to the defaults for the boundary datasets: Remove 2.65x3.33 datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, slevis (units change), sacks (crop doc)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, csm_share, datm
+    scripts   to scripts4_110517
+    csm_share to share3_110516
+    datm      to datm8_110517b
+
+List all files eliminated:
+
+>>>>>>>>>>>>> Remove as no longer needed to get lists for documentation
+   D   models/lnd/clm/doc/UsersGuide/config_cache.xml
+
+List all files added and what they do:
+
+>>>>>>>>>>>>> Add new test configurations
+   A   models/lnd/clm/test/system/config_files/17p_scnv_dm
+   A   models/lnd/clm/test/system/config_files/17p_scnv_ds
+   A   models/lnd/clm/test/system/config_files/17p_nrcnsc_do
+   A   models/lnd/clm/test/system/config_files/17p_nrcnsc_ds
+   A   models/lnd/clm/test/system/config_files/17p_scnv_m
+   A   models/lnd/clm/test/system/config_files/17p_scnv_o
+   A   models/lnd/clm/test/system/config_files/17p_scnv_s
+   A   models/lnd/clm/test/system/config_files/17p_cnnfsc_dh -- turn on NOFIRE
+   A   models/lnd/clm/test/system/config_files/17p_cnnfsc_dm -- turn on NOFIRE
+   A   models/lnd/clm/test/system/config_files/17p_cnnfsc_do -- turn on NOFIRE
+   A   models/lnd/clm/test/system/config_files/21p_nrcncrpsc_s
+   A   models/lnd/clm/test/system/config_files/21p_nrcncrpsc_ds
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/test/system/config_files/README
+
+>>>>>>>>>>>>> Change tests a bit to make them more consistent with naming convention
+>>>>>>>>>>>>> make sure tests are covered, and have no-RTM tests for single-point
+   M   models/lnd/clm/test/system/README.testnames
+   M   models/lnd/clm/test/system/nl_files/clm_spin --- Use MOAR data on bluefire
+   M   models/lnd/clm/test/system/input_tests_master
+
+>>>>>>>>>>>>> Change test lists
+   M   models/lnd/clm/test/system/tests_posttag_lynx_nompi
+   M   models/lnd/clm/test/system/tests_pretag_bluefire
+   M   models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M   models/lnd/clm/test/system/tests_pretag_edinburgh
+   M   models/lnd/clm/test/system/tests_posttag_kraken
+   M   models/lnd/clm/test/system/tests_posttag_yong
+   M   models/lnd/clm/test/system/tests_posttag_purempi_regression
+   M   models/lnd/clm/test/system/tests_posttag_hybrid_regression
+   M   models/lnd/clm/test/system/tests_pretag_jaguarpf
+   M   models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi
+   M   models/lnd/clm/test/system/tests_posttag_mirage
+   M   models/lnd/clm/test/system/tests_posttag_intrepid
+   M   models/lnd/clm/test/system/tests_posttag_intrepid_nompi
+   M   models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M   models/lnd/clm/test/system/tests_posttag_lynx
+
+>>>>>>>>>>>>> Add -co2_ppmv, and -rtm_tstep options to build-namelist
+>>>>>>>>>>>>> Don't require config file for build-namelist list options
+>>>>>>>>>>>>> Remove 2.65x3.33 files, add capability to handle MOAR data
+   M   models/lnd/clm/bld/build-namelist
+   M   models/lnd/clm/bld/clm.cpl7.template
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml
+   M   models/lnd/clm/bld/namelist_files/datm-build-namelist
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+
+>>>>>>>>>>>>> Correct documentation of units from kg to g
+   M   models/lnd/clm/src/biogeochem/CNMRespMod.F90
+   M   models/lnd/clm/src/biogeochem/CNPhenologyMod.F90 -- Also documentation changes
+            from Bill Sacks
+   M   models/lnd/clm/src/biogeochem/CNDecompMod.F90
+   M   models/lnd/clm/src/biogeochem/CNAllocationMod.F90
+   M   models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90
+
+>>>>>>>>>>>>> Add title and comment attributes to output files
+   M   models/lnd/clm/src/main/histFileMod.F90
+   M   models/lnd/clm/src/main/restFileMod.F90
+
+Summary of testing:
+
+  bluefire interactive testing: All PASS up to...
+006 smC97 TSM.sh _sc_do clm_spin^nl_urb 20030101:1800 4x5 gx3v7@1850 -6 arb_ic ..................FAIL! rc= 10
+  bluefire/CESM testing: All PASS except...
+BFAIL PST.f45_g37.I1850CN.bluefire.compare.clm4_0_31
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_31
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_31
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_31
 Originator(s):  erik (Erik Kluzek)
 Date: Fri May 13 17:11:38 MDT 2011

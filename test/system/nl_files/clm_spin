@@ -1,5 +1,8 @@
 -ignore_ic_date 
 -silent 
 -drv_case clmrun 
--datm_source CPLHIST3HrWxHfHrSol
--datm_data_dir /cgd/tss/BCN1850TR1f09g16_3Hrly
+-datm_source CPLHIST3HrWx
+-datm_data_dir "/glade/data01/CMIP5/CCSM/csm/%c/cpl/hist"
+-datm_cpl_case b40.20th.track1.1deg.012
+-datm_cycle_beg_year 1850
+-datm_cycle_end_year 1900

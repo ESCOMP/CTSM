@@ -165,8 +165,8 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    integer , pointer :: pcolumn(:)    ! pft's column index
    integer , pointer :: pfti(:)       ! initial pft index in landunit
    real(r8), pointer :: lgsf(:)       ! long growing season factor [0-1]
-   real(r8), pointer :: xsmrpool(:)      ! (kgC/m2) temporary photosynthate C pool
-   real(r8), pointer :: retransn(:)   ! (kgN/m2) plant pool of retranslocated N
+   real(r8), pointer :: xsmrpool(:)   ! (gC/m2) temporary photosynthate C pool
+   real(r8), pointer :: retransn(:)   ! (gN/m2) plant pool of retranslocated N
    real(r8), pointer :: psnsun(:)     ! sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer :: psnsha(:)     ! shaded leaf-level photosynthesis (umol CO2 /m**2/ s)
 #if (defined C13)
@@ -188,7 +188,7 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    real(r8), pointer :: livestem_xsmr(:)
    real(r8), pointer :: livecroot_xsmr(:)
    ! column level
-   real(r8), pointer :: sminn(:)      ! (kgN/m2) soil mineral N
+   real(r8), pointer :: sminn(:)      ! (gN/m2) soil mineral N
    ! ecophysiological constants
    real(r8), pointer :: woody(:)      ! binary flag for woody lifeform (1=woody, 0=not woody)
    real(r8), pointer :: froot_leaf(:) ! allocation parameter: new fine root C per new leaf C (gC/gC)

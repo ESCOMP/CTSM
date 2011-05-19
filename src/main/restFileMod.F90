@@ -661,6 +661,9 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'title', &
+          'CLM Restart information, required to continue a simulation' )
+
     
   end subroutine restFile_dimset
   

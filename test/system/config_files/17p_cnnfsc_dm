@@ -1,0 +1,7 @@
+-mode clm_stndln
+-nouse_mpiserial -nosmp
+-debug
+-maxpft 17
+-nofire
+-bgc cn
+-s

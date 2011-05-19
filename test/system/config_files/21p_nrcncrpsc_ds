@@ -1,0 +1,9 @@
+-mode clm_stndln
+-use_mpiserial
+-nosmp
+-debug
+-maxpft 21
+-bgc cn
+-crop on
+-rtm off
+-s

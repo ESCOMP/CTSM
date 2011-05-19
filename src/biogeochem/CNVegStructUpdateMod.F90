@@ -72,15 +72,15 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    integer , pointer :: pcolumn(:)    ! column index associated with each pft
    integer , pointer :: pgridcell(:)  ! pft's gridcell index
    real(r8), pointer :: snowdp(:)     ! snow height (m)
-   real(r8), pointer :: leafc(:)      ! (kgC/m2) leaf C
-   real(r8), pointer :: deadstemc(:)  ! (kgC/m2) dead stem C
+   real(r8), pointer :: leafc(:)      ! (gC/m2) leaf C
+   real(r8), pointer :: deadstemc(:)  ! (gC/m2) dead stem C
    real(r8), pointer :: woody(:)      !binary flag for woody lifeform (1=woody, 0=not woody)
    real(r8), pointer :: slatop(:)     !specific leaf area at top of canopy, projected area basis [m^2/gC]
    real(r8), pointer :: dsladlai(:)   !dSLA/dLAI, projected area basis [m^2/gC]
    real(r8), pointer :: z0mr(:)       !ratio of momentum roughness length to canopy top height (-)
    real(r8), pointer :: displar(:)    !ratio of displacement height to canopy top height (-)
    real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft-level [m]
-   real(r8), pointer :: dwood(:)      ! density of wood (kgC/m^3)
+   real(r8), pointer :: dwood(:)      ! density of wood (gC/m^3)
 !
 ! local pointers to implicit in/out scalars
 !

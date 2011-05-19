@@ -1099,7 +1099,7 @@ Type of output files for datm PIO
 <!-- ========================================================================================  -->
 
 <entry id="datamode" type="char*256"  category="datm"
-       group="shr_strdata_nml" valid_values="CLMNCEP,CAMHIST,COPYALL,CPLHIST,CORE2,TN460,NULL" >
+       group="shr_strdata_nml" valid_values="CLMNCEP,,COPYALL,CPLHIST,CORE2,TN460,NULL" >
 Flags for physics options with respect to how to handle input data.
 </entry>
 
@@ -1118,6 +1118,16 @@ Fill algorithm
 Fill mask
 </entry>
 
+<entry id="fillread" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+Fill mapping file to read
+</entry>
+
+<entry id="fillwrit" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+Fill mapping file to read
+</entry>
+
 <entry id="mapmask" type="char*256(30)"  category="datm"
        group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
 Scalar mapping mask
@@ -1126,6 +1136,16 @@ Scalar mapping mask
 <entry id="mapalgo" type="char*256(30)"  category="datm"
        group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
 Scalar mapping algorithm
+</entry>
+
+<entry id="mapread" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+Regrid mapping file to read
+</entry>
+
+<entry id="mapwrit" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+Regrid mapping file to write
 </entry>
 
 <entry id="tintalgo" type="char*256(30)"  category="datm"
@@ -1158,6 +1178,11 @@ Character array of vector description file names
 File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 </entry>
 
+<entry id="decomp" type="char*4" category="datm"
+       group="datm_nml" valid_values="1d,root" >
+DATM Decomposition strategy
+</entry>
+
 <entry id="presaero" type="logical" category="datm"
        group="datm_nml">
 If prescribed aerosols are coming from the data atmosphere model (datm)
@@ -1185,7 +1210,7 @@ Stream restart file name for datm model, needed for branch simulations
 
 <entry id="datm_source" type="char*80" category="datm_internal"
        group="datm_internal" 
-       valid_values="CLM_QIAN,CPLHIST3HrWxHfHrSol,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
+       valid_values="CLM_QIAN,CPLHIST3HrWx,CLM1PT">
 Description of data source for datm input data.
 </entry>
 
@@ -1260,7 +1285,7 @@ Glacier model grid
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,0.33x0.33">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,0.33x0.33">
 Horizontal resolutions
 </entry> 
 

@@ -1747,6 +1747,9 @@ contains
           call shr_sys_flush(iulog)
        end if
        call ncd_pio_createfile(lnfid, trim(locfnh(t)))
+       call ncd_putatt(lnfid, ncd_global, 'title', 'CLM History file information' )
+       call ncd_putatt(lnfid, ncd_global, 'comment', &
+          "NOTE: None of the variables are weighted by land fraction!" )
     else
        if (masterproc) then
           write(iulog,*) trim(subname),' : Opening netcdf rhtape ', &
@@ -1754,6 +1757,8 @@ contains
           call shr_sys_flush(iulog)
        end if
        call ncd_pio_createfile(lnfid, trim(locfnhr(t)))
+       call ncd_putatt(lnfid, ncd_global, 'title', &
+          'CLM Restart History information, required to continue a simulation' )
        call ncd_putatt(lnfid, ncd_global, 'comment', &
                        "This entire file NOT needed for startup or branch simulations")
     end if

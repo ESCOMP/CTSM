@@ -463,19 +463,19 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: decl(:)               ! solar declination (radians)
    real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
-   real(r8), pointer :: leafc_storage(:)      ! (kgC/m2) leaf C storage
-   real(r8), pointer :: frootc_storage(:)     ! (kgC/m2) fine root C storage
-   real(r8), pointer :: livestemc_storage(:)  ! (kgC/m2) live stem C storage
-   real(r8), pointer :: deadstemc_storage(:)  ! (kgC/m2) dead stem C storage
-   real(r8), pointer :: livecrootc_storage(:) ! (kgC/m2) live coarse root C storage
-   real(r8), pointer :: deadcrootc_storage(:) ! (kgC/m2) dead coarse root C storage
-   real(r8), pointer :: gresp_storage(:)      ! (kgC/m2) growth respiration storage
-   real(r8), pointer :: leafn_storage(:)      ! (kgN/m2) leaf N storage
-   real(r8), pointer :: frootn_storage(:)     ! (kgN/m2) fine root N storage
-   real(r8), pointer :: livestemn_storage(:)  ! (kgN/m2) live stem N storage
-   real(r8), pointer :: deadstemn_storage(:)  ! (kgN/m2) dead stem N storage
-   real(r8), pointer :: livecrootn_storage(:) ! (kgN/m2) live coarse root N storage
-   real(r8), pointer :: deadcrootn_storage(:) ! (kgN/m2) dead coarse root N storage
+   real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
+   real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
+   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
+   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
+   real(r8), pointer :: livecrootc_storage(:) ! (gC/m2) live coarse root C storage
+   real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
+   real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
+   real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
+   real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
+   real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
+   real(r8), pointer :: deadstemn_storage(:)  ! (gN/m2) dead stem N storage
+   real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
+   real(r8), pointer :: deadcrootn_storage(:) ! (gN/m2) dead coarse root N storage
    ! ecophysiological constants
    real(r8), pointer :: season_decid(:) ! binary flag for seasonal-deciduous leaf habit (0 or 1)
    real(r8), pointer :: woody(:)        ! binary flag for woody lifeform (1=woody, 0=not woody)
@@ -509,18 +509,18 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: deadstemn_xfer_to_deadstemn(:)
    real(r8), pointer :: livecrootn_xfer_to_livecrootn(:)
    real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)
-   real(r8), pointer :: leafc_xfer(:)      ! (kgC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)     ! (kgC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)  ! (kgC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)  ! (kgC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:) ! (kgC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:) ! (kgC/m2) dead coarse root C transfer
-   real(r8), pointer :: leafn_xfer(:)      ! (kgN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)     ! (kgN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)  ! (kgN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)  ! (kgN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:) ! (kgN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:) ! (kgN/m2) dead coarse root N transfer
+   real(r8), pointer :: leafc_xfer(:)      ! (gC/m2) leaf C transfer
+   real(r8), pointer :: frootc_xfer(:)     ! (gC/m2) fine root C transfer
+   real(r8), pointer :: livestemc_xfer(:)  ! (gC/m2) live stem C transfer
+   real(r8), pointer :: deadstemc_xfer(:)  ! (gC/m2) dead stem C transfer
+   real(r8), pointer :: livecrootc_xfer(:) ! (gC/m2) live coarse root C transfer
+   real(r8), pointer :: deadcrootc_xfer(:) ! (gC/m2) dead coarse root C transfer
+   real(r8), pointer :: leafn_xfer(:)      ! (gN/m2) leaf N transfer
+   real(r8), pointer :: frootn_xfer(:)     ! (gN/m2) fine root N transfer
+   real(r8), pointer :: livestemn_xfer(:)  ! (gN/m2) live stem N transfer
+   real(r8), pointer :: deadstemn_xfer(:)  ! (gN/m2) dead stem N transfer
+   real(r8), pointer :: livecrootn_xfer(:) ! (gN/m2) live coarse root N transfer
+   real(r8), pointer :: deadcrootn_xfer(:) ! (gN/m2) dead coarse root N transfer
    real(r8), pointer :: leafc_storage_to_xfer(:)
    real(r8), pointer :: frootc_storage_to_xfer(:)
    real(r8), pointer :: livestemc_storage_to_xfer(:)
@@ -873,19 +873,19 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    integer , pointer :: pgridcell(:)          ! pft's gridcell index
    real(r8), pointer :: latdeg(:)             ! latitude (radians)
    real(r8), pointer :: decl(:)               ! solar declination (radians)
-   real(r8), pointer :: leafc_storage(:)      ! (kgC/m2) leaf C storage
-   real(r8), pointer :: frootc_storage(:)     ! (kgC/m2) fine root C storage
-   real(r8), pointer :: livestemc_storage(:)  ! (kgC/m2) live stem C storage
-   real(r8), pointer :: deadstemc_storage(:)  ! (kgC/m2) dead stem C storage
-   real(r8), pointer :: livecrootc_storage(:) ! (kgC/m2) live coarse root C storage
-   real(r8), pointer :: deadcrootc_storage(:) ! (kgC/m2) dead coarse root C storage
-   real(r8), pointer :: gresp_storage(:)      ! (kgC/m2) growth respiration storage
-   real(r8), pointer :: leafn_storage(:)      ! (kgN/m2) leaf N storage
-   real(r8), pointer :: frootn_storage(:)     ! (kgN/m2) fine root N storage
-   real(r8), pointer :: livestemn_storage(:)  ! (kgN/m2) live stem N storage
-   real(r8), pointer :: deadstemn_storage(:)  ! (kgN/m2) dead stem N storage
-   real(r8), pointer :: livecrootn_storage(:) ! (kgN/m2) live coarse root N storage
-   real(r8), pointer :: deadcrootn_storage(:) ! (kgN/m2) dead coarse root N storage
+   real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
+   real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
+   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
+   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
+   real(r8), pointer :: livecrootc_storage(:) ! (gC/m2) live coarse root C storage
+   real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
+   real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
+   real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
+   real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
+   real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
+   real(r8), pointer :: deadstemn_storage(:)  ! (gN/m2) dead stem N storage
+   real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
+   real(r8), pointer :: deadcrootn_storage(:) ! (gN/m2) dead coarse root N storage
    real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
    real(r8), pointer :: leaf_long(:)          ! leaf longevity (yrs)
@@ -926,18 +926,18 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: deadstemn_xfer_to_deadstemn(:)
    real(r8), pointer :: livecrootn_xfer_to_livecrootn(:)
    real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)
-   real(r8), pointer :: leafc_xfer(:)      ! (kgC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)     ! (kgC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)  ! (kgC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)  ! (kgC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:) ! (kgC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:) ! (kgC/m2) dead coarse root C transfer
-   real(r8), pointer :: leafn_xfer(:)      ! (kgN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)     ! (kgN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)  ! (kgN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)  ! (kgN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:) ! (kgN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:) ! (kgN/m2) dead coarse root N transfer
+   real(r8), pointer :: leafc_xfer(:)      ! (gC/m2) leaf C transfer
+   real(r8), pointer :: frootc_xfer(:)     ! (gC/m2) fine root C transfer
+   real(r8), pointer :: livestemc_xfer(:)  ! (gC/m2) live stem C transfer
+   real(r8), pointer :: deadstemc_xfer(:)  ! (gC/m2) dead stem C transfer
+   real(r8), pointer :: livecrootc_xfer(:) ! (gC/m2) live coarse root C transfer
+   real(r8), pointer :: deadcrootc_xfer(:) ! (gC/m2) dead coarse root C transfer
+   real(r8), pointer :: leafn_xfer(:)      ! (gN/m2) leaf N transfer
+   real(r8), pointer :: frootn_xfer(:)     ! (gN/m2) fine root N transfer
+   real(r8), pointer :: livestemn_xfer(:)  ! (gN/m2) live stem N transfer
+   real(r8), pointer :: deadstemn_xfer(:)  ! (gN/m2) dead stem N transfer
+   real(r8), pointer :: livecrootn_xfer(:) ! (gN/m2) live coarse root N transfer
+   real(r8), pointer :: deadcrootn_xfer(:) ! (gN/m2) dead coarse root N transfer
    real(r8), pointer :: leafc_storage_to_xfer(:)
    real(r8), pointer :: frootc_storage_to_xfer(:)
    real(r8), pointer :: livestemc_storage_to_xfer(:)
@@ -1393,7 +1393,7 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
       integer pmmax     ! latest possible month (month) and
       integer pdmax     ! latest day in latest month to plant
       real(r8) dayspyr  ! days per year
-      real(r8) crmcorn  ! ??
+      real(r8) crmcorn  ! comparitive relative maturity for corn
 
 ! local pointers to implicit in scalars
 
@@ -1677,8 +1677,16 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
             ! maturity rating for maize
 
             if (ivt(p) == ncorn) then
+               ! the following estimation of crmcorn from gddmaturity is based on a linear
+               ! regression using data from Pioneer-brand corn hybrids (Kucharik, 2003,
+               ! Earth Interactions 7:1-33: fig. 2)
                crmcorn = max(73._r8, min(135._r8, (gddmaturity(p)+ 53.683_r8)/13.882_r8))
+
+               ! the following adjustment of grnfill based on crmcorn is based on a tuning
+               ! of Agro-IBIS to give reasonable results for max LAI and the seasonal
+               ! progression of LAI growth (pers. comm. C. Kucharik June 10, 2010)
                huigrain(p) = -0.002_r8  * (crmcorn - 73._r8) + grnfill(ivt(p))
+
                huigrain(p) = min(max(huigrain(p), grnfill(ivt(p))-0.1_r8), grnfill(ivt(p)))
                huigrain(p) = huigrain(p) * gddmaturity(p)     ! Cabelguenne et
             else
@@ -2075,18 +2083,18 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
    integer , pointer :: ivt(:)             ! pft vegetation type
    real(r8), pointer :: onset_flag(:)      ! onset flag
    real(r8), pointer :: onset_counter(:)   ! onset days counter
-   real(r8), pointer :: leafc_xfer(:)      ! (kgC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)     ! (kgC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)  ! (kgC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)  ! (kgC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:) ! (kgC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:) ! (kgC/m2) dead coarse root C transfer
-   real(r8), pointer :: leafn_xfer(:)      ! (kgN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)     ! (kgN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)  ! (kgN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)  ! (kgN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:) ! (kgN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:) ! (kgN/m2) dead coarse root N transfer
+   real(r8), pointer :: leafc_xfer(:)      ! (gC/m2) leaf C transfer
+   real(r8), pointer :: frootc_xfer(:)     ! (gC/m2) fine root C transfer
+   real(r8), pointer :: livestemc_xfer(:)  ! (gC/m2) live stem C transfer
+   real(r8), pointer :: deadstemc_xfer(:)  ! (gC/m2) dead stem C transfer
+   real(r8), pointer :: livecrootc_xfer(:) ! (gC/m2) live coarse root C transfer
+   real(r8), pointer :: deadcrootc_xfer(:) ! (gC/m2) dead coarse root C transfer
+   real(r8), pointer :: leafn_xfer(:)      ! (gN/m2) leaf N transfer
+   real(r8), pointer :: frootn_xfer(:)     ! (gN/m2) fine root N transfer
+   real(r8), pointer :: livestemn_xfer(:)  ! (gN/m2) live stem N transfer
+   real(r8), pointer :: deadstemn_xfer(:)  ! (gN/m2) dead stem N transfer
+   real(r8), pointer :: livecrootn_xfer(:) ! (gN/m2) live coarse root N transfer
+   real(r8), pointer :: deadcrootn_xfer(:) ! (gN/m2) dead coarse root N transfer
    real(r8), pointer :: woody(:)           ! binary flag for woody lifeform (1=woody, 0=not woody)
    real(r8), pointer :: bgtr(:)            ! background transfer growth rate (1/s)
 !
@@ -2236,13 +2244,13 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
    integer , pointer :: ivt(:)                   ! pft vegetation type
    real(r8), pointer :: offset_flag(:)           ! offset flag
    real(r8), pointer :: offset_counter(:)        ! offset days counter
-   real(r8), pointer :: leafc(:)                 ! (kgC/m2) leaf C
-   real(r8), pointer :: frootc(:)                ! (kgC/m2) fine root C
+   real(r8), pointer :: leafc(:)                 ! (gC/m2) leaf C
+   real(r8), pointer :: frootc(:)                ! (gC/m2) fine root C
    real(r8), pointer :: cpool_to_leafc(:)        ! allocation to leaf C (gC/m2/s)
    real(r8), pointer :: cpool_to_frootc(:)       ! allocation to fine root C (gC/m2/s)
 !  integer , pointer :: pcolumn(:)               ! pft's column index
-   real(r8), pointer :: grainc(:)                ! (kgC/m2) grain C
-   real(r8), pointer :: livestemc(:)             ! (kgC/m2) livestem C
+   real(r8), pointer :: grainc(:)                ! (gC/m2) grain C
+   real(r8), pointer :: livestemc(:)             ! (gC/m2) livestem C
    real(r8), pointer :: cpool_to_grainc(:)       ! allocation to grain C (gC/m2/s)
    real(r8), pointer :: cpool_to_livestemc(:)    ! allocation to live stem C (gC/m2/s)
    real(r8), pointer :: livewdcn(:)              ! live wood C:N (gC/gN)
@@ -2385,8 +2393,8 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
    ! pft level
    integer , pointer :: ivt(:)       ! pft vegetation type
    real(r8), pointer :: bglfr(:)     ! background litterfall rate (1/s)
-   real(r8), pointer :: leafc(:)     ! (kgC/m2) leaf C
-   real(r8), pointer :: frootc(:)    ! (kgC/m2) fine root C
+   real(r8), pointer :: leafc(:)     ! (gC/m2) leaf C
+   real(r8), pointer :: frootc(:)    ! (gC/m2) fine root C
    ! ecophysiological constants
    real(r8), pointer :: leafcn(:)    ! leaf C:N (gC/gN)
    real(r8), pointer :: lflitcn(:)   ! leaf litter C:N (gC/gN)

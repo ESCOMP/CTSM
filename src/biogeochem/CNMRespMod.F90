@@ -64,10 +64,10 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: t_soisno(:,:) ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    ! pft level
    real(r8), pointer :: t_ref2m(:)    ! 2 m height surface air temperature (Kelvin)
-   real(r8), pointer :: leafn(:)      ! (kgN/m2) leaf N
-   real(r8), pointer :: frootn(:)     ! (kgN/m2) fine root N
-   real(r8), pointer :: livestemn(:)  ! (kgN/m2) live stem N
-   real(r8), pointer :: livecrootn(:) ! (kgN/m2) live coarse root N
+   real(r8), pointer :: leafn(:)      ! (gN/m2) leaf N
+   real(r8), pointer :: frootn(:)     ! (gN/m2) fine root N
+   real(r8), pointer :: livestemn(:)  ! (gN/m2) live stem N
+   real(r8), pointer :: livecrootn(:) ! (gN/m2) live coarse root N
    real(r8), pointer :: rootfr(:,:)   ! fraction of roots in each soil layer  (nlevgrnd)
    integer , pointer :: ivt(:)        ! pft vegetation type
    integer , pointer :: pcolumn(:)    ! index into column level quantities

@@ -42,6 +42,7 @@ OPTIONS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
+     -datm_cpl_case "case"    Casename to use for forcing for CPLHIST3HrWx mode
      -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
      -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
      -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
@@ -120,6 +121,7 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 my %opts = ( config                => $cfg_cache,
 	     csmdata               => undef,
 	     clm_usr_name          => undef,
+             datm_cpl_case         => undef,
              datm_cycle_beg_year   => "default",
              datm_cycle_end_year   => "default",
              datm_cycle_init_year  => "default",
@@ -141,6 +143,7 @@ GetOptions(
     "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "clm_usr_name=s"            => \$opts{'clm_usr_name'},
+    "datm_cpl_case=s"           => \$opts{'datm_cpl_case'},
     "datm_cycle_beg_year=s"     => \$opts{'datm_cycle_beg_year'},
     "datm_cycle_end_year=s"     => \$opts{'datm_cycle_end_year'},
     "datm_cycle_init_year=s"    => \$opts{'datm_cycle_init_year'},
@@ -674,7 +677,7 @@ $inputopts{'yearlast'}   = $end_year;
 if ( defined($opts{'datm_data_dir'}) ) {
    $inputopts{'filepath'} = $opts{'datm_data_dir'};
 } else {
-   if ( $datm_source ne "CAMHIST.eul64x128_datm6.01" && $datm_source ne "CLM1PT" ) {
+   if ( $datm_source ne "CLM1PT" ) {
       die "$ProgName ERROR:: Need to specify datm_data_dir directory of where " .
           " datm data is for datasource=$datm_source.\n";
    }
@@ -682,19 +685,11 @@ if ( defined($opts{'datm_data_dir'}) ) {
 }
 if ( ! defined($opts{'datm_dom_dir'} ) ) {
    $inputopts{'domainpath'} = "";
-   if ( $datm_source =~ /CAMHIST.GENERIC/ ) {
-      die "$ProgName ERROR:: Need to specify datm_dom_dir directory of where " .
-          "datm domain data is for datasource=$datm_source.\n";
-    }
 } else {
    $inputopts{'domainpath'} = $opts{'datm_dom_dir'};
 }
 if ( ! defined($opts{'datm_domain'}) ) {
    $inputopts{'domain'} = "";
-   if ( $datm_source =~ /CAMHIST.GENERIC/ ) {
-      die "$ProgName ERROR:: Need to specify datm_domain name of domain file " .
-          "for datasource=$datm_source.\n";
-   }
 } else {
    $inputopts{'domain'} = $opts{'datm_domain'};
 }
@@ -704,7 +699,7 @@ $inputopts{'filenames'} = "";
 $inputopts{'case'}      = "";
 $inputopts{'chng_din_lc'} = 1;
     
-if ( $datm_source ne "CLM_QIAN" ) {
+if ( $datm_source eq "CLM1PT" ) {
    my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
    add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
    add_default($nl, 'mapalgo',  'source'=>$datm_source );
@@ -733,9 +728,22 @@ if ( $datm_source ne "CLM_QIAN" ) {
    my $ofillalgo = undef;
    my $ofillmask = undef;
    my $filepath  = $inputopts{'filepath'};
-   foreach my $src ( "Solar", "Precip", "TPQW" ) {
-      $inputopts{'datasource'}  = "$datm_source.$src";
-      $inputopts{'filepath'} = "$filepath/" . $defaults->get_value( "CLM_QIAN_dir.$src" );
+   my @sources;
+   if ( $datm_source eq "CLM_QIAN" ) {
+      @sources = ( "Solar", "Precip", "TPQW" ); 
+   } else {
+      @sources = ( "Solar", "Precip", "nonSolarNonPrecip" ); 
+   }
+   my $dsource;
+   if ( $datm_source eq "CPLHIST3HrWx" ) {
+      $dsource = "CPLHIST3Hrly";
+      $inputopts{'case'}  = $opts{'datm_cpl_case'};
+   } else {
+      $dsource = $datm_source;
+   }
+   foreach my $src ( @sources ) {
+      $inputopts{'datasource'}  = "$dsource.$src";
+      $inputopts{'filepath'} = "$filepath/" . $defaults->get_value( "${datm_source}_dir.$src" );
 
       my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' ) . ".$src";
       my $mapalgo    = $defaults->get_value( 'mapalgo' );

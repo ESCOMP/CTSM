@@ -35,9 +35,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <CLM_QIAN_dir.Precip>Precip6Hrly</CLM_QIAN_dir.Precip>
 <CLM_QIAN_dir.TPQW>TmpPrsHumWnd3Hrly</CLM_QIAN_dir.TPQW>
 
-<tintalgo.Solar >coszen</tintalgo.Solar>
-<tintalgo.Precip>nearest</tintalgo.Precip>
-<tintalgo.TPQW  >linear</tintalgo.TPQW>
+<CPLHIST3HrWx_dir.Solar>.</CPLHIST3HrWx_dir.Solar>
+<CPLHIST3HrWx_dir.Precip>.</CPLHIST3HrWx_dir.Precip>
+<CPLHIST3HrWx_dir.TPQW>.</CPLHIST3HrWx_dir.TPQW>
+
+<tintalgo.Solar             >coszen</tintalgo.Solar>
+<tintalgo.Precip            >nearest</tintalgo.Precip>
+<tintalgo.TPQW              >linear</tintalgo.TPQW>
+<tintalgo.nonSolarNonPrecip>linear</tintalgo.nonSolarNonPrecip>
 
 <!-- Output Streams text filename -->
 <outstreams>datm.streams.txt</outstreams>

@@ -1,0 +1,7 @@
+-mode clm_stndln
+-use_mpiserial -smp
+-debug
+-maxpft 17
+-bgc cn
+-rtm off
+-s

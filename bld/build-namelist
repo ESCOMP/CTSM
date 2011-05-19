@@ -41,6 +41,7 @@ OPTIONS
      -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
+     -co2_ppmv "value"        Set CO2 concentration to use when co2_type is constant (ppmv).
      -config "filepath"       Read the given CLM configuration cache file. Default: "config_cache.xml".
      -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
@@ -71,7 +72,8 @@ OPTIONS
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
-     -rtm_res "resolution"    Specify river transport model resolution.
+     -rtm_tstep "seconds"     Specify river transport model time step size (seconds) (used if RTM on)
+     -rtm_res "resolution"    Specify river transport model resolution. (used if RTM on)
      -s                       Turns on silent mode - only fatal messages issued.
      -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
@@ -93,6 +95,7 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -drv_final_spinup "mode" If you want to turn on the final_spinup mode to set run length.
                               Mode is "on" or "off"
                               Default: off 
+     -datm_cpl_case "case"    Casename to use for forcing for CPLHIST3HrWx mode
      -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
      -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
      -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
@@ -156,6 +159,8 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 my %opts = ( config                => $cfg_cache,
 	     csmdata               => undef,
 	     clm_usr_name          => undef,
+             co2_ppmv              => undef,
+             datm_cpl_case         => undef,
              datm_cycle_beg_year   => "default",
              datm_cycle_end_year   => "default",
              datm_cycle_init_year  => "default",
@@ -170,6 +175,7 @@ my %opts = ( config                => $cfg_cache,
              irrig                 => undef,
 	     res                   => "default",
 	     rtm_res               => "default",
+	     rtm_tstep             => undef,
 	     lnd_res               => "default",
 	     silent                => 0,
              datm_source           => "default",
@@ -181,9 +187,11 @@ my %opts = ( config                => $cfg_cache,
 GetOptions(
     "drv_case=s"                => \$opts{'drv_case'},
     "clm_demand=s"              => \$opts{'clm_demand'},
+    "co2_ppmv=f"                => \$opts{'co2_ppmv'},
     "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "clm_usr_name=s"            => \$opts{'clm_usr_name'},
+    "datm_cpl_case=s"           => \$opts{'datm_cpl_case'},
     "datm_cycle_beg_year=s"     => \$opts{'datm_cycle_beg_year'},
     "datm_cycle_end_year=s"     => \$opts{'datm_cycle_end_year'},
     "datm_cycle_init_year=s"    => \$opts{'datm_cycle_init_year'},
@@ -205,6 +213,7 @@ GetOptions(
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
     "rtm_res=s"                 => \$opts{'rtm_res'},
+    "rtm_tstep=i"               => \$opts{'rtm_tstep'},
     "rcp=s"                     => \$opts{'rcp'},
     "drv_runlength=s"           => \$opts{'drv_runlength'},
     "drv_final_spinup=s"        => \$opts{'drv_final_spinup'},
@@ -241,12 +250,6 @@ my $eol = "\n";
 
 if ($print>=2) { print "Setting CLM configuration script directory to $cfgdir$eol"; }
 
-# Check that configuration cache file exists.
-(-f $opts{'config'})  or  die <<"EOF";
-** $ProgName - Cannot find configuration cache file: \"$opts{'config'}\" **
-EOF
-
-if ($print>=2) { print "Using CLM configuration cache file $opts{'config'}$eol"; }
 
 
 # Add the location of the use case defaults files to the options hash
@@ -333,11 +336,14 @@ require Build::NamelistDefaults;
 require Build::Namelist;
 require Streams::Template;
 #-----------------------------------------------------------------------------------------------
-# Create a configuration object from the CLM config_cache.xml file. 
-my $cfg = Build::Config->new($opts{'config'});
-
-# Validate some of the commandline option values.
-validate_options("commandline", $cfg, \%opts);
+# Create a configuration object from the default config_definition file
+my $configfile;
+if ( -f $opts{'config'} ) {
+   $configfile = $opts{'config'};
+} else {
+   $configfile = "$cfgdir/config_files/config_definition.xml";
+}
+my $cfg = Build::Config->new("$configfile");
 
 # Create a namelist definition object.  This object provides a method for verifying that the
 # output namelist variables are in the definition file, and are output in the correct
@@ -355,7 +361,18 @@ foreach my $nl_defaults_file ( @nl_defaults_files ) {
 #
 # List valid values if asked for
 #
-list_options( $cfg, \%opts );
+list_options( \%opts );
+
+# Validate some of the commandline option values.
+validate_options("commandline", $cfg, \%opts);
+
+# Check that configuration cache file exists.
+if ($print>=2) { print "Using CLM configuration cache file $opts{'config'}$eol"; }
+if ( $configfile ne $opts{'config'} ) {
+   die <<"EOF";
+** $ProgName - Cannot find configuration cache file: \"$opts{'config'}\" **
+EOF
+}
 
 # Create an empty namelist object.  Add values to it in order of precedence.
 my $nl = Build::Namelist->new();
@@ -1063,8 +1080,19 @@ if ( $crop eq "on" ) {
     add_default($nl, 'create_crop_landunit' );
 }
 
-add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_year );
 add_default($nl, 'co2_type');
+if ( $nl->get_value('co2_type') =~ /constant/ ) {
+  my $var = 'co2_ppmv';
+  if ( defined($opts{$var}) ) {
+    if ( $opts{$var} <= 0.0 ) {
+       die "$ProgName ERROR:: co2_ppmv can NOT be less than or equal to zero.\n";
+    }
+    my $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, $opts{$var});
+  } else {
+    add_default($nl, $var, 'sim_year'=>$sim_year );
+  }
+}
 #add_default($nl, 'wrtdia',       'val'=> '.false.');
 
 add_default($nl, 'urban_hac');
@@ -1078,6 +1106,15 @@ add_default($nl, 'urban_traffic');
 if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm', 'rtm_res'=>$rtm_res );
    add_default($nl, 'ice_runoff',  'hgrid'=>$res );
+   if ( defined($opts{'rtm_tstep'}) ) {
+       my $dtime = $nl->get_value('dtime');
+       if ( $opts{'rtm_tstep'} < $dtime ) {
+          die "$ProgName ERROR:: rtm_tstep can NOT be less than time-step of: $dtime.\n";
+       }
+       my $val = int( $opts{'rtm_tstep'} / $dtime );
+       my $group = $definition->get_group_name('rtm_nsteps');
+       $nl->set_variable_value($group, 'rtm_nsteps', $val );
+   }
 }
 
 if ( $rtm eq "off" ) {
@@ -1359,6 +1396,9 @@ if ($mode eq "clm_stndln") {
    }
    if ( defined($opts{'datm_domain'}) ) {
       $datmbldnmlopts .= " -datm_domain ".$opts{'datm_domain'};
+   }
+   if ( defined($opts{'datm_cpl_case'}) ) {
+      $datmbldnmlopts .= " -datm_cpl_case ".$opts{'datm_cpl_case'};
    }
    if ( defined($opts{'datm_dom_dir'}) ) {
       $datmbldnmlopts .= " -datm_dom_dir ".$opts{'datm_dom_dir'};
@@ -1773,7 +1813,6 @@ sub list_options {
 #
 # List the options for different command line values if asked for
 #
-    my $cfg     = shift;   # configure object
     my $optsref = shift;   # reference to hash that contains the options
 
     # options to list values that are in the defaults files

@@ -10,32 +10,37 @@ Where: xx is the two-letter test type
 
 n is the configuration type:
 
+1 -- unused
+2 -- unused
+3 -- unused
+4 -- unused
+5 -- unused
 6 -- mkgriddata
 7 -- mksurfdata
 8 -- interpinic
 9 -- tools scripts
 0 -- unused
-A -- Standard CESM mode 
-B -- Standard CESM mode with SNICAR_FRC on
-C -- clm_stndln URBAN
-D -- clm_stndln Pergro
-E -- clm_stndln numpft=4, VOC, DUST, RTM
-F -- clm_stndln numpft=17, VOC, DUST, RTM
-G -- clm_stndln numpft=17
-H -- clm_stndln numpft=17, CN
-J -- clm_stndln numpft=4, CASA
-K -- clm_stndln numpft=10, CNDV
-L -- clm_stndln Standard default
+A -- Standard default RTM off
+B -- Standard default with SNICAR_FRC on
+C -- Standard default
+D -- Pergro
+E -- numpft=4, VOC, RTM
+F -- numpft=17, VOC, RTM
+G -- numpft=17, no-VOC
+H -- numpft=17, CN
+J -- numpft=4, CASA
+K -- numpft=10, CNDV
+L -- Standard default
 M -- ncl scripts (such as ndepregrid)
-N -- clm_stndln MEXICOCITY
-O -- clm_stndln VANCOUVER
-P -- unused
-Q -- generate_urban_input
-R -- clm_stndln numpft=17, CN, C13
-S -- unused
-V -- clm_stndln standard default, with glc_mec=10
-T -- ccsm_seq numpft=20, CN, CROP
-U -- ccsm_seq numpft=20, CNDV, CROP
+N -- MEXICOCITY no-RTM
+O -- VANCOUVER no-RTM
+P -- numpft=17, CN, NOFIRE
+Q -- numpft=17, CN no-RTM
+R -- numpft=17, CN, C13
+S -- Standard default, with glc_mec=10
+T -- numpft=21, CN, CROP
+U -- numpft=21, CNDV, CROP
+V -- numpft=21, CN, CROP RTM off
 
 m is the resolution
 
@@ -65,7 +70,9 @@ M -- 2.5x3.33
 N -- 1.9x2.5 with transient 1850-2100 for rcp=8.5
 n -- 1.9x2.5 with transient 1850-2100 for rcp=8.5 and glacier-MEC on
 O -- 10x15 with drydep
+o -- 10x15 with irrig on
 P -- 1.9x2.5 with drydep
+p -- 1.9x2.5 with irrig on
 Q -- 1x1 brazil with drydep
 R -- 1.9x2.5 with transient 1850-2100 for rcp=4.5
 S -- with CLM_USRDAT_NAME=13x12pt_f19_alaskaUSA 

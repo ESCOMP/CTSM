@@ -71,17 +71,17 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    real(r8), pointer :: soilpsi(:,:)     ! soil water potential in each soil layer (MPa)
    real(r8), pointer :: dz(:,:)          ! soil layer thickness (m)
    real(r8), pointer :: cwdc(:)          ! (gC/m2) coarse woody debris C
-   real(r8), pointer :: litr1c(:)        ! (kgC/m2) litter labile C
-   real(r8), pointer :: litr2c(:)        ! (kgC/m2) litter cellulose C
-   real(r8), pointer :: litr3c(:)        ! (kgC/m2) litter lignin C
-   real(r8), pointer :: soil1c(:)        ! (kgC/m2) soil organic matter C (fast pool)
-   real(r8), pointer :: soil2c(:)        ! (kgC/m2) soil organic matter C (medium pool)
-   real(r8), pointer :: soil3c(:)        ! (kgC/m2) soil organic matter C (slow pool)
-   real(r8), pointer :: soil4c(:)        ! (kgC/m2) soil organic matter C (slowest pool)
+   real(r8), pointer :: litr1c(:)        ! (gC/m2) litter labile C
+   real(r8), pointer :: litr2c(:)        ! (gC/m2) litter cellulose C
+   real(r8), pointer :: litr3c(:)        ! (gC/m2) litter lignin C
+   real(r8), pointer :: soil1c(:)        ! (gC/m2) soil organic matter C (fast pool)
+   real(r8), pointer :: soil2c(:)        ! (gC/m2) soil organic matter C (medium pool)
+   real(r8), pointer :: soil3c(:)        ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)        ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: cwdn(:)          ! (gN/m2) coarse woody debris N
-   real(r8), pointer :: litr1n(:)        ! (kgN/m2) litter labile N
-   real(r8), pointer :: litr2n(:)        ! (kgN/m2) litter cellulose N
-   real(r8), pointer :: litr3n(:)        ! (kgN/m2) litter lignin N
+   real(r8), pointer :: litr1n(:)        ! (gN/m2) litter labile N
+   real(r8), pointer :: litr2n(:)        ! (gN/m2) litter cellulose N
+   real(r8), pointer :: litr3n(:)        ! (gN/m2) litter lignin N
    integer, pointer :: clandunit(:)      ! index into landunit level quantities
    integer , pointer :: itypelun(:)      ! landunit type
    ! pft level
