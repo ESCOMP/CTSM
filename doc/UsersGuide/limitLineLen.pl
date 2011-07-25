@@ -45,7 +45,7 @@ sub LengthofwhiteSpaceNearLength {
   my $leng = shift;
 
    my $l = $leng;
-   while( substr( $line, $l, 1 ) !~ /\s|,/ ) {
+   while( substr( $line, $l, 1 ) !~ /\s|:|,|\// ) {
       # First search for white-space before desired length -- and then after
       if ( $l <= $leng ) {
          $l--;
@@ -87,9 +87,13 @@ while (my $line = <$fh>) {
    while( length($line) > $limitLen ) {
       print STDERR "Line length over $limitLen\n";
       my $lenlim = &LengthofwhiteSpaceNearLength( $line, $limitLen );
-      my $substring = substr( $line, 0, $lenlim );
+      if ( ($lenlim == length($line)) || $lenlim < 0 ) {
+         print "Can NOT truncate long line: $line\n";
+         die "ERROR : Having trouble breaking a long line\n";
+      }
+      my $substring = substr( $line, 0, $lenlim+1 );
       print "$substring \\ \n";
-      my $newline = "   " . substr( $line, $lenlim, length($line) );
+      my $newline = "   " . substr( $line, $lenlim+1, length($line) );
       $line = $newline;
    }
    print $line;

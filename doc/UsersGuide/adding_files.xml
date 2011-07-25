@@ -19,9 +19,14 @@ you might be best off using the other methods mentioned above.
 <para>
 There are two parts to adding files to the build-namelist database. The first part
 is adding new resolution names which is done in the
-<filename>models/lnd/clm/bld/namelist_files/namelist_definition.xml</filename> file.
+<filename>models/lnd/clm/bld/namelist_files/namelist_definition.xml</filename> file
+(and in the 
+<filename>models/lnd/clm/bld/config_files/config_definition.xml</filename> file
+when adding supported single-point datasets).
 The second part is actually adding the new filenames which is done in the 
-<filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml</filename> file.
+<filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml</filename> file
+(<filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml</filename> 
+file for CLM tools).
 If you aren't adding any new resolutions, and you are just changing the files for existing
 resolutions, you don't need to edit the namelist_definition file.
 </para>
@@ -37,7 +42,7 @@ to do so. In order to add files to the XML database or to use &CLMUSRDAT; you ne
 to put data in the standard locations so that they can be found. The recommended 
 way to do this is to use the <command>link_dirtree</command> tool in the &cesm; scripts.
 Some information on <command>link_dirtree</command> is available in the 
-<ulink url="&cesmwebmodelrel;cesm">&cesm1; Scripts User's Guide</ulink>. We also have
+<ulink url="&cesmwebmodelrel;cesm">&cesmrel; Scripts User's Guide</ulink>. We also have
 some examples of it's use here and in other sections of this User's Guide.
 </para>
 <para>
@@ -132,6 +137,26 @@ Horizontal resolutions
 As you can see you just add your new resolution names to the end of the valid_values
 list.
 </para>
+<para>
+When using &ptclm; and adding supported single-point resolutions, you'll also want to
+add these resolutions to the
+<filename>models/lnd/clm/bld/config_files/config_definition.xml</filename> under
+the <envar>sitespf_pt</envar> name. The entry in that file looks like:
+<screen width="99">
+&lt;entry id="sitespf_pt" 
+valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,
+1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,
+1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA" 
+value="none" category="physics"&gt;
+Flag to turn on site specific special configuration flags for supported single
+point resolutions.
+Currently the only special settings are for MEXICOCITY and VANCOUVER, which make
+changes to urban parameters.
+&lt;/entry&gt;
+</screen>
+&ptclm; assumes that any supported single-point resolutions are valid settings for
+<envar>sitespf_pt</envar>.
+</para>
 </sect1>
 
 <sect1 id="adding_default_files">
@@ -153,10 +178,16 @@ scenarios, and the type of biogeochemistry (bgc) model used. For example the
 Other <filename>fatmgrid</filename> files are distinguished from this one by 
 their resolution (hgrid) attribute.
 </para>
+<para>
+To add or change the default filenames for &clm; tools edit the 
+<filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml</filename>
+and either change an existing filename or add a new one. Editing this file is
+similar to the <filename>namelist_defaults_clm.xml</filename> talked about above.
+</para>
 <sect2 id="required_files">
 <title>What are the required files?</title>
 <para>
-Different types of simulations and different types of configurations for CLM require
+Different types of simulations and different types of configurations for &clm; require
 different lists of files. The Carbon Nitrogen (cn) Biogeochemistry model for example
 requires <filename>stream_fldfilename_ndep</filename> files, which are NOT required by 
 other bgc modes.  Transient simulations also require transient datasets, and the names 
@@ -199,7 +230,8 @@ that are least likely to be customized.
 </row>
 <row>
    <entry spanname="notes_span"><para>Not usually customized, as describes plant function
-type properties.</para></entry>
+type properties. &ptclm; copies the file for you so that you can customize it if you
+like, see <xref linkend="pftphyscopy"></xref>.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsnowoptics</entry>
@@ -256,8 +288,11 @@ use what mkgriddata gives you.</para></entry>
 <row>
    <entry spanname="notes_span"><para>Describes percentages of different land-units, columns and 
 vegetation types within each grid-cell. To customize for a specific point
-or region you may want to use custom input datasets to mksurfdata when
-creating the file.</para></entry>
+or region you may want to use custom input datasets to <command>mksurfdata</command> when
+creating the file. <command>mksurfdata</command> also allows you to customize the PFT,
+and soil types to it see <xref linkend="mksurfdata_exp"></xref>. &ptclm; takes
+advantage of this to create customized datasets as well, see the chapter on &ptclm;
+at <xref linkend="PTCLMDOC"></xref>.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fpftdyn</entry>

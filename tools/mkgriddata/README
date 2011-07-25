@@ -1,4 +1,4 @@
-models/lnd/clm/tools/mkgriddata/README		Mar/13/2008
+models/lnd/clm/tools/mkgriddata/README		May/26/2011
 
 The files in this directory enable a user to create
 a regular regional or global grid and associated 
@@ -10,10 +10,6 @@ input topographic dataset.
 1) cd to this directory 
 
 2) run gmake
-
-NOTE: In order to successfully build, some source files are required from
-      other clm src directories. See the Filepath for the expected path of
-      required files.
 
 See Also: See the models/lnd/clm/tools/README file for notes about setting
           the path for NetCDF and running with shared-memory parallelism.
@@ -69,6 +65,7 @@ e.g., cp surfdata_096x144.nc /fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_1.
 Important files:
 
   Makefile ---------------- GNU makefile
+  Mkdepends --------------- Tool for Makefile to figure out code dependencies.
   Srcfiles ---------------- List of source files needed (includes files outside this directory)
   Filepath ---------------- Filepath location to source files needed
   mkgriddata.cesm_dom ----- Sample namelist reading in a CESM domain file

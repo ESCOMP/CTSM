@@ -157,7 +157,7 @@ contains
     use clm_varpar      , only : lsmlon, lsmlat, maxpatch_pft
     use domainMod       , only : ldomain,llatlon
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
-                                 frivinp_rtm
+                                 frivinp_rtm, iulog
     use clm_varcon      , only : spval
     use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, &
                                  get_curr_time
@@ -452,7 +452,7 @@ contains
     call ncd_pio_closefile(ncid)
 
     if (masterproc) then
-       write(6,*)'(histCNDV): Finished writing CNDV history dataset ',&
+       write(iulog,*)'(histCNDV): Finished writing CNDV history dataset ',&
             trim(dgvm_fn), 'at nstep = ',get_nstep()
     end if
 

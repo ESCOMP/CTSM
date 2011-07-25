@@ -129,7 +129,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
 ! area-averaging from the input (1/2 degree) grid to the models grid.
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -185,7 +184,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   integer  :: ier                             ! error status
   integer  :: indxcrop                        ! input grid index for crop
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
 
   character(len=35)  veg(0:numpft)            ! vegetation types
   integer :: nonIrrigIdx = 15
@@ -235,12 +233,10 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   if ( .not. use_input_pft ) then
      ! Obtain input grid info, read PCT_PFT
 
-     call getfil (fpft, locfn, 0)
-
-     call read_domain(tdomain,locfn)
+     call read_domain(tdomain,fpft)
      call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-     call check_ret(nf_open(locfn, 0, ncid), subname)
+     call check_ret(nf_open(fpft, 0, ncid), subname)
 
      call check_ret(nf_inq_dimid  (ncid, 'pft', dimid), subname)
      call check_ret(nf_inq_dimlen (ncid, dimid, numpft_i), subname)
@@ -595,7 +591,6 @@ subroutine mkirrig(lsmlon, lsmlat, fname, ndiag, irrig_o)
 ! make percent irrigated area
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -644,7 +639,6 @@ subroutine mkirrig(lsmlon, lsmlat, fname, ndiag, irrig_o)
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkirrig'
 !-----------------------------------------------------------------------
 
@@ -657,12 +651,10 @@ subroutine mkirrig(lsmlon, lsmlat, fname, ndiag, irrig_o)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   allocate(irrig_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()

@@ -9,8 +9,18 @@ to do at least two simulations with different configurations, or require more co
 editing of the case (changing the streams files).
 </para>
 <para>
-The five cases we will describe are:
+The nine cases we will describe are:
 <orderedlist>
+<listitem>
+<para>
+<emphasis>Running with the prognostic crop model on</emphasis>
+</para>
+</listitem>
+<listitem>
+<para>
+<emphasis>Running with the irrigation model on</emphasis>
+</para>
+</listitem>
 <listitem>
 <para>
 <emphasis>Spinning up the Satellite Phenology Model (&clmsp; spinup)</emphasis>
@@ -24,6 +34,16 @@ The five cases we will describe are:
 <listitem>
 <para>
 <emphasis>Spinning up the Carbon-Nitrogen Dynamic Global Vegetation Model (CNDV spinup)</emphasis>
+</para>
+</listitem>
+<listitem>
+<para>
+<emphasis>Running with MOAR data as atmospheric forcing to spinup the model</emphasis>
+</para>
+</listitem>
+<listitem>
+<para>
+<emphasis>Running with your own previous simulation as atmospheric forcing to spinup the model</emphasis>
 </para>
 </listitem>
 <listitem>
@@ -46,6 +66,79 @@ and skill than cases in previous chapters. The user should be very familiar with
 simple cases before moving onto the cases described here.
 </para>
 </caution>
+<sect1 id="CROP">
+<title>Running with the prognostic crop model on</title>
+
+<para>
+In &clmcesm103; a prognostic crop model was added to &clm4;. The prognostic crop
+model is setup to work with CN for present day conditions and we have surface
+and initial condition datasets at f19 resolution. In order to use the initial condition
+file, we need to set the <envar>RUN_TYPE</envar> to <literal>startup</literal> rather
+than <literal>hybrid</literal> since the compset for f19 sets up to use an initial
+condition file without crop active. To activate the crop model we simply add "-crop on"
+to &CLMCONFIG;.
+<example>
+<title>Example Crop Simulation</title>
+<screen width="99">
+> cd scripts
+> ./create_newcase -case CROP -res f19_g16 -compset ICN -mach bluefire
+> cd CROP
+# Append "-crop on" to &CLMCONFIG; in env_conf.xml (you could also use an editor)
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-crop on" -append
+# Change to startup type so uses spunup initial conditions file for crop if it exists
+# By default the model will do a hybrid startup with an initial condition file
+# incompatible with the crop surface dataset.
+> ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
+> ./configure -case
+# Now build and run normally
+> ./CROP.bluefire.build
+> ./CROP.bluefire.submit
+</screen>
+</example>
+</para>
+</sect1>
+
+<sect1 id="IRRIG">
+<title>Running with the irrigation model on</title>
+
+<para>
+In &clmcesm103; an irrigation model for generic crop was added to &clm4;. Currently,
+irrigation and crop can NOT be used together see bug number 1326 in the 
+&KnownBugs; file.
+The irrigation model is tuned to work only with &clmsp; see the caution below for
+for more information on this. To turn on
+irrigation we simply add "-irrig on" to &CLMBLDNML;. Just as in the crop example we
+also change <envar>RUN_TYPE</envar> to <literal>startup</literal> so that we don't use
+an initial condition file that is incompatible with irrigation.
+<example>
+<title>Example Irrigation Simulation</title>
+<screen width="99">
+> cd scripts
+# Note here we do a &clmsp; simulation as that is what has been validated
+> ./create_newcase -case IRRIG -res f19_g16 -compset I -mach bluefire
+> cd IRRIG
+# Append "-irrig on" to &CLMBLDNML; in env_conf.xml (you could also use an editor)
+> ./xmlchange -file env_conf.xml -id &CLMBLDNML; -val "-irrig" -append
+# Change to startup type so uses spunup initial conditions file for irrigation if it exists
+# By default the model will do a hybrid startup with an initial condition file
+# incompatible with the irrigation surface dataset.
+> xmlchange -file env_conf.xml -id RUN_TYPE -val startup
+> ./configure -case
+# Now build and run normally
+> ./IRRIG.bluefire.build
+> ./IRRIG.bluefire.submit
+</screen>
+</example>
+<caution>
+<para>
+We have only run the irrigation model with &clmsp; (i.e. without the CN model). We 
+recommend that if you want to run the irrigation model with CN, that you do a spinup 
+as outlined in the examples below. But, more than that you may need to make 
+the adjustments we discuss in <xref linkend="bld_nml_not_validated"></xref>.
+</para>
+</caution>
+</para>
+</sect1>
 
 <sect1 id="CLMSP_SPINUP">
 <title>Spinning up the Satellite Phenology Model (&clmsp; spinup)</title>
@@ -71,7 +164,7 @@ for a simulation year, and then save a restart from that and use it as initial c
 for further spinup of CN (at least 50 simulation years).
 </para>
 <procedure>
-<title>Spinup of &clmcn</title>
+<title>Spinup of &clmcn;</title>
 <step>
 <title>AD_SPINUP</title>
 <para>
@@ -84,14 +177,18 @@ So do the following:
 <title>Example AD_SPINUP Simulation</title>
 <screen width="99">
 > cd scripts
-> ./create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire
 > cd CN_spinup
-# Add "-ad_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
-> $EDITOR env_conf.xml
+# Append "-ad_spinup on" to &CLMCONFIG; in env_conf.xml
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-ad_spinup on" -append
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
 > ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
-# Configure
 > ./configure -case
+> ./xmlchange -file env_run.xml -id STOP_DATE -val 6010101
+# Make the output history files only annual, by adding the following to the &usernlclm; namelist
+> echo '&amp;clm_inparm hist_nhtfrq = -8760 /' > &usernlclm;
+# Now build
+> ./CN_spinup.bluefire.build
 # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id RESUBMIT -val 30
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
@@ -99,11 +196,7 @@ So do the following:
 # The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id STOP_N -val 20
 # The following sets STOP_DATE to Jan/1 of year 601 in env_run.xml (you could also use an editor)
-> ./xmlchange -file env_run.xml -id STOP_DATE -val 6010101
-# Make the output history files only annual, by adding the following to the &usernlclm; namelist
-> echo '&amp;clm_inparm hist_nhtfrq = -8760 /' > &usernlclm;
-# Build and run normally
-> ./CN_spinup.bluefire.build
+# Now run normally
 > ./CN_spinup.bluefire.submit
 </screen>
 </example>
@@ -118,25 +211,24 @@ Afterwards save the last restart file from this simulation to use in the next st
 <title>Example EXIT_SPINUP Simulation</title>
 <screen width="99">
 > cd scripts
-> ./create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire
 > cd CN_exitspinup
-# Add "-exit_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
-> $EDITOR env_conf.xml
+# Append "-exit_spinup on" to &CLMCONFIG; in env_conf.xml
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-exit_spinup on" -append
 # Change run type to branch and branch from the last year of the last simulation
 > ./xmlchange -file env_conf.xml -id RUN_TYPE    -val branch
 > ./xmlchange -file env_conf.xml -id RUN_REFCASE -val CN_spinup
 > ./xmlchange -file env_conf.xml -id RUN_REFDATE -val 0601-01-01
 > ./xmlchange -file env_conf.xml -id GET_REFCASE -val FALSE
 > ./configure -case
+# Go ahead and build, so that the run directory is created
+> ./CN_exitspinup.bluefire.build
+# Now, Copy the last restart files from the earlier case into your run directory
+> cp /ptmp/$LOGIN/archive/CN_spinup/rest/CN_spinup.*.r*.0601-01-01-00000* /ptmp/$LOGIN/CN_exitspinup
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 > ./xmlchange -file env_run.xml -id STOP_N      -val 1
-# Go ahead and build, so that the run directory is created
-> CN_exitspinup.bluefire.build
-# Now, Copy the last restart file from the earlier case into your run directory
-> cp /ptmp/$LOGIN/archive/CN_spinup/rest/CN_spinup.*.r*.0601-01-01-00000* /ptmp/$LOGIN/CN_exitspinup
-# Build and run normally
-> ./CN_exitspinup.bluefire.build
+# Now run normally
 > ./CN_exitspinup.bluefire.submit
 </screen>
 </example>
@@ -153,19 +245,27 @@ So do the following:
 <title>Example Final CN Spinup Simulation</title>
 <screen width="99">
 > cd scripts
-> ./create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire
 > cd CN_finalspinup
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
 > ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
+> ./configure -case
+# Now, Copy the last &clm; restart file from the earlier case into your run directory
+> cp /ptmp/$LOGIN/archive/CN_exitspinup/rest/CN_exitspinup.clm*.r*.0602-01-01-00000.nc \
+/ptmp/$LOGIN/CN_finalspinup
+# Set the finidat file to the last restart file saved in previous step
+> echo '&amp;clm_inparm finidat = "CN_exitspinup.clm2.r.0602-01-01-00000.nc" /' > &usernlclm;
+> $EDITOR Buildconf/clm.buildnml.csh
+> Now build
+> .CN_finalspinup.bluefire.build
 # The following sets RESUBMIT to 5 times in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id RESUBMIT -val 5
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 10 years in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id STOP_N -val 10
-> ./configure -case
-# Set the finidat file to the last restart file saved in previous step
-> $EDITOR Buildconf/clm.buildnml.csh
+> Now run as normal
+> .CN_finalspinup.bluefire.submit
 </screen>
 </example>
 </para>
@@ -198,20 +298,12 @@ There are no compsets using CNDV, so in
 <title>Example CNDV Spinup Simulation</title>
 <screen width="99">
 > cd scripts
-> ./create_newcase -case CNDV_spinup -res f09_g16 -compset ICN -mach bluefire -skip_rundb
+> ./create_newcase -case CNDV_spinup -res f09_g16 -compset ICN -mach bluefire
 > cd CNDV_spinup
 # Set run type to startup and do a cold start
 > ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # The following sets CLM_CONFIG_OPTS to "-bgc cndv" in env_conf.xml (you could also use an editor)
 > ./xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS  -val "-bgc cndv"
-# The following sets RESUBMIT to 10 times in env_run.xml (you could also use an editor)
-> ./xmlchange -file env_run.xml -id RESUBMIT -val 10
-# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
-# The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
-> ./xmlchange -file env_run.xml -id STOP_N -val 20
-# Make sure you turn archiving on, so you save your files to long term archival
-> ./xmlchange -file env_run.xml -id DOUT_L_MS -val TRUE
 # Make the default primary history file annual and add an annual 1D vector auxiliary file
 # By putting the following in a &usernlclm; file.
 > cat &lt;&lt; EOF > &usernlclm;
@@ -227,9 +319,25 @@ There are no compsets using CNDV, so in
 #
 # Now build and run as normal
 > ./CNDV_spinup.bluefire.build
+# The following sets RESUBMIT to 10 times in env_run.xml (you could also use an editor)
+> ./xmlchange -file env_run.xml -id RESUBMIT -val 10
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
+> ./xmlchange -file env_run.xml -id STOP_N -val 20
+# Make sure you turn archiving on, so you save your files to long term archival
+> ./xmlchange -file env_run.xml -id DOUT_L_MS -val TRUE
 > ./CNDV_spinup.bluefire.submit
 </screen>
 </example>
+
+<warning>
+<para>
+There is a build bug with &clmcesm103; see bug 1370 in the &KnownBugs; on 
+how to address this.
+</para>
+</warning>
+
 </para>
 <para>
 In a data analysis tool you should examine the auxiliary file and examine the
@@ -249,6 +357,136 @@ We've provided a spinup file for CNDV at f19 resolution, you could also use
 <command>interpinic</command> to interpolate this file to other resolutions.
 </para>
 </note>
+</sect1>
+
+<sect1 id="MOARFORCE">
+<title>Running with MOAR data as atmospheric forcing to spinup the model</title>
+<para>
+Because it takes so long to spinup the CN model (as we just saw previously), if you 
+are doing fully coupled simulations with active atmosphere and ocean, you will want 
+to do the spinup portion of this "offline". So instead of doing expensive fully 
+coupled simulations for the spinup duration, you run &clm; in a very cheap "I" 
+compset using atmospheric forcing from a shorter fully coupled simulation 
+(or a simulation run previously by someone else).
+</para>
+<para>
+In this example we will use the <literal>I1850SPINUPCN</literal> compset to setup
+&clm; to run with atmospheric forcing from a previous fully coupled simulation with
+data that is already stored on disk on bluefire. There are several simulations that
+have high frequency data for which we can do this. You can also do this on a machine
+other than bluefire, but would need to download the data from the Earth System Grid and
+change the datapath similar to <xref linkend="ownforce"></xref>. 
+This compset is designed for constant
+1850 conditions, but unfortunately (because of bug 1354 see the &KnownBugs; file) by
+default it points to a transient simulation instead of an 1850 simulation. Here we
+point to an 1850 simulation and setup the forcing years to run over.
+<example>
+<title>Example Simulation with MOAR Data on bluefire</title>
+<screen width="99">
+> cd scripts
+> ./create_newcase -case MOARforce1850 -res f19_g16 -compset I1850SPINUPCN -mach bluefire
+> cd MOARforce1850
+# The following sets the casename to point to for atm forcing (you could also use an editor)
+> ./xmlchange -file env_conf.xml -id DATM_CPL_CASE -val b40.1850.track1.1deg.006a
+# The following sets the align year and years to run over for atm forcing 
+#  (you could also use an editor)
+> ./xmlchange -file env_conf.xml -id DATM_CPL_YR_ALIGN -val 1
+> ./xmlchange -file env_conf.xml -id DATM_CPL_YR_START -val 960
+> ./xmlchange -file env_conf.xml -id DATM_CPL_YR_END -val 1030
+> ./configure -case
+# Now build and run as normal
+> ./MOARforce1850.bluefire.build
+> ./MOARforce1850.bluefire.submit
+</screen>
+</example>
+<caution>
+<para>
+Because of bug 1339 (see the &KnownBugs; file on this) 
+you can't run with 83 or more years of forcing. If you do need to run with more years of 
+forcing, you'll need to address the issue as outlined in the &KnownBugs; file.
+</para>
+</caution>
+</para>
+</sect1>
+
+<sect1 id="OWNCPLHISTFORCE">
+<title>Running with your own previous simulation as atmospheric forcing to spinup the model</title>
+<para>
+Another way that you might want to spinup the model is to run your own simulation 
+for a relatively short period (either a B, E, or F compset) and then use it as forcing 
+for your "I" case later. By only running 20 to 50 years for the fully coupled case,
+you'll save a substantial amount of computer time rather than running the entire spinup
+period with a fully coupled model.
+</para>
+<para>
+The first thing we need to do is to run a fully coupled case and save the atmospheric
+coupling fields on a three hourly basis. In this example, we will run on bluefire
+and archive the data to a local disk that we can then use in the next simulation.
+<example>
+<title>Example Fully Coupled Simulation to Create Data to Force Next Example Simulation</title>
+<screen width="99">
+> cd scripts
+> ./create_newcase -case myBCN1850 -res f09_g16 -compset B1850CN  -mach bluefire
+> cd myBCN1850
+> ./configure -case
+# Set histaux_a2x3hr to .true. in cpl.buildnml.csh so output from the atmosphere model 
+# will be saved 3 hourly
+$EDITOR BuildConf/cpl.buildnml.csh
+# Now build
+> ./myBCN1850.bluefire.build
+# The following sets the archival disk space (you could also use an editor)
+> ./xmlchange -file env_run.xml -id DOUT_S_ROOT -val '/glade/home/$USER/$CASE'
+# Make sure files are archived to disk, but NOT to long term storage 
+# (you could also use an editor)
+> ./xmlchange -file env_run.xml -id DOUT_S -val TRUE
+> ./xmlchange -file env_run.xml -id DOUT_L_MS -val FALSE
+# Set the run length to run a total of 20 years (you could also use an editor)
+> ./xmlchange -file env_run.xml -id RESUBMIT -val 9
+> ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> ./xmlchange -file env_run.xml -id STOP_N -val 2
+# Now run as normal
+> ./myBCN1850.bluefire.submit
+</screen>
+</example>
+</para>
+<para>
+Now we run an I compset forced with the data from the previous simulation using
+the &CPLHIST; option to DATM_MODE. See 
+<xref linkend="cplhist_mode_datm_settings"></xref> for more information on the
+&datm; settings for &CPLHIST; mode.
+<example id="ownforce">
+<title>Example Simulation Forced with Data from the Previous Simulation</title>
+<screen width="99">
+> cd scripts
+> ./create_newcase -case frcwmyBCN1850 -res f09_g16 -compset I1850SPINUPCN -mach bluefire
+> cd frcWmyBCN1850
+# The following sets the casename to point to for atm forcing (you could also use an editor)
+> ./xmlchange -file env_conf.xml -id DATM_CPL_CASE -val "myBCN1850"
+# The following sets the align year and years to run over for atm forcing 
+#  (you could also use an editor)
+> ./xmlchange -file env_conf.xml -id DATM_CPL_YR_ALIGN -val "1"
+> ./xmlchange -file env_conf.xml -id DATM_CPL_YR_START -val "1"
+> ./xmlchange -file env_conf.xml -id DATM_CPL_YR_END -val "20"
+# Set the datapath in the template to the archival path from the case above
+> sed -E 's#set datapath = ".+"#set datapath = "/glade/home/$USER/%c/cpl/hist"#' \
+  Tools/Templates/datm.cpl7.template &gt; new.datm.cpl7.template
+> mv -f new.datm.cpl7.template Tools/Templates/datm.cpl7.template
+> chmod +x Tools/Templates/datm.cpl7.template 
+> ./configure -case
+# Now build and run as normal
+> ./frcwmyBCN1850.bluefire.build
+> ./frcwmyBCN1850.bluefire.submit
+</screen>
+</example>
+<note>
+<para>
+In order to accomplish this we needed to edit the &datm; template file. See
+<xref linkend="editing_templates"></xref> for more information on doing this.
+If your input case was at a resolution besides f09 you would have to edit
+the &datm; template file even further to use a domain file at the input resolution.
+</para>
+</note>
+</para>
 </sect1>
 
 <sect1 id="PERGRO">
@@ -341,15 +579,15 @@ inputdata repository to take place of this step.
 <screen width="99">
 > cd scripts
 > ./create_newcase -case trustedMachinePergro0 -compset ICN -res f19_g16 \
--mach bluefire -skip_rundb
+-mach bluefire
 > cd trustedMachinePergro0
 # Set the non-perturbed PERGRO use-case
-> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
+> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0_pd
 # Set coldstart on so arbitrary initial conditions will be used
 > ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 > ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # Set PERGRO on in the configure
-> $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-pergro on" -append
 # Now configure and build
 > ./configure -case
 > ./trustedMachinePergro0.bluefire.build
@@ -380,15 +618,15 @@ The next step is to run a perturbed case on the trusted machine.
 <screen width="99">
 > cd scripts
 > ./create_newcase -case trustedMachinePergroRnd -compset ICN -res f19_g16 \
--mach bluefire -skip_rundb
+-mach bluefire
 > cd trustedMachinePergroRnd
 # Set the perturbed PERGRO use-case
-> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro
+> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro_pd
 # Set coldstart on so arbitrary initial conditions will be used
 > ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 > ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 # Set PERGRO on in the configure
-> $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-pergro on" -append
 # Now configure and build
 > ./configure -case
 > ./trustedMachinePergroRnd.bluefire.build
@@ -420,25 +658,20 @@ repository to take their place -- however this step is required.
 <screen width="99">
 > cd scripts
 > ./create_newcase -case newMachinePergro0 -compset ICN -res f19_g16 \
--mach intrepid -skip_rundb
+-mach intrepid
 > cd newMachinePergro0
 # Set the non-perturbed PERGRO use-case
-> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
+> ./xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0_pd
 > ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 > ./xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # Set PERGRO on in the configure
-> $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
+> ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-pergro on" -append
 # Now configure and build
 > ./configure -case
 > ./newMachinePergro0.intrepid.build
 # Set it to run for three days and turn archiving off
 > ./xmlchange -file env_run.xml -id STOP_N -val 3 
 > ./xmlchange -file env_run.xml -id DOUT_S -val FALSE
-# A change required by intrepid is to change the queue to the development queue
-# This is because the number of nodes used by default is only 16, and the production
-# queue requires 512 nodes. You could also increase the number of processors.
-> sed s/prod/prod-devel/g newMachinePergro0.intrepid.run &gt; temp.run
-> mv temp.run newMachinePergro0.intrepid.run
 # Run the case and then you will save the history file output for later use
 > ./newMachinePergro0.intrepid.submit
 </screen>
@@ -503,7 +736,7 @@ bluefire that is available on the inputdata repository.
 # Get the unperturbed file from the subversion repository
 > cd ../../../../../scripts/newMachinePergro0
 > set dir = "lnd/clm2/pergrodata"
-> set file = bluefirePergro0.ICN.0001-01-01_1.9x2.5_gx1v6_simyr2000_clm4.0.10.c100816.nc
+> set file = bluefirePergro0.ICN.0001-01-01_1.9x2.5_gx1v6_simyr2000_clm4-cesm1_0_3.c110617.nc
 > echo "trustedfile = DIN_LOC_ROOT/$dir/$file" &gt; clm.input_data_list
 > ../ccsm_utils/Tools/check_input_data -datalistdir . -export
 # And now run cprnc on the bluefire file and the new machine both without perturbation
@@ -552,7 +785,7 @@ For this example, we will start with the "I_1850-2000_CN" compset that
 has transient: land-use, Nitrogen and Aerosol deposition already. You could
 also use another compset if you didn't want these other features to be transient.
 In order to get &CO2; to be transient we need to edit the
-datm template so that we add an extra streams file to describe how
+&datm; template so that we add an extra streams file to describe how
 &CO2; varies over the historical period. You also need
 a &netcdf; datafile that datm can read that gives the variation. You could
 supply your own file, but we have a standard file that is used by <acronym>CAM</acronym> for this
@@ -613,7 +846,7 @@ that includes file with a &CO2; time-series from 1765 to 2007.
 <screen width="99">
 > cd scripts
 > ./create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN \
--mach bluefire -skip_rundb
+-mach bluefire
 > cd DATM_CO2_TSERIES
 # Set CCSM_BGC to CO2A so that CO2 will be passed from atmosphere to land
 > ./xmlchange -file env_conf.xml -id CCSM_BGC -val CO2A
@@ -660,7 +893,7 @@ the &CO2; file which should be "nn" for nearest neighbor).
 
 <warning>
 <para>
-The streams file above is hard-coded for the path of the file on NCAR computers. To use it on an outside
+The streams file above is hard-coded for the path of the file on &ncar; computers. To use it on an outside
 machine you'll need to edit the filepath in the streams file to point to the location where you have the file.
 </para>
 </warning>

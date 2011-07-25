@@ -13,7 +13,7 @@ Process:
 
    cd scripts
 
-   ./create_newcase -case <testcase> -mach bluefire -res f19_g15 -compset I4804 -skip_rundb
+   ./create_newcase -case <testcase> -mach bluefire -res f19_g16 -compset I4804 
    (./create_newcase -help -- to get help on the script)
 TRUE
 
@@ -54,21 +54,6 @@ Information on Compsets:
      I_1850_CN        (I1850CN):   CLM with CN on to simulate year=1850
      I_1948-2004_CN   (I4804CN):   CLM with CN on running with atm data over 1948-2004 
      I_1850-2000_CN   (I8520CN):   CLM with CN on with transient PFT over 1850-2000
-
-Information on run-database:
-
-    -skip_rundb says to skip entering information on this case into the run-database.
-    The run-database stores meta-data on simulations being performed so they can
-    be shared effectively with collaborators. The information on how to redo a simulation
-    as well as where the simulation is stored and any diagnostics on it are stored in
-    the run data-base. The run data-base is on the web at...
-
-    http://ccsm-rundb.cgd.ucar.edu/case_list.php
-
-    It contains information on important cases that we want to retain information on
-    (so they can be reproduced and so scientific details are publicly available).
-    The standard CSM internal user-name/password is used for the database (as for the CSEG
-    internal web-page).
 
 Automatically resubmitting jobs:
 

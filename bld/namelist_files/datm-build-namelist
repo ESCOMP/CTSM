@@ -33,11 +33,15 @@ sub usage {
     die <<EOF;
 SYNOPSIS
      datm-build-namelist [options]
+
+     Build the datm namelist for use with CLM stand-alone testing
 OPTIONS
-     -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
+     -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. 
+                              Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
-     -config "filepath"       Read the given CLM configuration cache file. Default: "config_cache.xml".
+     -config "filepath"       Read the given CLM configuration cache file. 
+                              Default: "config_cache.xml".
      -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
@@ -45,32 +49,31 @@ OPTIONS
      -datm_cpl_case "case"    Casename to use for forcing for CPLHIST3HrWx mode
      -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
      -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
-     -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
+     -datm_cycle_init_year "year"  The simulation year that will correspond to the 
+                                   data for cycle_beg_year.
      -datm_data_dir "path"    Directory path to the datm data
      -datm_domain "file"      File name of domain file for datm data matching 
                               resolution data resolution.
      -datm_dom_dir "path"     Directory path to the datm_domain file.
      -datm_presaero "type"    Prescribed aerosol type:
-                              Can be default, none, or any of the list of valid options
+                              Can be default or any of the list of valid options
                                   default = use default for this scenario
-                                  none    = read in aerosols from clm rather than datm
                               (other options include: clim_1850, clim_2000, trans_1850-2000)
      -datm_source "source"    Source data to use for datm
-                              "-datm_source list" to list valid datm_source types.
      -drv_case "name"         Case name to use to describe this case.
      -drv_start_type "type"   Type of simulation (startup, continue, or branch)
      -help [or -h]            Print usage to STDOUT.
      -infile "filepath"       Specify a file containing namelists to read values from.
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
-                              "-mask list" to list valid land masks.
-     -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
-                              a string containing FORTRAN namelist syntax, e.g.,
+     -namelist "namelist"     Specify namelist settings directly on the commandline by 
+                              supplying a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&shr_strdata_nml taxmode='extend'/"
      -print "level"           Print level for debugging:
                                  0 = silent
                                  1 = regular
                                  2 = verbose
-     -rcp "value"             Representative concentration pathway (rcp) to use for future scenarios.
+     -rcp "value"             Representative concentration pathway (rcp) to use for 
+                              future scenarios.
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
@@ -79,7 +82,6 @@ OPTIONS
                               (i.e.  constant, 1850-2000, 1850-2100)
      -test                    Enable checking that input datasets exist on local filesystem.
      -use_case "case"         Specify a use case which will provide default values.
-                              "-use_case list" to list valid use-cases.
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, i.e., -d, -sim_year
@@ -617,20 +619,6 @@ if ( $print == 0 ) {
 }
 $inputopts{'test'} = $opts{'test'};
 if ( $opts{'datm_source'} eq "default" ) {
-  $inputopts{'datasource'}  = $defaults->get_value( 'datm_source' );
-} else {
-  $inputopts{'datasource'}  = $opts{'datm_source'};
-}
-
-# Determine options for reading the stream template file (datm.streams.template.xml)
-my %inputopts;
-if ( $print == 0 ) {
-   $inputopts{'printing'} = 0;
-} else {
-   $inputopts{'printing'} = 1;
-}
-$inputopts{'test'} = $opts{'test'};
-if ( $opts{'datm_source'} eq "default" ) {
    $inputopts{'datasource'}  = $defaults->get_value( 'datm_source' );
 } else {
    $inputopts{'datasource'}  = $opts{'datm_source'};
@@ -729,17 +717,14 @@ if ( $datm_source eq "CLM1PT" ) {
    my $ofillmask = undef;
    my $filepath  = $inputopts{'filepath'};
    my @sources;
+   my $dsource;
    if ( $datm_source eq "CLM_QIAN" ) {
       @sources = ( "Solar", "Precip", "TPQW" ); 
+      $dsource = $datm_source;
    } else {
       @sources = ( "Solar", "Precip", "nonSolarNonPrecip" ); 
-   }
-   my $dsource;
-   if ( $datm_source eq "CPLHIST3HrWx" ) {
       $dsource = "CPLHIST3Hrly";
       $inputopts{'case'}  = $opts{'datm_cpl_case'};
-   } else {
-      $dsource = $datm_source;
    }
    foreach my $src ( @sources ) {
       $inputopts{'datasource'}  = "$dsource.$src";
@@ -844,7 +829,7 @@ $streams->Write( $outstreams );
 # namelist group: datm_in    #
 #############################
 
-add_default($nl, 'datamode', 'val'=>'CLMNCEP' );
+add_default($nl, 'datamode', 'source'=>$datm_source );
 add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask); 
 add_default($nl, 'factorfn');
 add_default($nl, 'iradsw');
@@ -861,11 +846,7 @@ if ( $opts{'start_type'} =~ /branch/ ) {
       die "$ProgName ERROR:: restfils is required for a branch type.\n";
    }
 }
-if ( $datm_presaero ne "none" ) {
-  add_default($nl, 'presaero', 'val'=>'.true.'  );
-} else {
-  add_default($nl, 'presaero', 'val'=>'.false.' );
-}
+add_default($nl, 'presaero', 'val'=>'.true.'  );
 
 #-----------------------------------------------------------------------------------------------
 # Validate that the entire resultant namelist is valid

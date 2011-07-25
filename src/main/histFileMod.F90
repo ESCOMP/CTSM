@@ -835,6 +835,7 @@ contains
        if (hist_type1d_pertape(t) /= ' ' .and. (.not. hist_dov2xy(t))) then
           select case (trim(hist_type1d_pertape(t)))
           case ('PFTS','COLS', 'LAND', 'GRID')
+             if ( masterproc ) &
              write(iulog,*)'history tape ',t,' will have 1d output type of ',hist_type1d_pertape(t)
           case default
              write(iulog,*) trim(subname),' ERROR: unknown namelist type1d per tape=',hist_type1d_pertape(t)
@@ -3131,7 +3132,7 @@ contains
           !
           ! Create the restart history filename and open it
           !
-          write(hnum,'(i1.1)') t
+          write(hnum,'(i1.1)') t-1
           locfnhr(t) = "./"//trim(caseid)//".clm2.rh"//hnum//"."//trim(rdate)//".nc"
 
           call htape_create( t, histrest=.true. )

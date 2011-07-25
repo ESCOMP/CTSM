@@ -1,15 +1,27 @@
-clm/test/system/README						3/13/2008
+clm/test/system/README						5/23/2011
 
-Scripts for testing CLM with many different configurations and run-time options.
+Scripts for testing CLM and the CLM support tools with many different 
+configurations and run-time options.
+
 To use...
 
-
-test_driver.sh
+./test_driver.sh
 
 (will then ask if you want to submit the script to the batch que)
-Intended for use on NCAR machines: edinburgh.cgd, breeze/gale/hail/gust, bluefire, 
-and ORNL machines: jaguar as well as ANL intrepid.
+On jaguarpf and lynx, compile first interactively and then submit.
 
+ env CLM_JOBID=1001 ./test_driver.sh -c
+ env CLM_JOBID=1001 ./test_driver.sh
+
+interactive usage on all machines (runs a different list of tests):
+
+env CLM_SOFF=FALSE ./test_driver.sh -i
+
+
+Intended for use on NCAR machines: edinburgh.cgd, lynx, mirage/storm, bluefire, 
+and ORNL machines: jaguar as well as ANL intrepid. And works on the MacBook laptop
+yong.cgd. For most machines more than one compiler is supported.
+ 
 Important environment variables
 
 BL_ROOT ---------------- Root directory of CLM baseline code to compare to 
@@ -24,7 +36,6 @@ CLM_JOBID -------------- Job identification number to use (rather than process I
 CLM_THREADS ------------ Number of open-MP threads to use 
                          (by default this is set differently by machine)
 CLM_SOFF --------------- If set to TRUE -- stop on first failed test
-CLM_CESMBLD ------------ If set to TRUE -- use the CESM cpl7 build files
 
 Important files:
 
@@ -40,3 +51,5 @@ CLM_compare.sh ------- Compares output history files between two cases
 T*.sh ---------------- Basic test script to do a specific type of test
 gen_test_table.sh ---- Creates HTML table of tests
 Makefile ------------- Will build the HTML table of tests
+
+../../tools/README.testing - Information on how the testing works for the CLM tools

@@ -24,7 +24,6 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, zero_out, lake_o, swmp_o)
 ! make %lake and %wetland from Cogley's one degree data
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -78,7 +77,6 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, zero_out, lake_o, swmp_o)
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mklanwat'
 !-----------------------------------------------------------------------
 
@@ -91,12 +89,10 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, zero_out, lake_o, swmp_o)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   allocate(lake_i(nlon_i,nlat_i), swmp_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()

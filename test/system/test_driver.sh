@@ -46,9 +46,6 @@ case $hostname in
 	    exit 2
 	fi
     fi
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -157,9 +154,6 @@ EOF
     ##mirage
     mirage* | storm* )
     submit_script="test_driver_mirage_${cur_time}.sh"
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -203,10 +197,6 @@ EOF
     edinburgh* | e0*) 
     submit_script="test_driver_edinburgh_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
-
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -312,9 +302,6 @@ EOF
     lynx* | l0*) 
     submit_script="test_driver_lynx_${cur_time}.sh"
 
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
     shell=bash
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -429,7 +416,7 @@ export INC_NETCDF=\${NETCDF_PATH}/include
 export LIB_NETCDF=\${NETCDF_PATH}/lib
 export INC_MPI=""
 export LIB_MPI=""
-export MACH_WORKSPACE="/ptmp/\$USER"
+export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/ptmp/csm/tools/cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export PFTDATA="/glade/proj2/cgd/tss/"
@@ -443,10 +430,6 @@ EOF
     ##jaguarpf
     jaguarpf* ) 
     submit_script="test_driver_jaguarpf_${cur_time}.sh"
-
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -556,9 +539,6 @@ EOF
     ##yong
     yong* )
     submit_script="test_driver_yong_${cur_time}.sh"
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -609,10 +589,6 @@ EOF
     ##intrepid
     login* )
     submit_script="test_driver_intrepid_${cur_time}.sh"
-
-    if [ -z "$CLM_CESMBLD" ]; then
-	export CLM_CESMBLD="TRUE"
-    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF

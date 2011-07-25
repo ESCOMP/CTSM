@@ -2,11 +2,13 @@
 ;
 ;  Erik Kluzek
 ;  Apr/10/2008
-;  $Id: aerdepregrid.ncl 9114 2008-03-06 17:07:01Z erik $
-;  $HeadURL;
+;
+;  Check that the latitudes and longitudes between the grid and topo
+;  files are within a reasonable tolerance.
 ;
 begin
 
+  print( "Check that lats/longs are the same between grid and topo files" );
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
@@ -21,7 +23,7 @@ begin
 
   print( "query string="+querynml )
 
-  resolutions = (/ "4x5", "10x15", "2.65x3.33", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "128x256","64x128","48x96","32x64","8x16" /);
+  resolutions = (/ "4x5", "10x15", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "128x256","64x128","48x96","32x64","8x16" /);
 
   space = "      ";
   eps   = 1.e-12;
@@ -36,7 +38,7 @@ begin
      print( space+"Use grid file:       "+gridfile );
      if ( systemfunc("test -f "+gridfile+"; echo $?" ) .ne. 0 )then
         print( "Input gridfile does not exist or not found: "+gridfile );
-        exit
+        continue
      end if
      ncg     = addfile( gridfile,  "r" );
 
@@ -46,13 +48,13 @@ begin
      topofile  = systemfunc( querynml+" -res "+res+" -var flndtopo" );
      if ( ismissing(topofile) )then
         print( "Missing topofile" );
-        exit;
+        continue
      end if
      ;;;print( querynml+" -res "+res+" -var fatmtopo" );
      print( space+space+"Use topo file:         "+topofile );
      if ( systemfunc("test -f "+topofile+"; echo $?" ) .ne. 0 )then
         print( "Input topofile does not exist or not found: "+topofile );
-        exit;
+        continue
      end if
      nct      = addfile( topofile,    "r" );
 

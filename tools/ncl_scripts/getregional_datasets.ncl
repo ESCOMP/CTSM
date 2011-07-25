@@ -27,6 +27,7 @@ begin
   sim_year   = stringtointeger( getenv("SIM_YR") ); ; Get input simulation year to use from env variable
   sim_yr_rng = getenv("SIM_YR_RNG");                ; Get input simulation year range to use
   debug_str  = getenv("DEBUG");                     ; Don't run just -- debug
+  nomv_str   = getenv("NOMV");                      ; Don't move files -- leave in current directory
   print_str  = getenv("PRINT");                     ; Do Extra printing for debugging
   csmdata    = getenv("MYCSMDATA");                 ; Your personal CESM inputdata location
 
@@ -75,6 +76,16 @@ begin
         printn = True;
      else
         debug = False;
+     end if
+  end if
+  if ( ismissing(nomv_str) )then
+     nomv = False;
+  else
+     if ( nomv_str .eq. "TRUE" )then
+        print( "NOMV is TRUE do NOT move files leave them in current directory" );
+        nomv = True;
+     else
+        nomv = False;
      end if
   end if
   if ( ismissing(id) )then
@@ -194,6 +205,9 @@ begin
         print( "Process file: "+globalfile );
      end if
      qry     = querynml+queryopts+qryopt(i)+queryopt+" -usrname "+id+" -var "+files(i);
+     if ( nomv .eq. True )then
+        qry  = qry+" -filenameonly";
+     end if
      regfile = systemfunc( qry );
      if ( ismissing(regfile) )then
         print( "Output regional filename was NOT found: "+regfile );
@@ -284,6 +298,6 @@ begin
   end do
 
   print( "================================================================================================" );
-  print( "Successfully extracted regional datasets from global datasets" );
+  print( "Successfully created regional datasets from global datasets" );
 
 end

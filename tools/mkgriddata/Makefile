@@ -28,15 +28,15 @@ RM = rm
 
 # Check for the netcdf library and include directories 
 ifeq ($(LIB_NETCDF),$(null))
-LIB_NETCDF := /usr/local/lib
+  LIB_NETCDF := /usr/local/lib
 endif
 
 ifeq ($(INC_NETCDF),$(null))
-INC_NETCDF := /usr/local/include
+  INC_NETCDF := /usr/local/include
 endif
 
 ifeq ($(MOD_NETCDF),$(null))
-MOD_NETCDF := $(LIB_NETCDF)
+  MOD_NETCDF := $(LIB_NETCDF)
 endif
 
 # Set user specified Fortran compiler
@@ -55,7 +55,13 @@ endif
 
 CPPDEF := -DNO_SHR_VMATH $(USER_CPPDEFS)
 
-ifeq ($(OPT),TRUE)
+ifeq ($(OPT),$(null))
+   # Set optimization off by default
+   OPT := FALSE
+endif
+
+ifeq ($(OPT),FALSE)
+else
    CPPDEF += -DOPT
 endif
 
@@ -77,7 +83,7 @@ VPATH    := $(subst $(space),:,$(VPATH))
 all: $(EXENAME)
 
 # Get list of files and build dependency file for all .o files
-#   using perl scripts mkSrcfiles and mkDepends
+#   using perl scripts mkSrcfiles and Mkdepends
 
 SOURCES   := $(shell cat Srcfiles)
 
@@ -86,14 +92,17 @@ OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
 # Newer makes set the CURDIR variable.
 CURDIR := $(shell pwd)
 
-ifeq ($(CLM_ROOT),$(null))
-   ROOTDIR := $(CURDIR)/../../
-else
-   ROOTDIR := $(shell ls -1d $(CLM_ROOT)/models/lnd/clm*)
+ifeq ($(TOOLROOT),$(null))
+   ifeq ($(CLM_ROOT),$(null))
+      TOOLROOT := $(CURDIR)
+   else
+      TOOLROOT := $(CLM_ROOT)/models/lnd/clm/tools/$(EXENAME)
+   endif
 endif
 
+
 $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
-	$(ROOTDIR)/../../../scripts/ccsm_utils/Build/mkDepends Filepath Srcfiles > $@
+	$(TOOLROOT)/Mkdepends Filepath Srcfiles > $@
 
 
 # Architecture-specific flags and rules
@@ -136,10 +145,10 @@ endif
 ifeq ($(UNAMES),Darwin)
 
 # Set the default Fortran compiler
-ifeq ($(strip $(USER_FC)),)
+ifeq ($(USER_FC),$(null))
   FC := g95
 endif
-ifeq ($(strip $(USER_CC)),)
+ifeq ($(USER_CC),$(null))
   CC := gcc
 endif
 
@@ -326,10 +335,10 @@ FFLAGS   += $(USER_FFLAGS)
 LDFLAGS  += $(USER_LDFLAGS)
 
 # Set user specified linker
-ifneq ($(strip $(USER_LINKER)),)
-  LINKER := $(USER_LINKER)
-else
+ifeq ($(USER_LINKER),$(null))
   LINKER := $(FC)
+else
+  LINKER := $(USER_LINKER)
 endif
 
 .F90.o:

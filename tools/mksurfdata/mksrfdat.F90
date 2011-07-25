@@ -15,7 +15,7 @@ program mksrfdat
     use shr_kind_mod, only : r8 => shr_kind_r8, r4 => shr_kind_r4
     use shr_sys_mod , only : shr_sys_getenv
     use shr_timer_mod
-    use fileutils   , only : getfil, putfil, opnfil, getavu, get_filename
+    use fileutils   , only : opnfil, getavu, get_filename
     use mklaiMod    , only : mklai
     use mkpftMod    , only : pft_idx, pft_frc, mkpft, mkpftInit, mkpft_parse_oride, &
                              mkirrig
@@ -73,7 +73,6 @@ program mksrfdat
     character(len=256) :: fdyndat           ! dynamic landuse data file name
     character(len=256) :: fname             ! generic filename
     character(len=256) :: string            ! string read in
-    character(len=256) :: loc_fn            ! local file name
     character(len= 32) :: resol             ! resolution for file name
     integer  :: t1                          ! timer
     real(r8),parameter :: p5  = 0.5_r8      ! constant
@@ -163,11 +162,11 @@ program mksrfdat
     !    mksrf_furban --- Urban dataset
     !    mksrf_fvegtyp -- PFT vegetation type dataset
     !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
+    !    mksrf_fdynuse -- ASCII text file that lists each year of pft files to use
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
     !    mksrf_firrig ------ Irrigation dataset
-    !    mksrf_fdynuse ----- ASCII text file that lists the
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    mksrf_gridnm ------ Name of output grid resolution
     !    outnc_double ------ If output should be in double precision
@@ -328,16 +327,22 @@ program mksrfdat
        write (ndiag,*) &
                     'irrigated area from:       ',trim(mksrf_firrig)
     endif
+    if (mksrf_fdynuse /= ' ') then
+       write(6,*)'mksrf_fdynuse = ',trim(mksrf_fdynuse)
+    else
+       write (6,*) subname, ' error: fdynuse file is required'
+       call abort()
+    end if
 
     write(6,*) ' timer_a1 init-----'
     call shr_timer_print(t1)
 
     ! Make irrigated area fraction [pctirr] from [firrig] dataset if requested in namelist
 
-    if (mksrf_firrig /= ' ') then
+    allocate ( pctirr(lsmlon,lsmlat) )
+    pctirr(:,:)       = spval
 
-       allocate ( pctirr(lsmlon,lsmlat) )
-       pctirr(:,:)       = spval
+    if (mksrf_firrig /= ' ') then
 
        call mkirrig (lsmlon, lsmlat, mksrf_firrig, ndiag, pctirr)
 
@@ -638,7 +643,7 @@ program mksrfdat
     end if
     ni = size(pctpft_i,1)
     nj = size(pctpft_i,2)
-    call mklai(lsmlon, lsmlat, mksrf_flai, mksrf_firrig, mksrf_fdynuse, &
+    call mklai(lsmlon, lsmlat, mksrf_flai, mksrf_firrig, &
                ndiag, ncid, ni, nj, pctpft_i)
     deallocate( pctpft_i )
 
@@ -654,135 +659,130 @@ program mksrfdat
          360._r8/lsmlon,' by ',180._r8/lsmlat,' grid'
 
     ! ----------------------------------------------------------------------
-    ! Create dynamic land use dataset if appropriate
+    ! Create dynamic land use dataset
     ! ----------------------------------------------------------------------
 
-    if (mksrf_fdynuse /= ' ') then
+    allocate( pctlnd_pft_dyn(lsmlon,lsmlat) )
+    call mkharvest_init( lsmlon, lsmlat, spval, harvest, mksrf_fvegtyp )
 
-       allocate( pctlnd_pft_dyn(lsmlon,lsmlat) )
-       call mkharvest_init( lsmlon, lsmlat, spval, harvest, mksrf_fvegtyp )
+    fdyndat = './surfdata.pftdyn_'//trim(resol)//'.nc'
 
-       fdyndat = './surfdata.pftdyn_'//trim(resol)//'.nc'
+    ! Define dimensions and global attributes
 
-       ! Define dimensions and global attributes
+    call mkfile(lsmlon, lsmlat, fdyndat, dynlanduse = .true.)
+    call write_domain(ldomain,fdyndat)
 
-       call mkfile(lsmlon, lsmlat, fdyndat, dynlanduse = .true.)
-       call write_domain(ldomain,fdyndat)
+    ! Write fields other pft to dynamic land use dataset
 
-       ! Write fields other pft to dynamic land use dataset
+    call check_ret(nf_open(trim(fdyndat), nf_write, ncid), subname)
+    call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
-       call check_ret(nf_open(trim(fdyndat), nf_write, ncid), subname)
-       call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
+    call ncd_ioglobal(varname='PFTDATA_MASK', data=pftdata_mask, ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='LANDFRAC_PFT', data=landfrac_pft, ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='PCT_WETLAND' , data=pctwet      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
 
-       call ncd_ioglobal(varname='PFTDATA_MASK', data=pftdata_mask, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='LANDFRAC_PFT', data=landfrac_pft, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_WETLAND' , data=pctwet      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
+    ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
+
+    call check_ret(nf_sync(ncid), subname)
+
+    ! Read in each dynamic pft landuse dataset
+
+    nfdyn = getavu(); call opnfil (mksrf_fdynuse, nfdyn, 'f')
+
+    ntim = 0
+    do 
+       ! Read input pft data
+
+       read(nfdyn, '(A125,1x,I4)', iostat=ier) string, year
+       if (ier /= 0) exit
+       !
+       ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
+       !
+       if ( any(pft_frc > 0.0_r8 ) )then
+          fname = ' '
+          call mkpft_parse_oride(     string )
+          call mkharvest_parse_oride( string )
+          write(6,*)'PFT and harvesting values are ',trim(string),' year is ',year
+          !
+          ! Otherwise intrepret string as a filename with PFT and harvesting values in it
+          !
+       else
+          fname = string
+          write(6,*)'input pft dynamic dataset is  ',trim(fname),' year is ',year
+       end if
+       ntim = ntim + 1
+
+       ! Create pctpft data at model resolution
+
+       call mkpft(lsmlon, lsmlat, fname, mksrf_firrig, ndiag, &
+                  pctlnd_pft_dyn, pctirr, pctpft)
+
+       ! Create harvesting data at model resolution
+
+       call mkharvest( lsmlon, lsmlat, fname, ndiag, harvest )
+
+       ! Consistency check on input land fraction
+
+       do j = 1,lsmlat
+          do i = 1,lsmlon
+
+             if (pctlnd_pft_dyn(i,j) /= pctlnd_pft(i,j)) then
+                write(6,*) subname,' error: pctlnd_pft for dynamics data = ',&
+                     pctlnd_pft_dyn(i,j), ' not equal to pctlnd_pft for surface data = ',&
+                     pctlnd_pft(i,j),' at i,j= ',i,j
+                if ( trim(fname) == ' ' )then
+                   write(6,*) ' PFT string = ', string
+                else
+                   write(6,*) ' PFT file = ', fname
+                end if
+                call abort()
+             end if
+
+          end do
+       end do
+
+       call change_landuse( lsmlon, lsmlat, dynpft=.true. )
+
+       call normalizencheck_landuse( lsmlon, lsmlat )
+
+       ! Output pctpft data for current year
+
+       beg4d(1) = 1     ;  len4d(1) = lsmlon
+       beg4d(2) = 1     ;  len4d(2) = lsmlat
+       beg4d(3) = 1     ;  len4d(3) = numpft+1
+       beg4d(4) = ntim  ;  len4d(4) = 1
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
+       call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, pctpft), subname)
+
+    
+       beg3d(1) = 1     ;  len3d(1) = lsmlon
+       beg3d(2) = 1     ;  len3d(2) = lsmlat
+       beg3d(3) = ntim  ;  len3d(3) = 1
+       do k = 1, mkharvest_numtypes()
+          call check_ret(nf_inq_varid(ncid, trim(mkharvest_fieldname(k)), varid), subname)
+          call check_ret(nf_put_vara_double(ncid, varid, beg3d, len3d, harvest(:,:,k) ), subname)
+       end do
+
+       call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
+       call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'time', varid), subname)
+       call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'input_pftdata_filename', varid), subname)
+       call check_ret(nf_put_vara_text(ncid, varid, (/ 1, ntim /), (/ len_trim(string), 1 /), trim(string) ), subname)
 
        ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
        call check_ret(nf_sync(ncid), subname)
 
-       ! Read in each dynamic pft landuse dataset
+    end do   ! end of read loop
 
-       call getfil (mksrf_fdynuse, loc_fn, 0)
-       nfdyn = getavu(); call opnfil (loc_fn, nfdyn, 'f')
-
-       ntim = 0
-       do 
-          ! Read input pft data
-
-          read(nfdyn, '(A125,1x,I4)', iostat=ier) string, year
-          if (ier /= 0) exit
-          !
-          ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
-          !
-          if ( any(pft_frc > 0.0_r8 ) )then
-             fname = ' '
-             call mkpft_parse_oride(     string )
-             call mkharvest_parse_oride( string )
-	     write(6,*)'PFT and harvesting values are ',trim(string),' year is ',year
-          !
-          ! Otherwise intrepret string as a filename with PFT and harvesting values in it
-          !
-          else
-             fname = string
-	     write(6,*)'input pft dynamic dataset is  ',trim(fname),' year is ',year
-          end if
-          ntim = ntim + 1
-
-          ! Create pctpft data at model resolution
-
-          call mkpft(lsmlon, lsmlat, fname, mksrf_firrig, ndiag, &
-                     pctlnd_pft_dyn, pctirr, pctpft)
-
-          ! Create harvesting data at model resolution
-
-          call mkharvest( lsmlon, lsmlat, fname, ndiag, harvest )
-
-          ! Consistency check on input land fraction
-
-          do j = 1,lsmlat
-             do i = 1,lsmlon
-
-                if (pctlnd_pft_dyn(i,j) /= pctlnd_pft(i,j)) then
-                   write(6,*) subname,' error: pctlnd_pft for dynamics data = ',&
-                        pctlnd_pft_dyn(i,j), ' not equal to pctlnd_pft for surface data = ',&
-                        pctlnd_pft(i,j),' at i,j= ',i,j
-                   if ( trim(fname) == ' ' )then
-                      write(6,*) ' PFT string = ', string
-                   else
-                      write(6,*) ' PFT file = ', fname
-                   end if
-                   call abort()
-                end if
-
-             end do
-          end do
-
-          call change_landuse( lsmlon, lsmlat, dynpft=.true. )
-
-          call normalizencheck_landuse( lsmlon, lsmlat )
-
-          ! Output pctpft data for current year
-
-          beg4d(1) = 1     ;  len4d(1) = lsmlon
-          beg4d(2) = 1     ;  len4d(2) = lsmlat
-          beg4d(3) = 1     ;  len4d(3) = numpft+1
-          beg4d(4) = ntim  ;  len4d(4) = 1
-
-          call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
-          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, pctpft), subname)
-
-    
-          beg3d(1) = 1     ;  len3d(1) = lsmlon
-          beg3d(2) = 1     ;  len3d(2) = lsmlat
-          beg3d(3) = ntim  ;  len3d(3) = 1
-          do k = 1, mkharvest_numtypes()
-             call check_ret(nf_inq_varid(ncid, trim(mkharvest_fieldname(k)), varid), subname)
-             call check_ret(nf_put_vara_double(ncid, varid, beg3d, len3d, harvest(:,:,k) ), subname)
-          end do
-
-          call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
-          call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
-
-          call check_ret(nf_inq_varid(ncid, 'time', varid), subname)
-          call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
-
-          call check_ret(nf_inq_varid(ncid, 'input_pftdata_filename', varid), subname)
-          call check_ret(nf_put_vara_text(ncid, varid, (/ 1, ntim /), (/ len_trim(string), 1 /), trim(string) ), subname)
-
-	  ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
-
-	  call check_ret(nf_sync(ncid), subname)
-
-       end do   ! end of read loop
-
-       call check_ret(nf_close(ncid), subname)
-
-    end if   ! end of if-create dynamic landust dataset   
+    call check_ret(nf_close(ncid), subname)
 
     write(6,*) ' timer_l writedyn-----'
     call shr_timer_print(t1)
@@ -801,6 +801,7 @@ program mksrfdat
 
     write(6,*) ' timer_z end-----'
     call shr_timer_print(t1)
+    write(6,*) 'Successfully created surface dataset'
 
 !-----------------------------------------------------------------------
 contains

@@ -10,7 +10,6 @@ module creategridMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use fileutils   , only : getfil
   use domainMod   , only : domain_init, domain_type, domain_check
   use areaMod     , only : gridmap_type, cellarea, celledge, areaini, areaave, &
                            gridmap_checkmap
@@ -429,7 +428,6 @@ contains
     real(r8), pointer     :: frac(:,:)         !local pointer for land fraction
     real(r8), pointer     :: topo(:,:)         !local pointer for topography
     integer,  pointer     :: mask(:,:)         !local pointer for land mask
-    character(len=256) :: locfn                !local file name
     character(len=256) :: fnamel               !local file name
     integer :: i,j                             !indexes
     integer :: ncid                            !netCDF file id
@@ -478,8 +476,7 @@ contains
 
     ! Read domain file and compute stuff as needed
 
-    call getfil (fnamel, locfn, 0)
-    call check_ret(nf_open(locfn, 0, ncid), subname)
+    call check_ret(nf_open(fnamel, 0, ncid), subname)
 
     ier = nf_inq_dimid (ncid, 'lon', dimid)
     if (ier == NF_NOERR) then
@@ -759,8 +756,7 @@ contains
     if (etype) then
 !----------------------
     if (trim(ftype) == 'mksrf_fcamfile' ) then
-       call getfil (fnamel, locfn, 0)
-       call check_ret(nf_open(locfn, 0, ncid), subname)
+       call check_ret(nf_open(fnamel, 0, ncid), subname)
 
        ier = nf_inq_varid (ncid, 'lon', varid)
        if (ier == NF_NOERR .and. .not. lonlatset ) then
@@ -798,8 +794,7 @@ contains
 !----------------------
 !----------------------
     if (trim(ftype) == 'mksrf_fcamtopo') then
-       call getfil (fnamel, locfn, 0)
-       call check_ret(nf_open(locfn, 0, ncid), subname)
+       call check_ret(nf_open(fnamel, 0, ncid), subname)
 
        ier = nf_inq_varid (ncid, 'PHIS', varid)
        if (ier == NF_NOERR .and. .not. toposet) then
@@ -929,7 +924,6 @@ contains
 
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
-    use fileutils   , only : get_filename
     use mkvarctl
     use ncdio       , only : check_ret, ncd_defvar
 

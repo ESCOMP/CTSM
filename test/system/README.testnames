@@ -6,7 +6,7 @@ xxnmi
 
 Where: xx is the two-letter test type 
        sm=smoke, br=branch, er=exact restart, bl=base-line comparision,
-       cb=configure-build
+       cb=configure-build, rp=reproducibility, op=OpenMP threading for tools
 
 n is the configuration type:
 
@@ -96,5 +96,7 @@ i is the specific test (usually this implies...)
 5 -- hybrid second test      (without DEBUG compiler mode on)
 6 -- mpi-only second test    (without DEBUG compiler mode on)
 7 -- OpenMP only second test (without DEBUG compiler mode on)
+8 -- hybrid third test       (without DEBUG compiler mode on)
+9 -- OpenMP only third test  (without DEBUG compiler mode on)
 
 

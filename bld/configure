@@ -43,44 +43,57 @@ sub usage {
     die <<EOF;
 SYNOPSIS
      configure [options]
+
+     Configure CLM in preparation to be built.
 OPTIONS
      User supplied values are denoted in angle brackets (<>).  Any value that contains
      white-space must be quoted.  Long option names may be supplied with either single
      or double leading dashes.  A consequence of this is that single letter options may
      NOT be bundled.
 
-     -ad_spinup <name>   Turn on AD_SPINUP mode for bgc setting of CN [on | off] (default is off).
-     -bgc <name>         Build CLM with bgc package [ none | cn | casa | cndv ] (default is none).
-     -c13 <name>         Turn on C13 mode for bgc setting of CN [on | off] (default is off).
+     -ad_spinup <name>   Turn on AD_SPINUP mode for BGC setting of CN [on | off] 
+                         (default is off).
+     -bgc <name>         Build CLM with BGC package [ none | cn | casa | cndv ] 
+                         (default is none).
+     -c13 <name>         Turn on C13 mode for BGC setting of CN [on | off] 
+                         (default is off).
      -cache <file>       Name of output cache file (default: config_cache.xml).
-     -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
-     -clm_root <dir>     Root directory of clm source code (default: directory above location of this script)
+     -cachedir <file>    Name of directory where output cache file is written 
+                         (default: CLM build directory).
+     -clm_root <dir>     Root directory of clm source code 
+                         (default: directory above location of this script)
      -cppdefs <string>   A string of user specified CPP defines.  Appended to
-                         Makefile defaults.  E.g. -cppdefs '-DVAR1 -DVAR2'
+                         Makefile defaults.  e.g. -cppdefs '-DVAR1 -DVAR2'
      -crop <name>        Toggle for prognostic crop model. [on | off] (default is off) 
                          (can ONLY be turned on when BGC type is CN or CNDV)
      -comp_intf <name>   Component interface to use (ESMF, MCT or cpl_\$COMP) (default MCT)
-     -defaults <file>    Specify full path to a configuration file which will be used to supply defaults instead of
-                         the defaults in bld/config_files.  This file is used to specify model
-                         configuration parameters only.  Parameters relating to the build which
-                         are system dependent will be ignored.
-     -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
-     -glc_nec <name>     Glacier number of elevation classes [0 | 3 | 5 | 10] (default is 0)
+     -defaults <file>    Specify full path to a configuration file which will be used 
+                         to supply defaults instead of the defaults in bld/config_files.
+                         This file is used to specify model configuration parameters only.
+                         Parameters relating to the build which are system dependent will
+                         be ignored.
+     -exit_spinup <name> Turn on EXIT_SPINUP mode for BGC setting of CN [on | off] 
+                         (default is off).
+     -glc_nec <name>     Glacier number of elevation classes [0 | 3 | 5 | 10] 
+                         (default is 0) (standard option with land-ice model is 10)
      -help [or -h]       Print usage to STDOUT.
-     -mach <name>        Machine name to use for CESM build.
      -maxpft <n>         Value of maxpatch_pft (default is $maxpatchpft{$crpmode}) 
-                         (required to be $maxpatchpft{'nocrop'} for CN or CNDV or transient cases without crop)
+                         (required to be $maxpatchpft{'nocrop'} for CN or CNDV or 
+                          transient cases without crop)
                          (required to be $maxpatchpft{'crop'} when crop is on)
-     -mode <name>        CLM mode [clm_stndln | ext_cesm]
-     -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
+     -nofire             Turn off wildfires for BGC setting of CN 
+                         (default includes fire for CN)
      -noio               Turn history output completely off (typically for testing).
-     -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
+     -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] 
+                         (default is off)
      -rtm <name>         Turn on River Transport Model (RTM)  [on | off] (default is on)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
-     -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] (default is off)
-     -target_os          Override the os setting for cross platform compilation [aix | darwin | dec_osf | irix | 
-                         linux | solaris | super-ux | bgl | bgp ].  Default: OS on which configure is
-			 executing as defined by the perl \$OSNAME variable.
+     -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] 
+                         (default is off)
+     -target_os          Override the os setting for cross platform compilation 
+                         [aix | darwin | dec_osf | irix | linux | solaris | super-ux | bgl | bgp ].
+                         Default: OS on which configure is executing as defined by the 
+                         perl \$OSNAME variable.
      -sitespf_pt <name>  Setup for the given site specific single-point resolution.
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
                          Directories containing user source code.
@@ -93,14 +106,15 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
     The CESM scripts already take care of everything here. These options exist for
     use with the CLM standalone testing in the models/lnd/clm/test/system directory.
 
-     -cesm_bld <name>    Turn use of CESM build and makefiles. [on | off] (default is off)
-                         Can ONLY be turned on for mode=clm_stndln.
+     -mach <name>        Machine name to use for CESM build.
+     -mode <name>        CLM mode [clm_stndln | ext_cesm]
      -debug              Switch to turn on building CLM with debugging compiler options.
      -nc_path            Path to NetCDF (lib and include directories should reside beneath it)
      -mpi_path           Path to MPI (lib and include directories should reside beneath it)
      -[no]smp            Switch on [off] SMP parallelism.
      -[no]use_mpiserial  Switch on [off] use of serial-only MPI.
-     -voc <name>         Turn on passing of Volatile Organic Compounds (VOC's) to driver [on | off] (default is on)
+     -voc <name>         Turn on passing of Volatile Organic Compounds (VOC's) to driver 
+                         [on | off] (default is on)
 EOF
 }
 
@@ -148,7 +162,6 @@ GetOptions(
     "bgc=s"                     => \$opts{'bgc'}, 
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
-    "cesm_bld=s"                => \$opts{'cesm_bld'},
     "snicar_frc=s"              => \$opts{'snicar_frc'},
     "clm_root=s"                => \$opts{'clm_root'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
@@ -594,8 +607,10 @@ if ($print>=2) { print "Using $snicar_frc for snicar_frc.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # cesm_bld option
-if ( defined $opts{'cesm_bld'}) {
-     $cfg_ref->set('cesm_bld', $opts{'cesm_bld'});
+if ($clm_mode eq "clm_stndln" ) {
+     $cfg_ref->set('cesm_bld', "on" );
+} else {
+     $cfg_ref->set('cesm_bld', "off" );
 }
 my $cesm_bld = $cfg_ref->get('cesm_bld');
 if ($clm_mode ne "clm_stndln" && $cesm_bld eq "on" ) {
@@ -608,8 +623,6 @@ if ($clm_mode eq "clm_stndln" && $cesm_bld eq "off" ) {
 *** cesm_bld can NOT be turned off if mode equals clm_stndln **
 EOF
 }
-if ($print>=2) { print "Using $cesm_bld for CESM build.$eol"; }
-
 #-----------------------------------------------------------------------------------------------
 # Makefile configuration #######################################################################
 #-----------------------------------------------------------------------------------------------
@@ -1515,7 +1528,7 @@ sub version {
 
     while (my $line = <$fh>) {
 
-	if ($line =~ /^Tag name:\s*(\w+)/ ) {
+	if ($line =~ /^Tag name:\s*[clm0-9_.-]*\s*[toin]*\s*([cesmclm0-9_.-]+)$/ ) {
 	    print "$1\n";
 	    exit;
 	}

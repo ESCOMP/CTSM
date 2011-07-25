@@ -17,7 +17,7 @@ In general you will run into one of three type of problems:
 </orderedlist>
 You may also run into problems with <command>create_newcase</command> itself, or
 with the archiving scripts -- for those problems you should consult the 
-<ulink url="&cesmwebmodelrel;cesm">&cesm1; Scripts User's Guide</ulink>.
+<ulink url="&cesmwebmodelrel;cesm">&cesmrel; Scripts User's Guide</ulink>.
 </para>
 
 <sect1 id="trouble_w_configure">
@@ -26,30 +26,38 @@ with the archiving scripts -- for those problems you should consult the
 The first type of problem happens when you invoke the <command>configure -case</command>
 command. This indicates there is something wrong with your template files, or input
 datasets, or the details of what you are trying to configure the model to do.
-There's also a trouble-shooting chapter in the <ulink url="&cesmwebmodelrel;cesm">&cesm1;
+There's also a trouble-shooting chapter in the <ulink
+url="&cesmwebmodelrel;cesm">&cesmrel;
 Scripts User's Guide</ulink>. Many of the problems with configuration can be resolved
 with the guidelines given there. Here we will restrict ourselves to problems from the
-&clm; or datm templates or input files.
+&clm; or &datm; templates or input files.
 <example id="configure_problem">
 <title>Example of configure problem with missing datasets</title>
 <screen width="99">
-> ./create_newcase -case transientT31 -res T31_g37 -compset I_1850-2000_CN \
--mach bluefire -skip_rundb
+> ./create_newcase -case T31rcp6 -res T31_g37 -compset IRCP60CN \
+-mach bluefire
 > ./configure -case
 </screen>
 <para>The following is what is displayed to the screen.</para>
 <screen width="99">
 Generating resolved namelist, prestage, and build scripts
-adding use_case 20thC_transient defaults for var clm_demand with val fpftdyn 
-adding use_case 20thC_transient defaults for var clm_start_type with val startup 
-adding use_case 20thC_transient defaults for var model_year_align_ndep with val 1850 
-adding use_case 20thC_transient defaults for var sim_year with val 1850 
-adding use_case 20thC_transient defaults for var sim_year_range with val 1850-2000 
-adding use_case 20thC_transient defaults for var start_ymd with val 18500101 
-adding use_case 20thC_transient defaults for var stream_year_first_ndep with val 1850 
-adding use_case 20thC_transient defaults for var stream_year_last_ndep with val 2005 
-adding use_case 20thC_transient defaults for var use_case_desc with val Simulate
-transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005 
+configure done.
+adding use_case 1850-2100_rcp6_transient defaults for var clm_demand with val fpftdyn 
+adding use_case 1850-2100_rcp6_transient defaults for var clm_start_type with val startup 
+adding use_case 1850-2100_rcp6_transient defaults for var model_year_align_ndep with val
+1850 
+adding use_case 1850-2100_rcp6_transient defaults for var rcp with val 6 
+adding use_case 1850-2100_rcp6_transient defaults for var sim_year with val 1850 
+adding use_case 1850-2100_rcp6_transient defaults for var sim_year_range with val
+1850-2100 
+adding use_case 1850-2100_rcp6_transient defaults for var stream_year_first_ndep with val
+1850 
+adding use_case 1850-2100_rcp6_transient defaults for var stream_year_last_ndep with val
+2100 
+adding use_case 1850-2100_rcp6_transient defaults for var use_case_desc with val Simulate
+transient land-use, aerosol and Nitrogen deposition changes with historical data from
+1850 to 2005 and then with the RCP6 scenario from AIM
+ 
 build-namelist - No default value found for fpftdyn.
             Are defaults provided for this resolution and land mask?
 ERROR: generate_resolved.csh error for lnd template
@@ -78,8 +86,8 @@ set echo
 </para>
 <para>
 In the example, the error is that the &clm; XML database does NOT have a
-<filename>fpftdyn</filename> for the given resolution and ocean mask. That means you
-will need to create the file and then supply the file into your case. See
+<filename>fpftdyn</filename> for the given resolution, rcp scenario and ocean mask. 
+That means you will need to create the file and then supply the file into your case. See
 <xref linkend="tools"></xref> for more information on creating files, and see
 <xref linkend="adding_files"></xref> for more information on adding files to the 
 XML database. Alternatively, you can provide the file to your case by creating
@@ -90,7 +98,7 @@ a user namelist as shown in <xref linkend="config_time_nml"></xref>.
 The two most common problems from your &clm; template will be errors from the &clm;
 &configure; or &buildnml;. For more information on these scripts see:
 <xref linkend="clm_configure_script"></xref> and 
-<link linkend="CLMBLDNML">the section on CLM_BLDML_OPTS</link>.
+<link linkend="CLMBLDNML">the section on &CLMBLDNML;</link>.
 </para>
 </note>
 </sect1>
@@ -136,7 +144,7 @@ In the next section we will talk about using the different log files to track
 down problems, and find out where the problem is coming from. In the section
 after that we give some general advice on debugging problems and some suggestions
 on ideas that may be helpful to track the problem down. Some of the examples
-below are from the <ulink url="../KnownBugs">KnownBugs</ulink> file.
+below are from the &KnownBugs; file.
 </para>
 <sect2 id="querying_log_files">
 <title>Tracking Problems by Querying Log Files</title>
@@ -170,7 +178,7 @@ the model dies and which model component it fails in. When the model dies at
 initialization the last model component listed is the component that failed.
 </para>
 <para>
-Example of a case that fails in the clm land model initialization.
+Example of a case that fails in the &clm; land model initialization.
 <screen width="99">
 (seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
 (seq_timemgr_clockPrint)     Next Time   = 99991201   00000
@@ -187,10 +195,11 @@ Example of a case that fails in the clm land model initialization.
 <title>The ccsm log file</title>
 <para>
 The ccsm log files are to some extent the "garbage collection" of log output. The
-clm sends it's output from it's master processor, but sends other output and possibly
+&clm; sends it's output from it's master processor, but sends other output and possibly
 errors to the ccsm log file. Because, of this, often error messages are somewhere in the
 ccsm log file. However, since there is so much other output it may be difficult to find.
-For example, here is some output where the RTM river routing file was not provided and
+For example, here is some output from an older version of &cesm; (&cesm102;) where the 
+RTM river routing file (before it was converted to &netcdf;) was not provided and
 the error on the open statement for the file was embedded near the end of the ccsm log
 file.
 <screen width="99">
@@ -208,6 +217,8 @@ Please wait...
 
 Memory usage for   ./ccsm.exe (task #   0) is:      51696 KB. Exit status: 1. Signal: 0
 </screen>
+Although the example is from an earlier version of the model it still serves to
+illustrate finding problems from the ccsm log file.
 </para>
 <para>
 When working with the ccsm log file, for a run-time problem, you will need to be able 
@@ -346,16 +357,16 @@ TID   HOST_NAME   COMMAND_LINE            STATUS            TERMINATION_TIME
 </sect3>
 
 <sect3 id="clm_log">
-<title>The clm log file</title>
+<title>The &clm; log file</title>
 <para>
-Of course when you are working with and making changes to clm, most of your focus
-will be on the clm log file and the errors it shows. As already pointed out 
+Of course when you are working with and making changes to &clm;, most of your focus
+will be on the &clm; log file and the errors it shows. As already pointed out 
 if you don't see errors in the <filename>lnd.log.*</filename> file you should look
 in the <filename>ccsm.log.*</filename> to see if any errors showed up there.
 </para>
 <para>
 Here's an example of the <filename>lnd.log.*</filename> file when running 
-&PTSMODE; with initial conditions (this is bug 1025 in the KnownBugs file).
+&PTSMODE; with initial conditions (this is bug 1025 in the &KnownBugs; file).
 <screen width="99">
  Successfully initialized variables for accumulation
  
@@ -368,7 +379,7 @@ Here's an example of the <filename>lnd.log.*</filename> file when running
 </sect3>
 
 <sect3 id="datm_log">
-<title>The datm log file</title>
+<title>The &datm; log file</title>
 <para>
 When working with "I cases" the second most common problems after &clm; problems are
 problems with the data atmosphere model. So examining the <filename>atm.log.*</filename>
@@ -394,7 +405,7 @@ is given to a <literal>pt1_pt1</literal> simulation.
 The names of the batch log files will depend on the batch system of the machine
 that is being used. They will normally be in the script directory. Usually, they
 don't contain important information, but they are a last resort place to look for
-error messages. On the NCAR IBM system "bluefire" the batch files are called
+error messages. On the &ncar; IBM system "bluefire" the batch files are called
 with names that start with "poe" and then either "stderr" or "stdout", with the
 job number at the end.
 </para>
@@ -468,7 +479,7 @@ in order to use more processors to make it faster if needed.
 <screen width="99">
 > ./configure -cleanall
 # Set tasks and threads for each component to 1
-# You could also set threads to something > 1 for speed, but still
+# You could also set threads to something &gt; 1 for speed, but still
 # run interactively if threading isn't an issue.
 > ./xmlchange -file env_mach_pes.xml -id NTASKS_ATM -val 1
 > ./xmlchange -file env_mach_pes.xml -id NTHRDS_ATM -val 1

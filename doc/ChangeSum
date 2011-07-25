@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_33         erik 07/25/2011 Move changes on release branch over to trunk
    clm4_0_32         erik 05/19/2011 Make I1850SPINUPCN compset use MOAR data, various bug fixes, work on test lists
    clm4_0_31         erik 05/13/2011 Fix answers for transient_CN, fix interpinic
    clm4_0_30         erik 05/11/2011 New finidat/fsurdat files for T31

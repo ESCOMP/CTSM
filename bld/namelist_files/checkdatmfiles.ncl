@@ -1,11 +1,12 @@
 ;
+; Check that the area and fraction is the same between the datm domain files
+; and the equivalent CLM land frac file.
 ;
 ;  Erik Kluzek
 ;  Apr/10/2008
-;  $Id: aerdepregrid.ncl 9114 2008-03-06 17:07:01Z erik $
-;  $HeadURL;
 ;
 
+  print( "Check that datm domain files and CLM land frac files are consistent" );
   resolutions = (/ "4x5", "10x15", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "128x256","64x128","48x96","32x64","8x16" /);
  
   space  = "      ";
@@ -78,13 +79,13 @@ begin
         domfile  = systemfunc( querynmlres+" -var domainfile -namelist shr_strdata_nml" );
         if ( ismissing(domfile) )then
           print( "Missing domainfile" );
-          exit;
+          continue;
         end if
         print( querynml+" -res "+res+" -var domainfile" );
         print( space+space+"Use dom file:         "+domfile );
         if ( systemfunc("test -f "+domfile+"; echo $?" ) .ne. 0 )then
            print( "Input domfile does not exist or not found: "+domfile );
-           exit;
+           continue;
         end if
         ncd      = addfile( domfile,    "r" );
    

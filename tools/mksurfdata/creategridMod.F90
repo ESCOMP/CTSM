@@ -10,7 +10,6 @@ module creategridMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use fileutils   , only : getfil
   use mkvarctl   
   use domainMod   , only : domain_init, domain_type, domain_check
   use areaMod
@@ -65,7 +64,6 @@ contains
     real(r8), allocatable :: lat1d(:)          !local array for 1d lat
     real(r8), allocatable :: xv(:,:,:)         !local array for corner lons
     real(r8), allocatable :: yv(:,:,:)         !local array for corner lats
-    character(len=256) :: locfn                !local file name
     integer :: i,j                             !indexes
     integer :: ncid                            !netCDF file id
     integer :: dimid                           !netCDF dimension id
@@ -102,8 +100,7 @@ contains
 
     ! Read domain file and compute stuff as needed
 
-    call getfil (fname, locfn, 0)
-    call check_ret(nf_open(locfn, 0, ncid), subname)
+    call check_ret(nf_open(fname, 0, ncid), subname)
 
     ier = nf_inq_dimid (ncid, 'lon', dimid)
     if (ier == NF_NOERR) then

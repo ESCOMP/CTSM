@@ -1,8 +1,11 @@
 #!/usr/bin/env perl
 #=======================================================================
 #
-#  This is a script to svn export missing files in the CLM default 
-#  namelist XML file
+#  This is a script to list the missing files in your CESM inputdata area
+#  for a list of resolutions and model configurations. The list goes
+#  out to the file: clm.input_data_list. The check_input_data script
+#  can then be used to get this list of files from the SVN inputdata
+#  repository.
 #
 # Usage:
 #
@@ -11,6 +14,10 @@
 # To get help on options and usage:
 #
 # listDefaultNamelist.pl -help
+#
+# To then get the files from the CESM SVN repository:
+#
+# ../../../../scripts/ccsm_utils/Tools/check_input_data -datalistdir . -export
 #
 #=======================================================================
 
@@ -81,6 +88,10 @@ EXAMPLES
   with silent mode on so no extra printing is done:
 
   $ProgName -res 10x15,4x5,64x128 -s
+
+  to then read the resulting clm.input_data_list file and retreive the files
+
+  ../../../../scripts/ccsm_utils/Tools/check_input_data -datalistdir . -export
 
 EOF
 }
@@ -273,6 +284,11 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
                     #
                     foreach my $crop ( @crop_vals ) {
                        $settings{'crop'} = $crop;
+                       if ( $crop eq "on" ) {
+                          $settings{'maxpft'} = 21;
+                       } else {
+                          $settings{'maxpft'} = 17;
+                       }
                        my @irrigset;
                        if ( $glc_nec  == 0 && $sim_year == 2000 ) { 
                           @irrigset= ( ".true.", ".false." );

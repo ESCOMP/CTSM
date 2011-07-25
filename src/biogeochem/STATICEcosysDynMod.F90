@@ -360,13 +360,13 @@ contains
 
     allocate(mlai(begg:endg,0:numpft), stat=ier)
     if (ier /= 0) then
-       write(6,*)subname, 'allocation error '; call endrun()
+       write(iulog,*)subname, 'allocation error '; call endrun()
     end if
 
     call get_proc_bounds(begp=begp,endp=endp)
 
     if (masterproc) then
-       write (6,*) 'Attempting to read annual vegetation data .....'
+       write (iulog,*) 'Attempting to read annual vegetation data .....'
     end if
 
     call getfil(fsurdat, locfn, 0)

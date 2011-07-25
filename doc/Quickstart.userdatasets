@@ -131,7 +131,7 @@ Process:
        i.e.
 
        		./create_newcase -case my_userdataset_test -res pt1_pt1 -compset I1850 \
-                -mach bluefire -skip_rundb
+                -mach bluefire
 
        The above example implies that: MASK=gx1v6, SIM_YEAR=1850, and SIM_YEAR_RANGE=constant.
        5.) Edit the env_run.xml in the case to point to your new dataset area

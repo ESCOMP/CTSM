@@ -16,14 +16,14 @@ module clmtype
 ! -------------------------------------------------------- 
 ! landunits types can have values of (see clm_varcon.F90)
 ! -------------------------------------------------------- 
-!   1  => (istsoil) soil (vegetated or bare soil landunit)
-!   2  => (istice)  land ice
-!   3  => (istdlak) deep lake
-!   4  => (istslak) shall lake (not currently implemented)
-!   5  => (istwet)  wetland
-!   6  => (isturb)  urban
+!   1  => (istsoil)    soil (vegetated or bare soil landunit)
+!   2  => (istice)     land ice
+!   3  => (istdlak)    deep lake
+!   4  => (istslak)    shallow lake (not currently implemented)
+!   5  => (istwet)     wetland
+!   6  => (isturb)     urban
 !   7  => (istice_mec) land ice (multiple elevation classes) 
-!   7  => (istcrop) crop (only for crop configuration)
+!   8  => (istcrop)    crop (only for crop configuration)
 ! -------------------------------------------------------- 
 ! column types can have values of
 ! -------------------------------------------------------- 
@@ -32,7 +32,7 @@ module clmtype
 !   3  => (istdlak)          deep lake
 !   4  => (istslak)          shallow lake 
 !   5  => (istwet)           wetland
-!   7  => (istice_mec)   land ice (multiple elevation classes)   
+!   7  => (istice_mec)       land ice (multiple elevation classes)   
 !   61 => (icol_roof)        urban roof
 !   62 => (icol_sunwall)     urban sunwall
 !   63 => (icol_shadewall)   urban shadewall
@@ -212,15 +212,12 @@ type, public :: pft_pstate_type
    real(r8), pointer :: sun_faii(:,:) !fraction sun canopy absorbed indirect from indirect
    real(r8), pointer :: sha_faid(:,:) !fraction shade canopy absorbed indirect from direct
    real(r8), pointer :: sha_faii(:,:) !fraction shade canopy absorbed indirect from indirect
-   ! 4/14/05: PET
-   ! Adding isotope code
    real(r8), pointer :: cisun(:)       !sunlit intracellular CO2 (Pa)
    real(r8), pointer :: cisha(:)       !shaded intracellular CO2 (Pa)
 #if (defined C13)
    real(r8), pointer :: alphapsnsun(:) !sunlit 13c fractionation ([])
    real(r8), pointer :: alphapsnsha(:) !shaded 13c fractionation ([])
 #endif
-   ! heald: added outside of CASA definition
    real(r8), pointer :: sandfrac(:)    ! sand fraction
    real(r8), pointer :: clayfrac(:)    ! clay fraction
    ! for dry deposition of chemical tracers
@@ -2145,8 +2142,6 @@ type, public :: pft_type
    type(pft_depvd_type)  :: pdd         !dry dep velocity
    
 #if (defined C13)
-   ! 4/14/05: PET
-   ! Adding isotope code
    type(pft_cstate_type) :: pc13s       !pft carbon-13 state
    type(pft_cflux_type)  :: pc13f       !pft carbon-13 flux
 #endif
@@ -2202,8 +2197,6 @@ type, public :: column_type
 #endif
    
 #if (defined C13)
-   ! 4/14/05: PET
-   ! Adding isotope code
    type(column_cstate_type) :: cc13s    !column carbon-13 state
    type(column_cflux_type)  :: cc13f    !column carbon-13 flux
 #endif

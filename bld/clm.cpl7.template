@@ -23,7 +23,7 @@ if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
 if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
 set config_opts = "-mode ext_cesm -rtm $rtm -glc_nec $GLC_NEC $CLM_CONFIG_OPTS"
-$CODEROOT/lnd/clm*/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
+$CODEROOT/lnd/clm/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
 # Invoke build-namelist
@@ -130,7 +130,6 @@ cat >! $CASEBUILD/clm.buildnml.csh << EOF1
 
 #******************************************************************#
 #                  WARNING:                                        #
-# - CAM and CLM namelist variable dtime must have same values      #
 # - If the user changes any input datasets - be sure to give it a  #
 #   unique filename. Do not duplicate any existing input files     #
 #******************************************************************#
@@ -188,6 +187,6 @@ EOF2
 
 #
 # Remove any temporary configure files in the clmconf directory
-# (Some files are still used in clm.buildexe.csh, so leave those around: CESM_cppdefs and *.h)
+# (Some files are still used in clm.buildexe.csh, so leave those around: CESM_cppdefs)
 #
 \rm -f $CASEBUILD/clmconf/Filepath

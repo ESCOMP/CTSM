@@ -1,4 +1,4 @@
-models/lnd/clm/tools/README					Mar/13/2008
+models/lnd/clm/tools/README					May/25/2011
 
 CLM tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.
@@ -19,9 +19,15 @@ II. Notes on the build system for each of the above tools:
 	README ------- Specific help for using the specific tool and help on specific files in that directory.
 	Filepath ----- List of directories needed to build the tool (some files in ../src directories are required).
 	Makefile ----- GNU Makefile to build the tool (these are almost identical between tools.
+        Mkdepends ---- Tool for Makefile to figure out code dependencies
 	Srcfiles ----- List of source files that are needed.
 
-    cprnc has it's own standalone Makefile and doesn't use any code outside of it's directory.
+    cprnc is a tool shared by other CESM components as it's a general tool for comparing
+    NetCDF files with a time coordinate. As such it has it's own standalone Makefile 
+    and is a little different than the other tools.
+
+    The tools have copies of files from other directories -- see the README.filecopies
+    file for more information on this.
 
     Tools also have files with the directory name followed by: namelist, runoptions, regional, or singlept
     these are sample namelists:
@@ -30,6 +36,9 @@ II. Notes on the build system for each of the above tools:
 	<directory>.regional ------ Namelist to create a regional file.
 	<directory>.singlept ------ Namelist to create a single-point file.
 	<directory>.runoptions ---- Command line options to use the given tool.
+
+    These files are also used by the test scripts to test the tools (see the
+    README.testing) file.
 
     NOTE: Be sure to change the path of the datasets references by these namelists to point to where you
     have untarred your datasets.
@@ -41,13 +50,31 @@ II. Notes on the build system for each of the above tools:
         setenv LIB_NETCDF <path-to-NetCDF-library-files>
 	gmake
 
-    The process will create a file called "Depends" which has with the dependencies for the build of each file on other files.
+    The process will create a file called "Depends" which has the dependencies
+    for the build of each file on other files.
 
-      By default code compiles non-optimized so that you can use the debugger,
-      and with bounds-checking, and float trapping on. To speed up do the following...
+      By default some codes (mkdatadomain and mkgridata) are compiled non-optimized 
+      so that you can use the debugger, and with bounds-checking, and float trapping on. 
+      To speed up do the following...
 
-   gmake OPT=TRUE  
+   gmake OPT=TRUE  (by default already on for interpinic and mksurfdata)
 
-      Also some of the tools allow for OpenMP shared memory parallelism (such as interpinic) with
+      Also some of the tools allow for OpenMP shared memory parallelism 
+      (such as interpinic and mksurfdata) with
 
    gmake SMP=TRUE
+
+
+    To run a program with a namelist:
+
+        ./program < namelist
+
+    To get help on running a program with command line options (cprnc and interpinic):
+
+        ./program
+
+    To run a program built with SMP=TRUE:
+
+        setenv OMP_NUM_THREADS=<number_of_threads_to_use>
+
+        run normally as above

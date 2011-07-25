@@ -117,7 +117,6 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 ! make percent glacier on multiple elevation classes and mean elevation for each elevation class
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarsur    , only : ldomain
@@ -191,7 +190,6 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
   integer  :: ncid,dimid,varid              ! input netCDF id's
   integer  :: ier                           ! error status
   real(r8), parameter :: minglac = 1.e-6_r8 ! Minimum glacier amount
-  character(len=256) locfn                  ! local dataset file name
   character(len=32) :: subname = 'mkglcmec'
 !-----------------------------------------------------------------------
 
@@ -225,12 +223,10 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname1, locfn, 0)
-
-  call read_domain(tdomain1,locfn)
+  call read_domain(tdomain1,fname1)
   call domain_setptrs(tdomain1,ni=nlont_i,nj=nlatt_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname1, 0, ncid), subname)
 
   allocate(topoice_i(nlont_i, nlatt_i), topobedrock_i(nlont_i, nlatt_i), stat=ier)
   if (ier/=0) call abort()
@@ -242,12 +238,10 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 
   call check_ret(nf_close(ncid), subname)
 
-  call getfil (fname2, locfn, 0)
-
-  call read_domain(tdomain2,locfn)
+  call read_domain(tdomain2,fname2)
   call domain_setptrs(tdomain2,ni=nlont_i,nj=nlatt_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname2, 0, ncid), subname)
 
   allocate(landmask_i(nlont_i, nlatt_i), stat=ier)                         
   if (ier/=0) call abort()
@@ -259,12 +253,10 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 
   ! Get pct_glacier data
 
-  call getfil (fname3, locfn, 0)
-
-  call read_domain(tdomain3,locfn)
+  call read_domain(tdomain3,fname3)
   call domain_setptrs(tdomain3,ni=nlong_i,nj=nlatg_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname3, 0, ncid), subname)
 
   allocate(glac_i(nlong_i, nlatg_i), stat=ier)
   if (ier/=0) call abort()
@@ -463,7 +455,6 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 ! make percent glacier
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -513,7 +504,6 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkglacier'
 !-----------------------------------------------------------------------
 
@@ -526,12 +516,10 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   allocate(glac_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()

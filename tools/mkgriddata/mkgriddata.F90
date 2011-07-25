@@ -12,7 +12,6 @@ program mkgriddata
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
-    use fileutils    , only : getfil, putfil, opnfil, getavu, get_filename
     use creategridMod, only : creategrid, write_domain, mkfile, settopo
     use domainMod    , only : domain_type
     use mkvarctl
@@ -29,24 +28,24 @@ program mkgriddata
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer  :: lsmlon, lsmlat        ! clm grid resolution
-    integer  :: i,j,k,m               ! indices
-    integer  :: nfile                 ! number of files read in
-    integer  :: nused                 ! number of files used
-    integer  :: ier                   ! error status
-    character(len= 9) :: resol        ! resolution for file name
-    character(len=64) :: fgriddat     ! output filename
-    character(len=64) :: ffracdat     ! output filename
-    character(len=64) :: ftopodat     ! output filename
-    character(len=256):: fileinfo     ! output filename
-    character(len=256):: Topofileinfo ! output filename
-    character(len=256):: Fracfileinfo ! output filename
-    logical           :: grid         ! grid is being set
-    logical           :: writeTopo    ! flag to write topo file out or not
-    logical           :: writeLFrc    ! flag to write land-frac file out or not
-    logical           :: writeTopo1   ! tmp flag to write topo file out or not
-    logical           :: writeLFrc1   ! tmp flag to write land-frac file out or not
-    type(domain_type) :: ldomain      ! local domain
+    integer  :: lsmlon, lsmlat              ! clm grid resolution
+    integer  :: i,j,k,m                     ! indices
+    integer  :: nfile                       ! number of files read in
+    integer  :: nused                       ! number of files used
+    integer  :: ier                         ! error status
+    character(len= 9) :: resol              ! resolution for file name
+    character(len=64) :: fgriddat           ! output filename
+    character(len=64) :: ffracdat           ! output filename
+    character(len=64) :: ftopodat           ! output filename
+    character(len=256):: fileinfo     = ' ' ! output filename
+    character(len=256):: Topofileinfo = ' ' ! output filename
+    character(len=256):: Fracfileinfo = ' ' ! output filename
+    logical           :: grid               ! grid is being set
+    logical           :: writeTopo          ! flag to write topo file out or not
+    logical           :: writeLFrc          ! flag to write land-frac file out or not
+    logical           :: writeTopo1         ! tmp flag to write topo file out or not
+    logical           :: writeLFrc1         ! tmp flag to write land-frac file out or not
+    type(domain_type) :: ldomain            ! local domain
     character(len=32) :: subname = 'mkgriddata'  ! program name
 
     namelist /clmexp/    &
@@ -178,7 +177,7 @@ program mkgriddata
     if ( writeTopo ) call write_domain(ldomain,ftopodat, itype=3)
 
     write (6,'(72a1)') ("-",i=1,60)
-    write (6,'(a46,f5.1,a4,f5.1,a5)') 'land model grid data set successfully created for ', &
+    write (6,'(a46,f5.1,a4,f5.1,a5)') 'Successfully created land model grid data set for ', &
          360./lsmlon,' by ',180./lsmlat,' grid'
 
 contains

@@ -42,7 +42,6 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 ! make percent glacier
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -105,9 +104,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, zero_out, glac_o )
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
   call check_ret(nf_open(locfn, 0, ncid), subname)

@@ -499,7 +499,7 @@ contains
     call check_ret(nf90_close( ncidi))
     call check_ret(nf90_close( ncido))
 
-    write (6,*) ' Successfully mapped from input to output initial files'
+    write (6,*) ' Successfully created initial condition file mapped from input IC file'
 
   end subroutine interp_filei
 
@@ -1131,9 +1131,9 @@ contains
     allocate (rbufslo(nveco))
     allocate (wto(nveco))
 
+    htop_var    = .false.
+    fpcgrid_var = .false.
     if (nvec == numpfts) then
-       htop_var    = .false.
-       fpcgrid_var = .false.
        if ( trim(varname) == 'htop'    ) htop_var    = .true.
        if ( trim(varname) == 'hbot'    ) htop_var    = .true.
        if ( trim(varname) == 'fpcgrid' ) fpcgrid_var = .true.
@@ -1287,14 +1287,16 @@ contains
     integer , allocatable :: ibufslo (:)        !output array
     integer :: count
     integer :: ret                              !NetCDF return code
-    logical :: present_var = .false.            !If variable name is == present
-    logical :: itypveg_var = .false.            !If variable name is == itypveg
+    logical :: present_var                      !If variable name is == present
+    logical :: itypveg_var                      !If variable name is == itypveg
     ! --------------------------------------------------------------------
 
     allocate (ibufsli(nvec))
     allocate (ibufslo(nveco))
     allocate (wto(nveco))
 
+    present_var = .false.
+    itypveg_var = .false.
     if (nvec == numpfts) then
        if ( trim(varname) == 'present' ) present_var = .true.
        if ( trim(varname) == 'pfts1d_itypveg' ) itypveg_var = .true.
@@ -1319,9 +1321,9 @@ contains
        call check_ret(nf90_inq_varid (ncido, 'cols1d_wtxy', varid))
        call check_ret(nf90_get_var(ncido, varid, wto))
     else if (nveco == numpftso) then
+       allocate (typeo(nveco))
+       allocate (vtypeo(nveco))
        if ( present_var .or. itypveg_var )then
-          allocate (typeo(nveco))
-          allocate (vtypeo(nveco))
           call check_ret(nf90_inq_varid (ncido, 'pfts1d_itypveg', varid))
           call check_ret(nf90_get_var(ncido, varid, vtypeo))
           call check_ret(nf90_inq_varid (ncido, 'pfts1d_ityplun', varid))

@@ -6,8 +6,8 @@
 The &clm; also allows you to set up and run cases with a single-point or a local region as well
 as global resolutions. This is often useful for running quick cases for testing, evaluating
 specific vegetation types, or land-units, or running with observed data for a specific site.
-There are three different ways to do this: &PTSMODE;,
-&CLM1PT;, and &CLMUSRDAT;.
+There are four different ways to do this: &PTSMODE;,
+&CLM1PT;, &CLMUSRDAT;, and with &ptclm;.
 <simplelist>
 <member><emphasis>&PTSMODE;</emphasis> -- to run for a single point
 using global datasets.</member>
@@ -15,11 +15,13 @@ using global datasets.</member>
 or regional dataset.</member>
 <member><emphasis>&CLMUSRDAT;</emphasis> -- to run using your own datasets (single-point
 or regional).</member>
+<member><emphasis>&ptclm;</emphasis> -- to easily setup simulations to run for
+tower sites..</member>
 </simplelist>
 </para>
 <note>
 <para>
-&PTSMODE; only works for a single point, while the other two options can
+&PTSMODE; and &ptclm; only work for a single point, while the other two options can
 also work for regional datasets as well.
 </para>
 </note>
@@ -47,14 +49,14 @@ single-point/regional datasets, is your region of interest (see
 created for you, and you can easily select one and run, pretty much, out of the box 
 with it. The problem is that there is a very limited set of supported datasets. You 
 can also use this method for your own datasets, but you have to create the datasets, 
-and add them to the XML database and to the datm. This is worthwhile if you want to 
+and add them to the XML database and to the &datm;. This is worthwhile if you want to 
 repeat many multiple cases for a given point or region.
 </para>
 <para>
 Next, <emphasis>&CLMUSRDAT;</emphasis> is the best way to setup cases quickly
 where you have to create your own datasets (see 
 <xref linkend="own_single_point_datasets"></xref>). With this method you don't have to
-change datm or add files to the XML database -- but you have to follow a strict 
+change &datm; or add files to the XML database -- but you have to follow a strict 
 naming convention for files. However, once the files are named and in the proper
 location, you can easily setup new cases that use these datasets. This is good
 for treating all the required datasets as a "group" and for a particular 
@@ -63,12 +65,22 @@ different model versions you would be best off adding these datasets as supporte
 datasets with the <emphasis>&CLM1PT;</emphasis> method.
 </para>
 <para>
+Lastly <emphasis>&ptclm;</emphasis> is a great way to easily create datasets, 
+setup simulations and run simulations for tower sites. It takes advantage of both
+&CLM1PT; and &CLMUSRDAT; internally. A big advantage to it, is that it's one-stop
+shopping, it runs tools to create datasets, and runs <command>create_newcase</command>
+and sets the appropriate env variables for you. So you only have to learn how to run
+one tool, rather than work with many different ones. &ptclm; is described in the next
+chapter <xref linkend="PTCLMDOC"></xref>.
+</para>
+<para>
 Finally, if you also have meteorology data that you want to force your &clm; simulations
 with you'll need to setup cases as described in <xref linkend="own_atm_forcing"></xref>.
 You'll need to create &clm; datasets either according to <emphasis>&CLM1PT;</emphasis>
-or <emphasis>&CLMUSRDAT;</emphasis>, but you'll also need to modify datm to use
+or <emphasis>&CLMUSRDAT;</emphasis>, but you'll also need to modify &datm; to use
 your forcing data. And you'll need to change your forcing data to be in a format that
-datm can use.
+&datm; can use. In the &ptclm; chapter the <xref linkend="AmeriFluxdata"></xref> 
+section tells you how to use AmeriFlux data for atmospheric forcing.
 </para>
 </sect1>
 
@@ -88,7 +100,7 @@ to Boulder Colorado.
 <screen width="99">
 > cd scripts
 > ./create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
--pts_lat 40.0 -pts_lon -105 -skip_rundb
+-pts_lat 40.0 -pts_lon -105
 > cd testPTS_MODE
 # We make sure the model will start up cold rather than using initial conditions
 > ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
@@ -100,7 +112,7 @@ since &PTSMODE; currently CAN NOT run with initial conditions.
 <important>
 <para>
 By default it sets up to run with
-<envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
+<envar>USE_MPISERIAL</envar> (in the <filename>env_build.xml</filename> file) turned on, 
 which allows you to run the model interactively. On some machines this mode is NOT 
 supported and you may need to change it to FALSE before you are able to build.
 </para>
@@ -124,7 +136,7 @@ Note, that when running with &PTSMODE; the number of processors
 is automatically set to one. When running a single grid point you can only use a single
 processor. You might also want to set the "env_conf" variable: <envar>USE_MPISERIAL</envar> to
 <literal>TRUE</literal> so that you can also run interactively without having to use
-mpi to start up your job.
+&mpi; to start up your job.
 </para>
 </note>
 </sect1>
@@ -140,7 +152,7 @@ one processor. This applies to all the different ways of running in single-point
 A warning for submitting single-point simulations to the batch que when only using
 one processor. On many machines this will mean using up at least an entire node, and 
 being charged for all the CPU's on that node even if you aren't using them. For example,
-on the <acronym>NCAR</acronym> machine bluefire, there are 32 processors for each node
+on the &ncar; machine bluefire, there are 32 processors for each node
 and the batch scripts are setup to have exclusive use of that node (and hence be charged
 for all 32 processors). There are similar issues on other machines, below we show you
 what to do when running on bluefire.
@@ -190,7 +202,7 @@ single-point and regional datasets that are ready to setup and run in the CESM m
 system.
 </para>
 <para>
-To get the list of supported dataset resolutions see the methodÂ given in the
+To get the list of supported dataset resolutions see the method given in the
 <link linkend="CLM1PT">section on use of &CLM1PT;</link>, which results in the following:
 <screen width="99">
 &res_list;
@@ -202,7 +214,7 @@ To run with the supported single-point and regional datasets, you setup a simula
 <filename>env_conf.xml</filename> file. 
 </para>
 <para>
-To run for the brazil test site
+To run for the Brazil test site
 do the following:
 <example id="brazil_1x1">
 <title>Example of running &clm; over a single-point test site in Brazil
@@ -211,7 +223,7 @@ with the default Qian atmosphere data forcing.
 <screen width="99">
 > cd scripts
 > ./create_newcase -case testSPDATASET -res pt1_pt1 -compset I \
--mach bluefire -skip_rundb
+-mach bluefire
 > cd testSPDATASET
 # Configure to run for the test site
 > set SITE=1x1_brazil
@@ -241,7 +253,7 @@ with the default Qian atmosphere data forcing.
 # Configure to run for the urban test site
 > ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-sitespf_pt $SITE"
 > ./xmlchange -file env_conf.xml -id &CLM1PT; -val $SITE
-# Set datm prescribed aerosols to single-point dataset
+# Set &datm; prescribed aerosols to single-point dataset
 # Will then use the dataset with just the point for this $SITE
 > ./xmlchange -file env_conf.xml -id DATM_PRESAERO -val pt1_pt1
 #
@@ -249,7 +261,7 @@ with the default Qian atmosphere data forcing.
 # in the XML database. For some sites, or for new sites this information won't be
 # stored. And the queryDefaultNamelist.pl command will abort.
 #
-# Set datm start and end range (optional just to run over the same years that
+# Set &datm; start and end range (optional just to run over the same years that
 # atmospheric forcing data is available for this site)
 > ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_START -val \
 `../../models/lnd/clm/bld/queryDefaultNamelist.pl -res $SITE \
@@ -291,7 +303,7 @@ mpi to start up your job.
 <para>
 Of the supported single-point datasets we have three that also have atmospheric forcing data 
 that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and
-urbanc_alpha (test data for an Urban intercomparison project). Mexico city and Vancouver
+urbanc_alpha (test data for an Urban inter-comparison project). Mexico city and Vancouver
 also have "#ifdef" in the source code for them to work with modified urban data
 parameters that are particular to these locations. They can be turned on by using
 the &CLMCONFIG; &envconf; variable to set the "-sitespf_pt" option in the &clm;
@@ -300,7 +312,7 @@ the &CLMCONFIG; &envconf; variable to set the "-sitespf_pt" option in the &clm;
 forcing datasets will be used for the point picked. 
 </para>
 <para>
-When running with datasets that have thier own atmospheric forcing you need to be careful
+When running with datasets that have their own atmospheric forcing you need to be careful
 to run over the period that data is available. If you have at least one year of forcing
 it will cycle over the available data over and over again no matter how long of a simulation
 you run. However, if you have less than a years worth of data (or if the start date doesn't
@@ -313,16 +325,6 @@ and you can use the <command>queryDefaultNamelist.pl</command> script to query t
 and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and
 urbanc_alpha).
 </para>
-<warning>
-<para>
-There is a Known Problem with the "urbanc_alpha" test site (see bug 1276 in the
-<ulink url="../KnownBugs">KnownBugs</ulink> file). The description also tells you 
-how to fix the problem. Also note that this test site has data at half-hourly
-frequency, so you can run for 22770 time-steps if you run for half-hour time-steps 
-rather than hourly (set ATM_NCPL=48 and dtime=1800 in the clm 
-<filename>Buildconf/clm.buildnml.csh</filename> file).
-</para>
-</warning>
 <para>
 In the example below we will show how to do this for the Vancouver, Canada point.
 </para>
@@ -334,7 +336,7 @@ supplied atmospheric forcing data for Vancouver.
 > cd scripts
 # Create a case at the single-point resolutions
 > ./create_newcase -case testSPDATASETnAtmForcing -res pt1_pt1 -compset I \
--mach bluefire -skip_rundb
+-mach bluefire
 > cd testSPDATASETnAtmForcing
 # Set a variable to the site you want to use (as it's used several times below)
 > set SITE=1x1_vancouverCAN
@@ -370,7 +372,7 @@ supplied atmospheric forcing data for Vancouver.
 > ./xmlchange -file env_run.xml -id START_TOD \
 -val `../../models/lnd/clm/bld/queryDefaultNamelist.pl -res $SITE \
 -namelist seq_timemgr_inparm -silent -var start_tod -justvalue`
-# Set datm start and end range...
+# Set &datm; start and end range...
 > ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_START -val
 `../../models/lnd/clm/bld/queryDefaultNamelist.pl -res $SITE \
 -namelist default_settings -silent -var datm_cycle_beg_year -justvalue`
@@ -388,7 +390,7 @@ supplied atmospheric forcing data for Vancouver.
 EOF
 # Set align year to start year as defined above
 > ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_ALIGN -val $START_YEAR
-# Set datm prescribed aerosols to single-point dataset
+# Set &datm; prescribed aerosols to single-point dataset
 # Will then use the dataset with just the point for this site
 > ./xmlchange -file env_conf.xml -id DATM_PRESAERO -val pt1_pt1
 > ./configure -case
@@ -398,7 +400,7 @@ EOF
 <para>
 If you don't set the start-year and run-length carefully as shown above the
 model will abort with a "dtlimit error" in the atmosphere model (see bug 1110 in
-the KnownLimitations file for documenation on this). Since, the forcing data for 
+the KnownLimitations file for documentation on this). Since, the forcing data for 
 this site (and the MexicoCity site) is less than a year, the model won't be able to 
 run for a full year.  The <literal>1x1_urbanc_alpha</literal> site has data for more 
 than a full year, but neither year is complete hence, it has the same problem (see the
@@ -461,15 +463,16 @@ their name used in the namelists are:
 <varname>fatmgrid</varname>, <varname>fatmlndfrc</varname>, 
 <varname>fsurdat</varname>, <varname>fpftdyn</varname>, 
 <varname>flndtopo</varname>, 
-<varname>stream_fldfilename_ndep</varname>, and the datm files 
+<varname>stream_fldfilename_ndep</varname>, and the &datm; files 
 <varname>domainfile</varname>, and <varname>faerdep</varname>.
 For more information on these files see the <link linkend="required_files"
 >Table on required files</link>.
 </para>
 <para>
 The alternatives to using this script are to use &PTSMODE;,
-discussed earlier, or creating the files individually using the different 
-file creation tools (given in the <link linkend="tools">Tools Chapter</link>). Creating
+discussed earlier, to use &ptclm; discussed in the next chapter, or creating the files 
+individually using the different file creation tools (given in the 
+<link linkend="tools">Tools Chapter</link>). Creating
 all the files individually takes quite a bit of effort and time. &PTSMODE;
 has some limitations as discussed earlier, but also as it uses global files, is
 a bit slower when running simulations than using files that just have the set
@@ -480,7 +483,7 @@ location that you can replace with what's already in these files.
 <para>
 The script requires the use of both "Perl" and "NCL". See the <link
 linkend="ncl_scripts">NCL Script</link> section in the <link linkend="tools">Tools Chapter</link>
-on getting and using NCL and NCL scripts. The main script to use is a perl script 
+on getting and using NCL and NCL scripts. The main script to use is a &perl; script 
 which will then in turn call the NCL script that actually creates the output files. 
 The ncl script gets it's settings from environment variables set by the perl script.
 To get help with the script use "-help" as follows:
@@ -504,9 +507,9 @@ for the land-mask to use, global resolution name, representative concentration p
 for future scenarios, simulation year, and simulation year range. The location of the 
 input and output files will be determined by the option <varname>-mycsmdata</varname> 
 (can also be set by using the environment variable <varname>$CSMDATA</varname>). If
-you are running on a machine like at NCAR where you do NOT have write permission
+you are running on a machine like at &ncar; where you do NOT have write permission
 to the CESM inputdata files, you should use the <filename>scripts/link_dirtree</filename>
-script to create softlinks of the original files to a location that you can write
+script to create soft-links of the original files to a location that you can write
 to. This way you can use both your new files you created as well as the original
 files and use them from the same location.
 </para>
@@ -562,7 +565,7 @@ specific region over Alaska</title>
 > cd scripts
 # Create the case and set it to only use one processor
 > ./create_newcase -case my_userdataset_test -res pt1_pt1 -compset I1850 \
--mach bluefire -pecount 1 -skip_rundb
+-mach bluefire
 > cd my_userdataset_test/
 > ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
 > ./xmlchange -file env_conf.xml -id &CLMUSRDAT; -val 13x12pt_f19_alaskaUSA
@@ -592,14 +595,15 @@ see the section on setting <link linkend="CLMUSRDAT">&CLMUSRDAT;</link>.
 </para>
 <para>
 Next we need to setup the atmosphere forcing data in &netcdf; format that can be
-read by datm. There is a list of eight variables that are expected to be on the input
+read by &datm;. There is a list of eight variables that are expected to be on the input
 files with the names and units on the following table (in the table TDEW and SHUM
 are optional fields that can be used in place of RH). In the table we also list
 which of the fields are required and if not required what the code will do to
 replace them. If the names of the fields are different or the list is changed
 from the standard list of eight fields: FLDS, FSDS, PRECTmms, 
 PSRF, RH, TBOT, WIND, and ZBOT, the resulting streams file will need to be modified
-to take this into account.
+to take this into account (see an example streams file for this in <xref
+linkend="own_force_streams"></xref> below).
 <table id="atm_forcing_fields" tocentry="1" pgwide="1" frame="all">
 <title>Atmosphere Forcing Fields</title>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
@@ -671,9 +675,11 @@ days, hours, minutes, or seconds. It can also have a calendar attribute that can
 be "noleap" or "gregorian". Normally the files will be placed in the:
 <filename>$MYCSMDATA/atm/datm7/CLM1PT_data/$MYUSRDAT</filename> directory with separate files per
 month called <filename>YYYY-MM.nc</filename> where YYYY-MM corresponds to the four
-digit year and two digit month with a dash inbetween. You also need a domain file that
+digit year and two digit month with a dash in-between. You also need a domain file that
 gives the coordinate information for the data that should be placed in:
 <filename>$MYCSMDATA/atm/datm7/domain.lnd.$MYUSRDAT_USGS.nc</filename>.
+<example id="own_force">
+<title>Example of setting up a case with your own atmosphere forcing</title>
 <screen width="99">
 > cd scripts
 # First make sure you have a inputdata location that you can write to 
@@ -685,23 +691,24 @@ gives the coordinate information for the data that should be placed in:
 
 #  Now create a single-point case
 > ./create_newcase -case my_atmforc_test -res pt1_pt1 -compset I1850 \
--mach bluefire -skip_rundb
+-mach bluefire
 > cd my_atmforc_test
 # Set the data root to your inputdata directory, and set &CLM1PT; and &CLMUSRDAT; 
 # to the user id you created for your datasets above
 > ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
 > ./xmlchange -file env_conf.xml -id &CLM1PT; -val $MYUSRDAT
 > ./xmlchange -file env_conf.xml -id &CLMUSRDAT; -val $MYUSRDAT
-# Set the land-mask to USGS, so both clm and datm can find files
+# Set the land-mask to USGS, so both clm and &datm; can find files
 > ./xmlchange -file env_conf.xml -id &CLMBLDNML; -val '-mask USGS'
-# Then set DATM_MODE to single-point mode so datm will use your forcing datasets
+# Then set DATM_MODE to single-point mode so &datm; will use your forcing datasets
 # Put your forcing datasets into $MYCSMDATA/atm/datm7/CLM1PT_data/$MYUSRDAT
 > ./xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
 > ./configure -case
 # If the list of fields, or filenames, filepaths, or fieldnames are different 
-# you'll need to edit the datm namelist streams file to make it consistent
+# you'll need to edit the &datm; namelist streams file to make it consistent
 > $EDITOR Buildconf/datm.buildnml.csh
 </screen>
+</example>
 </para>
 <warning>
 <para>
@@ -715,6 +722,209 @@ See <xref linkend="managingyourdata"></xref> for notes about managing your data
 when using <command>link_dirtree</command>.
 </para>
 </note>
+
+<para>
+Now, we'll show an example of what the &datm; streams file might look like for a case
+with your own forcing data with 3-hourly forcing. In this example, we'll leave off the 
+fields: ZBOT, and FLDS so they'll be calculated as given in the 
+<xref linkend="atm_forcing_fields"></xref> table above. We'll also include: 
+FSDSdif and FSDSdir which aren't required, and we'll use TDEW in place of RH. In this 
+example the datafiles are in &netcdf; format and contain the fields: TA, Tdew, WS, 
+PREC, Rg, Rgdir, Rgdif, and PRESS which are translated into the &datm; internal names 
+in this streams file. There is also a domain file that has the position information 
+for this location. The normal assumption for CLM1PT mode in the &datm; is that data is 
+hourly or half-hourly and as such is often enough that using the data on the nearest 
+time-stamp is reasonable and as such the data is in a single streams file (see
+<xref linkend="clm1pt_mode_datm_settings"></xref> for more information on 
+the default settings for &datm; and how to change them. If the data is less often three to six hours -- see <xref linkend="own_force_streams"></xref> 
+below, where you will need to modify the time-interpolation method as well as the 
+time stamp offsets. In the example below we also have to divide the single
+stream file into three files to manage the time-stamps and time interpolation
+algorithm for the different types of data differently.
+<example id="own_force_streams">
+<title>Example of &datm; streams files with your own forcing for 3-hourly data</title>
+<para>
+Precipitation streams file 
+(<filename>clm1PT.1x1pt_lapazMEX.precip.stream.txt</filename> file) .
+</para>
+<screen width="99">
+&lt;streamstemplate&gt;
+&lt;stream&gt;
+      &lt;dataSource&gt;
+         CLMNCEP
+      &lt;/dataSource&gt;
+      &lt;domainInfo&gt;
+         &lt;variableNames&gt;
+            time    time
+            xc      lon
+            yc      lat
+            area    area
+            mask    mask
+         &lt;/variableNames&gt;
+         &lt;filePath&gt;
+            $DIN_LOC_ROOT/atm/datm7/domain.clm
+         &lt;/filePath&gt;
+         &lt;fileNames&gt;
+            domain.lnd.1x1pt_lapazMEX_navy.nc
+         &lt;/fileNames&gt;
+      &lt;/domainInfo&gt;
+      &lt;fieldInfo&gt;
+         &lt;variableNames&gt;
+            PRECTmms PREC
+         &lt;/variableNames&gt;
+         &lt;offset&gt;
+            -5400
+         &lt;/offset&gt;
+         &lt;filePath&gt;
+            $DIN_LOC_ROOT/atm/datm7/CLM1PT_data/1x1pt_lapazMEX
+         &lt;/filePath&gt;
+         &lt;fileNames&gt;
+            2004-01.nc
+            2004-02.nc
+            2004-03.nc
+.
+.
+.
+            2009-12.nc
+         &lt;/fileNames&gt;
+      &lt;/fieldInfo&gt;
+&lt;/stream&gt;
+&lt;/streamstemplate&gt;
+</screen>
+<para>
+Solar streams file (<filename>clm1PT.1x1pt_lapazMEX.solar.stream.txt</filename> file).
+</para>
+<screen width="99">
+&lt;streamstemplate&gt;
+&lt;stream&gt;
+      &lt;dataSource&gt;
+         CLMNCEP
+      &lt;/dataSource&gt;
+      &lt;domainInfo&gt;
+         &lt;variableNames&gt;
+            time    time
+            xc      lon
+            yc      lat
+            area    area
+            mask    mask
+         &lt;/variableNames&gt;
+         &lt;filePath&gt;
+            $DIN_LOC_ROOT/atm/datm7/domain.clm
+         &lt;/filePath&gt;
+         &lt;fileNames&gt;
+            domain.lnd.1x1pt_lapazMEX_navy.nc
+         &lt;/fileNames&gt;
+      &lt;/domainInfo&gt;
+      &lt;fieldInfo&gt;
+         &lt;variableNames&gt;
+            FSDS     Rg
+            FSDSdir  Rgdir
+            FSDSdif  Rgdif
+         &lt;/variableNames&gt;
+         &lt;offset&gt;
+            -10800
+         &lt;/offset&gt;
+         &lt;filePath&gt;
+            $DIN_LOC_ROOT/atm/datm7/CLM1PT_data/1x1pt_lapazMEX
+         &lt;/filePath&gt;
+         &lt;fileNames&gt;
+            2004-01.nc
+            2004-02.nc
+            2004-03.nc
+.
+.
+.
+            2009-12.nc
+         &lt;/fileNames&gt;
+      &lt;/fieldInfo&gt;
+&lt;/stream&gt;
+&lt;/streamstemplate&gt;
+</screen>
+<para>
+Other fields streams file.
+(<filename>clm1PT.1x1pt_lapazMEX.other.stream.txt</filename> file) .
+</para>
+<screen width="99">
+&lt;streamstemplate&gt;
+&lt;stream&gt;
+      &lt;dataSource&gt;
+         CLMNCEP
+      &lt;/dataSource&gt;
+      &lt;domainInfo&gt;
+         &lt;variableNames&gt;
+            time    time
+            xc      lon
+            yc      lat
+            area    area
+            mask    mask
+         &lt;/variableNames&gt;
+         &lt;filePath&gt;
+            $DIN_LOC_ROOT/atm/datm7/domain.clm
+         &lt;/filePath&gt;
+         &lt;fileNames&gt;
+            domain.lnd.1x1pt_lapazMEX_navy.nc
+         &lt;/fileNames&gt;
+      &lt;/domainInfo&gt;
+      &lt;fieldInfo&gt;
+         &lt;variableNames&gt;
+            TBOT     TA
+            TDEW     Tdew
+            WIND     WS
+            PSRF     PRESS
+         &lt;/variableNames&gt;
+         &lt;offset&gt;
+            -5400
+         &lt;/offset&gt;
+         &lt;filePath&gt;
+            $DIN_LOC_ROOT/atm/datm7/CLM1PT_data/1x1pt_lapazMEX
+         &lt;/filePath&gt;
+         &lt;fileNames&gt;
+            2004-01.nc
+            2004-02.nc
+            2004-03.nc
+.
+.
+.
+            2009-12.nc
+         &lt;/fileNames&gt;
+      &lt;/fieldInfo&gt;
+&lt;/stream&gt;
+&lt;/streamstemplate&gt;
+</screen>
+<para>
+Example streams namelist for the above streams files:
+</para>
+<screen width="99">
+ &amp;shr_strdata_nml
+   dataMode       = 'CLMNCEP'
+   domainFile     = '$DOMAINFILE'
+   streams        = 'clm1PT.1x1pt_lapazMEX.solar.stream.txt  1 2004 2009 ',
+                    'clm1PT.1x1pt_lapazMEX.precip.stream.txt 1 2004 2009 ',
+                    'clm1PT.1x1pt_lapazMEX.other.stream.txt  1 2004 2009 ',
+                    'presaero.stream.txt 1 2000 2000'
+   vectors        = 'null','null','null','null'
+   mapmask        = 'nomask','nomask','nomask','nomask'
+   mapalgo        = 'nn','nn','nn','nn'
+   tintalgo       = 'coszen','nearest','linear','linear'
+   taxmode        = 'cycle','cycle','cycle','cycle'
+  /
+</screen>
+</example>
+</para>
+<note>
+<para>
+The example above shows the resolved namelist and streams file after &configure;
+has been run. In order to save this configuration for future use, you would need
+to edit the &datm; template adding new DATM_MODE see 
+<xref linkend="adding_new_DATM_MODE"></xref> for more information on how to do this.
+</para>
+</note>
+
+<para>
+We've outlined and given a few examples of using your own atmosphere
+forcing. In the next chapter we go into the details of using &ptclm;.
+</para>
+
 </sect1>
 
 </chapter>

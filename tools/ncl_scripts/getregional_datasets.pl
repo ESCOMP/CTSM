@@ -68,6 +68,7 @@ OPTIONS
                                    Recommended name: grid-size_global-resolution_location (?x?pt_f??_????)
                                    (i.e. 12x13pt_f19_alaskaUSA for 12x13 grid cells from the f19 global resolution over Alaska)
      -NE_corner "lat,lon" [or -ne] North East corner latitude and longitude                       (REQUIRED)
+     -nomv                         Do NOT move datasets to final location, just leave them in current directory
      -res "resolution"             Global horizontal resolution to extract data from (default $res).
      -rcp "pathway"                Representative concentration pathway for future scenarios 
                                    Only used when simulation year range ends in a future
@@ -131,6 +132,7 @@ my %opts = (
               res              => $res,
               rcp              => $rcp,
               help             => 0, 
+              nomv             => 0,
               verbose          => 0,
               debug            => 0,
            );
@@ -143,6 +145,7 @@ GetOptions(
     "mask=s"           => \$opts{'mask'},
     "res=s"            => \$opts{'res'},
     "rcp=f"            => \$opts{'rcp'},
+    "nomv"             => \$opts{'nomv'},
     "sim_yr_rng=s"     => \$opts{'sim_yr_rng'},
     "h|help"           => \$opts{'help'},
     "d|debug"          => \$opts{'debug'},
@@ -202,6 +205,10 @@ my $debug;
 if ( $opts{'debug'} ) {
   $debug = "DEBUG=TRUE";  
 }
+my $nomv;
+if ( $opts{'nomv'} ) {
+  $nomv = "NOMV=TRUE";  
+}
 my $print;
 if ( $opts{'verbose'} ) {
   $print = "PRINT=TRUE";  
@@ -210,7 +217,7 @@ if ( $opts{'verbose'} ) {
 my $cmd = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
           "SIM_YR=$opts{'sim_year'} SIM_YR_RNG=$opts{'sim_yr_rng'} MASK=$opts{'mask'} " .
           "ID=$opts{'mydataid'} RCP=$opts{'rcp'} RES=$opts{'res'} MYCSMDATA=$inputdata_rootdir " .
-          "$debug $print ncl $scrdir/getregional_datasets.ncl";
+          "$debug $print $nomv ncl $scrdir/getregional_datasets.ncl";
 
 print "Execute: $cmd\n";
 system( $cmd );

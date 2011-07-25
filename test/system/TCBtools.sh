@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm*/tools/$1`
+cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1`
 blddir=${CLM_TESTDIR}/${test_name}
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
@@ -47,10 +47,10 @@ echo "TCBtools.sh: building $1 executable; output in ${CLM_TESTDIR}/${test_name}
 #
 # Copy build files over
 #
-cp $cfgdir/Makefile .
-cp $cfgdir/Srcfiles .
+cp $cfgdir/Makefile  .
+cp $cfgdir/Srcfiles  .
 #
-# Add cfgdir path to begining of each path in Filepath
+# Add cfgdir path to beginning of each path in Filepath
 #
 touch Filepath
 while read filepath_arg; do

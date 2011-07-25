@@ -33,7 +33,7 @@ contains
 ! !IROUTINE: mklai
 !
 ! !INTERFACE:
-subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
+subroutine mklai(lsmlon, lsmlat, fname, firrig, ndiag, ncido, &
                  ni, nj, pctpft_i )
 !
 ! !DESCRIPTION:
@@ -42,13 +42,11 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
 ! for improved efficiency
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarsur    , only : ldomain
   use mkvarpar    , only : numstdpft
-  use areaMod     , only : areaini,areaave, gridmap_clean, &
-                           areaave_pft, areaini_pft
+  use areaMod     , only : areaini,areaave, gridmap_clean
   use ncdio
 !
 ! !ARGUMENTS:
@@ -56,7 +54,6 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
   character(len=256), intent(in) :: fname         ! input dataset file name
   character(len=256), intent(in) :: firrig        ! %irrigated area filename
-  character(len=256), intent(in) :: fdynuse       ! dynamic land use filename
   integer , intent(in) :: ndiag                   ! unit number for diag out
   integer , intent(in) :: ncido                   ! output netcdf file id
   integer , intent(in) :: ni                      ! number of long dimension of pft index
@@ -120,7 +117,6 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
   character(len=256) :: name                  ! name of attribute
   character(len=256) :: unit                  ! units of attribute
-  character(len=256) :: locfn                 ! local dataset file name
   character(len= 32) :: subname = 'mklai'
 !-----------------------------------------------------------------------
 
@@ -133,12 +129,10 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncidi), subname)
+  call check_ret(nf_open(fname, 0, ncidi), subname)
 
   call check_ret(nf_inq_dimid(ncidi, 'pft', dimid), subname)
   call check_ret(nf_inq_dimlen(ncidi, dimid, numpft_i), subname)
@@ -227,50 +221,23 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
      mhgtb_o(:,:,:) = 0.
 
      do l = 0, numpft
-        if ( fdynuse == ' ' )then
-           ! Calculate weights for this PFT type
-           call areaini_pft(tgridmap,ni,nj,pctpft_i=pctpft_i,pft_indx=l)
-        end if
 
         fld_i(:,:) = mlai_i(:,:,l)
-        if ( fdynuse == ' ' )then
-           call areaave_pft(fld_i,fld_o,tgridmap)
-        else
-           call areaave(    fld_i,fld_o,tgridmap)
-        end if
+        call areaave(    fld_i,fld_o,tgridmap)
         mlai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = msai_i(:,:,l)
-        if ( fdynuse == ' ' )then
-           call areaave_pft(fld_i,fld_o,tgridmap)
-        else
-           call areaave    (fld_i,fld_o,tgridmap)
-        end if
+        call areaave    (fld_i,fld_o,tgridmap)
         msai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtt_i(:,:,l)
-        if ( fdynuse == ' ' )then
-           call areaave_pft(fld_i,fld_o,tgridmap)
-        else
-           call areaave    (fld_i,fld_o,tgridmap)
-        end if
+        call areaave    (fld_i,fld_o,tgridmap)
         mhgtt_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtb_i(:,:,l)
-        if ( fdynuse == ' ' )then
-           call areaave_pft(fld_i,fld_o,tgridmap)
-        else
-           call areaave    (fld_i,fld_o,tgridmap)
-        end if
+        call areaave    (fld_i,fld_o,tgridmap)
         mhgtb_o(:,:,l) = fld_o(:,:)
 
-        if ( fdynuse == ' ' )then
-           do ji = 1, nlat_i
-           do ii = 1, nlon_i
-              if ( (mlai_i(ii,ji,l)+msai_i(ii,ji,l)) > 0.0_r8 ) laimask(ii,ji,l) = 1
-           end do
-           end do
-        end if
 !tcx?        where (ldomain%mask(:,:) == 0)
 !           mlai_o (:,:,l) = 0.
 !           msai_o (:,:,l) = 0.

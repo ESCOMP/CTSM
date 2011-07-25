@@ -10,13 +10,13 @@
 
 <xsl:template match="config_definition">
   <head>
-    <title>Configuration Definition</title>
+    <title>CLM Configuration Definition</title>
   </head>
   <body>
-    <h2>Configuration Definition</h2>
+    <h2>CLM Configuration Definition</h2>
 
     <table border="1" cellpadding="10">
-    <caption><font size="larger"><bold>Physics Configurations</bold></font></caption>
+    <caption><font size="larger"><bold>CLM Physics Configurations</bold></font></caption>
     <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>
@@ -29,7 +29,7 @@
     </table>
 
     <table border="1" cellpadding="10">
-    <caption><font size="larger"><bold>Biogeochemistry Configurations</bold></font></caption>
+    <caption><font size="larger"><bold>CLM Biogeochemistry Configurations</bold></font></caption>
     <tr>
       <th rowspan="2">Name</th>
       <th rowspan="2">Value</th>

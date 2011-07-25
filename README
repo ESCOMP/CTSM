@@ -1,20 +1,15 @@
-clm/README                                          6/24/2010
+clm/README                                          5/20/2011
 
-Community Land Surface Model (CLM) version 4.0 -- source code, tools, 
+Community Land Surface Model (CLM) version 4.0.32 -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
 to run CLM with CESM with datm8 to provide NCEP forcing data in 
 place of a modeled atmosphere.
 
-What is new in this version of CLM (compared to the CCSM4.0 release)?
-
-See the Users-Guide for a description of the changes since the
-CCSM4.0 release.
-
-What is new in CLM4 (compared to CLM3.5.00)?
+What is new in this version of CLM (compared to previous CESM and CCSM releases)?
 
 See the ChangeLog file for a summary description of the most recent major
-version changes leading up to clm4_0_00, and then from CLM4.0.00 to now.
-The User's Guide also has a section on this as well.
+version changes leading up to clm4_0_00, from CLM4.0.00 to CLM4.0.14, and then
+from CLM4.0.14 to CLM4.0.32.  The User's Guide also has a section on this as well.
 
 General directory structure:
 
@@ -87,6 +82,11 @@ models/lnd/clm/tools/interpinic --- Directory to build program to interpolate in
                                     conditions to any resolution.
 models/lnd/clm/tools/mkdatadomain - Directory to build program to create datm7 or docn7 
                                     domain files from clm files.
+models/lnd/clm/tools/ncl_scripts  - Directory of NCL and perl scripts to do various
+                                    tasks. Most notably to plot perturbation error growth
+                                    testing and to extract regional information from
+                                    global datasets for single-point/regional simulations.
+
 models/lnd/clm/bld/README --------- Description of how to use the template, configure and
                                     build-namelist scripts.
 
@@ -96,8 +96,8 @@ models/lnd/clm/bld/README --------- Description of how to use the template, conf
 
          cd scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase -case testI -mach bluefire -res f19_g16 -compset I -skip_rundb    
-                                     # create new "I" case for bluefire at 1.9x2.5_gx1v6 res, without entering info on the case in the run database
+         ./create_newcase -case testI -mach bluefire -res f19_g16 -compset I
+                                     # create new "I" case for bluefire at 1.9x2.5_gx1v6 res
                                      # "I" case is clm active, datm8, and inactive ice/ocn
          cd testI
          ./configure -case           # create scripts

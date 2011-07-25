@@ -147,7 +147,6 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -218,7 +217,6 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
   integer  :: miss = 99999                  ! missing data indicator
   real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
   integer  :: t1,t2,t3,t4                   ! timers
-  character(len=256) locfn                  ! local dataset file name
   character(len=32) :: subname = 'mksoitex'
 !-----------------------------------------------------------------------
 
@@ -241,12 +239,10 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
@@ -558,7 +554,6 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
 ! igbp soil 'mapunits' and their corresponding textures
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -622,7 +617,6 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   integer  :: miss = 99999                  ! missing data indicator
   real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
   integer  :: t1,t2,t3,t4                   ! timers
-  character(len=256) locfn                  ! local dataset file name
   character(len=32) :: subname = 'mksoicol'
 !-----------------------------------------------------------------------
 
@@ -635,12 +629,10 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   allocate(soil_color_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()
@@ -899,7 +891,6 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
 ! make organic matter dataset
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -951,7 +942,6 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkorganic'
 !-----------------------------------------------------------------------
 
@@ -964,12 +954,10 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
@@ -1021,27 +1009,27 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
      enddo
      enddo
 
-     ! Diagnostic output
+!    ! Diagnostic output
 
-     write (ndiag,*)
-     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-     write (ndiag,2001)
-2001 format (1x,'surface type   input grid area  output grid area'/ &
-             1x,'                 10**6 km**2      10**6 km**2   ')
-     write (ndiag,'(1x,70a1)') ('.',k=1,70)
-     write (ndiag,*)
-     write (ndiag,2002) gomlev_i*1.e-06,gomlev_o*1.e-06
-     write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
-2002 format (1x,'organic    ',f14.3,f17.3)
-2004 format (1x,'all surface ',f14.3,f17.3)
+!    write (ndiag,*)
+!    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+!    write (ndiag,2001)
+!2001 format (1x,'surface type   input grid area  output grid area'/ &
+!            1x,'                 10**6 km**2      10**6 km**2   ')
+!    write (ndiag,'(1x,70a1)') ('.',k=1,70)
+!    write (ndiag,*)
+!    write (ndiag,2002) gomlev_i*1.e-06,gomlev_o*1.e-06
+!    write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
+!2002 format (1x,'organic    ',f14.3,f17.3)
+!2004 format (1x,'all surface ',f14.3,f17.3)
 
-     if (lsmlat > 1) then
-        k = lsmlat/2
-        write (ndiag,*)
-        write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
-        write (ndiag,'(f10.3,a14)')ldomain%area(1,k)*1.e-06,' x 10**6 km**2'
-        write (ndiag,*)
-     endif
+!    if (lsmlat > 1) then
+!       k = lsmlat/2
+!       write (ndiag,*)
+!       write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
+!       write (ndiag,'(f10.3,a14)')ldomain%area(1,k)*1.e-06,' x 10**6 km**2'
+!       write (ndiag,*)
+!    endif
      call shr_sys_flush(ndiag)
 
      write (6,*) 'Successfully made organic matter, level = ', lev
@@ -1200,7 +1188,6 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
 ! make percent fmax
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -1250,7 +1237,6 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkfmax'
 !-----------------------------------------------------------------------
 
@@ -1272,12 +1258,10 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
 
      ! Obtain input grid info, read local fields
 
-     call getfil (fname, locfn, 0)
-   
-     call read_domain(tdomain,locfn)
+     call read_domain(tdomain,fname)
      call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-     call check_ret(nf_open(locfn, 0, ncid), subname)
+     call check_ret(nf_open(fname, 0, ncid), subname)
 
      allocate(fmax_i(nlon_i,nlat_i), stat=ier)
      if (ier/=0) call abort()

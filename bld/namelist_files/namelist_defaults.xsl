@@ -28,6 +28,10 @@
        <li>Number of glacier multiple elevation classes (glc_nec)</li>
        <li>Site specific point name (sitespf_pt)</li>
        <li>Glacier model grid size (glc_grid)</li>
+       <li>Crop model (crop)</li>
+       <li>Irrigation model (irrig)</li>
+       <li>Data model forcing source (forcing)</li>
+       <li>Accelerated Decomposition spin-up mode (ad_spin-up)</li>
     </ol>
 
     <table border="1" cellpadding="10">
@@ -116,6 +120,18 @@
         </xsl:if>
         <xsl:if test="string-length(@datm_presaero)>0">
         datm_presaero=<xsl:value-of select="@datm_presaero"/>
+        </xsl:if>
+        <xsl:if test="string-length(@crop)>0">
+        crop=<xsl:value-of select="@crop"/>
+        </xsl:if>
+        <xsl:if test="string-length(@irrig)>0">
+        irrig=<xsl:value-of select="@irrig"/>
+        </xsl:if>
+        <xsl:if test="string-length(@ad_spinup)>0">
+        ad_spinup=<xsl:value-of select="@ad_spinup"/>
+        </xsl:if>
+        <xsl:if test="string-length(@source)>0">
+        forcing=<xsl:value-of select="@source"/>
         </xsl:if>
         </td>
       </tr>

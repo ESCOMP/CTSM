@@ -34,15 +34,19 @@ sub usage {
     die <<EOF;
 SYNOPSIS
      build-namelist [options]
+
+     Create the namelist for CLM
 OPTIONS
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
                               "-clm_demand list" to list valid options.
                               (can include a list member "null" which does nothing)
-     -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
+     -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. 
+                              Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
      -co2_ppmv "value"        Set CO2 concentration to use when co2_type is constant (ppmv).
-     -config "filepath"       Read the given CLM configuration cache file. Default: "config_cache.xml".
+     -config "filepath"       Read the given CLM configuration cache file. 
+                              Default: "config_cache.xml".
      -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
@@ -50,9 +54,9 @@ OPTIONS
      -glc_grid "grid"         Glacier model grid and resolution when glacier model is active
                               (i.e. gland20, gland10 etcetera)
      -help [or -h]            Print usage to STDOUT.
-     -ignore_ic_date          Ignore the date on the initial condition files (ic_ymd and ic_tod) 
+     -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
-     -ignore_ic_year          Ignore just the year part of the date on the initial condition files (ic_ymd and ic_tod) 
+     -ignore_ic_year          Ignore just the year part of the date on the initial condition files 
                               when determining what input initial condition file to use.
      -infile "filepath"       Specify a file containing namelists to read values from.
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
@@ -61,26 +65,34 @@ OPTIONS
      -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
                               (if different than resolution coupling to atmosphere)
                               Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
-			      (dlat and dlon are the grid cell size in degrees for latitude and longitude).
+			      (dlat and dlon are the grid cell size in degrees for 
+                               latitude and longitude).
+                              "-lnd_res list" to list valid resolutions.
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -rcp "value"             Representative concentration pathway (rcp) to use for future scenarios.
+     -rcp "value"             Representative concentration pathway (rcp) to use for 
+                              future scenarios.
+                              "-rcp list" to list valid rcp settings.
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
-     -rtm_tstep "seconds"     Specify river transport model time step size (seconds) (used if RTM on)
+     -rtm_tstep "seconds"     Specify river transport model time step size (seconds) 
+                              (used to set rtm_nsteps if RTM on)
      -rtm_res "resolution"    Specify river transport model resolution. (used if RTM on)
      -s                       Turns on silent mode - only fatal messages issued.
-     -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000, 1850-2100)
+     -sim_year "year"         Year to simulate for input datasets 
+                              (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
-     -clm_start_type "type"   Type of simulation (default, cold, arb_ic, startup, continue, or branch)
+     -clm_start_type "type"   Start type of simulation 
+                              (default, cold, arb_ic, startup, continue, or branch)
                               (default=do the default type for this configuration)
                               (cold=always start with arbitrary initial conditions)
-                              (arb_ic=start with arbitrary initial conditions if initial conditions don't exist)
+                              (arb_ic=start with arbitrary initial conditions if 
+                               initial conditions don't exist)
                               (startup=ensure that initial conditions are being used)
      -test                    Enable checking that input datasets exist on local filesystem.
      -verbose [or -v]         Turn on verbose echoing of informational messages.
@@ -98,18 +110,17 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -datm_cpl_case "case"    Casename to use for forcing for CPLHIST3HrWx mode
      -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
      -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
-     -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
+     -datm_cycle_init_year "year"  The simulation year that will correspond to the data 
+                                   for cycle_beg_year.
      -datm_data_dir "path"    Directory path to the datm data
      -datm_domain "file"      File name of domain file for datm data matching 
                               resolution data resolution.
      -datm_dom_dir "path"     Directory path to the datm_domain file.
      -datm_presaero "type"    Prescribed aerosol type:
-                              Can be default, none, or any of the list of valid options
+                              Can be default, or any of the list of valid options
                                   default = use default for this scenario
-                                  none    = read in aerosols from clm rather than datm
                               (other options include: clim_1850, clim_2000, trans_1850-2000)
      -datm_source "source"    Source data to use for datm (for clm_stndln mode)
-                              "-datm_source list" to list valid datm_source types.
      -drv_runlength "length"  Length of simulation (e.g. default, 10d, 5s, 2y)
                               (Corresponding to: default, 10 days, 5 steps, or 2 years)
                               classifiers (d=days, s=steps, y=years)
@@ -1335,7 +1346,7 @@ if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
 
 if ($mode eq "clm_stndln") {
     # Driver
-    @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm pio_inparm);
+    @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
     $outfile = "$opts{'dir'}/drv_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
@@ -1816,9 +1827,7 @@ sub list_options {
     my $optsref = shift;   # reference to hash that contains the options
 
     # options to list values that are in the defaults files
-    my @opts_list = ( "res", "lnd_res", "mask", "datm_source", "sim_year", 
-                      "datm_cycle_beg_year", "datm_cycle_end_year", 
-                      "datm_cycle_init_year", "rcp" );
+    my @opts_list = ( "res", "lnd_res", "mask", "sim_year", "rcp" );
     my %opts;
     foreach my $var ( "res", "mask", "sim_year", "rcp" ) {
        my $val;
@@ -1852,13 +1861,13 @@ sub list_options {
                }
                $val= $defaults->get_value($var, \%opts);
                if ( $opt eq "lnd_res" ) { $val = "same as atm resolution given in res option"; }
-               if ( $opt eq "datm_cycle_init_year" ) { 
-                  unshift( @valid_values, "0 to 9999" );
-                  $val = int( $defaults->get_value("start_ymd")/10000 ); 
-               }
+               my $doc = $definition->get_var_doc( $var );
+               $doc =~ s/\n//;
+               chomp( $doc );
                die <<EOF;
-$ProgName - valid values for $opt: @valid_values
-                  default = $val
+$ProgName - valid values for $opt ($doc):
+                  Values: @valid_values
+                  Default = $val
                   (NOTE: resolution and mask and other settings may influence what the default is)
 EOF
            }
@@ -1877,8 +1886,12 @@ EOF
                  push( @demands, $var );
               }
            }
+           my $doc = $definition->get_var_doc( 'clm_demand' );
+           $doc =~ s/\n//;
+           chomp( $doc );
            die <<EOF;
-$ProgName - valid values for $opt: @demands
+$ProgName - valid values for $opt ($doc): 
+            Namelist options to require: @demands
             any valid namelist item for clm_inparm can be set. However, not all are 
             available in the clm defaults file. The defaults are also dependent on
             resolution and landmask, as well as other settings. Hence, the list above
@@ -1914,7 +1927,7 @@ sub version {
 
     while (my $line = <$fh>) {
 
-	if ($line =~ /^Tag name:\s*(\w+)/ ) {
+        if ($line =~ /^Tag name:\s*[clm0-9_.-]*\s*[toin]*\s*([clmcesm0-9_.-]+)$/ ) {
 	    print "$1\n";
 	    exit;
 	}

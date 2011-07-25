@@ -41,7 +41,6 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$cfgtol`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -103,7 +102,7 @@ rc=$?
 cd $rundir
 if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
     touch $tofile
-elif [ -z "$tofile" ] || [$rc -ne 0]; then
+elif [ -z "$tofile" ] || ["$rc" -ne 0]; then
     echo "TSMrst_tools.sh: error finding restart file from cold case" 
     echo "FAIL.job${JOBID}" > TestStatus
     exit 10

@@ -20,7 +20,7 @@ Control cases:
    yyyy$desc_control
 
 
-Present day options (uses default present-day simulation year -- right now is 2000):
+Present day options (uses default present-day simulation year -- which right now is 2000):
 
    $desc_pd
 

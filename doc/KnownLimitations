@@ -1,4 +1,4 @@
-Known Limitations in CLM4.0.14 		                          Jan/10/2011
+Known Limitations in CLM4/CESM1.0.3                              Jun/07/2011
 
 As opposed to the KnownBugs file where we expect that eventually we will find a 
 fix, these are limitations that we do NOT have plans to fix. They are simply known
@@ -6,6 +6,59 @@ limitations that we describe workarounds for below. In the course of doing other
 work they may be resolved, but we do not plan on addressing them directly. We 
 reference "bug numbers" in this list, but these are things where those "bugs" 
 were closed out with a "will-not-fix".
+
+====================================================================================
+Bug Number: 1355
+tlai is zero for first two time-steps in CLMSP
+
+tlai is zero for time-steps 0, and 1 when doing a startup simulation.
+
+For CLMSP EcosystemDyn is only done when doalb is true, and it's NOT called at
+initialization. At initialization for CLMSP it doesn't setup tlai, and only
+does a barebones setting of vars. In contrast CLMCN calls it's EcosystemDyn
+every time step (and not just when doalb is true), and at initalization it
+calls CNAllocation and CNPhenology, so it's got at least something going. With
+an initialization more similar to CN it would at least make sure tlai is set.
+
+====================================================================================
+Bug Number: 1310
+Difference in restart files for differing number of tasks/threads
+
+This is from Bill Sacks...
+
+With Mariana's help, I believe I have uncovered a minor bug in the urban model;
+this came up while testing the new CLM multi-instance code that I have been
+working on. This appears as a difference in the lnd restart files depending on
+the number of processors. It's possible that this is unimportant, but I thought
+I'd let you know anyway.
+
+In particular, the two variables albgrd and albgri differ in some urban
+landunits in the CLM restart files. I have confirmed this with the latest clm
+tag (clm4_0_26), doing a 5-day run with resolution f19_g16, and comparing
+results using 64 vs. 16 tasks for the land model. You can see the output of
+cprnc in
+/ptmp/sacks/archive/clm4_0_26.init.quarterPEs/rest/0001-01-06-00000/cprnc.out
+
+
+I believe that what is going on is the following: 
+
+(1) In UrbanMod.F90: UrbanAlbedo: A count is made of the number of urban
+landunits with coszen > 0 (num_solar); note that this count is just of the
+number of landunits that this processor is responsible for; thus, this is where
+the # PE-dependence comes in, I think.
+
+(2) Later in that subroutine, a bunch of calculations are done if num_solar > 0
+-- i.e., if this PE is responsible for at least one urban landunit with coszen
+> 0. Note that many of these calculations are done for all landunits, even ones
+for which coszen = 0. This introduces the possibility for different results
+depending on the decomposition.
+
+(3) The particular difference that I am seeing is in albgrd & albgri. These are
+initialized to 0 at the start of the subroutine, and so remain 0 on any PE for
+which num_solar = 0. However, for PEs with num_solar > 0, landunits that have
+coszen = 0 end up getting albgrd = albgri = 1. This is because the calculation
+of albgrd & albgri depends on the values of the sref_* variables, which are
+initialized to 1 (and stay at 1 for any landunit for which coszen = 0).
 
 ====================================================================================
 Bug Number: 1147

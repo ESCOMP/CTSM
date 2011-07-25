@@ -41,7 +41,6 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
 ! make volatile organic coumpunds (VOC) emission factors.
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -101,7 +100,6 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001_r8             ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkvocef'
 !-----------------------------------------------------------------------
 
@@ -114,12 +112,10 @@ subroutine mkvocef (lsmlon, lsmlat, fvocef, ndiag, ef_btr_o,ef_fet_o,ef_fdt_o,ef
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fvocef, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fvocef)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fvocef, 0, ncid), subname)
 
   allocate(area_i(nlon_i,nlat_i),temp_i(nlon_i,nlat_i),&
        ef_btr_i(nlon_i,nlat_i), ef_fet_i(nlon_i,nlat_i), ef_fdt_i(nlon_i,nlat_i), &

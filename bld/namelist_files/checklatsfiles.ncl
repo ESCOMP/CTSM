@@ -1,12 +1,12 @@
 ;
+; Check that the latitudes and longitudes are the same between the grid and topo files.
 ;
 ;  Erik Kluzek
 ;  Apr/10/2008
-;  $Id: aerdepregrid.ncl 9114 2008-03-06 17:07:01Z erik $
-;  $HeadURL;
 ;
 begin
 
+  print( "Check that latitudes and longitudes are the same between grid and topo files");
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
@@ -36,7 +36,7 @@ begin
      print( space+"Use grid file:       "+gridfile );
      if ( systemfunc("test -f "+gridfile+"; echo $?" ) .ne. 0 )then
         print( "Input gridfile does not exist or not found: "+gridfile );
-        exit
+        continue;
      end if
      ncg     = addfile( gridfile,  "r" );
 
@@ -46,13 +46,13 @@ begin
      topofile  = systemfunc( querynml+" -res "+res+" -var flndtopo" );
      if ( ismissing(topofile) )then
         print( "Missing topofile" );
-        exit;
+        continue;
      end if
      ;;;print( querynml+" -res "+res+" -var fatmtopo" );
      print( space+space+"Use topo file:         "+topofile );
      if ( systemfunc("test -f "+topofile+"; echo $?" ) .ne. 0 )then
         print( "Input topofile does not exist or not found: "+topofile );
-        exit;
+        continue;
      end if
      nct      = addfile( topofile,    "r" );
 

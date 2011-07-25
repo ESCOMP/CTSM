@@ -55,11 +55,7 @@ while read config_arg; do
     config_string="${config_string}${config_arg} "
 done < ${CLM_SCRIPTDIR}/config_files/$1
 
-if [ "$CLM_CESMBLD" = "TRUE" ]; then
-    config_string="${config_string} -cesm_bld on "
-else
-    config_string="${config_string} -cesm_bld off "
-fi
+config_string="${config_string} "
 
 echo "TCB.sh: building clm executable; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 

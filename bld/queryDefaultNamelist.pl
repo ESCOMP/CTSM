@@ -58,10 +58,13 @@ sub usage {
     die <<EOF;
 SYNOPSIS
      $ProgName [options]
+
+     query default namelist values.
 OPTIONS
      -config "file"                       CLM build configuration file created by configure.
      -cesm                                CESM mode set csmdata to \$DIN_LOC_ROOT.
-     -usrname "name"                      Dataset resolution/descriptor for personal datasets.  Default : not used
+     -usrname "name"                      Dataset resolution/descriptor for personal datasets.  
+                                          Default : not used
                                           Example: 1x1pt_boulderCO to describe location,
                                           number of pts
      -csmdata "dir"                       Directory for head of csm inputdata.
@@ -96,10 +99,10 @@ EXAMPLES
 
   To query for namelist items that match particular configurations
 
-  $ProgName  -namelist seqinfodata_inparm -options sim_year=2000,bgc=cn
+  $ProgName  -namelist seq_infodata_inparm -options sim_year=2000,bgc=cn
 
   Only lists namelist items in the seqinfodata_inparm namelist with options for
-  sim_year=200 and BGC=cn.
+  sim_year=2000 and BGC=cn.
 
 EOF
 }

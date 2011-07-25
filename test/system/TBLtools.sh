@@ -36,7 +36,6 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm*/tools/$1`/
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -65,8 +64,8 @@ if [ -n "${BL_ROOT}" ]; then
 
     echo "TBLtools.sh: calling ****baseline**** TSMtools.sh for smoke test"
     env CLM_TESTDIR=${BL_TESTDIR} \
-        CLM_SCRIPTDIR=${BL_ROOT}/models/lnd/clm*/test/system \
-        ${BL_ROOT}/models/lnd/clm*/test/system/TSMtools.sh $1 $2 $3
+        CLM_SCRIPTDIR=${BL_ROOT}/models/lnd/clm/test/system \
+        ${BL_ROOT}/models/lnd/clm/test/system/TSMtools.sh $1 $2 $3
     rc=$?
     if [ $rc -ne 0 ]; then
         echo "TBLtools.sh: error from *baseline* TSMtools.sh= $rc"

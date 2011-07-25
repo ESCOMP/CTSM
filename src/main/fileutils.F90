@@ -300,7 +300,7 @@ contains
         write(iulog,*)'(OPNFIL): failed to open file ',trim(locfn),        &
              &     ' on unit ',iun,' ierr=',ioe
         call endrun
-     else
+     else if ( masterproc )then
         write(iulog,*)'(OPNFIL): Successfully opened file ',trim(locfn),   &
              &     ' on unit= ',iun
      end if

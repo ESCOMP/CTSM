@@ -8,7 +8,11 @@ fi
 
 test_name=TSMtools.$1.$2.$3
 
-if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
+if [ -z "$CLM_RERUN" ]; then
+  CLM_RERUN="no"
+fi
+
+if [ "$CLM_RERUN" != "yes" ] && [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
         echo "TSMtools.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
@@ -31,7 +35,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm*/tools/$1`
+cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -57,7 +61,7 @@ fi
 
 echo "TSMtools.sh: running $1; output in ${rundir}/test.log" 
 
-if [ $2 == "tools__o" ]; then
+if [ "$2" = "tools__o" ] || [ "$2" = "tools__do" ]; then
    toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBtools.$1.$2/$1"
 else
    toolrun="${CLM_TESTDIR}/TCBtools.$1.$2/$1"
@@ -74,10 +78,10 @@ if [ $3 == "runoptions" ]; then
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
      $toolrun  `cat ${cfgdir}/$1.$3` >> test.log 2>&1
-     status="PASS"
      rc=$?
+     status="PASS"
   else
-     echo "success" > test.log
+     echo "Successfully created file" > test.log
      status="GEN"
      rc=0
   fi
@@ -85,16 +89,16 @@ else
   echo "$toolrun < ${cfgdir}/$1.$3"
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
      $toolrun < ${cfgdir}/$1.$3 >> test.log 2>&1
-     status="PASS"
      rc=$?
+     status="PASS"
   else
-     echo "success" > test.log
+     echo "Successfully created file" > test.log
      status="GEN"
      rc=0
   fi
 fi
 
-if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then
+if [ $rc -eq 0 ] && grep -ci "Successfully created " test.log > /dev/null; then
     echo "TSMtools.sh: smoke test passed" 
     echo "$status" > TestStatus
 else

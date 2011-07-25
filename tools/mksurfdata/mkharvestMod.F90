@@ -64,7 +64,6 @@ contains
 !              Initialization of mkharvest module.
 !
 ! !USES:
-    use fileutils    , only : getfil
     use ncdio        , only : nf_open, check_ret, nf_inq_varid, &
                               nf_close, nf_get_att_text
     implicit none
@@ -82,7 +81,6 @@ contains
 ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkharvest_init'
     integer  :: ncid,varid                      ! input netCDF id's
-    character(len=256) locfn                    ! local dataset file name
     integer  :: ifld                            ! indices
 !EOP
 !-----------------------------------------------------------------------
@@ -91,9 +89,7 @@ contains
 
     harvest(:,:,:) = init_val
 
-    call getfil (fharvest, locfn, 0)
-
-    call check_ret(nf_open(locfn, 0, ncid), subname)
+    call check_ret(nf_open(fharvest, 0, ncid), subname)
 
     do ifld = 1, numharv
        call check_ret(nf_inq_varid (   ncid, mkharvest_fieldname(ifld), varid),            subname)
@@ -237,7 +233,6 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
 ! the model.
 !
 ! !USES:
-  use fileutils    , only : getfil
   use domainMod    , only : domain_type, domain_clean, domain_setptrs
   use creategridMod, only : read_domain
   use mkvarsur     , only : ldomain
@@ -282,7 +277,6 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
   integer  :: k,n,m                           ! indices
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
-  character(len=256) locfn                    ! local dataset file name
 
   character(len=*), parameter :: unit = '10**6 km**2' ! Output units
   real(r8), parameter :: fac = 1.e-06_r8              ! Output factor
@@ -304,12 +298,10 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
 
      ! Obtain input grid info, read HARVEST_VH1, HARVEST_VH2, ... GRAZING etc.
 
-     call getfil (fharvest, locfn, 0)
-
-     call read_domain(tdomain,locfn)
+     call read_domain(tdomain,fharvest)
      call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-     call check_ret(nf_open(locfn, 0, ncid), subname)
+     call check_ret(nf_open(fharvest, 0, ncid), subname)
 
      allocate(harv_i(nlon_i,nlat_i,1:numharv), stat=ier)
      if (ier/=0) call abort()

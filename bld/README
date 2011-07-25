@@ -1,4 +1,4 @@
-models/lnd/clm/bld/README                              3/13/2008 
+models/lnd/clm/bld/README                            May/26/2011 
 
 CLM build and configure directory and scripts. Scripts to help
 you prepare to build CLM as a component within CESM, and setup
@@ -11,30 +11,38 @@ Important files/directories:
 --------- Configure and build scripts
 --------- (These scripts are also used by the cpl7 scripts)
 
-configure ---------------- Configure script -- creates Makefile and files needed to build CLM
+configure ---------------- Configure script -- sets up the CPP Macro's needed to be
+                           defined to build CLM
   ----- configure --help - Configure help mode -- sends information on all configure options
 config_files/config_defaults.xml ----- XML file of defaults for CLM
 config_files/config_definition.xml --- XML file definining all CLM configuration items
 config_files/config_sys_defaults.xml - XML file of system defaults
-config_files/Makefile.in ------------- Base Makefile for building CLM used ONLY for stand-alone CLM testing
-                                       The Makefile and Macro's in the root scripts/ccsm_utils/Build and
-                                       scripts/ccsm_utils/Machines are used to build the model normally.
 
 --------- Scripts to build the namelists
 --------- (These scripts are also used by the cpl7 scripts)
 build-namelist --- Build the namelists needed
 
 --------- CPL7 Script to create namelist and clm library
-clm.cpl7.template ------- Script used by CPL7 scripts to create namelist
+clm.cpl7.template ------- Script used by CPL7 scripts to create namelist and the build
+                          for CLM as a component of CESM.
 
 --------- Scripts to query namelist defaults
-listDefaultNamelist.pl -- List the files needed for a list of resolutions 
-                          that are NOT available
-queryDefaultNamelist.pl - Query default namelist for variables
+listDefaultNamelist.pl -- List the files needed, for a list of resolutions,
+                          to run CLM that are currently NOT on your machine.
+                          This file can then be used by 
+                            scripts/ccsm_utils/Tools/check_input_data
+                          to retreive them from the inputdata repository.
+                          Setting up cases with create_newcase also does
+                          this -- but only for the exact configuration
+                          given. This tries to get all the files need
+                          for several different resolutions and configurations
+                          at once.
+queryDefaultNamelist.pl - Query default namelist for settings of variables
 queryDefaultXML.pm ------ Subroutines needed by queryDefaultNamelist.pl script
 
 ---------- XML Files describing namelists in namelist_files
 namelist_files/namelist_defaults_clm.xml -------- List of default values for the clm namelist
+namelist_files/namelist_defaults_clm_tools.xml -- List of default values for the clm tools.
 namelist_files/namelist_defaults_overall.xml ---- List of default values for overall settings
 namelist_files/namelist_defaults_usr_files.xml -- List of default values for the user-files
 namelist_files/namelist_definition.xml ---------- Definition of all namelist items
@@ -43,5 +51,7 @@ namelist_files/use_cases ------------------------ Specific configurations that b
 
 ---------- XML Files describing namelists only used in stand-alone CLM testing
 namelist_files/namelist_defaults_datm.xml -- List of default values for the datm model namelist
-namelist_files/namelist_defaults_drv.xml -- List of default values for the drv namelist
+namelist_files/namelist_defaults_drv.xml --- List of default values for the drv namelist
+namelist_files/namelist_defaults_drydep.xml  List of default values for the dry
+                                             deposition module.
 

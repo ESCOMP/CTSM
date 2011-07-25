@@ -596,7 +596,8 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
                aleaf(p) = 1.e-5_r8 ! allocation coefficients should be irrelevant
                astem(p) = 0._r8    ! because crops have no live carbon pools;
                aroot(p) = 0._r8    ! this applies to this "else" and to the "else"
-            end if                 ! a few lines down
+               arepr(p) = 0._r8    ! a few lines down
+            end if
 
             f1 = aroot(p) / aleaf(p)
             f3 = astem(p) / aleaf(p)

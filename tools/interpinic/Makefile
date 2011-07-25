@@ -56,9 +56,13 @@ endif
 CPPDEF := -DNO_SHR_VMATH $(USER_CPPDEFS)
 
 ifeq ($(OPT),$(null))
-   CPPDEF += -DOPT
    # Set optimization on by default
    OPT := TRUE
+endif
+
+ifeq ($(OPT),FALSE)
+else
+   CPPDEF += -DOPT
 endif
 
 # Determine platform 

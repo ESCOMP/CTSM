@@ -370,7 +370,7 @@
   
   call check_ret(nf_close(ncid), subname)
 
-  write(6,'(/,A,//)') "domain for data model successful created"
+  write(6,'(/,A,//)') "Successfully created domain dataset for data model"
   
 end program create_domain
 

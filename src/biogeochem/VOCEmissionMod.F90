@@ -615,7 +615,7 @@ contains
                 gamma_out(p)=gamma(p)
 	     else
                 gamma_out(p)=gamma(p)
-                write(6,*) 'clh GAMMA: ',gamma(p),gamma_l,gamma_p,gamma_t,gamma_a,gamma_sm
+                write(iulog,*) 'clh GAMMA: ',gamma(p),gamma_l,gamma_p,gamma_t,gamma_a,gamma_sm
              end if
 
           end do

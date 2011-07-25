@@ -511,7 +511,7 @@ contains
     ! Just print out the first error
     if (fn > 0) then
        g = filterg(1)
-       write(6,*) 'Error in Establishment: fpc_total =',fpc_total(g), ' at gridcell ',g
+       write(iulog,*) 'Error in Establishment: fpc_total =',fpc_total(g), ' at gridcell ',g
        call endrun
     end if
 

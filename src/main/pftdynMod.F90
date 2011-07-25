@@ -357,7 +357,7 @@ contains
           do_harvest = .false.
        endif
        
-       if (nt2 > ntimes) then
+       if (nt2 > ntimes .and. masterproc) then
           write(iulog,*)subname,' error - current year is past input data boundary'
        end if
        
@@ -459,7 +459,6 @@ contains
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
-    write(iulog,*) subname,' get next pftdyn data'
     allocate(arrayl(begg:endg,pft0:maxpft))	
     call ncd_io(ncid=ncid, varname= 'PCT_PFT', flag='read', data=arrayl, &
          dim1name=grlnd, nt=ntime, readvar=readvar)

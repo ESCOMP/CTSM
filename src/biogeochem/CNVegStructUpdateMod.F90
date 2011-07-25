@@ -262,7 +262,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
                 htmx(p) = 0._r8
                 peaklai(p) = 0
              end if
-             if (harvdate(p) < 999 .and. tlai(p) > 0._r8) write(iulog,*) 'CNVegStructUpdate: tlai>0 after harvest!' ! remove after initial debugging?
+             !if (harvdate(p) < 999 .and. tlai(p) > 0._r8) write(iulog,*) 'CNVegStructUpdate: tlai>0 after harvest!' ! remove after initial debugging?
 
              ! canopy top and bottom heights
              htop(p) = ztopmx(ivt(p)) * (min(tlai(p)/(laimx(ivt(p))-1._r8),1._r8))**2

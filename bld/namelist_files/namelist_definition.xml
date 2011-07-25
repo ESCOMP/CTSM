@@ -15,12 +15,16 @@ Clumps per processor.
 
 <entry id="co2_ppmv" type="real" category="clm_physics"
        group="clm_inparm" valid_values="" >
-Atmospheric CO2 molar ratio (by volume) (umol/mol)
+Atmospheric CO2 molar ratio (by volume) only used when co2_type==constant (umol/mol)
+(Set by CCSM_CO2_PPMV)
 </entry>
 
 <entry id="co2_type" type="char*16" category="clm_physics"
        group="clm_inparm" valid_values="constant,prognostic,diagnostic" >
 Type of CO2 feedback.
+    constant   = use the input co2_ppmv value
+    prognostic = use the prognostic value sent from the atmosphere
+    diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
 <entry id="albice" type="real(2)" category="clm_physics"
@@ -30,49 +34,49 @@ Visible and Near-infrared albedo's for glacier ice
 
 <entry id="ice_runoff" type="logical" category="clm_physics"
        group="clm_inparm">
-If true, river runoff will be split up into liquid and ice streams, otherwise ice runoff will be zero and all runoff directed to liquid stream
+If TRUE, river runoff will be split up into liquid and ice streams, otherwise ice runoff will be zero and all runoff directed to liquid stream
 </entry>
 
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,PROG_CROP_ONLY,ALL" >
-Supplemental Nitrogen mode and what type of PFT's it's turned on. In this mode Nitrogen
-is unlimited rather than prognosed and in general vegetation is overproductive.
-It does act as a proxy for fertilization for crops however.
-    NONE           = No PFT's get supplemental Nitrogen
+Supplemental Nitrogen mode and for what type of vegetation it's turned on for. 
+In this mode Nitrogen is unlimited rather than prognosed and in general vegetation is 
+over-productive. It does act as a proxy for fertilization for crops however.
+    NONE           = No vegetation types get supplemental Nitrogen
     PROG_CROP_ONLY = Supplemental Nitrogen is only active for prognostic Crops
-    ALL            = Supplemental Nitrogen is active for all PFT's
+    ALL            = Supplemental Nitrogen is active for all vegetation types
 </entry>
 
 <entry id="create_crop_landunit" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-Flag to separate the vegetated landunit into a crop landunit and a natural vegetation landunit
+If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
 <entry id="create_glacier_mec_landunit" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-Set to true to turn on multiple elevation classes over glacier points.
+If TRUE, turn on multiple elevation classes over glacier points.
 Normally this is ONLY used when running CESM with the active glacier model.
 Only works when GLC_NEC is greater than zero.
 </entry>
 
 <entry id="glc_smb" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-Set to true to calculate surface mass balance for glacier multi-elevation class points.
-Set to false to use growing degree day information for glaciers multi-elevation class points.
+If TRUE, calculate surface mass balance for glacier multi-elevation class points.
+If false use growing degree day information for glaciers multi-elevation class points.
 Only works when create_glacier_mec_landunit is true.
 (Only tested with glc_smb=.true. when create_glacier_mec_landunit is .true., setting it to .false. is NOT tested)
 </entry>
 
 <entry id="glc_dyntopo" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-Set to true to dynamically change topographic height over glacier points.
+If TRUE, dynamically change topographic height over glacier points.
 Only works when create_glacier_mec_landunit is true.
 (EXPERIMENTAL AND NOT FUNCTIONAL!)
 </entry>
 
 <entry id="outnc_large_files" type="logical" category="history"
        group="clm_inparm" valid_values="" >
-Flag to output NetCDF files in 64-bit large-file format
+If TRUE, output NetCDF files in 64-bit large-file format
 </entry>
 
 <entry id="dtime" type="real"  category="clm_physics" 
@@ -82,179 +86,198 @@ Time step (seconds)
 
 <entry id="override_nsrest" type="integer"  category="clm_restart" 
        group="clm_inparm" valid_values="3">
-Override the start type from the driver: 3: branch
+Override the start type from the driver: it can only be
+set to 3 meaning branch.
 </entry>
 
-<entry id="fatmgrid" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of atmosphere grid data file.
+<entry id="fatmgrid" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of grid data file on the atm grid.
 </entry>
 
 <entry id="fget_archdev" type="char*8" category="datasets"
-       group="clm_inparm" valid_values="null:,mss:,cp:,hpss:" >
+       group="clm_inparm" valid_values="null:,cp:,hpss:" >
 Input archive device prefix to retrieve input files from (used by shr/shr_file_mod.F90)
-(such as mss: for NCAR mass store)
+(This feature is deprecated and NOT recommended for use).
 </entry>
 
-<entry id="fatmlndfrc" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of landfrac data file (on atm grid).
+<entry id="fatmlndfrc" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of land fraction data file (on atm grid).
 </entry>
 
-<entry id="fatmtopo" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of atmosphere topography data file (on atm grid).
+<entry id="fatmtopo" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of topography data file (on atm grid). Only required
+when fine-mesh activated. (fine-mesh is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
-<entry id="fglcmask" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
+<entry id="fglcmask" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of land-ice mask data file (on lnd grid).
 </entry>
 
-<entry id="finidat" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of initial conditions file.
+<entry id="finidat" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of initial conditions file. If blank CLM will startup from
+arbitrary initial conditions.
 </entry>
 
-<entry id="flndtopo" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of land topography file.
+<entry id="flndtopo" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of topography data file (on lnd grid). Only required
+when fine-mesh is activated or when land-ice model is active. 
+(fine-mesh is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 
-<entry id="fpftcon" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of plant function type (PFT) constants
+<entry id="fpftcon" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname datafile with plant function type (PFT) constants
 </entry>
 
-<entry id="fpftdyn" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of time varying PFT data file.
+<entry id="fpftdyn" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of time varying PFT data file. This causes the land-use types of
+the initial surface dataset to vary over time.
 </entry>
 
-<entry id="frivinp_rtm" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
-Full pathname of input datafile for rtm.
+<entry id="frivinp_rtm" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of input datafile for RTM.
 </entry>
 
-<entry id="fsurdat" type="char*256" input_pathname="abs" category="datasets"
-       group="clm_inparm" valid_values="" >
+<entry id="fsurdat" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of surface data file.
 </entry>
 
-<entry id="fsnowoptics" type="char*256"  input_pathname="abs" category="datasets" 
-       group="clm_inparm" valid_values="" >
+<entry id="fsnowoptics" type="char*256"  category="datasets" 
+       input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 </entry>
 
-<entry id="fsnowaging" type="char*256"  input_pathname="abs" category="datasets" 
-       group="clm_inparm" valid_values="" >
+<entry id="fsnowaging" type="char*256"  category="datasets" 
+       input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
 <entry id="hist_avgflag_pertape" type="char*1(6)" category="history"
        group="clm_inparm" valid_values="A,I,X,M" >
 Per file averaging flag.
-'A' (average over history period)
-'I' (instantaneous)
-'X' (maximum over history period)
-'M' (minimum over history period)
+    'A' (average over history period)
+    'I' (instantaneous)
+    'X' (maximum over history period)
+    'M' (minimum over history period)
 </entry>
 
 <entry id="hist_type1d_pertape" type="char*4(6)" category="history"
        group="clm_inparm" valid_values="GRID,LAND,COLS,PFTS, " >
-Averaging of output for 1D vector output
+Averaging type of output for 1D vector output (when hist_dov2xy is false).
+    GRID means average all land-units up to the grid-point level
+    LAND means average all columns up to the land-unit level
+    COLS means average all PFT's up to the column level
+    PFTS means report everything on native PFT level
 </entry>
 
 <entry id="hist_dov2xy" type="logical(6)" category="history"
        group="clm_inparm" valid_values="" >
-TRUE implies do grid averaging.  One setting per history file.
+If TRUE, implies output data on a 2D latitude/longitude grid. False means
+output in 1D vector format.  One setting per history tape series.
 </entry>
 
 <entry id="hist_empty_htapes" type="logical" category="history"
        group="clm_inparm" valid_values="" >
-TRUE indicates no default history fields.
+If TRUE, indicates do NOT output any default history fields (requires you to use
+hist_fincl* to set the exact output fields to use)..
 </entry>
 
 <entry id="hist_fexcl1" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to exclude from history file 1.
+Fields to exclude from history tape series 1.
 </entry>
 
 <entry id="hist_fexcl2" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to exclude from history file 2.
+Fields to exclude from history tape series  2.
 </entry>
 
 <entry id="hist_fexcl3" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to exclude from history file 3.
+Fields to exclude from history tape series  3.
 </entry>
 
 <entry id="hist_fexcl4" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to exclude from history file 4.
+Fields to exclude from history tape series  4.
 </entry>
 
 <entry id="hist_fexcl5" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to exclude from history file 5.
+Fields to exclude from history tape series  5.
 </entry>
 
 <entry id="hist_fexcl6" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to exclude from history file 6.
+Fields to exclude from history tape series  6.
 </entry>
 
 <entry id="hist_fincl1" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to add to history file 1.
+Fields to add to history tape series  1.
 </entry>
 
 <entry id="hist_fincl2" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to add to history file 2.
+Fields to add to history tape series  2.
 </entry>
 
 <entry id="hist_fincl3" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to add to history file 3.
+Fields to add to history tape series  3.
 </entry>
 
 <entry id="hist_fincl4" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to add to history file 4.
+Fields to add to history tape series  4.
 </entry>
 
 <entry id="hist_fincl5" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to add to history file 5.
+Fields to add to history tape series  5.
 </entry>
 
 <entry id="hist_fincl6" type="char*34(1000)" category="history"
        group="clm_inparm" valid_values="" >
-Fields to add to history file 6.
+Fields to add to history tape series  6.
 </entry>
 
 <entry id="hist_mfilt" type="integer(6)" category="history"
        group="clm_inparm" valid_values="" >
-Per file maximum number of time samples.
+Per tape series  maximum number of time samples.
 </entry>
 
 <entry id="hist_ndens" type="integer(6)" category="history"
        group="clm_inparm" valid_values="1,2" >
-Per file history file density (i.e. output precision) (1=double precision, 2=single precision)
+Per tape series  history file density (i.e. output precision) 
+    1=double precision
+    2=single precision
 <default>Default: 2,2,2,2,2,2</default>
 </entry>
 
 <entry id="hist_nhtfrq" type="integer(6)" category="history"
        group="clm_inparm" valid_values="" >
-Per file history write frequency in steps if positive, (0=monthly), negative means hours
+Per tape series history write frequency. 
+    positive means in time steps
+    0=monthly
+    negative means hours
+(i.e. 5 means every 24 time-steps and -24 means every day
 <default>Default: 0,-24,-24,-24,-24,-24</default>
 </entry>
 
-<entry id="nrevsn" type="char*256" input_pathname="abs" category="clm_restart"
-       group="clm_inparm" valid_values="" >
-Full pathname of master restart file for branch run.
+<entry id="nrevsn" type="char*256" category="clm_restart"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of master restart file for a branch run. (only used if RUN_TYPE=branch)
+(Set with RUN_REFCASE and RUN_REFDATE)
 </entry>
 
 <entry id="nsegspc" type="integer" category="clm_performance"
@@ -270,30 +293,30 @@ Perturbation limit when doing error growth test
 
 <entry id="rest_flag" type="logical" category="clm_restart"
        group="clm_inparm" valid_values="" >
-FALSE implies don't write any restart files.
+If FALSE, don't write any restart files.
 </entry>
 
 <entry id="rtm_nsteps" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="" >
-If greater than one, average rtm over rtm_nsteps time steps
+If greater than one, average River Transport Model (RTM) over given number of time steps
 </entry>
 
 <entry id="urban_hac" type="char*16" category="clm_physics"
        group="clm_inparm" valid_values="OFF,ON,ON_WASTEHEAT" >
-Turn urban air conditioning/heating ON or OFF and add wasteheat
-         OFF          = Air conditioning/heating is OFF in buildings, internal temperature allowed to float freely
-         ON           = Air conditioning/heating is ON in buildings, internal temperature constrained
-         ON_WASTEHEAT = Air conditioning/heating is ON and waste-heat sent to urban canyon
+Turn urban air conditioning/heating ON or OFF and add wasteheat:
+    OFF          = Air conditioning/heating is OFF in buildings, internal temperature allowed to float freely
+    ON           = Air conditioning/heating is ON in buildings, internal temperature constrained
+    ON_WASTEHEAT = Air conditioning/heating is ON and waste-heat sent to urban canyon
 </entry>
 
 <entry id="urban_traffic" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-TRUE if want urban traffic flux (Currently NOT implemented)
+If TRUE, urban traffic flux will be activated (Currently NOT implemented).
 </entry>
 
 <entry id="wrtdia" type="logical" category="history"
        group="clm_inparm" valid_values="" >
-TRUE if want diagnostic of global radiative temperature written to CLM log file
+If TRUE, write diagnostic of global radiative temperature written to CLM log file.
 </entry>
 
 <!--                                                   -->
@@ -304,15 +327,143 @@ TRUE if want diagnostic of global radiative temperature written to CLM log file
 Plant Function Type dataset for mksurfdata
 </entry>
 
-<entry id="mksrf_glacier" type="char*256" category="mkgriddata"
+<entry id="mksrf_glacier" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for percent glacier land-unit
+Dataset for percent glacier land-unit for mksurfdata
 </entry>
 
 <entry id="mksrf_flai" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Leaf Area Index dataset for mksurfdata
 </entry>
+
+<entry id="mksrf_soitex" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Soil texture dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_soicol" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Soil color dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fmax" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Soil max fraction dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_ffrac" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+High resolution land mask/fraction dataset for mksurfdata
+(used for glacier_mec land-units)
+</entry>
+
+<entry id="mksrf_gridtype" type="char*256" category="mksurfdata"
+       group="clmexp" value="global" valid_values="global,regional" >
+Type of grid to create for mksurfdata
+</entry>
+
+<entry id="mksrf_fgrid" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Grid file at the output resolution for mksurfdata
+</entry>
+
+<entry id="mksrf_fdynuse" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Text file with filepaths (or list of XML elements) for vegetation fractions
+and harvesting for each year to run over for mksurfdata to be able to model
+transient land-use change
+</entry>
+
+<entry id="mksrf_ftopo" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+High resolution topography dataset for mksurfdata
+(used for glacier_mec land-units)
+</entry>
+
+<entry id="mksrf_irrig" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Irrigation dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_forganic" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Organic soil dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_flanwat" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Land water dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_furban" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Urban dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fvocef" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Biogenic Volatile Organic Compounds (VOC) emissions dataset for mksurfdata
+</entry>
+
+<entry id="outnc_double" type="logical" category="mksurfdata"
+       group="clmexp" value=".true.">
+If TRUE, output variables in double precision for mksurfdata
+</entry>
+
+<entry id="outnc_large_files" type="logical" category="mksurfdata"
+       group="clmexp" value=".true.">
+If TRUE, use the large file format for NetCDF
+</entry>
+
+<entry id="all_urban" type="logical" category="mksurfdata"
+       group="clmexp" value=".false.">
+If TRUE, ignore other files, and set the output percentage to 100% urban and
+zero for other land-use types.
+</entry>
+
+<entry id="numpft" type="integer" category="mksurfdata"
+       group="clmexp" value="16" valid_values="16,20" >
+Number of Plant Functional Types (excluding bare-soil)
+</entry>
+
+<entry id="nglcec" type="integer" category="mksurfdata"
+       group="clmexp" value="0" valid_values="0,1,3,5,10" >
+Number of glacier multiple elevation classes
+</entry>
+
+<entry id="pft_idx" type="integer" category="mksurfdata"
+       group="clmexp"
+       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
+Plant Function Type index to override global file with for mksurfdata
+</entry>
+
+<entry id="pft_frc" type="real" category="mksurfdata"
+       group="clmexp" valid_values="">
+Plant Function Type fraction to override global file with for mksurfdata
+</entry>
+
+<entry id="soil_color" type="integer" category="mksurfdata"
+       group="clmexp"
+       valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
+Soil color index to override global file with for mksurfdata
+</entry>
+
+<entry id="soil_fmax" type="real" category="mksurfdata"
+       group="clmexp" >
+Soil maximum fraction to override global file with for mksurfdata
+</entry>
+
+<entry id="soil_sand" type="real" category="mksurfdata"
+       group="clmexp" >
+Soil percent sand to override global file with for mksurfdata
+</entry>
+
+<entry id="soil_clay" type="real" category="mksurfdata"
+       group="clmexp" >
+Soil percent clay to override global file with for mksurfdata
+</entry>
+
 
 <!--                                                   -->
 <!-- mkgriddata namelist                               -->
@@ -322,26 +473,102 @@ Leaf Area Index dataset for mksurfdata
 Orography file with surface heights and land area fraction
 </entry>
 
+<entry id="mksrf_fclmgrid" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+CLM grid file
+</entry>
+
+<entry id="mksrf_fccsmdom" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+CESM domain file
+</entry>
+
+<entry id="mksrf_fcamfile" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+CAM file
+</entry>
+
+<entry id="mksrf_frawtopo" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Raw topography file
+</entry>
+
+<entry id="mksrf_fcamtopo" type="char*256" category="mkgriddata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+CAM topography file
+</entry>
+
+<entry id="mksrf_lsmlon" type="integer" category="mkgriddata"
+       group="clmexp" valid_values="" >
+Number of longitudes to use for a regional grid (for single-point set to 1)
+</entry>
+
+<entry id="mksrf_lsmlat" type="integer" category="mkgriddata"
+       group="clmexp" valid_values="" >
+Number of latitudes to use for a regional grid (for single-point set to 1)
+</entry>
+
+<entry id="mksrf_edgen" type="real" category="mkgriddata"
+       group="clmexp" valid_values="" >
+Northern edge of the regional grid
+</entry>
+
+<entry id="mksrf_edges" type="real" category="mkgriddata"
+       group="clmexp" valid_values="" >
+Southern edge of the regional grid
+</entry>
+
+<entry id="mksrf_edgee" type="real" category="mkgriddata"
+       group="clmexp" valid_values="" >
+Eastern edge of the regional grid
+</entry>
+
+<entry id="mksrf_edgew" type="real" category="mkgriddata"
+       group="clmexp" valid_values="" >
+Western edge of the regional grid
+</entry>
+
 
 <!--             -->
 <!-- mkghg       -->
 <!--             -->
-<entry id="mkghg_bndtvghg" type="char*256" category="mksurfdata"
+<entry id="mkghg_bndtvghg" type="char*256" category="tools"
        input_pathname="abs" group="clmexp" valid_values="" >
-Historical greenhouse gas concentrations from CAM
+Historical greenhouse gas concentrations from CAM, only used
+by getco2_historical.ncl
 </entry>
 
 <!--                                                   -->
 <!-- files needed for tools/ncl_scripts                -->
 <!--                                                   -->
-<entry id="faerdep" type="char*256"  input_pathname="abs" category="tools" 
-       group="clmexp" valid_values="" >
-Aerosol deposition file name (when NOT passing deposition rates from atmosphere model)
+<entry id="faerdep" type="char*256"  category="tools" 
+       input_pathname="abs" group="clmexp" valid_values="" >
+Aerosol deposition file name (only used for aerdepregrid.ncl)
 </entry>
 
-<entry id="fndepdat" type="char*256" input_pathname="abs" category="tools"
-       group="clmexp" valid_values="" >
-Full pathname of nitrogen deposition data file.
+<entry id="fndepdat" type="char*256" category="tools"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Full pathname of nitrogen deposition data file (only used for ndepregrid.ncl).
+</entry>
+
+<entry id="f_fracdata" type="char*256" category="tools"
+       input_pathname="abs" group="domain_nl" valid_values="" >
+Full pathname of CLM fraction dataset (only used for mkdatadomain).
+</entry>
+
+<entry id="f_griddata" type="char*256" category="tools"
+       input_pathname="abs" group="domain_nl" valid_values="" >
+Full pathname of CLM grid dataset (only used for mkdatadomain).
+</entry>
+
+<entry id="f_domain" type="char*256" category="tools"
+       input_pathname="abs" group="domain_nl" valid_values="" >
+Full pathname of output domain dataset (only used for mkdatadomain).
+</entry>
+
+<entry id="dtype" type="char*5" category="tools"
+       group="domain_nl" valid_values="datm,docn" >
+Type of domain file to create (ocean or atmosphere) (only used for mkdatadomain)
 </entry>
 
 <!--                                                              -->
@@ -349,13 +576,19 @@ Full pathname of nitrogen deposition data file.
 <!--                                                              -->
 <entry id="lnpp" type="integer" category="casa"
        group="clm_inparm" valid_values="1,2" >
-CASA Net Primary Production format: 1=gpp*gppfact,2=fn(lgrow)*gppfact (CASA is EXPERIMENTAL NOT SUPPORTED!)
+CASA Net Primary Production format: 
+    1=gpp*gppfact
+    2=fn(lgrow)*gppfact 
+(CASA is EXPERIMENTAL NOT SUPPORTED!)
 <default>Default: 2</default>
 </entry>
 
 <entry id="lalloc" type="integer" category="casa"
        group="clm_inparm" valid_values="0,1" >
-CASA allocation type: 0=fixed allocation, 1=dynamic allocation (CASA is EXPERIMENTAL NOT SUPPORTED!)
+CASA allocation type: 
+     0=fixed allocation
+     1=dynamic allocation
+(CASA is EXPERIMENTAL NOT SUPPORTED!)
 <default>Default: 1</default>
 </entry>
 
@@ -367,7 +600,10 @@ CASA Temperature dependence (CASA is EXPERIMENTAL NOT SUPPORTED!)
 
 <entry id="spunup" type="integer" category="casa"
        group="clm_inparm" valid_values="0,1" >
-CASA flag if input file spunup or not: 0=no, 1=yes (CASA is EXPERIMENTAL NOT SUPPORTED!)
+CASA flag if input file spunup or not: 
+    0=no
+    1=yes 
+(CASA is EXPERIMENTAL NOT SUPPORTED!)
 <default>Default: 0</default>
 </entry>
 
@@ -396,14 +632,20 @@ Last year to loop over for Nitrogen Deposition data
 Simulation year that aligns with stream_year_first_ndep value
 </entry>
 
-<entry id="stream_fldfilename_ndep" type="char*256" input_pathname="abs" category="datasets"
-       group="ndepdyn_nml" valid_values="" >
+<entry id="stream_fldfilename_ndep" type="char*256" category="datasets"
+       input_pathname="abs" group="ndepdyn_nml" valid_values="" >
 Filename of input stream data for Nitrogen Deposition
 </entry>
 
 <entry id="ndepmapalgo" type="char*256" category="datasets"
        group="ndepdyn_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
 Mapping method from Nitrogen deposition input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
 </entry>
 
 <!-- ========================================================================================  -->
@@ -412,96 +654,98 @@ Mapping method from Nitrogen deposition input file to the model resolution
 
 <!-- Control info -->
 
-<entry id="aqua_planet" type="logical"  category="driver"
+<entry id="aqua_planet" type="logical"  category="drv_physics"
        group="seq_infodata_inparm" valid_values="" >
-If true, run model in "aqua planet" mode. Only one of
+If TRUE, run model in "aqua planet" mode with a prescribed ocean model over 
+the entire earth surface. Only one of
 <varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
-<varname>aqua_planet</varname> can be true.
+<varname>aqua_planet</varname> can be true
+(Note: Turning on this mode inherently turns CLM off, and requires using CAM).
 </entry>
 
-<entry id="atm_adiabatic" type="logical"  category="driver"
+<entry id="aqua_planet_sst" type="integer"  category="drv_physics"
+       group="seq_infodata_inparm" valid_values="1,2,3,4,5,6,7,8,9,10" >
+Aqua planet analytic Sea Surface Temperature (SST) type (only if aqua_planet is true).
+</entry>
+
+
+<entry id="atm_adiabatic" type="logical"  category="drv_physics"
        group="seq_infodata_inparm" valid_values="" >
-If true, do not run model physics, only run the dynamical core.
+If TRUE, do not run atmosphere model physics, only run the dynamical core.
 Only one of
 <varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
 <varname>aqua_planet</varname> can be true.
 </entry>
 
-<entry id="atm_ideal_phys" type="logical"  category="driver"
+<entry id="atm_ideal_phys" type="logical"  category="drv_physics"
        group="seq_infodata_inparm" valid_values="" >
-If true run the idealized Held&amp;Suarez physics package.
+If TRUE, run the idealized Held &amp; Suarez physics package for the atmosphere.
 Only one of
 <varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
 <varname>aqua_planet</varname> can be true.
-</entry>
-
-<entry id="bfbflag" type="logical"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-bit for bit flag
 </entry>
 
 <entry id="brnch_retain_casename" type="logical"  category="driver"
        group="seq_infodata_inparm" valid_values="" >
-If true, use the pre-existing case name for a branch run.
+If TRUE, use the pre-existing case name for a branch run.
 </entry>
 
 <entry id="case_desc" type="char*256"  category="driver"
        group="seq_infodata_inparm" valid_values="" >
-Case title.
+Case description.
+(Set with CASESTR).
 </entry>
 
 <entry id="case_name" type="char*80"  category="driver"
        group="seq_infodata_inparm" valid_values="" >
-Case identifier.  Normally used as part of the archive path name.  By
-default also used in output filenames (see
-the <varname>hfilename_spec</varname> namelist option).
+Case identifier.
+(Set with the CASE name in env_case.xml)
 </entry>
 
-<entry id="flux_albav" type="logical" category="driver"
+<entry id="flux_albav" type="logical" category="drv_physics"
        group="seq_infodata_inparm" valid_values="" >
-T => no diurnal cycle in ocn albedos.
-<default>Default: FALSE</default>
+If TRUE, no diurnal cycle will be done for ocean albedos.
 </entry>
 
-<entry id="flux_epbal" type="char*256" category="driver"
+<entry id="flux_epbal" type="char*256" category="drv_physics"
        group="seq_infodata_inparm" valid_values="off,ocn" >
 Selects E,P,R adjustment technique.
 </entry>
 
 <entry id="info_debug" type="integer" category="driver"
        group="seq_infodata_inparm" valid_values="0,1,2,3" >
-Debug flag.
-<default>Default: 1</default>
+Level of debug output flag.
 </entry>
 
 <entry id="logfilepostfix" type="char*80" category="driver"
        group="seq_infodata_inparm" valid_values="" >
-Postfix for output log files.
+Ending suffix "postfix" for output log files.
 </entry>
 
-<entry id="ocean_tight_coupling" type="logical"  category="driver"
+<entry id="ocean_tight_coupling" type="logical"  category="drv_physics"
        group="seq_infodata_inparm" valid_values="" >
-Couple ocean on atm timestep.
+If TRUE, couple ocean on atmosphere timestep.
 </entry>
 
-<entry id="orb_mode" type="char*256" category="radiation" value="fixed_year"
-       group="seq_infodata_inparm" valid_values="fixed_year,variable_year,fixed_parameters" >
+<entry id="orb_mode" type="char*256" category="radiation"
+       group="seq_infodata_inparm"  value="fixed_year"
+       valid_values="fixed_year,variable_year,fixed_parameters" >
+Mode for orbital calculations
+    fixed_year       = use a fixed year
+    variable_year    = let the orbital year advance with the simulation
+    fixed_parameters = use a fixed set of parameters, not based on the year
 </entry>
 
 <entry id="orb_eccen" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Earth's eccentricity of orbit. (unitless: typically 0. to 0.1). 
 Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
-
-Not used when running as part of CESM.
 </entry>
 
 <entry id="orb_iyear" type="integer"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Year (AD) used to compute earth's orbital parameters, when orb_mode='fixed_year'
 Orbital parameters will be computed automatically (based on Berger, 1977).
-
-Not used when running as part of CESM.
 </entry>
 
 <entry id="orb_iyear_align" type="integer"  category="radiation"
@@ -509,8 +753,6 @@ Not used when running as part of CESM.
 Align year (AD) used to compute earth's orbital parameters, when orb_mode='variable_year'.
 Orbital parameters will be computed automatically (based on Berger, 1977), and
 updated yearly as the model progresses.
-
-Not used when running as part of CESM.
 </entry>
 
 
@@ -518,26 +760,22 @@ Not used when running as part of CESM.
        group="seq_infodata_inparm" valid_values="" >
 Earth's moving vernal equinox at perihelion (degrees: 0. to 360.0).
 Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
-
-Not used when running as part of CESM.
 </entry>
 
 <entry id="orb_obliq" type="real"  category="radiation"
        group="seq_infodata_inparm" valid_values="" >
 Earth's orbital  angle of obliquity  (degrees: -90. to +90., typically 22. to 26.).
 Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
-
-Not used when running as part of CESM.
 </entry>
 
 <entry id="outpathroot" type="char*256" category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Root output files
+Root directory for driver output files
 </entry>
 
 <entry id="perpetual" type="logical"  category="time_mgr"
        group="seq_infodata_inparm" valid_values="" >
-Set to TRUE to specify that the run will use a perpetual calendar, i.e., a
+If TRUE, means the run will use a perpetual calendar, i.e., a
 diurnal cycle will be present for the fixed calendar day specified
 by <varname>perpetual_ymd</varname>.
 </entry>
@@ -549,121 +787,199 @@ If <varname>aqua_planet</varname> = .true. then perpetual_ymd is ignored
 and the perpetual date is set to 321.
 </entry>
 
-<entry id="restart_file" type="char*256" category="restart"
+<entry id="restart_file" type="char*256" category="drv_restart"
        group="seq_infodata_inparm" valid_values="" >
 Driver restart filename.
+(Set with RUN_REFCASE and RUN_REFDATE)
 </entry>
 
-<entry id="restart_file_override" type="char*256" category="restart"
-       group="seq_infodata_inparm" valid_values="" >
-List of namelist variables that may be overridden on a restart run.
-</entry>
-
-<entry id="restart_pfile" type="char*256" category="restart"
+<entry id="restart_pfile" type="char*256" category="drv_restart"
        group="seq_infodata_inparm" valid_values="" >
 Driver restart pointer filename.
 </entry>
 
+<entry id="vect_map" type="char*256" category="drv_physics"
+       group="seq_infodata_inparm" 
+       valid_values="none,npfix,cart3d,cart3d_diag,cart3d_uvw,cart3d_uvw_diag">
+Vector mapping option
+</entry>
+
+<entry id="aoflux_grid" type="char*80" category="drv_physics"
+       group="seq_infodata_inparm" valid_values="atm,ocn">
+Grid for atmosphere to ocean flux calculations
+</entry>
+
 <entry id="samegrid_ao" type="logical" category="driver"
        group="seq_infodata_inparm" valid_values="">
-are atmosphere and ocean grids same lat/lon/size
+If TRUE, atmosphere and ocean grids are the same lat/lon/size
+</entry>
+
+<entry id="samegrid_ro" type="logical" category="driver"
+       group="seq_infodata_inparm" valid_values="">
+if TRUE, runoff and ocean grids are the same lat/lon/size
+</entry>
+
+<entry id="shr_map_dopole" type="logical" category="drv_physics"
+       group="seq_infodata_inparm" valid_values="">
+If TRUE, do the pole corrections in shr_map_mod
 </entry>
 
 <entry id="samegrid_al" type="logical" category="driver"
        group="seq_infodata_inparm" valid_values="">
-are atmosphere and land grids same lat/lon/size
+If TRUE, atmosphere and land grids same lat/lon/size
 </entry>
 
 <entry id="scmlat" type="real" category="scam"
        group="seq_infodata_inparm" valid_values="">
 Latitude value of single column.
+(Set by PTS_LAT)
 </entry>
 
 <entry id="scmlon" type="real" category="scam"
        group="seq_infodata_inparm" valid_values="">
 Longitude value of single column.
+(Set by PTS_LON)
 </entry>
 
 <entry id="single_column" type="logical" category="scam"
        group="seq_infodata_inparm" valid_values="">
-Set to TRUE to turn on single column mode.
+If TRUE, run in single column mode.
+(Set by PTS_MODE)
 </entry>
 
 <entry id="start_type" type="char*8"  category="driver"
        group="seq_infodata_inparm" valid_values="startup,continue,branch" >
-Run type.  'startup' is an initial run.  'continue' is a restart run.
-'branch' is a restart run in which properties of the output history files
-may be changed.
+Run type.  
+    'startup' is an initial run.  
+    'continue' is a restart run.
+    'branch' is a restart run in which properties of the output history files
+may be changed 
+(Set by RUN_TYPE).
 </entry>
 
 <entry id="model_version" type="char*256"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Model version.
+Model version to write to history files.
 </entry>
 
 <entry id="hostname" type="char*80"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Name of the machine you are running the model on.
+Name of the machine you are running the model on to write to history files.
 </entry>
 
 <entry id="username" type="char*80"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Name of user running the model.
+Name of user running the model to write to history files.
 </entry>
 
-<entry id="bfbflag" type="logical"  category="driver"
+<entry id="cpl_cdf64" type="logical"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Change mapping in driver to give bit-for-bit results regardless of number of processors used.
+If TRUE, output files in NetCDF large-file format
 </entry>
 
-<entry id="do_budgets" type="logical"  category="driver"
+<entry id="histaux_a2x" type="logical"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Toggle to turn writing of budgets to log file on.
+If TRUE, output auxiliary history files for atmosphere to coupler fields every
+coupling time step.
 </entry>
 
-<entry id="budget_inst" type="integer"  category="driver"
+<entry id="histaux_a2x3hr" type="logical"  category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, output auxiliary history files for atmosphere to coupler fields every
+three hours. Set this to true in order to create data that can be later used
+by datm to run CLM (normally this would only be done for a fully case only)
+</entry>
+
+<entry id="histaux_a2x3hrp" type="logical"  category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, output auxiliary history files for atmosphere to coupler precipitation 
+fields every three hours.
+</entry>
+
+<entry id="histaux_a2x24hr" type="logical"  category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, output auxiliary history files for atmosphere to coupler
+fields every 24 hours hours.
+</entry>
+
+<entry id="histaux_l2x" type="logical"  category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, output auxiliary history files for land to coupler
+fields every coupling time step.
+</entry>
+
+<entry id="histaux_r2x" type="logical"  category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, output auxiliary history files for runoff to coupler
+fields every coupling time step.
+</entry>
+
+<entry id="bfbflag" type="logical"  category="drv_physics"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, change mapping in driver to give bit-for-bit results 
+regardless of number of processors used.
+</entry>
+
+<entry id="do_budgets" type="logical"  category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, turn writing of budgets to log file on.
+</entry>
+
+<entry id="budget_inst" type="integer"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Output level for instantaneous budgets.
 </entry>
 
-<entry id="budget_daily" type="integer"  category="driver"
+<entry id="budget_daily" type="integer"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Output level for daily budgets.
 </entry>
 
-<entry id="budget_month" type="integer"  category="driver"
+<entry id="budget_month" type="integer"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Output level for monthly budgets.
 </entry>
 
-<entry id="budget_ann" type="integer"  category="driver"
+<entry id="budget_ann" type="integer"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Output level for annual budgets.
 </entry>
 
-<entry id="budget_ltann" type="integer"  category="driver"
+<entry id="budget_ltann" type="integer"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Output level for long-term annual budgets.
+(Set with BUDGET_LONGTERM_EOY)
 </entry>
 
-<entry id="budget_ltend" type="integer"  category="driver"
+<entry id="budget_ltend" type="integer"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Output level for long-term budgets written at the end of the run.
+(Set with BUDGET_LONGTERM_STOP)
 </entry>
 
-<entry id="timing_dir" type="char*256"  category="driver"
+<entry id="timing_dir" type="char*256"  category="profiling"
        group="seq_infodata_inparm" valid_values="" >
 Directory name to store timing files
 </entry>
 
-<entry id="tchkpt_dir" type="char*256"  category="driver"
+<entry id="tchkpt_dir" type="char*256"  category="profiling"
        group="seq_infodata_inparm" valid_values="" >
 Directory name to store timing checkpoint files
 </entry>
 
-<entry id="run_barriers" type="logical"  category="driver"
+<entry id="do_histinit" type="logical"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
-Flag to turn on barriers around the component run calls.
+If TRUE, write out the initial history file
+</entry>
+
+<entry id="run_barriers" type="logical"  category="profiling"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, turn on barriers around the component run calls.
+</entry>
+
+<entry id="drv_threading" type="logical"  category="performance"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, turn threading control on in driver
 </entry>
 
 <entry id="eps_frac" type="real"  category="driver"
@@ -686,124 +1002,139 @@ Tolerance to match land and atmospheric grid masks
 Tolerance to match land and atmospheric grid areas
 </entry>
 
+<entry id="eps_ogrid" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match ocean and ice grid cell latitudes and longitudes.
+</entry>
+
+<entry id="eps_omask" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match ocean and ice grid masks
+</entry>
+
+<entry id="eps_oarea" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match ocean and ice grid areas
+</entry>
+
 <!-- Task/Thread layouts -->
 
-<entry id="atm_pestride" type="integer"  category="driver"
+<entry id="atm_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the atm communicator group.
 </entry>
 
-<entry id="atm_rootpe" type="integer"  category="driver"
+<entry id="atm_rootpe" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Root process of the atm communicator group.
 </entry>
 
-<entry id="atm_ntasks" type="integer"  category="driver"
+<entry id="atm_ntasks" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of atm tasks.
 </entry>
 
-<entry id="atm_nthreads" type="integer"  category="driver"
+<entry id="atm_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each atm task.
 </entry>
 
-<entry id="lnd_pestride" type="integer"  category="driver"
+<entry id="lnd_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the lnd communicator group.
 </entry>
 
-<entry id="lnd_rootpe" type="integer"  category="driver"
+<entry id="lnd_rootpe" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Root process of the lnd communicator group.
 </entry>
 
-<entry id="lnd_ntasks" type="integer"  category="driver"
+<entry id="lnd_ntasks" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of lnd tasks.
 </entry>
 
-<entry id="lnd_nthreads" type="integer"  category="driver"
+<entry id="lnd_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each lnd task.
 </entry>
 
-<entry id="ice_pestride" type="integer"  category="driver"
+<entry id="ice_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the ice communicator group.
 </entry>
 
-<entry id="ice_rootpe" type="integer"  category="driver"
+<entry id="ice_rootpe" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Root process of the ice communicator group.
 </entry>
 
-<entry id="ice_ntasks" type="integer"  category="driver"
+<entry id="ice_ntasks" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of ice tasks.
 </entry>
 
-<entry id="ice_nthreads" type="integer"  category="driver"
+<entry id="ice_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each ice task.
 </entry>
 
-<entry id="ocn_pestride" type="integer"  category="driver"
+<entry id="ocn_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the ocn communicator group.
 </entry>
 
-<entry id="ocn_rootpe" type="integer"  category="driver"
+<entry id="ocn_rootpe" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Root process of the ocn communicator group.
 </entry>
 
-<entry id="ocn_ntasks" type="integer"  category="driver"
+<entry id="ocn_ntasks" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of ocn tasks.
 </entry>
 
-<entry id="ocn_nthreads" type="integer"  category="driver"
+<entry id="ocn_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each ocn task.
 </entry>
 
-<entry id="glc_pestride" type="integer"  category="driver"
+<entry id="glc_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the glc communicator group.
 </entry>
 
-<entry id="glc_rootpe" type="integer"  category="driver"
+<entry id="glc_rootpe" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Root process of the glc communicator group.
 </entry>
 
-<entry id="glc_ntasks" type="integer"  category="driver"
+<entry id="glc_ntasks" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of glc tasks.
 </entry>
 
-<entry id="glc_nthreads" type="integer"  category="driver"
+<entry id="glc_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each glc task.
 </entry>
 
-<entry id="cpl_pestride" type="integer"  category="driver"
+<entry id="cpl_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the cpl communicator group.
 </entry>
 
-<entry id="cpl_rootpe" type="integer"  category="driver"
+<entry id="cpl_rootpe" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Root process of the cpl communicator group.
 </entry>
 
-<entry id="cpl_ntasks" type="integer"  category="driver"
+<entry id="cpl_ntasks" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of cpl tasks.
 </entry>
 
-<entry id="cpl_nthreads" type="integer"  category="driver"
+<entry id="cpl_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each cpl task.
 </entry>
@@ -816,59 +1147,72 @@ Number of threads in each cpl task.
 Coupling interval between the atmosphere and other system components.  This
 is how frequently information can be communicated between the atmosphere
 and the surface models.
+(Set by ATM_NCPL)
 </entry>
 
 <entry id="atm_cpl_offset" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the atmosphere model. (seconds)
+Controls phasing of the coupling with the atmosphere model (seconds).
 </entry>
 
 <entry id="calendar" type="char*80"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="NO_LEAP,GREGORIAN" >
-Calendar type "NO_LEAP" for consistent 365-days per year or "GREGORIAN" to
-include leap-years. Note that if "GREGORIAN" is selected
+Calendar type 
+    "NO_LEAP" for consistent 365-days per year
+    "GREGORIAN" to include leap-years. 
+Note that if "GREGORIAN" is selected
 leap-years will be used in the time manager, but the calculation of the
-earth's orbit still assumes 365 day years.
+earth's orbit still assumes 365 day years. Also use of GREGORIAN requires
+compiling with the full ESMF library.
 </entry>
 
-<entry id="end_restart" type="logical"  category="restart"
+<entry id="end_restart" type="logical"  category="drv_restart"
        group="seq_timemgr_inparm" valid_values="" >
-Write restart at end of run.
+If TRUE, write restart at end of run.
 </entry>
 
 <entry id="ice_cpl_dt" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
+Coupling interval between the sea-ice  and other system components (seconds).
+(Set by ICE_NCPL)
 </entry>
 
 <entry id="ice_cpl_offset" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the sea-ice model. (seconds)
+Controls phasing of the coupling with the sea-ice model (seconds).
 </entry>
 
 <entry id="lnd_cpl_dt" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
+Coupling interval between the land model  and other system components.
+(Set by LND_NCPL)
 </entry>
 
 <entry id="lnd_cpl_offset" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the land model. (seconds)
+Controls phasing of the coupling with the land model (seconds).
 </entry>
 
 <entry id="ocn_cpl_dt" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
+Coupling interval between the ocean model  and other system components (seconds).
+(Set by OCN_NCPL)
 </entry>
 
 <entry id="ocn_cpl_offset" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the ocean model. (seconds)
+Controls phasing of the coupling with the ocean model (seconds).
 </entry>
 
 <entry id="glc_cpl_dt" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
+Coupling interval between the glacier model and other system components (seconds).
+(Set by GLC_NCPL)
 </entry>
 
 <entry id="glc_cpl_offset" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
+Controls phasing of the coupling with the glacier model (seconds).
 </entry>
 
 <entry id="ref_tod" type="integer"  category="time_mgr"
@@ -889,23 +1233,88 @@ convention for the unit string of a time coordinate is of the form
 <varname>ref_ymd</varname> and <varname>ref_tod</varname> variables.
 </entry>
 
-<entry id="restart_n" type="integer"  category="restart"
+<entry id="restart_n" type="integer"  category="drv_restart"
        group="seq_timemgr_inparm" valid_values="" >
 Set the restart interval as a number of elapsed time units which are specified
 by <varname>restart_option</varname>.
 </entry>
 
-<entry id="restart_option" type="char*8"  category="restart"
-       group="seq_timemgr_inparm" valid_values="none,nsteps,ndays,nmonths,nyears,monthly,yearly,end" >
+<entry id="restart_option" type="char*8"  category="drv_restart"
+       group="seq_timemgr_inparm"
+       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
 Set the interval between writing restart files
 using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
-with <varname>stop_n</varname> to set the number of time units.
+with <varname>restart_n</varname> to set the number of time units.
 A convenience option allows specifying that restart files be written at the
 end of each month or at the end of each year by using the options
 'monthly' or 'yearly' respectively.  It is also possible to request that no
-restart files be written via the option 'none', or that restart files be
-written only at the end of the run via the option 'end'.
+restart files be written via the option 'never', or that restart files be
+written only at the end of the run via the option 'end'. "ifdays0" means to 
+write restart files at the beginning of the next year and every year after.
+</entry>
+
+<entry id="restart_ymd" type="integer"  category="drv_restart"
+       group="seq_timemgr_inparm" valid_values="" >
+Restart date encoded in an integer as (year*1000 + month*100 + day).
+Used in conjunction with <varname>restart_option</varname> to set the date to
+write restart files for the simulation.
+</entry>
+
+<entry id="history_n" type="integer"  category="drv_history"
+       group="seq_timemgr_inparm" valid_values="" >
+Set the history file write interval as a number of elapsed time units which are specified
+by <varname>history_option</varname>.
+</entry>
+
+<entry id="history_option" type="char*8"  category="drv_history"
+       group="seq_timemgr_inparm"
+       valid_values="never,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+Set the interval between writing history files
+using one of the options 'nsteps',
+'ndays', 'nmonths', or 'nyears', in conjunction
+with <varname>historyt_n</varname> to set the number of time units.
+A convenience option allows specifying that history files be written at the
+end of each month or at the end of each year by using the options
+'monthly' or 'yearly' respectively.  It is also possible to request that no
+history files be written via the option 'never', or that history files be
+written only at the end of the run via the option 'end'. "ifdays0" means to 
+write history files at the beginning of the next year and each year after.
+</entry>
+
+<entry id="history_ymd" type="integer"  category="drv_history"
+       group="seq_timemgr_inparm" valid_values="" >
+History file write date encoded in an integer as (year*1000 + month*100 + day).
+Used in conjunction with <varname>history_option</varname> to set the date to
+write history files for the simulation.
+</entry>
+
+<entry id="histavg_n" type="integer"  category="drv_history"
+       group="seq_timemgr_inparm" valid_values="" >
+Set the interval to write averaged history files as a number of elapsed time units which are specified
+by <varname>histavg_option</varname>.
+</entry>
+
+<entry id="histavg_option" type="char*8"  category="drv_history"
+       group="seq_timemgr_inparm"
+       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+Set the interval between writing averaged history files
+using one of the options 'nsteps',
+'ndays', 'nmonths', or 'nyears', in conjunction
+with <varname>histavg_n</varname> to set the number of time units.
+A convenience option allows specifying that averaged history files be written at the
+end of each month or at the end of each year by using the options
+'monthly' or 'yearly' respectively.  It is also possible to request that no
+averaged history files be written via the option 'never', or that averaged history 
+files be written only at the end of the run via the option 'end'. "ifdays0" means to 
+write averaged history files at the beginning of the next year and each year after.
+</entry>
+
+<entry id="histavg_ymd" type="integer"  category="drv_history"
+       group="seq_timemgr_inparm" valid_values="" >
+Averaged history file write date encoded in an integer as (year*1000 + month*100 + day).
+Used in conjunction with <varname>histavg_option</varname> to set the date to
+write averaged history files for the simulation.
 </entry>
 
 <entry id="start_tod" type="integer"  category="time_mgr"
@@ -932,6 +1341,21 @@ conjunction with <varname>start_tod</varname> to set the start date of
 the simulation.
 </entry>
 
+<entry id="curr_tod" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Current time-of-day expressed as seconds past midnight.  Used in
+conjunction with <varname>curr_ymd</varname> to set the current time
+(normally set to start_tod).
+</entry>
+
+<entry id="curr_ymd" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Current date encoded in an integer as (year*1000 + month*100 + day).
+Used in
+conjunction with <varname>curr_tod</varname> to set the current date of
+the simulation (normally set to start_tod).
+</entry>
+
 <entry id="stop_n" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Set the length of run as a number of elapsed time units which are specified
@@ -939,14 +1363,15 @@ by <varname>stop_option</varname>.
 </entry>
 
 <entry id="stop_option" type="char*8"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="nsteps,ndays,nmonths,nyears,date" >
+       group="seq_timemgr_inparm" 
+       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0" >
 Set the length of run as an elapsed time using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
 with <varname>stop_n</varname> to set the number of elapsed time units.
 Alternatively, set the final simulation time in absolute terms by using the
 option 'date' in conjunction with <varname>stop_ymd</varname>,
 and <varname>stop_tod</varname> to specify a date and time of day at which
-the simulation should stop.
+the simulation should stop. "ifdays0" means to stop at the beginning of the next year.
 </entry>
 
 <entry id="stop_tod" type="integer"  category="time_mgr"
@@ -958,204 +1383,276 @@ conjunction with <varname>stop_ymd</varname> to set the stop time.
 <entry id="stop_ymd" type="integer"  category="time_mgr"
        group="seq_timemgr_inparm" valid_values="" >
 Stop date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjunction with <varname>stop_tod</varname> to set the stop date of
+Used in conjunction with <varname>stop_option</varname> to set the stop date of
 the simulation.
+</entry>
+
+<entry id="tprof_n" type="integer"  category="profiling"
+       group="seq_timemgr_inparm" valid_values="" >
+Set the interval for time-profiling as a number of elapsed time units which are specified
+by <varname>tprof_option</varname>.
+</entry>
+
+<entry id="tprof_option" type="char*80"  category="profiling"
+       group="seq_timemgr_inparm"
+       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+Set the time-profiling write time as an elapsed time using one of the options 'nsteps',
+'ndays', 'nmonths', or 'nyears', in conjunction
+with <varname>tprof_n</varname> to set the number of elapsed time units.
 </entry>
 
 <!-- Time profiler -->
 
-<entry id="profile_barrier" type="logical"  category="performance"
+<entry id="profile_barrier" type="logical"  category="profiling"
        group="prof_inparm" valid_values="" >
-Flag to turn on barriers before running a performance section.
+If TRUE, turn on barriers before running a performance section.
 </entry>
 
-<entry id="profile_disable" type="logical"  category="performance"
+<entry id="profile_disable" type="logical"  category="profiling"
        group="prof_inparm" valid_values="" >
-Flag to turn all performance OFF or on.
+If TRUE, disable all performance profilers
 </entry>
 
-<entry id="profile_single_file" type="logical"  category="performance"
+<entry id="profile_single_file" type="logical"  category="profiling"
        group="prof_inparm" valid_values="" >
-Flag to send output to a single file (rather than separate files per MPI task).
+If TRUE, send output to a single file (rather than separate files per MPI task).
 </entry>
 
-<entry id="profile_depth_limit" type="integer"  category="performance"
+<entry id="profile_global_stats" type="logical"  category="profiling"
+       group="prof_inparm" valid_values="" >
+If TRUE, do global statistics
+</entry>
+
+<entry id="profile_papi_enable" type="logical"  category="profiling"
+       group="prof_inparm" valid_values="" >
+If TRUE, enable the PAPI namelist
+</entry>
+
+<entry id="profile_depth_limit" type="integer"  category="profiling"
        group="prof_inparm" valid_values="" >
 integer indicating maximum number of levels of timer nesting.
 </entry>
 
-<entry id="profile_detail_limit" type="integer"  category="performance"
+<entry id="profile_outpe_num" type="integer"  category="profiling"
+       group="prof_inparm" valid_values="" >
+Number of output processors for profiling
+</entry>
+
+<entry id="profile_outpe_stride" type="integer"  category="profiling"
+       group="prof_inparm" valid_values="" >
+Stride of output processors for profiling
+</entry>
+
+<entry id="profile_detail_limit" type="integer"  category="profiling"
        group="prof_inparm" valid_values="" >
 integer indicating maximum detail level to profile.
 </entry>
 
-<entry id="profile_timer" type="integer"  category="performance"
-       group="prof_inparm" valid_values="6,7,8,9,10,11" >
+<entry id="profile_timer" type="integer"  category="profiling"
+       group="prof_inparm" valid_values="1,2,3,4,5,6" >
 integer indicating which timer to use. As defined in gptl.inc.
 <ul>
-<li>GPTLgettimeofday   = 6</li>
-<li>GPTLnanotime       = 7</li>
-<li>GPTLrtc            = 8</li>
-<li>GPTLmpiwtime       = 9</li>
-<li>GPTLclockgettime   = 10</li>
-<li>GPTLpapitime       = 11</li>
+<li>GPTLgettimeofday   = 1</li>
+<li>GPTLnanotime       = 2</li>
+<li>GPTLrtc            = 3</li>
+<li>GPTLmpiwtime       = 4</li>
+<li>GPTLclockgettime   = 5</li>
+<li>GPTLpapitime       = 6</li>
 </ul>
+</entry>
+
+<entry id="papi_ctr1_str" type="char*16"  category="profiling"
+       group="papi_inparm" >
+Performance Application Programming Interface (PAPI) counter option number 1
+(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
+PAPI_FP_INS).
+</entry>
+
+<entry id="papi_ctr2_str" type="char*16"  category="profiling"
+       group="papi_inparm" >
+PAPI counter option number 2
+(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
+PAPI_FP_INS).
+</entry>
+
+<entry id="papi_ctr3_str" type="char*16"  category="profiling"
+       group="papi_inparm" >
+PAPI counter option number 3
+(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
+PAPI_FP_INS).
+</entry>
+
+<entry id="papi_ctr4_str" type="char*16"  category="profiling"
+       group="papi_inparm" >
+PAPI counter option number 4
+(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
+PAPI_FP_INS).
 </entry>
 
 <!-- PIO namelist -->
 
-<entry id="pio_async_interface" type="logical"  category="driver"
+<entry id="pio_async_interface" type="logical"  category="performance"
        group="pio_inparm" valid_values="" >
-If you want to use PIO asynchronously
+If TRUE, use PIO asynchronously
+(Experimental and NOT supported)
 </entry>
 
-<entry id="pio_debug_level" type="integer"  category="driver"
+<entry id="pio_debug_level" type="integer"  category="performance"
        group="pio_inparm" valid_values="0,1,2,3" >
 Debug printing level for PIO
 </entry>
 
-<entry id="pio_stride" type="integer"  category="driver"
+<entry id="pio_stride" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
 Stride to use for PIO tasks
 </entry>
 
-<entry id="pio_root" type="integer"  category="driver"
+<entry id="pio_root" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
 Root PE for PIO output processing
 </entry>
 
-<entry id="pio_numtasks" type="integer"  category="driver"
+<entry id="pio_numtasks" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for PIO
 </entry>
 
-<entry id="pio_typename" type="char*80"  category="driver"
+<entry id="pio_typename" type="char*80"  category="performance"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
 Type of output files for PIO
 </entry>
 
-<entry id="cpl_pio_stride" type="integer"  category="driver"
+<entry id="cpl_pio_stride" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
 Stride to use for coupler PIO tasks
 </entry>
 
-<entry id="cpl_pio_root" type="integer"  category="driver"
+<entry id="cpl_pio_root" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
 Root PE for coupler PIO output processing
 </entry>
 
-<entry id="cpl_pio_numtasks" type="integer"  category="driver"
+<entry id="cpl_pio_numtasks" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for coupler PIO
 </entry>
 
-<entry id="cpl_pio_typename" type="char*80"  category="driver"
+<entry id="cpl_pio_typename" type="char*80"  category="performance"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
 Type of output files for coupler PIO
 </entry>
 
-<entry id="lnd_pio_stride" type="integer"  category="driver"
+<entry id="lnd_pio_stride" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
-Stride to use for CLM PIO tasks
+Stride to use for lnd PIO tasks
 </entry>
 
-<entry id="lnd_pio_root" type="integer"  category="driver"
+<entry id="lnd_pio_root" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
-Root PE for CLM PIO output processing
+Root PE for lnd PIO output processing
 </entry>
 
-<entry id="lnd_pio_numtasks" type="integer"  category="driver"
+<entry id="lnd_pio_numtasks" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
-Number of tasks to use for CLM PIO
+Number of tasks to use for lnd PIO
 </entry>
 
-<entry id="lnd_pio_typename" type="char*80"  category="driver"
+<entry id="lnd_pio_typename" type="char*80"  category="performance"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for CLM PIO
+Type of output files for lnd PIO
 </entry>
 
-<entry id="atm_pio_stride" type="integer"  category="driver"
+<entry id="atm_pio_stride" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
-Stride to use for datm PIO tasks
+Stride to use for atm PIO tasks
 </entry>
 
-<entry id="atm_pio_root" type="integer"  category="driver"
+<entry id="atm_pio_root" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
-Root PE for datm PIO output processing
+Root PE for atm PIO output processing
 </entry>
 
-<entry id="atm_pio_numtasks" type="integer"  category="driver"
+<entry id="atm_pio_numtasks" type="integer"  category="performance"
        group="pio_inparm" valid_values="" >
-Number of tasks to use for datm PIO
+Number of tasks to use for atm PIO
 </entry>
 
-<entry id="atm_pio_typename" type="char*80"  category="driver"
+<entry id="atm_pio_typename" type="char*80"  category="performance"
        group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for datm PIO
+Type of output files for atm PIO
 </entry>
 
 <!-- ========================================================================================  -->
 <!-- DATM Namelists                                                                            -->
 <!-- ========================================================================================  -->
 
-<entry id="datamode" type="char*256"  category="datm"
-       group="shr_strdata_nml" valid_values="CLMNCEP,,COPYALL,CPLHIST,CORE2,TN460,NULL" >
+<entry id="datamode" type="char*256"  category="datm_physics"
+       group="shr_strdata_nml" valid_values="CLMNCEP,COPYALL,CPLHIST,CORE2,TN460,NULL" >
 Flags for physics options with respect to how to handle input data.
+(Set with DATM_MODE)
 </entry>
 
-<entry id="domainfile" type="char*256" input_pathname="abs"  category="datm"
-       group="shr_strdata_nml" valid_values="" >
+<entry id="domainfile" type="char*256" category="datm"
+       input_pathname="abs" group="shr_strdata_nml" valid_values="" >
 File containing domain info.
 </entry>
 
-<entry id="fillalgo" type="char*256(30)"  category="datm"
+<entry id="fillalgo" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
 Fill algorithm
 </entry>
 
-<entry id="fillmask" type="char*256(30)"  category="datm"
+<entry id="fillmask" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
 Fill mask
 </entry>
 
-<entry id="fillread" type="char*256(30)"  category="datm"
+<entry id="fillread" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="">
 Fill mapping file to read
 </entry>
 
-<entry id="fillwrit" type="char*256(30)"  category="datm"
+<entry id="fillwrite" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="">
-Fill mapping file to read
+Fill mapping file to write
 </entry>
 
-<entry id="mapmask" type="char*256(30)"  category="datm"
+<entry id="mapmask" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
 Scalar mapping mask
 </entry>
 
-<entry id="mapalgo" type="char*256(30)"  category="datm"
+<entry id="mapalgo" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
 Scalar mapping algorithm
 </entry>
 
-<entry id="mapread" type="char*256(30)"  category="datm"
+<entry id="mapread" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="">
 Regrid mapping file to read
 </entry>
 
-<entry id="mapwrit" type="char*256(30)"  category="datm"
+<entry id="mapwrite" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="">
 Regrid mapping file to write
 </entry>
 
-<entry id="tintalgo" type="char*256(30)"  category="datm"
+<entry id="tintalgo" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="coszen,nearest,linear,lower,upper">
 Time interpolation algorithm method
+    coszen  = Scale according to the cosine of the solar zenith angle (for solar)
+    nearest = Use the nearest time-value
+    linear  = Linearly interpolate between the two time-values
+    lower   = Use lower time-value
+    upper   = Use upper time-value
 </entry>
 
-<entry id="taxmode" type="char*256(30)"  category="datm"
+<entry id="taxmode" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="extend,cycle,limit">
 Time axis mode
+    extend = extrapolate before and after the period by using the first or last value.
+    cycle  = cycle between the range of data
+    limit  = restrict to the period for which the data is valid
 </entry>
 
 <entry id="dtlimit" type="real(30)"  category="datm"
@@ -1173,7 +1670,7 @@ Character array of stream description file names
 Character array of vector description file names
 </entry>
 
-<entry id="factorfn" type="char*256" category="datm"
+<entry id="factorfn" type="char*256" category="datm_physics"
        group="datm_nml" valid_values="null">
 File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 </entry>
@@ -1181,11 +1678,14 @@ File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 <entry id="decomp" type="char*4" category="datm"
        group="datm_nml" valid_values="1d,root" >
 DATM Decomposition strategy
+    1d   = Vector decomposition
+    root = run only on the master task
 </entry>
 
-<entry id="presaero" type="logical" category="datm"
+<entry id="presaero" type="logical" category="datm_physics"
        group="datm_nml">
-If prescribed aerosols are coming from the data atmosphere model (datm)
+If TRUE, prescribed aerosols are coming from the data atmosphere model (datm)
+(Must be true for running with CLM).
 </entry>
 
 <entry id="atm_in" type="char*256" category="datm"
@@ -1193,14 +1693,14 @@ If prescribed aerosols are coming from the data atmosphere model (datm)
 Namelist filename for data model share stream data namelist
 </entry>
 
-<entry id="iradsw" type="integer" category="datm"
+<entry id="iradsw" type="integer" category="datm_physics"
        group="datm_nml" valid_values="">
 Frequency to update radiation in number of steps (or hours if negative)
 </entry>
 
 <entry id="restfilm" type="char*256" category="datm"
        group="datm_nml" valid_values="">
-Master restart file name for datm model, needed for branch simulations, but currently unused
+Master restart file name for datm model
 </entry>
 
 <entry id="restfils" type="char*256" category="datm"
@@ -1212,50 +1712,63 @@ Stream restart file name for datm model, needed for branch simulations
        group="datm_internal" 
        valid_values="CLM_QIAN,CPLHIST3HrWx,CLM1PT">
 Description of data source for datm input data.
+(Normally set by DATM_MODE) [NOTE: we only list the valid CLM options here]
+    CLM_QIAN     = Run with the CLM Qian dataset valid from 1948 to 2004
+    CPLHIST3HrWx = Run with CESM 3-hourly coupler history output
+    CLM1PT       = Run with supplied single point data
 </entry>
 
 <entry id="datm_file_aero" type="char*256" category="datm_internal"
        group="datm_internal"  input_pathname="abs"
        valid_values="">
 Prescribed aerosol file name, full path
+(Normally set according to DATM_PRESAERO)
 </entry>
 
 <entry id="datm_year_first_aero" type="integer" category="datm_internal"
        group="datm_internal" 
        valid_values="">
 Prescribed aerosol initial year
+(Normally set according to DATM_PRESAERO)
 </entry>
 
 <entry id="datm_year_last_aero" type="integer" category="datm_internal"
        group="datm_internal" 
        valid_values="">
 Prescribed aerosol last year
+(Normally set according to DATM_PRESAERO)
 </entry>
 
 <entry id="datm_year_align_aero" type="integer" category="datm_internal"
        group="datm_internal" 
        valid_values="">
 Prescribed aerosol model year to align to first year
+(Normally set according to DATM_PRESAERO)
 </entry>
 
 <entry id="datm_cycle_beg_year" type="integer" category="datm_internal"
        group="default_settings" valid_values="">
 Beginning of year to cycle datm data through
+(Normally set by DATM_CLMNCEP_YR_START or DATM_CPL_YR_START)
 </entry>
 
 <entry id="datm_cycle_end_year" type="integer" category="datm_internal"
        group="default_settings" valid_values="">
 End of year to cycle datm data through
+(Normally set by DATM_CLMNCEP_YR_END or DATM_CPL_YR_END)
 </entry>
 
 <entry id="diri" type="char*256" category="datm"
        group="modelio" valid_values="">
+datm input directory
 </entry>
 <entry id="diro" type="char*256" category="datm"
        group="modelio" valid_values="">
+datm output directory
 </entry>
 <entry id="logfile" type="char*256" category="datm"
        group="modelio" valid_values="">
+Datm logfile name
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1265,12 +1778,12 @@ End of year to cycle datm data through
 <entry id="clm_start_type" type="char*8"  category="default_settings"
        group="default_settings" valid_values="default,cold,arb_ic,startup,continue,branch" >
 CLM run type.  
-   'default' use the default type of clm_start type for this configuration
-   'cold' is a run from arbitrary initial conditions
-   'arb_ic' is a run using initial conditions if provided, OR arbitrary initial conditions if no files can be found
-   'startup' is an initial run with initial conditions provided.  
-   'continue' is a restart run.
-   'branch' is a restart run in which properties of the output history files may be changed.
+    'default' use the default type of clm_start type for this configuration
+    'cold' is a run from arbitrary initial conditions
+    'arb_ic' is a run using initial conditions if provided, OR arbitrary initial conditions if no files can be found
+    'startup' is an initial run with initial conditions provided.  
+    'continue' is a restart run.
+    'branch' is a restart run in which properties of the output history files may be changed.
 </entry>
 
 <entry id="glc_grid" type="char*10" category="default_settings"
@@ -1287,6 +1800,7 @@ Glacier model grid
        valid_values=
 "512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,0.33x0.33">
 Horizontal resolutions
+Note: 0.5x0.5 and 0.33x0.33 are only used for CLM tools
 </entry> 
 
 <entry id="rcp" type="real" category="default_settings"
@@ -1304,19 +1818,22 @@ Land mask description
 
 <entry id="irrig" type="logical" category="default_settings"
        group="default_settings"  >
-If true, irrigation will be active (find surface datasets with active irrigation).
+If TRUE, irrigation will be active (find surface datasets with active irrigation).
 </entry> 
 
-<entry id="rtm_res" type="char*20" category="default_settings" value="R05"
-       group="default_settings" valid_values="R05,RX1,19BASIN" >
+<entry id="rtm_res" type="char*20" category="default_settings"
+       group="default_settings" valid_values="R05,RX1,19BASIN" value="R05">
 Resolution for River Transport Model (RTM)
 </entry> 
 
 <entry id="sim_year" type="integer" category="default_settings"
        group="default_settings" valid_values=
 "1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
-Year to simulate datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
+Year to simulate and to provide datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
+A sim_year greater than 2005 corresponds to rcp scenario data
+Most years are only used for clm_tools and there aren't CLM datasets that correspond to them.
+CLM datasets exist for years: 1000 (for testing), 1850, and 2000
 </entry> 
 
 <entry id="sim_year_range" type="char*9" category="default_settings"
@@ -1340,18 +1857,17 @@ Description of the use case selected.
 
 <entry id="datm_presaero" type="char*80" category="default_settings"
        group="default_settings" 
-       valid_values="none,prognostic,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6.0,rcp8.5">
+       valid_values="prognostic,pt1_pt1,clim_1850,clim_2000,trans_1850-2000,rcp2.6,rcp4.5,rcp6.0,rcp8.5">
 Prescribed aerosol mode for the atmosphere model 
-   none = Don't pass aerosol from atmosphere, read it from inside of CLM (using faerdep) 
-   prognostic = Pass aerosol from a prognostic atmosphere model -- such as CAM. (may still be read in from a dataset in that model) 
-   pt1_pt1 = For datm use a single point dataset 
-   clim_1850 = For datm use constant 1850 conditions 
-   clim_2000 = For datm use constant 2000 conditions 
-   trans_1850-2000 = For datm use transient 1850 to 2000 conditions 
-   rcp2.6 = For datm use rcp=2.6 future scenario 
-   rcp4.5 = For datm use rcp=4.5 future scenario 
-   rcp6   = For datm use rcp=6.0 future scenario 
-   rcp8.5 = For datm use rcp=8.5 future scenario
+    prognostic = Pass aerosol from a prognostic atmosphere model -- such as CAM. (may still be read in from a dataset in that model) 
+    pt1_pt1 = For datm use a single point dataset 
+    clim_1850 = For datm use constant 1850 conditions 
+    clim_2000 = For datm use constant 2000 conditions 
+    trans_1850-2000 = For datm use transient 1850 to 2000 conditions 
+    rcp2.6 = For datm use rcp=2.6 future scenario 
+    rcp4.5 = For datm use rcp=4.5 future scenario 
+    rcp6   = For datm use rcp=6.0 future scenario 
+    rcp8.5 = For datm use rcp=8.5 future scenario
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1367,7 +1883,7 @@ Where dry deposition is calculated (from land, atmosphere, or from a table)
 <entry id="drydep_list" type="char*32(100)" category="dry-deposition"
        group="drydep_inparm" 
        valid_values=
-"OX,H2O2,OH,HO2,CO,CH4,CH3O2,CH3OOH,CH2O,CHOOH,NO,NO2,HNO3,CO2,NH3,N2O5,NO3,CH3OH,HO2NO2,O1D,C2H6,C2H5O2,PO2,MACRO2,ISOPO2,C4H10,CH3CHO,C2H5OOH,C3H6,POOH,C2H4,PAN,CH3COOOH,C10H16,CHOCHO,CH3COCHO,GLYALD,CH3CO3,C3H8,C3H7O2,CH3COCH3,C3H7OOH,RO2,ROOH,Rn,ISOP,MVK,MACR,C2H5OH,ONITR,ONIT,ISOPNO3,HYDRALD"
+"OX,H2O2,OH,HO2,CO,CH4,CH3O2,CH3OOH,CH2O,CHOOH,NO,NO2,HNO3,CO2,NH3,N2O5,NO3,CH3OH,HO2NO2,O1D,C2H6,C2H5O2,PO2,MACRO2,ISOPO2,C4H10,CH3CHO,C2H5OOH,C3H6,POOH,C2H4,PAN,CH3COOOH,C10H16,CHOCHO,CH3COCHO,GLYALD,CH3CO3,C3H8,C3H7O2,CH3COCH3,C3H7OOH,RO2,ROOH,Rn,ISOP,MVK,MACR,C2H5OH,ONITR,ONIT,ISOPNO3,HYDRALD,HCN,CH3CN"
 >
 List of chemical constituents that dry deposition will be calculated for
 </entry>

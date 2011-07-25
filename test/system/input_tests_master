@@ -1062,33 +1062,63 @@ brQS3 TBR.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -3+
 blQS3 TBL.sh _nrcnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6    arb_ic
 
 sm654 TSMtools.sh mkgriddata   tools__ds namelist
-sm674 TSMtools.sh mkgriddata   tools__ds singlept
-sm694 TSMtools.sh mkgriddata   tools__ds cesm_dom
 bl654 TBLtools.sh mkgriddata   tools__ds namelist
+
+sm674 TSMtools.sh mkgriddata   tools__ds singlept
+bl674 TBLtools.sh mkgriddata   tools__ds singlept
+
+sm694 TSMtools.sh mkgriddata   tools__ds cesm_dom
+bl694 TBLtools.sh mkgriddata   tools__ds cesm_dom
 
 sm754 TSMtools.sh mksurfdata   tools__s  namelist
 bl754 TBLtools.sh mksurfdata   tools__s  namelist
 
+sm773 TSMtools.sh mksurfdata   tools__do singlept
+bl773 TBLtools.sh mksurfdata   tools__do singlept
+op773 TOPtools.sh mksurfdata   tools__do singlept
+
 sm774 TSMtools.sh mksurfdata   tools__ds singlept
 bl774 TBLtools.sh mksurfdata   tools__ds singlept
+
+sm777 TSMtools.sh mksurfdata   tools__o singlept
+bl777 TBLtools.sh mksurfdata   tools__o singlept
+op777 TOPtools.sh mksurfdata   tools__o singlept
 
 smZ94 TSMtools.sh mkdatadomain tools__ds namelist
 blZ94 TBLtools.sh mkdatadomain tools__ds namelist
 
 sm854 TSMtools.sh interpinic   tools__ds runoptions
-sm853 TSMtools.sh interpinic   tools__o  runoptions
-bl853 TBLtools.sh interpinic   tools__o  runoptions
+bl854 TBLtools.sh interpinic   tools__ds runoptions
+
+sm853 TSMtools.sh interpinic   tools__do runoptions
+bl853 TBLtools.sh interpinic   tools__do runoptions
+op853 TOPtools.sh interpinic   tools__do runoptions
+
+sm857 TSMtools.sh interpinic   tools__o  runoptions
+bl857 TBLtools.sh interpinic   tools__o  runoptions
+op857 TOPtools.sh interpinic   tools__o  runoptions
 
 sm893 TSMrst_tools.sh _sc_do         interpinic clm_std^nl_urb       20000101:1800 1.9x2.5  gx1v6      4x5   gx3v7      -1
-sm857 TSMrst_tools.sh 17p_cnsc_o     interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 10x15 USGS@1850  -1
+bl893 TBLrst_tools.sh _sc_do         interpinic clm_std^nl_urb       20000101:1800 1.9x2.5  gx1v6      4x5   gx3v7      -1
+sm859 TSMrst_tools.sh 17p_cnsc_o     interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 10x15 USGS@1850  -1
+bl859 TBLrst_tools.sh 17p_cnsc_o     interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 10x15 USGS@1850  -1
 sm813 TSMrst_tools.sh 17p_cndvsc_do  interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 48x96 gx3v7@1850 -1
+bl813 TBLrst_tools.sh 17p_cndvsc_do  interpinic clm_std^nl_urb       18500101:1800 1.9x2.5  gx1v6@1850 48x96 gx3v7@1850 -1
 sm8y3 TSMrst_tools.sh _mec10sc_do    interpinic clm_std^nl_urb       18500101:1800 0.9x1.25 gx1v6@1850 48x96 gx3v7      -1
+bl8y3 TBLrst_tools.sh _mec10sc_do    interpinic clm_std^nl_urb       18500101:1800 0.9x1.25 gx1v6@1850 48x96 gx3v7      -1
 sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5  gx1v6      10x15 USGS       -1
+bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5  gx1v6      10x15 USGS       -1
 
 sm954 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
+bl954 TBLscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 sm974 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
+bl974 TBLscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 sm978 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
+bl978 TBLscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
 sm9T4 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__ds
+bl9T4 TBLscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__ds
 sm9C4 TSMscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds
+bl9C4 TBLscript_tools.sh mksurfdata mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds
 
 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional
+bl9S4 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional

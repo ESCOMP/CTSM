@@ -988,7 +988,7 @@ contains
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then
-       write(iulog,*) 'Allocation error for TPOOL_C write'
+       call endrun( 'Allocation error for TPOOL_C write' )
     end if
 
     ! TPOOL_C_LEAF

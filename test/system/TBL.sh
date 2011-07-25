@@ -64,7 +64,7 @@ if [ -n "${BL_ROOT}" ]; then
     echo "TBL.sh: generating baseline data from root $BL_ROOT - results in $BL_TESTDIR"
 
     echo "TBL.sh: calling ****baseline**** TSM.sh for smoke test"
-    bl_dir=`/bin/ls -1d ${BL_ROOT}/models/lnd/clm*/test/system`
+    bl_dir=`/bin/ls -1d ${BL_ROOT}/models/lnd/clm/test/system`
     env CLM_TESTDIR=${BL_TESTDIR} \
 	CLM_SCRIPTDIR=$bl_dir \
 	$bl_dir/TSM.sh $1 $2 $3 $4 $5 $6 $7

@@ -723,6 +723,7 @@ contains
        stmon_day   = stymd - styr*10000
        call get_start_date( rsyr, rsmon, rsday, tod )
        rsmon_day = rsmon*100 + rsday
+       if ( masterproc ) &
        write(iulog,formDate) 'Date on the restart file is: ', rsyr, rsmon, rsday
        if ( stmon_day /= rsmon_day )then
           write(iulog,formDate) 'Start date is: ', styr, stmon_day/100, &

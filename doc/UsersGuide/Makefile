@@ -4,7 +4,8 @@
 #
 VPATH := ../../tools/cprnc . .. ../../bld ../../tools/ncl_scripts \
 	../../tools/mksurfdata ../../test/system ../../bld/namelist_files \
-	../../bld/config_files
+	../../bld/config_files ../../tools ../../../../../scripts/ccsm_utils/Tools \
+        ../../../../../scripts/ccsm_utils/Tools/lnd/clm/PTCLM/
 
 PDFUG     := clm_ug.pdf
 HTMLUG    := book1.html
@@ -12,11 +13,15 @@ DOCBKUG   := clm_ug.xml
 CFGLOG    := config_help
 CPRLOG    := cprnc_readme
 BNMLOG    := buildnml_help
+BSTLOG    := build_streams_help
 RESLOG    := buildnml_resolutions
 USCLOG    := buildnml_usecases
 QCKLOG    := quickstart_guide
+COPLOG    := filecopies
 MKSLOG    := mksurfdata.pl
 USRLOG    := quickstart_usrdat
+PTCLOG    := ptclm_help
+PTCLST    := ptclm_list
 TDRLOG    := test_driver.sh
 GETREG    := getregional_datasets
 CO2DIF    := addco2_datm.buildnml
@@ -25,11 +30,11 @@ NMLDFTBL  := namelist_definition_table
 NMLDLTBL  := namelist_defaults_clm_table
 CFGDFTBL  := config_definition_table
 COMPLIST  := compsets_list_ofIcases.xml
-SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
-             $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml \
+SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(PTCLOG).xml $(BNMLOG).xml \
+             $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml $(COPLOG).xml $(PTCLST).xml \
              $(USRLOG).xml $(GETREG).xml preface.xml custom.xml special_cases.xml \
              tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml \
-             appendix.xml trouble_shooting.xml \
+             appendix.xml trouble_shooting.xml ptclm.xml $(BSTLOG).xml \
              $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml $(CPRLOG).xml \
 	     $(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml
 
@@ -44,10 +49,14 @@ all: $(HTMLUG) $(PDFUG)
 RM := /bin/rm
 
 $(CFGLOG).xml: $(CFGLOG).tlog
+$(PTCLOG).xml: $(PTCLOG).tlog
+$(PTCLST).xml: $(PTCLST).tlog
 $(BNMLOG).xml: $(BNMLOG).tlog
+$(BSTLOG).xml: $(BSTLOG).tlog
 $(RESLOG).xml: $(RESLOG).tlog
 $(USCLOG).xml: $(USCLOG).tlog
 $(QCKLOG).xml: $(QCKLOG).tlog
+$(COPLOG).xml: $(COPLOG).tlog
 $(USRLOG).xml: $(USRLOG).tlog
 $(GETREG).xml: $(GETREG).tlog
 $(MKSLOG).xml: $(MKSLOG).tlog
@@ -100,6 +109,11 @@ $(BNMLOG).tlog: build-namelist
 	@echo "Check that the output $@ is good and redo your make"
 	../../bld/build-namelist -help >& $@
 
+$(BSTLOG).tlog: build_streams
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	../../../../../scripts/ccsm_utils/Tools/build_streams --help >& $@
+
 $(DATLOG).tlog:
 	@echo "Get current build date"
 	date  +%b-%d-%Y >& $@
@@ -119,6 +133,17 @@ $(CFGLOG).tlog: configure
 	@echo "Check that the output $@ is good and redo your make"
 	../../bld/configure -help >& $@
 
+$(PTCLOG).tlog: PTCLM.py
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	../../../../../scripts/ccsm_utils/Tools/lnd/clm/PTCLM/PTCLM.py --help >& $@
+
+$(PTCLST).tlog: PTCLM.py
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	cd ../../../../../scripts/ccsm_utils/Tools/lnd/clm/PTCLM; \
+        PTCLM.py --list >& $(CURDIR)/$@
+
 $(MKSLOG).tlog: mksurfdata.pl
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
 	@echo "Check that the output $@ is good and redo your make"
@@ -130,6 +155,9 @@ $(TDRLOG).tlog: test_driver.sh
 	../../test/system/test_driver.sh -help >& $@
 
 $(QCKLOG).tlog: Quickstart.GUIDE
+	cp $<  $@
+
+$(COPLOG).tlog: README.filecopies
 	cp $<  $@
 
 $(CPRLOG).tlog: README
@@ -144,10 +172,12 @@ $(GETREG).tlog:  getregional_datasets.pl
 	../../tools/ncl_scripts/getregional_datasets.pl -help >& $@
 
 clean:
-	$(RM) -f $(HTMLUG) $(PDFUG) *.tlog $(DATLOG).xml *.xhtml
+	$(RM) -f $(HTMLUG) $(PDFUG) *.tlog $(DATLOG).xml *.xhtml *.tex
 
 realclean: clean
-	$(RM) -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
+	$(RM) -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml \
+        $(BNMLOG).xml $(BSTLOG).xml $(PTCLOG).xml  $(PTCLST).xml \
 	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml \
 	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml \
-	$(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(CPRLOG).xml
+	$(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(CPRLOG).xml \
+        $(COPLOG).xml

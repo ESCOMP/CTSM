@@ -46,7 +46,6 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, zero_out, urbn_o)
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	
@@ -96,7 +95,6 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, zero_out, urbn_o)
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
   real(r8) :: relerr = 0.00001_r8             ! max error: sum overlap wts ne 1
-  character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkurban'
 !-----------------------------------------------------------------------
 
@@ -109,12 +107,10 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, zero_out, urbn_o)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncid), subname)
+  call check_ret(nf_open(fname, 0, ncid), subname)
 
   allocate(urbn_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()
@@ -301,7 +297,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
 ! Make Urban Parameter data
 !
 ! !USES:
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar	  , only : nlevurb, numsolar, numrad
@@ -403,7 +398,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   real(r8) :: wt                              ! temporary weight of overlap input cell
   character(len=256) :: name                  ! name of attribute
   character(len=256) :: unit                  ! units of attribute
-  character(len=256) :: locfn                 ! local dataset file name
   character(len= 32) :: subname = 'mkurbanpar'
 !-----------------------------------------------------------------------
 
@@ -416,12 +410,10 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname, locfn, 0)
-
-  call read_domain(tdomain,locfn,readmask=.true.)
+  call read_domain(tdomain,fname,readmask=.true.)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncidi), subname)
+  call check_ret(nf_open(fname, 0, ncidi), subname)
 
   call check_ret(nf_inq_dimid(ncidi, 'nlevurb', dimid), subname)
   call check_ret(nf_inq_dimlen(ncidi, dimid, nlevurb_i), subname)
@@ -1038,7 +1030,6 @@ subroutine mkelev(lsmlon, lsmlat, fname1, fname2, ndiag, elev_o, ncido)
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
   use mkvarpar
@@ -1086,7 +1077,6 @@ subroutine mkelev(lsmlon, lsmlat, fname1, fname2, ndiag, elev_o, ncido)
   real(r8) :: wt                              ! temporary weight of overlap input cell
   character(len=256) :: name                  ! name of attribute
   character(len=256) :: unit                  ! units of attribute
-  character(len=256) :: locfn                 ! local dataset file name
   character(len= 32) :: subname = 'mkelev'
 !-----------------------------------------------------------------------
 
@@ -1099,12 +1089,10 @@ subroutine mkelev(lsmlon, lsmlat, fname1, fname2, ndiag, elev_o, ncido)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname1, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname1)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncidi), subname)
+  call check_ret(nf_open(fname1, 0, ncidi), subname)
 
   ! Allocation
 
@@ -1134,12 +1122,10 @@ subroutine mkelev(lsmlon, lsmlat, fname1, fname2, ndiag, elev_o, ncido)
 
   ! Obtain input grid info, read local fields
 
-  call getfil (fname2, locfn, 0)
-
-  call read_domain(tdomain,locfn)
+  call read_domain(tdomain,fname2)
   call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
 
-  call check_ret(nf_open(locfn, 0, ncidi), subname)
+  call check_ret(nf_open(fname2, 0, ncidi), subname)
   call check_ret(nf_inq_varid (ncidi, 'LANDMASK', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, mask_i), subname)
   call check_ret(nf_close(ncidi), subname)

@@ -12,7 +12,7 @@ Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) r
 (SNICAR_FRC .true.is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="sitespf_pt" 
-valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha" 
+valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA" 
 value="none" category="physics">
 Flag to turn on site specific special configuration flags for supported single 
 point resolutions.
@@ -102,13 +102,13 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scr
 Toggle to turn on perturbation error growth test
 </entry>
 <entry id="rtm" valid_values="on,off" value="on" category="physics">
-Toggle to turn on river transport module, to run global river routing model to ocean
+Toggle to turn on river transport module (RTM), to run global river routing model to ocean
 </entry>
 <entry id="nofire" valid_values="on,off" value="off" category="bgc">
 Toggle to make wild-fires inactive for biogeochemistry=CN mode
 </entry>
 <entry id="noio" valid_values="on,off" value="off" category="physics">
-Toggle to turn all history output completey OFF (possibly used for testing)
+Toggle to turn all history output completely OFF (possibly used for testing)
 </entry>
 <entry id="target_os" value="" category="mach_options">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"

@@ -35,7 +35,6 @@ module areaMod
      integer          ,pointer :: j_ovr(:,:,:)       ! j index of overlap input cell
      real(r8)         ,pointer :: a_ovr(:,:,:)       ! area of overlap input cell
      real(r8)         ,pointer :: w_ovr(:,:,:)       ! wt of overlap input cell
-     real(r8)         ,pointer :: scale_pft_i(:,:)   ! PFT wt of overlap input cell
   end type gridmap_type
   public gridmap_type
 
@@ -53,8 +52,6 @@ module areaMod
   public :: gridmap_setptrs
   public :: areaini        ! area averaging initialization
   public :: areaave        ! area averaging of field from input to output grids
-  public :: areaini_pft    ! area averaging initialization for plant function type average
-  public :: areaave_pft    ! area averaging of field from input to output grids with pft
   interface areaave
      module procedure areaave
      module procedure areaave3D
@@ -190,18 +187,12 @@ end subroutine gridmap_init
 !------------------------------------------------------------------------------
 
   if ( first_time )then
-     allocate( gridmap%scale_pft_i(ni,nj), stat=ier )
-     if (ier /= 0) then
-        write(6,*) subName//' ERROR: allocate gridmap scale_pft_i'
-        stop
-     endif
      nio = size(gridmap%w_ovr,1)
      njo = size(gridmap%w_ovr,2)
      call gridmap_setptrs( gridmap, mx_ovr=mwts )
 
      first_time = .false.
   end if
-  gridmap%scale_pft_i(:,:) = nan
   gridmap%w_ovr(:,:,:)     = nan
 end subroutine gridmap_init_pft
 
@@ -253,13 +244,6 @@ end subroutine gridmap_init_pft
      write(6,*) SubName//' ERROR: deallocate gridmap w_ovr'
      stop
   endif
-  if ( associated( gridmap%scale_pft_i) )then
-     deallocate(gridmap%scale_pft_i, stat=ier)
-     if (ier /= 0) then
-        write(6,*) SubName//' ERROR: deallocate gridmap scale_pft_i'
-        stop
-     endif
-  end if
 
 end subroutine gridmap_clean
 !------------------------------------------------------------------------------
@@ -269,7 +253,7 @@ end subroutine gridmap_clean
 !
 ! !INTERFACE:
   subroutine gridmap_setptrs(gridmap,name,type,domain_i,domain_o, &
-     mx_ovr,n_ovr,i_ovr,j_ovr,a_ovr,w_ovr,scale_pft_i)
+     mx_ovr,n_ovr,i_ovr,j_ovr,a_ovr,w_ovr)
 !
 ! !DESCRIPTION:
 ! This subroutine sets external pointer arrays to arrays in gridmap
@@ -289,7 +273,6 @@ end subroutine gridmap_clean
     integer          ,optional,pointer  :: j_ovr(:,:,:)
     real(r8)         ,optional,pointer  :: a_ovr(:,:,:)
     real(r8)         ,optional,pointer  :: w_ovr(:,:,:)
-    real(r8)         ,optional,pointer  :: scale_pft_i(:,:)
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -329,13 +312,6 @@ end subroutine gridmap_clean
     endif
     if (present(w_ovr)) then
       w_ovr => gridmap%w_ovr
-    endif
-    if (present(scale_pft_i)) then
-      if ( .not. associated(gridmap%scale_pft_i) )then
-         write(6,*) subName//" ERROR:: scale_pft_i asked for but NOT allocated yet"
-         stop
-      end if
-      scale_pft_i => gridmap%scale_pft_i
     endif
 
 end subroutine gridmap_setptrs
@@ -660,118 +636,6 @@ end subroutine gridmap_checkmap
     deallocate (fld_o, fld_i)
 
   end subroutine areaini
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: areaini_pft
-!
-! !INTERFACE:
-  subroutine areaini_pft( gridmap, ni, nj, pctpft_i, pft_indx )
-!
-! !DESCRIPTION:
-! Initialize the Plant function type weights
-!
-! !USES:
-    use mkvarctl, only: numpft
-!
-! !ARGUMENTS:
-    type(gridmap_type),intent(inout) :: gridmap                  ! gridmap
-    integer,           intent(in)    :: ni                       ! size of longitude of pft index
-    integer,           intent(in)    :: nj                       ! size of latitude of pft index
-    real(r8),          intent(in)    :: pctpft_i(ni,nj,0:numpft) ! plant function type %'s
-    integer,           intent(in)    :: pft_indx                 ! PFT index
-!
-! !REVISION HISTORY:
-! 2007.01.29 Created by Erik Kluek
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    character(len=*), parameter :: subName = "areaini_pft"
-    integer  :: nlon_o                   !output  grid: max number of longitude pts
-    integer  :: nlat_o                   !output  grid: number of latitude  points
-    integer  :: nlon_i                   !input  grid: max number of longitude pts
-    integer  :: nlat_i                   !input  grid: number of latitude  points
-    integer  :: mwts                     !max number of wts per cell in map
-    integer  :: ier                      !allocate error status
-    integer  :: ii                       !input  grid longitude loop index
-    integer  :: ji                       !input  grid latitude  loop index
-    integer  :: io                       !output  grid longitude loop index
-    integer  :: jo                       !output  grid latitude  loop index
-    integer  :: n                        !weight index
-    integer  :: p                        !plant function type loop index
-    integer, pointer :: i_ovr(:,:,:)     !longitude index of overlap areas
-    integer, pointer :: j_ovr(:,:,:)     !latitude index of overlap areas
-    real(r8),pointer :: a_ovr_o(:,:,:)   !output grid: overlap areas
-    real(r8),pointer :: w_ovr(:,:,:)     !output grid: overlap wts
-    real(r8),pointer :: scale_pft_i(:,:) !input grid: PFT
-    real(r8),pointer :: sumpft(:,:)      !input grid: sum of weights
-
-    call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
-    if ( (ni /= nlon_i) .or. (nj /= nlat_i) )then
-       write (6,*) subName//' error: size of input PFT does not match internal LAI grid'
-       stop
-    end if
-    if ( (pft_indx < 0) .or. (pft_indx > numpft) )then
-       write (6,*) subName//' error: pft_indx is out of range'
-       stop
-    end if
-    call gridmap_init_pft(gridmap,ni,nj)
-    call gridmap_setptrs(gridmap,mx_ovr=mwts, a_ovr=a_ovr_o,scale_pft_i=scale_pft_i, &
-                         w_ovr=w_ovr, i_ovr=i_ovr,j_ovr=j_ovr )
-    call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
-    allocate( sumpft(nlon_o,nlat_o), stat=ier )
-    if (ier /= 0) then
-       write(6,*) subName//' ERROR: allocate sumpft'
-       stop
-    endif
-    do ji = 1, nlat_i
-    do ii = 1, nlon_i
-       scale_pft_i(ii,ji) = pctpft_i(ii,ji,pft_indx)
-    end do
-    end do
-    sumpft(:,:) = 0.0_r8
-    do n = 1, mwts
-    do jo = 1, nlat_o
-    do io = 1, nlon_o
-       ii = i_ovr(io,jo,n)
-       ji = j_ovr(io,jo,n)
-       sumpft(io,jo) = sumpft(io,jo) + a_ovr_o(io,jo,n)*scale_pft_i(ii,ji)
-#ifndef LINUX
-       if ( scale_pft_i(ii,ji) == nan )then
-          write (6,*) subName//' error: scale_pft_i == nan! at i, j=', ii,ji
-          write (6,*) pctpft_i(ii,ji,pft_indx)
-          stop
-       end if
-#endif
-    end do
-    end do
-    end do
-    ! Normalize weights by their sum (sum of weights includes a_ovr weights multiplied in)
-    do n = 1, mwts
-    do jo = 1, nlat_o
-    do io = 1, nlon_o
-       if ( sumpft(io,jo) > 0.0_r8 ) then
-          w_ovr(io,jo,n) = a_ovr_o(io,jo,n)/sumpft(io,jo)
-       else
-          w_ovr(io,jo,n) = 0.0_r8
-       end if
-    end do
-    end do
-    end do
-    if ( any(w_ovr== nan) )then
-       write (6,*) subName//' error: w_ovr == nan!'
-       stop
-    end if
-    deallocate( sumpft   )
-    nullify( a_ovr_o     )
-    nullify( i_ovr       )
-    nullify( j_ovr       )
-    nullify( w_ovr       )
-    nullify( scale_pft_i )
-
-  end subroutine areaini_pft
 
 !------------------------------------------------------------------------
 !BOP
@@ -1152,41 +1016,6 @@ end subroutine gridmap_checkmap
     return
   end subroutine areaave4D
 
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: areaave_pft
-!
-! !INTERFACE:
-  subroutine areaave_pft (fld_i , fld_o , gridmap)
-!
-! !DESCRIPTION:
-! Mapping of field from input to output grids, 2d global fields
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    real(r8)          ,intent(in) :: fld_i(:,:)   !input grid : field
-    real(r8)          ,intent(out):: fld_o(:,:)   !field for output grid
-    type(gridmap_type),intent(in) :: gridmap      ! gridmap
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan
-!
-!
-! !LOCAL VARIABLES:
-    real(r8),pointer :: scale_pft_i(:,:)  !PFT %
-!EOP
-!------------------------------------------------------------------------
-
-    call gridmap_setptrs(gridmap, scale_pft_i=scale_pft_i)
-    call areaave_internal (fld_i , fld_o , gridmap, scale_i=scale_pft_i )
-    nullify( scale_pft_i )
-
-    return
-  end subroutine areaave_pft
 
 !------------------------------------------------------------------------
 !BOP
