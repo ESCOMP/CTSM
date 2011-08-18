@@ -7,6 +7,7 @@ sc    => standalone clm         is on
 van   => VANCOUVER              is on
 mex   => MEXICOCITY             is on
 mec10 => Glacier multiple elev classes = 10, green-land 20km mask
+nil3  => Number of land instances = 3
 snf   => snicar_frc             is on
 
 _cn   => bgc is in cn   mode

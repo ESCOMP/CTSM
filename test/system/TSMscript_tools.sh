@@ -60,7 +60,7 @@ else
   tcbtools="."
 fi
 
-scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|HOME|$HOME|g" | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|PFTDATA|$PFTDATA|g" | sed -e "s|EXEDIR|$tcbtools|"`
+scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|HOME|$HOME|g" | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|EXEDIR|$tcbtools|"`
 
 echo "TSMscript_tools.sh: running ${cfgdir}/$2 with $scopts; output in ${rundir}/test.log" 
 

@@ -80,9 +80,9 @@ if [ $rc -ne 0 ]; then
     exit 7
 fi
 
-mv ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.${restart_length}.continue/*.clm?.h*.nc .
+mv ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.${restart_length}.continue/*.clm*.h*.nc .
 echo "TER.sh: starting b4b comparisons " 
-files_to_compare=`ls *.clm?.h*.nc`
+files_to_compare=`ls *.clm*.h*.nc`
 if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TER.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus

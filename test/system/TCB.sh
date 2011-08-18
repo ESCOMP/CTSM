@@ -51,6 +51,7 @@ fi
 
 ##construct string of args to configure
 config_string="$CFG_STRING -mach $CESM_MACH -nc_path $NETCDF_PATH "
+config_string="${config_string} -mct_dir $MCT_LIBDIR -pio_dir $PIO_LIBDIR "
 while read config_arg; do
     config_string="${config_string}${config_arg} "
 done < ${CLM_SCRIPTDIR}/config_files/$1
@@ -82,16 +83,18 @@ while [ $still_compiling = "TRUE" ]; do
     fi
 
     echo "TCB.sh: call to make:" 
-    echo "        ${MAKE_CMD}" 
+    echo "        ${MAKE_CMD} MACFILE=${CLM_TESTDIR}/${test_name}/Macros.${CESM_MACH} "
     if [ "$debug" != "YES" ]; then
-      ${MAKE_CMD} >> test.log 2>&1
+      ${MAKE_CMD}  MACFILE=${CLM_TESTDIR}/${test_name}/Macros.${CESM_MACH} >> test.log 2>&1
       status="PASS"
       rc=$?
     else
+      touch ${CLM_TESTDIR}/TCB.$1/clm
+      chmod +x ${CLM_TESTDIR}/TCB.$1/clm
       status="GEN"
       rc=0
     fi
-    if [ $rc -eq 0 ]; then
+    if [ $rc -eq 0 -a -x "${CLM_TESTDIR}/TCB.$1/clm" ]; then
 	echo "TCB.sh: make was successful" 
 	echo "TCB.sh: configure and build test passed"
 	echo "$status" > TestStatus

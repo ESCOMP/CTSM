@@ -1,4 +1,288 @@
 ===============================================================
+Tag name:  clm4_0_34
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Aug 18 13:14:01 MDT 2011
+One-line Summary: Bring tcens branch to trunk, fix a few issues
+
+Purpose of changes:
+
+Remove -pftlc to mksurfdata.pl. Correct units of H2OSNOTOP, HC, and HCSOI history fields.
+Remove fget_archdev. Fix single point restarts from Brenden Rogers (although now there
+is a PIO issue). Fix pio error when clm is running at same grid as RTM from Mariana. 
+Move Tony's "tcens" DART ensemble branch to trunk. Add save statement to ncdio. Have 
+chkdatmfiles.ncl check both grid and frac files. 
+Update pio/MCT/scripts/datm/PTCLM/csm_share.
+
+Bugs fixed (include bugzilla ID):
+                                 1383 (Remove no-VOC and MAXPFT=4 tests)
+                                 1381 (Can't change monthly average files to NOT be one per month)
+                                 1372 (pio problem writing out RTM hist fields at RTM res)
+                                 1361 (Problem with transient compsets for PTCLM)
+                                 1358 (incorrect units for a few history fields)
+                                 1025 (SCM mode can NOT use a global finidat file) (partial)
+                                 1017 (SCM mode can NOT restart) (partial)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1352 (RCP 6.0 2100-2300 crashing on Hopper)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1392 (US-UMB site has some incorrect data)
+                                 1393 (error when running Gregorian calendar)
+                                 1396 (pio problem reading 2D data with 1st dim=1)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system:
+   Add -ninst_lnd for multiple ensembles of CLM for data assimulation to configure.
+   Build pio and mct as seperate libraries (add -mct_dir/pio_dir to configure).
+
+   Set multiple instances with NINST_LND env variable in env_mach_pes.xml
+   (make sure NTASKS_LND is >= NINST_LND)
+
+Describe any changes made to the namelist:
+   Remove fget_archdev option (don't try to get input files from archival device).
+
+   Set multiple instances of namelists by creating a "user_nl_clm" directory
+
+   Inside of the directory place
+
+   user_nl_clm ---- namelist changes to make for ALL instances
+   user_nl_clm_1 -- namelist changes for first instance
+   user_nl_clm_2 -- namelist changes for first instance
+   user_nl_clm_3 -- namelist changes for third instance
+.
+.
+.
+
+   build-namelist will create a namelist for each instance of the model being run.
+
+List any changes to the defaults for the boundary datasets: domain files updated
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+    scripts   to scripts4_110812
+    drv       to drvseq4_0_04
+    datm      to datm8_110811
+    csm_share to share3_110803
+    mct       to MCT2_7_0_110804a
+    pio       to pio1_3_9
+
+List all files eliminated:
+
+>>>>>>>>>> Delete some 4p and non-VOC tests to reduce testing
+  D  models/lnd/clm/test/system/config_files/4p_vorsc_dm
+  D  models/lnd/clm/test/system/config_files/17p_scnv_dm
+  D  models/lnd/clm/test/system/config_files/4p_vorsc_do
+  D  models/lnd/clm/test/system/config_files/17p_scnv_do
+  D  models/lnd/clm/test/system/config_files/_scnv_dh
+  D  models/lnd/clm/test/system/config_files/4p_vorsc_ds
+  D  models/lnd/clm/test/system/config_files/17p_scnv_ds
+  D  models/lnd/clm/test/system/config_files/_scnv_dm
+  D  models/lnd/clm/test/system/config_files/_scnv_do
+  D  models/lnd/clm/test/system/config_files/17p_scnv_m
+  D  models/lnd/clm/test/system/config_files/17p_scnv_o
+  D  models/lnd/clm/test/system/config_files/17p_scnv_s
+  D  models/lnd/clm/test/system/config_files/4p_vorsc_h
+  D  models/lnd/clm/test/system/config_files/4p_vorsc_o
+  D  models/lnd/clm/test/system/config_files/17p_nrscnv_ds
+  D  models/lnd/clm/test/system/config_files/4p_vonrsc_ds
+  D  models/lnd/clm/test/system/config_files/4p_vorsc_dh
+  D  models/lnd/clm/test/system/config_files/17p_scnv_dh
+
+List all files added and what they do:
+
+>>>>>>>>>> Add tests for multi-instance
+  A  models/lnd/clm/test/system/config_files/_nrnil3sc_dh
+  A  models/lnd/clm/test/system/config_files/_nrnil3sc_dm
+  A  models/lnd/clm/test/system/config_files/_nil3sc_dh
+  A  models/lnd/clm/test/system/config_files/_nil3sc_dm
+  A  models/lnd/clm/test/system/nl_files/multi_inst/multi_inst
+  A  models/lnd/clm/test/system/nl_files/multi_inst/multi_inst_1
+  A  models/lnd/clm/test/system/nl_files/multi_inst/multi_inst_2
+  A  models/lnd/clm/test/system/nl_files/multi_inst/multi_inst_3
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>> Remove old tests add new multi-instance tests in
+  M  models/lnd/clm/test/system/tests_posttag_lynx_nompi
+  M  models/lnd/clm/test/system/tests_pretag_bluefire
+  M  models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+  M  models/lnd/clm/test/system/tests_pretag_edinburgh
+  M  models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+  M  models/lnd/clm/test/system/tests_posttag_kraken
+  M  models/lnd/clm/test/system/tests_posttag_yong
+  M  models/lnd/clm/test/system/tests_posttag_purempi_regression
+  M  models/lnd/clm/test/system/tests_posttag_hybrid_regression
+  M  models/lnd/clm/test/system/tests_pretag_jaguarpf
+  M  models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi
+  M  models/lnd/clm/test/system/tests_posttag_mirage
+  M  models/lnd/clm/test/system/tests_posttag_intrepid_nompi
+  M  models/lnd/clm/test/system/tests_posttag_nompi_regression
+  M  models/lnd/clm/test/system/tests_posttag_lynx
+
+>>>>>>>>>> Handle clm* for multi-instance files, remove PFTDATA 
+  M  models/lnd/clm/test/system/TCB.sh -- Set pio/mct_dir in configure, send MACFILE
+           to make, and create clm exec temp for debug mode
+  M  models/lnd/clm/test/system/TBL.sh --- compare clm* for multi-instance history
+  M  models/lnd/clm/test/system/TBR.sh --- compare clm* for multi-instance history
+  M  models/lnd/clm/test/system/TER.sh --- compare clm* for multi-instance history
+  M  models/lnd/clm/test/system/TSMrst_tools.sh - compare clm* for multi-instance history
+  M  models/lnd/clm/test/system/TSMpergro.sh - compare clm* for multi-instance history
+  M  models/lnd/clm/test/system/TSMscript_tools.sh -- Remove PFTDATA setting
+  M  models/lnd/clm/test/system/TSM.sh - compare clm* for multi-instance, cat lnd_in_000?  files
+  M  models/lnd/clm/test/system/input_tests_master -- add new multi_inst tests remove old
+  M  models/lnd/clm/test/system/mknamelist - add quotes
+  M  models/lnd/clm/test/system/README - Remove storm
+  M  models/lnd/clm/test/system/README.testnames -- Add nil tests remove some 4p no-voc
+  M  models/lnd/clm/test/system/TBLrst_tools.sh - compare clm* for multi-instance history
+  M  models/lnd/clm/test/system/CLM_runcmnd.sh - remove storm
+  M  models/lnd/clm/test/system/test_driver.sh -- use glade paths, add mct/pio_dir
+        add gres setting on jaguarpf, remove PFTDATA, remove storm, update cprnc on lynx
+  M  models/lnd/clm/test/system/config_files/README - add nil3 config
+          change x resolution from T31 to f19 (no datasets at T31 for glc)
+
+>>>>>>>>>> Remove PFTDATA
+  M  models/lnd/clm/test/system/nl_files/mksrfdt_10x15_irr_1850 --------- Remove PFTDATA
+  M  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850-2000 --- Remove PFTDATA
+  M  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_vancouverCAN_2000 -- Remove PFTDATA
+  M  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_brazil_1850 -------- Remove PFTDATA
+  M  models/lnd/clm/test/system/nl_files/mksrfdt_1x1_numaIA_mp20irrcr_2000 -- Remove PFTDATA
+
+>>>>>>>>>> Remove PFTDATA and -p option, add -nobreak to cprnc.pl, print out more info
+  M  models/lnd/clm/tools/mksurfdata/mksurfdata.pl - Remove PFTDATA
+  M  models/lnd/clm/tools/ncl_scripts/cprnc.pl ----- Add -nobreak
+  M  models/lnd/clm/tools/ncl_scripts/cprnc.ncl ----- Add BREAKONDIFF, print avg/max diffs
+
+>>>>>>>>>> Add NINST_LND and build with new MCT/PIO where need mct_pio_dir
+>>>>>>>>>> Handle user_nl_clm directory for multi-instance
+  M  models/lnd/clm/bld/configure - Add ninst_lnd/mct_dir/pio_dir options
+           change to work with new MCT/PIO
+  M  models/lnd/clm/bld/config_files/config_definition.xml - add mct_dir/pio_dir/ninst_lnd/ninst_atm
+  M  models/lnd/clm/bld/build-namelist - Add ability to write out multiple ensemble 
+           namelist files, handle multiple infiles, and infile directories for multiple
+           ensembles
+  M  models/lnd/clm/bld/clm.cpl7.template - handle NINST_LND add user_nl_clm directory 
+           for multiple ensembles
+
+>>>>>>>>>> Compare grid/frac files, update domain files for datm, handle multiple infiles
+  M  models/lnd/clm/bld/namelist_files/checkdatmfiles.ncl - compare grid/frac files
+  M  models/lnd/clm/bld/namelist_files/namelist_definition.xml - Add glc_pio stuff
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - New f45, f10, f09,
+           f19, T31 domain files
+  M  models/lnd/clm/bld/namelist_files/datm-build-namelist - Be able to handle multiple
+           infiles
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml - Add glc_pio settings
+
+>>>>>>>>>> Handle multi-instance SPMD and files, remove fget_archdev, fix problem
+>>>>>>>>>> of running on RTM grid (mvertens), handle scam restart files (still fails
+>>>>>>>>>> because of PIO problem)
+  M  models/lnd/clm/src/biogeochem/CNDVMod.F90 - Add inst_suffix to hv files
+  M  models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 - Handle multiple instances and
+           multiple instances lnd_in and lnd_modelio.nml namelist files
+  M  models/lnd/clm/src/main/fileutils.F90 -- Remove set_filename and putfil, simplify
+           getfil to NOT do archival retreival
+  M  models/lnd/clm/src/main/ndepStreamMod.F90 - Handle multi-instances
+  M  models/lnd/clm/src/main/histFileMod.F90 --- Pass mfilt to set_hist_filename, don't
+           require mfilt to be one if nhtfrq=0, only use monthly form of filenames if
+           nhtfrq=0 AND mfilt=1
+  M  models/lnd/clm/src/main/restFileMod.F90 - Handle multi-instance files
+  M  models/lnd/clm/src/main/controlMod.F90 -- Remove fget_archdev
+  M  models/lnd/clm/src/main/clm_varctl.F90 -- Remove fget_archdev, add inst_* vars
+  M  models/lnd/clm/src/main/ncdio_pio.F90 --- Fix problem of running on RTM grid, handle
+           multi-instance files, pass vardesc to scam_field_offsets, handle landunit
+           in scam_field_offsets, start/count set for all dims, check that dimension
+           sizes and names are equal in order to share iodesc
+  M  models/lnd/clm/src/main/spmdMod.F90 ---- spmd_init has LNDID passed in
+  M  models/lnd/clm/src/main/histFldsMod.F90 - Fix units/long_names
+  M  models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 - Handle multi-instances and
+           multiple instances lnd_in and lnd_modelio.nml namelist files
+  M  models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90 -- Get LNDID
+
+Summary of testing:
+
+  bluefire: All PASS except TBL tests and...
+>>>>>>> rpointer.lnd_* files empty
+017 erX51 TER.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -3+-2 cold ..............FAIL! rc= 7
+018 brX51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+>>>>>>> Build fails
+020 smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4
+021 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -3+-7 cold ................FAIL! rc= 5
+022 brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -5+-5 cold ................FAIL! rc= 5
+>>>>>>> Build fails
+028 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4
+029 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -3+-7 arb_ic ............FAIL! rc= 5
+030 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -5+-5 arb_ic ............FAIL! rc= 5
+>>>>>>> Build fails
+032 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 96 cold ...............FAIL! rc= 4
+033 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 10+38 cold ............FAIL! rc= 5
+034 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:1800 10x15 USGS@2000 72+72 cold .........FAIL! rc= 5
+  bluefire interactive testing: All PASS except... (pio bug 1396)
+031 erAK4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 7
+032 brAK4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 6
+036 brAK8 TBR.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 6
+  bluefire/CESM testing: All PASS except...
+FAIL  ERS_RLA.f45_f45.I.bluefire  -- pio bug 1396
+>>>>>>> Compare fails because of new domain files/new pftdyn
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm4_0_33 
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm4_0_33 
+BFAIL ERS_RLA.f45_f45.I.bluefire.generate.clm4_0_34 
+BFAIL ERS_RLA.f45_f45.I.bluefire.compare.clm4_0_33 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm4_0_33 
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm4_0_33 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare_hist.clm4_0_33 
+FAIL  SMS_ROA.f45_f45.I.bluefire.compare.clm4_0_33 
+FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire.compare_hist.clm4_0_33 -- only glc map area?
+FAIL  ERP.f19_g16.IGRCP60CN.bluefire.compare_hist.clm4_0_33 ---- only glc map area?
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm4_0_33 
+FAIL  PST.f10_f10.I20TRCN.bluefire.compare.clm4_0_33 
+FAIL  PET_PT.f10_f10.I20TRCN.bluefire.compare.clm4_0_33 
+FAIL  SMS.f10_f10.IRCP45CN.bluefire.compare_hist.clm4_0_33 
+FAIL  SMS.f10_f10.IRCP45CN.bluefire.compare.clm4_0_33 
+  bluefire/PTCLM testing: All PASS
+  jaguarpf interactive testing: All PASS except...
+014 erAK4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 7
+015 brAK4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 6
+  edinburgh/lf95 interactive testing: All PASS, except TBL and... (pio bug 1396)
+006 erAL4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 5
+007 brAL4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 5
+  mirage,storm/ifort interactive testing: All fail -- problem with pio build
+  yong/ifort interactive testing: All fail -- problem with pio build
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_33
+
+Changes answers relative to baseline: No bit-for-bit, except:
+
+  f10_f10, f45_f45, f09_f09, f19_f19, T31_T31, with new domain files
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_33
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Jul 25 14:34:18 MDT 2011
@@ -50,6 +334,7 @@ Known bugs (include bugzilla ID):
                                  1360 (Can't do a ncdump on US-UMB data)
                                  1361 (Problem with transient compsets for PTCLM)
                                  1372 (pio problem writing out RTM hist fields at RTM res)
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -421,6 +706,7 @@ Known bugs (include bugzilla ID):
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1367 (final_spinup stop time isn't right)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -581,6 +867,7 @@ Known bugs (include bugzilla ID):
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1367 (final_spinup stop time isn't right)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -716,6 +1003,7 @@ Known bugs (include bugzilla ID):
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1335 (transient_CN sometimes different than clm4_0_26)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -855,6 +1143,7 @@ Known bugs (include bugzilla ID):
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1335 (transient_CN sometimes different than clm4_0_26)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -972,6 +1261,7 @@ Known bugs (include bugzilla ID):
                                  1328 (interpinic gives bad results that can NOT be used!)
                                  1335 (transient_CN sometimes different than clm4_0_26)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1094,6 +1384,7 @@ Known bugs (include bugzilla ID):
                                  1328 (interpinic gives bad results that can NOT be used!)
                                  1335 (transient_CN sometimes different than clm4_0_26)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1592,6 +1883,7 @@ Known bugs (include bugzilla ID):
                                  1299 (interpinic does NOT work going from non glc_mec)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1740,6 +2032,7 @@ Known bugs (include bugzilla ID):
                                  1304 (bug in interpinic *_var)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -1984,6 +2277,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -2176,6 +2470,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -2506,6 +2801,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -2668,6 +2964,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -2846,6 +3143,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -3048,6 +3346,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -3401,6 +3700,7 @@ Known bugs (include bugzilla ID):
                                  1305 (dvolrdt is documented with the wrong units)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -3496,6 +3796,7 @@ Known bugs (include bugzilla ID):
                                  1266 (Threading problem with CNDV)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -3748,6 +4049,7 @@ Known bugs (include bugzilla ID):
                                  1266 (Threading problem with CNDV)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -3833,6 +4135,7 @@ Known bugs (include bugzilla ID):
                                  1266 (Threading problem with CNDV)
                                  1318 (interpinic has trouble with new restart files)
                                  1372 (pio problem writing out CLM history files for CRU
+                                 1381 (Can't change monthly average files to NOT be one per month)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

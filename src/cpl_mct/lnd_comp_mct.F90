@@ -96,7 +96,7 @@ contains
     use clm_atmlnd       , only : clm_l2a
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
-                                  downscale
+                                  downscale, inst_index, inst_suffix, inst_name
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
@@ -111,6 +111,7 @@ contains
     use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData, seq_infodata_PutData, &
                                   seq_infodata_start_type_start, seq_infodata_start_type_cont,   &
                                   seq_infodata_start_type_brnch
+    use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use spmdMod          , only : masterproc, spmd_init
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
     use clm_varctl       , only : create_glacier_mec_landunit, nsrStartup, &
@@ -193,7 +194,7 @@ contains
 
     ! Initialize clm MPI communicator 
 
-    call spmd_init( mpicom_lnd )
+    call spmd_init( mpicom_lnd, LNDID )
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -202,14 +203,18 @@ contains
     endif
 #endif                      
 
+    inst_name   = seq_comm_name(LNDID)
+    inst_index  = seq_comm_inst(LNDID)
+    inst_suffix = seq_comm_suffix(LNDID)
+
     ! Initialize io log unit
 
     call shr_file_getLogUnit (shrlogunit)
     if (masterproc) then
-       inquire(file='lnd_modelio.nml',exist=exists)
+       inquire(file='lnd_modelio.nml'//trim(inst_suffix),exist=exists)
        if (exists) then
           iulog = shr_file_getUnit()
-          call shr_file_setIO('lnd_modelio.nml',iulog)
+          call shr_file_setIO('lnd_modelio.nml'//trim(inst_suffix),iulog)
        end if
        write(iulog,format) "CLM land model initialization"
     else
@@ -226,7 +231,7 @@ contains
 
     ! Consistency check on namelist filename	
 
-    call control_setNL( 'lnd_in' )
+    call control_setNL("lnd_in"//trim(inst_suffix))
 
     ! Initialize clm
     ! initialize1 reads namelist, grid and surface data
@@ -265,7 +270,7 @@ contains
                            brnch_retain_casename_in=brnch_retain_casename,         &
                            single_column_in=single_column, scmlat_in=scmlat,       &
                            scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
-                           hostname_in=hostname, username_in=username )
+                           hostname_in=hostname, username_in=username)
 
     ! Read namelist, grid and surface data
 

@@ -18,7 +18,7 @@ interactive usage on all machines (runs a different list of tests):
 env CLM_SOFF=FALSE ./test_driver.sh -i
 
 
-Intended for use on NCAR machines: edinburgh.cgd, lynx, mirage/storm, bluefire, 
+Intended for use on NCAR machines: edinburgh.cgd, lynx, mirage, bluefire, 
 and ORNL machines: jaguar as well as ANL intrepid. And works on the MacBook laptop
 yong.cgd. For most machines more than one compiler is supported.
  

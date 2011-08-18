@@ -97,7 +97,7 @@ elif [ "${7%+*}" = "continue" ]; then
    datm_restfils='null'
    export datm_restfils
 
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm?.*.*     $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm*.*.*     $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r*       $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r*       $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm.r*      $rundir/.
@@ -110,8 +110,8 @@ elif [ "${7%+*}" = "branch" ]; then
    if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
        touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm3.r.1967-01-01-00000.nc
    fi
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* $rundir/.
-   master_clm_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* \
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*.clm*.r.* $rundir/.
+   master_clm_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.clm*.r.* \
        | tail -1 | head -1`
    rc=$?
    if [ $rc -ne 0 ]; then
@@ -165,6 +165,9 @@ rc=$?
 if [ $rc -eq 0 ]; then
     echo "TSM.sh: namelist creation was successful" 
     cat *_in
+    if [ -f "lnd_in_0002" ]; then
+       cat *_in_000?
+    fi
 else
     echo "TSM.sh: error building namelist, error= $rc" 
     echo "TSM.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"

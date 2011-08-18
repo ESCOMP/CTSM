@@ -135,7 +135,7 @@ end subroutine
     use clm_atmlnd       , only : clm_l2a
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
-                                  downscale
+                                  downscale, inst_index, inst_suffix, inst_name
     use controlMod       , only : control_setNL
     use decompMod        , only : get_proc_bounds, get_proc_bounds_atm
     use domainMod        , only : adomain
@@ -153,6 +153,7 @@ end subroutine
                                   seq_infodata_start_type_brnch, &
 	                          seq_infodata_start_type_start
     use seq_flds_mod
+    use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x, nflds_x2l
     use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
     use clm_varctl       , only : create_glacier_mec_landunit, nsrStartup, &
@@ -204,6 +205,7 @@ end subroutine
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
     integer :: begg_l, endg_l, begg_a, endg_a
+    integer :: LNDID                                 ! cesm ID value
     real(R8), pointer :: fptr(:, :)
     character(len=32), parameter :: sub = 'lnd_init_esmf'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
@@ -231,7 +233,10 @@ end subroutine
 
     ! Initialize clm MPI communicator
 
-    call spmd_init( mpicom_lnd )
+    call ESMF_AttributeGet(export_state, name="ID", value=LNDID, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
+
+    call spmd_init( mpicom_lnd, LNDID )
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -240,14 +245,18 @@ end subroutine
     endif
 #endif                      
 
+    inst_name   = seq_comm_name(LNDID)
+    inst_index  = seq_comm_inst(LNDID)
+    inst_suffix = seq_comm_suffix(LNDID)
+
     ! Initialize io log unit
 
     call shr_file_getLogUnit (shrlogunit)
     if (masterproc) then
-       inquire(file='lnd_modelio.nml',exist=exists)
+       inquire(file='lnd_modelio.nml'//trim(inst_suffix),exist=exists)
        if (exists) then
           iulog = shr_file_getUnit()
-          call shr_file_setIO('lnd_modelio.nml',iulog)
+          call shr_file_setIO('lnd_modelio.nml'//trim(inst_suffix),iulog)
        end if
        write(iulog,format) "CLM land model initialization"
     else
@@ -270,7 +279,7 @@ end subroutine
 
     ! Consistency check on namelist filename	
 
-    call control_setNL( 'lnd_in' )
+    call control_setNL("lnd_in"//trim(inst_suffix))
 
     ! Initialize clm
     ! initialize1 reads namelist, grid and surface data

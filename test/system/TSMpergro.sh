@@ -61,9 +61,9 @@ if [ $rc -ne 0 ]; then
     exit 4
 fi
 
-mv ${CLM_TESTDIR}/TSM.$1.$2.$4.$5.$6.$7.$8/*.clm?.h*.nc .
+mv ${CLM_TESTDIR}/TSM.$1.$2.$4.$5.$6.$7.$8/*.clm*.h*.nc .
 echo "TSMpergro.sh: starting comparisons "
-files_to_compare=`ls *.clm?.h*.nc`
+files_to_compare=`ls *.clm*.h*.nc`
 if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TSMpergro.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus

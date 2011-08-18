@@ -1,0 +1,3 @@
+&clm_inparm
+ pertlim    = 1.0e-2
+/

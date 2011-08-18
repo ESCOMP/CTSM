@@ -4,6 +4,8 @@
 ;
 ;  Erik Kluzek
 ;  Apr/10/2008
+;  $Id$
+;  $HeadURL;
 ;
 
   print( "Check that datm domain files and CLM land frac files are consistent" );
@@ -12,8 +14,6 @@
   space  = "      ";
   badres = 0
   badresolutions = new( (/ 1000 /), string )
-  ;type   = "fatmlndfrc";    ; Can be either fatmlndfrc or fatmgrid
-  type   = "fatmgrid";    ; Can be either fatmlndfrc or fatmgrid
 
 procedure checkit( desc:string, maxdiff:numeric, res:string, omask:string, eps:numeric )
 ;
@@ -65,12 +65,14 @@ begin
            delete( fracfile );
            continue;
         end if
-        gridfile  = systemfunc( querynmlres+" -var "+type );
+        print( space+"Use fracfile:       "+fracfile );
+        ncf     = addfile( fracfile,  "r" );
+        gridfile  = systemfunc( querynmlres+" -var fatmgrid" );
         if ( systemfunc("test -f "+gridfile+"; echo $?" ) .ne. 0 )then
            delete( gridfile );
            continue;
         end if
-        print( space+"Use "+type+" file:       "+gridfile );
+        print( space+"Use gridfile:       "+gridfile );
         ncg     = addfile( gridfile,  "r" );
    
         ;
@@ -79,30 +81,34 @@ begin
         domfile  = systemfunc( querynmlres+" -var domainfile -namelist shr_strdata_nml" );
         if ( ismissing(domfile) )then
           print( "Missing domainfile" );
-          continue;
+          exit;
         end if
         print( querynml+" -res "+res+" -var domainfile" );
         print( space+space+"Use dom file:         "+domfile );
         if ( systemfunc("test -f "+domfile+"; echo $?" ) .ne. 0 )then
            print( "Input domfile does not exist or not found: "+domfile );
-           continue;
+           exit;
         end if
         ncd      = addfile( domfile,    "r" );
    
         maxdiff = max( abs(ncd->yc - ncg->LATIXY) );
-        checkit( "Lats ", maxdiff, res, omask, 1.e-12 );
+        checkit( "Lats  ", maxdiff, res, omask, 1.e-12 );
+        maxdiff = max( abs(ncd->yc - ncf->LATIXY) );
+        checkit( "LatsF ", maxdiff, res, omask, 1.e-12 );
         maxdiff = max( abs(ncd->xc - ncg->LONGXY) );
-        checkit( "Longs", maxdiff, res, omask, 1.e-12 );
+        checkit( "Longs ", maxdiff, res, omask, 1.e-12 );
+        maxdiff = max( abs(ncd->xc - ncf->LONGXY) );
+        checkit( "LongsF", maxdiff, res, omask, 1.e-12 );
 
-        if ( type .eq. "fatmlndfrc" )then
-           maxdiff = max( abs(ncd->frac - ncg->LANDFRAC) );
-           checkit( "Fracs", maxdiff, res, omask, 1.0e-14 );
-        else
-           re = 6371.22;
-           r2 = re*re;
-           maxdiff = max( abs(ncd->area - ncg->AREA/r2) );
-           checkit( "Area", maxdiff, res, omask, 9.0e-07 );
-        end if
+        maxdiff = max( abs(ncd->frac - ncf->LANDFRAC) );
+        checkit( "Fracs", maxdiff, res, omask, 1.0e-14 );
+        imaxdiff = max( abs(ncd->mask - ncf->LANDMASK) );
+        checkit( "Mask", imaxdiff, res, omask, 1.0e-14 );
+        re = 6371.22;
+        r2 = re*re;
+        maxdiff = max( abs(ncd->area - ncg->AREA/r2) );
+        checkit( "Area", maxdiff, res, omask, 9.0e-07 );
+        delete( imaxdiff );
         delete( maxdiff );
         delete( domfile );
         delete( ncd );

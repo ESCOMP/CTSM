@@ -168,7 +168,7 @@ case $hostname in
     ;;
 
     ##mirage
-    mirage* | storm* )
+    mirage* )
     if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
        ##serial
        cmnd=""

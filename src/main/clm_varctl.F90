@@ -65,7 +65,6 @@ module clm_varctl
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
   character(len=256), public :: fglcmask     = ' '      ! glacier mask file name
-  character(len=8),   public :: fget_archdev = 'null:'  ! archive device to read input files from if not on local disk
   logical         ,   public :: downscale               ! true => do downscaling with fine mesh
                                                         ! ASSUMES that all grids are lat/lon
 !
@@ -99,6 +98,12 @@ module clm_varctl
   logical,  public :: single_column = .false.           ! true => single column mode
   real(r8), public:: scmlat         = rundef            ! single column lat
   real(r8), public:: scmlon         = rundef            ! single column lon
+!
+! instance control
+!
+  integer, public :: inst_index
+  character(len=16), public :: inst_name
+  character(len=16), public :: inst_suffix
 #ifdef RTM
 !
 ! Rtm control variables
@@ -121,6 +126,8 @@ module clm_varctl
 !
   real(r8), public :: pertlim = 0.0_r8                  ! perturbation limit when doing error growth test
 !
+! !PRIVATE DATA MEMBERS:
+!
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein and Gordon Bonan
 ! 1 June 2004, Peter Thornton: added fnedpdat for nitrogen deposition data
@@ -141,7 +148,7 @@ contains
 ! !INTERFACE:
   subroutine set_clmvarctl( caseid_in, ctitle_in, brnch_retain_casename_in,    &
                             single_column_in, scmlat_in, scmlon_in, nsrest_in, &
-                            version_in, hostname_in, username_in )
+                            version_in, hostname_in, username_in)
 !
 ! !DESCRIPTION:
 !      Set input control variables.
@@ -160,6 +167,7 @@ contains
   character(len=256), optional, intent(IN) :: version_in               ! model version
   character(len=256), optional, intent(IN) :: hostname_in              ! hostname running on
   character(len=256), optional, intent(IN) :: username_in              ! username running job
+
 !
 ! !LOCAL VARIABLES:
    character(len=32) :: subname = 'set_clmvarctl'  ! subroutine name

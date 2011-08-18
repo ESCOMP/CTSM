@@ -60,7 +60,7 @@ contains
 ! !IROUTINE: spmd_init( clm_mpicom )
 !
 ! !INTERFACE:
-  subroutine spmd_init( clm_mpicom )
+  subroutine spmd_init( clm_mpicom, LNDID )
 !
 ! !DESCRIPTION:
 ! MPI initialization (number of cpus, processes, tids, etc)
@@ -70,6 +70,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: clm_mpicom
+    integer, intent(in) :: LNDID
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -91,7 +92,7 @@ contains
 
     mpicom = clm_mpicom
 
-    comp_id = 1
+    comp_id = LNDID
 
     ! Get my processor id
 

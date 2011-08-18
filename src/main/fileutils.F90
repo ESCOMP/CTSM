@@ -20,10 +20,8 @@ module fileutils
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: get_filename  !Returns filename given full pathname
-  public :: set_filename  !Set remote full path filename
   public :: opnfil        !Open local unformatted or formatted file
   public :: getfil        !Obtain local copy of file
-  public :: putfil        !Dispose file to archival system
   public :: relavu        !Close and release Fortran unit no longer in use
   public :: getavu        !Get next available Fortran unit number
 !
@@ -75,40 +73,6 @@ contains
 !------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: set_filename
-!
-! !INTERFACE:
-  character(len=256) function set_filename (rem_dir, loc_fn)
-!
-! !DESCRIPTION:
-!
-! !ARGUMENTS:
-!
-    implicit none
-    character(len=*), intent(in)  :: rem_dir !remote directory
-    character(len=*), intent(in)  :: loc_fn  !local full path filename
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer :: i   !integer
-!------------------------------------------------------------------------
-
-    set_filename = ' '
-    do i = len_trim(loc_fn), 1, -1
-       if (loc_fn(i:i)=='/') go to 10
-    end do
-    i = 0
-10  set_filename = trim(rem_dir) // loc_fn(i+1:len_trim(loc_fn))
-
-  end function set_filename
-
-!------------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: getfil
 !
 ! !INTERFACE:
@@ -118,11 +82,9 @@ contains
 ! Obtain local copy of file
 ! First check current working directory
 ! Next check full pathname[fulpath] on disk
-! Finally check full pathname[fulpath] on archival system
 ! 
 ! !USES:
      use shr_file_mod, only: shr_file_get
-     use clm_varctl  , only: fget_archdev
 ! !ARGUMENTS:
      implicit none
      character(len=*), intent(in)  :: fulpath !Archival or permanent disk full pathname
@@ -137,19 +99,12 @@ contains
 !EOP
      integer i               !loop index
      integer klen            !length of fulpath character string
-     integer ierr            !error status
      logical lexist          !true if local file exists
-     character(len=len(fulpath)+5)  :: fulpath2 !Archival full pathname
 !------------------------------------------------------------------------
 
-     ! get local file name from full name: start at end. look for first "/"
+     ! get local file name from full name
 
-     klen = len_trim(fulpath)
-     do i = klen, 1, -1
-        if (fulpath(i:i).eq.'/') go to 100
-     end do
-     i = 0
-100  locfn = fulpath(i+1:klen)
+     locfn = get_filename( fulpath )
      if (len_trim(locfn) == 0) then
 	if (masterproc) write(iulog,*)'(GETFIL): local filename has zero length'
         call endrun
@@ -167,95 +122,23 @@ contains
         RETURN
      endif
 
-     ! second check for full pathname on disk if no prepended "type:"
+     ! second check for full pathname on disk
+     locfn = fulpath
 
-     if ( index(fulpath,":") == 0 )then
-        inquire(file=fulpath,exist=lexist)
-        if (lexist) then
-           locfn = trim(fulpath)
-           if (masterproc) write(iulog,*)'(GETFIL): using ',trim(fulpath)
-           return
-        endif
-        fulpath2 = trim(fget_archdev)//trim(fulpath)
+     inquire (file=fulpath,exist=lexist)
+     if (lexist) then
+        if (masterproc) write(iulog,*) '(GETFIL): using ',trim(fulpath)
+        RETURN
      else
-        fulpath2 = trim(fulpath)
-     end if
-
-     ! finally check on full archive path location
-
-     call shr_file_get( ierr, locfn, fulpath2 )
-     if (ierr==0) then
-        if (masterproc) write(iulog,*)'(GETFIL): File ',trim(locfn),' read in from: ', fulpath2
-     else  ! all tries to get file have been unsuccessful
-        if (masterproc) write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath2
+        if (masterproc) write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath
         if (present(iflag) .and. iflag==0) then
-           call endrun ('GETFIL: FAILED to get '//trim(fulpath2))
+           call endrun ('GETFIL: FAILED to get '//trim(fulpath))
         else
            RETURN
         endif
-     end if
-
-     ! And now make sure file was successfully transfered
-
-     inquire (file=locfn,exist=lexist)
-     if ( .not. lexist) then
-        if (masterproc) write(iulog,*)'(GETFIL): failed transferring file to local path: ', locfn
-        if (present(iflag) .and. iflag==0) then
-           call endrun ('GETFIL: file not transfered to local path' )
-        end if
      endif
 
    end subroutine getfil
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: putfil
-!
-! !INTERFACE:
-   subroutine putfil(locfn, fulpath, pass, irt, lremov)
-!
-! !DESCRIPTION:
-! Dispose to archival system only if nonzero retention period.
-! Put mswrite command in background for asynchronous behavior.
-! The string put into 'cmd' below needs to be changed to
-! the appropriate archival command for the users system
-! if a shell command 'mswrite' does not exist.
-!
-! !USES:
-     use shr_file_mod, only: shr_file_put
-! !ARGUMENTS:
-     implicit none
-     character(len=*), intent(in) :: locfn   ! Local filename
-     character(len=*), intent(in) :: fulpath ! archive full pathname
-     character(len=*), intent(in) :: pass    ! write password
-     integer, intent(in) :: irt              ! Archival system retention time
-     logical, intent(in) :: lremov           ! true=>remove local file
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-     integer ier                ! error number
-!------------------------------------------------------------------------
-
-     if (irt/=0) then
-        if (pass(1:1) /= ' ')then
-           call shr_file_put( ier, locfn, fulpath, passwd=pass, rtpd=irt, &
-                              async=.false., remove=lremov )
-        else
-           call shr_file_put( ier, locfn, fulpath, rtpd=irt, async=.false., &
-                              remove=lremov )
-        end if
-
-        if (ier /= 0) then
-           call endrun ('PUTFIL: Error from shell shr_file_put')
-        end if
-     endif
-
-   end subroutine putfil
 
 !------------------------------------------------------------------------
 !BOP

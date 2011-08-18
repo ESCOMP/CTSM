@@ -24,9 +24,9 @@ A -- Standard default RTM off
 B -- Standard default with SNICAR_FRC on
 C -- Standard default
 D -- Pergro
-E -- numpft=4, VOC, RTM
+E -- unused
 F -- numpft=17, VOC, RTM
-G -- numpft=17, no-VOC
+G -- unused
 H -- numpft=17, CN
 J -- numpft=4, CASA
 K -- numpft=10, CNDV
@@ -41,6 +41,8 @@ S -- Standard default, with glc_mec=10
 T -- numpft=21, CN, CROP
 U -- numpft=21, CNDV, CROP
 V -- numpft=21, CN, CROP RTM off
+W -- ninst_lnd=3, no-RTM
+X -- ninst_lnd=3
 
 m is the resolution
 
@@ -82,7 +84,7 @@ V -- 4x5 with drydep
 W -- 10x15   with transient 1850-2100 for rcp=6
 w -- 1.9x2.5 with transient 1850-2100 for rcp=6 and glacier-MEC on
 X -- 10x15   with transient 1850-2100 for rcp=4.5
-x -- 48x96   with transient 1850-2100 for rcp=4.5 and glacier-MEC on
+x -- 1.9x2.5 with transient 1850-2100 for rcp=4.5 and glacier-MEC on
 Y -- 10x15   with transient 1850-2100 for rcp=2.6
 y -- 1.9x2.5 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
 Z -- 10x15 with crop on

@@ -14,10 +14,11 @@ begin
   ;
   ; Input files to compare
   ;
-  file1      = getenv("MYFILE1")    ; Get the first file
-  file2      = getenv("MYFILE2")    ; Get the second file
-  debug_str  = getenv("DEBUG");     ; Don't run just -- debug
-  print_str  = getenv("PRINT");     ; Do Extra printing for debugging
+  file1      = getenv("MYFILE1")      ; Get the first file
+  file2      = getenv("MYFILE2")      ; Get the second file
+  debug_str  = getenv("DEBUG");       ; Don't run just -- debug
+  print_str  = getenv("PRINT");       ; Do Extra printing for debugging
+  break_str  = getenv("BREAKONDIFF"); ; Break on first difference
 
   if ( ismissing(file1) )then
      file1 = "../interpinic/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc"
@@ -32,6 +33,15 @@ begin
         printn = True;
      else
         printn = False;
+     end if
+  end if
+  if ( ismissing(break_str) )then
+     breakondiff = False;
+  else
+     if ( break_str .eq. "TRUE" )then
+        breakondiff = True;
+     else
+        breakondiff = False;
      end if
   end if
   if ( ismissing(debug_str) )then
@@ -113,26 +123,28 @@ end
            print( "var dimensions differ: "+vars(i) )
         end if
         differ = True;
+        break;
      end if
      typ = typeof( nc1->$vars(i)$ );
-     if ( .not. differ .and. typ .ne. "character" .and. typ .ne. "logical" )then
+     if ( typ .ne. "character" .and. typ .ne. "logical" )then
         if ( any( abs((/nc1->$vars(i)$/) - (/nc2->$vars(i)$/)) .gt. 0.0d00 ) )then
+           differ = True;
+           if ( printn .eq. True )then
+              diff = abs((/nc1->$vars(i)$/) - (/nc2->$vars(i)$/));
+              print( "  var differs:  "+vars(i) )
+              print( "  max abs diff: "+max(diff)+" avg diff: "+avg(diff) )
+              delete(diff)
+           end if
+        end if
+     else 
+        if ( any((/nc1->$vars(i)$/) .ne. (/nc2->$vars(i)$/)) )then
            differ = True;
            if ( printn .eq. True )then
               print( "var differs: "+vars(i) )
            end if
         end if
-     else 
-        if ( .not. differ )then
-           if ( any((/nc1->$vars(i)$/) .ne. (/nc2->$vars(i)$/)) )then
-              differ = True;
-              if ( printn .eq. True )then
-                 print( "var differs: "+vars(i) )
-              end if
-           end if
-        end if
      end if
-     if ( differ )then
+     if ( differ .and. breakondiff )then
         break
      end if
   end do

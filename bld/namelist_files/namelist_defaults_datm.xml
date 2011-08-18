@@ -71,7 +71,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="8x16"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.T5_USGS.090106.nc</domainfile>
 <domainfile hgrid="32x64"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T21_USGS.090106.nc</domainfile>
 <domainfile hgrid="48x96"       mask="gx3v7">atm/datm7/domain.lnd.T31_gx3v7.090928.nc</domainfile>
-<domainfile hgrid="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.090106.nc</domainfile>
+<domainfile hgrid="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.110713.nc</domainfile>
 <domainfile hgrid="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.090106.nc</domainfile>
 <domainfile hgrid="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.090106.nc</domainfile>
 <domainfile hgrid="94x192"      mask="T62"  >atm/datm7/domain.lnd.T62_T62.090129.nc</domainfile>
@@ -89,18 +89,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="0.47x0.63"   mask="gx1v6"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v6.090407.nc</domainfile>
 <domainfile hgrid="0.47x0.63"   mask="USGS"  >atm/datm7/domain.clm/domain.lnd.fv0.47x0.63_USGS.090106.nc</domainfile>
 <domainfile hgrid="0.47x0.63"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.090106.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.110713.nc</domainfile>
 <domainfile hgrid="0.9x1.25"    mask="gx1v6"  >atm/datm7/domain.lnd.fv0.9x1.25_gx1v6.090309.nc</domainfile>
 <domainfile hgrid="0.9x1.25"    mask="tx0.1v2">atm/datm7/domain.lnd.fv0.9x1.25_tx0.1v2_070928.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_USGS.090106.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_USGS.110713.nc</domainfile>
 <domainfile hgrid="1.9x2.5"     mask="gx1v6"  >atm/datm7/domain.lnd.fv1.9x2.5_gx1v6.090206.nc</domainfile>
 <domainfile hgrid="1.9x2.5"     mask="tx1v1"  >atm/datm7/domain.lnd.fv1.9x2.5_tx1v1_090713.nc</domainfile>
 <domainfile hgrid="2.65x3.33"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.65x3.33_USGS.090106.nc</domainfile>
 <domainfile hgrid="2.5x3.33"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.5x3.33_USGS.091012.nc</domainfile>
 <domainfile hgrid="2.5x3.33"    mask="gx3v7"  >atm/datm7/domain.lnd.fv2.5x3.33_gx3v7.110223.nc</domainfile>
-<domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.090106.nc</domainfile>
+<domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.110713.nc</domainfile>
 <domainfile hgrid="4x5"         mask="gx3v7"  >atm/datm7/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
-<domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.090106.nc</domainfile>
+<domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.110713.nc</domainfile>
 
 <factorfn >null</factorfn>
 

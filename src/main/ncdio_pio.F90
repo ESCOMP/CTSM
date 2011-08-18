@@ -11,7 +11,7 @@ module ncdio_pio
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8, i8=>shr_kind_i8, shr_kind_cl
   use spmdMod        , only : masterproc, mpicom, iam, npes,  &
-                            MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
+                              MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
   use clmtype        , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use clm_varcon     , only : spval,ispval
   use clm_varctl     , only : single_column, iulog
@@ -28,6 +28,7 @@ module ncdio_pio
 ! !PUBLIC TYPES:
   implicit none
   private
+  save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
@@ -108,7 +109,6 @@ module ncdio_pio
      module procedure ncd_io_real_var3_nf
   end interface
 
-  private :: ncd_inqiodesc      ! inquire variable descriptor
   private :: ncd_getiodesc      ! obtain iodesc
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
 
@@ -122,11 +122,12 @@ module ncdio_pio
   type(iosystem_desc_t), pointer, public  :: pio_subsystem
 
   type iodesc_plus_type
-     character(len=32) :: name
+     character(len=64) :: name
      type(IO_desc_t)   :: iodesc
      integer           :: type
      integer           :: ndims
      integer           :: dims(4)
+     integer           :: dimids(4) 
   end type iodesc_plus_type
   integer,parameter      ,private :: max_iodesc = 100
   integer                ,private :: num_iodesc = 0
@@ -150,6 +151,7 @@ contains
 !
 ! !USES:
     use seq_io_mod      , only : seq_io_getiosys, seq_io_getiotype
+    use clm_varctl      , only : inst_name
 ! !ARGUMENTS:
     implicit none
 !
@@ -160,8 +162,8 @@ contains
     character(len=*),parameter :: subname='ncd_pio_init' ! subroutine name
 !-----------------------------------------------------------------------
 !EOP
-    PIO_subsystem => seq_io_getiosys('LND')
-    io_type       =  seq_io_getiotype('LND')
+    PIO_subsystem => seq_io_getiosys(inst_name)
+    io_type       =  seq_io_getiotype(inst_name)
 
   end subroutine ncd_pio_init
 
@@ -486,56 +488,6 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: ncd_inqiodesc
-!
-! !INTERFACE:
-  subroutine ncd_inqiodesc(ndims,dims,type,iodnum)
-!
-! !DESCRIPTION:
-! get description of file
-!
-! !ARGUMENTS:
-    implicit none
-    integer         ,intent(in) :: ndims     ! number of dims
-    integer         ,intent(in) :: dims(:)   ! dims
-    integer         ,intent(in) :: type      ! data type
-    integer         ,intent(out):: iodnum    ! iodesc num
-!
-! !REVISION HISTORY:
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    logical :: found             ! search flag
-    integer :: n,m               ! indices
-    character(len=*),parameter :: subname='ncd_inqiodesc' ! subroutine name
-
-!-----------------------------------------------------------------------
-
-    iodnum = -1
-
-    n = 1
-    found = .false.
-    do while (n <= num_iodesc .and. .not.found)
-       if (ndims == iodesc_list(n)%ndims .and. type == iodesc_list(n)%type) then
-          found = .true.
-          do m = 1,ndims
-             if (dims(m) /= iodesc_list(n)%dims(m)) then
-                found = .false.
-             endif
-          enddo
-       endif
-       if (found) then
-          iodnum = n
-       endif
-       n = n + 1
-    enddo
-
-  end subroutine ncd_inqiodesc
-
-!-----------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: ncd_inqvid
 !
 ! !INTERFACE:
@@ -585,7 +537,7 @@ contains
 ! !IROUTINE: ncd_inqvdims
 !
 ! !INTERFACE:
-  subroutine ncd_inqvdims(ncid,varid,ndims,vardesc)
+  subroutine ncd_inqvdims(ncid,ndims,vardesc)
 !
 ! !DESCRIPTION:
 ! inquire variable dimensions
@@ -593,7 +545,6 @@ contains
 ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(in)   :: ncid      ! netcdf file id
-    integer          , intent(in)   :: varid     ! variable id
     integer          , intent(out)  :: ndims     ! variable ndims
     type(Var_desc_t) , intent(inout):: vardesc   ! variable descriptor
 !
@@ -1071,7 +1022,6 @@ contains
     integer :: idata                ! raw integer data
     logical :: varpresent           ! if true, variable is on tape
     integer :: temp(1)              ! temporary
-    logical :: found                ! if true, found lat/lon dims on file
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_log_var0_nf'
@@ -1151,7 +1101,6 @@ contains
     integer :: status               ! error code
     logical :: varpresent           ! if true, variable is on tape
     integer :: temp(1)              ! temporary
-    logical :: found                ! if true, found lat/lon dims on file
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_int_var0_nf'
@@ -1220,7 +1169,6 @@ contains
     logical :: varpresent           ! if true, variable is on tape
     real(r8):: temp(1)              ! temporary                
     character(len=32) :: vname      ! variable error checking
-    logical :: found                ! if true, found lat/lon dims on file
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_real_var0_nf'
 !-----------------------------------------------------------------------
@@ -1287,7 +1235,6 @@ contains
     integer :: status               ! error code
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
-    logical :: found                ! if true, found lat/lon dims on file
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_int_var1_nf'
 !-----------------------------------------------------------------------
@@ -1358,7 +1305,6 @@ contains
     integer, pointer :: idata(:)    ! Temporary integer data to send to file
     logical :: varpresent           ! if true, variable is on tape
     character(len=32) :: vname      ! variable error checking
-    logical :: found                ! if true, found lat/lon dims on file
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_log_var1_nf'
 !-----------------------------------------------------------------------
@@ -1401,7 +1347,7 @@ contains
        allocate( idata(size(data)) ) 
        where( data )
           idata = 1
-       else where
+       elsewhere
           idata = 0
        end where
        status = pio_put_var(ncid, varid, start, count, idata)
@@ -1441,7 +1387,6 @@ contains
     integer :: start(2), count(2)   ! output bounds
     integer :: status               ! error code
     logical :: varpresent           ! if true, variable is on tape
-    logical :: found                ! if true, found lat/lon dims on file
     character(len=32) :: vname      ! variable error checking
     type(var_desc_t)  :: vardesc    ! local vardesc pointer
     character(len=*),parameter :: subname='ncd_io_real_var1_nf'
@@ -1511,7 +1456,6 @@ contains
     integer :: start(2), count(2)      ! output bounds
     integer :: status                  ! error code
     logical :: varpresent              ! if true, variable is on tape
-    logical :: found                   ! if true, found lat/lon dims on file
     character(len=32) :: vname         ! variable error checking
     character(len=1)  :: tmpString(128)! temp for manipulating output string
     type(var_desc_t)  :: vardesc       ! local vardesc pointer
@@ -1592,7 +1536,8 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             call scam_field_offsets(ncid,'undefined',vardesc,&
+                  start,count,found=found,posNOTonfile=posNOTonfile)
              if ( found )then
                 status = pio_get_var(ncid, varid, start, count, data)
              else
@@ -1669,7 +1614,8 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             call scam_field_offsets(ncid,'undefined',vardesc,start,count,&
+                                     found=found,posNOTonfile=posNOTonfile)
              if ( found )then
                 status = pio_get_var(ncid, varid, start, count, data)
              else
@@ -1746,7 +1692,8 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             call scam_field_offsets(ncid,'undefined',vardesc,start,count, &
+                                     found=found,posNOTonfile=posNOTonfile)
              if ( found )then
                 status = pio_get_var(ncid, varid, start, count, data)
              else
@@ -1940,7 +1887,7 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid,clmlevel,start,count)
+             call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
                 if (present(nt)) start(3) = nt
              else
@@ -1960,7 +1907,8 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-             call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                  xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -1985,7 +1933,8 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-       call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2066,7 +2015,7 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid,clmlevel,start,count)
+             call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
                 if (present(nt)) start(3) = nt
              else
@@ -2086,7 +2035,8 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-             call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                  xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2117,7 +2067,8 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-       call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2125,7 +2076,7 @@ contains
        allocate( idata(size(data)) ) 
        where( data )
           idata = 1
-       else where
+       elsewhere
           idata = 0
        end where
        call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status, fillval=0)
@@ -2204,7 +2155,7 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid,clmlevel,start,count)
+             call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
                 if (present(nt)) start(3) = nt
              else
@@ -2224,7 +2175,8 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-             call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                  xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2249,7 +2201,8 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-       call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2345,13 +2298,13 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid, clmlevel, start, count)
+             call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              status = pio_get_var(ncid, vardesc, start, count, data)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)
+                count(3) = size(data,dim=2)    ! Correct ????
                 if (present(nt)) start(4) = nt
              else
-                count(2) = size(data,dim=2)
+                count(2) = size(data,dim=2)    ! Correct ????
                 if (present(nt)) start(3) = nt
              end if
           else
@@ -2372,9 +2325,11 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              if (present(switchdim)) then
-                call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum, switchdim=.true.)
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum, switchdim=.true.)
              else
-                call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum)
              end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
@@ -2414,9 +2369,11 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        if (present(switchdim)) then
-          call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum, switchdim=.true.)
+          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+               xtype, iodnum, switchdim=.true.)
        else
-          call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+               xtype, iodnum)
        end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
@@ -2522,12 +2479,12 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid, clmlevel, start, count)
+             call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)
+                count(3) = size(data,dim=2)    ! Correct ????
                 if (present(nt)) start(4) = nt
              else
-                count(2) = size(data,dim=2)
+                count(2) = size(data,dim=2)    ! Correct ????
                 if (present(nt)) start(3) = nt
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
@@ -2549,9 +2506,11 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              if (present(switchdim)) then
-                call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum, switchdim=.true.)
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum, switchdim=.true.)
              else
-                call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum)
              end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
@@ -2591,9 +2550,11 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        if (present(switchdim)) then
-          call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum, switchdim=.true.)
+          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+               xtype, iodnum, switchdim=.true.)
        else
-          call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+               xtype, iodnum)
        end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
@@ -2687,14 +2648,14 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid, clmlevel, start, count)
+             call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)
-                count(4) = size(data,dim=3)
+                count(3) = size(data,dim=2)    ! Correct ????
+                count(4) = size(data,dim=3)    ! Correct ????
                 if (present(nt)) start(5) = nt
              else
-                count(2) = size(data,dim=2)
-                count(3) = size(data,dim=3)
+                count(2) = size(data,dim=2)    ! Correct ????
+                count(3) = size(data,dim=3)    ! Correct ????
                 if (present(nt)) start(4) = nt
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
@@ -2715,7 +2676,8 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-             call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                  xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2744,7 +2706,8 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-       call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2826,14 +2789,14 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid, clmlevel, start, count)
+             call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)
-                count(4) = size(data,dim=3)
+                count(3) = size(data,dim=2)    ! Correct ????
+                count(4) = size(data,dim=3)    ! Correct ????
                 if (present(nt)) start(5) = nt
              else
-                count(2) = size(data,dim=2)
-                count(3) = size(data,dim=3)
+                count(2) = size(data,dim=2)    ! Correct ????
+                count(3) = size(data,dim=3)    ! Correct ????
                 if (present(nt)) start(4) = nt
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
@@ -2854,7 +2817,8 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-             call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                  xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2883,7 +2847,8 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-       call ncd_getiodesc(clmlevel, ndims_iod, dims(1:ndims_iod), xtype, iodnum)
+       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+            xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2943,7 +2908,8 @@ contains
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
           if (single_column) then
-             call scam_field_offsets(ncid,'undefined',start,count,found=found,posNOTonfile=posNOTonfile)
+             call scam_field_offsets(ncid,'undefined',vardesc, start,count, &
+                                     found=found,posNOTonfile=posNOTonfile)
              if ( found )then
                 status = pio_get_var(ncid, varid, start, count, data)
              else
@@ -2985,7 +2951,8 @@ contains
 ! !IROUTINE: subroutine scam_field_offsets
 !
 ! !INTERFACE:
-  subroutine scam_field_offsets(ncid,dim1name,start,count,found,posNOTonfile)
+  subroutine scam_field_offsets( ncid, dim1name, vardesc, start, count, &
+                                 found, posNOTonfile)
 !
 ! !DESCRIPTION: 
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
@@ -3000,6 +2967,7 @@ contains
     implicit none
     type(file_desc_t) , intent(inout) :: ncid         ! netcdf file id
     character(len=*)  , intent(in)    :: dim1name     ! dimension 1 name
+    type(Var_desc_t)  , intent(inout) :: vardesc      ! variable descriptor
     integer           , intent(inout) :: start(:)     ! start index
     integer           , intent(inout) :: count(:)     ! count to retrieve
     logical, optional , intent(out)   :: found        ! if present return true if found
@@ -3021,23 +2989,29 @@ contains
     real(r8) , pointer :: cols1dlat(:)       ! holds cols1d_jxy var
     real(r8) , pointer :: pfts1dlon(:)       ! holds pfts1d_ixy var
     real(r8) , pointer :: pfts1dlat(:)       ! holds pfts1d_jxy var
+    real(r8) , pointer :: land1dlon(:)       ! holds land1d_ixy var
+    real(r8) , pointer :: land1dlat(:)       ! holds land1d_jxy var
     integer :: cols(maxpatch)                ! grid cell columns for scam
     integer :: pfts(maxpatch)                ! grid cell pfts for scam
+    integer :: landunits(maxpatch)           ! grid cell landunits for scam
     integer :: cc,i                          ! index variable
     integer :: totpfts                       ! total number of pfts
     integer :: totcols                       ! total number of columns
+    integer :: totlandunits                  ! total number of landunits
     integer :: dimid                         ! netCDF dimension id
     integer :: varid                         ! netCDF variable id
     integer :: status                        ! return code
     integer :: latidx,lonidx                 ! latitude/longitude indices
     real(r8):: closelat,closelon             ! closest latitude and longitude indices
+    integer :: ndims                         ! number of dimensions in desired variable
     character(len=32) :: subname = 'scam_field_offsets'
 !------------------------------------------------------------------------
 
     if ( present(posNOTonfile) )then
        if ( posNOTonfile )then
           if ( .not. present(found) )then
-             call endrun( subname//'ERROR: Bad calling structure to this subroutine posNOTonfile sent, but found was NOT!' )
+             call endrun( subname// &
+                  'ERROR: Bad subroutine calling structure posNOTonfile sent, but found was NOT!')
           end if
           found = .false.
           return
@@ -3053,6 +3027,7 @@ contains
        call shr_scam_getCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
     end if
      
+    call ncd_inqvdims(ncid,ndims,vardesc)
     if (dim1name == 'column') then
 
        status = pio_inq_dimid(ncid, 'column', dimid)
@@ -3087,8 +3062,8 @@ contains
        deallocate (cols1dlon)
        deallocate (cols1dlat)
        
-       start(1) = data_offset
-       count(1) = ndata
+       start(ndims) = data_offset
+       count(ndims) = ndata
        
     else if (dim1name == 'pft') then
        
@@ -3125,8 +3100,46 @@ contains
        deallocate (pfts1dlon)
        deallocate (pfts1dlat)
        
-       start(1) = data_offset
-       count(1) = ndata
+       start(ndims) = data_offset
+       count(ndims) = ndata
+       
+    else if (dim1name == 'landunit') then
+       
+       status = pio_inq_dimid(ncid, 'landunit', dimid)
+       status = pio_inq_dimlen(ncid, dimid, totlandunits)
+
+       allocate (land1dlon(totlandunits))
+       allocate (land1dlat(totlandunits))
+
+       status = pio_inq_varid(ncid, 'land1d_lon', varid)
+       status = pio_get_var(ncid, varid, land1dlon)
+
+       status = pio_inq_varid(ncid, 'land1d_lat', varid)
+       status = pio_get_var(ncid, varid, land1dlat)
+       
+       landunits(:) = bigint
+       data_offset  = bigint
+       i     = 1
+       ndata = 0
+       do cc = 1, totlandunits
+          if (land1dlon(cc) == closelon.and.land1dlat(cc) == closelat) then
+             landunits(i)=cc
+             ndata  =i
+             i=i+1
+          end if
+       end do
+       if (ndata == 0) then
+          write(iulog,*)'couldnt find any landunits for this latitude ',closelat,' and longitude ',closelon
+          call endrun( subname//'ERROR:: no landunits for this position' )
+       else
+          data_offset=landunits(1)
+       end if
+       
+       deallocate (land1dlon)
+       deallocate (land1dlat)
+       
+       start(ndims) = data_offset
+       count(ndims) = ndata
        
     else
        
@@ -3146,7 +3159,9 @@ contains
 ! !IROUTINE: subroutine ncd_getiodesc
 !
 ! !INTERFACE:
-  subroutine ncd_getiodesc(clmlevel, ndims, dims, xtype, iodnum, switchdim)
+  subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
+       xtype, iodnum, switchdim) 
+       
 !
 ! !DESCRIPTION: 
 ! Returns an index to an io descriptor
@@ -3154,12 +3169,15 @@ contains
 ! !USES:
 !
 ! !ARGUMENTS:
-    character(len=8), intent(in)  :: clmlevel   ! clmlevel
-    integer         , intent(in)  :: ndims      ! ndims for var      
-    integer         , intent(in)  :: dims(:)    ! dim sizes
-    integer         , intent(in)  :: xtype      ! file external type
-    integer         , intent(out) :: iodnum     ! iodesc num in list
-    logical,optional, intent(in)  :: switchdim  ! switch level dimension and first dim 
+
+    type(file_desc_t), intent(inout) :: ncid       ! PIO file descriptor
+    character(len=8) , intent(in)    :: clmlevel   ! clmlevel
+    integer          , intent(in)    :: ndims      ! ndims for var      
+    integer          , intent(in)    :: dims(:)    ! dim sizes
+    integer          , intent(in)    :: dimids(:)  ! dim ids
+    integer          , intent(in)    :: xtype      ! file external type
+    integer          , intent(out)   :: iodnum     ! iodesc num in list
+    logical,optional , intent(in)    :: switchdim  ! switch level dimension and first dim 
 
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -3176,129 +3194,168 @@ contains
     integer :: vsize                         ! other dimensions
     integer :: vsize1, vsize2                ! other dimensions
     integer :: status                        ! error status
+    logical :: found                         ! true => found created iodescriptor
+    integer :: ndims_file                    ! temporary
+    character(len=64) dimname_file           ! dimension name on file
+    character(len=64) dimname_iodesc         ! dimension name from io descriptor
     type(mct_gsMap),pointer       :: gsmap   ! global seg map
     integer, pointer,dimension(:) :: gsmOP   ! gsmap ordered points
     integer, pointer  :: compDOF(:)
     character(len=32) :: subname = 'ncd_getiodesc'
 !------------------------------------------------------------------------
 
-    call ncd_inqiodesc(ndims, dims, xtype, iodnum)
+    ! Determining if need to create a new io descriptor
 
-    if (iodnum < 1) then
-
-       if (ndims > 0) then 
-          num_iodesc = num_iodesc + 1
-          if (num_iodesc > max_iodesc) then
-             write(iulog,*) trim(subname),' ERROR num_iodesc gt max_iodesc ',max_iodesc
-             call endrun()
+    n = 1
+    found = .false.
+    do while (n <= num_iodesc .and. .not.found)
+       if (ndims == iodesc_list(n)%ndims .and. xtype == iodesc_list(n)%type) then
+          found = .true.
+          ! First found implies that dimension sizes are the same 
+          do m = 1,ndims
+             if (dims(m) /= iodesc_list(n)%dims(m)) then
+                found = .false.
+             endif
+          enddo
+          ! If found - then also check that dimension names are equal - 
+          ! dimension ids in iodescriptor are only used to query dimension
+          ! names associated with that iodescriptor
+          if (found) then
+             do m = 1,ndims
+                status = PIO_inq_dimname(ncid,dimids(m),dimname_file)
+                status = PIO_inquire(ncid, ndimensions=ndims_file)
+                if (iodesc_list(n)%dimids(m) > ndims_file) then 
+                   found = .false.
+                   exit
+                else
+                   status = PIO_inq_dimname(ncid,iodesc_list(n)%dimids(m),dimname_iodesc)
+                   if (trim(dimname_file) .ne. trim(dimname_iodesc)) then
+                      found = .false.
+                      exit
+                   end if
+                end if
+             end do
+          end if
+          if (found) then
+             iodnum = n
+             if (iodnum > num_iodesc) then
+                write(iulog,*) trim(subname),' ERROR: iodnum out of range ',iodnum,num_iodesc
+                call endrun()
+             endif
+             RETURN
           endif
-          iodnum = num_iodesc
-          if (masterproc .and. debug > 1) then
-             write(iulog,*) trim(subname),' creating iodesc at iodnum,ndims,dims(1:ndims),xtype',&
-                  iodnum,ndims,dims(1:ndims),xtype
-          endif
-       end if
+       endif
+       n = n + 1
+    enddo
 
-       if (xtype == pio_double ) then
-          basetype = PIO_DOUBLE
-       else if (xtype == pio_real) then
-          basetype  = PIO_DOUBLE
-       else if (xtype == pio_int) then
-          basetype = PIO_INT
-       end if
+    ! Creating a new io descriptor
 
-       call get_clmlevel_gsmap(clmlevel,gsmap)
-       gsize = get_clmlevel_gsize(clmlevel)
-       gsmap_lsize = mct_gsmap_lsize(gsmap,mpicom)
-       gsmap_gsize = mct_gsmap_gsize(gsmap)
-
-       call mct_gsmap_OP(gsmap,iam,gsmOP)
-
-       fullsize = 1
-       do n = 1,ndims
-          fullsize = fullsize*dims(n)
-       enddo
-
-       vsize = fullsize / gsize
-       if (mod(fullsize,gsize) /= 0) then
-          write(iulog,*) subname,' ERROR in vsize ',fullsize,gsize,vsize
+    if (ndims > 0) then 
+       num_iodesc = num_iodesc + 1
+       if (num_iodesc > max_iodesc) then
+          write(iulog,*) trim(subname),' ERROR num_iodesc gt max_iodesc ',max_iodesc
           call endrun()
        endif
+       iodnum = num_iodesc
+       if (masterproc .and. debug > 1) then
+          write(iulog,*) trim(subname),' creating iodesc at iodnum,ndims,dims(1:ndims),xtype',&
+               iodnum,ndims,dims(1:ndims),xtype
+       endif
+    end if
 
-       allocate(compDOF(gsmap_lsize*vsize))
+    if (xtype == pio_double ) then
+       basetype = PIO_DOUBLE
+    else if (xtype == pio_real) then
+       basetype  = PIO_DOUBLE
+    else if (xtype == pio_int) then
+       basetype = PIO_INT
+    end if
 
-       if (present(switchdim)) then
-          if (switchdim) then
-             cnt = 0
-             do m = 1,gsmap_lsize
-                do n = 1,vsize
-                   cnt = cnt + 1
-                   compDOF(cnt) = (gsmOP(m)-1)*vsize + n
-                enddo
-             enddo
-          else
-             write(iulog,*) subname,' ERROR switch dims present must have switchdim true' 
-             call endrun()
-          end if
-       else         ! currently allow for up to two vertical dimensions
-          if (vsize /= 1 .and. vsize /= dims(ndims)) then
-             vsize1 = vsize/dims(ndims)
-             vsize2 = dims(ndims)
-             if (vsize1*vsize2 /= vsize) then
-                write(iulog,*)'vsize1= ',vsize1,' vsize2= ',vsize2,' vsize= ',vsize
-                call endrun('error in vsize1 and vsize2 computation')
-             end if
-             cnt = 0
-             do k = 1,vsize2
-                do n = 1,vsize1
-                   do m = 1,gsmap_lsize
-                      cnt = cnt + 1
-                      compDOF(cnt) = (k-1)*vsize1*gsmap_gsize + (n-1)*gsmap_gsize +  gsmOP(m) 
-                   enddo
-                enddo
-             end do
-          else
-             cnt = 0
+    call get_clmlevel_gsmap(clmlevel,gsmap)
+    gsize = get_clmlevel_gsize(clmlevel)
+    gsmap_lsize = mct_gsmap_lsize(gsmap,mpicom)
+    gsmap_gsize = mct_gsmap_gsize(gsmap)
+
+    call mct_gsmap_OP(gsmap,iam,gsmOP)
+
+    fullsize = 1
+    do n = 1,ndims
+       fullsize = fullsize*dims(n)
+    enddo
+
+    vsize = fullsize / gsize
+    if (mod(fullsize,gsize) /= 0) then
+       write(iulog,*) subname,' ERROR in vsize ',fullsize,gsize,vsize
+       call endrun()
+    endif
+
+    allocate(compDOF(gsmap_lsize*vsize))
+
+    if (present(switchdim)) then
+       if (switchdim) then
+          cnt = 0
+          do m = 1,gsmap_lsize
              do n = 1,vsize
+                cnt = cnt + 1
+                compDOF(cnt) = (gsmOP(m)-1)*vsize + n
+             enddo
+          enddo
+       else
+          write(iulog,*) subname,' ERROR switch dims present must have switchdim true' 
+          call endrun()
+       end if
+    else         ! currently allow for up to two vertical dimensions
+       if (vsize /= 1 .and. vsize /= dims(ndims)) then
+          vsize1 = vsize/dims(ndims)
+          vsize2 = dims(ndims)
+          if (vsize1*vsize2 /= vsize) then
+             write(iulog,*)'vsize1= ',vsize1,' vsize2= ',vsize2,' vsize= ',vsize
+             call endrun('error in vsize1 and vsize2 computation')
+          end if
+          cnt = 0
+          do k = 1,vsize2
+             do n = 1,vsize1
                 do m = 1,gsmap_lsize
                    cnt = cnt + 1
-                   compDOF(cnt) = (n-1)*gsmap_gsize + gsmOP(m)
+                   compDOF(cnt) = (k-1)*vsize1*gsmap_gsize + (n-1)*gsmap_gsize +  gsmOP(m) 
                 enddo
              enddo
-          end if
-       end if
-
-       if (debug > 1) then
-          do m = 0,npes-1
-             if (iam == m) then
-                write(iulog,*) trim(subname),' sizes1  = ',iam,gsize,gsmap_gsize,gsmap_lsize
-                write(iulog,*) trim(subname),' sizes2  = ',iam,fullsize,npes,vsize
-                write(iulog,*) trim(subname),' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
-                call shr_sys_flush(iulog)
-             endif
-             call mpi_barrier(mpicom,status)
+          end do
+       else
+          cnt = 0
+          do n = 1,vsize
+             do m = 1,gsmap_lsize
+                cnt = cnt + 1
+                compDOF(cnt) = (n-1)*gsmap_gsize + gsmOP(m)
+             enddo
           enddo
-       endif
+       end if
+    end if
 
-       deallocate(gsmOP)
-
-       call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
-
-       deallocate(compDOF)
-
-       iodesc_list(iodnum)%type  = xtype
-       iodesc_list(iodnum)%ndims = ndims
-       iodesc_list(iodnum)%dims  = 0
-       iodesc_list(iodnum)%dims(1:ndims) = dims(1:ndims)
-
-    else
-
-       if (iodnum > num_iodesc) then
-          write(iulog,*) trim(subname),' ERROR: iodnum out of range ',iodnum,num_iodesc
-          call endrun()
-       endif
-
+    if (debug > 1) then
+       do m = 0,npes-1
+          if (iam == m) then
+             write(iulog,*) trim(subname),' sizes1  = ',iam,gsize,gsmap_gsize,gsmap_lsize
+             write(iulog,*) trim(subname),' sizes2  = ',iam,fullsize,npes,vsize
+             write(iulog,*) trim(subname),' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
+             call shr_sys_flush(iulog)
+          endif
+          call mpi_barrier(mpicom,status)
+       enddo
     endif
+
+    deallocate(gsmOP)
+
+    call pio_initdecomp(pio_subsystem, baseTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
+
+    deallocate(compDOF)
+
+    iodesc_list(iodnum)%type  = xtype
+    iodesc_list(iodnum)%ndims = ndims
+    iodesc_list(iodnum)%dims  = 0
+    iodesc_list(iodnum)%dims(1:ndims)   = dims(1:ndims)
+    iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
+
 
   end subroutine ncd_getiodesc
 

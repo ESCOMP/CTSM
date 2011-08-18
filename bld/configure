@@ -32,6 +32,7 @@ use English;
 use Getopt::Long;
 use IO::File;
 use IO::Handle;
+use File::Copy;
 
 my $crpmode = "nocrop";
 my %maxpatchpft;
@@ -81,6 +82,8 @@ OPTIONS
                          (required to be $maxpatchpft{'nocrop'} for CN or CNDV or 
                           transient cases without crop)
                          (required to be $maxpatchpft{'crop'} when crop is on)
+     -ninst_lnd <number> Number of instances (ensembles) of CLM to run (normally 1)
+                         Normally used for Data Assimilation
      -nofire             Turn off wildfires for BGC setting of CN 
                          (default includes fire for CN)
      -noio               Turn history output completely off (typically for testing).
@@ -109,10 +112,12 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -mach <name>        Machine name to use for CESM build.
      -mode <name>        CLM mode [clm_stndln | ext_cesm]
      -debug              Switch to turn on building CLM with debugging compiler options.
-     -nc_path            Path to NetCDF (lib and include directories should reside beneath it)
-     -mpi_path           Path to MPI (lib and include directories should reside beneath it)
+     -nc_path <dir>      Path to NetCDF (lib and include directories should reside beneath it)
+     -mct_dir <dir>      Directory to MCT to either build or use pre-built MCT
+     -mpi_path <dir>     Path to MPI (lib and include directories should reside beneath it)
      -[no]smp            Switch on [off] SMP parallelism.
      -[no]use_mpiserial  Switch on [off] use of serial-only MPI.
+     -pio_dir <dir>      Directory to PIO to either build or use pre-built PIO
      -voc <name>         Turn on passing of Volatile Organic Compounds (VOC's) to driver 
                          [on | off] (default is on)
 EOF
@@ -155,6 +160,10 @@ my %opts = (
             mpi_path    => undef,
             glc_nec     => undef,
             clm_root    => undef,
+            mct_dir     => undef,
+            pio_dir     => undef,
+            ninst_lnd   => 1,
+            ninst_atm   => 1,
 	    );
 GetOptions(
     "ad_spinup=s"               => \$opts{'ad_spinup'}, 
@@ -170,6 +179,8 @@ GetOptions(
     "defaults=s"                => \$opts{'defaults'},
     "exit_spinup=s"             => \$opts{'exit_spinup'}, 
     "glc_nec=i"                 => \$opts{'glc_nec'},
+    "mct_dir=s"                 => \$opts{'mct_dir'},
+    "pio_dir=s"                 => \$opts{'pio_dir'},
     "mach=s"                    => \$opts{'mach'},
     "h|help"                    => \$opts{'help'},
     "maxpft=s"                  => \$opts{'maxpft'},
@@ -177,6 +188,7 @@ GetOptions(
     "nadv=s"                    => \$opts{'nadv'},
     "nofire"                    => \$opts{'nofire'},
     "noio"                      => \$opts{'noio'},
+    "ninst_lnd=i"               => \$opts{'ninst_lnd'},
     "nc_path=s"                 => \$opts{'nc_path'},
     "mpi_path=s"                => \$opts{'mpi_path'},
     "pergro=s"                  => \$opts{'pergro'}, 
@@ -516,6 +528,38 @@ my $comp_intf = $cfg_ref->get('comp_intf');
 if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# ninst_lnd
+if (defined $opts{'ninst_lnd'}) {
+    if ( $opts{'ninst_lnd'} < 1 || $opts{'ninst_lnd'} > 9999 ) {
+        die <<"EOF";
+**  The number of ensemble instances of CLM to run is out of the reasonable range of (1-9999)
+** 
+**** Set the number of ensemble instances of CLM to run with the NINST_LND env_conf variable.
+EOF
+    }
+    $cfg_ref->set('ninst_lnd', $opts{'ninst_lnd'});
+}
+my $ninst_lnd = $cfg_ref->get('ninst_lnd');
+if ($print>=2) { print "Using $ninst_lnd for ninst_lnd.$eol"; }
+
+# ninst_atm
+if ($clm_mode eq "clm_stndln" ) {
+   if (defined $opts{'ninst_atm'}) {
+       if ( $opts{'ninst_atm'} != 1 ) {
+          die <<"EOF";
+**  The number of ensemble instances of DATM is NOT one
+**  Configure and build-namelist are NOT configured for this
+** 
+EOF
+       }
+       $cfg_ref->set('ninst_atm', $opts{'ninst_atm'});
+    }
+    my $ninst_atm = $cfg_ref->get('ninst_atm');
+    if ($print>=2) { print "Using $ninst_atm for ninst_atm.$eol"; }
+}
+
+
+#-----------------------------------------------------------------------------------------------
 # VOC option
 if (defined $opts{'voc'}) {
     $cfg_ref->set('voc', $opts{'voc'});
@@ -683,6 +727,41 @@ my $mach = $mach_val;
 if ($print>=2) { print "CESM machine/compiler: $mach$eol";}
 
 #-----------------------------------------------------------------------------------------------
+# PIO and MCT build directories
+my($mct_dir,$pio_dir,$sub_dir);
+if ($clm_mode eq "clm_stndln" ) {
+   # subdirectory for both
+   if ( $debug ) {
+      $sub_dir .= "/debug"
+   } else {
+      $sub_dir .= "/opt"
+   }
+   if ( $use_mpiserial ) {
+      $sub_dir .= "-mpiserial"
+   } else {
+      $sub_dir .= "-mpi"
+   }
+   # MCT
+   if (defined $opts{'mct_dir'}){
+       $mct_dir = $opts{'mct_dir'};
+   }else{
+       $mct_dir = "$clm_bld/mct";
+   }
+   $mct_dir .= $sub_dir;
+   $cfg_ref->set('mct_dir', $mct_dir);
+   if ($print>=2) { print "Build MCT library $mct_dir $eol"; }
+   
+   # PIO
+   if (defined $opts{'pio_dir'}){
+       $pio_dir = $opts{'pio_dir'};
+   }else{
+       $pio_dir = "$clm_bld/pio";
+   }
+   $pio_dir .= $sub_dir;
+   $cfg_ref->set('pio_dir', $pio_dir);
+   if ($print>=2) { print "Build PIO library $pio_dir $eol"; }
+}
+#-----------------------------------------------------------------------------------------------
 # For the CPP tokens, start with the defaults (from defaults file) and append the specifications
 # from the commandline.  That way the user can override defaults since the commandline versions
 # occur last.
@@ -766,6 +845,15 @@ $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
 if ( ($clm_mode eq "clm_stndln") && ($use_mpiserial eq "on") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
 if ($glc_nec > 0 ) { 
     $cfg_cppdefs .= " -DGLC_NEC_" . $glc_nec;
+}
+if ( $clm_mode eq "clm_stndln" ) {
+   my $NINST_LND = $cfg_ref->get( "ninst_lnd" );
+   my $NINST_ATM = $cfg_ref->get( "ninst_atm" );
+   $cfg_cppdefs .= " -DNUM_COMP_INST_ATM=$NINST_ATM" .
+                   " -DNUM_COMP_INST_LND=$NINST_LND" .
+    	           " -DNUM_COMP_INST_OCN=1" .
+                   " -DNUM_COMP_INST_ICE=1" .
+		   " -DNUM_COMP_INST_GLC=1";
 }
 
 # CPP defines to put on Makefile
@@ -946,7 +1034,33 @@ if ($clm_mode eq "ext_cesm" ) {
     foreach my $dir ( @dirs ) {
        mkdirp( "$dir" );
     }
+    # Create and build MCT and PIO
 
+    if(-d $mct_dir){
+       print "Using existing mct_dir: $mct_dir";
+    }else{
+       print "creating $mct_dir\n" if($print);
+       my $mct_root = "$clm_root/../../utils/mct";
+       mkdirp($mct_dir);
+       mkdir("$mct_dir/mct");
+       mkdir("$mct_dir/mpeu");
+       mkdir("$mct_dir/mpi-serial");
+       copy("$mct_root/Makefile",$mct_dir);
+       copy("$mct_root/mct/Makefile","$mct_dir/mct");
+       copy("$mct_root/mpeu/Makefile","$mct_dir/mpeu");
+       copy("$mct_root/mpi-serial/Makefile","$mct_dir/mpi-serial");
+       
+    } 
+
+    # PIO library
+    if(-d $pio_dir){
+       print "Using existing pio_dir: $pio_dir";
+    }else{
+       my $pio_root= "$clm_root/../../utils/pio";
+       print "creating $pio_dir\n" if($print);
+       mkdirp($pio_dir);
+       copy("$pio_root/Makefile",$pio_dir);
+    }
     # Write the file for clm's cppdefs needed in cesm.
     write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
     if ($print>=2) { print "creating $clm_bld/$cpp_filename\n"; }
@@ -954,27 +1068,20 @@ if ($clm_mode eq "ext_cesm" ) {
     # Write the Macro's file for machine dependent build information
     my $macro      = "Macros.$mach";
     my $cppmacro   = "Macros.cppdefs";
+    my $postmacro  = "Macros.postdefs";
     my $config_dir = "$cfgdir/config_files";
     my $scriptsdir = "$cfgdir/../../../../scripts/ccsm_utils/Machines";
     my $builddir   = "$cfgdir/../../../../scripts/ccsm_utils/Build";
-    my $macdir;
-    if (      -f "$config_dir/$macro" ) {
-       $macdir = "$config_dir";
-    } elsif ( -f "$scriptsdir/$macro" ) {
-       $macdir = "$scriptsdir";
-    } else {
-	die <<"EOF";
-** Could not find a $macro file in $config_dir or $scriptsdir
+    foreach my $mac ( $macro, $cppmacro, $postmacro ) {
+       if ( ! -f "$scriptsdir/$mac" ) {
+	   die <<"EOF";
+** Could not find a $mac file in $scriptsdir
 ** 
 EOF
+       }
     }
-    if ( ! -f "$scriptsdir/$cppmacro" ) {
-	die <<"EOF";
-** Could not find a $cppmacro file in $scriptsdir
-** 
-EOF
-    }
-    write_macros("$macdir/$macro", "$scriptsdir/$cppmacro", "$clm_bld/$macro", $cfg_ref );
+    write_macros("$scriptsdir/$macro", "$scriptsdir/$cppmacro", "$scriptsdir/$postmacro", 
+                 "$clm_bld/$macro", $cfg_ref );
     if ($print>=2) { print "creating $clm_bld/$macro\n"; }
 
     # Write the cesm top level Makefile.
@@ -1056,11 +1163,7 @@ sub write_filepath_cesmbld
     if ( $model eq "cesm_lib" ) {
        my @dirs = ( "csm_share/shr", 
                     "utils/timing",   
-                    "utils/mct/mpeu",
-                    "utils/mct/mct" );
-       if ( $use_mpiserial ) {
-	   push( @dirs, "utils/mct/mpi-serial" );
-       }
+                  );
        push( @dirs, "utils/esmf_wrf_timemgr" );
 
        print $fh "../SourceMods/src.cesm\n";
@@ -1104,7 +1207,6 @@ sub write_filepath_cesmbld
 		   die "** source directory does not exist: $srcdir/../../../$dir\n";
 	       }
 	   }
-	   print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
        }
     }
     
@@ -1165,7 +1267,7 @@ sub write_cppdefs
 
 sub write_macros
 {
-    my ($file_in, $cppfile_in, $file_out, $cfg_ref) = @_;
+    my ($file_in, $cppfile_in, $postfile_in, $file_out, $cfg_ref) = @_;
     my  $fh_in  = new IO::File;
     my  $fh_out = new IO::File;
 
@@ -1193,6 +1295,8 @@ sub write_macros
     my $coderoot  = absolute_path( "$clm_root/../../../models" );
 
     my $mpi_path     = $cfg_ref->get('mpi_path');
+    my $mct_libdir   = $cfg_ref->get('mct_dir');
+    my $pio_libdir   = $cfg_ref->get('pio_dir');
     print $fh_out  <<"EOF";
 # Make macro settings for building CLM using the CESM build files.
 BLDROOT                 := $clm_bld
@@ -1213,19 +1317,17 @@ NETCDF_PATH             := $nc_path
 MPICH_PATH              := $mpi_path
 USE_MPISERIAL           := $use_mpiserial
 USE_ESMF_LIB            := FALSE
+MCT_LIBDIR              := $mct_libdir
+PIO_LIBDIR              := $pio_libdir
 
 EOF
 
-    # Copy the "template" cpp Macros file to the new file.
-    $fh_in->open("<$cppfile_in") or die "** can't open file: $cppfile_in\n";
-    while (<$fh_in>) {
-	print $fh_out $_;
-    }
-    $fh_in->close;
-    # Copy the "template" Macros file to the new file.
-    $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
-    while (<$fh_in>) {
-	print $fh_out $_;
+    foreach my $mac ( $cppfile_in, $file_in, $postfile_in ) {
+       # Copy the "template" cpp Macros file to the new file.
+       $fh_in->open("<$mac") or die "** can't open file: $mac\n";
+       while (<$fh_in>) {
+	  print $fh_out $_;
+       }
     }
     $fh_in->close;
 
@@ -1274,8 +1376,8 @@ EOF
     if ( $model eq "cesm" ) {
         if ( $macfile !~ /darwin_intel/ ) {
            print $fh_out  <<"EOF";
-ULIBS   := -L\$(LIBROOT) -lcesm_lib
-CLIBS   := -L\$(LIBROOT) -llnd
+ULIBS        := -L\$(LIBROOT) -lcesm_lib
+CLIBS        := -L\$(LIBROOT) -llnd
 EOF
         } else {
            print $fh_out  <<"EOF";
@@ -1287,10 +1389,10 @@ EOF
 ULIBDEP := \$(LIBROOT)/libcesm_lib.a \$(LIBROOT)/liblnd.a
 
 \$(LIBROOT)/liblnd.a: \$(LIBROOT)/libcesm_lib.a
-	cd lnd && \$(MAKE) \$(MAKEFLAGS) mkcomplib
+	\$(MAKE) -C lnd  mkcomplib
 
-\$(LIBROOT)/libcesm_lib.a:
-	cd cesm_lib && \$(MAKE) \$(MAKEFLAGS) mkcomplib
+\$(LIBROOT)/libcesm_lib.a:  \$(MCTLIBS) \$(PIOLIB) 
+	\$(MAKE) -C cesm_lib mkcomplib
 
 #-----------------------------------------------------------------------------
 # This is duplicated from the CESM Makefile with the following mods.
@@ -1304,6 +1406,7 @@ EOF
 
     } else {
         print $fh_out  <<"EOF";
+
 mkcomplib: complib copymod
 copymod: complib
 	\$(CP) *.mod \$(INCROOT)

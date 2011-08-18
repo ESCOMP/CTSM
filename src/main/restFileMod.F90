@@ -362,7 +362,7 @@ contains
 !
 ! !USES:
     use fileutils , only : opnfil, getavu, relavu
-    use clm_varctl, only : rpntfil, rpntdir
+    use clm_varctl, only : rpntfil, rpntdir, inst_suffix
 !
 ! !ARGUMENTS:
     implicit none
@@ -394,7 +394,7 @@ contains
     endif
 
     nio = getavu()
-    locfn = trim(rpntdir) //'/'// trim(rpntfil)
+    locfn = trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)
     call opnfil (locfn, nio, 'f')
     read (nio,'(a256)') pnamer
     call relavu (nio)
@@ -420,7 +420,6 @@ contains
 !
 ! !USES:
     use clm_time_manager, only : is_last_step
-    use fileutils   , only : putfil, set_filename
 !
 ! !ARGUMENTS:
     implicit none
@@ -459,8 +458,8 @@ contains
 ! Open restart pointer file. Write names of current netcdf restart file.
 !
 ! !USES:
-    use clm_varctl, only : rpntdir, rpntfil
-    use fileutils , only : set_filename, relavu
+    use clm_varctl, only : rpntdir, rpntfil, inst_suffix
+    use fileutils , only : relavu
     use fileutils , only : getavu, opnfil
 !
 ! !ARGUMENTS:
@@ -483,7 +482,7 @@ contains
 
     if (masterproc) then
        nio = getavu()
-       filename= trim(rpntdir) //'/'// trim(rpntfil)
+       filename= trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)
        call opnfil( filename, nio, 'f' )
        
        write(nio,'(a)') fnamer
@@ -543,7 +542,7 @@ contains
 ! !DESCRIPTION:
 !
 ! !USES:
-    use clm_varctl, only : caseid
+    use clm_varctl, only : caseid, inst_suffix
 !
 ! !ARGUMENTS:
     implicit none
@@ -560,7 +559,8 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    restFile_filename = "./"//trim(caseid)//".clm2.r."//trim(rdate)//".nc"
+    restFile_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+                        ".r."//trim(rdate)//".nc"
     if (masterproc) then
        write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',rdate
     end if

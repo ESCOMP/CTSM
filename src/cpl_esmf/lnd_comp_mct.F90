@@ -119,7 +119,7 @@ end subroutine
 
    ! Copy infodata to state
 
-   call esmfshr_infodata_infodata2state(infodata,export_state,rc=rc)
+   call esmfshr_infodata_infodata2state(infodata,export_state,ID=LNDID,rc=rc)
    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
    if (phase > 1) then
@@ -257,14 +257,16 @@ subroutine lnd_run_mct( EClock, cdata_l, x2l, l2x, cdata_r, r2x, cdata_s, x2s, s
    type(mct_gGrid), pointer         :: dom_l
    real(R8), pointer                :: fptr (:,:)
    integer(IN)                      :: ka,kb,lb,ub,lsize
+   integer(IN)                      :: LNDID
    logical, save                    :: firstcall = .true.
    integer(IN)                      :: rc, urc
    !----------------------------------------------------------------------------
 
    call t_startf('lcm_run1')
    call seq_cdata_setptrs(cdata_l, infodata=infodata, dom=dom_l)
+   call seq_cdata_setptrs(cdata_l, ID=LNDID)
 
-   call esmfshr_infodata_infodata2state(infodata, export_state, rc=rc)
+   call esmfshr_infodata_infodata2state(infodata, export_state, ID=LNDID, rc=rc)
    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
 
    if (firstcall) then

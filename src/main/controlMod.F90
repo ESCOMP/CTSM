@@ -20,7 +20,7 @@ module controlMod
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, model_version=>version,    &
                             iulog, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
                             fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn,                   &
-                            create_crop_landunit, allocate_all_vegpfts, fget_archdev, &
+                            create_crop_landunit, allocate_all_vegpfts,   &
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
                             username, fsnowaging, fsnowoptics, fglcmask
   use SurfaceAlbedoMod, only : albice
@@ -388,7 +388,6 @@ contains
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fglcmask,     len(fglcmask),     MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
 
     ! River runoff dataset and control flag
 #if (defined RTM)
@@ -590,9 +589,6 @@ contains
     write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
     if ( outnc_large_files ) then
        write(iulog,*)'Large file support for output files is ON'
-    end if
-    if ( trim(fget_archdev) /= "null:" ) then
-       write(iulog,*)'try to retreive input files that do NOT exist from archival device: ', trim(fget_archdev)
     end if
     write(iulog,*) 'model physics parameters:'
 #if (defined PERGRO)

@@ -1582,6 +1582,26 @@ Number of tasks to use for atm PIO
 Type of output files for atm PIO
 </entry>
 
+<entry id="glc_pio_stride" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Stride to use for glc PIO tasks
+</entry>
+
+<entry id="glc_pio_root" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Root PE for glc PIO output processing
+</entry>
+
+<entry id="glc_pio_numtasks" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for glc PIO
+</entry>
+
+<entry id="glc_pio_typename" type="char*80"  category="performance"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for glc PIO
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- DATM Namelists                                                                            -->
 <!-- ========================================================================================  -->

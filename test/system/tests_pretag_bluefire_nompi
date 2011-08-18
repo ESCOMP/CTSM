@@ -4,10 +4,10 @@ smQS3 erQS3 brQS3 blQS3
 smCA4 erCA4 brCA4 blCA4
 smNB4 erNB4 brNB4 blNB4
 smJ74 erJ74 brJ74 blJ74
-smCA8             blCA8
-smAK4             blAK4
-smAK8             
-smL78             blL78
+smCA8 erCA8 brCA8 blCA8
+smAK4 erAK4 brAK4 blAK4
+smAK8 erAK8 brAK8 blAK8
+smL78 erL78 brL78 blL78
 smF93 erF93 brF93 blF93
 smL83 erL83 brL83 blL83
 smK74 erK74 brK74 blK74

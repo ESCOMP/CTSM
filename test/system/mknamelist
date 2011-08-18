@@ -98,7 +98,7 @@ fi
 
 
 clmopt=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile`
-clmnl=${CLM_SCRIPTDIR}/nl_files/$nlfile
+clmnl="${CLM_SCRIPTDIR}/nl_files/$nlfile"
 
 datm_source=`grep datm_source ${CLM_SCRIPTDIR}/nl_files/$optfile | awk '{print $NF}'`
 if [ "$datm_source" = "CLM_QIAN" ]; then

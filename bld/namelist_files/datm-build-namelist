@@ -63,7 +63,8 @@ OPTIONS
      -drv_case "name"         Case name to use to describe this case.
      -drv_start_type "type"   Type of simulation (startup, continue, or branch)
      -help [or -h]            Print usage to STDOUT.
-     -infile "filepath"       Specify a file containing namelists to read values from.
+     -infile "filepath"       Specify a file or list of files (comma delimited) 
+                              containing namelists to read values from.
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
      -namelist "namelist"     Specify namelist settings directly on the commandline by 
                               supplying a string containing FORTRAN namelist syntax, e.g.,
@@ -476,19 +477,21 @@ if (defined $opts{'namelist'}) {
 # Process the -infile arg.
 
 if (defined $opts{'infile'}) {
-    # Parse namelist input from a file
-    my $nl_infile = Build::Namelist->new($opts{'infile'});
+   foreach my $infile ( split( /,/, $opts{'infile'} ) ) {
+      # Parse namelist input from a file
+      my $nl_infile = Build::Namelist->new($infile);
 
-    # Validate input namelist -- trap exceptions
-    my $nl_infile_valid;
-    eval { $nl_infile_valid = $definition->validate($nl_infile); };
-    if ($@) {
-	die "$ProgName - ERROR: Invalid namelist variable in '-infile' $opts{'infile'}.\n $@";
-    }
+      # Validate input namelist -- trap exceptions
+      my $nl_infile_valid;
+      eval { $nl_infile_valid = $definition->validate($nl_infile); };
+      if ($@) {
+         die "$ProgName - ERROR: Invalid namelist variable in '-infile' $infile.\n $@";
+      }
 
-    # Merge input values into namelist.  Previously specified values have higher precedence
-    # and are not overwritten.
-    $nl->merge_nl($nl_infile_valid);
+      # Merge input values into namelist.  Previously specified values have higher precedence
+      # and are not overwritten.
+      $nl->merge_nl($nl_infile_valid);
+   }
 }
 
 #-----------------------------------------------------------------------------------------------

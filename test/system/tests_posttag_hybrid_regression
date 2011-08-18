@@ -1,10 +1,8 @@
 smC91 erC91 brC91 blC91
 smTZ1 erTZ1 brTZ1 blTZ1
 smB91 erB91 brB91 blB91
-smE91 erE91 brE91 blE91 smE95
 smF21 erF21 brF21 blF21 smF25
-smG51 erG51 brG51 blG51 smG55
-smGp1 erGp1 brGp1 blGp1
+smX51 erX51 brX51 blX51
 smK51 erK51 brK51 blK51
 smH91 erH91 brH91 blH91 smH96
 smH41 erH41 brH41 blH41
@@ -25,5 +23,4 @@ smL51 erL51 brL51 blL51
 smL81 erL81 brL81 blL81
 smP51 erP51 brP51 blP51
 smR51 erR51 brR51 blR51
-smG61 erG61 brG61 blG61
 smC51 erC51 brC51 blC51

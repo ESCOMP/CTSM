@@ -18,6 +18,7 @@
 # -------------------------------------------------------------------------------------------
 # 2009-01-20  Vertenstein      Original version
 # 2010-04-27  Kluzek           Add ndep streams capability
+# 2011-07-25  Kluzek           Add multiple ensemble's of namelists
 #--------------------------------------------------------------------------------------------
 
 use strict;
@@ -28,6 +29,7 @@ use Cwd;
 use English;
 use Getopt::Long;
 use IO::File;
+use File::Glob ':glob';
 #-----------------------------------------------------------------------------------------------
 
 sub usage {
@@ -58,7 +60,18 @@ OPTIONS
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files 
                               when determining what input initial condition file to use.
-     -infile "filepath"       Specify a file containing namelists to read values from.
+     -infile "filepath"       Specify a file (or list of files) containing namelists to 
+                              read values from. 
+
+                              If used with a CLM build with multiple ensembles (ninst_lnd>1)
+                              and the filename entered is a directory to files of the
+                              form filepath/filepath and filepath/filepath_\$n where \$n
+                              is the ensemble member number. the "filepath/filepath"
+                              input namelist file is the master input namelist file
+                              that is applied to ALL ensemble members.
+
+                              (by default for CESM this is setup for files of the
+                               form \$CASEDIR/user_nl_clm/user_nl_clm_????)
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
      -irrig                   Seek surface datasets with irrigation turned on.
@@ -131,8 +144,8 @@ Note: The precedence for setting the values of namelist variables is (highest to
              (i.e.  CLM_BLDNML_OPTS env_conf variable)
       1. values set on the command-line using the -namelist option,
              (i.e. CLM_NAMELIST_OPTS env_conf variable)
-      2. values read from the file specified by -infile,
-             (i.e.  user_nl_clm file)
+      2. values read from the file(s) specified by -infile,
+             (i.e.  user_nl_clm files)
       3. datasets from the -clm_usr_name option,
              (i.e.  CLM_USRDAT_NAME env_conf variable)
       4. values set from a use-case scenario, e.g., -use_case
@@ -386,7 +399,8 @@ EOF
 }
 
 # Create an empty namelist object.  Add values to it in order of precedence.
-my $nl = Build::Namelist->new();
+my @nl;
+$nl[0] = Build::Namelist->new();
 
 # Check that the CESM inputdata root directory has been specified.  This must be
 # a local or nfs mounted directory.
@@ -435,6 +449,10 @@ my $maxpft = $cfg->get('maxpft');
 
 # crop mode
 my $crop = $cfg->get('crop');
+
+# Number of ensembles
+my $nensemble = $cfg->get('ninst_lnd');
+
 #-----------------------------------------------------------------------------------------------
 
 # Process the user input in order of precedence.  At each point we'll only add new
@@ -485,7 +503,7 @@ my $mask = $val;
 $opts{'mask'} = $mask;
 $val = &quote_string( $val );
 $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
+$nl[0]->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
@@ -503,7 +521,7 @@ my $glc_grid = $val;
 $opts{'glc_grid'} = $glc_grid;
 $val = &quote_string( $val );
 $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
+$nl[0]->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
@@ -519,7 +537,7 @@ if ( ! defined($opts{$var}) ) {
 }
 my $irrig = $val;
 $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
+$nl[0]->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
@@ -541,7 +559,7 @@ if ( $opts{$var} ne "default" ) {
 my $rcp = $val;
 $opts{'rcp'} = $rcp;
 $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
+$nl[0]->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
@@ -563,12 +581,12 @@ if ( $val =~ /([0-9]+)-([0-9]+)/ ) {
 }
 $val = $sim_year;
 $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val );
+$nl[0]->set_variable_value($group, $var, $val );
 if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
 }
-$nl->set_variable_value($group, $var, $val );
+$nl[0]->set_variable_value($group, $var, $val );
 if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
 
 my $var = "sim_year_range";
@@ -576,13 +594,13 @@ $val = $sim_year_range;
 if ( $val ne "constant" ) {
    $opts{$var}   = $val;
    $group = $definition->get_group_name($var);
-   $nl->set_variable_value($group, $var, $val );
+   $nl[0]->set_variable_value($group, $var, $val );
    if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
       my @valid_values   = $definition->get_valid_values( $var );
       die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
    }
    $val = "'".$defaults->get_value($var)."'";
-   $nl->set_variable_value($group, $var, $val );
+   $nl[0]->set_variable_value($group, $var, $val );
    if ($print>=2) { print "CLM sim_year_range is $sim_year_range $eol"; }
 }
 
@@ -616,7 +634,7 @@ if ( $opts{'datm_presaero'} eq "default" ) {
 my $var = "datm_presaero";
 my $val = &quote_string( $datm_presaero );
 my $group = $definition->get_group_name( $var );
-$nl->set_variable_value($group, $var, $val );
+$nl[0]->set_variable_value($group, $var, $val );
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are:
@@ -648,15 +666,15 @@ if ( $rtm eq "on" ) {
 my $var = "clm_start_type";
 if (defined $opts{$var}) { 
     if ($opts{$var} eq "default" ) {
-       add_default($nl, $var );
+       add_default($nl[0], $var );
     } else {
        my $group = $definition->get_group_name($var);
-       $nl->set_variable_value($group, $var, quote_string( $opts{$var} ) );
+       $nl[0]->set_variable_value($group, $var, quote_string( $opts{$var} ) );
     }
 } else {
-    add_default($nl, $var );
+    add_default($nl[0], $var );
 }
-my $clm_start_type = $nl->get_value($var);
+my $clm_start_type = $nl[0]->get_value($var);
 
 my $drv_final_spinup = "off";
 # Length of simulation, if clm stand-alone
@@ -664,8 +682,8 @@ if ($mode eq "clm_stndln") {
    if ( defined $opts{'drv_runlength'} ) {
        if ( $opts{'drv_runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
 	   my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
-	   add_default($nl, "stop_n"     , 'val'=>$1 );
-	   add_default($nl, "stop_option", 'val'=>$options{$2} );
+	   add_default($nl[0], "stop_n"     , 'val'=>$1 );
+	   add_default($nl[0], "stop_option", 'val'=>$options{$2} );
        } else {
 	   die "$ProgName ERROR:: bad input to drv_runlength option\n";
        }
@@ -699,25 +717,62 @@ if (defined $opts{'namelist'}) {
 
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
-    $nl->merge_nl($nl_arg_valid);
+    $nl[0]->merge_nl($nl_arg_valid);
 }
 
 # Process the -infile arg.
 
+my $ensembledir     = undef;
+my $ensemblefil     = undef;
+my $datm_infilelist = undef;
 if (defined $opts{'infile'}) {
-    # Parse namelist input from a file
-    my $nl_infile = Build::Namelist->new($opts{'infile'});
+    my @infiles = split( /,/, $opts{'infile'} );
+    foreach my $infile ( @infiles ) {
+       # Make sure a valid file was found
+       if (    -f "$infile" ) {
+          # Only add valid files to the datm infile list
+          if ( defined($datm_infilelist) ) {
+             $datm_infilelist .= ",$infile";
+          } else {
+             $datm_infilelist = "$infile";
+          }
+       # If ensembles are being done and the file name is a directory..
+       } elsif ( -d "$infile" && $nensemble > 1 ) {
+          if ( defined($ensembledir) ) {
+	     die "$ProgName - ERROR: only one infile directory " . 
+                 "for ensembles can exist $ensembledir already set " . 
+                 "can NOT also add $infile.\n $@";
+          }
+          $ensembledir = $infile;
+          $ensemblefil = $infile;
+          if ($print>=2) { print "Found ensemble infile directory: $ensembledir $eol"; }
+          $ensemblefil =~ s!(.*)/!!;
+          $infile = "$ensembledir/$ensemblefil";
+          if ( ! -f "$infile" ) {
+             if ($print>=1) { print "Ensemble infile directory found, but no master" .
+             "namelist for all ensemble members $infile $eol"; }
+             next; 
+          } else {
+             if ($print>=1) { print "Master infile namelist for all ensemble members found: $infile\n"; }
+          }
+       # Otherwise abort as a valid file doesn't exist
+       } else {
+	  die "$ProgName - ERROR: input namelist file does NOT exist $infile.\n $@";
+       }
+       # Parse namelist input from the next file
+       my $nl_infile = Build::Namelist->new($infile);
 
-    # Validate input namelist -- trap exceptions
-    my $nl_infile_valid;
-    eval { $nl_infile_valid = $definition->validate($nl_infile); };
-    if ($@) {
-	die "$ProgName - ERROR: Invalid namelist variable in '-infile' $opts{'infile'}.\n $@";
+       # Validate input namelist -- trap exceptions
+       my $nl_infile_valid;
+       eval { $nl_infile_valid = $definition->validate($nl_infile); };
+       if ($@) {
+	   die "$ProgName - ERROR: Invalid namelist variable in '-infile' $infile.\n $@";
+       }
+
+       # Merge input values into namelist.  Previously specified values have higher precedence
+       # and are not overwritten.
+       $nl[0]->merge_nl($nl_infile_valid);
     }
-
-    # Merge input values into namelist.  Previously specified values have higher precedence
-    # and are not overwritten.
-    $nl->merge_nl($nl_infile_valid);
 }
 
 # Process the -clm_usr_name argument
@@ -744,13 +799,13 @@ if (defined $opts{'clm_usr_name'}) {
     }
 
     my $nvars = 0;
-    my $nl_infile = Build::Namelist->new($opts{'infile'});
+    my $nl_usrfile = Build::Namelist->new();
     foreach my $var (@vars) {
 	my $val = $uf_defaults->get_usr_file($var, $definition, \%settings);
 
 	if ($val) {
             print "adding clm user file defaults for var $var with val $val \n";
-	    add_default($nl_infile, $var, 'val'=>$val);
+	    add_default($nl_usrfile, $var, 'val'=>$val);
             $nvars++;
 	}
     }
@@ -759,7 +814,7 @@ if (defined $opts{'clm_usr_name'}) {
     }
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
-    $nl->merge_nl($nl_infile);
+    $nl[0]->merge_nl($nl_usrfile);
 }
 
 # Now process the -use_case arg.
@@ -779,20 +834,20 @@ if (defined $opts{'use_case'}) {
     # Loop over the variables specified in the use case.
     # Add each one to the namelist.
     my @vars = $uc_defaults->get_variable_names();
-    my $nl_infile = Build::Namelist->new($opts{'infile'});
+    my $nl_usecase = Build::Namelist->new();
     foreach my $var (@vars) {
 	my $val = $uc_defaults->get_value($var, \%settings );
 
 	if ( defined($val) ) {
             print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
 
-	    add_default($nl_infile, $var, 'val'=>$val);
+	    add_default($nl_usecase, $var, 'val'=>$val);
 	}
     }
 
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
-    $nl->merge_nl($nl_infile);
+    $nl[0]->merge_nl($nl_usecase);
 }
 #-----------------------------------------------------------------------------------------------
 
@@ -808,83 +863,83 @@ if (defined $opts{'use_case'}) {
 # Run type for driver namelist - note that arb_ic implies that the run is startup
 my $var = "start_type";
 if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
-   add_default($nl, $var, 'val'=>'startup'   ); 
+   add_default($nl[0], $var, 'val'=>'startup'   ); 
 } else {
-   add_default($nl, $var, 'val'=>$clm_start_type ); 
+   add_default($nl[0], $var, 'val'=>$clm_start_type ); 
 }
 
 if ($mode eq "clm_stndln") {
 
    # stop_option and stop_n
-   add_default($nl, 'stop_option', 'hgrid'=>$lnd_res, 'mask'=>$mask,
+   add_default($nl[0], 'stop_option', 'hgrid'=>$lnd_res, 'mask'=>$mask,
                'final_spinup'=>$drv_final_spinup);
-   unless (defined $nl->get_value('stop_ymd')) { 
-     add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask,
+   unless (defined $nl[0]->get_value('stop_ymd')) { 
+     add_default($nl[0], 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask,
                'final_spinup'=>$drv_final_spinup);
    }
    # Case name
    if (defined $opts{'drv_case'}) {
-       add_default($nl, 'case_name', 'val'=>$opts{'drv_case'});
+       add_default($nl[0], 'case_name', 'val'=>$opts{'drv_case'});
    } else {
-       add_default($nl, 'case_name');
+       add_default($nl[0], 'case_name');
    }
    # Case description
-   my $case_desc  = $nl->get_value('case_desc');
+   my $case_desc  = $nl[0]->get_value('case_desc');
    if ( $case_desc eq "" ) {
       if (defined $opts{'use_case'}) {
-         add_default($nl, 'case_desc', 'val'=>$nl->get_value("use_case_desc") );
+         add_default($nl[0], 'case_desc', 'val'=>$nl[0]->get_value("use_case_desc") );
       } else {
-         add_default($nl, 'case_desc', 'nofail'=>1 );
+         add_default($nl[0], 'case_desc', 'nofail'=>1 );
       }
    }
 
    # Output path root directory
-   add_default($nl, 'outpathroot', 'val'=>$opts{'dir'}."/"); 
+   add_default($nl[0], 'outpathroot', 'val'=>$opts{'dir'}."/"); 
    
    # Orbit
    # If orbital parameters have not been specified then set default orbital year.
    # If NOT all of obliq, eccen and mvelp are specified -- return an error.
    
-   add_default($nl, 'orb_mode');
+   add_default($nl[0], 'orb_mode');
 
-   if (      $nl->get_value('orb_mode') =~ /fixed_year/ ) {
-         add_default($nl, 'orb_iyear', 'sim_year'=>$sim_year );
-   } elsif ( $nl->get_value('orb_mode') =~ /variable_year/ ) {
-         add_default($nl, 'orb_iyear_align', 'sim_year'=>$sim_year );
-   } elsif ( $nl->get_value('orb_mode') =~ /fixed_parameters/ ) {
-      if (not defined $nl->get_value('orb_obliq') or
-          not defined $nl->get_value('orb_eccen') or
-          not defined $nl->get_value('orb_mvelp')     ) {
+   if (      $nl[0]->get_value('orb_mode') =~ /fixed_year/ ) {
+         add_default($nl[0], 'orb_iyear', 'sim_year'=>$sim_year );
+   } elsif ( $nl[0]->get_value('orb_mode') =~ /variable_year/ ) {
+         add_default($nl[0], 'orb_iyear_align', 'sim_year'=>$sim_year );
+   } elsif ( $nl[0]->get_value('orb_mode') =~ /fixed_parameters/ ) {
+      if (not defined $nl[0]->get_value('orb_obliq') or
+          not defined $nl[0]->get_value('orb_eccen') or
+          not defined $nl[0]->get_value('orb_mvelp')     ) {
          die "$nm when setting orbit, ALL of orb_obliq, orb_eccen, AND orb_mvelp MUST be set\n";
       }
    }
 
-   add_default($nl, 'model_version' );
-   add_default($nl, 'hostname', 'val'=>`hostname` );
-   add_default($nl, 'username', 'val'=>$ENV{'LOGNAME'} );
-   add_default($nl, 'timing_dir' );
-   add_default($nl, 'tchkpt_dir' );
-   add_default($nl, 'eps_frac'   );
-   add_default($nl, 'eps_amask'  );
-   add_default($nl, 'eps_aarea'  );
+   add_default($nl[0], 'model_version' );
+   add_default($nl[0], 'hostname', 'val'=>`hostname` );
+   add_default($nl[0], 'username', 'val'=>$ENV{'LOGNAME'} );
+   add_default($nl[0], 'timing_dir' );
+   add_default($nl[0], 'tchkpt_dir' );
+   add_default($nl[0], 'eps_frac'   );
+   add_default($nl[0], 'eps_amask'  );
+   add_default($nl[0], 'eps_aarea'  );
    
    if ( $clm_start_type =~ /branch/ ) {
-      if ( not defined $nl->get_value('restart_file') ) {
+      if ( not defined $nl[0]->get_value('restart_file') ) {
          die "$nm restart_file MUST be set when clm_start_type equals branch\n";
       }
    } else {
-      if ( defined $nl->get_value('restart_file') ) {
+      if ( defined $nl[0]->get_value('restart_file') ) {
          die "$nm restart_file ONLY needed when clm_start_type equals branch\n";
       }
    }
 
    # Only one of these can be set to .true.
-   if (defined $nl->get_value('atm_adiabatic')     or
-       defined $nl->get_value('aqua_planet')       or
-       defined $nl->get_value('atm_ideal_physics') ) {
-          my $atm_adiabatic     = $nl->get_value('atm_adiabatic');
-          my $atm_ideal_physics = $nl->get_value('atm_ideal_physics');
-          my $aqua_planet       = $nl->get_value('aqua_planet');
+   if (defined $nl[0]->get_value('atm_adiabatic')     or
+       defined $nl[0]->get_value('aqua_planet')       or
+       defined $nl[0]->get_value('atm_ideal_physics') ) {
+          my $atm_adiabatic     = $nl[0]->get_value('atm_adiabatic');
+          my $atm_ideal_physics = $nl[0]->get_value('atm_ideal_physics');
+          my $aqua_planet       = $nl[0]->get_value('aqua_planet');
           my $t = 0;
           if ( defined( $atm_adiabatic ) ) { 
               if ( $atm_adiabatic     =~ /$TRUE/i ) { $t++; }
@@ -901,8 +956,8 @@ if ($mode eq "clm_stndln") {
           }
    }
    # Budgets
-   add_default($nl, 'do_budgets'  );
-   add_default($nl, 'budget_inst'  );
+   add_default($nl[0], 'do_budgets'  );
+   add_default($nl[0], 'budget_inst'  );
 
 }
 
@@ -933,12 +988,12 @@ if ($mode eq "clm_stndln") {
        }
 
        if ($nthreads) {
-	   add_default($nl, 'atm_nthreads', 'val'=>$nthreads);
-	   add_default($nl, 'cpl_nthreads', 'val'=>$nthreads);
-	   add_default($nl, 'lnd_nthreads', 'val'=>$nthreads);
-	   add_default($nl, 'ice_nthreads', 'val'=>1        );
-	   add_default($nl, 'ocn_nthreads', 'val'=>1        );
-	   add_default($nl, 'glc_nthreads', 'val'=>1        );
+	   add_default($nl[0], 'atm_nthreads', 'val'=>$nthreads);
+	   add_default($nl[0], 'cpl_nthreads', 'val'=>$nthreads);
+	   add_default($nl[0], 'lnd_nthreads', 'val'=>$nthreads);
+	   add_default($nl[0], 'ice_nthreads', 'val'=>1        );
+	   add_default($nl[0], 'ocn_nthreads', 'val'=>1        );
+	   add_default($nl[0], 'glc_nthreads', 'val'=>1        );
        }
    }
 }
@@ -950,22 +1005,22 @@ if ($mode eq "clm_stndln") {
 
 if ($mode eq "clm_stndln") {
    # Restart interval
-   add_default($nl, 'restart_option');
+   add_default($nl[0], 'restart_option');
 
    # Write restart file at end
-   add_default($nl, 'end_restart');
+   add_default($nl[0], 'end_restart');
 
    # Start date
    my %opts = ( 'hgrid'=>$lnd_res, 'mask'=>$mask );
    my $start_ymd = $defaults->get_value('run_startdate', \%opts );
    $start_ymd =~ s/-//g;
-   add_default($nl, 'start_ymd', 'val'=>$start_ymd );
+   add_default($nl[0], 'start_ymd', 'val'=>$start_ymd );
 
    # Start tod
-   add_default($nl, 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+   add_default($nl[0], 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
 
    # Coupling interval
-   add_default($nl, 'atm_cpl_dt', 'hgrid'=>$lnd_res);
+   add_default($nl[0], 'atm_cpl_dt', 'hgrid'=>$lnd_res);
 }
 
 ##############################
@@ -976,22 +1031,27 @@ if ($mode eq "clm_stndln" ) {
 
    my $serial = $cfg->get('use_mpiserial');
    if ( $serial ) {
-     foreach my $var ( "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
+     foreach my $var ( "pio_stride",       "pio_numtasks", 
+                       "glc_pio_stride",   "glc_pio_numtasks",
+                       "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
                        "cpl_pio_numtasks", "lnd_pio_numtasks", "atm_pio_numtasks" ) {
-       add_default($nl, $var, 'val'=>1   );
+       add_default($nl[0], $var, 'val'=>1   );
      }
-     foreach my $var ( "cpl_pio_root", "lnd_pio_root", "atm_pio_root" ) {
-       add_default($nl, $var, 'val'=>0   );
+     foreach my $var ( "pio_root", "cpl_pio_root", "lnd_pio_root", "atm_pio_root", "glc_pio_root" ) {
+       add_default($nl[0], $var, 'val'=>0   );
      }
-     foreach my $var ( "cpl_pio_typename", "lnd_pio_typename", "atm_pio_typename" ) {
-       add_default($nl, $var, 'val'=>"NETCDF"   );
+     foreach my $var ( "pio_typename", "cpl_pio_typename", "lnd_pio_typename", "atm_pio_typename", "glc_pio_typename" ) {
+       add_default($nl[0], $var, 'val'=>"NETCDF"   );
      }
    } else {
-     foreach my $var ( "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
+     foreach my $var ( "pio_stride",       "pio_numtasks",     "glc_pio_stride",
+                       "glc_pio_numtasks", "pio_root",         "glc_pio_root",
+                       "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
                        "cpl_pio_root",     "lnd_pio_root",     "atm_pio_root",
                        "cpl_pio_typename", "lnd_pio_typename", "atm_pio_typename",
+                       "pio_typename",     "glc_pio_typename",
                        "cpl_pio_numtasks", "lnd_pio_numtasks", "atm_pio_numtasks" ) {
-       add_default($nl, $var );
+       add_default($nl[0], $var );
      }
    }
 
@@ -1002,9 +1062,9 @@ if ($mode eq "clm_stndln" ) {
 ##############################
 
 $var = "start_type";
-my $drv_start_type = $nl->get_value($var);
+my $drv_start_type = $nl[0]->get_value($var);
 my $my_start_type  = $clm_start_type;
-my $nsrest         = $nl->get_value('override_nsrest');
+my $nsrest         = $nl[0]->get_value('override_nsrest');
 if ( defined($nsrest) ) {
    if ( $nsrest == 0 ) { $my_start_type = "startup";  }
    if ( $nsrest == 1 ) { $my_start_type = "continue"; }
@@ -1017,26 +1077,26 @@ if ( defined($nsrest) ) {
    }
 }
 
-add_default($nl, 'dtime', 'hgrid'=>$lnd_res);
+add_default($nl[0], 'dtime', 'hgrid'=>$lnd_res);
 
 if ( $my_start_type =~ /branch/ ) {
-   if (not defined $nl->get_value('nrevsn')) {
+   if (not defined $nl[0]->get_value('nrevsn')) {
       die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
    }
 } else {
-   if (defined $nl->get_value('nrevsn')) {
+   if (defined $nl[0]->get_value('nrevsn')) {
       die "$ProgName ERROR:: nrevsn should ONLY be set for a branch type.\n";
    }
 }
 
-add_default($nl, 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
-add_default($nl, 'outnc_large_files' );
-add_default($nl, 'fsnowoptics' );
-add_default($nl, 'fsnowaging' );
+add_default($nl[0], 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
+add_default($nl[0], 'outnc_large_files' );
+add_default($nl[0], 'fsnowoptics' );
+add_default($nl[0], 'fsnowaging' );
 
 if ($res ne $lnd_res) {
-    add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
-    add_default($nl, 'fatmtopo'  , 'hgrid'=>$res,     'mask'=>$mask );
+    add_default($nl[0], 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
+    add_default($nl[0], 'fatmtopo'  , 'hgrid'=>$res,     'mask'=>$mask );
 }
 
 #
@@ -1047,67 +1107,67 @@ if ( $glc_nec > 0 ) {
   if ( $glc_grid eq "none" ) {
      die "$ProgName ERROR:: glc_grid is equal to none, but glc_nec is positive\n";
   }
-  add_default($nl, 'create_glacier_mec_landunit');
-  add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
-  add_default($nl, 'fglcmask'  , 'hgrid'=>$lnd_res, 'glc_grid'=>$glc_grid );
-  add_default($nl, 'glc_smb'   , 'glc_nec'=>$glc_nec );
-  add_default($nl, 'albice'    , 'glc_nec'=>$glc_nec );
+  add_default($nl[0], 'create_glacier_mec_landunit');
+  add_default($nl[0], 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
+  add_default($nl[0], 'fglcmask'  , 'hgrid'=>$lnd_res, 'glc_grid'=>$glc_grid );
+  add_default($nl[0], 'glc_smb'   , 'glc_nec'=>$glc_nec );
+  add_default($nl[0], 'albice'    , 'glc_nec'=>$glc_nec );
 } else {
   if ( $glc_grid ne "none" ) {
      die "$ProgName ERROR:: glc_grid is set, but glc_nec is zero\n";
   }
   # Error checking for glacier multiple elevation class options when glc_nec off
   # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask is NOT set
-  my $create_glcmec = $nl->get_value('create_glacier_mec_landunit');
+  my $create_glcmec = $nl[0]->get_value('create_glacier_mec_landunit');
   if ( defined($create_glcmec) ) {
      if ( $create_glcmec =~ /$TRUE/i ) {
         die "$ProgName ERROR:: create_glacer_mec_landunit is true, but glc_nec is equal to zero\n";
      }
   }
-  my $glc_smb = $nl->get_value('glc_smb');
+  my $glc_smb = $nl[0]->get_value('glc_smb');
   if ( defined($glc_smb) ) {
      if ( $glc_smb =~ /$TRUE/i ) {
         die "$ProgName ERROR:: glc_smb is true, but glc_nec is equal to zero\n";
      }
   }
-  my $glc_dyntopo= $nl->get_value('glc_dyntopo');
+  my $glc_dyntopo= $nl[0]->get_value('glc_dyntopo');
   if ( defined($glc_dyntopo) ) {
      if ( $glc_dyntopo =~ /$TRUE/i ) {
         die "$ProgName ERROR:: glc_dyntopo is true, but glc_nec is equal to zero\n";
      }
   }
-  my $fglcmask = $nl->get_value('fglcmask');
+  my $fglcmask = $nl[0]->get_value('fglcmask');
   if ( defined($fglcmask) ) {
       die "$ProgName ERROR:: fglcmask is set, but glc_nec is equal to zero\n";
   }
 }
 
-add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );
+add_default($nl[0], 'fatmgrid'  , 'hgrid'=>$res );
 
 
-add_default($nl, 'fpftcon');
+add_default($nl[0], 'fpftcon');
 
 if ( $crop eq "on" ) {
-    add_default($nl, 'create_crop_landunit' );
+    add_default($nl[0], 'create_crop_landunit' );
 }
 
-add_default($nl, 'co2_type');
-if ( $nl->get_value('co2_type') =~ /constant/ ) {
+add_default($nl[0], 'co2_type');
+if ( $nl[0]->get_value('co2_type') =~ /constant/ ) {
   my $var = 'co2_ppmv';
   if ( defined($opts{$var}) ) {
     if ( $opts{$var} <= 0.0 ) {
        die "$ProgName ERROR:: co2_ppmv can NOT be less than or equal to zero.\n";
     }
     my $group = $definition->get_group_name($var);
-    $nl->set_variable_value($group, $var, $opts{$var});
+    $nl[0]->set_variable_value($group, $var, $opts{$var});
   } else {
-    add_default($nl, $var, 'sim_year'=>$sim_year );
+    add_default($nl[0], $var, 'sim_year'=>$sim_year );
   }
 }
-#add_default($nl, 'wrtdia',       'val'=> '.false.');
+#add_default($nl[0], 'wrtdia',       'val'=> '.false.');
 
-add_default($nl, 'urban_hac');
-add_default($nl, 'urban_traffic');
+add_default($nl[0], 'urban_hac');
+add_default($nl[0], 'urban_traffic');
 
 #
 # Optional variables or variables only turned on for specific settings
@@ -1115,27 +1175,27 @@ add_default($nl, 'urban_traffic');
 
 # If River Transport Model turned on
 if ( $rtm eq "on" ) {
-   add_default($nl, 'frivinp_rtm', 'rtm_res'=>$rtm_res );
-   add_default($nl, 'ice_runoff',  'hgrid'=>$res );
+   add_default($nl[0], 'frivinp_rtm', 'rtm_res'=>$rtm_res );
+   add_default($nl[0], 'ice_runoff',  'hgrid'=>$res );
    if ( defined($opts{'rtm_tstep'}) ) {
-       my $dtime = $nl->get_value('dtime');
+       my $dtime = $nl[0]->get_value('dtime');
        if ( $opts{'rtm_tstep'} < $dtime ) {
           die "$ProgName ERROR:: rtm_tstep can NOT be less than time-step of: $dtime.\n";
        }
        my $val = int( $opts{'rtm_tstep'} / $dtime );
        my $group = $definition->get_group_name('rtm_nsteps');
-       $nl->set_variable_value($group, 'rtm_nsteps', $val );
+       $nl[0]->set_variable_value($group, 'rtm_nsteps', $val );
    }
 }
 
 if ( $rtm eq "off" ) {
-   if (defined $nl->get_value('frivinp_rtm')) {
+   if (defined $nl[0]->get_value('frivinp_rtm')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
    }
-   if (defined $nl->get_value('ice_runoff')) {
+   if (defined $nl[0]->get_value('ice_runoff')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set ice_runoff.\n";
    }
-   if (defined $nl->get_value('rtm_nsteps')) {
+   if (defined $nl[0]->get_value('rtm_nsteps')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set rtm_nsteps.\n";
    }
 }
@@ -1144,7 +1204,7 @@ if ( $rtm eq "off" ) {
 # Get aerosol deposition rates from datasets, if NOT coming from atmosphere model
 #
 if ( $datm_presaero eq "none" ) {
-   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
+   add_default($nl[0], 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
                'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
 }
 
@@ -1158,7 +1218,7 @@ $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
 $settings{'irrig'}          = $irrig;
 $settings{'rcp'}            = $rcp;
-my $demand           = $nl->get_value('clm_demand');
+my $demand           = $nl[0]->get_value('clm_demand');
 $demand              =~ s/\'//g;   # Remove quotes
 if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
 my $demand           = $defaults->get_value('clm_demand', \%settings);
@@ -1167,18 +1227,18 @@ if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
 my @demandlist       = split( ",", $opts{'clm_demand'} );
 foreach my $item ( @demandlist ) {
    if ( $item eq "null" ) { next; }
-   add_default($nl, $item, %settings );
+   add_default($nl[0], $item, %settings );
 }
 #
 # Get surface dataset after fpftdyn so that we can get surface data consistent with it
 #
-my $fpftdyn = $nl->get_value('fpftdyn');
+my $fpftdyn = $nl[0]->get_value('fpftdyn');
 $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/'//;
 $fpftdyn =~ s/"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'irrig'=>$irrig );
-my $fsurdat = $nl->get_value( 'fsurdat' );
+add_default($nl[0], 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'irrig'=>$irrig );
+my $fsurdat = $nl[0]->get_value( 'fsurdat' );
 
 # Initial conditions
 # The initial date is an attribute in the defaults file which should be matched unless
@@ -1186,14 +1246,14 @@ my $fsurdat = $nl->get_value( 'fsurdat' );
 # or just ignore the year of the initial date via the -ignore_ic_year option.
 
 if ( $clm_start_type =~ /cold/ ) {
-   if (defined $nl->get_value('finidat')) {
+   if (defined $nl[0]->get_value('finidat')) {
       die "$ProgName ERROR:: setting finidat is incomptable with using start_type=cold.\n";
    }
-   add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
+   add_default($nl[0], 'finidat', 'val'=>"' '", 'no_abspath'=>1);
 }
 
-if (not defined $nl->get_value('finidat')) {
-    my $ic_date = $nl->get_value('start_ymd');
+if (not defined $nl[0]->get_value('finidat')) {
+    my $ic_date = $nl[0]->get_value('start_ymd');
     my $nofail = 1;
     my $var = "finidat";
     if ( $clm_start_type =~ /startup/  ) { $nofail = 0; }
@@ -1201,38 +1261,38 @@ if (not defined $nl->get_value('finidat')) {
            if ( $crop eq "on" ) {
               die "$ProgName ERROR:: using ignore_ic_date is incompatable with crop!\n";
            }
-	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+	   add_default($nl[0], $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
                     'irrig'=>$irrig );
     } elsif ($opts{'ignore_ic_year'}) {
-	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+	   add_default($nl[0], $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
                     'irrig'=>$irrig );
     } else {
-	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+	   add_default($nl[0], $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
                     'irrig'=>$irrig );
     }
-    my $finidat = $nl->get_value($var);
+    my $finidat = $nl[0]->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
        my $group = $definition->get_group_name($var);
-       $nl->set_variable_value($group, $var, "' '" );
+       $nl[0]->set_variable_value($group, $var, "' '" );
     }
 }
 
 #
 # Create crop land unit
 #
-add_default($nl, 'create_crop_landunit', 'irrig'=>$irrig );
+add_default($nl[0], 'create_crop_landunit', 'irrig'=>$irrig );
 
 #
 # Supplemental Nitrogen for prognostic crop cases
 #
 if ( $bgc =~ /^cn/ && $crop eq "on" ) {
-   add_default($nl, 'suplnitro' );
+   add_default($nl[0], 'suplnitro' );
 }
 #
 # Nitrogen deposition for bgc=CN
@@ -1241,38 +1301,38 @@ if ( $bgc =~ /^cn/ ) {
    ###############################
    # namelist group: ndepdyn_nml #
    ###############################
-   add_default($nl, 'ndepmapalgo', 'hgrid'=>$res );
-   add_default($nl, 'stream_year_first_ndep',   'sim_year'=>$sim_year,
+   add_default($nl[0], 'ndepmapalgo', 'hgrid'=>$res );
+   add_default($nl[0], 'stream_year_first_ndep',   'sim_year'=>$sim_year,
                'sim_year_range'=>$sim_year_range);
-   add_default($nl, 'stream_year_last_ndep',    'sim_year'=>$sim_year,
+   add_default($nl[0], 'stream_year_last_ndep',    'sim_year'=>$sim_year,
                'sim_year_range'=>$sim_year_range);
    # Set align year, if first and last years are different
-   if ( $nl->get_value('stream_year_first_ndep') != $nl->get_value('stream_year_last_ndep') ) {
-      add_default($nl, 'model_year_align_ndep',    'sim_year'=>$sim_year,
+   if ( $nl[0]->get_value('stream_year_first_ndep') != $nl[0]->get_value('stream_year_last_ndep') ) {
+      add_default($nl[0], 'model_year_align_ndep',    'sim_year'=>$sim_year,
                   'sim_year_range'=>$sim_year_range);
    }
-   add_default($nl, 'stream_fldfilename_ndep',  'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
+   add_default($nl[0], 'stream_fldfilename_ndep',  'rcp'=>$rcp, 'hgrid'=>"1.9x2.5" );
 #
 # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set
 #
 } else {
-  if ( defined($nl->get_value('stream_year_first_ndep')) ||
-       defined($nl->get_value('stream_year_last_ndep'))  ||
-       defined($nl->get_value('model_year_align_ndep'))  ||
-       defined($nl->get_value('stream_fldfilename_ndep'))
+  if ( defined($nl[0]->get_value('stream_year_first_ndep')) ||
+       defined($nl[0]->get_value('stream_year_last_ndep'))  ||
+       defined($nl[0]->get_value('model_year_align_ndep'))  ||
+       defined($nl[0]->get_value('stream_fldfilename_ndep'))
   ) {
      die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
           "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" . 
           " can be set!\n";
   }
 }
-if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl->get_value('scaled_harvest') ) {
+if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl[0]->get_value('scaled_harvest') ) {
    die "$ProgName ERROR:: scaled_harvest is set, but neither CN nor CNDV is active!\n";
 }
 # 
 # Error checking for suplnitro
 #
-my $suplnitro = $nl->get_value('suplnitro');
+my $suplnitro = $nl[0]->get_value('suplnitro');
 if ( defined($suplnitro) ) {
    if ( $bgc !~ /^cn/ ) {
       die "$ProgName ERROR:: supplemental Nitrogen (suplnitro) is set, but neither CN nor CNDV is active!\n";
@@ -1301,34 +1361,106 @@ if ( defined($suplnitro) ) {
 ###############################
 
 if ($mode eq "clm_stndln") {
-  add_default($nl, 'profile_barrier');
-  add_default($nl, 'profile_disable');
-  add_default($nl, 'profile_single_file');
-  add_default($nl, 'profile_depth_limit');
-  add_default($nl, 'profile_detail_limit');
+  add_default($nl[0], 'profile_barrier');
+  add_default($nl[0], 'profile_disable');
+  add_default($nl[0], 'profile_single_file');
+  add_default($nl[0], 'profile_depth_limit');
+  add_default($nl[0], 'profile_detail_limit');
 }
 
 #################################
 # namelist group: drydep_inparm #
 #################################
 if ($opts{'drv_drydep'} ) {
-    add_default($nl, 'drydep_list');
-    add_default($nl, 'drydep_method');
+    add_default($nl[0], 'drydep_list');
+    add_default($nl[0], 'drydep_method');
 }
 
 ##############################
 # namelist group: modelio    #
 ##############################
 if ($mode eq "clm_stndln") {
-    add_default($nl, 'diri'    );
-    add_default($nl, 'diro'    );
+    add_default($nl[0], 'diri'    );
+    add_default($nl[0], 'diro'    );
 }
 
 #-----------------------------------------------------------------------------------------------
 # Validate that the entire resultant namelist is valid
 #
-$definition->validate($nl);
+$definition->validate($nl[0]);
 
+#-----------------------------------------------------------------------------------------------
+# Add new namelists for each ensemble member, repeat of the master namelist
+for( my $i = 2; $i <= $nensemble; $i++ ) {
+   push( @nl, $definition->validate($nl[0]) );
+}
+
+
+#-----------------------------------------------------------------------------------------------
+# Read in user_nl_clm namelists specific for each ensemble member
+# Bringing in changes from user_nl_clm/user_nl_clm_* files for each
+my $nfilelistnfile = 0;
+my $infilewildcard = "${ensembledir}/${ensemblefil}_*";
+my @infilelist = glob( $infilewildcard );
+if ( ($#infilelist+1) > $nensemble ) {
+   print "ERROR: More ensemble specific files matching $infilewildcard than ensembles to use!\n";
+   die "$ProgName - ERROR: Either increase nensembles or delete extra $infilewildcard files\n"
+}
+if ( defined($ensembledir) ) {
+  my $nfilelist = $#infilelist+1;
+  if ($print>=1 && $#infilelist > 0 ) { 
+     print "Found $nfilelist of $nensemble ensemble member infile namelists $eol";
+  }
+  if ( $#infilelist < 0 ) {
+     die "$ProgName - ERROR: Ensemble infile directory found -- but no ensemble member files: $infilewildcard\n";
+  }
+}
+# Make sure the list of files is sorted, not worrying about digits of precision
+# (want _0001, _001, or _1 to all be 1)
+# And check for errors in the filenames
+my %infilelist;
+foreach my $infile ( @infilelist ) {
+  if ( $infile =~ /_([0-9]+)$/ ) {
+     my $nens = int($1);
+     if ( ($nens < 1) || ($nens > $nensemble) ) {
+        die "$ProgName - ERROR: there is an ensemble specific filename" .
+            " out of range (1-$nensemble) named $infile\n";
+     }
+     if ( exists( $infilelist{$nens} ) ) {
+        die "$ProgName - ERROR: More than one ensemble specific filename for : $nens\n";
+     }
+     $infilelist{$nens} = $infile;
+  } else {
+     die "$ProgName - ERROR: Bad ensemble specific filename: $infile\n";
+  }
+}
+#
+# Now go through each ensemble member validating the namelist each time
+# But also adding in appropriate infile namelist file for that member.
+#
+for( my $i = 1; $i <= $nensemble; $i++ ) {
+  if ( exists($infilelist{$i}) ) {
+     my $infile = $infilelist{$i};
+     if ($print>=2) { print "Found ensemble member infile namelist: $infile $eol"; }
+     # Parse namelist input from the next file
+     my $nl_infile = Build::Namelist->new($infile);
+
+     # Validate input namelist -- trap exceptions
+     my $nl_infile_valid;
+     eval { $nl_infile_valid = $definition->validate($nl_infile); };
+     if ($@) {
+        die "$ProgName - ERROR: Invalid namelist variable in '-infile' $infile.\n $@";
+     }
+
+     # Merge input values into namelist, overwriting new values into old namelist.
+     $nl[$i-1]->merge_nl($nl_infile_valid, overwrite=>1);
+  } else {
+     if ($print>=1 && defined($ensembledir) ) { 
+        print "Skipped ensemble member infile namelist for member: $i $eol"; 
+     }
+  }
+  $definition->validate($nl[$i-1]);
+}
 
 #-----------------------------------------------------------------------------------------------
 # Write output files
@@ -1340,30 +1472,52 @@ my $note = "Comment:\n" .
 
 # CLM component
 my @groups = qw(clm_inparm ndepdyn_nml);
-my $outfile = "$opts{'dir'}/lnd_in";
-$nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
+my $outfile;
+if ( $nensemble == 1 ) {
+   $outfile = "$opts{'dir'}/lnd_in";
+   $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+   if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
+} else {
+   # Ensemble member namelists for CLM
+   my $outprefix = "$opts{'dir'}/lnd_in_";
+   for( my $i = 1; $i <= $nensemble; $i++ ) {
+     $outfile = sprintf( "%s%4.4d", $outprefix, $i );
+     $nl[$i-1]->write($outfile, 'groups'=>\@groups, 'note'=>"$note\nEnsemble member: $i" );
+   }
+   if ($print>=2) { print "Wrote $nensemble clm ensemble member namelists to $outprefix* $eol"; }
+}
 
 if ($mode eq "clm_stndln") {
     # Driver
     @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
     $outfile = "$opts{'dir'}/drv_in";
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
 
     # lnd_modelio
     @groups = qw(modelio);
     $outfile = "$opts{'dir'}/lnd_modelio.nml";
-    $nl->set_variable_value( "modelio", "logfile", "'lnd.log'" );
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    $nl[0]->set_variable_value( "modelio", "logfile", "'lnd.log'" );
+    $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing lnd_modelio.nml namelist to $outfile $eol"; }
+
+    # Ensemble member namelists for CLM
+    my $outprefix = "$opts{'dir'}/lnd_modelio.nml_";
+    for( my $i = 2; $i <= $nensemble; $i++ ) {
+      $outfile = sprintf( "%s%4.4d", $outprefix, $i );
+      $nl[$i-1]->set_variable_value( "modelio", "logfile", "'lnd_$i.log'" );
+      $nl[$i-1]->write($outfile, 'groups'=>\@groups, 'note'=>"$note\nEnsemble member: $i" );
+    }
+    if ( $nensemble > 1 ) {
+       if ($print>=2) { print "Wrote $nensemble lnd_modelio ensemble member namelists to $outprefix* $eol"; }
+    }
 }
 
 # Drydep namelist
 if ($opts{'drv_drydep'} ) {
     @groups = qw(drydep_inparm);
     $outfile = "$opts{'dir'}/drv_flds_in";
-    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing drydep_inparm namelist to $outfile $eol"; }
 }
 
@@ -1371,7 +1525,9 @@ if ($opts{'drv_drydep'} ) {
 
 # Output input dataset list.
 if ($opts{'inputdata'}) {
-    check_input_files($nl,$inputdata_rootdir,$opts{'inputdata'});
+    foreach my $nl ( @nl ) {
+       check_input_files($nl,$inputdata_rootdir,$opts{'inputdata'});
+    }
 }
 
 ####################################
@@ -1383,7 +1539,7 @@ if ($mode eq "clm_stndln") {
    my $datmbldnmlopts = "-mask $mask -res $res -rcp $rcp -sim_year $sim_year" . 
                         " -sim_year_range $sim_year_range -print $print" . 
                         " -drv_start_type $drv_start_type" .
-                        " -csmdata $inputdata_rootdir -d $outdirname" .
+                        " -csmdata $inputdata_rootdir -d $opts{'dir'}" .
                         " -config "               . $opts{'config'} .
                         " -datm_cycle_beg_year "  . $opts{'datm_cycle_beg_year'} .
                         " -datm_cycle_end_year "  . $opts{'datm_cycle_end_year'} .
@@ -1399,8 +1555,8 @@ if ($mode eq "clm_stndln") {
    if ( defined($opts{'use_case'}) ) {
       $datmbldnmlopts .= " -use_case ".$opts{'use_case'};
    }
-   if ( defined($opts{'infile'}) ) {
-      $datmbldnmlopts .= " -infile ".$opts{'infile'};
+   if ( defined($datm_infilelist) ) {
+      $datmbldnmlopts .= " -infile $datm_infilelist";
    }
    if ( defined($opts{'namelist'}) ) {
       $datmbldnmlopts .= ' -namelist "'.$opts{'namelist'} . '"';

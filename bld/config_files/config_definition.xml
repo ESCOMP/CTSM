@@ -37,6 +37,12 @@ Glacier model number of elevation classes
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
 </entry>
+<entry id="mct_dir" value="" category="standalone_test">
+Path to MCT to either build MCT or use pre-built MCT
+</entry>
+<entry id="pio_dir" value="" category="standalone_test">
+Path to PIO to either build PIO or use pre-built PIO
+</entry>
 <entry id="comp_intf" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT"
 category="directories">
 Component framework interface to use 
@@ -110,6 +116,9 @@ Toggle to make wild-fires inactive for biogeochemistry=CN mode
 <entry id="noio" valid_values="on,off" value="off" category="physics">
 Toggle to turn all history output completely OFF (possibly used for testing)
 </entry>
+<entry id="ninst_lnd" value="" category="physics">
+Number of instances of CLM to run at the same time (for data assimilation ensemble work)
+</entry>
 <entry id="target_os" value="" category="mach_options">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"
 command on the target platform.  This parameter is to allow cross-compilation
@@ -119,6 +128,9 @@ command on the target platform.  This parameter is to allow cross-compilation
 Toggle to turn on coupling of Volatile Organic Compounds module to atmosphere model.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts.
 This is turned on with the CCSM_VOC env_conf.xml in the standard cesm scripts.
+</entry>
+<entry id="ninst_atm" value="" category="standalone_test">
+Number of instances of datm to run at the same time (for data assimilation ensemble work)
 </entry>
 
 </config_definition>

@@ -522,7 +522,6 @@ contains
        tape(t)%begtime = day + sec/secspday
        tape(t)%dov2xy = hist_dov2xy(t)
        tape(t)%nhtfrq = hist_nhtfrq(t)
-       if (hist_nhtfrq(t) == 0) hist_mfilt(t) = 1
        tape(t)%mfilt = hist_mfilt(t)
        if (hist_ndens(t) == 1) then
           tape(t)%ncprec = ncd_double
@@ -2791,7 +2790,6 @@ contains
 !   date = yyyy/mm+1/01 with mscur = 0.
 !
 ! !USES:
-    use fileutils       , only : set_filename, putfil
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use clmtype
@@ -2876,7 +2874,8 @@ contains
           ! define dims, vars, etc.
 
           if (tape(t)%ntimes == 1) then
-             locfnh(t) = set_hist_filename (hist_freq=tape(t)%nhtfrq, hist_file=t)
+             locfnh(t) = set_hist_filename (hist_freq=tape(t)%nhtfrq, &
+                                            hist_mfilt=tape(t)%mfilt, hist_file=t)
              if (masterproc) then
                 write(iulog,*) trim(subname),' : Creating history file ', trim(locfnh(t)), &
                      ' at nstep = ',get_nstep()
@@ -2991,8 +2990,8 @@ contains
 ! A new history file is used on a branch run.
 !
 ! !USES:
-    use clm_varctl, only : nsrest, caseid, nsrStartup, nsrBranch
-    use fileutils , only : set_filename, getfil
+    use clm_varctl, only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
+    use fileutils , only : getfil
     use domainMod , only : ldomain,llatlon,adomain,alatlon
     use clm_varpar, only : nlevgrnd, nlevlak, numrad, rtmlon, rtmlat
 #if (defined CASA)
@@ -3394,7 +3393,7 @@ contains
                           'write', ncid_hist(t), start )
           end do
        end do
-       
+              
        deallocate(itemp2d)
 
     !
@@ -3900,18 +3899,19 @@ end function max_nFields
 ! !IROUTINE: set_hist_filename
 !
 ! !INTERFACE:
-  character(len=256) function set_hist_filename (hist_freq, hist_file)
+  character(len=256) function set_hist_filename (hist_freq, hist_mfilt, hist_file)
 !
 ! !DESCRIPTION:
 ! Determine history dataset filenames.
 !
 ! !USES:
-    use clm_varctl, only : caseid
+    use clm_varctl, only : caseid, inst_suffix
     use clm_time_manager, only : get_curr_date, get_prev_date
 !
 ! !ARGUMENTS:
    implicit none
    integer, intent(in)  :: hist_freq   !history file frequency
+   integer, intent(in)  :: hist_mfilt  !history file number of time-samples
    integer, intent(in)  :: hist_file   !history file index
 !
 ! !REVISION HISTORY:
@@ -3929,7 +3929,7 @@ end function max_nFields
    character(len=*),parameter :: subname = 'set_hist_filename'
 !-----------------------------------------------------------------------
 
-   if (hist_freq == 0 ) then   !monthly
+   if (hist_freq == 0 .and. hist_mfilt == 1) then   !monthly
       call get_prev_date (yr, mon, day, sec)
       write(cdate,'(i4.4,"-",i2.2)') yr,mon
    else                        !other
@@ -3937,8 +3937,8 @@ end function max_nFields
       write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
    endif
    write(hist_index,'(i1.1)') hist_file - 1
-   set_hist_filename = "./"//trim(caseid)//".clm2.h"//hist_index//"."//&
-        trim(cdate)//".nc"
+   set_hist_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+                       ".h"//hist_index//"."//trim(cdate)//".nc"
 
   end function set_hist_filename
 

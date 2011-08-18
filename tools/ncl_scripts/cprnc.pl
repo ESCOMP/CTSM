@@ -115,6 +115,8 @@ SYNOPSIS
 OPTIONS
 
      -help [or -h]                 Print usage to STDOUT.
+     -[no]break                    Switch on [off] break on first difference
+                                   (default is -break, abort after first difference found)
      -verbose [or -v]              Make output more verbose.
 
 EOF
@@ -124,10 +126,12 @@ EOF
 
 my %opts = ( 
               help             => 0, 
+              break            => 1,
               verbose          => 0,
            );
 GetOptions(
     "h|help"           => \$opts{'help'},
+    "break!"           => \$opts{'break'},
     "v|verbose"        => \$opts{'verbose'},
 )  or usage();
 
@@ -165,7 +169,12 @@ if ( $opts{'verbose'} ) {
   $print = "PRINT=TRUE";  
 }
 
-my $cmd = "env MYFILE1=$file1 MYFILE2=$file2 $print ncl $scrdir/cprnc.ncl";
+my $break;
+if ( $opts{'break'} ) {
+   $break = "BREAKONDIFF=TRUE";
+}
+
+my $cmd = "env MYFILE1=$file1 MYFILE2=$file2 $print $break ncl $scrdir/cprnc.ncl";
 
 print "Execute: $cmd\n";
 system( $cmd );

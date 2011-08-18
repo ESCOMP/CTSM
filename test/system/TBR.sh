@@ -95,10 +95,10 @@ if [ $rc -ne 0 ]; then
 fi
 
 
-mv ${CLM_TESTDIR}/TSM.$1.$2.$branch_nlops.$4.$5.${branch_length}.branch/*.clm?.h*.nc .
+mv ${CLM_TESTDIR}/TSM.$1.$2.$branch_nlops.$4.$5.${branch_length}.branch/*.clm*.h*.nc .
 echo "TBR.sh: starting b4b comparisons " 
-files_to_compare=`ls *.clm?.h*.nc`
-first_file=`ls *.clm?.h*.nc | head -1`
+files_to_compare=`ls *.clm*.h*.nc`
+first_file=`ls *.clm*.h*.nc | head -1`
 if [ -z "${files_to_compare}" ] && [ "${debug}" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TBR.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus

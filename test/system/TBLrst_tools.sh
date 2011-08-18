@@ -86,7 +86,7 @@ fi
 
 echo "TBLrst_tools.sh: starting b4b comparisons "
 startupname="TSM.$cascfg.$casrun.$casdat.$tores.$tomsk.$caslen.startup"
-files_to_compare=`cd ${CLM_TESTDIR}/$startupname; ls ls *.clm?.h*.nc`
+files_to_compare=`cd ${CLM_TESTDIR}/$startupname; ls ls *.clm*.h*.nc`
 if [ -z "${files_to_compare}" ] && [ "$debug" != "YES" ]; then
     echo "TBLrst_tools.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus

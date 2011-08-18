@@ -5,16 +5,15 @@ smVU4 erVU4 brVU4 blVU4
 smB93 erB93 brB93 blB93
 smP53 erP53 brP53 blP53
 smE93 erE93 brE93 blE93 smE97
-smG74             blG74
 smQ74             blQ74
 smQQ4 erQQ4 brQQ4 blQQ4
 smQS3 erQS3 brQS3 blQS3
 smJ74 erJ74 brJ74 blJ74 smJ05
 smL74 erL74 brL74 blL74
 smK74 erK74 brK74 blK74
-smL78             blL78
-smAK4             blAK4
-smAK8             
+smL78 erL78 brL78 blL78
+smAK4 erAK4 brAK4 blAK4
+smAK8 erAK8 brAK8 blAK8
 smH43 erH43 brH43 blH43
 smAL4 erAL4 brAL4 blAL4
 smS63 erS63 brS63 blS63

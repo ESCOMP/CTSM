@@ -45,7 +45,6 @@ my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition.xml";
 my $definition = Build::NamelistDefinition->new( $nldef_file );
 
 my $CSMDATA = "/fs/cgd/csm/inputdata";
-my $PFTDATA = "/cgd/tss";
 
 my %opts = ( 
                hgrid=>"all", 
@@ -70,7 +69,6 @@ my %opts = (
                dynpft=>undef,
                nomv=>undef,
                csmdata=>$CSMDATA,
-               pftdata=>$PFTDATA,
            );
 
 my $numpft = 16;
@@ -96,8 +94,6 @@ OPTIONS
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
-     -pftlc [or -p]                Enter directory location for pft data
-                                   (default $opts{'pftdata'})
      -nomv                         Don't move the files to inputdata after completion.
      -res   [or -r] "resolution"   Resolution(s) to use for files (by default $opts{'hgrid'} ).
      -rcp   [or -c] "rep-con-path" Representative concentration pathway(s) to use for 
@@ -206,7 +202,6 @@ sub check_pft {
         "irrig"        => \$opts{'irrig'},
         "c|rcp=s"      => \$opts{'rcp'},
         "l|dinlc=s"    => \$opts{'csmdata'},
-        "p|pftlc=s"    => \$opts{'pftdata'},
         "nomv"         => \$opts{'nomv'},
         "glc_nec=i"    => \$opts{'glc_nec'},
         "irrig"        => \$opts{'irrig'},
@@ -236,8 +231,6 @@ sub check_pft {
    if ( $CSMDATA ne $opts{'csmdata'} ) {
       $CSMDATA = $opts{'csmdata'};
    }
-   my $pftdata = $opts{'pftdata'};
-
    my $glc_nec = $opts{'glc_nec'};
    #
    # Set disk location to send files to, and list resolutions to operate over, 
@@ -500,7 +493,6 @@ EOF
                for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
                  my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol -options sim_year=$yr,rcp=${rcp}$mkcrop -var mksrf_fvegtyp -namelist clmexp`;
                  chomp( $vegtypyr );
-                 $vegtypyr =~ s#^$PFTDATA#$pftdata#;
                  printf $fhpftdyn $dynpft_format, $vegtypyr, $yr;
                  if ( $yr % 100 == 0 ) {
                     print "year: $yr\n";
@@ -551,7 +543,7 @@ EOF
 
             print $fh <<"EOF";
  mksrf_fvegtyp      = '$vegtyp'
- mksrf_fsoicol      = '$pftdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
+ mksrf_fsoicol      = '$CSMDATA/lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
  mksrf_flai         = '$mksrf_flai'
  mksrf_fdynuse      = '$pftdyntext_file'
  $setnumpft

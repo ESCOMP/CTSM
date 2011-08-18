@@ -132,17 +132,16 @@ fi
 
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
-export MAKE_CMD="gmake -j 65"
+export MAKE_CMD="gmake -j "
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
-CPRNC_EXE="/fs/cgd/csm/tools/cprnc/cprnc"
+CPRNC_EXE="/glade/proj3/cseg/tools/cprnc/cprnc"
 newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
-export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="/cgd/tss"
-dataroot="/fis/cgd/cseg/csm"
+export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/glade/proj3/cseg"
 
 
 echo_arg=""
@@ -152,7 +151,7 @@ EOF
     ;;
 
     ##mirage
-    mirage* | storm* )
+    mirage* )
     submit_script="test_driver_mirage_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -166,11 +165,11 @@ interactive="YES"
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
    export CLM_THREADS=2
 fi
-export CLM_RESTART_THREADS=2
+export CLM_RESTART_THREADS=1
 
 ##mpi tasks
-export CLM_TASKS=2
-export CLM_RESTART_TASKS=1
+export CLM_TASKS=4
+export CLM_RESTART_TASKS=3
 
 export NETCDF_PATH=/contrib/netcdf-3.6.3/intel-10-64
 export INC_NETCDF=\$NETCDF_PATH/include
@@ -183,9 +182,8 @@ export CFG_STRING="-cppdefs '-DFORTRANUNDERSCORE' "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/glade/home/erik/bin/cprnc
-export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="/cgd/tss"
-dataroot="/fis/cgd/cseg/csm"
+export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/glade/proj3/cseg"
 echo_arg="-e"
 input_file="tests_posttag_mirage"
 
@@ -290,7 +288,6 @@ export MAKE_CMD="gmake -j 5"   ##using hyper-threading on edinburgh
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="/project/tss"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 
@@ -417,9 +414,8 @@ export LIB_NETCDF=\${NETCDF_PATH}/lib
 export INC_MPI=""
 export LIB_MPI=""
 export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/ptmp/csm/tools/cprnc/cprnc
+export CPRNC_EXE=/glade/proj2/fis/cgd/cseg/csm/tools/cprnc.lynx/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="/glade/proj2/cgd/tss/"
 dataroot="/glade/proj3/cseg"
 echo_arg="-e"
 
@@ -448,6 +444,8 @@ cat > ./${submit_script} << EOF
 #PBS -S /bin/sh
 # Export all Environment variables
 #PBS -V
+# filesystems to associate with job
+#PBS -l gres=widow1%widow2%widow3
 #PBS -A CLI017dev
 # End of options
 
@@ -531,7 +529,6 @@ export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/tmp/proj/ccsm/tools/ccsm_cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/tmp/proj/ccsm"
-export PFTDATA="\$dataroot/inputdata/lnd/clm2/rawdata"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
@@ -577,7 +574,6 @@ export MAKE_CMD="make -j 4"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="/cgd/tss";
 dataroot="/fis/cgd/cseg/csm"
 echo_arg=""
 input_file="tests_posttag_yong"
@@ -636,7 +632,6 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="\$dataroot/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-export PFTDATA="\$dataroot/inputdata/lnd/clm2/rawdata"
 echo_arg=""
 
 EOF
@@ -707,6 +702,10 @@ if [ ! -d \$CLM_TESTDIR ]; then
 	exit 4
     fi
 fi
+
+## MCT and PIO build directorys
+export MCT_LIBDIR=\$CLM_TESTDIR/mct
+export PIO_LIBDIR=\$CLM_TESTDIR/pio
 
 ##set our own environment vars
 export CSMDATA=\${dataroot}/inputdata

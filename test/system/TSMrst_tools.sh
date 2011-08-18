@@ -72,7 +72,7 @@ if [ $rc -ne 0 ]; then
 fi
 frmcas="$cascfg.$casrun.$casdat.$frmres.$frmmsk.$caslen.startup"
 cd ${CLM_TESTDIR}/TSM.$frmcas
-copyfile=`ls -1rt *.clm?.r.*.nc | tail -1 | head -1`
+copyfile=`ls -1rt *.clm*.r.*.nc | tail -1 | head -1`
 fromfile="$frmres.$frmmsk.clm2.r.$casdat.$caslen.nc"
 cp -p $copyfile $rundir/$fromfile
 rc=$?
@@ -95,7 +95,7 @@ if [ $rc -ne 0 ]; then
 fi
 tocas="$cascfg.$casrun.$casdat.$tores.$tomsk.$caslen.cold"
 cd ${CLM_TESTDIR}/TSM.$tocas
-copyfile=`ls -1rt *.clm?.r.*.nc | tail -1 | head -1`
+copyfile=`ls -1rt *.clm*.r.*.nc | tail -1 | head -1`
 tofile="$tores.$tomsk.clm2.r.$casdat.$caslen.nc"
 cp -p $copyfile $rundir/$tofile
 rc=$?

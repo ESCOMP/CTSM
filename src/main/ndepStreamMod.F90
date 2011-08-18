@@ -54,9 +54,10 @@ contains
    ! Initialize data stream information.  
    !----------------------------------------------------------------------- 
    ! Uses:
-   use clm_time_manager, only : get_calendar
-   use ncdio_pio       , only : pio_subsystem
-   use seq_io_mod      , only : seq_io_getiotype
+   use clm_varctl       , only : inst_name
+   use clm_time_manager , only : get_calendar
+   use ncdio_pio        , only : pio_subsystem
+   use seq_io_mod       , only : seq_io_getiotype
    ! arguments
    implicit none
 
@@ -124,7 +125,7 @@ contains
 
    call shr_strdata_create(sdat,name="clmndep",    &
         pio_subsystem=pio_subsystem,               & 
-        pio_iotype=seq_io_getiotype('LND'),        &
+        pio_iotype=seq_io_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,             &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
         nxg=lsmlon, nyg=lsmlat,                    &

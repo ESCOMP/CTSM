@@ -1,1 +1,1 @@
--l CSMDATA -p PFTDATA -r 1x1_vancouverCAN -y 2000 -nomv -exedir EXEDIR
+-l CSMDATA -r 1x1_vancouverCAN -y 2000 -nomv -exedir EXEDIR

@@ -78,6 +78,11 @@ $URL$
 <atm_pio_typename >NETCDF</atm_pio_typename>
 <atm_pio_root     >1</atm_pio_root>
 
+<glc_pio_stride   >1</glc_pio_stride>
+<glc_pio_numtasks >1</glc_pio_numtasks>
+<glc_pio_typename >NETCDF</glc_pio_typename>
+<glc_pio_root     >1</glc_pio_root>
+
 <!-- ================================================================== -->
 <!-- Defaults for driver namelist seq_timemgr_inparm                    -->
 <!-- ================================================================== -->

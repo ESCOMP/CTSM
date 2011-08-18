@@ -161,7 +161,7 @@ contains
     use clm_varcon      , only : spval
     use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, &
                                  get_curr_time
-    use fileutils       , only : set_filename, putfil, get_filename
+    use fileutils       , only : get_filename
     use shr_sys_mod     , only : shr_sys_getenv
     use spmdMod         , only : masterproc
     use shr_const_mod   , only : SHR_CONST_CDAY
@@ -470,8 +470,8 @@ contains
 ! Determine initial dataset filenames
 !
 ! !USES:
-    use clm_varctl      , only : caseid
-    use clm_time_manager, only : get_curr_date
+    use clm_varctl       , only : caseid, inst_suffix
+    use clm_time_manager , only : get_curr_date
 !
 ! !ARGUMENTS:
     implicit none
@@ -493,7 +493,8 @@ contains
 
     call get_curr_date (yr, mon, day, sec)
     write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
-    set_dgvm_filename = "./"//trim(caseid)//".clm2.hv."//trim(cdate)//".nc"
+    set_dgvm_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+                        ".hv."//trim(cdate)//".nc"
 
   end function set_dgvm_filename
 
