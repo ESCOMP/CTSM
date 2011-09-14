@@ -9,7 +9,8 @@
 ;
 
   print( "Check that datm domain files and CLM land frac files are consistent" );
-  resolutions = (/ "4x5", "10x15", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "128x256","64x128","48x96","32x64","8x16" /);
+  #resolutions = (/ "4x5", "10x15", "1.9x2.5", "0.9x1.25", "0.47x0.63", "0.23x0.31", "128x256","64x128","48x96","32x64","8x16", "1x1_brazil", "1x1_tropicAtl" /);
+  resolutions = (/ "128x256", "64x128", "48x96", "32x64", "8x16", "94x192", "0.23x0.31", "0.47x0.63", "0.9x1.25", "1.9x2.5", "2.5x3.33", "4x5", "10x15", "5x5_amazon", "1x1_tropicAtl", "1x1_camdenNJ", "1x1_vancouverCAN", "1x1_mexicocityMEX", "1x1_asphaltjungleNJ", "1x1_brazil", "1x1_urbanc_alpha", "1x1_numaIA", "1x1_smallvilleIA", "ne4np4", "ne16np4", "ne30np4", "ne60np4", "ne120np4", "ne240np4" /);
  
   space  = "      ";
   badres = 0
@@ -51,7 +52,7 @@ begin
   do i = 0, dimsizes(resolutions)-1
      res = resolutions(i);
      print( "Resolution: "+res );
-     masks = (/ "gx3v7", "gx1v6", "tx1v1", "USGS" /);
+     masks = (/ "gx3v7", "gx1v6", "tx1v1", "USGS", "navy", "test" /);
      do j = 0, dimsizes(masks)-1
         omask = masks(j);
         print( "Mask: "+omask);

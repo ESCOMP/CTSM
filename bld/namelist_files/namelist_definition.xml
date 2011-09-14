@@ -146,12 +146,17 @@ the initial surface dataset to vary over time.
 Full pathname of input datafile for RTM.
 </entry>
 
-<entry id="fsurdat" type="char*256" category="datasets"
+<entry id="fmapinp_rtm" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of input mapping file for model grid to rtm grid.
+</entry>
+
+<entry id="fsurdat" type="char*256"     category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of surface data file.
 </entry>
 
-<entry id="fsnowoptics" type="char*256"  category="datasets" 
+<entry id="fsnowoptics" type="char*256" category="datasets" 
        input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 </entry>
@@ -320,6 +325,14 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 </entry>
 
 <!--                                                   -->
+<!-- mkmapdata  namelist                               -->
+<!--                                                   -->
+<entry id="scripgriddata" type="char*256" category="mkmapdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+SCRIP format grid data file
+</entry>
+
+<!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
 <entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
@@ -330,6 +343,11 @@ Plant Function Type dataset for mksurfdata
 <entry id="mksrf_glacier" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Dataset for percent glacier land-unit for mksurfdata
+</entry>
+
+<entry id="mksrf_fglctopo" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Dataset for glacier topography
 </entry>
 
 <entry id="mksrf_flai" type="char*256" category="mksurfdata"
@@ -1792,6 +1810,28 @@ Datm logfile name
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- Mapping files                                                                             -->
+<!-- ========================================================================================  -->
+
+<entry id="map" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Mapping file to go from one resolution/land-mask to another resolution/land-mask
+</entry>
+
+<entry id="lmask" type="char*10" category="mksurfdata"
+       group="default_settings"  
+       valid_values="nomask,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP">
+Land mask description for mksurfdata input files
+</entry> 
+
+<entry id="hgrid" type="char*10" category="mksurfdata"
+       group="default_settings"  
+       valid_values="0.5x0.5,10x10min,5x5min,360x720,19basin">
+Horizontal grid resolutions for mksurfdata input files
+</entry> 
+
+
+<!-- ========================================================================================  -->
 <!-- Generic issues (resolution, mask etc.)                                                    -->
 <!-- ========================================================================================  -->
 
@@ -1818,7 +1858,7 @@ Glacier model grid
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,0.33x0.33">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4">
 Horizontal resolutions
 Note: 0.5x0.5 and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -1844,6 +1884,9 @@ If TRUE, irrigation will be active (find surface datasets with active irrigation
 <entry id="rtm_res" type="char*20" category="default_settings"
        group="default_settings" valid_values="R05,RX1,19BASIN" value="R05">
 Resolution for River Transport Model (RTM)
+   R05 = half degree (default and only option working)
+   RX1 = one degree
+   R19 = 19 basin
 </entry> 
 
 <entry id="sim_year" type="integer" category="default_settings"

@@ -1,1 +1,0 @@
-/fs/cgd/csm/inputdata/lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc2000_c090630.nc           2000

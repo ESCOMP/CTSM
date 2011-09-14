@@ -28,18 +28,16 @@ module domainMod
      integer          :: nbeg,nend  ! local beg/end indices
      character(len=8) :: clmlevel   ! grid type
      logical          :: decomped   ! decomposed locally or global copy
-     logical          :: regional   ! regional or global grid
-     logical          :: areaset    ! has area been set
      integer ,pointer :: mask(:)    ! land mask: 1 = land, 0 = ocean
      real(r8),pointer :: frac(:)    ! fractional land
      real(r8),pointer :: topo(:)    ! topography
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
-     real(r8),pointer :: asca(:)    ! area scaling from CESM driver
-     character*16     :: set        ! flag to check if domain is set
+     real(r8),pointer :: ascale(:)  ! area scaling from CESM driver
      integer ,pointer :: glcmask(:) ! glc mask: 1=sfc mass balance required by GLC component
                                     !           0=SMB not required (default)
+     character*16     :: set        ! flag to check if domain is set
      !--- following are valid only for land domain ---
      integer ,pointer :: pftm(:)    ! pft mask: 1=real, 0=fake, -1=notset
      real(r8),pointer :: nara(:)    ! normalized area in upscaling (km**2),
@@ -51,9 +49,8 @@ module domainMod
   type latlon_type
      integer          :: ns         ! global size of domain
      integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
+     logical          :: isgrid2d   ! true => file is 2d
      character*16     :: set        ! flag to check if domain is set
-     logical          :: regional   ! regional or global grid
-     real(r8)         :: edges(4)   ! global edges (N,E,S,W)
      real(r8),pointer :: latc(:)    ! latitude of 1d grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of 1d grid cell (deg)
      real(r8),pointer :: lats(:)    ! latitude of 1d south grid cell edge (deg)
@@ -141,7 +138,7 @@ contains
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
-             domain%asca(nb:ne),domain%glcmask(nb:ne),stat=ier)
+             domain%ascale(nb:ne),domain%glcmask(nb:ne),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
@@ -164,8 +161,6 @@ contains
     domain%area     = nan
 
     domain%set      = set
-    domain%regional = .false.
-    domain%areaset  = .false.
     if (domain%nbeg == 1 .and. domain%nend == domain%ns) then
        domain%decomped = .false.
     else
@@ -176,7 +171,7 @@ contains
     domain%glcmask  = 0  
     domain%nara     = 0._r8
     domain%ntop     = -1.0e36
-    domain%asca     = 1._r8
+    domain%ascale     = 1._r8
 
 end subroutine domain_init
 !------------------------------------------------------------------------------
@@ -212,7 +207,7 @@ end subroutine domain_init
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
-                  domain%asca,domain%glcmask,stat=ier)
+                  domain%ascale,domain%glcmask,stat=ier)
        if (ier /= 0) then
           write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           call endrun()
@@ -231,8 +226,6 @@ end subroutine domain_init
     domain%nend       = bigint
     domain%set        = unset
     domain%decomped   = .true.
-    domain%regional   = .false.
-    domain%areaset    = .false.
 
 end subroutine domain_clean
 !------------------------------------------------------------------------------
@@ -241,9 +234,9 @@ end subroutine domain_clean
 ! !IROUTINE: domain_setptrs
 !
 ! !INTERFACE:
-  subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped,regional, &
+  subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped, &
                             mask,pftm,glcmask,clmlevel, &
-                            frac,topo,latc,lonc,area,nara,ntop,asca)
+                            frac,topo,latc,lonc,area,nara,ntop,ascale)
 !
 ! !DESCRIPTION:
 ! This subroutine sets external pointer arrays to arrays in domain
@@ -256,7 +249,6 @@ end subroutine domain_clean
     integer ,optional :: ns,ni,nj,nbeg,nend    ! grid size, 2d, beg/end
     character(len=*),optional :: clmlevel      ! grid type
     logical, optional :: decomped              ! decomped or global
-    logical, optional :: regional              ! regional or global
     integer ,optional,pointer  :: mask(:)  
     integer ,optional,pointer  :: pftm(:)  
     integer ,optional,pointer  :: glcmask(:)  
@@ -267,7 +259,7 @@ end subroutine domain_clean
     real(r8),optional,pointer  :: area(:)  
     real(r8),optional,pointer  :: nara(:)  
     real(r8),optional,pointer  :: ntop(:)  
-    real(r8),optional,pointer  :: asca(:)  
+    real(r8),optional,pointer  :: ascale(:)  
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -297,9 +289,6 @@ end subroutine domain_clean
     endif
     if (present(decomped)) then
       decomped = domain%decomped
-    endif
-    if (present(regional)) then
-      regional = domain%regional
     endif
     if (present(mask)) then
       mask => domain%mask
@@ -331,8 +320,8 @@ end subroutine domain_clean
     if (present(ntop)) then
       ntop => domain%ntop
     endif
-    if (present(asca)) then
-      asca => domain%asca
+    if (present(ascale)) then
+      ascale => domain%ascale
     endif
 
 end subroutine domain_setptrs
@@ -365,23 +354,21 @@ end subroutine domain_setptrs
   if (masterproc) then
     write(iulog,*) '  domain_check set       = ',trim(domain%set)
     write(iulog,*) '  domain_check decomped  = ',domain%decomped
-    write(iulog,*) '  domain_check regional  = ',domain%regional
-    write(iulog,*) '  domain_check areaset   = ',domain%areaset
     write(iulog,*) '  domain_check ns        = ',domain%ns
     write(iulog,*) '  domain_check ni,nj     = ',domain%ni,domain%nj
     write(iulog,*) '  domain_check clmlevel  = ',trim(domain%clmlevel)
     write(iulog,*) '  domain_check nbeg,nend = ',domain%nbeg,domain%nend
-    write(iulog,*) '  domain_check lonc = ',minval(domain%lonc),maxval(domain%lonc)
-    write(iulog,*) '  domain_check latc = ',minval(domain%latc),maxval(domain%latc)
-    write(iulog,*) '  domain_check mask = ',minval(domain%mask),maxval(domain%mask)
-    write(iulog,*) '  domain_check frac = ',minval(domain%frac),maxval(domain%frac)
-    write(iulog,*) '  domain_check topo = ',minval(domain%topo),maxval(domain%topo)
-    write(iulog,*) '  domain_check area = ',minval(domain%area),maxval(domain%area)
-    write(iulog,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
-    write(iulog,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
-    write(iulog,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
-    write(iulog,*) '  domain_check asca = ',minval(domain%asca),maxval(domain%asca)
-    write(iulog,*) '  domain_check glcmask = ',minval(domain%glcmask),maxval(domain%glcmask)
+    write(iulog,*) '  domain_check lonc      = ',minval(domain%lonc),maxval(domain%lonc)
+    write(iulog,*) '  domain_check latc      = ',minval(domain%latc),maxval(domain%latc)
+    write(iulog,*) '  domain_check mask      = ',minval(domain%mask),maxval(domain%mask)
+    write(iulog,*) '  domain_check frac      = ',minval(domain%frac),maxval(domain%frac)
+    write(iulog,*) '  domain_check topo      = ',minval(domain%topo),maxval(domain%topo)
+    write(iulog,*) '  domain_check area      = ',minval(domain%area),maxval(domain%area)
+    write(iulog,*) '  domain_check pftm      = ',minval(domain%pftm),maxval(domain%pftm)
+    write(iulog,*) '  domain_check nara      = ',minval(domain%nara),maxval(domain%nara)
+    write(iulog,*) '  domain_check ntop      = ',minval(domain%ntop),maxval(domain%ntop)
+    write(iulog,*) '  domain_check ascale    = ',minval(domain%ascale),maxval(domain%ascale)
+    write(iulog,*) '  domain_check glcmask   = ',minval(domain%glcmask),maxval(domain%glcmask)
     write(iulog,*) ' '
   endif
 
@@ -436,10 +423,7 @@ end subroutine domain_check
     latlon%latn     = nan
     latlon%lonw     = nan
     latlon%lone     = nan
-    latlon%edges    = nan
-
     latlon%set      = set
-    latlon%regional = .false.
 
 end subroutine latlon_init
 !------------------------------------------------------------------------------
@@ -485,10 +469,7 @@ end subroutine latlon_init
     latlon%ns       = bigint
     latlon%ni       = bigint
     latlon%nj       = bigint
-    latlon%edges    = nan
-
     latlon%set      = unset
-    latlon%regional = .false.
 
 end subroutine latlon_clean
 !------------------------------------------------------------------------------
@@ -528,16 +509,13 @@ end subroutine latlon_clean
     if (masterproc) then
        write(iulog,*) 'latlon_setsame: copying ',latlon1%ni,latlon1%nj
     endif
-    latlon2%edges    = latlon1%edges
     latlon2%latc     = latlon1%latc
     latlon2%lonc     = latlon1%lonc
     latlon2%lats     = latlon1%lats
     latlon2%latn     = latlon1%latn
     latlon2%lonw     = latlon1%lonw
     latlon2%lone     = latlon1%lone
-
     latlon2%set      = latlon1%set
-    latlon2%regional = latlon1%regional
 
 end subroutine latlon_setsame
 !------------------------------------------------------------------------------
@@ -570,8 +548,6 @@ end subroutine latlon_setsame
     write(iulog,*) '  latlon_check ns        = ',latlon%ns
     write(iulog,*) '  latlon_check ni,nj     = ',latlon%ni,latlon%nj
     write(iulog,*) '  latlon_check set       = ',latlon%set
-    write(iulog,*) '  latlon_check regional  = ',latlon%regional
-    write(iulog,*) '  latlon_check edgeNESW  = ',latlon%edges
     write(iulog,*) '  latlon_check lonc = ',minval(latlon%lonc),maxval(latlon%lonc)
     write(iulog,*) '  latlon_check latc = ',minval(latlon%latc),maxval(latlon%latc)
     write(iulog,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)

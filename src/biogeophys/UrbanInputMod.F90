@@ -73,12 +73,13 @@ contains
 ! Allocate memory and read in urban input data
 !
 ! !USES:
-    use clm_varpar, only : lsmlon, lsmlat, numrad, nlevurb, numsolar
+    use clm_varpar, only : numrad, nlevurb, numsolar
     use clm_varctl, only : iulog, fsurdat, single_column
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
     use clmtype   , only : grlnd
     use decompMod , only : get_proc_bounds
+    use domainMod , only : llatlon
     use ncdio_pio 
 !
 ! !ARGUMENTS:
@@ -99,13 +100,13 @@ contains
     type(file_desc_t)  :: ncid       ! netcdf id
     integer :: dimid,varid           ! netCDF id's
     integer :: begg,endg             ! start/stop gridcells
-    integer :: nw,n,k,i,j            ! indices
+    integer :: nw,n,k,i,j,ni,nj,ns   ! indices
     integer :: nlevurb_i             ! input grid: number of urban vertical levels
     integer :: numsolar_i            ! input grid: number of solar type (DIR/DIF)
     integer :: numrad_i              ! input grid: number of solar bands (VIS/NIR)
-    integer :: ier  
-    integer :: ret
-    logical :: readvar
+    integer :: ier,ret               ! error status
+    logical :: isgrid2d              ! true => file is 2d 
+    logical :: readvar               ! true => variable is on dataset
     real(r8), pointer :: arrayl3d(:,:,:)  ! generic global array
     character(len=32) :: subname = 'UrbanInput' ! subroutine name
 !-----------------------------------------------------------------------
@@ -159,11 +160,15 @@ contains
 
        if (masterproc) then
           write(iulog,*) subname,trim(fsurdat)
-          write(iulog,*) " Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
        end if
-       if (.not. single_column) then
-          call check_dim(ncid, 'lsmlon', lsmlon)
-          call check_dim(ncid, 'lsmlat', lsmlat)
+
+       call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
+       if (llatlon%ns /= ns .or. llatlon%ni /= ni .or. llatlon%nj /= nj) then
+          write(iulog,*)trim(subname), 'llatlon and input file do not match dims '
+          write(iulog,*)trim(subname), 'llatlon%ni,ni,= ',llatlon%ni,ni
+          write(iulog,*)trim(subname), 'llatlon%nj,nj,= ',llatlon%nj,nj
+          write(iulog,*)trim(subname), 'llatlon%ns,ns,= ',llatlon%ns,ns
+          call endrun()
        end if
 
        call ncd_inqdid(ncid, 'nlevurb', dimid)

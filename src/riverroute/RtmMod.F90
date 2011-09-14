@@ -15,15 +15,16 @@ module RtmMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc,npes,iam,mpicom,comp_id,MPI_REAL8,MPI_INTEGER
   use spmdMod     , only : MPI_MAX,MPI_SUM
-  use clm_varpar  , only : lsmlon, lsmlat, rtmlon, rtmlat
+  use clm_varpar  , only : rtmlon, rtmlat
   use clm_varcon  , only : re, spval
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, fmapinp_rtm
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
-  use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
-  use RunoffMod   , only : gsMap_rtm_gdc2glo
+  use RunoffMod   , only : runoff, nt_rtm, rtm_tracers, gsMap_rtm_gdc2glo
+  use domainMod   , only : llatlon
   use clm_mct_mod
   use perf_mod
+  use shr_mct_mod , only : shr_mct_sMatWritednc, shr_mct_sMatReadnc
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -72,6 +73,12 @@ module RtmMod
   type(mct_sMat)  :: sMat0_l2r_d
   type(mct_sMatP) :: sMatP_l2r
 
+#if (defined L2R_Decomp)
+  logical :: l2r_decomp = .true.
+#else
+  logical :: l2r_decomp = .false.
+#endif
+
 !EOP
 !-----------------------------------------------------------------------
 
@@ -97,7 +104,8 @@ contains
     use decompMod    , only : get_proc_bounds, ldecomp, gsMap_lnd_gdc2glo
     use clmtype      , only : grlnd
     use ncdio_pio    , only : ncd_pio_openfile, ncd_pio_closefile, ncd_io, &
-                              ncd_inqdid, ncd_inqdlen, file_desc_t
+                              ncd_inqdid, ncd_inqdlen, file_desc_t, &
+                              pio_subsystem, io_type
     use fileutils    , only : getfil
     use spmdGathScatMod
 !
@@ -114,7 +122,8 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    real(r8), dimension(4) :: rtmedge = (/ 90._r8, 180._r8, -90._r8, -180._r8 /)  !N,E,S,W edges of rtm grid
+    real(r8), dimension(4) :: &
+         rtmedge = (/ 90._r8, 180._r8, -90._r8, -180._r8 /)  !N,E,S,W edges of rtm grid
     integer  :: ioff(0:8) = (/0,0,1,1,1,0,-1,-1,-1/) !rdirc input to i
     integer  :: joff(0:8) = (/0,1,1,0,-1,-1,-1,0,1/) !rdirc input to j
     integer  :: i,j,k,n,g,n2,nt               ! loop indices
@@ -147,26 +156,19 @@ contains
     integer  :: begg,endg                     ! local start/end gridcell indices
     integer  :: begr,endr,numr                ! tot num of roff pts on all pes
     real(r8) :: dtover,dtovermax              ! ts calc temporaries
-    character(len=16), dimension(50) :: river_name
-    character(len=30), dimension(50) :: rivstat_name
-    real(r8)         , dimension(50) :: rivstat_lon
-    real(r8)         , dimension(50) :: rivstat_lat
-    type(file_desc_t)                :: ncid  ! netcdf id
-    integer  :: dimid                         ! dimension identifier
-    integer  :: nroflnd
-    integer  :: nrofocn
+    type(file_desc_t) :: ncid                 ! netcdf file id
+    integer  :: dimid                         ! netcdf dimension identifier
+    integer  :: nroflnd                       ! local number of land runoff 
+    integer  :: nrofocn                       ! local number of ocn runoff
     integer  :: pid,np,npmin,npmax,npint      ! log loop control
-    integer,parameter  :: dbug = 1            ! 0 = none, 1=normal, 2=much, 3=max
-
-    integer lsize,gsize                    ! sizes to initialize GsMap
+    integer  :: lsize,gsize                   ! sizes to initialize GsMap
     integer  :: na,nb,ns                   ! mct sizes
     integer  :: igrow,igcol,iwgt           ! mct field indices
     integer  :: ii,ji,ni,no,gi,go          ! tmps
     real(r8) :: wt                         ! mct wt
     integer ,pointer :: rgdc2glo(:)        ! temporary for initialization
     integer ,pointer :: rglo2gdc(:)        ! temporary for initialization
-    real(r8),pointer :: lfield(:)          ! tmp lnd field
-    real(r8),pointer :: rfield(:)          ! tmp rtm field
+    real(r8),pointer :: lfield(:)          ! global land mask field
     real(r8),pointer :: glatc(:),glonc(:)  ! global lat/lon
     real(r8),pointer :: gfrac(:)           ! global frac
     real(r8),pointer :: lfrac(:)           ! global land frac
@@ -174,8 +176,8 @@ contains
     type(latlon_type):: rlatlon            ! rtm grid 
     logical          :: found              ! if variable found on rdirc file
     character(len=256):: locfn             ! local file name
+    integer,parameter :: dbug = 1          ! 0 = none, 1=normal, 2=much, 3=max
     character(len=32) :: subname = 'Rtmini'! subroutine name
-
 !-----------------------------------------------------------------------
 
     call t_startf('rtmi_grid')
@@ -222,7 +224,8 @@ contains
        call endrun
     end if
 
-    allocate (runoff%rlat(rtmlat), runoff%rlon(rtmlon), &
+    allocate (runoff%rlat(rtmlat), &
+              runoff%rlon(rtmlon), &
               stat=ier)
     if (ier /= 0) then
        write(iulog,*)'Rtmgridini: Allocation error for ',&
@@ -232,7 +235,8 @@ contains
 
     !--- Allocate temporaries
 
-    allocate(rdirc(rtmlon*rtmlat),stat=ier)
+    allocate(rdirc(rtmlon*rtmlat),& ! allocate global rtm array
+         stat=ier)
     if (ier /= 0) then
        write(iulog,*)'Rtmgridini: Allocation error for ',&
             'rdirc'
@@ -244,8 +248,7 @@ contains
     deg2rad = SHR_CONST_PI / 180._r8
 
     ! Open and read input data (river direction file)
-    rlatlon%edges(1:4) = rtmedge(1:4)
-    allocate(tempr(rtmlon,rtmlat))
+    allocate(tempr(rtmlon,rtmlat))  ! allocate global rtm array
 
     call ncd_io(ncid=ncid, varname='RTM_FLOW_DIRECTION', flag='read', data=tempr, readvar=found)
     if ( .not. found ) call endrun( trim(subname)//' ERROR: RTM_FLOW_DIRECTION NOT on rdirc file' )
@@ -273,7 +276,7 @@ contains
     enddo
 
     call ncd_pio_closefile(ncid)
-    deallocate(tempr)
+    deallocate(tempr)             ! deallocate global rtm array
 
     if (masterproc) then
        write(iulog,*)'RTM netcdf river direction file successfully read '
@@ -295,9 +298,8 @@ contains
 
     deallocate(glatc,glonc)
 
-    allocate (dwnstrm_index(rtmlon*rtmlat), &
-              gfrac(rtmlon*rtmlat), lfrac(lsmlon*lsmlat), &
-              gmask(rtmlon*rtmlat), &
+    allocate (dwnstrm_index(rtmlon*rtmlat),&  ! allocate global rtm array
+              lfrac(llatlon%ns), &            ! allocate global clm array
               stat=ier)
     if (ier /= 0) then
        write(iulog,*)'Rtmgridini: Allocation error for ',&
@@ -305,13 +307,47 @@ contains
        call endrun
     end if
 
+    !--- Set sMat0_l2r, full mapping weights for l2r  
+    !--- Compute on all pes for decomp based on overlap 
+    !--- for now use lfield to "ignore" non-active land cells in sMat0_l2r
+    !--- Later these will be "reduced" to just the useful weights
+    !--- Compute gfrac on root pe and bcast 
+
+    call t_stopf('rtmi_grid')
+
+    call celledge (rlatlon, rtmedge(1), rtmedge(2), rtmedge(3), rtmedge(4))
+
+    call gather_data_to_master(ldomain%frac,lfrac,grlnd)
+    call mpi_bcast(lfrac,size(lfrac),MPI_REAL8,0,mpicom,ier)
+
+    call t_startf('rtmi_setl2r')
+    if (fmapinp_rtm /= ' ') then
+       ! All processors will issue this read
+       write(6,*)'reading in rtm mapping file ', trim(fmapinp_rtm) 
+       call shr_sys_flush(6)
+       call getfil(fmapinp_rtm, locfn, 0 )
+       call shr_mct_sMatReadnc(sMat0_l2r, locfn)
+       write(6,*)'finished reading in rtm mapping file ' 
+       call shr_sys_flush(6)
+    else
+       write(6,*)'calculating mapping file' 
+       allocate(lfield(llatlon%ns))
+       lfield(:) = 0._r8
+       do n = 1,llatlon%ns
+          if (ldecomp%glo2gdc(n) > 0) lfield(n) = 1._r8
+       enddo
+       call map_setmapsAR(llatlon,rlatlon,sMat0_l2r,fracin=lfield)
+       deallocate (lfield)
+    end if
+    call t_stopf('rtmi_setl2r')
+
     !--- Set dwnstrm_index from rdirc values
     !--- The following assumes that there is no runoff 
     !---   south of j=1 or north of j=rtmlat
     !--- This is true for rdirc.05
     !--- Determine dwnstrmm_index from rtm river flow direction (0-8)
 
-    dwnstrm_index = 0
+    dwnstrm_index(:) = 0
     do j=1,rtmlat
     do i=1,rtmlon
        n = (j-1)*rtmlon + i
@@ -335,34 +371,22 @@ contains
     enddo
     enddo
 
-    !--- Determine RTM celledges and areas 
+    !--- Determine rtm ocn/land mask 
+    !---  0=none, 1=land, 2=ocean outflow, 
+    !--- -1=reroute over ocean to ocean outflow points
+    ! Note that gfrac below tells you if there is some land fraction on the
+    ! source grid associated with the rtm gridcell
 
-    call celledge (rlatlon, &
-                   rlatlon%edges(1), rlatlon%edges(2), &
-                   rlatlon%edges(3), rlatlon%edges(4))
+    call t_startf('rtmi_decomp')
 
-    call t_stopf('rtmi_grid')
-
-    !--- Set sMat0_l2r, full mapping weights for l2r, just on root pe
-    !--- for now use lfield to "ignore" non-active land cells in sMat0_l2r
-    !--- Later these will be "reduced" to just the useful weights
-    !--- Compute gfrac on root pe and bcast 
-
-    !--- Change 9/2007, compute on all pes for decomp based on overlap
-
-    call t_startf('rtmi_setl2r')
-    call get_proc_bounds(begg, endg)
-    call gather_data_to_master(ldomain%frac,lfrac,grlnd)
-    call mpi_bcast(lfrac,size(lfrac),MPI_REAL8,0,mpicom,ier)
-
-    allocate(lfield(lsmlon*lsmlat),rfield(rtmlon*rtmlat))
-    lfield = 0._r8
-    do n = 1,lsmlon*lsmlat
-       if (ldecomp%glo2gdc(n) > 0) lfield(n) = 1._r8
-    enddo
-    rfield = 1._r8
-
-    call map_setmapsAR(llatlon,rlatlon,sMat0_l2r,fracin=lfield,fracout=rfield)
+    allocate (gfrac(rtmlon*rtmlat), &  ! allocate global rtm array
+              gmask(rtmlon*rtmlat), &  ! allocate global rtm array
+              stat=ier)
+    if (ier /= 0) then
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
+            'dwnstrm_index,gfrac'
+       call endrun
+    end if
 
     igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
     igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
@@ -374,16 +398,8 @@ contains
        wt = sMat0_l2r%data%rAttr(iwgt ,n)
        gfrac(nr) = gfrac(nr) + lfrac(ns)
     enddo
-    deallocate(lfield,rfield)
 
-    call t_stopf('rtmi_setl2r')
-
-    !--- Determine rtm ocn/land mask, 0=none, 1=land, 2=ocean outflow, -1=reroute over ocean to ocean outflow points
-
-    call t_startf('rtmi_decomp')
-
-    gmask = 0             ! assume neither land nor ocn
-
+    gmask(:) = 0                 ! assume neither land nor ocn
     do n=1,rtmlon*rtmlat         ! set downstream value first
        nr = dwnstrm_index(n)
        if (nr /= 0) then         ! assume downstream cell is ocn
@@ -405,7 +421,7 @@ contains
     enddo
 
     deallocate(rdirc)
-    deallocate(gfrac,lfrac)
+    deallocate(gfrac,lfrac)      ! deallocate global rtm arrays
 
    !--- Compute river basins, actually compute ocean outlet gridcell
    !--- iocn = final downstream cell, index is global 1d ocean gridcell
@@ -429,9 +445,9 @@ contains
              n = dwnstrm_index(n)
              g = g + 1
           end do
-          if (gmask(n) == 2) then  ! found ocean outlet
-             iocn(nr) = n                 ! set ocean outlet or nr to n
-             nocn(n) = nocn(n) + 1        ! one more land cell for n
+          if (gmask(n) == 2) then           ! found ocean outlet
+             iocn(nr) = n                   ! set ocean outlet or nr to n
+             nocn(n) = nocn(n) + 1          ! one more land cell for n
           elseif (abs(gmask(n)) == 1) then  ! no ocean outlet, warn user, ignore cell
              write(iulog,*) 'rtmini WARNING no downstream ocean cell - IGNORED', &
                g,nr,gmask(nr),dwnstrm_index(nr), &
@@ -464,9 +480,12 @@ contains
        endif
     enddo
 
-    allocate(pocn(rtmlon*rtmlat), &
-             nop(0:npes-1),nba(0:npes-1),nrs(0:npes-1), &
-             rglo2gdc(rtmlon*rtmlat),runoff%num_rtm(0:npes-1))
+    allocate(pocn(rtmlon*rtmlat),     &  !global rtm array
+             rglo2gdc(rtmlon*rtmlat), &  !global rtm array
+             nop(0:npes-1), &
+             nba(0:npes-1), &
+             nrs(0:npes-1), &
+             runoff%num_rtm(0:npes-1))
 
     nop = 0
     nba = 0
@@ -524,7 +543,8 @@ contains
        if (iocn(nr) > 0) then
           pocn(nr) = pocn(iocn(nr))
           if (pocn(nr) < 0 .or. pocn(nr) > npes-1) then
-             write(iulog,*) 'Rtmini ERROR pocn lnd setting ',nr,iocn(nr),iocn(iocn(nr)),pocn(iocn(nr)),pocn(nr),npes
+             write(iulog,*) 'Rtmini ERROR pocn lnd setting ',&
+                  nr,iocn(nr),iocn(iocn(nr)),pocn(iocn(nr)),pocn(nr),npes
              call endrun()
           endif
        endif
@@ -758,7 +778,6 @@ contains
           enddo
        endif
 
-       !tcx testing
        dx = (rlatlon%lone(i) - rlatlon%lonw(i)) * deg2rad
        dy = sin(rlatlon%latn(j)*deg2rad) - sin(rlatlon%lats(j)*deg2rad)
        runoff%area(nr) = 1.e6_r8 * dx*dy*re*re
@@ -766,12 +785,15 @@ contains
           runoff%dsi(nr) = 0
        else
           if (rglo2gdc(dwnstrm_index(n)) == 0) then
-             write(iulog,*) 'Rtmini ERROR glo2gdc dwnstrm ',nr,n,dwnstrm_index(n),rglo2gdc(dwnstrm_index(n))
+             write(iulog,*) 'Rtmini ERROR glo2gdc dwnstrm ',&
+                  nr,n,dwnstrm_index(n),rglo2gdc(dwnstrm_index(n))
              call endrun()
           endif
           runoff%dsi(nr) = rglo2gdc(dwnstrm_index(n))
        endif
+
     enddo
+    call latlon_clean(rlatlon)
 
     !--- Determine downstream distance - instead of reading a distance file
     !--- calculate the downstream distance
@@ -821,7 +843,7 @@ contains
     endif
     if (masterproc) write(iulog,*) 'rtm max timestep = ',delt_rtm_max,' (sec) for cfl_scale = ',cfl_scale
 
-    !--- Allocate and initialize rtm input fields on clm decomp
+    !--- Allocate and initialize rtm input fields on clm grid/decomp
 
     call get_proc_bounds(begg, endg)
     allocate (rtmin_avg(begg:endg,nt_rtm), rtmin_acc(begg:endg,nt_rtm), stat=ier)
@@ -845,14 +867,16 @@ contains
     do n = begr,endr
        runoff%gindex(n) = rgdc2glo(n)
     enddo
+    deallocate(rgdc2glo)
+
     lsize = endr-begr+1
     gsize = rtmlon * rtmlat
     call mct_gsMap_init( gsMap_rtm_gdc2glo, runoff%gindex, mpicom, comp_id, lsize, gsize )
 
-    !--- initialize sMat0_l2r_d, from sMat0_l2r - remove unused weights
-    !--- root pe only
+    !--- on root pe  only initialize sMat0_l2r_d from sMat0_l2r and remove unused weights
+    !--- then initialize sMatP_l2r based on sMat0_l2r_d and gsmaps
 
-   if (masterproc) then
+    if (masterproc) then
        na = llatlon%ni * llatlon%nj
        nb = rtmlon * rtmlat
        igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
@@ -882,29 +906,26 @@ contains
           endif
        enddo
     endif   ! masterproc
-
-    !--- initialize sMatP_l2r, scatter sMat0_l2r_d based on gsmaps
     
+    deallocate(rglo2gdc)
+
     call mct_sMatP_init(sMatP_l2r,  sMat0_l2r_d,  &
                         gsmap_lnd_gdc2glo, gsMap_rtm_gdc2glo, &
                        'Xonly',0,mpicom,comp_id)
 
-   deallocate(rgdc2glo,rglo2gdc)
-   call latlon_clean(rlatlon)
+    !--- clean up the root sMat0 datatypes
 
-   !--- clean up the root sMat0 datatypes
-
-   call mct_sMat_clean(sMat0_l2r)
-   if (masterproc) then
-      call mct_sMat_clean(sMat0_l2r_d)
-      write(iulog,*) 'Rtmini complete'
-   endif
-
-   !--- update rtm history fields
-
-   call rtm_sethist()
-
-   call t_stopf('rtmi_mctdata')
+    call mct_sMat_clean(sMat0_l2r)
+    if (masterproc) then
+       call mct_sMat_clean(sMat0_l2r_d)
+       write(iulog,*) 'Rtmini complete'
+    endif
+    
+    !--- update rtm history fields
+    
+    call rtm_sethist()
+    
+    call t_stopf('rtmi_mctdata')
 
   end subroutine Rtmini
 
@@ -1081,7 +1102,7 @@ contains
        endif
        do nt = 1,nt_rtm
        do g = begg,endg
-          rtmin_avg(g,nt) = rtmin_acc(g,nt)*ldomain%asca(g)/(ncount_rtm*1.0_r8)
+          rtmin_avg(g,nt) = rtmin_acc(g,nt)*ldomain%ascale(g)/(ncount_rtm*1.0_r8)
           rtmin_acc(g,nt) = 0._r8
        end do
        end do

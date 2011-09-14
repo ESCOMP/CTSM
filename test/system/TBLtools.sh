@@ -63,9 +63,11 @@ if [ -n "${BL_ROOT}" ]; then
     echo "TBLtools.sh: generating baseline data from root $BL_ROOT - results in $BL_TESTDIR"
 
     echo "TBLtools.sh: calling ****baseline**** TSMtools.sh for smoke test"
+    bl_dir=`/bin/ls -1d ${BL_ROOT}/models/lnd/clm/test/system`
     env CLM_TESTDIR=${BL_TESTDIR} \
-        CLM_SCRIPTDIR=${BL_ROOT}/models/lnd/clm/test/system \
-        ${BL_ROOT}/models/lnd/clm/test/system/TSMtools.sh $1 $2 $3
+        CLM_ROOT=${BL_ROOT} \
+        CLM_SCRIPTDIR=$bl_dir \
+        $bl_dir/TSMtools.sh $1 $2 $3
     rc=$?
     if [ $rc -ne 0 ]; then
         echo "TBLtools.sh: error from *baseline* TSMtools.sh= $rc"

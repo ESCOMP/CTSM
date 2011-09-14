@@ -1,4 +1,418 @@
 ===============================================================
+Tag name:  clm4_0_35
+Originator(s):  erik (Erik Kluzek), mvertens
+Date: Tue Sep 13 22:15:17 MDT 2011
+One-line Summary: Bring in Mariana's non2D grid branch to trunk, enabling HOMME grids: ne30np4/ne120np4
+
+Purpose of changes:
+
+Move Mariana's new non-2D branch to trunk. Extensive changes to mksurfdata, allows 1D-vector surface 
+datasets. Mariana change mksurfdata to add unstructured grid format using SCRIP weights. Won't work 
+with PTCLM and mksurfdata won't be able to create single-pt/regional surface datasets. Fix reverse 
+coordinates on VOC/irrig mksurfdata input file. Update scripts and datm with HOMME grids. Add in 
+half-degree pftdyn historical dataset. Partial fix to PTSMODE restart problem. Fix the US-UMB data for PTCLM.
+
+NOTE: File creation process is changed substantially! mksurfdata now requires mapping files to be created first
+      in order to run the new mksurfdata_map. This means you need to do the following:
+
+	  1.) run mkgriddata
+          2.) run mkmapgrid (add files to XML database) (requires 1)
+          3.) run mkmapdata (add files to XML database) (requires 2)
+          4.) run mksurfdata_map (requires 3)
+          5.) run gen_domain (requires 3 needed for datm)
+
+      See the models/lnd/clm/tools/README file for more help on the process.
+
+WARNING: YOU CAN'T CREATE SINGLE-POINT DATASETS WITH THIS VERSION! You can create frac/grid files with this
+      version and then use an older verison of clm to use mksurfdata to create surface datasets. The mapping
+      for single-point datasets using ESMF does NOT work -- although it does work if you have at least 4 points
+      so you can create regional datasets.
+
+      THIS MEANS PTCLM DOES NOT WORK FOR CREATING NEW DATASETS! It will work for datasets already created however.
+
+CAUTION: Mapping files to allow mksurfdata to work are only provided for: f09, f19, f10, T31, f45, f25, ne30 and ne120
+
+Bugs fixed (include bugzilla ID):
+                                 1392 (US-UMB site has some incorrect data)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1398 (clm and mksurfdata_map needs to check map files for consistency)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1404 (Inconsistent domain and fatmlndfrc files)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: standard
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist:
+   Can now read in domain files in place of fatmlndfrac
+   fatmgrid no longer required (use fsurdat to get grid)
+   fmapinp_rtm new namelist item to give mapping for RTM
+
+List any changes to the defaults for the boundary datasets:
+
+   Add: ne30np4/ne120np4 datasets, add 1850-2000 0.47x0.63 fpftdyn file
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, mvertens, sacks
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, csm_share, datm
+
+    scripts     to scripts4_110906
+    csm_share   to share3_110906
+    datm        to datm8_110908
+
+List all files eliminated:
+
+>>>>>>>>>>>> Rename mksurfdata to mksurfdata_map
+   D   models/lnd/clm/tools/mksurfdata/*
+
+>>>>>>>>>>>> Move source code to src subdirectory
+   D   models/lnd/clm/tools/mkdatadomain/Mkdepends/Srcfiles/Filepath/Makefile/*.F90
+   D   models/lnd/clm/tools/mkgriddata/Mkdepends/Srcfiles/Filepath/Makefile/*.F90
+   D   models/lnd/clm/tools/interpinic/Mkdepends/Srcfiles/Filepath/Makefile/*.F90
+
+List all files added and what they do:
+
+>>>>>>>>>>>> Rename mksurfdata to mksurfdata_map, create src sub-directory
+   A   models/lnd/clm/tools/mksurfdata_map
+   A   models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl
+   A   models/lnd/clm/tools/mksurfdata_map/mksurfdata_map.namelist
+   A   models/lnd/clm/tools/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt
+   A   models/lnd/clm/tools/mksurfdata_map/README
+   A   models/lnd/clm/tools/mksurfdata_map/src
+   A   models/lnd/clm/tools/mksurfdata_map/src/clm_varctl.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/clm_varpar.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/Filepath
+   A   models/lnd/clm/tools/mksurfdata_map/src/fileutils.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/Macros.custom
+   A   models/lnd/clm/tools/mksurfdata_map/src/Makefile
+   A   models/lnd/clm/tools/mksurfdata_map/src/Mkdepends
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkdomainMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkfileMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkglcmecMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkharvestMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mklaiMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mklanwatMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkncdio.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkpftMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mksoilMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkurbanparMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkvarctl.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkvarpar.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/mkvocefMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/nanMod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_const_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_file_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_kind_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_log_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_string_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_sys_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/shr_timer_mod.F90
+   A   models/lnd/clm/tools/mksurfdata_map/src/Srcfiles
+
+>>>>>>>>>>>> Scripts to use ESMF to create SCRIP mapping files from SCRIP grid files
+   A   models/lnd/clm/tools/mkmapdata
+   A   models/lnd/clm/tools/mkmapdata/mkmapdata.sh
+   A   models/lnd/clm/tools/mkmapdata/mvNimport.sh
+   A   models/lnd/clm/tools/mkmapdata/README
+   A   models/lnd/clm/tools/mkmapdata/regridbatch.sh
+   A   models/lnd/clm/tools/mkmapdata/rmdups.ncl ----- NCL script to remove duplicates
+
+>>>>>>>>>>>> Program to create SCRIP grid files from CLM grid/frac files
+   A   models/lnd/clm/tools/mkmapgrids
+   A   models/lnd/clm/tools/mkmapgrids/mkmapgrids.csh
+   A   models/lnd/clm/tools/mkmapgrids/mkmapgrids.namelist
+   A   models/lnd/clm/tools/mkmapgrids/README
+   A   models/lnd/clm/tools/mkmapgrids/src
+   A   models/lnd/clm/tools/mkmapgrids/src/domainMod.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/Filepath
+   A   models/lnd/clm/tools/mkmapgrids/src/Macros.custom
+   A   models/lnd/clm/tools/mkmapgrids/src/Makefile
+   A   models/lnd/clm/tools/mkmapgrids/src/Mkdepends
+   A   models/lnd/clm/tools/mkmapgrids/src/mkmapgrids.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/nanMod.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/shr_file_mod.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/shr_kind_mod.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/shr_log_mod.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/shr_sys_mod.F90
+   A   models/lnd/clm/tools/mkmapgrids/src/Srcfiles
+
+>>>>>>>>>>>> Programs to postprocess 1D vector unstructured grids
+   A   models/lnd/clm/tools/mkprocdata_map
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/mkprocdata_map_in
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/Depends
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/domainMod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/Filepath
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/fileutils.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/gridmapMod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/Makefile
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/mkprocdata_map.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/nanMod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/shr_file_mod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/shr_kind_mod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/camhomme/src/Srcfiles
+   A   models/lnd/clm/tools/mkprocdata_map/clm
+   A   models/lnd/clm/tools/mkprocdata_map/clm/mkprocdata_map_all
+   A   models/lnd/clm/tools/mkprocdata_map/clm/mkprocdata_map_in
+   A   models/lnd/clm/tools/mkprocdata_map/clm/mkprocdata_map_wrap
+   A   models/lnd/clm/tools/mkprocdata_map/clm/README
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/constMod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/Filepath
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/fileutils.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/fmain.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/gridmapMod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/Makefile
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/Mkdepends
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/mkprocdata_map.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/nanMod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/shr_file_mod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/shr_kind_mod.F90
+   A   models/lnd/clm/tools/mkprocdata_map/clm/src/Srcfiles
+
+>>>>>>>>>>>> Make macros files to customize how tools operate (allows all tools to have an identical Makefile)
+   A   models/lnd/clm/tools/interpinic/src/Macros.custom
+   A   models/lnd/clm/tools/mkgridata/src/Macros.custom
+   A   models/lnd/clm/tools/mkdomaindata/src/Macros.custom
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>> Add tests for new grids/tools
+   M   models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M   models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+   M   models/lnd/clm/test/system/tests_pretag_jaguarpf
+   M   models/lnd/clm/test/system/tests_posttag_mirage
+   M   models/lnd/clm/test/system/tests_posttag_intrepid
+   M   models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M   models/lnd/clm/test/system/README.testnames --------------- 4/5=mkmapgrids/gen_domain config
+             I=CN spinup, @=ne120np4, #=ne30np4, *=ne16np4 run options
+
+>>>>>>>>>>>> Change build/run for tools, update netcdf on bluefire, update modules on jaguar, add new tests
+   M   models/lnd/clm/test/system/TCB.sh ------------- Remove setting of MACFILE not needed
+   M   models/lnd/clm/test/system/TCBtools.sh -------- Add src directory, Mkdepends, Macros.custom
+   M   models/lnd/clm/test/system/TBLscript_tools.sh - Set CLM_ROOT
+   M   models/lnd/clm/test/system/TBLtools.sh -------- Set CLM_ROOT
+   M   models/lnd/clm/test/system/TBL.sh ------------- Allow compile-only mode to work
+   M   models/lnd/clm/test/system/TSM.sh ------------- Handle multi-instance rpointer files
+   M   models/lnd/clm/test/system/test_driver.sh -- Get netcdf4.1.3 working on bluefire, get mirage build working,
+              use glade paths, add ESMFBIN_PATH, update jaguar modules
+   M   models/lnd/clm/test/system/input_tests_master - Fill out HM tests, add H#, H@, blJ07, 454, 5@4, 9#2, 953
+              tests, mksurfdata=>mksurfdata_map
+   M   models/lnd/clm/test/system/nl_files/clm_spin -- Change case to agree with 1850 MOAR case in CESM scripts
+   M   models/lnd/clm/test/system/nl_files/mksrfdt_10x15_irr_1850 ------------ Remove -nomv option
+   M   models/lnd/clm/test/system/nl_files/mksrfdt_1x1_vancouverCAN_2000 ----- Remove -nomv option
+   M   models/lnd/clm/test/system/nl_files/mksrfdt_1x1_numaIA_mp20irrcr_2000 - Remove -nomv option
+
+>>>>>>>>>>>> Run interpinic and checkin the result
+   M   models/lnd/clm/tools/interpinic/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
+
+>>>>>>>>>>>> Update to glade path, add notes on src subdirectory
+   M   models/lnd/clm/tools/interpinic/README ------------------ Add notes about src subdirectory
+   M   models/lnd/clm/tools/mkgriddata/mkgriddata.namelist ----- Use glade path
+   M   models/lnd/clm/tools/mkgriddata/mkgriddata.regional ----- Use glade path
+   M   models/lnd/clm/tools/mkgriddata/mkgriddata.singlept ----- Use glade path
+   M   models/lnd/clm/tools/mkgriddata/mkgriddata.cesm_dom ----- Use glade path
+   M   models/lnd/clm/tools/mkgriddata/README ------------------ Update with added src sub-directory
+   M   models/lnd/clm/tools/mkdatadomain/mkdatadomain.namelist - Use glade path
+   M   models/lnd/clm/tools/mkdatadomain/README ---------------- Add notes about src subdirectory
+
+>>>>>>>>>>>> Update tools README information
+   M   models/lnd/clm/tools/README.testing ------ Note about src subdirectory required
+   M   models/lnd/clm/tools/README -------------- Updated with notes on new process
+   M   models/lnd/clm/tools/README.filecopies --- Notes on list of file copies has changed
+
+>>>>>>>>>>>> Changes to tools source codes moved to src subdirectories, Makefile was standardized
+>>>>>>>>>>>> update shr_sys_mod.F90 file to latest csm_share
+   M   models/lnd/clm/tools/interpinic/src/interpinic.F90 --- Add metadata on OPT and OMP
+   M   models/lnd/clm/tools/interpinic/src/Makefile --------- Standardize
+   M   models/lnd/clm/tools/interpinic/src/shr_sys_mod.F90 -- Update
+   M   models/lnd/clm/tools/mkdatadomain/src/Makefile ------- Standardize
+   M   models/lnd/clm/tools/mkdatadomain/src/Filepath ------- Only use local directory
+   M   models/lnd/clm/tools/mkgriddata/src/Makefile --------- Standardize
+   M   models/lnd/clm/tools/mkgriddata/src/shr_sys_mod.F90 -- Update
+   M   models/lnd/clm/tools/mkgriddata/src/clm_varctl.F90 --- Update
+
+>>>>>>>>>>>> Add RTM mapping file, change some namelist file required logic
+   M   models/lnd/clm/bld/listDefaultNamelist.pl - Also get RTM mapping file, and use $CSMDATA if set
+   M   models/lnd/clm/bld/build-namelist --------- If can't find a frac file use the datm domain file, only
+             get fatmgrid file for fine-mesh, if RTM on get mapping file, if fine-mesh on and fatmgrid not found
+             use fsurdat file
+   M   models/lnd/clm/bld/clm.cpl7.template ------ Clarify documentation for CLM_RTM_RES
+
+>>>>>>>>>>>> Add new files needed for ne30np4/ne120np4 and processing of them
+   M   models/lnd/clm/bld/namelist_files/checkdatmfiles.ncl --------- Add test for more resolutions
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml ---- Add: fmapinp_rtm, scripgriddata, mksrf_fglctopo,
+              map, lmask, hgrid
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- Add: ne30np4/ne120np4 datasets, add
+              1850-2000 0.47x0.63 fpftdyn file, remove some of the single-point fatmlndgrd files, add mapping files,
+              add lmask/hgrid for different map types
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - Add ne30np4/ne120np4 domain files
+
+>>>>>>>>>>>> Use llatlon structure in place of lsmlat/lsmlon, required files a bit different, use fsurdat if
+>>>>>>>>>>>> fatmgrid is not given, add RTM mapping file, if fatmlndfrc NOT set set mask/frac to 1.
+   M   models/lnd/clm/src/biogeochem/CASAMod.F90 ------------ Use llatlon%ni/nj in place of lsmlon/lat
+              don't allow 1D grids for CASA
+   M   models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 - Use llatlon structure in place of lsmlon/lat
+   M   models/lnd/clm/src/biogeochem/CNDVMod.F90 ------------ Use llatlon structure in place of lsmlon/lat
+   M   models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 ---------- asca => ascale
+   M   models/lnd/clm/src/main/organicFileMod.F90 ----------- Use llatlon structure in place of lsmlon/lat
+   M   models/lnd/clm/src/main/clm_varpar.F90 --------------- Remove lsmlon/lsmlat parameters
+   M   models/lnd/clm/src/main/clm_timemanager.F90 ---------- Add some meta-data to restart file, check restart values
+   M   models/lnd/clm/src/main/clm_initializeMod.F90 -------- Remove cellarea, surfrd gets area
+   M   models/lnd/clm/src/main/fileutils.F90 ---------------- Make iflag required argument
+   M   models/lnd/clm/src/main/ndepStreamMod.F90 ------------ Use llatlon structure in place of lsmlon/lat
+   M   models/lnd/clm/src/main/iniTimeConst.F90 ------------- Remove start/count lsmlon/lsmlat
+   M   models/lnd/clm/src/main/histFileMod.F90 -------------- Add namea grid, replace lsmlon/lat with llatlon
+              handle unstructured grids
+   M   models/lnd/clm/src/main/controlMod.F90 --------------- If fatmgrid NOT set, use fsurdat, add fmapinp_rtm
+              if fatmlndfrc NOT set, set mask/frac to 1.
+   M   models/lnd/clm/src/main/clm_varctl.F90 --------------- Add fmapinp_rtm
+   M   models/lnd/clm/src/main/ncdio_pio.F90 ---------------- Add ncd_inqfdims, io_type public, clmlevel set 
+              earlier, remove switchdim from ncd_io_int_var2, handle switchdim in ncd_io_real_var2 read for
+              singlept
+   M   models/lnd/clm/src/main/surfrdMod.F90 ---------------- Remove surfrd, add surfrd_get_data hande 1D grids
+   M   models/lnd/clm/src/main/domainMod.F90 ---------------- asca=>ascale
+   M   models/lnd/clm/src/main/decompMod.F90 ---------------- Add namea remove get_clmlevel_dsize
+   M   models/lnd/clm/src/main/clmtype.F90 ------------------ Increase len=8 to len=16
+   M   models/lnd/clm/src/riverroute/RtmMod.F90 ------------- Add L2R_Decomp, remove lsmlat/lon for llatlon
+              remove river meta-data
+   M   models/lnd/clm/src/riverroute/RtmMapMod.F90 ---------- Pass in fracout
+   M   models/lnd/clm/src/biogeophys/UrbanInputMod.F90 ------ Use llatlon in place of lsmlat/lon
+   M   models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 -------- asca=>ascale
+
+Summary of testing:
+
+  bluefire: All PASS except...
+015 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -10 cold FAIL! rc= 7
+018 brX51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+020 smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4
+021 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -3+-7 cold ................FAIL! rc= 5
+022 brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -5+-5 cold ................FAIL! rc= 5
+023 blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4
+028 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4
+029 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -3+-7 arb_ic ............FAIL! rc= 5
+030 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -5+-5 arb_ic ............FAIL! rc= 5
+031 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4
+032 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 96 cold ...............FAIL! rc= 4
+033 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 10+38 cold ............FAIL! rc= 5
+034 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:1800 10x15 USGS@2000 72+72 cold .........FAIL! rc= 5
+035 blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 48 cold ...............FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+009 blC97 TBL.sh _sc_do clm_spin^nl_urb 20030101:1800 4x5 gx3v7@1850 -6 arb_ic ..................FAIL! rc= 5
+031 erAK4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 7
+032 brAK4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 6
+036 brAK8 TBR.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 6
+037 blAK8 TBL.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 4
+051 blK74 TBL.sh 17p_cndvsc_s clm_std 19971231:1800 1x1_brazil navy -670 arb_ic .................FAIL! rc= 5
+004 blS63 TBL.sh _mec10sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ...................FAIL! rc= 7
+005 smQQ4 TSM.sh _nrcnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -150 cold .............FAIL! rc= 4
+006 erQQ4 TER.sh _nrcnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -3+-7 cold ............FAIL! rc= 5
+007 brQQ4 TBR.sh _nrcnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -5+-5 cold ............FAIL! rc= 5
+008 blQQ4 TBL.sh _nrcnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -150 cold .............FAIL! rc= 4
+012 blH43 TBL.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000 -10 startup FAIL! rc= 7
+014 bl454 TBLtools.sh mkmapgrids tools__ds namelist .............................................FAIL! rc= 5
+016 bl5@4 TBLtools.sh gen_domain tools__ds namelist .............................................FAIL! rc= 5
+024 bl754 TBLtools.sh mksurfdata_map tools__s namelist ..........................................FAIL! rc= 5
+025 sm774 TSMtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 5
+026 bl774 TBLtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 4
+033 bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6FAIL! rc= 5
+037 bl953 TBLscript_tools.sh mkmapdata mkmapdata.sh mkmapdata_if10 ..............................FAIL! rc= 5
+039 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......FAIL! rc= 6
+043 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 6
+045 bl9T4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+047 bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+  bluefire/CESM testing: All PASS except...
+FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire.compare_hist.clm4_0_34
+FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire.compare.clm4_0_34
+FAIL  ERP.f19_g16.IGRCP60CN.bluefire.compare_hist.clm4_0_34
+FAIL  ERP.f19_g16.IGRCP60CN.bluefire.compare.clm4_0_34
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_34
+BFAIL ERB.ne30_g16.I_1948-2004.bluefire.compare.clm4_0_34
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm4_0_34
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm4_0_34
+  bluefire/PTCLM testing: All PASS
+  lynx/pgi testing: All FAIL (build issues)
+  lynx/pgi interactive testing: All PASS except...
+010 erAL4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 7
+011 brAL4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 6
+  lynx/CESM extra testing: ...
+PASS  ERS.ne30_g16.I1850CN.lynx_gnu 
+PASS  ERS.ne30_g16.I1850CN.lynx_intel
+PASS  ERS.ne30_g16.I1850CN.lynx_pathscale
+  jaguarpf: All FAIL (system build issue)
+  jaguarpf interactive testing: All PASS up to...
+14 PTCLM.16750_US-UMB_ICN_exit_spinup.PTCLM                     PASS
+  jaguarpf/CESM testing: All PASS except...
+FAIL  PST.f09_g16.I.jaguarpf 
+FAIL  ERI_D.ne30_g16.I1850CN.jaguarpf 
+TFAIL ERH.ne120_g16.I2000CN.jaguarpf.G.235924
+  jaguarpf/CESM additional testing: ...
+FAIL  ERH.ne120_g16.ICN.jaguarpf 
+PASS  SMS.ne120_g16.I.jaguarpf 
+FAIL  ERS.ne120_g16.I.jaguarpf
+  edinburgh/lf95 interactive testing: All PASS except...
+006 erAL4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 7
+007 brAL4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 6
+008 blAL4 TBL.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 5
+025 sm978 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds .....FAIL! rc= 6
+026 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+027 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+  edinburgh/CESM testing: ...
+PASS  ERS.ne30_g16.I1850CN.edinburgh_pgi
+PASS  ERS.ne30_g16.I1850CN.edinburgh_lahey
+  edinburgh/PTCLM testing: All PASS up to...
+14 PTCLM.30770_US-UMB_ICN_exit_spinup.PTCLM                     PASS
+  mirage,storm/ifort interactive testing: All PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_34
+
+Changes answers relative to baseline:
+
+  f09_gx1v6, f19_gx1v6 are similar climate but different because of new RTM mapping files
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_34
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Aug 18 13:14:01 MDT 2011
@@ -43,7 +457,6 @@ Known bugs (include bugzilla ID):
                                  1309 (Problem with building T31 rcp pftdyn files)
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1339 (Increase streams file limit from 1000 to 2000)
-                                 1352 (RCP 6.0 2100-2300 crashing on Hopper)
                                  1360 (Can't do a ncdump on US-UMB data)
                                  1392 (US-UMB site has some incorrect data)
                                  1393 (error when running Gregorian calendar)
@@ -329,7 +742,6 @@ Known bugs (include bugzilla ID):
                                  1309 (Problem with building T31 rcp pftdyn files)
                                  1325 (GDDHARV on hist causes model to die in debug)
                                  1339 (Increase streams file limit from 1000 to 2000)
-                                 1352 (RCP 6.0 2100-2300 crashing on Hopper)
                                  1358 (incorrect units for a few history fields)
                                  1360 (Can't do a ncdump on US-UMB data)
                                  1361 (Problem with transient compsets for PTCLM)

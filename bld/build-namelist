@@ -1089,7 +1089,17 @@ if ( $my_start_type =~ /branch/ ) {
    }
 }
 
-add_default($nl[0], 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
+# Get the fraction file
+add_default($nl[0], 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask, 'nofail'=>1 );
+# If can't find a fraction file, get the datm domain file instead
+if ( not defined $nl[0]->get_value( "fatmlndfrac" ) ) {
+   my $datm_nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_datm.xml";
+   $defaults->add( "$datm_nl_defaults_file" );
+   add_default($nl[0], 'domainfile', 'hgrid'=>$res, 'mask'=>$mask);
+   add_default($nl[0], 'fatmlndfrc', 'val'=>$nl[0]->get_value( "domainfile" ) );
+}
+
+
 add_default($nl[0], 'outnc_large_files' );
 add_default($nl[0], 'fsnowoptics' );
 add_default($nl[0], 'fsnowaging' );
@@ -1142,8 +1152,9 @@ if ( $glc_nec > 0 ) {
   }
 }
 
-add_default($nl[0], 'fatmgrid'  , 'hgrid'=>$res );
-
+if ($res ne $lnd_res) {
+    add_default($nl[0], 'fatmgrid'  , 'hgrid'=>$res, , 'nofail'=>1 );
+}
 
 add_default($nl[0], 'fpftcon');
 
@@ -1175,6 +1186,20 @@ add_default($nl[0], 'urban_traffic');
 
 # If River Transport Model turned on
 if ( $rtm eq "on" ) {
+   if ( ! defined $nl[0]->get_value('fmapinp_rtm')) {
+      my %rtmsettings = ( 'type'=>$rtm_res );
+      my $rres = $defaults->get_value("hgrid", \%rtmsettings );
+      my $lmask= $defaults->get_value("lmask", \%rtmsettings );
+      my %mapsettings = ( 'frm_hgrid'=>$lnd_res, 'to_hgrid'=>$rres,
+                          'frm_lmask'=>"nomask", 'to_lmask'=>$lmask );
+      my $map  = $defaults->get_value("map", \%mapsettings );
+      if ( ! defined($map) ) {
+         print "$ProgName WARNING:: Can NOT find a mapping file from $rtm_res to $res for RTM.\n";
+         print "CLM  will calculate RTM mapping while running.\n";
+      } else {
+         add_default($nl[0], 'fmapinp_rtm', 'val'=>$map );
+      }
+   }
    add_default($nl[0], 'frivinp_rtm', 'rtm_res'=>$rtm_res );
    add_default($nl[0], 'ice_runoff',  'hgrid'=>$res );
    if ( defined($opts{'rtm_tstep'}) ) {
@@ -1191,6 +1216,9 @@ if ( $rtm eq "on" ) {
 if ( $rtm eq "off" ) {
    if (defined $nl[0]->get_value('frivinp_rtm')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
+   }
+   if (defined $nl[0]->get_value('fmapinp_rtm')) {
+      die "$ProgName ERROR:: when RTM is off you can NOT set fmapinp_rtm.\n";
    }
    if (defined $nl[0]->get_value('ice_runoff')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set ice_runoff.\n";
@@ -1280,6 +1308,14 @@ if (not defined $nl[0]->get_value('finidat')) {
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
        my $group = $definition->get_group_name($var);
        $nl[0]->set_variable_value($group, $var, "' '" );
+    }
+}
+
+#
+# If fatmgrid was not found for fine-mesh mode use fsurdat file
+if ($res ne $lnd_res) {
+    if ( not defined $nl[0]->get_value( "fatmgrid" ) ) {
+       add_default($nl[0], 'fatmgrid'  , 'val'=>$fsurdat );
     }
 }
 

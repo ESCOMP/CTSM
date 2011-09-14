@@ -324,9 +324,10 @@ contains
   subroutine readAnnualVegetation ( )
 
     use clmtype
-    use clm_varpar  , only : lsmlon, lsmlat, numpft
+    use clm_varpar  , only : numpft
     use pftvarcon   , only : noveg
     use decompMod   , only : get_proc_bounds
+    use domainMod   , only : llatlon
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
     use shr_scam_mod, only : shr_scam_getCloseLatLon
@@ -341,15 +342,17 @@ contains
     integer :: ier                        ! error code
     character(len=256) :: locfn           ! local file name
     integer :: g,k,l,m,n,p,ivt            ! indices
+    integer :: ni,nj,ns                   ! indices
     integer :: dimid,varid                ! input netCDF id's
     integer :: ntim                       ! number of input data time samples
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
     integer :: begp,endp                  ! beg and end local p index
-    integer :: closelatidx,closelonidx
-    real(r8):: closelat,closelon
     integer :: begg,endg                  ! beg and end local g index
+    integer :: closelatidx,closelonidx    ! single column vars
+    real(r8):: closelat,closelon          ! single column vars
+    logical :: isgrid2d                   ! true => file is 2d
     character(len=32) :: subname = 'readAnnualVegetation'
 
     annlai    => clm3%g%l%c%p%pps%annlai
@@ -363,21 +366,26 @@ contains
        write(iulog,*)subname, 'allocation error '; call endrun()
     end if
 
-    call get_proc_bounds(begp=begp,endp=endp)
-
     if (masterproc) then
        write (iulog,*) 'Attempting to read annual vegetation data .....'
     end if
 
     call getfil(fsurdat, locfn, 0)
     call ncd_pio_openfile (ncid, trim(locfn), 0)
+    call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
 
-    call check_dim(ncid, 'lsmlon', lsmlon)
-    call check_dim(ncid, 'lsmlat', lsmlat)
+    if (llatlon%ns /= ns .or. llatlon%ni /= ni .or. llatlon%nj /= nj) then
+       write(iulog,*)trim(subname), 'llatlon and input file do not match dims '
+       write(iulog,*)trim(subname), 'llatlon%ni,ni,= ',llatlon%ni,ni
+       write(iulog,*)trim(subname), 'llatlon%nj,nj,= ',llatlon%nj,nj
+       write(iulog,*)trim(subname), 'llatlon%ns,ns,= ',llatlon%ns,ns
+       call endrun()
+    end if
     call check_dim(ncid, 'lsmpft', numpft+1)
 
     if (single_column) then
-       call shr_scam_getCloseLatLon(locfn,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+       call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
+            closelat, closelon, closelatidx, closelonidx)
     endif
 
     do k=1,12   !! loop over months and read vegetated data
@@ -426,13 +434,12 @@ contains
 ! !USES:
     use clmtype
     use decompMod   , only : get_proc_bounds
-    use clm_varpar  , only : lsmlon, lsmlat, numpft
+    use clm_varpar  , only : numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
-    use clm_time_manager, only : get_nstep
-    use ncdio_pio   , only : ncd_io
     use shr_scam_mod, only : shr_scam_getCloseLatLon
+    use clm_time_manager, only : get_nstep
     use netcdf
 !
 ! !ARGUMENTS:
@@ -449,7 +456,7 @@ contains
 !EOP
     character(len=256) :: locfn           ! local file name
     type(file_desc_t)  :: ncid            ! netcdf id
-    integer :: g,n,k,l,m,p,ivt            ! indices
+    integer :: g,n,k,l,m,p,ivt,ni,nj,ns   ! indices
     integer :: dimid,varid                ! input netCDF id's
     integer :: ntim                       ! number of input data time samples
     integer :: nlon_i                     ! number of input data longitudes
@@ -484,18 +491,15 @@ contains
 
     ! ----------------------------------------------------------------------
     ! Open monthly vegetation file
-    ! Read data and convert from [lsmlon] x [lsmlat] grid to patch data
+    ! Read data and convert from gridcell to pft data
     ! ----------------------------------------------------------------------
    
     call getfil(fveg, locfn, 0)
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     
-    if (.not. single_column) then
-       call check_dim(ncid, 'lsmlon', lsmlon)
-       call check_dim(ncid, 'lsmlat', lsmlat)
-       call check_dim(ncid, 'lsmpft', numpft+1)
-    else
-       call shr_scam_getCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+    if (single_column) then
+       call shr_scam_getCloseLatLon (ncid, scmlat, scmlon, closelat, closelon,&
+            closelatidx, closelonidx)
     endif
     
     do k=1,2   !loop over months and read vegetated data

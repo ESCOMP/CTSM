@@ -1,0 +1,7 @@
+domainMod.o : domainMod.F90 shr_kind_mod.o fileutils.o nanMod.o 
+fileutils.o : fileutils.F90 shr_file_mod.o 
+gridmapMod.o : gridmapMod.F90 shr_kind_mod.o fileutils.o 
+mkprocdata_map.o : mkprocdata_map.F90 shr_kind_mod.o fileutils.o gridmapMod.o 
+nanMod.o : nanMod.F90 shr_kind_mod.o 
+shr_file_mod.o : shr_file_mod.F90 shr_kind_mod.o 
+shr_kind_mod.o : shr_kind_mod.F90  

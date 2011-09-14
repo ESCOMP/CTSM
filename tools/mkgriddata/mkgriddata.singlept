@@ -1,5 +1,5 @@
 &clmexp
- mksrf_fnavyoro="/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc"
+ mksrf_fnavyoro="/glade/proj3/cseg/inputdata/lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc"
  mksrf_lsmlon = 1
  mksrf_lsmlat = 1
  mksrf_edgee = 306.0

@@ -610,9 +610,9 @@ contains
        call mct_gGrid_exportRattr(dom_l,"ascale",data,lsize) 
        do g = begg_a,endg_a
           i = 1 + (g - begg_a)
-          adomain%asca(g) = data(i)
+          adomain%ascale(g) = data(i)
           if (.not. downscale) then
-             ldomain%asca(g) = adomain%asca(g)
+             ldomain%ascale(g) = adomain%ascale(g)
           end if
        end do
        deallocate(data)

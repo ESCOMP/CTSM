@@ -14,7 +14,7 @@ and generate the dataset:
 
 1) cd to this directory 
 
-2) run gmake
+2) run gmake in the src directory
 
 See Also: See the models/lnd/clm/tools/README file for notes about setting
           the path for NetCDF.
@@ -48,10 +48,11 @@ See Also: See the models/lnd/clm/tools/README file for notes about setting
 
 Important files:
 
-  Makefile ---------------- GNU makefile
-  Mkdepends --------------- Tool for Makefile to figure out code dependencies.
-  Srcfiles ---------------- List of source files needed (includes files outside this directory)
-  Filepath ---------------- Filepath location to source files needed
+  src/Makefile ---------------- GNU makefile
+  src/Macros.custom ----------- Customized make macros for mkdatadomain
+  src/Mkdepends --------------- Tool for Makefile to figure out code dependencies.
+  src/Srcfiles ---------------- List of source files needed (includes files outside this directory)
+  src/Filepath ---------------- Filepath location to source files needed
   mkdatadomain.namelist --- sample namelist
 
 

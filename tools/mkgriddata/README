@@ -9,7 +9,7 @@ input topographic dataset.
 
 1) cd to this directory 
 
-2) run gmake
+2) run gmake in src
 
 See Also: See the models/lnd/clm/tools/README file for notes about setting
           the path for NetCDF and running with shared-memory parallelism.
@@ -64,10 +64,11 @@ e.g., cp surfdata_096x144.nc /fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_1.
 
 Important files:
 
-  Makefile ---------------- GNU makefile
-  Mkdepends --------------- Tool for Makefile to figure out code dependencies.
-  Srcfiles ---------------- List of source files needed (includes files outside this directory)
-  Filepath ---------------- Filepath location to source files needed
+  src/Makefile ------------ GNU makefile
+  src/Maacros.custom ------ Make customizations for mkgriddata
+  src/Srcfiles ------------ List of source files needed (includes files outside this directory)
+  src/Mkdepends ----------- Tool for Makefile to figure out code dependencies.
+  src/Filepath ------------ Filepath location to source files needed
   mkgriddata.cesm_dom ----- Sample namelist reading in a CESM domain file
   mkgriddata.namelist ----- Sample namelist for a global grid
   mkgriddata.regional ----- Sample namelist for a regional grid

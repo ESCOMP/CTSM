@@ -1,4 +1,3 @@
-
 module organicFileMod
 
 !-----------------------------------------------------------------------
@@ -47,10 +46,10 @@ contains
 !
 ! !USES:
     use clm_varctl  , only : fsurdat, single_column
-    use clm_varpar  , only : lsmlon, lsmlat, nlevsoi
     use fileutils   , only : getfil
     use spmdMod     , only : masterproc
     use clmtype     , only : grlnd
+    use domainMod   , only : llatlon
     use ncdio_pio
 !
 ! !ARGUMENTS:
@@ -69,6 +68,11 @@ contains
 !EOP
     character(len=256) :: locfn                 ! local file name
     type(file_desc_t)  :: ncid                  ! netcdf id
+    integer            :: dimid                 ! dimension id
+    integer            :: ni,nj,ns              ! dimension sizes  
+    integer            :: ier                   ! error status
+    logical            :: isgrid2d              ! true => file is 2d
+    logical            :: readvar               ! true => variable is on dataset
     character(len=32)  :: subname = 'organicrd' ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -76,33 +80,34 @@ contains
 
     organic(:,:)   = 0._r8
        
-    ! read data if file was specified in namelist
+    ! Read data if file was specified in namelist
        
     if (fsurdat /= ' ') then
-
-       ! Obtain netcdf file and read surface data
-
        if (masterproc) then
           write(iulog,*) 'Attempting to read organic matter data .....'
 	  write(iulog,*) subname,trim(fsurdat)
-          write(iulog,*) "  Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
        end if
 
        call getfil (fsurdat, locfn, 0)
        call ncd_pio_openfile (ncid, locfn, 0)
 
-       if (.not.single_column) then
-          call check_dim(ncid, 'lsmlon' , lsmlon)
-          call check_dim(ncid, 'lsmlat' , lsmlat)
-       endif
-
-       call ncd_io(ncid=ncid, varname='ORGANIC', flag='read', data=organic, dim1name=grlnd)
+       call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
+       if (llatlon%ns /= ns .or. llatlon%ni /= ni .or. llatlon%nj /= nj) then
+          write(iulog,*)trim(subname), 'llatlon and input file do not match dims '
+          write(iulog,*)trim(subname), 'llatlon%ni,ni,= ',llatlon%ni,ni
+          write(iulog,*)trim(subname), 'llatlon%nj,nj,= ',llatlon%nj,nj
+          write(iulog,*)trim(subname), 'llatlon%ns,ns,= ',llatlon%ns,ns
+          call endrun()
+       end if
+       
+       call ncd_io(ncid=ncid, varname='ORGANIC', flag='read', data=organic, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun('organicrd: errror reading ORGANIC')
 
        if ( masterproc )then
           write(iulog,*) 'Successfully read organic matter data'
           write(iulog,*)
        end if
-
     endif
 
   end subroutine organicrd

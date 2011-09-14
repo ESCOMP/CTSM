@@ -20,12 +20,12 @@ module ndepStreamMod
   use mct_mod
 
   use spmdMod     , only: mpicom, masterproc, comp_id, iam
-  use clm_varpar  , only: lsmlon, lsmlat
   use clm_varctl  , only: iulog
   use controlMod  , only: NLFilename
   use abortutils  , only: endrun
   use fileutils   , only: getavu, relavu
-  use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo 
+  use decompMod   , only: get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo 
+  use domainMod   , only: llatlon
 
 ! !PUBLIC TYPES:
   implicit none
@@ -128,7 +128,7 @@ contains
         pio_iotype=seq_io_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,             &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
-        nxg=lsmlon, nyg=lsmlat,                    &
+        nxg=llatlon%ni, nyg=llatlon%nj,            &
         yearFirst=stream_year_first_ndep,          &
         yearLast=stream_year_last_ndep,            &
         yearAlign=model_year_align_ndep,           &

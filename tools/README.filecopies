@@ -22,13 +22,6 @@ I. Files that are IDENTICAL:
        clm_varctl.F90
        nanMod.F90
 
-   3. Files shared between mkgridata and mksurfdata that are identical:
-      (these all came from a much older version of clm)
-
-       ncdioMod.F90
-       areaMod.F90
-       mkvarpar.F90
-
 II. Files with differences
 
    1. csm_share files copied with differences:
@@ -39,9 +32,20 @@ II. Files with differences
 
        fileutils.F90 --- Remove use of masterproc and spmdMod and endrun in abortutils.
 
-   3. Files shared between mkgridata and mksurfdata different from models/lnd/clm/src:
+   3. Files in mkgriddata (different from mkmapgrids)
 
       domainMod.F90 ---- Highly customized based off an earlier version of clm code.
                          Remove use of abortutils, spmdMod. clm version uses latlon
                          this version uses domain in names. Distributed memory
                          parallelism is removed.
+
+   4. Files in mkmapgrids (different from mkgriddata)
+
+      domainMod.F90 ---- Highly customized based off an earlier version of clm code.
+                         Remove use of abortutils, spmdMod. clm version uses latlon
+                         this version uses domain in names. Distributed memory
+                         parallelism is removed.
+
+   5. Files in mksurfdata_map
+
+       mkvarpar.F90

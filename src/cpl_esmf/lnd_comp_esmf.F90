@@ -767,9 +767,9 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, terminationflag=ESMF_ABORT)
        do g = begg_a,endg_a
           i = 1 + (g - begg_a)
-          adomain%asca(g) = fptr(ka, i)
+          adomain%ascale(g) = fptr(ka, i)
           if ( .not. downscale )then
-             ldomain%asca(g) = adomain%asca(g)
+             ldomain%ascale(g) = adomain%ascale(g)
           end if
        end do
     endif

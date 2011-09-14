@@ -1,0 +1,6 @@
+&mkprocdata_map_in
+  fmap  = 'map_ne30np4_fv0.9x1.25_bilinear_110303.nc'
+  filei = './cubedsphere/camrun.cam2.h0.1995-01-01-00000.nc' 
+  fileo = 'camrun.cam2.2d_bilinear.1995-01-01-00000.nc' 
+/
+

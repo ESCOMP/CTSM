@@ -7,13 +7,15 @@ smJ74 erJ74 brJ74 blJ74
 smCA8 erCA8 brCA8 blCA8
 smAK4 erAK4 brAK4 blAK4
 smAK8 erAK8 brAK8 blAK8
-smL78 erL78 brL78 blL78
+smL78             blL78
 smF93 erF93 brF93 blF93
 smL83 erL83 brL83 blL83
 smK74 erK74 brK74 blK74
 smS63 erS63 brS63 blS63
 smQQ4 erQQ4 brQQ4 blQQ4
 smH43 erH43 brH43 blH43
+sm454             bl454
+sm5@4             bl5@4
 sm654             bl654
 sm674             bl674
 sm694             bl674
@@ -23,6 +25,7 @@ sm854             bl854
 sm853             bl853 op853
 sm8Z3             bl8Z3
 smZ94             blZ94
+sm953             bl953
 sm954             bl954
 sm9S4             bl9S4
 sm974             bl974

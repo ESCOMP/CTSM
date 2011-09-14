@@ -47,7 +47,7 @@ contains
 ! !IROUTINE: map_setmapsAR
 !
 ! !INTERFACE:
-  subroutine map_setmapsAR (latlon_i, latlon_o, sMat, fracin, fracout)
+  subroutine map_setmapsAR (latlon_i, latlon_o, sMat, fracin)
 !
 ! !DESCRIPTION:
 ! area averaging initialization
@@ -61,8 +61,7 @@ contains
     type(latlon_type), intent(in)    :: latlon_i   ! input domain
     type(latlon_type), intent(in)    :: latlon_o   ! output domain
     type(mct_sMat)   , intent(inout) :: sMat       ! mct sparse matrix plux
-    real(r8)         , intent(in),target :: fracin(:)
-    real(r8)         , intent(in),target :: fracout(:)
+    real(r8), target , intent(in)    :: fracin(:)
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
@@ -84,7 +83,6 @@ contains
     integer          :: nlat_o       !output grid: number of latitude  points
     real(r8),pointer :: dx_o(:)      !output grid: dx length
     real(r8),pointer :: dy_o(:)      !output grid: dy length
-    real(r8),pointer :: fland_o(:)   !output grid: cell frac
     real(r8),pointer :: lone_o(:)    !output grid: longitude, E edge  (degrees)
     real(r8),pointer :: lonw_o(:)    !output grid: longitude, W edge  (degrees)
     real(r8),pointer :: latn_o(:)    !output grid: latitude, N edge (degrees)
@@ -140,7 +138,7 @@ contains
     lats_o => latlon_o%lats
     lonw_o => latlon_o%lonw
     lone_o => latlon_o%lone
-    fland_o => fracout
+    ! Note - it is assumed that fland_o is 1 everywhere for the purposes of mapping
 
     ! Dynamically allocate memory
 
@@ -224,7 +222,7 @@ contains
                        lone_i(ii)+offset > lonw_o(io)) then
                        
                       !------- found overlap ------
-                      if (fland_i(ni) > 0._r8 .and. fland_o(no) > 0._r8 ) then
+                      if (fland_i(ni) > 0._r8) then
                          nw = nw + 1
                       endif
                    endif
@@ -244,7 +242,7 @@ contains
                       sum = sum + a_ovr
 
                       !------- found overlap ------
-                      if (fland_i(ni) > 0._r8 .and. fland_o(no) > 0._r8 ) then
+                      if (fland_i(ni) > 0._r8) then
                          nw = nw + 1
                          ! make sure nw <= nwts
                          if (nw > nwts) then
@@ -353,7 +351,7 @@ contains
     do i = 1,nlon_o
        no = (j-1)*nlon_o + i
        sum_fldo = sum_fldo + dx_o(i)*dy_o(j)*fld_o(no)
-       sum_areo = sum_areo + dx_o(i)*dy_o(j)*fland_o(no)
+       sum_areo = sum_areo + dx_o(i)*dy_o(j)
     end do
     end do
 
@@ -393,8 +391,7 @@ contains
   subroutine celledge(latlon, edgen, edgee, edges, edgew)
 !
 ! !DESCRIPTION:
-! Southern and western edges of grid cells - regional grid
-! (can become global as special case)
+! Southern and western edges of grid cells
 ! Latitudes -- southern/northern edges for each latitude strip.
 ! For grids oriented South to North, the southern
 ! and northern edges of latitude strip [j] are:
@@ -486,12 +483,6 @@ contains
        lonw(i)    = lonw(i) + (i-1)*dx
        lone(i-1) = lonw(i)
     end do
-
-    latlon%regional = .true.
-    latlon%edges(1) = edgen
-    latlon%edges(2) = edgee
-    latlon%edges(3) = edges
-    latlon%edges(4) = edgew
 
   end subroutine celledge
 

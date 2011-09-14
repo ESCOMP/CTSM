@@ -25,7 +25,7 @@ module controlMod
                             username, fsnowaging, fsnowoptics, fglcmask
   use SurfaceAlbedoMod, only : albice
 #ifdef RTM
-  use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps
+  use clm_varctl   , only : frivinp_rtm, ice_runoff, rtm_nsteps, fmapinp_rtm
 #endif
 #ifdef CN
   use CNAllocationMod, only : suplnitro
@@ -194,7 +194,7 @@ contains
 
     ! River runoff
 #ifdef RTM
-    namelist /clm_inparm / ice_runoff, frivinp_rtm, rtm_nsteps
+    namelist /clm_inparm / ice_runoff, frivinp_rtm, rtm_nsteps, fmapinp_rtm
 #endif
 
      ! clm glacier_mec info
@@ -312,6 +312,15 @@ contains
 
        end if
        
+       ! If fatmgrid not set - use surface dataset
+
+       if (fatmgrid == ' ') then
+          fatmgrid = fsurdat
+       end if
+
+    else
+
+
     endif   ! end of if-masterproc if-block
 
     call clmvarctl_init( masterproc, dtime )
@@ -392,6 +401,7 @@ contains
     ! River runoff dataset and control flag
 #if (defined RTM)
     call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fmapinp_rtm, len(fmapinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (ice_runoff,  1,                MPI_LOGICAL,   0, mpicom, ier)
     call mpi_bcast (rtm_nsteps,  1,                MPI_INTEGER,   0, mpicom, ier)
 #endif
@@ -524,15 +534,10 @@ contains
     end if
     if (fatmgrid == ' ') then
        write(iulog,*) '   fatmgrid not set, using fsurdat'
-       fatmgrid = fsurdat
-       write(iulog,*) '   atm grid data  = ',trim(fatmgrid)
-    else
-       write(iulog,*) '   atm grid data  = ',trim(fatmgrid)
     end if
+    write(iulog,*) '   atm grid data  = ',trim(fatmgrid)
     if (fatmlndfrc == ' ') then
-       write(iulog,*) '   fatmlndfrc not set, using fatmgrid'
-       fatmlndfrc = fatmgrid
-       write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
+       write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'
     else
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
@@ -583,6 +588,7 @@ contains
     write(iulog,*) '   atmospheric forcing data is from cesm atm model'
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
+    if (fmapinp_rtm /= ' ') write(iulog,*) '   RTM mapping data     = ',trim(fmapinp_rtm)
 #endif
     write(iulog,*) 'Restart parameters:'
     write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)

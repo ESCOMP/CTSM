@@ -14,7 +14,7 @@ The name of the executable program is the same as the directory name of the tool
 
 The build for any Fortran tools should work the same way, with the same options
 and required files for it. The files: Makefile, Mkdepends, Filepath and Srcfile
-are expected to exist in the tool directory. To make maintaining these files easier
+are expected to exist in the tool "src" sub-directory. To make maintaining these files easier
 in general the Makefile and Mkdepends files should be kept identical other than
 default settings for OPT and SMP and the output executable name.
 

@@ -15,11 +15,9 @@ module clm_varpar
   implicit none
   save
 !
-! Define land surface 2-d grid. The model resolution is read in from the surface dataset
+! Define land surface grid. 
+! The model resolution is read in from the surface dataset
 !
-  integer             :: lsmlon              ! maximum number of longitude points on lsm grid
-  integer             :: lsmlat              ! number of latitude points on lsm grid
-
 ! Define number of levels
 
   integer, parameter :: nlevsoi     =  10     ! number of hydrologically active soil layers
@@ -127,8 +125,6 @@ contains
 !EOP
 !------------------------------------------------------------------------------
 
-  lsmlon         = 1
-  lsmlat         = 1
   rtmlon         = 1
   rtmlat         = 1
   maxpatch_pft   = MAXPATCH_PFT

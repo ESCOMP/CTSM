@@ -102,6 +102,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="4x5"         mask="gx3v7"  >atm/datm7/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
 <domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.110713.nc</domainfile>
 
+<domainfile hgrid="ne30np4"     mask="gx1v6"  >atm/datm7/domain.lnd.ne30np4_gx1v6.110905.nc</domainfile>
+<domainfile hgrid="ne120np4"    mask="gx1v6"  >atm/datm7/domain.lnd.ne120np4_gx1v6.110502.nc</domainfile>
+
 <factorfn >null</factorfn>
 
 <vectors  >null</vectors>

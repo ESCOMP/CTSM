@@ -2388,13 +2388,14 @@ type(pft_epc_type), public, target, save :: pftcon
 type(pft_dgvepc_type), public, target, save :: dgv_pftcon
 #endif
 
-character(len=8), parameter, public :: gratm  = 'atmgrid'   ! name of atmgrid
-character(len=8), parameter, public :: grlnd  = 'lndgrid'   ! name of lndgrid
-character(len=8), parameter, public :: nameg  = 'gridcell'  ! name of gridcells
-character(len=8), parameter, public :: namel  = 'landunit'  ! name of landunits
-character(len=8), parameter, public :: namec  = 'column'    ! name of columns
-character(len=8), parameter, public :: namep  = 'pft'       ! name of pfts
-character(len=8), parameter, public :: allrof = 'allrof'    ! name of rtm, runoff
+character(len=16), parameter, public :: gratm  = 'atmgrid'      ! name of atmgrid
+character(len=16), parameter, public :: grlnd  = 'lndgrid'      ! name of lndgrid
+character(len=16), parameter, public :: namea  = 'gridcellatm'  ! name of atmgrid
+character(len=16), parameter, public :: nameg  = 'gridcell'     ! name of gridcells
+character(len=16), parameter, public :: namel  = 'landunit'     ! name of landunits
+character(len=16), parameter, public :: namec  = 'column'       ! name of columns
+character(len=16), parameter, public :: namep  = 'pft'          ! name of pfts
+character(len=16), parameter, public :: allrof = 'allrof'       ! name of rtm, runoff
 
 !
 !EOP

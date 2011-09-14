@@ -20,7 +20,7 @@ subroutine iniTimeConst
   use decompMod   , only : get_proc_bounds, get_proc_global
   use decompMod   , only : gsMap_lnd_gdc2glo
   use clm_atmlnd  , only : clm_a2l
-  use clm_varpar  , only : nlevsoi, nlevgrnd, nlevlak, lsmlon, lsmlat, numpft, numrad, nlevurb
+  use clm_varpar  , only : nlevsoi, nlevgrnd, nlevlak, numpft, numrad, nlevurb
   use clm_varcon  , only : istice, istdlak, istwet, isturb, istice_mec,  &
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
@@ -166,7 +166,6 @@ subroutine iniTimeConst
   real(r8) :: perc_norm               ! normalize to 1 when 100% organic soil
   real(r8) :: uncon_hksat             ! series conductivity of mineral/organic soil
   real(r8) :: uncon_frac              ! fraction of "unconnected" soil
-  integer  :: start(3),count(3)      ! netcdf start/count arrays
   integer  :: varid                  ! netCDF id's
   integer  :: ret
 
@@ -195,7 +194,7 @@ subroutine iniTimeConst
   call get_proc_global(numg, numl, numc, nump)
 
   allocate(soic2d(begg:endg), gti(begg:endg))
-  allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
+  allocate(sand3d(begg:endg,nlevsoi), clay3d(begg:endg,nlevsoi))
   allocate(organic3d(begg:endg,nlevsoi))
 
   allocate(temp_ef(begg:endg),efisop2d(6,begg:endg))
@@ -278,12 +277,8 @@ subroutine iniTimeConst
   ! Determine number of soil color classes - if number of soil color classes is not
   ! on input dataset set it to 8
 
-  count(1) = lsmlon
-  count(2) = lsmlat
   if (single_column) then
      call shr_scam_getCloseLatLon(locfn,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
-     start(1) = closelonidx
-     start(2) = closelatidx
   end if
   call ncd_io(ncid=ncid, varname='mxsoil_color', flag='read', data=mxsoil_color, &
               readvar=readvar)

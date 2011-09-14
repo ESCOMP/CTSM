@@ -13,8 +13,8 @@ n is the configuration type:
 1 -- unused
 2 -- unused
 3 -- unused
-4 -- unused
-5 -- unused
+4 -- mkmapgrids
+5 -- gen_domain
 6 -- mkgriddata
 7 -- mksurfdata
 8 -- interpinic
@@ -28,6 +28,7 @@ E -- unused
 F -- numpft=17, VOC, RTM
 G -- unused
 H -- numpft=17, CN
+I -- CN spinup test series (ad_spinup, exit_spinup, final_spinup)
 J -- numpft=4, CASA
 K -- numpft=10, CNDV
 L -- Standard default
@@ -88,6 +89,9 @@ x -- 1.9x2.5 with transient 1850-2100 for rcp=4.5 and glacier-MEC on
 Y -- 10x15   with transient 1850-2100 for rcp=2.6
 y -- 1.9x2.5 with transient 1850-2100 for rcp=2.6 and glacier-MEC on
 Z -- 10x15 with crop on
+@ -- ne120np4
+# -- ne30np4
+* -- ne16np4
 
 i is the specific test (usually this implies...)
 

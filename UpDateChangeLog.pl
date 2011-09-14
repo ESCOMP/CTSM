@@ -69,7 +69,7 @@ if ( ! $opts{'update'} ) {
    }
 }
 my $EDITOR = $ENV{EDITOR};
-if ( $EDITOR !~ "" ) {
+if ( $EDITOR !~ /.+/ ) {
   print "ERROR: editor NOT set -- set the env variable EDITOR to the text editor you would like to use\n";
   usage();
 }

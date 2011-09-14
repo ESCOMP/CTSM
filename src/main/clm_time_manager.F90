@@ -438,6 +438,7 @@ subroutine timemgr_restart_io( ncid, flag )
   integer :: rst_caltype         ! calendar type
   integer, parameter :: noleap = 1
   integer, parameter :: gregorian = 2
+  character(len=135) :: varname
   character(len=len(calendar)) :: cal
   !---------------------------------------------------------------------------------
   
@@ -446,15 +447,16 @@ subroutine timemgr_restart_io( ncid, flag )
   else if (flag == 'read') then
      nstep_rad_prev  = rst_nstep_rad_prev
   end if
+  varname = 'timemgr_rst_nstep_rad_prev'
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_nstep_rad_prev', xtype=ncd_int,  &
-          long_name='previous_radiation_nstep', units='')
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='previous_radiation_nstep', units='unitless positive integer', ifill_value=uninit_int)
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_nstep_rad_prev', data=rst_nstep_rad_prev, &
+     call ncd_io(varname=varname, data=rst_nstep_rad_prev, &
           ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
-           call endrun()
+           call endrun(sub//'ERROR: '//trim(varname)//' not on file')
         end if
      end if
   end if
@@ -464,9 +466,11 @@ subroutine timemgr_restart_io( ncid, flag )
   else if (flag == 'read') then
      calendar = rst_calendar
   end if
+  varname = 'timemgr_rst_type'
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_type', xtype=ncd_int,  &
-          long_name='calendar type', units='')
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='calendar type', units='unitless', flag_meanings=(/ "NO_LEAP_C", "GREGORIAN" /), &
+          flag_values=(/ noleap, gregorian /), ifill_value=uninit_int )
   else if (flag == 'read' .or. flag == 'write') then
      if (flag== 'write') then
         cal = to_upper(calendar)
@@ -475,15 +479,14 @@ subroutine timemgr_restart_io( ncid, flag )
         else if ( trim(cal) == 'GREGORIAN' ) then
            rst_caltype = gregorian
         else
-           write(iulog,*)sub,': unrecognized calendar specified: ',calendar
-           call endrun
+           call endrun(sub//'ERROR: unrecognized calendar specified= '//trim(calendar))
         end if
      end if
-     call ncd_io(varname='timemgr_rst_type', data=rst_caltype, &
+     call ncd_io(varname=varname, data=rst_caltype, &
           ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
-           call endrun()
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
         end if
      end if
      if (flag == 'read') then
@@ -493,7 +496,7 @@ subroutine timemgr_restart_io( ncid, flag )
            calendar = 'GREGORIAN'
         else
            write(iulog,*)sub,': unrecognized calendar type in restart file: ',rst_caltype
-           call endrun
+           call endrun( sub//'ERROR: bad calendar type in restart file')
         end if
      end if
   end if
@@ -507,94 +510,113 @@ subroutine timemgr_restart_io( ncid, flag )
      rst_curr_ymd  = TimeGetymd( curr_date,  tod=rst_curr_tod  )
   end if
   
+  varname = 'timemgr_rst_step_sec'
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_step_sec', xtype=ncd_int,  &
-          long_name='seconds component of timestep size', units='')
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='seconds component of timestep size', units='sec', nvalid_range=(/0,isecspday/), ifill_value=uninit_int)
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_step_sec', data=rst_step_sec, &
+     call ncd_io(varname=varname, data=rst_step_sec, &
           ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
-           call endrun()
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
+        end if
+     end if
+     if ( rst_step_sec < 0 .or. rst_step_sec > isecspday ) then
+        call endrun( sub//'ERROR: '//trim(varname)//' out of range')
+     end if
+  end if
+
+  varname = 'timemgr_rst_start_ymd'
+  if (flag == 'define') then
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='start date', units='YYYYMMDD', ifill_value=uninit_int)
+  else if (flag == 'read' .or. flag == 'write') then
+     call ncd_io(varname=varname, data=rst_start_ymd, &
+          ncid=ncid, flag=flag, readvar=readvar)
+     if (flag=='read' .and. .not. readvar) then
+        if (is_restart()) then
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
         end if
      end if
   end if
 
+  varname = 'timemgr_rst_start_tod'
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_ymd', xtype=ncd_int,  &
-          long_name='start date', units='')
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='start time of day', units='sec', nvalid_range=(/0,isecspday/), ifill_value=uninit_int)
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_start_ymd', data=rst_start_ymd, &
+     call ncd_io(varname=varname, data=rst_start_tod, &
           ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
-           call endrun()
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
+        end if
+     end if
+     if ( rst_start_tod < 0 .or. rst_start_tod > isecspday ) then
+        call endrun( sub//'ERROR: '//trim(varname)//' out of range')
+     end if
+  end if
+
+  varname = 'timemgr_rst_ref_ymd'
+  if (flag == 'define') then
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='reference date', units='YYYYMMDD', ifill_value=uninit_int)
+  else if (flag == 'read' .or. flag == 'write') then
+     call ncd_io(varname=varname, data=rst_ref_ymd, &
+          ncid=ncid, flag=flag, readvar=readvar)
+     if (flag=='read' .and. .not. readvar) then
+        if (is_restart()) then
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
         end if
      end if
   end if
 
+  varname = 'timemgr_rst_ref_tod'
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_start_tod', xtype=ncd_int,  &
-          long_name='start time of day', units='')
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='reference time of day', units='sec', nvalid_range=(/0,isecspday/), ifill_value=uninit_int)
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_start_tod', data=rst_start_tod, &
+     call ncd_io(varname=varname, data=rst_ref_tod, &
           ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
-           call endrun()
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
+        end if
+     end if
+     if ( rst_start_tod < 0 .or. rst_start_tod > isecspday ) then
+        call endrun( sub//'ERROR: '//trim(varname)//' out of range')
+     end if
+  end if
+
+  varname = 'timemgr_rst_curr_ymd'
+  if (flag == 'define') then
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='current date', units='YYYYMMDD', ifill_value=uninit_int)
+  else if (flag == 'read' .or. flag == 'write') then
+     call ncd_io(varname=varname, data=rst_curr_ymd, &
+          ncid=ncid, flag=flag, readvar=readvar)
+     if (flag=='read' .and. .not. readvar) then
+        if (is_restart()) then
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
         end if
      end if
   end if
 
+  varname = 'timemgr_rst_curr_tod'
   if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_ymd', xtype=ncd_int,  &
-          long_name='reference date', units='')
+     call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
+          long_name='current time of day', units='sec', nvalid_range=(/0,isecspday/), ifill_value=uninit_int )
   else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_ref_ymd', data=rst_ref_ymd, &
+     call ncd_io(varname=varname, data=rst_curr_tod, &
           ncid=ncid, flag=flag, readvar=readvar)
      if (flag=='read' .and. .not. readvar) then
         if (is_restart()) then
-           call endrun()
+           call endrun( sub//'ERROR: '//trim(varname)//' not on file')
         end if
      end if
-  end if
-
-  if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_ref_tod', xtype=ncd_int,  &
-          long_name='reference time of day', units='')
-  else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_ref_tod', data=rst_ref_tod, &
-          ncid=ncid, flag=flag, readvar=readvar)
-     if (flag=='read' .and. .not. readvar) then
-        if (is_restart()) then
-           call endrun()
-        end if
-     end if
-  end if
-
-  if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_ymd', xtype=ncd_int,  &
-          long_name='current date', units='')
-  else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_curr_ymd', data=rst_curr_ymd, &
-          ncid=ncid, flag=flag, readvar=readvar)
-     if (flag=='read' .and. .not. readvar) then
-        if (is_restart()) then
-           call endrun()
-        end if
-     end if
-  end if
-
-  if (flag == 'define') then
-     call ncd_defvar(ncid=ncid, varname='timemgr_rst_curr_tod', xtype=ncd_int,  &
-          long_name='current time of day', units='')
-  else if (flag == 'read' .or. flag == 'write') then
-     call ncd_io(varname='timemgr_rst_curr_tod', data=rst_curr_tod, &
-          ncid=ncid, flag=flag, readvar=readvar)
-     if (flag=='read' .and. .not. readvar) then
-        if (is_restart()) then
-           call endrun()
-        end if
+     if ( rst_curr_tod < 0 .or. rst_curr_tod > isecspday ) then
+        call endrun( sub//'ERROR: '//trim(varname)//' out of range')
      end if
   end if
 

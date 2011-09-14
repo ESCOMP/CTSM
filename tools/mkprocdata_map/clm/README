@@ -1,0 +1,12 @@
+Some miscellaneous notes on the scripts contained here:
+
+6-27-11: WJS: area vs. area_regridded in the output of
+mkprocdata_map_wrap and mkprocdata_map_all: The 'area' variable gives
+the actual grid cell area on the destination grid. The
+'area_regridded' variable is the result of performing the regridding
+procedure on the 'area' variable in the original source data. I
+believe that this is the wrong way to regrid areas (e.g., it leads to
+global totals that I have trouble explaining). However, I am leaving
+this in as a diagnostic. BUT PLEASE USE CAUTION IF USING THIS
+AREA_REGRIDDED VALUE, UNLESS YOU KNOW WHAT IT REALLY REPRESENTS!
+ 

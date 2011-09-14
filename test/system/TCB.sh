@@ -83,9 +83,9 @@ while [ $still_compiling = "TRUE" ]; do
     fi
 
     echo "TCB.sh: call to make:" 
-    echo "        ${MAKE_CMD} MACFILE=${CLM_TESTDIR}/${test_name}/Macros.${CESM_MACH} "
+    echo "        ${MAKE_CMD} "
     if [ "$debug" != "YES" ]; then
-      ${MAKE_CMD}  MACFILE=${CLM_TESTDIR}/${test_name}/Macros.${CESM_MACH} >> test.log 2>&1
+      ${MAKE_CMD}  >> test.log 2>&1
       status="PASS"
       rc=$?
     else

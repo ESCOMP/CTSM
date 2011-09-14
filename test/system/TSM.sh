@@ -97,13 +97,13 @@ elif [ "${7%+*}" = "continue" ]; then
    datm_restfils='null'
    export datm_restfils
 
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm*.*.*     $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r*       $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r*       $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm.r*      $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/$atm_rpointer $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/$lnd_rpointer $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/$drv_rpointer $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm*.*.*      $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r*        $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r*        $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm.r*       $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/$atm_rpointer* $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/$lnd_rpointer* $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/$drv_rpointer* $rundir/.
 
 elif [ "${7%+*}" = "branch" ]; then
 

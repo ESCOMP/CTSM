@@ -40,7 +40,6 @@ module clm_initializeMod
 ! !PRIVATE MEMBER FUNCTIONS:
   private header         ! echo version numbers
   private do_restread    ! read a restart file
-  private cellarea       ! area of grid cells (square km)
 !-----------------------------------------------------------------------
 ! !PRIVATE DATA MEMBERS: None
 
@@ -71,20 +70,18 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use clm_varpar   , only : lsmlon, lsmlat, maxpatch, clm_varpar_init
-    use pftvarcon    , only : pftconrd
-    use decompInitMod, only : decompInit_atm, decompInit_lnd, decompInit_glcp
-    use decompMod    , only : adecomp,ldecomp
-    use decompMod    , only : get_proc_clumps, get_clump_bounds, &
-                              get_proc_bounds, get_proc_bounds_atm
-    use domainMod    , only : domain_check
-    use domainMod    , only : adomain,ldomain
-    use domainMod    , only : alatlon,llatlon,gatm,amask,pftm
-    use domainMod    , only : latlon_check, latlon_setsame
-    use surfrdMod    , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
-                              surfrd_get_topo, surfrd_get_latlon
+    use clm_varpar   , only : maxpatch, clm_varpar_init
     use clm_varctl   , only : fsurdat, fatmgrid, fatmlndfrc, &
                               fatmtopo, flndtopo, noland, downscale, fglcmask
+    use pftvarcon    , only : pftconrd
+    use decompInitMod, only : decompInit_atm, decompInit_lnd, decompInit_glcp
+    use decompMod    , only : adecomp,ldecomp, get_proc_clumps, get_clump_bounds, &
+                              get_proc_bounds, get_proc_bounds_atm
+    use domainMod    , only : domain_check, adomain, ldomain, &
+                              alatlon, llatlon, gatm, amask, pftm, &
+                              latlon_check, latlon_setsame
+    use surfrdMod    , only : surfrd_get_data,surfrd_get_grid,surfrd_get_frac,&
+                              surfrd_get_topo, surfrd_get_latlon
     use controlMod   , only : control_init, control_print, nlfilename
     use UrbanInputMod, only : UrbanInput
     use ncdio_pio    , only : ncd_pio_init
@@ -131,14 +128,15 @@ contains
 
     ! ------------------------------------------------------------------------
     ! Read atm and land grids - global reads of data
+    ! Note that amask and pftm below are global variables
     ! ------------------------------------------------------------------------
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read alatlon from fatmgrid'
        call shr_sys_flush(iulog)
     endif
-
-    call surfrd_get_latlon(alatlon, fatmgrid, amask, fatmlndfrc)
+    call surfrd_get_latlon(latlon=alatlon, filename=fatmgrid, &
+         mask=amask, mfilename=fatmlndfrc)
     call latlon_check(alatlon)
     if (masterproc) then
        write(iulog,*) 'amask size/min/max ',size(amask),minval(amask),maxval(amask)
@@ -149,13 +147,10 @@ contains
        write(iulog,*) 'Attempting to read llatlon from fsurdat'
        call shr_sys_flush(iulog)
     endif
-
-    call surfrd_get_latlon(llatlon, fsurdat, pftm, pftmflag=.true.)
+    call surfrd_get_latlon(latlon=llatlon, filename=fsurdat, &
+         mask=pftm, mfilename=fsurdat, pftmflag=.true.)
     call latlon_check(llatlon)
-
-    lsmlon = llatlon%ni
-    lsmlat = llatlon%nj
-
+    
     if (llatlon%ni < alatlon%ni .or. llatlon%nj < alatlon%nj) then
        if (masterproc) write(iulog,*) 'ERROR llatlon size > alatlon size: ', &
           n,llatlon%ni, llatlon%nj, alatlon%ni, alatlon%nj
@@ -236,8 +231,11 @@ contains
        write(iulog,*) 'Attempting to read adomain from fatmgrid'
        call shr_sys_flush(iulog)
     endif
+
+    ! Initialize adomain and fill in by rereading fatmgrid
     call surfrd_get_grid(adomain, fatmgrid, begg_atm, endg_atm, gratm)
 
+    ! Fraction only read in for atm grid
     if (masterproc) then
        write(iulog,*) 'Attempting to read atm landfrac from fatmlndfrc'
        call shr_sys_flush(iulog)
@@ -259,23 +257,13 @@ contains
        call surfrd_get_frac(adomain, fatmlndfrc)
     endif
 
+    ! Topo only read in for atm grid
     if (fatmtopo /= " ") then
        if (masterproc) then
           write(iulog,*) 'Attempting to read atm topo from fatmtopo'
           call shr_sys_flush(iulog)
        endif
        call surfrd_get_topo(adomain, fatmtopo)
-    endif
-
-    !--- compute area
-    if (.not. adomain%areaset) then
-       do nr = begg_atm,endg_atm
-          n = adecomp%gdc2glo(nr)
-          i = mod(n-1,adomain%ni) + 1
-          j = (n-1)/adomain%ni + 1
-          adomain%area(nr) = cellarea(alatlon,i,j)
-       enddo
-       adomain%areaset = .true.
     endif
 
     if (masterproc) then
@@ -303,17 +291,6 @@ contains
        call surfrd_get_topo(ldomain, flndtopo)
     endif
 
-    !--- compute area
-    if (.not. ldomain%areaset) then
-       do nr = begg,endg
-          n = ldecomp%gdc2glo(nr)
-          i = mod(n-1,ldomain%ni) + 1
-          j = (n-1)/ldomain%ni + 1
-          ldomain%area(nr) = cellarea(alatlon,i,j)
-       enddo
-       ldomain%areaset = .true.
-    endif
-
     if (masterproc) then
        call domain_check(ldomain)
     endif
@@ -331,8 +308,6 @@ contains
        ldomain%lonc     = adomain%lonc
        ldomain%area     = adomain%area
        ldomain%set      = adomain%set
-       ldomain%areaset  = adomain%areaset 
-       ldomain%regional = adomain%regional
        ldomain%decomped = adomain%decomped
        ldomain%glcmask  = adomain%glcmask
     endif
@@ -373,7 +348,7 @@ contains
     ! --------------------------------------------------------------------
     ! Read list of PFTs and their corresponding parameter values
     ! Independent of model resolution
-    ! Needs to stay before call surfrd
+    ! Needs to stay before call surfrd_get_data
     ! --------------------------------------------------------------------
 
     call pftconrd()
@@ -381,7 +356,7 @@ contains
     ! Read surface dataset and set up vegetation type [vegxy] and 
     ! weight [wtxy] arrays for [maxpatch] subgrid patches.
     
-    call surfrd (fsurdat, ldomain)
+    call surfrd_get_data(fsurdat, ldomain)
 
     if (create_glacier_mec_landunit) then
        call decompInit_glcp (alatlon%ns,   alatlon%ni,   alatlon%nj, &
@@ -952,42 +927,4 @@ contains
     end if
   end function do_restread
   
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: cellarea
-!
-! !INTERFACE:
-  real(r8) function cellarea(latlon,i,j)
-!
-! !DESCRIPTION:
-! Comute area of grid cells (square kilometers)
-
-! !USES:
-    use domainMod , only : latlon_type
-    use clm_varcon, only : re
-!
-! !ARGUMENTS:
-    implicit none
-    type(latlon_type), intent(in   ) :: latlon    ! latlon datatype
-    integer          , intent(in)    :: i,j       ! latlon index to compute
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    real(r8) :: deg2rad ! pi/180
-    real(r8) :: dx      ! cell width: E-W
-    real(r8) :: dy      ! cell width: N-S
-!------------------------------------------------------------------------
-
-    deg2rad = SHR_CONST_PI / 180._r8
-    dx = (latlon%lone(i) - latlon%lonw(i)) * deg2rad
-    dy = sin(latlon%latn(j)*deg2rad) - sin(latlon%lats(j)*deg2rad)
-    cellarea = dx*dy*re*re
-
-  end function cellarea
-
 end module clm_initializeMod

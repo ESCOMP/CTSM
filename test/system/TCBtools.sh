@@ -32,11 +32,11 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
 fi
 
 cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1`
-blddir=${CLM_TESTDIR}/${test_name}
+blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}
 fi
-mkdir -p ${blddir} 
+mkdir -p ${blddir}
 if [ $? -ne 0 ]; then
     echo "TCBtools.sh: error, unable to create work subdirectory" 
     exit 3
@@ -47,15 +47,17 @@ echo "TCBtools.sh: building $1 executable; output in ${CLM_TESTDIR}/${test_name}
 #
 # Copy build files over
 #
-cp $cfgdir/Makefile  .
-cp $cfgdir/Srcfiles  .
+cp $cfgdir/src/Makefile      .
+cp $cfgdir/src/Srcfiles      .
+cp $cfgdir/src/Mkdepends     .
+cp $cfgdir/src/Macros.custom .
 #
 # Add cfgdir path to beginning of each path in Filepath
 #
 touch Filepath
 while read filepath_arg; do
-    echo "${cfgdir}/${filepath_arg}" >> Filepath
-done < ${cfgdir}/Filepath
+    echo "${cfgdir}/src/${filepath_arg}" >> Filepath
+done < ${cfgdir}/src/Filepath
 
 #
 # Figure out configuration

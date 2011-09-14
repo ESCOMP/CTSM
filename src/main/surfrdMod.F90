@@ -19,17 +19,19 @@ module surfrdMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, numpft, &
+  use clm_varpar  , only : nlevsoi, numpft, &
                            maxpatch_pft, numcft, maxpatch, &
-                           npatch_urban, npatch_lake, npatch_wet, npatch_glacier, &
-                           maxpatch_urb, npatch_glacier_mec
-  use clm_varctl  , only : create_glacier_mec_landunit, &
-                           iulog, scmlat, scmlon, single_column
+                           npatch_urban, npatch_lake, npatch_wet, &
+                           npatch_glacier,maxpatch_urb, npatch_glacier_mec
+  use clm_varctl  , only : create_glacier_mec_landunit, iulog, &
+                           scmlat, scmlon, single_column
   use clm_varsur  , only : wtxy, vegxy, topoxy, pctspec
-  use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,ldecomp
+  use decompMod   , only : get_proc_bounds
   use clmtype
   use spmdMod                         
   use ncdio_pio
+!DEBUG
+  use pio
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -38,9 +40,9 @@ module surfrdMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: surfrd_get_latlon  ! Read surface dataset into domain (before domain decomp)
   public :: surfrd_get_grid    ! Read surface dataset into domain (after domain decomp)
-  public :: surfrd_get_frac    ! Read land fraction into domain
-  public :: surfrd_get_topo    ! Read topography into domain
-  public :: surfrd             ! Read surface dataset and determine subgrid weights
+  public :: surfrd_get_frac    ! Read land fraction into domain   (after domain decomp)
+  public :: surfrd_get_topo    ! Read topography into domain      (after domain decomp)
+  public :: surfrd_get_data    ! Read surface dataset and determine subgrid weights
 !
 ! !PUBLIC DATA MEMBERS:
   logical, public :: crop_prog = .false. ! If prognostic crops is turned on
@@ -48,6 +50,7 @@ module surfrdMod
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 ! Updated by T Craig
+! Updated by Mariana Vertenstein Jan 2011
 !
 !
 ! !PRIVATE MEMBER FUNCTIONS:
@@ -67,25 +70,25 @@ contains
 ! !IROUTINE: surfrd_get_latlon
 !
 ! !INTERFACE:
-  subroutine surfrd_get_latlon(latlon,filename,mask,mfilename,pftmflag)
+  subroutine surfrd_get_latlon(latlon, filename, mask, mfilename, pftmflag)
 !
 ! !DESCRIPTION:
 ! Read the surface dataset grid related information:
-! This is the first routine called by clm_initialize and no domain decomposition
-! has been set yet
+! This is the first routine called by clm_initialize 
+! NO DOMAIN DECOMPOSITION  HAS BEEN SET YET
 !
 ! !USES:
-    use clm_varcon, only : spval
+    use clm_varcon, only : spval, re
     use domainMod , only : latlon_type, latlon_init
     use fileutils , only : getfil
 !
 ! !ARGUMENTS:
     implicit none
-    type(latlon_type)         ,intent(inout) :: latlon   ! domain to init
-    character(len=*)          ,intent(in)    :: filename ! grid filename
-    integer,pointer  ,optional               :: mask(:)
-    character(len=*) ,optional,intent(in)    :: mfilename ! grid filename
-    logical          ,optional,intent(in)    :: pftmflag   ! is mask pft mask?
+    type(latlon_type)         , intent(inout) :: latlon    ! domain to init
+    character(len=*)          , intent(in)    :: filename  ! grid filename
+    integer                   , pointer       :: mask(:)   ! grid mask 
+    character(len=*)          , intent(in)    :: mfilename ! grid filename
+    logical          ,optional, intent(in)    :: pftmflag  ! is mask pft mask?
 !
 ! !CALLED FROM:
 ! subroutine surfrd in this module
@@ -97,36 +100,22 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     integer :: dimid,varid         ! netCDF id's
-    integer :: ni,nj               ! size of grid on file
-    integer :: n                   ! index
+    integer :: ni,nj,ns            ! size of grid on file
+    integer :: n,i,j               ! index 
     integer :: ier                 ! error status
-    type(file_desc_t) :: ncid      ! netcdf id
-    type(file_desc_t) :: ncidm     ! netcdf id
-    type(var_desc_t)  :: vardesc   ! variable descriptor
-    character(len=256)  :: locfn   ! local file name
-    real(r8),pointer :: rdata(:,:) ! temporary data
-    integer ,pointer :: idata(:,:)
-    logical :: NSEWset             ! true if lat/lon NSEW read from grid file
-    logical :: EDGEset             ! true if EDGE NSEW read from grid file
-    logical :: lpftmflag           ! is mask a pft mask, local copy
+    type(file_desc_t)  :: ncid     ! netcdf id
+    type(file_desc_t)  :: ncidm    ! netcdf id
+    type(var_desc_t)   :: vardesc  ! variable descriptor
+    character(len=256) :: varname  ! variable name
+    character(len=256) :: locfn    ! local file name
     logical :: readvar             ! read variable in or not
-    logical :: dimexists           ! if dimension exists or not
+    logical :: isgrid2d            ! true => input grid is 2d
+    logical :: istype_domain       ! true => input file is of type domain
+    real(r8), allocatable :: rdata3d(:,:,:)
+    real(r8), allocatable :: rdata2d(:,:)
+    integer , allocatable :: idata2d(:,:)
     character(len=32) :: subname = 'surfrd_get_latlon'     ! subroutine name
-!DEBUG
-    integer :: i,j	
-!DEBUG
 !-----------------------------------------------------------------------
-
-    NSEWset = .false.
-    EDGEset = .false.
-    lpftmflag = .false.
-
-    ni = 0
-    nj = 0
-
-    if (present(pftmflag)) then
-       lpftmflag = pftmflag
-    endif
 
     if (masterproc) then
        if (filename == ' ') then
@@ -138,129 +127,190 @@ contains
     call getfil( filename, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-    if (single_column) then
-       ni = lsmlon
-       nj = lsmlat
-    else
-! Set PIO Mark
-       call ncd_inqdid(ncid,'lon',dimid,dimexists)
-       if (dimexists) call ncd_inqdlen(ncid,dimid,ni)
-       call ncd_inqdid(ncid,'lat',dimid,dimexists)
-       if (dimexists) call ncd_inqdlen(ncid,dimid,nj)
-       call ncd_inqdid(ncid,'lsmlon',dimid,dimexists)
-       if (dimexists) call ncd_inqdlen(ncid,dimid,ni)
-       call ncd_inqdid(ncid,'lsmlat',dimid,dimexists)
-       if (dimexists) call ncd_inqdlen(ncid,dimid,nj)
-       if (ni == 0 .or. nj == 0) then
-          write(iulog,*) trim(subname),' ERROR: ni or nj not set',ni,nj
-          call endrun()
-       end if
-    endif
+    ! Determine dimensions and if grid file is 2d or 1d
+
+    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
+
+    ! Initialize latlon derived type
+
+    call latlon_init(latlon, ni, nj)
+    latlon%isgrid2d = isgrid2d
+    if (masterproc) write(iulog,*)'isgrid2d = ',isgrid2d
+
+    ! Determine type of file - old style grid file or new style domain file
     
-    call latlon_init(latlon,ni,nj)
-    nullify(idata)
-    if (present(mask)) then
-       allocate(mask(ni*nj))
-       allocate(idata(ni,nj))	
-       mask = 1
-       idata = 1	
-    endif
+    call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar) 
+    if (readvar) istype_domain = .false.
 
-    allocate(rdata(ni,nj))
+    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar) 
+    if (readvar) istype_domain = .true.
 
-    call ncd_io(ncid=ncid, varname='LONGXY', data=rdata, flag='read', readvar=readvar)
-    if ( .not. readvar) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
-    latlon%lonc(:) = rdata(:,1)
+    if (isgrid2d) then
+       allocate(rdata2d(ni,nj))
+    end if
 
-    call ncd_io(ncid=ncid, varname='LATIXY', data=rdata, flag='read',readvar=readvar)
-    if ( .not. readvar) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
-    latlon%latc(:) = rdata(1,:)
+    ! Read in grid
+    ! NOTE - assume that edges are only relevant for lat/lon grid - not for unstructured mesh
 
-    if (single_column) then
-       EDGEset = .true.
-       latlon%edges(1) = 90.0_r8
-       latlon%edges(2) = latlon%lonc(1) + 180._r8
-       latlon%edges(3) = -90.0_r8
-       latlon%edges(4) = latlon%lonc(1) - 180._r8
+    if (istype_domain) then
+       varname = 'xc'
     else
-       latlon%edges(:) = spval
-       call ncd_inqvid(ncid,'EDGEN',varid,vardesc,readvar)
-       if (readvar)then
-          EDGEset = .true.
-          call ncd_io(ncid=ncid,varname='EDGEN',data=latlon%edges(1),flag='read',readvar=readvar)
-          call ncd_io(ncid=ncid,varname='EDGEE',data=latlon%edges(2),flag='read',readvar=readvar)
-          call ncd_io(ncid=ncid,varname='EDGES',data=latlon%edges(3),flag='read',readvar=readvar)
-          call ncd_io(ncid=ncid,varname='EDGEW',data=latlon%edges(4),flag='read',readvar=readvar)
-          if (maxval(latlon%edges) > 1.0e35) EDGEset = .false. ! read garbage
-       endif
-    endif
+       varname = 'LONGXY'
+    end if
+    if (isgrid2d) then
+       call ncd_io(ncid=ncid, varname=trim(varname), data=rdata2d, flag='read', readvar=readvar)
+       if (readvar) latlon%lonc(:) = rdata2d(:,1)
+    else
+       call ncd_io(ncid=ncid, varname=trim(varname), data=latlon%lonc, flag='read', readvar=readvar)
+    end if
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY or xc NOT on file' )
 
-    call ncd_inqvid(ncid,'LATN',varid,vardesc,readvar)
-    if (readvar)then
-       NSEWset = .true.
-       call ncd_io(ncid=ncid, varname='LATN',data=rdata,flag='read')
-       latlon%latn(:) = rdata(1,:)
-       call ncd_io(ncid=ncid, varname='LONE',data=rdata,flag='read')
-       latlon%lone(:) = rdata(:,1)
-       call ncd_io(ncid=ncid, varname='LATS',data=rdata,flag='read')
-       latlon%lats(:) = rdata(1,:)
-       call ncd_io(ncid=ncid, varname='LONW',data=rdata,flag='read')
-       latlon%lonw(:) = rdata(:,1)
-    endif
-    
-    if (present(mask)) then
-       if (present(mfilename)) then
-          if (mfilename == ' ') then
-             write(iulog,*) trim(subname),' ERROR: mfilename must be specified '
-             call endrun()
-          endif
-          call getfil( mfilename, locfn, 0 )
-          call ncd_pio_openfile (ncidm, trim(locfn), 0)
+    if (istype_domain) then
+       varname = 'yc'
+    else
+       varname = 'LATIXY'
+    end if
+    if (isgrid2d) then
+       call ncd_io(ncid=ncid, varname=trim(varname), data=rdata2d, flag='read', readvar=readvar)
+       if (readvar) latlon%latc(:) = rdata2d(1,:)
+    else
+       call ncd_io(ncid=ncid, varname=trim(varname), data=latlon%latc, flag='read', readvar=readvar)
+    end if
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: LATIXY or yc NOT on file' )
+
+    if (istype_domain) then
+       if (isgrid2d) then
+          allocate(rdata3d(4,ni,nj))
+          call ncd_io(ncid=ncid, varname='xv',data=rdata3d, flag='read', readvar=readvar)
+          if (.not. readvar) call endrun( trim(subname)//' ERROR: xv NOT on file' )
+          latlon%lonw(:) = rdata3d(1,:,1)
+          latlon%lone(:) = rdata3d(2,:,1)
+          call ncd_io(ncid=ncid, varname='yv',data=rdata3d, flag='read', readvar=readvar)
+          if (.not. readvar) call endrun( trim(subname)//' ERROR: yv NOT on file' )
+          latlon%lats(:) = rdata3d(1,1,:)
+          latlon%latn(:) = rdata3d(3,1,:)
+          deallocate(rdata3d)
        else
-          ncidm = ncid
-       endif
+          latlon%latn(:) = spval
+          latlon%lats(:) = spval
+          latlon%lone(:) = spval
+          latlon%lonw(:) = spval
+       end if
+    else
+       if (isgrid2d) then
+          call ncd_io(ncid=ncid, varname='LATN',data=rdata2d,flag='read', readvar=readvar)
+          if (readvar) latlon%latn(:) = rdata2d(1,:)
+       else
+          call ncd_io(ncid=ncid, varname='LATN',data=latlon%latn,flag='read', readvar=readvar)
+       end if
+       if (isgrid2d) then
+          call ncd_io(ncid=ncid, varname='LONE',data=rdata2d,flag='read', readvar=readvar)
+          if (readvar) latlon%lone(:) = rdata2d(:,1)
+       else
+          call ncd_io(ncid=ncid, varname='LONE',data=latlon%lone,flag='read', readvar=readvar)
+       end if
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: LONE NOT on file' )
+
+       if (isgrid2d) then
+          call ncd_io(ncid=ncid, varname='LATS',data=rdata2d,flag='read', readvar=readvar)
+          if (readvar) latlon%lats(:) = rdata2d(1,:)
+       else
+          call ncd_io(ncid=ncid, varname='LATS',data=latlon%lats,flag='read', readvar=readvar)
+       end if
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: LATS NOT on file' )
        
-       mask = 1
-       call ncd_inqvid(ncidm,'LANDMASK',varid,vardesc,readvar)
-       if (readvar)then
-	  ! ASSUME that LANDMASK is 2d here !TODO? talk to jim about this
-          call ncd_io(ncid=ncidm, varname='LANDMASK', data=idata, flag='read')
-          ! mask = reshape(idata, (/1/)) !TODO? why does this not work?
-	  do j = 1,nj
+       if (isgrid2d) then
+          call ncd_io(ncid=ncid, varname='LONW',data=rdata2d,flag='read', readvar=readvar)
+          if (readvar) latlon%lonw(:) = rdata2d(:,1)
+       else
+          call ncd_io(ncid=ncid, varname='LONW',data=latlon%lonw,flag='read', readvar=readvar)
+       end if
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: LONW NOT on file' )
+    end if
+
+    call ncd_pio_closefile(ncid)
+
+    ! Determine mask - new file and new flag for isgrid2d
+
+    if (mfilename == ' ') then
+       mask(:) = 1
+       RETURN
+    end if
+
+    call getfil( mfilename, locfn, 0 )
+    call ncd_pio_openfile (ncidm, trim(locfn), 0)
+    call ncd_inqfdims (ncidm, isgrid2d, ni, nj, ns)
+    if (masterproc) write(iulog,*)'isgrid2d = ',isgrid2d
+
+    allocate(mask(ns))
+    mask(:) = 1
+    if (isgrid2d) then
+       allocate(idata2d(ni,nj))
+       idata2d(:,:) = 1	
+       call ncd_io(ncid=ncidm, varname='LANDMASK', data=idata2d, flag='read', readvar=readvar)
+       if (.not. readvar) then
+          call ncd_io(ncid=ncidm, varname='mask', data=idata2d, flag='read', readvar=readvar)
+       end if
+       if (readvar) then
+          do j = 1,nj
           do i = 1,ni
              n = (j-1)*ni + i	
-             mask(n) = idata(i,j)
+             mask(n) = idata2d(i,j)
           enddo
           enddo
-       endif
+       end if
+       deallocate(idata2d)
+    else
+       call ncd_io(ncid=ncidm, varname='LANDMASK', data=mask, flag='read', &
+            readvar=readvar)
+       if (.not. readvar) then
+          call ncd_io(ncid=ncidm, varname='mask', data=mask, flag='read', &
+               readvar=readvar)
+       end if
+    end if
        
-       !--- if this is a pft mask, then modify and look for pftdata_mask array on dataset ---
-       if (lpftmflag) then
-          do n = 1,ni*nj
-             if (mask(n) <= 0) mask(n) = -1
-          enddo
-          call ncd_inqvid(ncidm,'PFTDATA_MASK',varid,vardesc,readvar)
-          if (readvar)then
-             call ncd_io(ncid=ncidm, varname='PFTDATA_MASK', data=idata, flag='read')
+    if (present(pftmflag)) then
+       !--- if this is a pft mask, first modify mask 
+       do n = 1,ns
+          if (mask(n) <= 0) mask(n) = -1
+       enddo
+       
+       !--- then look for PFTDATA_MASK on dataset ---
+       if (isgrid2d) then
+          call ncd_io(ncid=ncidm, varname='PFTDATA_MASK', data=rdata2d, flag='read', &
+               readvar=readvar)
+          if (readvar) then
              do j = 1,nj
              do i = 1,ni
                 n = (j-1)*ni + i	
-                mask(n) = idata(i,j)
+                mask(n) = rdata2d(i,j)
              enddo
              enddo
-          endif
-       endif
-       
-       if (present(mfilename)) then
-          call ncd_pio_closefile(ncidm)
+          end if
+       else
+          call ncd_io(ncid=ncidm, varname='PFTDATA_MASK', data=mask, flag='read', &
+               readvar=readvar)
        endif
     endif
+  
+    call ncd_pio_closefile(ncidm)
 
-    deallocate(rdata)
-    if(associated(idata)) deallocate(idata)
+    ! Check lat limited to -90,90
+    if (minval(latlon%latc) < -90.0_r8 .or. &
+        maxval(latlon%latc) >  90.0_r8) then
+       write(iulog,*) trim(subname),' WARNING: lat/lon min/max is ', &
+                   minval(latlon%latc),maxval(latlon%latc)
+       ! call endrun( trim(subname)//' ERROR: lat is outside [-90,90]' )
+       ! write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
+       !            minval(latlon%latc),maxval(latlon%latc)
+       ! where (latlon%latc < -90.0_r8) latlon%latc = -90.0_r8
+       ! where (latlon%latc >  90.0_r8) latlon%latc =  90.0_r8
+    endif
+
+    if (isgrid2d) then
+       deallocate(rdata2d)
+    end if
         
-    call ncd_pio_closefile(ncid)
-
   end subroutine surfrd_get_latlon
 
 !-----------------------------------------------------------------------
@@ -272,43 +322,13 @@ contains
   subroutine surfrd_get_grid(domain,filename,beg,end,clmlevel)
 !
 ! !DESCRIPTION:
-! This is called after the domain decomposition has been created
+! THIS IS CALLED AFTER THE DOMAIN DECOMPOSITION HAS BEEN CREATED
 ! Read the surface dataset grid related information:
-! o real edges of grid
-! o integer  number of longitudes per latitude
 ! o real latitude  of grid cell (degrees)
 ! o real longitude of grid cell (degrees)
-! If grid is read in from dataset, grid is assumed to be global but
-! does not have to be regular.
-! If grid is generated by model, grid does not have to be global but 
-! must then define the north, east, south, and west edges:
-!
-! o edges(1)    = northern edge of grid (degrees): >  -90 and <= 90
-! o edges(2)    = eastern edge of grid (degrees) : see following notes
-! o edges(3)    = southern edge of grid (degrees): >= -90 and <  90
-! o edges(4)    = western edge of grid (degrees) : see following notes
-!
-!   For partial grids, northern and southern edges are any latitude
-!   between 90 (North Pole) and -90 (South Pole). Western and eastern
-!   edges are any longitude between -180 and 180, with longitudes
-!   west of Greenwich negative. That is, western edge >= -180 and < 180;
-!   eastern edge > western edge and <= 180.
-!
-!   For global grids, northern and southern edges are 90 (North Pole)
-!   and -90 (South Pole). The western and eastern edges depend on
-!   whether the grid starts at Dateline or Greenwich. Regardless,
-!   these edges must span 360 degrees. Examples:
-!
-!                              West edge    East edge
-!                            --------------------------------------------------
-!  (1) Dateline            :        -180 to 180       (negative W of Greenwich)
-!  (2) Greenwich (centered):    0 - dx/2 to 360 - dx/2
-!
-!    Grid 2 is the grid for cam and cesm mode since the NCAR CAM
-!    starts at Greenwich, centered on Greenwich
 !
 ! !USES:
-    use clm_varcon, only : spval
+    use clm_varcon, only : spval, re
     use domainMod , only : domain_type,domain_init
     use fileutils , only : getfil
 !
@@ -330,10 +350,13 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     type(file_desc_t) :: ncid               ! netcdf id
-    integer :: ni,nj                        ! size of grid on file
+    type(var_desc_t)  :: vardesc            ! variable descriptor
+    integer :: ni,nj,ns                     ! size of grid on file
     integer :: dimid,varid                  ! netCDF id's
     integer :: ier,ret                      ! error status
     logical :: readvar 
+    logical :: isgrid2d                     ! true => file is 2d lat/lon
+    logical :: istype_domain                  ! true => input file is of type domain
     character(len=256):: locfn              ! local file name
     character(len=32) :: subname = 'surfrd_get_grid'     ! subroutine name
 !-----------------------------------------------------------------------
@@ -348,44 +371,70 @@ contains
     call getfil( filename, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-    if (single_column) then
-       ni = lsmlon
-       nj = lsmlat
-    else
-       call ncd_inqdid (ncid, 'lsmlon', dimid)
-       call ncd_inqdlen(ncid, dimid, ni)
-       call ncd_inqdid (ncid, 'lsmlat', dimid)
-       call ncd_inqdlen(ncid, dimid, nj)
-    endif
+    ! Determine dimensions
+
+    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
+
+    ! Initialize domain data type - this will be a global initializaiton
 
     call domain_init(domain,ni,nj,beg,end,clmlevel)
 
-    call ncd_io(ncid=ncid, varname= 'AREA', flag='read', data=domain%area, &
-         dim1name=clmlevel, readvar=readvar)
-    if (readvar) domain%areaset = .true.
+    ! Determine type of file - old style grid file or new style domain file
 
-    call ncd_io(ncid=ncid, varname= 'LONGXY', flag='read', data=domain%lonc, &
-         dim1name=clmlevel, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
+    call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar) 
+    if (readvar) istype_domain = .false.
 
-    call ncd_io(ncid=ncid, varname= 'LATIXY', flag='read', data=domain%latc, &
-         dim1name=clmlevel, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LATIXY NOT on file' )
+    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar) 
+    if (readvar) istype_domain = .true.
 
-    ! set mask to 1 everywhere by default, override if LANDMASK exists
-    ! if landmask exists, use it to set pftm (for older datasets)
-    ! pftm should be overwritten below for newer datasets
+    ! Read in area, lon, lat
 
-    domain%mask = 1
-    call ncd_io(ncid=ncid, varname= 'LANDMASK', flag='read', data=domain%mask, &
-         dim1name=clmlevel, readvar=readvar)
-    domain%pftm = domain%mask
-    where (domain%mask <= 0)
-       domain%pftm = -1
-    endwhere
+    if (istype_domain) then
+       call ncd_io(ncid=ncid, varname= 'area', flag='read', data=domain%area, &
+            dim1name=clmlevel, readvar=readvar)
+       ! convert from radians**2 to km**2
+       domain%area = domain%area * (re**2)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: area NOT on file' )
+       
+       call ncd_io(ncid=ncid, varname= 'xc', flag='read', data=domain%lonc, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: xc NOT on file' )
+       
+       call ncd_io(ncid=ncid, varname= 'yc', flag='read', data=domain%latc, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: yc NOT on file' )
+    else
+       call ncd_io(ncid=ncid, varname= 'AREA', flag='read', data=domain%area, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: AREA NOT on file' )
+       
+       call ncd_io(ncid=ncid, varname= 'LONGXY', flag='read', data=domain%lonc, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
+       
+       call ncd_io(ncid=ncid, varname= 'LATIXY', flag='read', data=domain%latc, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: LATIXY NOT on file' )
+    end if
+
+    ! Read in pft mask - this variable is only on the surface dataset - but not
+    ! on the domain dataset
 
     call ncd_io(ncid=ncid, varname= 'PFTDATA_MASK', flag='read', data=domain%pftm, &
          dim1name=clmlevel, readvar=readvar)
+
+    ! Check lat limited to -90,90
+
+    if (minval(domain%latc) < -90.0_r8 .or. &
+        maxval(domain%latc) >  90.0_r8) then
+       write(iulog,*) trim(subname),' WARNING: lat/lon min/max is ', &
+            minval(domain%latc),maxval(domain%latc)
+       ! call endrun( trim(subname)//' ERROR: lat is outside [-90,90]' )
+       ! write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
+       !     minval(domain%latc),maxval(domain%latc)
+       ! where (domain%latc < -90.0_r8) domain%latc = -90.0_r8
+       ! where (domain%latc >  90.0_r8) domain%latc =  90.0_r8
+    endif
 
     call ncd_pio_closefile(ncid)
 
@@ -516,7 +565,7 @@ contains
 ! !IROUTINE: surfrd_get_frac
 !
 ! !INTERFACE:
-  subroutine surfrd_get_frac(domain,filename,glcfilename)
+  subroutine surfrd_get_frac(domain, filename, glcfilename)
 !
 ! !DESCRIPTION:
 ! Read the landfrac dataset grid related information:
@@ -551,52 +600,54 @@ contains
     integer :: beg,end             ! local beg,end indices
     character(len=8)   :: clmlevel         ! grid type
     logical            :: readvar          ! is variable in file
+    logical            :: isgrid2d         ! true => file is 2d lat/lon
     real(r8),pointer   :: lonc(:),latc(:)  ! local lat/lon
     character(len=256) :: locfn            ! local file name
-    character(len=32) :: subname = 'surfrd_get_frac'     ! subroutine name
+    character(len= 32) :: subname = 'surfrd_get_frac'     ! subroutine name
 !-----------------------------------------------------------------------
 
+    beg = domain%nbeg
+    end = domain%nend
+    clmlevel = domain%clmlevel
+
     if (filename == ' ') then
-       write(iulog,*) trim(subname),' ERROR: filename must be specified '
-       call endrun()
+       domain%mask(beg:end) = 1
+       domain%frac(beg:end) = 1._r8
     endif
     
     call getfil( filename, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
+    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
 
-    if (single_column) then
-       ni = lsmlon
-       nj = lsmlat
-    else
-       call ncd_inqdid (ncid, 'lsmlon', dimid)
-       call ncd_inqdlen(ncid, dimid, ni)
-       call ncd_inqdid (ncid, 'lsmlat', dimid)
-       call ncd_inqdlen(ncid, dimid, nj)
-    endif
-    
-    ns = ni*nj
-    if (domain%ni /= ni .or. domain%nj /= nj .or. domain%ns /= ns) then
-       write(iulog,*) trim(subname),' ERROR: landfrac file mismatch ni,nj',&
-            domain%ni,ni,domain%nj,nj,domain%ns,ns
+    if (domain%ns /= ns) then
+       write(iulog,*) trim(subname),' ERROR: landfrac file mismatch ns',&
+            domain%ns,ns
        call endrun()
     endif
-    
-    ni  = domain%ni
-    nj  = domain%nj
-    beg = domain%nbeg
-    end = domain%nend
-    clmlevel = domain%clmlevel
 
     allocate(latc(beg:end),lonc(beg:end))
 
     call ncd_io(ncid=ncid, varname='LONGXY', flag='read', data=lonc, &
          dim1name=clmlevel, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LONGXY NOT on fracdata file' )
+    if (.not. readvar) then
+       call ncd_io(ncid=ncid, varname='xc', flag='read', data=lonc, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) then
+          call endrun( trim(subname)//' ERROR: LONGXY NOT on fracdata file' )
+       end if
+    end if
 
     call ncd_io(ncid=ncid, varname='LATIXY', flag='read', data=latc, &
          dim1name=clmlevel, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LATIXY NOT on fracdata file' )
+    if (.not. readvar) then
+       call ncd_io(ncid=ncid, varname='yc', flag='read', data=latc, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) then
+          call endrun( trim(subname)//' ERROR: LATIXY NOT on fracdata file' )
+       end if
+    end if
 
+    ! Check that lats and lons are the same
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
            abs(lonc(n)-domain%lonc(n)) > eps) then
@@ -608,11 +659,23 @@ contains
           
     call ncd_io(ncid=ncid, varname='LANDMASK', flag='read', data=domain%mask, &
          dim1name=clmlevel, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LANDMASK NOT on fracdata file' )
+    if (.not. readvar) then
+       call ncd_io(ncid=ncid, varname='mask', flag='read', data=domain%mask, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) then
+          call endrun( trim(subname)//' ERROR: LANDMASK NOT on fracdata file' )
+       end if
+    end if
 
     call ncd_io(ncid=ncid, varname='LANDFRAC', flag='read', data=domain%frac, &
          dim1name=clmlevel, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: LANDFRAC NOT on fracdata file' )
+    if (.not. readvar) then
+       call ncd_io(ncid=ncid, varname='frac', flag='read', data=domain%frac, &
+            dim1name=clmlevel, readvar=readvar)
+       if (.not. readvar) then
+          call endrun( trim(subname)//' ERROR: LANDFRAC NOT on fracdata file' )
+       end if
+    end if
 
     deallocate(latc,lonc)
 
@@ -628,11 +691,21 @@ contains
        call getfil( glcfilename, locfn, 0 )
        call ncd_pio_openfile (ncidg, trim(locfn), 0)
 
-       domain%glcmask = 0
+       domain%glcmask(:) = 0
        call ncd_io(ncid=ncidg, varname='GLCMASK', flag='read', data=domain%glcmask, &
             dim1name=clmlevel, readvar=readvar)
        if (.not. readvar) call endrun( trim(subname)//' ERROR: GLCMASK NOT in file' )
 
+       ! Make sure the glc mask is a subset of the land mask
+       do n = beg,end
+          if (domain%glcmask(n)==1 .and. domain%mask(n)==0) then
+             write(iulog,*)trim(subname),&
+                  'initialize1: landmask/glcmask mismatch'
+             write(iulog,*)trim(subname),&
+                  'glc requires input where landmask = 0, gridcell index', n
+             call endrun()
+          endif
+       enddo
        call ncd_pio_closefile(ncidg)
     endif   ! present(glcfilename)
 
@@ -673,12 +746,13 @@ contains
     integer :: ni,nj,ns            ! size of grid on file
     integer :: dimid,varid         ! netCDF id's
     integer :: ier                 ! error status
-    real(r8):: eps = 1.0e-12_r8    ! lat/lon error tolerance
-    integer :: beg,end             ! local beg,end indices
-    character(len=8)    :: clmlevel   ! grid type
+    real(r8):: eps = 1.0e-12_r8             ! lat/lon error tolerance
+    integer :: beg,end                      ! local beg,end indices
+    logical             :: isgrid2d         ! true => file is 2d lat/lon
+    character(len=8)    :: clmlevel         ! grid type
     real(r8),pointer    :: lonc(:),latc(:)  ! local lat/lon
-    character(len=256)  :: locfn   ! local file name
-    logical :: readvar             ! is variable on file
+    character(len=256)  :: locfn            ! local file name
+    logical :: readvar                      ! is variable on file
     character(len=32) :: subname = 'surfrd_get_topo'     ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -691,25 +765,14 @@ contains
 
     call getfil( filename, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
+    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
 
-    if (single_column) then
-       ni = lsmlon
-       nj = lsmlat
-    else
-       call ncd_inqdid (ncid, 'lsmlon', dimid)
-       call ncd_inqdlen(ncid, dimid, ni)
-       call ncd_inqdid (ncid, 'lsmlat', dimid)
-       call ncd_inqdlen(ncid, dimid, nj)
-    endif
-    
-    ns = ni*nj
-    if (domain%ni /= ni .or. domain%nj /= nj .or. domain%ns /= ns) then
-       write(iulog,*) trim(subname),' ERROR: topo file mismatch ni,nj',domain%ni,ni,domain%nj,nj,domain%ns,ns
+    if (domain%ns /= ns) then
+       write(iulog,*) trim(subname),' ERROR: topo file mismatch ns',&
+            domain%ns,ns
        call endrun()
     endif
     
-    ni  = domain%ni
-    nj  = domain%nj
     beg = domain%nbeg
     end = domain%nend
     clmlevel = domain%clmlevel
@@ -742,6 +805,110 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_topo
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: surfrd_get_data
+!
+! !INTERFACE:
+!  subroutine surfrd_get_data(vegxy, wtxy, lfsurdat, domain)
+  subroutine surfrd_get_data (lfsurdat, domain)
+!
+! !DESCRIPTION:
+! Read the surface dataset and create subgrid weights.
+! The model's surface dataset recognizes 6 basic land cover types within a grid
+! cell: lake, wetland, urban, glacier, glacier_mec and vegetated. The vegetated
+! portion of the grid cell is comprised of up to [maxpatch_pft] PFTs. These
+! subgrid patches are read in explicitly for each grid cell. This is in
+! contrast to LSMv1, where the PFTs were built implicitly from biome types.
+!    o real latitude  of grid cell (degrees)
+!    o real longitude of grid cell (degrees)
+!    o integer surface type: 0 = ocean or 1 = land
+!    o integer soil color (1 to 20) for use with soil albedos
+!    o real soil texture, %sand, for thermal and hydraulic properties
+!    o real soil texture, %clay, for thermal and hydraulic properties
+!    o real % of cell covered by lake    for use as subgrid patch
+!    o real % of cell covered by wetland for use as subgrid patch
+!    o real % of cell that is urban      for use as subgrid patch
+!    o real % of cell that is glacier    for use as subgrid patch
+!    o real % of cell that is glacier_mec for use as subgrid patch
+!    o integer PFTs
+!    o real % abundance PFTs (as a percent of vegetated area)
+!
+! !USES:
+    use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
+    use pftvarcon   , only : noveg
+    use fileutils   , only : getfil
+    use domainMod   , only : domain_type
+!
+! !ARGUMENTS:
+    implicit none
+    character(len=*), intent(in) :: lfsurdat               ! surf filename
+    type(domain_type),intent(in) :: domain ! domain associated with wtxy
+!
+! !CALLED FROM:
+! subroutine initialize in module initializeMod
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    character(len=256):: locfn                          ! local file name
+    type(file_desc_t) :: ncid                           ! netcdf id
+    integer           :: begg,endg   
+    character(len=32) :: subname = 'surfrd'             ! subroutine name
+!-----------------------------------------------------------------------
+
+    if (masterproc) then
+       write(iulog,*) 'Attempting to read surface boundary data .....'
+       if (lfsurdat == ' ') then
+          write(iulog,*)'lfsurdat must be specified'; call endrun()
+       endif
+    endif
+
+    call get_proc_bounds(begg,endg)
+    allocate(pctspec(begg:endg))
+
+    vegxy(:,:) = noveg
+    wtxy(:,:)  = 0._r8
+    pctspec(:) = 0._r8
+    if (allocated(topoxy)) topoxy(:,:) = 0._r8
+
+    ! Read surface data
+
+    call getfil( lfsurdat, locfn, 0 )
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+    ! Obtain surface dataset special landunit info
+
+    call surfrd_wtxy_special(ncid, domain)
+
+    ! Obtain surface dataset vegetated landunit info
+
+#if (defined CNDV)
+    if (create_crop_landunit) then ! CNDV means allocate_all_vegpfts = .true.
+       call surfrd_wtxy_veg_all(ncid, domain)
+    end if
+    call surfrd_wtxy_veg_dgvm(domain)
+#else
+    if (allocate_all_vegpfts) then
+       call surfrd_wtxy_veg_all(ncid, domain)
+    else
+       call surfrd_wtxy_veg_rank(ncid, domain)
+    end if
+#endif
+
+    call ncd_pio_closefile(ncid)
+
+    if ( masterproc )then
+       write(iulog,*) 'Successfully read surface boundary data'
+       write(iulog,*)
+    end if
+
+  end subroutine surfrd_get_data
 
 !-----------------------------------------------------------------------
 !BOP
@@ -834,7 +1001,7 @@ contains
 
        call ncd_io(ncid=ncid, varname='GLC_MEC', flag='read', data=glc_topomax, &
             readvar=readvar)
-       if ( .not. readvar) call endrun( trim(subname)//'ERROR: GLC_MEC was NOT on the input surfdata file' )
+       if (.not. readvar) call endrun( trim(subname)//'ERROR: GLC_MEC was NOT on the input surfdata file' )
 
        call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=pctglc_mec, &
             dim1name=grlnd, readvar=readvar)
@@ -978,31 +1145,31 @@ contains
     end do
     if ( found ) then
        write(iulog,*)'surfrd error: no valid urban data for nl=',nindx
-       write(iulog,*)'canyon_hwr: ',urbinp%canyon_hwr(nindx)
-       write(iulog,*)'em_improad: ',urbinp%em_improad(nindx)
-       write(iulog,*)'em_perroad: ',urbinp%em_perroad(nindx)
-       write(iulog,*)'em_roof: ',urbinp%em_roof(nindx)
-       write(iulog,*)'em_wall: ',urbinp%em_wall(nindx)
-       write(iulog,*)'ht_roof: ',urbinp%ht_roof(nindx)
-       write(iulog,*)'thick_roof: ',urbinp%thick_roof(nindx)
-       write(iulog,*)'thick_wall: ',urbinp%thick_wall(nindx)
-       write(iulog,*)'t_building_max: ',urbinp%t_building_max(nindx)
-       write(iulog,*)'t_building_min: ',urbinp%t_building_min(nindx)
+       write(iulog,*)'canyon_hwr:      ',urbinp%canyon_hwr(nindx)
+       write(iulog,*)'em_improad:      ',urbinp%em_improad(nindx)
+       write(iulog,*)'em_perroad:      ',urbinp%em_perroad(nindx)
+       write(iulog,*)'em_roof:         ',urbinp%em_roof(nindx)
+       write(iulog,*)'em_wall:         ',urbinp%em_wall(nindx)
+       write(iulog,*)'ht_roof:         ',urbinp%ht_roof(nindx)
+       write(iulog,*)'thick_roof:      ',urbinp%thick_roof(nindx)
+       write(iulog,*)'thick_wall:      ',urbinp%thick_wall(nindx)
+       write(iulog,*)'t_building_max:  ',urbinp%t_building_max(nindx)
+       write(iulog,*)'t_building_min:  ',urbinp%t_building_min(nindx)
        write(iulog,*)'wind_hgt_canyon: ',urbinp%wind_hgt_canyon(nindx)
-       write(iulog,*)'wtlunit_roof: ',urbinp%wtlunit_roof(nindx)
-       write(iulog,*)'wtroad_perv: ',urbinp%wtroad_perv(nindx)
+       write(iulog,*)'wtlunit_roof:    ',urbinp%wtlunit_roof(nindx)
+       write(iulog,*)'wtroad_perv:     ',urbinp%wtroad_perv(nindx)
        write(iulog,*)'alb_improad_dir: ',urbinp%alb_improad_dir(nindx,:)
        write(iulog,*)'alb_improad_dif: ',urbinp%alb_improad_dif(nindx,:)
        write(iulog,*)'alb_perroad_dir: ',urbinp%alb_perroad_dir(nindx,:)
        write(iulog,*)'alb_perroad_dif: ',urbinp%alb_perroad_dif(nindx,:)
-       write(iulog,*)'alb_roof_dir: ',urbinp%alb_roof_dir(nindx,:)
-       write(iulog,*)'alb_roof_dif: ',urbinp%alb_roof_dif(nindx,:)
-       write(iulog,*)'alb_wall_dir: ',urbinp%alb_wall_dir(nindx,:)
-       write(iulog,*)'alb_wall_dif: ',urbinp%alb_wall_dif(nindx,:)
-       write(iulog,*)'tk_roof: ',urbinp%tk_roof(nindx,:)
-       write(iulog,*)'tk_wall: ',urbinp%tk_wall(nindx,:)
-       write(iulog,*)'cv_roof: ',urbinp%cv_roof(nindx,:)
-       write(iulog,*)'cv_wall: ',urbinp%cv_wall(nindx,:)
+       write(iulog,*)'alb_roof_dir:    ',urbinp%alb_roof_dir(nindx,:)
+       write(iulog,*)'alb_roof_dif:    ',urbinp%alb_roof_dif(nindx,:)
+       write(iulog,*)'alb_wall_dir:    ',urbinp%alb_wall_dir(nindx,:)
+       write(iulog,*)'alb_wall_dif:    ',urbinp%alb_wall_dif(nindx,:)
+       write(iulog,*)'tk_roof:         ',urbinp%tk_roof(nindx,:)
+       write(iulog,*)'tk_wall:         ',urbinp%tk_wall(nindx,:)
+       write(iulog,*)'cv_roof:         ',urbinp%cv_roof(nindx,:)
+       write(iulog,*)'cv_wall:         ',urbinp%cv_wall(nindx,:)
        if (urbinp%nlev_improad(nindx) .gt. 0) then
           nlev = urbinp%nlev_improad(nindx)
           write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,1:nlev)
@@ -1014,23 +1181,18 @@ contains
     ! Initialize glacier_mec weights
 
     if (create_glacier_mec_landunit) then
-
        do n = 1, glc_nec
           npatch = npatch_glacier_mec - glc_nec + n
-
           do nl = begg, endg
              vegxy (nl,npatch) = noveg
              wtxy  (nl,npatch) = pctglc_mec(nl,n)/100._r8
              topoxy(nl,npatch) = topoglc_mec(nl,n)
-
           enddo   ! nl
        enddo      ! glc_nec
-
        deallocate(pctglc_mec, pctglc_mec_tot, topoglc_mec)
+    endif          ! create_glacier_mec_landunit
 
-   endif    ! create_glacier_mec_landunit
-
-   deallocate(pctgla,pctlak,pctwet,pcturb)
+    deallocate(pctgla,pctlak,pctwet,pcturb)
 
   end subroutine surfrd_wtxy_special
 
@@ -1067,7 +1229,6 @@ contains
     integer  :: k,m,k1,k2,n,nl,ns               ! indices
     integer  :: begg,endg                       ! beg/end gcell index
     integer  :: dimid,varid                     ! netCDF id's
-    integer  :: start(3),count(3)               ! netCDF start/count arrays
     integer  :: cropcount                       ! temporary counter
     real(r8),allocatable :: sumvec(:)           ! temporary vector sum
     logical  :: found                           ! temporary for error check
@@ -1079,11 +1240,11 @@ contains
     real(r8) :: sumpct                          ! sum of %pft over maxpatch_pft
     real(r8) :: diff                            ! the difference (wst_sum - sumpct)
     real(r8) :: rmax                            ! maximum patch cover
+    integer  :: ier                             ! error status
     integer ,allocatable :: pft(:,:)            ! PFT
     integer ,allocatable :: cft(:,:)            ! CFT
     real(r8),allocatable :: pctcft_lunit(:,:)   ! % of crop lunit area for CFTs
     real(r8),allocatable :: pctpft_lunit(:,:)   ! % of vegetated lunit area PFTs
-    integer  :: ier                             ! error status
     real(r8),allocatable :: pctpft(:,:)         ! percent of vegetated gridcell area for PFTs
     real(r8),pointer :: arrayl(:,:)             ! local array
     integer ,pointer :: irrayg(:)               ! global array
@@ -1393,7 +1554,6 @@ contains
     integer  :: m,mp7,mp8,mp11,n,nl,ns         ! indices
     integer  :: begg,endg                      ! beg/end gcell index
     integer  :: dimid,varid                    ! netCDF id's
-    integer  :: start(3),count(3)              ! netcdf start/count arrays
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
     real(r8) :: sumpct                         ! sum of %pft over maxpatch_pft
@@ -1414,6 +1574,7 @@ contains
     call ncd_io(ncid=ncid, varname='PCT_PFT', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on surfdata file' )
+
     pctpft(begg:endg,0:numpft) = arrayl(begg:endg,0:numpft)
     deallocate(arrayl)
 

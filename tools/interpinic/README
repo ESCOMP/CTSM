@@ -37,14 +37,16 @@ See Also: See the models/lnd/clm/tools/README file for more notes about setting
 
 Files:
 
-Makefile ------------------------------------------- GNU makefile
+src/Makefile --------------------------------------- GNU makefile
+src/Macros.custom ---------------------------------- Customization of make macros for interpinic
 
-Mkdepends ------------------------------------------ Tool for Makefile to figure out
+src/Mkdepends -------------------------------------- Tool for Makefile to figure out
                                                      code dependencies.
 
-Srcfiles ------------------------------------------- List of source files needed 
+src/Srcfiles --------------------------------------- List of source files needed 
 
-Filepath ------------------------------------------- Filepath location to source files needed
+
+src/Filepath --------------------------------------- Filepath location to source files needed
 
 clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc- Sample 10x15 resolution dataset that
                                                      you can interpolate to

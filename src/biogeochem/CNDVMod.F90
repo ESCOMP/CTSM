@@ -14,7 +14,6 @@ module CNDVMod
 !
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use clm_varpar          , only : maxpatch_pft, lsmlon, lsmlat, nlevsoi
   use abortutils          , only : endrun
   use CNVegStructUpdateMod, only : CNVegStructUpdate
 !
@@ -154,8 +153,8 @@ contains
 ! !USES:
     use clmtype
     use decompMod       , only : get_proc_bounds, get_proc_global
-    use clm_varpar      , only : lsmlon, lsmlat, maxpatch_pft
-    use domainMod       , only : ldomain,llatlon
+    use clm_varpar      , only : maxpatch_pft
+    use domainMod       , only : ldomain, llatlon
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                                  frivinp_rtm, iulog
     use clm_varcon      , only : spval
@@ -301,11 +300,15 @@ contains
     ! Define dimensions.
     ! -----------------------------------------------------------------------
     
-    call ncd_defdim (ncid, 'lon', lsmlon       , dimid)
-    call ncd_defdim (ncid, 'lat', lsmlat       , dimid)
-    call ncd_defdim (ncid, 'pft', maxpatch_pft , dimid)
+    if (llatlon%isgrid2d) then
+       call ncd_defdim (ncid, 'lon' ,llatlon%ni, dimid)
+       call ncd_defdim (ncid, 'lat' ,llatlon%nj, dimid)
+    else
+       call ncd_defdim (ncid, 'gridcell', llatlon%ns, dimid)
+    end if
+    call ncd_defdim (ncid, 'pft' , maxpatch_pft , dimid)
     call ncd_defdim (ncid, 'time', ncd_unlimited, dimid)
-    call ncd_defdim (ncid, 'string_length', 80 , dimid)
+    call ncd_defdim (ncid, 'string_length', 80  , dimid)
     
     ! -----------------------------------------------------------------------
     ! Define variables
@@ -313,11 +316,13 @@ contains
     
     ! Define coordinate variables (including time)
     
-    call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon', &
-         long_name='coordinate longitude', units='degrees_east')
+    if (llatlon%isgrid2d) then
+       call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon', &
+            long_name='coordinate longitude', units='degrees_east')
     
-    call ncd_defvar(ncid=ncid, varname='lat', xtype=ncprec, dim1name='lat', &
-         long_name='coordinate latitude', units='degrees_north')
+       call ncd_defvar(ncid=ncid, varname='lat', xtype=ncprec, dim1name='lat', &
+            long_name='coordinate latitude', units='degrees_north')
+    end if
     
     call get_curr_time(mdcur, mscur)
     call get_ref_date(yr, mon, day, nbsec)
@@ -334,28 +339,33 @@ contains
     call ncd_defvar(ncid=ncid, varname='time', xtype=ncd_double, dim1name='time', &
          long_name='time', units=str)
        
-    call ncd_defvar(ncid=ncid, varname='edgen', xtype=ncprec, &
-         long_name='northern edge of surface grid', units='degrees_north')
-    
-    call ncd_defvar(ncid=ncid, varname='edgee', xtype=ncprec, &
-         long_name='eastern edge of surface grid', units='degrees_east')
-    
-    call ncd_defvar(ncid=ncid, varname='edges', xtype=ncprec, &
-         long_name='southern edge of surface grid', units='degrees_north')
-    
-    call ncd_defvar(ncid=ncid, varname='edgew', xtype=ncprec, &
-         long_name='western edge of surface grid', units='degrees_east')
-    
     ! Define surface grid (coordinate variables, latitude, longitude, surface type).
     
-    call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-         long_name='longitude', units='degrees_east')
-
-    call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-         long_name='latitude', units='degrees_north')
-
-    call ncd_defvar(ncid=ncid, varname='landmask', xtype=ncd_int, dim1name='lon', dim2name='lat', &
-         long_name='land/ocean mask (0.=ocean and 1.=land)')
+    if (llatlon%isgrid2d) then
+       call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, &
+            dim1name='lon', dim2name='lat', &
+            long_name='longitude', units='degrees_east')
+       
+       call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, &
+            dim1name='lon', dim2name='lat', &
+            long_name='latitude', units='degrees_north')
+       
+       call ncd_defvar(ncid=ncid, varname='landmask', xtype=ncd_int, &
+            dim1name='lon', dim2name='lat', &
+            long_name='land/ocean mask (0.=ocean and 1.=land)')
+    else
+       call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, &
+            dim1name='gridcell',&
+            long_name='longitude', units='degrees_east')
+       
+       call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, &
+            dim1name='gridcell',&
+            long_name='latitude', units='degrees_north')
+       
+       call ncd_defvar(ncid=ncid, varname='landmask', xtype=ncd_int, &
+            dim1name='gridcell', &
+            long_name='land/ocean mask (0.=ocean and 1.=land)')
+    end if
 
     ! Define time information
 
@@ -376,15 +386,27 @@ contains
 
     ! Define time dependent variables
 
-    call ncd_defvar(ncid=ncid, varname='FPCGRID', xtype=ncprec, &
-         dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
-         long_name='plant functional type cover', units='fraction of vegetated area', &
-         missing_value=spval, fill_value=spval)
-
-    call ncd_defvar(ncid=ncid, varname='NIND', xtype=ncprec, &
-         dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
-         long_name='number of individuals', units='individuals/m2 vegetated land', &
-         missing_value=spval, fill_value=spval)
+    if (llatlon%isgrid2d) then
+       call ncd_defvar(ncid=ncid, varname='FPCGRID', xtype=ncprec, &
+            dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
+            long_name='plant functional type cover', units='fraction of vegetated area', &
+            missing_value=spval, fill_value=spval)
+       
+       call ncd_defvar(ncid=ncid, varname='NIND', xtype=ncprec, &
+            dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
+            long_name='number of individuals', units='individuals/m2 vegetated land', &
+            missing_value=spval, fill_value=spval)
+    else 
+       call ncd_defvar(ncid=ncid, varname='FPCGRID', xtype=ncprec, &
+            dim1name='gridcell', dim2name='pft', dim3name='time', &
+            long_name='plant functional type cover', units='fraction of vegetated area', &
+            missing_value=spval, fill_value=spval)
+       
+       call ncd_defvar(ncid=ncid, varname='NIND', xtype=ncprec, &
+            dim1name='gridcell', dim2name='pft', dim3name='time', &
+            long_name='number of individuals', units='individuals/m2 vegetated land', &
+            missing_value=spval, fill_value=spval)
+    end if
 
     call ncd_enddef(ncid)
 
@@ -392,18 +414,18 @@ contains
     ! Write variables
     ! -----------------------------------------------------------------------
 
-    call ncd_io(ncid=ncid, varname='edgen', data=llatlon%edges(1), flag='write')
-    call ncd_io(ncid=ncid, varname='edgee', data=llatlon%edges(2), flag='write')
-    call ncd_io(ncid=ncid, varname='edges', data=llatlon%edges(3), flag='write')
-    call ncd_io(ncid=ncid, varname='edgew', data=llatlon%edges(4), flag='write')
-
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    call ncd_io(ncid=ncid, varname='lon'     , data=llatlon%lonc, flag='write')
-    call ncd_io(ncid=ncid, varname='lat'     , data=llatlon%latc, flag='write')
-    call ncd_io(ncid=ncid, varname='longxy'  , data=ldomain%lonc, flag='write', dim1name=grlnd)
-    call ncd_io(ncid=ncid, varname='latixy'  , data=ldomain%latc, flag='write', dim1name=grlnd)
-    call ncd_io(ncid=ncid, varname='landmask', data=ldomain%mask, flag='write', dim1name=grlnd)
+    if (llatlon%isgrid2d) then
+       call ncd_io(ncid=ncid, varname='lon', data=llatlon%lonc, flag='write')
+       call ncd_io(ncid=ncid, varname='lat', data=llatlon%latc, flag='write')
+    end if
+    call ncd_io(ncid=ncid, varname='longxy'  , data=ldomain%lonc, flag='write', &
+         dim1name=grlnd)
+    call ncd_io(ncid=ncid, varname='latixy'  , data=ldomain%latc, flag='write', &
+         dim1name=grlnd)
+    call ncd_io(ncid=ncid, varname='landmask', data=ldomain%mask, flag='write', &
+         dim1name=grlnd)
 
     ! Write current date, current seconds, current day, current nstep
 

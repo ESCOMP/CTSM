@@ -123,7 +123,9 @@ export LAPI_DEBUG_RC_DREG_THRESHOLD=1000000
 export LAPI_DEBUG_QP_NOTIFICATION=no
 export LAPI_DEBUG_RC_INIT_SETUP=no
 
-export NETCDF_PATH=/contrib/netcdf-3.6.2
+source /contrib/Modules/3.2.6/init/sh
+module load netcdf/4.2.3_seq
+export NETCDF_PATH=$NETCDF
 if [ "\$CLM_FC" = "GENIBM" ]; then
   export CESM_MACH="generic_ibm"
 else
@@ -178,7 +180,7 @@ export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
 export CESM_MACH="generic_linux_intel"
-export CFG_STRING="-cppdefs '-DFORTRANUNDERSCORE' "
+export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/glade/home/erik/bin/cprnc
@@ -414,7 +416,7 @@ export LIB_NETCDF=\${NETCDF_PATH}/lib
 export INC_MPI=""
 export LIB_MPI=""
 export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/glade/proj2/fis/cgd/cseg/csm/tools/cprnc.lynx/cprnc
+export CPRNC_EXE=/glade/proj3/cseg/tools/cprnc.lynx/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/glade/proj3/cseg"
 echo_arg="-e"
@@ -479,23 +481,22 @@ export CLM_RESTART_TASKS=129
 
 source /opt/modules/default/init/sh
 
+module remove netcdf
 if [ "\$CLM_FC" = "GENXT" ]; then
-  module remove netcdf
-  module load   netcdf/3.6.2
   export CESM_MACH="generic_xt"
 else
-  module switch pgi       pgi/9.0.4         #  9.0.4 tested for bfb on 2010-mar-12
+  module switch pgi       pgi/11.0.0         #  11.0.0 tested for bfb on 2011-mar
   module switch xt-mpt    xt-mpt/3.5.1      #  3.5.1 tested for bfb on 2010-mar-12
   module switch xt-libsci xt-libsci/10.4.1  # 10.4.1 tested for bfb on 2010-mar-12
   module swap xt-asyncpe xt-asyncpe/3.7
-  module remove netcdf
-  module load p-netcdf/1.1.1
-  module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
   export CESM_MACH="jaguarpf"
 fi
 
+module load netcdf/3.6.2
+module load p-netcdf/1.1.1
 module load   ncl
 module load subversion
+module load esmf/5.2.0-p1_with-netcdf_g
 
 export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
 export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)
@@ -528,6 +529,7 @@ export MAKE_CMD="gmake -j 25 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/tmp/proj/ccsm/tools/ccsm_cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
+export ESMFBIN_PATH=$ESMF_BIN
 dataroot="/tmp/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -574,6 +576,8 @@ export MAKE_CMD="make -j 4"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
+export ESMFBIN_PATH=\
+"/usr/local/esmf_5_2_0/DEFAULTINSTALLDIR/bin/binO/Darwin.intel.64.mpiuni.default"
 dataroot="/fis/cgd/cseg/csm"
 echo_arg=""
 input_file="tests_posttag_yong"

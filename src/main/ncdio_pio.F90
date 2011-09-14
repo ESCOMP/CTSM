@@ -44,6 +44,7 @@ module ncdio_pio
   public :: ncd_inqdid         ! inquire dimension id
   public :: ncd_inqdname       ! inquire dimension name
   public :: ncd_inqdlen        ! inquire dimension length
+  public :: ncd_inqfdims       ! inquire file dimnesions 
   public :: ncd_defvar         ! define variables
   public :: ncd_inqvid         ! inquire variable id
   public :: ncd_inqvname       ! inquire variable name
@@ -117,7 +118,7 @@ module ncdio_pio
   integer , parameter  , public  :: max_string_len = 256     ! length of strings
   real(r8), parameter  , public  :: fillvalue = 1.e36_r8     ! fill value for netcdf fields
 
-  integer, private :: io_type
+  integer, public :: io_type
 
   type(iosystem_desc_t), pointer, public  :: pio_subsystem
 
@@ -484,6 +485,78 @@ contains
     status = PIO_inq_dimname(ncid,dimid,dname)
 
   end subroutine ncd_inqdname
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_inqfdims
+!
+! !INTERFACE:
+  subroutine ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
+
+!
+! !ARGUMENTS:
+    type(file_desc_t), intent(inout):: ncid
+    logical          , intent(out)  :: isgrid2d
+    integer          , intent(out)  :: ni
+    integer          , intent(out)  :: nj
+    integer          , intent(out)  :: ns
+! !LOCAL VARIABLES:
+!EOP
+    integer  :: dimid                                ! netCDF id
+    integer  :: ier                                  ! error status 
+    character(len=32) :: subname = 'surfrd_filedims' ! subroutine name
+!-----------------------------------------------------------------------
+
+    if (single_column) then
+       ni = 1
+       nj = 1
+       ns = 1
+       isgrid2d = .true.
+       RETURN
+    end if
+
+    ni = 0
+    nj = 0
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
+    ier = pio_inq_dimid (ncid, 'lon', dimid)
+    if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, ni)
+    ier = pio_inq_dimid (ncid, 'lat', dimid)
+    if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, nj)
+
+    ier = pio_inq_dimid (ncid, 'lsmlon', dimid)
+    if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, ni)
+    ier = pio_inq_dimid (ncid, 'lsmlat', dimid)
+    if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, nj)
+
+    ier = pio_inq_dimid (ncid, 'ni', dimid)
+    if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, ni)
+    ier = pio_inq_dimid (ncid, 'nj', dimid)
+    if (ier == PIO_NOERR) ier = pio_inq_dimlen(ncid, dimid, nj)
+
+    ier = pio_inq_dimid (ncid, 'gridcell', dimid)
+    if (ier == PIO_NOERR) then
+       ier = pio_inq_dimlen(ncid, dimid, ni)
+       if (ier == PIO_NOERR) nj = 1
+    end if
+
+    call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+
+    if (ni == 0 .or. nj == 0) then
+       write(iulog,*) trim(subname),' ERROR: ni,nj = ',ni,nj,' cannot be zero '
+       call endrun()
+    end if
+
+    if (nj == 1) then
+       isgrid2d = .false.
+    else
+       isgrid2d = .true.
+    end if
+
+    ns = ni*nj
+
+  end subroutine ncd_inqfdims
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1691,17 +1764,7 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          if (single_column) then
-             call scam_field_offsets(ncid,'undefined',vardesc,start,count, &
-                                     found=found,posNOTonfile=posNOTonfile)
-             if ( found )then
-                status = pio_get_var(ncid, varid, start, count, data)
-             else
-                status = pio_get_var(ncid, varid, data)
-             end if
-          else
-             status = pio_get_var(ncid, varid, data)
-          endif
+          status = pio_get_var(ncid, varid, data)
        endif
        if (present(readvar)) readvar = varpresent
 
@@ -1874,11 +1937,11 @@ contains
     character(len=*),parameter :: subname='ncd_io_int_var1' ! subroutine name
 !-----------------------------------------------------------------------
 
+    clmlevel = dim1name
+
     if (masterproc .and. debug > 1) then
        write(iulog,*) subname//' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     end if
-
-    clmlevel = dim1name
 
     if (flag == 'read') then
 
@@ -2142,11 +2205,11 @@ contains
     character(len=*),parameter :: subname='ncd_io_real_var1' ! subroutine name
 !-----------------------------------------------------------------------
 
+    clmlevel = dim1name
+
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     endif
-
-    clmlevel = dim1name
 
     if (flag == 'read') then
 
@@ -2227,7 +2290,7 @@ contains
 !
 ! !INTERFACE:
   subroutine ncd_io_int_var2(varname, data, dim1name, &
-                         lowerb2, upperb2, flag, ncid, nt, readvar, switchdim)
+                         lowerb2, upperb2, flag, ncid, nt, readvar)
 !
 ! !DESCRIPTION:
 ! Netcdf i/o of 2d initial integer field out to netCDF file
@@ -2244,14 +2307,12 @@ contains
     integer, optional, intent(in)  :: nt              ! time sample index
     integer, optional, intent(in)  :: lowerb2,upperb2 ! lower and upper bounds of second dimension
     logical, optional, intent(out) :: readvar         ! true => variable is on initial dataset (read only)
-    logical, optional, intent(in)  :: switchdim            ! true=> permute dim1 and dim2 for output
 !
 ! !REVISION HISTORY:
 !
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer, pointer  :: temp(:,:)
     integer           :: ndim1,ndim2       
     character(len=8)  :: clmlevel   ! clmlevel
     character(len=32) :: dimname    ! temporary      
@@ -2267,7 +2328,6 @@ contains
     integer           :: count(4)   ! netcdf count index
     logical           :: varpresent ! if true, variable is on tape
     integer           :: xtype      ! netcdf data type
-    integer           :: i,j      
     integer           :: lb1,lb2
     integer           :: ub1,ub2
     type(iodesc_plus_type) , pointer  :: iodesc_plus
@@ -2275,20 +2335,10 @@ contains
     character(len=*),parameter :: subname='ncd_io_int_var2' ! subroutine name
 !-----------------------------------------------------------------------
 
-    if (masterproc .and. debug > 1) then
-       write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
-    end if
-
     clmlevel = dim1name      
 
-    if (present(switchdim)) then
-       lb1 = lbound(data, dim=1)
-       ub1 = ubound(data, dim=1)
-       lb2 = lbound(data, dim=2)
-       ub2 = ubound(data, dim=2)
-       if (present(lowerb2)) lb2 = lowerb2
-       if (present(upperb2)) ub2 = upperb2
-       allocate(temp(lb2:ub2,lb1:ub1))
+    if (masterproc .and. debug > 1) then
+       write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     end if
 
     if (flag == 'read') then
@@ -2324,27 +2374,13 @@ contains
              do n = 1,ndims_iod
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
-             if (present(switchdim)) then
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum, switchdim=.true.)
-             else
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                      xtype, iodnum)
-             end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
              end if
-             if (present(switchdim)) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status)
-                do j = lb2,ub2
-                do i = lb1,ub1
-                   data(i,j) = temp(j,i) 
-                end do
-                end do
-             else
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             end if
+             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
           end if
        end if
        if (present(readvar)) readvar = varpresent
@@ -2368,27 +2404,13 @@ contains
        do n = 1,ndims_iod
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
-       if (present(switchdim)) then
-          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-               xtype, iodnum, switchdim=.true.)
-       else
-          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                xtype, iodnum)
-       end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
        end if
-       if (present(switchdim)) then
-        do j = lb2,ub2
-        do i = lb1,ub1
-             temp(j,i) = data(i,j)
-          end do
-          end do
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=0)
-       else
-          call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=0)
-       end if
+       call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=0)
 
     else
        
@@ -2425,7 +2447,7 @@ contains
     integer, optional, intent(in)  :: nt              ! time sample index
     integer, optional, intent(in)  :: lowerb2,upperb2 ! lower and upper bounds of second dimension
     logical, optional, intent(out) :: readvar         ! true => variable is on initial dataset (read only)
-    logical, optional, intent(in)  :: switchdim            ! true=> permute dim1 and dim2 for output
+    logical, optional, intent(in)  :: switchdim       ! true=> permute dim1 and dim2 for output
 !
 ! !REVISION HISTORY:
 !
@@ -2451,16 +2473,17 @@ contains
     integer           :: i,j      
     integer           :: lb1,lb2
     integer           :: ub1,ub2
+    integer           :: itemp      ! integer temporary if switchdim is on
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
     character(len=*),parameter :: subname='ncd_io_real_var2' ! subroutine name
 !-----------------------------------------------------------------------
 
+    clmlevel = dim1name      
+
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     end if
-
-    clmlevel = dim1name      
 
     if (present(switchdim)) then
        lb1 = lbound(data, dim=1)
@@ -2482,9 +2505,25 @@ contains
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)    ! Correct ????
+                if (present(switchdim)) then
+                   itemp    = count(1)
+                   count(1) = count(3)
+                   count(3) = itemp
+                   itemp    = start(1)
+                   start(1) = start(3)
+                   start(3) = itemp
+                end if
                 if (present(nt)) start(4) = nt
              else
                 count(2) = size(data,dim=2)    ! Correct ????
+                if (present(switchdim)) then
+                   itemp    = count(1)
+                   count(1) = count(2)
+                   count(2) = itemp
+                   itemp    = start(1)
+                   start(1) = start(2)
+                   start(2) = itemp
+                end if
                 if (present(nt)) start(3) = nt
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
@@ -2635,11 +2674,11 @@ contains
     character(len=*),parameter :: subname='ncd_io_int_var3' ! subroutine name
 !-----------------------------------------------------------------------
 
+    clmlevel = dim1name      
+
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     end if
-
-    clmlevel = dim1name      
 
     if (flag == 'read') then
 
@@ -2775,12 +2814,11 @@ contains
     character(len=*),parameter :: subname='ncd_io_real_var3' ! subroutine name
 !-----------------------------------------------------------------------
 
+    clmlevel = dim1name      
 
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     end if
-
-    clmlevel = dim1name      
 
     if (flag == 'read') then
 

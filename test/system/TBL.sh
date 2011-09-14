@@ -78,7 +78,7 @@ fi
 
 echo "TBL.sh: starting b4b comparisons " 
 files_to_compare=`cd ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.$6.$7; ls *.clm*.h*.nc`
-if [ -z "${files_to_compare}" ] && [ "$debug" != "YES" ]; then
+if [ -z "${files_to_compare}" ] && [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TBL.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 6

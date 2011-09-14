@@ -89,7 +89,7 @@ contains
      implicit none
      character(len=*), intent(in)  :: fulpath !Archival or permanent disk full pathname
      character(len=*), intent(out) :: locfn   !output local file name
-     integer, optional, intent(in) :: iflag   !0=>abort if file not found 1=>do not abort
+     integer,          intent(in)  :: iflag   !0=>abort if file not found 1=>do not abort
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -131,7 +131,7 @@ contains
         RETURN
      else
         if (masterproc) write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath
-        if (present(iflag) .and. iflag==0) then
+        if (iflag==0) then
            call endrun ('GETFIL: FAILED to get '//trim(fulpath))
         else
            RETURN

@@ -276,9 +276,10 @@ contains
 ! !USES:
     use fileutils    , only : getfil
     use shr_const_mod, only : SHR_CONST_CDAY
+    use domainMod    , only : llatlon
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varctl   , only : nsrest, nsrStartup, nsrContinue
-    use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
+    use clm_varpar   , only : max_pft_per_gcell
     use spmdMod      , only : masterproc
     use clm_time_manager , only : get_step_size
     use pftvarcon    , only : noveg, nc3_nonarctic_grass, nc3crop, nirrig
@@ -666,8 +667,8 @@ contains
        end if
        call getfil(fcpool, locfn, 0)
        call ncd_pio_openfile (ncid, locfn, 0)
-       call check_dim(ncid, 'longitude', lsmlon)
-       call check_dim(ncid, 'latitude',  lsmlat)
+       call check_dim(ncid, 'longitude', llatlon%ni)
+       call check_dim(ncid, 'latitude',  llatlon%nj)
 
        ! TPOOL_C_LEAF
        call ncd_io(ncid=ncid, varname='TPOOL_C_LEAF',flag='read', data=rloc, dim1name=nameg, readvar=readvar)
@@ -868,7 +869,6 @@ contains
     use decompMod    , only : get_proc_bounds, get_proc_global
     use subgridAveMod, only : p2g
     use domainMod    , only : ldomain, llatlon
-    use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
     use ncdio_pio
 !
@@ -902,9 +902,13 @@ contains
 ! !REVISION HISTORY:
 ! 2004.08.17 Created by Forrest Hoffman
 !
-!
 !EOP
 !-----------------------------------------------------------------------
+
+    if (.not. llatlon%isgrid2d) then
+       write(iulog,*)trim(subname),' 1d input grid is not supported for CASA'
+       call endrun()
+    end if
 
     Tpool_C    => clm3%g%l%c%p%pps%Tpool_C
 
@@ -913,8 +917,8 @@ contains
 
     call ncd_pio_createfile(ncid, 'CPOOL_INITIAL.nc')
 
-    call ncd_defdim(ncid, 'longitude', lsmlon, dimid)
-    call ncd_defdim(ncid, 'latitude' , lsmlat, dimid)
+    call ncd_defdim(ncid, 'longitude', llatlon%ni, dimid)
+    call ncd_defdim(ncid, 'latitude' , llatlon%nj, dimid)
 
     call ncd_defvar(ncid=ncid, varname='longitude', xtype=ncd_double, &
          dim1name='longitude', long_name='coordinate longitude', &

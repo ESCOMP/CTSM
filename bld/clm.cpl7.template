@@ -32,7 +32,8 @@ $CODEROOT/lnd/clm/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/c
 #--------------------------------------------------------------------
 
 # RTM resolution (only R05 is available now)
-# 19BASIN and RX1 having RTM to Ocean mapping files available
+# R19 (19-basin) and RX1 do have RTM to Ocean mapping files available
+# BUT -- we don't have CLM datasets available for these resolutions
 setenv CLM_RTM_RES "R05"
 
 

@@ -1,4 +1,4 @@
 &clmexp
- mksrf_fccsmdom='/fs/cgd/csm/inputdata/lnd/dlnd7/domain.lnd.4x5_gx3v5.060404.nc'
- mksrf_fclmgrid='/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_4x5_060404.nc'
+ mksrf_fccsmdom='/glade/proj3/cseg/inputdata/lnd/dlnd7/domain.lnd.4x5_gx3v5.060404.nc'
+ mksrf_fclmgrid='/glade/proj3/cseg/inputdata/lnd/clm2/griddata/griddata_4x5_060404.nc'
 /
