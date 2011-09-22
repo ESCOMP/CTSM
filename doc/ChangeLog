@@ -1,4 +1,137 @@
 ===============================================================
+Tag name:  clm4_0_36
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Sep 22 11:05:59 MDT 2011
+One-line Summary: Comment out RTM mapping files for f09 and f19
+
+Purpose of changes:
+
+Comment out the RTM mapping files for f09/f19 so answers are the same as clm4_0_34 and as the f19 mapping
+files cause the fully coupled model to blow up in POP. Add "mv" option to mksurfdata.pl and make -nomv the
+default so it doesn't try to copy files by default. Increase length of filename strings for mksurfdata pftdyn
+files. Add some metadata for some restart file variables. Add "new good wood harvest" datasets
+and option (-new_woodharv) to mksurfdata.pl from Peter Lawrence so can make surface 
+datasets with either set of files.  New good wood harvest applies to rcp6 and rcp8.5. 
+Also add in some new mapping files for: 512x1024,128x256,64x128,32x64,8x16,0.23x0.31,5x5_amazon. 
+Add SCRIP grid files for: ne4np4,ne16np4, ne60np4, ne240np4. Add 3x3min resolution 
+and 3x3min SCRIP grid file which will be used for high resolution surface dataset 
+creation in the future. Use new surface datasets with old fatmgrid values for f09_g16
+for 1850 and 2000 so that answers can be identical to clm4_0_34 without requiring the
+fatmgrid file.
+
+Bugs fixed (include bugzilla ID): 
+                                 1414 (Answers change @ f09 resolution w/o fatmgrid file)
+                                 1413 (re is in incorrect units in mksurfdata_map)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  896 (T62 mode does not work)
+                                  935 (RTM warning NOT an error)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1398 (clm and mksurfdata_map needs to check map files for consistency)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1404 (Inconsistent domain and fatmlndfrc files)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Type of tag: critical
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: 
+   Comment out RTM mapping files for f09/f19
+   Also new mapping files for: 512x1024,128x256,64x128,32x64,8x16,0.23x0.31,5x5_amazon. 
+   Add SCRIP grid files for: ne4np4,ne16np4, ne60np4, ne240np4. 
+   Add 3x3min SCRIP grid file.
+   New surface datasets with old fatmgrid grid coordinate values for f09/1850/2000
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90 -------------- Increase pftdyn file length to 135
+   M   models/lnd/clm/tools/mksurfdata_map/src/mkfileMod.F90 -------------- Increase nchar dim to 256
+   M   models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl ------------------ Add "mv" option with "nomv" the default
+   M   models/lnd/clm/tools/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt - Increse length of strings for files
+
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Add 3x3min,
+           ne4np4,ne16np4, ne60np4, ne240np4 as valid resolutions
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Comment out f09/f19 RTM mapping files
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Add new 
+          good wood harvest pftdyn input files from Peter Lawrence for mksurfdata_map 
+          for rcp6 and rcp8.5
+
+   M   models/lnd/clm/src/biogeochem/CNrestMod.F90 --------- Add some FillValue to some fields for restart files
+   M   models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 - Add some FillValue to some fields for restart files
+
+Summary of testing:
+
+  bluefire interactive testing: Following PASS
+001 sm754 TSMtools.sh mksurfdata_map tools__s namelist ..........................................PASS
+003 sm953 TSMscript_tools.sh mkmapdata mkmapdata.sh mkmapdata_if10 ..............................PASS
+005 sm954 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......PASS
+007 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................PASS
+008 bl9S4 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional ....................PASS
+  bluefire/CESM testing: All PASS except (compare to clm4_0_34)
+CFAIL ERS_E.T31_g37.I1850.bluefire.GC.125250 (ESMF doesn't work with NetCDF4)
+BFAIL ERB.ne30_g16.I_1948-2004.bluefire.compare.clm4_0_34 (ne30 wasn't in clm4_0_34) (answers are identical to clm4_0_35)
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm4_0_34 (I1850SPINUPCN wasn't in clm4_0_34 or before)
+FAIL  NCK.f10_f10.I.bluefire -- scripts needs to cleannamelist after changing NINST_LND
+  bluefire extra CESM testing: Following PASS
+PASS  ERS.f09_g16.ICN.bluefire
+PASS  ERS.f09_g16.ICN.bluefire.generate.clm4_0_36
+PASS  ERS.f09_g16.ICN.bluefire.compare_hist.clm4_0_33
+PASS  ERS.f09_g16.ICN.bluefire.compare.clm4_0_33
+PASS  ERS.f09_g16.I1850CN.bluefire
+PASS  ERS.f09_g16.I1850CN.bluefire.generate.clm4_0_36
+PASS  ERS.f09_g16.I1850CN.bluefire.compare_hist.clm4_0_33
+PASS  ERS.f09_g16.I1850CN.bluefire.compare.clm4_0_33
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_35
+
+Changes answers relative to baseline: f09/f19 now same as clm4_0_34
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_35
 Originator(s):  erik (Erik Kluzek), mvertens
 Date: Tue Sep 13 22:15:17 MDT 2011
@@ -67,6 +200,8 @@ Known bugs (include bugzilla ID):
                                  1409 (ne120 is having restart trouble on jaguar with NetCDF3)
                                  1410 (Problem running PST.f09_g16.I.jaguarpf)
                                  1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1413 (re is in incorrect units in mksurfdata_map)
+                                 1414 (Answers change @ f09 resolution w/o fatmgrid file)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

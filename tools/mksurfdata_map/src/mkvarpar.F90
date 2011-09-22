@@ -23,7 +23,7 @@ module mkvarpar
   integer, parameter :: numsolar = 2  ! number of solar types (Direct,Diffuse)
   integer, parameter :: numrad = 2    ! number of solar bands (VIS,NIR)
   real(r8),parameter :: elev_thresh  = 2040._r8   ! elevation threshold for screening urban areas
-  real(r8),parameter :: re = SHR_CONST_REARTH
+  real(r8),parameter :: re = SHR_CONST_REARTH*0.001
 
 !
 !EOP

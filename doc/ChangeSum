@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_36         erik 09/22/2011 Comment out RTM mapping files for f09 and f19
    clm4_0_35         erik 09/13/2011 Bring in Mariana's non2D grid branch to trunk, enabling HOMME grids: ne30np4/ne120np4
    clm4_0_34         erik 08/18/2011 Bring tcens branch to trunk, fix a few issues
    clm4_0_33         erik 07/25/2011 Move changes on release branch over to trunk

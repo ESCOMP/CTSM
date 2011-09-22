@@ -56,6 +56,8 @@ my %opts = (
                years=>"1850,2000",
                glc_nec=>0,
                help=>0,
+               mv=>0,
+               ngwh=>undef,
                irrig=>undef,
                pft_override=>undef,
                pft_frc=>undef,
@@ -92,6 +94,10 @@ OPTIONS
      -irrig                        If you want to include irrigated crop in the output file.
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
+     -mv                           If you want to move the files after creation to the correct location in inputdata
+                                   (by default -nomv is assumed so files are NOT moved)
+     -new_woodharv                 Use the new good wood harvesting (for rcp6 and rcp8.5)
+                                   (by default use the old harvesting used for IPCC simulations)
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -216,11 +222,13 @@ sub trim($)
         "d|debug"      => \$opts{'debug'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
+        "new_woodharv" => \$opts{'ngwh'},
         "exedir=s"     => \$opts{'exedir'},
         "h|help"       => \$opts{'help'},
         "usrname=s"    => \$opts{'usrname'},
         "glc_nec=i"    => \$opts{'glc_nec'},
         "irrig"        => \$opts{'irrig'},
+        "mv"           => \$opts{'mv'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
         "soil_col=i"   => \$opts{'soil_col'},
@@ -514,7 +522,7 @@ EOF
                $desc     = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
                $desc_yr0 = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr0  );
             }
-            my $strlen = 125;
+            my $strlen = 135;
             my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
             my $options = "";
             my $crpdes  = "";
@@ -530,8 +538,12 @@ EOF
 		    my $fhpftdyn = IO::File->new;
 		    $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
 		    print "Writing out pftdyn text file: $pftdyntext_file\n";
+                    my $ngwh = "";
+                    if ( defined($opts{'ngwh'}) ) {
+                       $ngwh = ",ngwh=on";
+                    }
 		    for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-                        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}$mkcrop -var mksrf_fvegtyp -namelist clmexp`;
+                        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop}${ngwh} -var mksrf_fvegtyp -namelist clmexp`;
 			chomp( $vegtypyr );
 			printf $fhpftdyn $dynpft_format, $vegtypyr, $yr;
 			if ( $yr % 100 == 0 ) {
@@ -667,23 +679,23 @@ EOF
             my $lsvnmesg = "'$svnmesg $urbdesc $desc'";
             if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
                my $outdir = "$CSMDATA/$surfdir";
-               if ( defined($opts{'nomv'}) ) {
+               if ( $opts{'mv'} ) {
                   $outdir = ".";
                }
                my $ofile = "surfdata_${res}_${crpdes}${desc_yr0}_${irrdes}${sdate}";
                my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
                print "$mvcmd\n";
-               if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {
+               if ( ! $opts{'debug'} && $opts{'mv'} ) {
                   system( "$mvcmd" );
                   chmod( 0444, "$outdir/$ofile.nc" );
                }
                my $mvcmd = "/bin/mv -f $lfiles[0] $outdir/$ofile.log";
                print "$mvcmd\n";
-               if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {
+               if ( ! $opts{'debug'} && $opts{'mv'} ) {
                   system( "$mvcmd" );
                   chmod( 0444, "$outdir/$ofile.log" );
                }
-               if ( ! defined($opts{'nomv'}) ) {
+               if ( $opts{'mv'} ) {
                   print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
                   print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " . 
                              "$svnrepo/$surfdir/$ofile.nc\n";
@@ -696,11 +708,11 @@ EOF
                   $ofile = "surfdata.pftdyn_${res}_${desc}_${sdate}";
                   $mvcmd = "/bin/mv -f $pfiles[0] $outdir/$ofile.nc";
                   print "$mvcmd\n";
-                  if ( ! $opts{'debug'} || ! defined($opts{'nomv'}) ) {
+                  if ( ! $opts{'debug'} && $opts{'mv'} ) {
                      system( "$mvcmd" );
                      chmod( 0444, "$outdir/$ofile.nc" );
                   }
-                  if ( ! defined($opts{'nomv'}) ) {
+                  if ( $opts{'mv'} ) {
                      print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
                      print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc " .
                                 "$svnrepo/$surfdir/$ofile.nc\n";

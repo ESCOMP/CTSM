@@ -66,7 +66,7 @@ contains
     call check_ret(nf_def_dim (ncid, 'nlevurb' , nlevurb     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'numsolar', numsolar    , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'numrad'  , numrad      , dimid), subname)
-    call check_ret(nf_def_dim (ncid, 'nchar'   , 128         , dimid), subname)
+    call check_ret(nf_def_dim (ncid, 'nchar'   , 256         , dimid), subname)
 
     ! Create global attributes.
 

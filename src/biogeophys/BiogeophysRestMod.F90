@@ -347,7 +347,7 @@ contains
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='frac_sno', xtype=ncd_double,  &
             dim1name='column',&
-            long_name='fraction of ground covered by snow (0 to 1)',units='')
+            long_name='fraction of ground covered by snow (0 to 1)',units='unitless')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='frac_sno', data=cptr%cps%frac_sno, &
             dim1name=namec, &
@@ -431,7 +431,7 @@ contains
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='coszen', xtype=ncd_double,  &
             dim1name='column', &
-            long_name='cosine of solar zenith angle', units='')
+            long_name='cosine of solar zenith angle', units='unitless')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='coszen', data=cptr%cps%coszen, &
             dim1name=namec, &

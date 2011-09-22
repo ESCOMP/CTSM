@@ -96,7 +96,7 @@ contains
     ! dormant_flag
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='dormant_flag', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='dormancy flag',units='unitless' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='dormant_flag', data=pptr%pepv%dormant_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -108,7 +108,7 @@ contains
     ! days_active
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='days_active', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='number of days since last dormancy',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='days_active', data=pptr%pepv%days_active, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -120,7 +120,7 @@ contains
     ! onset_flag
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='onset_flag', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='flag if critical growing degree-day sum is exceeded',units='unitless' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_flag', data=pptr%pepv%onset_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -132,7 +132,7 @@ contains
     ! onset_counter
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='onset_counter', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='onset days counter',units='sec' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_counter', data=pptr%pepv%onset_counter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -144,7 +144,7 @@ contains
     ! onset_gddflag
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='onset_gddflag', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='onset flag for growing degree day sum',units='' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_gddflag', data=pptr%pepv%onset_gddflag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -156,7 +156,7 @@ contains
     ! onset_fdd
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='onset_fdd', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='onset freezing degree days counter',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_fdd', data=pptr%pepv%onset_fdd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -168,7 +168,7 @@ contains
     ! onset_gdd
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='onset_gdd', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='onset growing degree days',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_gdd', data=pptr%pepv%onset_gdd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -180,7 +180,7 @@ contains
     ! onset_swi
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='onset_swi', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='onset soil water index',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='onset_swi', data=pptr%pepv%onset_swi, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -192,7 +192,7 @@ contains
     ! offset_flag
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='offset_flag', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='offset flag',units='unitless' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_flag', data=pptr%pepv%offset_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -204,7 +204,7 @@ contains
     ! offset_counter
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='offset_counter', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='offset days counter',units='sec' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_counter', data=pptr%pepv%offset_counter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
@@ -216,7 +216,7 @@ contains
     ! offset_fdd
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='offset_fdd', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
+            dim1name='pft',long_name='offset freezing degree days counter',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_io(varname='offset_fdd', data=pptr%pepv%offset_fdd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
