@@ -2424,8 +2424,11 @@ contains
        else
           call ncd_io(varname='lon'      , data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
           call ncd_io(varname='lat'      , data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lonatm'   , data=adomain%lonc, dim1name=namea, ncid=nfid(t), flag='write')
-          call ncd_io(varname='latatm'   , data=adomain%latc, dim1name=namea, ncid=nfid(t), flag='write')
+          !--- Comment out fine-mesh lon/lat for HOMME grids as this option doesn't work -
+          !--- Code blows up if you uncomment this out, see bug 1415, EBK Sep/26/2011
+          !call ncd_io(varname='lonatm'   , data=adomain%lonc, dim1name=namea, ncid=nfid(t), flag='write')
+          !call ncd_io(varname='latatm'   , data=adomain%latc, dim1name=namea, ncid=nfid(t), flag='write')
+          !-------------------------------------------------------------------------------
        end if
        call ncd_io(varname='area'    , data=ldomain%area, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='areaupsc', data=ldomain%nara, dim1name=grlnd, ncid=nfid(t), flag='write')
