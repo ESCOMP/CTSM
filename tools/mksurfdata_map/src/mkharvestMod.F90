@@ -14,6 +14,7 @@ module mkharvestMod
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_sys_mod  , only : shr_sys_flush
+  use mkdomainMod  , only : domain_checksame
 
   implicit none
 
@@ -293,6 +294,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harv_o)
      if (ier/=0) call abort()
      ns_o = ldomain%ns
 
+     write (6,*) 'Open harvest file: ', trim(datfname)
      call check_ret(nf_open(datfname, 0, ncid), subname)
      do ifld = 1, numharv
         call check_ret(nf_inq_varid(ncid, mkharvest_fieldname(ifld), varid), subname)
@@ -306,33 +308,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harv_o)
 
      ! Error checks for domain and map consistencies
      
-     if (tdomain%ns /= tgridmap%na) then
-        write(6,*)'input domain size and gridmap source size are not the same size'
-        write(6,*)' domain size = ',tdomain%ns
-        write(6,*)' map src size= ',tgridmap%na
-        stop
-     end if
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
+     call domain_checksame( tdomain, ldomain, tgridmap )
 
      ! Determine harv_o on output grid
 

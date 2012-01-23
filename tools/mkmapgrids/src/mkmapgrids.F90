@@ -257,6 +257,7 @@ contains
   subroutine write_domain(domain,fname,grid_file_out)
 !
 ! !USES:
+    use shr_sys_mod, only : shr_sys_getenv
 !
 ! !DESCRIPTION:
 ! Write a scrip netcdf grid file
@@ -303,7 +304,20 @@ contains
     integer :: omode           ! netCDF output mode
     integer :: i,j,n,ns
     integer :: grid_size
+    integer :: values(8)
+    character(len= 8) :: date
+    character(len=10) :: time
+    character(len= 5) :: zone
+    character(len=18) :: datetime
+    character(len=16) :: logname
+    character(len=16) :: hostname
     character(len=32) :: subname = 'write_domain'
+    character(len=32) :: str
+    character(len=256) :: version = &
+    "$HeadURL$"
+    character(len=256) :: revision_id = &
+    "$Id$"
+    character(len=1500) :: hist
     integer :: ier, varid
     integer,  allocatable :: grid_dims(:)
 !-----------------------------------------------------------------
@@ -350,8 +364,40 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, 'title', &
          len_trim(grid_file_out), grid_file_out), subname)
 
+    call date_and_time (date, time, zone, values)
+
+    datetime(1:8) =        date(5:6) // '/' // date(7:8) // '/' // date(3:4)
+    datetime(9:)  = ' ' // time(1:2) // ':' // time(3:4) // ':' // time(5:6) // ' '
+
+    call shr_sys_getenv ('LOGNAME', logname,  ier)
+    call shr_sys_getenv ('HOST',    hostname, ier)
+
+    str = 'NCAR-CESM:CF-1.0'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+       'Conventions', len_trim(str), trim(str)), subname)
+
+
+    hist = datetime // trim (logname) // ':' // trim (hostname)
+
+    call check_ret(nf_put_att_text (ncid, nf_global, 'history', len_trim(hist), trim(hist) ), subname )
+
+
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, 'input_file', &
          len_trim(fname), trim(fname)), subname)
+
+    call check_ret(nf_put_att_text (ncid, nf_global, 'version', &
+         len_trim(version), version), subname)
+    call check_ret(nf_put_att_text (ncid, nf_global, 'revision_Id', &
+         len_trim(revision_id), revision_id), subname)
+
+#ifdef OPT
+    str = 'TRUE'
+#else
+    str = 'FALSE'
+#endif
+
+    call check_ret(nf_put_att_text (ncid, nf_global, 'Compiler_Optimized', &
+         len_trim(str), str), subname)
 
     ! define grid size, grid corner and grid rank dimensions
 

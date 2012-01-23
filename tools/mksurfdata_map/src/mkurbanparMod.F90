@@ -14,6 +14,7 @@ module mkurbanparMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
+  use mkdomainMod , only : domain_checksame
   implicit none
 
   private
@@ -93,6 +94,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, urbn_o)
   allocate(urbn_i(ns), stat=ier)
   if (ier/=0) call abort()
 
+  write (6,*) 'Open urban file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
   call check_ret(nf_inq_varid (ncid, 'PCT_URBAN', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, urbn_i), subname)
@@ -120,33 +122,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, urbn_o)
 
      ! Error checks for domain and map consistencies
      
-     if (tdomain%ns /= tgridmap%na) then
-        write(6,*)'input domain size and gridmap source size are not the same size'
-        write(6,*)' domain size = ',tdomain%ns
-        write(6,*)' map src size= ',tgridmap%na
-        stop
-     end if
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
+     call domain_checksame( tdomain, ldomain, tgridmap )
      
      ! Determine urbn_o on ouput grid
 
@@ -376,6 +352,7 @@ subroutine mkurbanpar(ldomain, mapfname, datfname, ndiag, ncido)
   call domain_read(tdomain     , datfname)
   call domain_read(tdomain_mask, datfname, readmask=.true.)
 
+  write (6,*) 'Open urban parameter file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncidi), subname)
   call check_ret(nf_inq_dimid(ncidi, 'nlevurb', dimid), subname)
   call check_ret(nf_inq_dimlen(ncidi, dimid, nlevurb_i), subname)
@@ -467,34 +444,7 @@ subroutine mkurbanpar(ldomain, mapfname, datfname, ndiag, ncido)
 
   ! Error checks for domain and map consistencies
 
-  if (tdomain%ns /= tgridmap%na) then
-     write(6,*)'input domain size and gridmap source size are not the same size'
-     write(6,*)' domain size = ',tdomain%ns
-     write(6,*)' map src size= ',tgridmap%na
-     stop
-  else
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
-  end if
+  call domain_checksame( tdomain, ldomain, tgridmap )
      
   ! Determine urban variables on output grid
 
@@ -886,6 +836,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
      write(6,*)'mkelev allocation error'; call abort()
   end if
 
+  write (6,*) 'Open elevation file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncidi), subname)
   call check_ret(nf_inq_varid (ncidi, trim(varname), varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, elev_i), subname)
@@ -898,33 +849,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
   ! Error checks for domain and map consistencies
   ! Note that the topo dataset has no landmask - so a unit landmask is assumed
 
-  if (tdomain%ns /= tgridmap%na) then
-     write(6,*)'input domain size and gridmap source size are not the same size'
-     write(6,*)' domain size = ',tdomain%ns
-     write(6,*)' map src size= ',tgridmap%na
-     stop
-  end if
-  do n = 1,tgridmap%ns
-     ni = tgridmap%src_indx(n)
-     if (tgridmap%mask_src(ni) /= 1) then
-        write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-        write(6,*)' domain  mask= ',tdomain%mask(ni)
-        write(6,*)' gridmap mask= 1'
-        stop
-     end if
-     if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-        write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-        write(6,*)' domain  lon= ',tdomain%lonc(ni)
-        write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-        stop
-     end if
-     if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-        write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-        write(6,*)' domain  lat= ',tdomain%latc(ni)
-        write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-        stop
-     end if
-  end do
+  call domain_checksame( tdomain, ldomain, tgridmap )
 
   ! Determine elev_o on output grid
 

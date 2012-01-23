@@ -6,6 +6,10 @@ One-line Summary:
 
 Purpose of changes:
 
+Requirements for tag:
+
+Test level of tag: doc, critical, standard, std-test, reg-test
+
 Bugs fixed (include bugzilla ID):
 
 Known bugs (include bugzilla ID):
@@ -15,9 +19,9 @@ Known Limitations:
                                  1147 (mkgriddata can't straddle over Greenwich)
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
                                   452 (Problem with support of soil-colors != 8 or 20)
-
-Type of tag: doc, critical, standard, std-test, reg-test
 
 Describe any changes made to build system:
 

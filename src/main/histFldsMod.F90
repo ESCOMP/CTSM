@@ -276,6 +276,7 @@ contains
          avgflag='A', long_name='reflected solar radiation', &
          ptr_pft=clm3%g%l%c%p%pef%fsr, c2l_scale_type='urbanf')
 
+    ! Rename of FSR for Urban intercomparision project
     call hist_addfld1d (fname='SWup', units='W/m^2',  &
          avgflag='A', long_name='upwelling shortwave radiation', &
          ptr_pft=clm3%g%l%c%p%pef%fsr, c2l_scale_type='urbanf', default='inactive')
@@ -296,6 +297,7 @@ contains
          avgflag='A', long_name='emitted infrared (longwave) radiation', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_out, c2l_scale_type='urbanf')
 
+    ! Rename of FIRE for Urban intercomparision project
     call hist_addfld1d (fname='LWup', units='W/m^2',  &
          avgflag='A', long_name='upwelling longwave radiation', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_out, c2l_scale_type='urbanf', default='inactive')
@@ -450,6 +452,7 @@ contains
          avgflag='A', long_name='zonal surface stress', &
          ptr_pft=clm3%g%l%c%p%pmf%taux)
 
+    ! Rename of TAUX for Urban intercomparision project (when U=V)
     call hist_addfld1d (fname='Qtau', units='kg/m/s^2',  &
          avgflag='A', long_name='momentum flux', &
          ptr_pft=clm3%g%l%c%p%pmf%taux, default='inactive')
@@ -808,7 +811,8 @@ contains
          ptr_col=clm3%g%l%c%cwf%qflx_snomelt, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QSOIL', units='mm/s',  &
-         avgflag='A', long_name='ground evaporation', &
+         avgflag='A', long_name= &
+         'Ground evaporation (soil/snow evaporation + soil/snow sublimation - dew)', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_soi, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QVEGE', units='mm/s',  &
@@ -967,6 +971,7 @@ contains
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
          ptr_lnd=clm_a2l%forc_wind)
 
+    ! Rename of WIND for Urban intercomparision project
     call hist_addfld1d (fname='Wind', units='m/s',  &
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
          ptr_gcell=clm_a2l%forc_wind, default = 'inactive')
@@ -999,6 +1004,7 @@ contains
          avgflag='A', long_name='atmospheric specific humidity', &
          ptr_lnd=clm_a2l%forc_q)
 
+    ! Rename of QBOT for Urban intercomparision project
     call hist_addfld1d (fname='Qair', units='kg/kg',  &
          avgflag='A', long_name='atmospheric specific humidity', &
          ptr_lnd=clm_a2l%forc_q, default='inactive')
@@ -4088,20 +4094,20 @@ contains
 
     call hist_addfld1d (fname='CISUN', units='Pa', &
          avgflag='A', long_name='sunlit intracellular CO2', &
-         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%cisun, default='inactive')
 
     call hist_addfld1d (fname='CISHA', units='Pa', &
          avgflag='A', long_name='shaded intracellular CO2', &
-         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%cisha, default='inactive')
 
 #if (defined C13)
     call hist_addfld1d (fname='ALPHAPSNSUN', units='proportion', &
          avgflag='A', long_name='sunlit c13 fractionation', &
-         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%alphapsnsun, default='inactive')
 
     call hist_addfld1d (fname='ALPHAPSNSHA', units='proportion', &
          avgflag='A', long_name='shaded c13 fractionation', &
-         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%alphapsnsha, default='inactive')
 #endif
 
     call hist_addfld1d (fname='FWET', units='proportion', &

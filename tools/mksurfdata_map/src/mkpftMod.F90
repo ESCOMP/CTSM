@@ -16,6 +16,7 @@ module mkpftMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use mkvarctl    , only : numpft
+  use mkdomainMod , only : domain_checksame
 
   implicit none
 
@@ -230,6 +231,7 @@ subroutine mkpft(ldomain, mapfname, fpft, firrig, ndiag, &
      call domain_read(tdomain,fpft)
      ns_i = tdomain%ns
 
+     write (6,*) 'Open PFT file: ', trim(fpft)
      call check_ret(nf_open(fpft, 0, ncid), subname)
 
      call check_ret(nf_inq_dimid  (ncid, 'pft', dimid), subname)
@@ -283,33 +285,7 @@ subroutine mkpft(ldomain, mapfname, fpft, firrig, ndiag, &
 
      ! Error checks for domain and map consistencies
 
-     if (tdomain%ns /= tgridmap%na) then
-        write(6,*)'input domain size and gridmap source size are not the same size'
-        write(6,*)' domain size = ',tdomain%ns
-        write(6,*)' map src size= ',tgridmap%na
-        stop
-     end if
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
+     call domain_checksame( tdomain, ldomain, tgridmap )
      ! Area-average percent cover on input grid [pctpft_i] to output grid 
      ! [pctpft_o] and correct [pctpft_o] according to land landmask
      ! Note that percent cover is in terms of total grid area.
@@ -353,7 +329,7 @@ subroutine mkpft(ldomain, mapfname, fpft, firrig, ndiag, &
         do m = 0,numpft
            wst_sum = wst_sum + pctpft_o(no,m)
         enddo
-        if (abs(wst_sum-100.) > 0.000001_r8) then
+        if (abs(wst_sum-100._r8) > 0.00001_r8) then
            write (6,*) subname//'error: pft = ', &
                 (pctpft_o(no,m), m = 0, numpft), &
                 ' do not sum to 100. at no = ',no,' but to ', wst_sum
@@ -632,6 +608,7 @@ subroutine mkirrig(ldomain, mapfname, datfname, ndiag, irrig_o)
   call domain_read(tdomain, datfname)
   ns_i = tdomain%ns
 
+  write (6,*) 'Open irrigation file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
 
   allocate(irrig_i(ns_i), stat=ier)
@@ -650,29 +627,7 @@ subroutine mkirrig(ldomain, mapfname, datfname, ndiag, irrig_o)
 
   ! Error checks for domain and map consistencies
 
-  if (tdomain%ns /= tgridmap%na) then
-     write(6,*)'input domain size and gridmap source size are not the same size'
-     write(6,*)' domain size = ',tdomain%ns
-     write(6,*)' map src size= ',tgridmap%na
-     stop
-  end if
-  do n = 1,tgridmap%ns
-     ni = tgridmap%src_indx(n)
-     ! NOTE - irrig dataset has no domain at this point
-     ! TODO - check this for future requirements
-     if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-        write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-        write(6,*)' domain  lon= ',tdomain%lonc(ni)
-        write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-        stop
-     end if
-     if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-        write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-        write(6,*)' domain  lat= ',tdomain%latc(ni)
-        write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-        stop
-     end if
-  end do
+  call domain_checksame( tdomain, ldomain, tgridmap )
 
   ! Do mapping from input to output grid
 

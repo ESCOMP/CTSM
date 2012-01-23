@@ -183,10 +183,11 @@ So do the following:
 > ./xmlchange -file env_conf.xml -id &CLMCONFIG; -val "-ad_spinup on" -append
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
 > ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
-> ./configure -case
-> ./xmlchange -file env_run.xml -id STOP_DATE -val 6010101
 # Make the output history files only annual, by adding the following to the &usernlclm; namelist
 > echo '&amp;clm_inparm hist_nhtfrq = -8760 /' > &usernlclm;
+# Now configure
+> ./configure -case
+> ./xmlchange -file env_run.xml -id STOP_DATE -val 6010101
 # Now build
 > ./CN_spinup.bluefire.build
 # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
@@ -225,6 +226,9 @@ Afterwards save the last restart file from this simulation to use in the next st
 > ./CN_exitspinup.bluefire.build
 # Now, Copy the last restart files from the earlier case into your run directory
 > cp /ptmp/$LOGIN/archive/CN_spinup/rest/CN_spinup.*.r*.0601-01-01-00000* /ptmp/$LOGIN/CN_exitspinup
+# And copy the rpointer files for datm and drv from the earlier case
+> cp /ptmp/$LOGIN/archive/CN_spinup/rest/rpointer.atm /ptmp/$LOGIN/CN_exitspinup
+> cp /ptmp/$LOGIN/archive/CN_spinup/rest/rpointer.drv /ptmp/$LOGIN/CN_exitspinup
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 > ./xmlchange -file env_run.xml -id STOP_N      -val 1
@@ -249,12 +253,16 @@ So do the following:
 > cd CN_finalspinup
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
 > ./xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
-> ./configure -case
 # Now, Copy the last &clm; restart file from the earlier case into your run directory
 > cp /ptmp/$LOGIN/archive/CN_exitspinup/rest/CN_exitspinup.clm*.r*.0602-01-01-00000.nc \
 /ptmp/$LOGIN/CN_finalspinup
+# And copy the rpointer files for datm and drv from the earlier case
+> cp /ptmp/$LOGIN/archive/CN_exitspinup/rest/rpointer.atm /ptmp/$LOGIN/CN_finalspinup
+> cp /ptmp/$LOGIN/archive/CN_exitspinup/rest/rpointer.drv /ptmp/$LOGIN/CN_finalspinup
 # Set the finidat file to the last restart file saved in previous step
 > echo '&amp;clm_inparm finidat = "CN_exitspinup.clm2.r.0602-01-01-00000.nc" /' > &usernlclm;
+# Now configure
+> ./configure -case
 > $EDITOR Buildconf/clm.buildnml.csh
 > Now build
 > .CN_finalspinup.bluefire.build

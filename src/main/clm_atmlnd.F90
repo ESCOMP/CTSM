@@ -713,7 +713,6 @@ subroutine clm_map2gcell(init)
   type(landunit_type), pointer :: lptr   ! pointer to landunit derived subtype
   type(column_type)  , pointer :: cptr   ! pointer to column derived subtype
   type(pft_type)     , pointer :: pptr   ! pointer to pft derived subtype
-  type(pft_dflux_type),pointer :: pdf    ! local pointer to derived subtype
   integer             :: n               ! Loop index over nmap
   real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
   real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen

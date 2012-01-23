@@ -52,7 +52,7 @@ for res in $resols; do
   dir=$mapdir/$res
   #----------------------------------------------------------------------
   files=(map_*${res}*_aave_da_c??????.nc)
-  if [ ${#files[*]} < 2 ]; then
+  if [ ${#files[*]} -lt 2 ]; then
      echo "No mappingfiles found for $res"
      exit 2
   else

@@ -382,7 +382,7 @@ supplied atmospheric forcing data for Vancouver.
 # Set the User namelist to set the output frequencies of the history files
 # Setting the stdurbpt use-case option create three history file streams
 # The frequencies and number of time-samples needs to be set
-> cat &lt;&lt; EOF &gt; user_nl_clm
+> cat &lt;&lt; EOF &gt; &usernlclm;
 &amp;clm_inparm
  hist_mfilt = $STOP_N,$STOP_N,$STOP_N
  hist_nhtfrq = -1,-1,-1

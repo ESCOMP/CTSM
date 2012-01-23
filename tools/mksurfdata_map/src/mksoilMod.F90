@@ -14,6 +14,7 @@ module mksoilMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod , only : shr_sys_flush
+  use mkdomainMod , only : domain_checksame
   implicit none
 
   SAVE
@@ -198,7 +199,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, pctglac_o, sand_o, clay
   real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
   logical  :: found                         ! temporary
   integer  :: kmap_max                      ! maximum overlap weights
-  integer, parameter :: kmap_max_min   = 50 ! kmap_max mininum value
+  integer, parameter :: kmap_max_min   = 90 ! kmap_max mininum value
   integer, parameter :: km_mx_ns_prod = 160000 ! product of kmap_max*ns_o to keep constant
   character(len=32) :: subname = 'mksoiltex'
 !-----------------------------------------------------------------------
@@ -226,6 +227,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, pctglac_o, sand_o, clay
   ns_i = tdomain%ns
   ns_o = ldomain%ns
 
+  write (6,*) 'Open soil texture file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
   call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
@@ -256,33 +258,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, pctglac_o, sand_o, clay
 
      ! Error checks for domain and map consistencies
 
-     if (tdomain%ns /= tgridmap%na) then
-        write(6,*)'input domain size and gridmap source size are not the same size'
-        write(6,*)' domain size = ',tdomain%ns
-        write(6,*)' map src size= ',tgridmap%na
-        stop
-     end if
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
+     call domain_checksame( tdomain, ldomain, tgridmap )
 
      ! kmap_max are the maximum number of mapunits that will consider on
      ! any output gridcell - this is set currently above and can be changed
@@ -337,7 +313,8 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, pctglac_o, sand_o, clay
         if (.not. found) then
            kmax(no) = kmax(no) + 1
            if (kmax(no) > kmap_max) then
-              write(6,*)'kmax is > kmap_max= ',kmap_max,' for no = ',no
+              write(6,*)'kmax is > kmap_max= ',kmax(no), 'kmap_max = ', &
+                         kmap_max,' for no = ',no
               write(6,*)'reset kmap_max in mksoilMod to a greater value'
               stop
            end if
@@ -666,6 +643,7 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
   allocate(soil_color_i(ns_i), stat=ier)
   if (ier/=0) call abort()
 
+  write (6,*) 'Open soil color file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
   call check_ret(nf_inq_varid (ncid, 'SOIL_COLOR', varid), subname)
   call check_ret(nf_get_var_int (ncid, varid, soil_color_i), subname)
@@ -734,33 +712,7 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
 
      ! Error checks for domain and map consistencies
 
-     if (tdomain%ns /= tgridmap%na) then
-        write(6,*)'input domain size and gridmap source size are not the same size'
-        write(6,*)' domain size = ',tdomain%ns
-        write(6,*)' map src size= ',tgridmap%na
-        stop
-     end if
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
+     call domain_checksame( tdomain, ldomain, tgridmap )
 
      ! find area of overlap for each soil color for each no
 
@@ -969,6 +921,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   call domain_read(tdomain,datfname)
   ns_i = tdomain%ns
 
+  write (6,*) 'Open soil organic file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
 
   call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
@@ -991,6 +944,9 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   ! Note that percent cover is in terms of total grid area.
 
   call gridmap_mapread(tgridmap, mapfname )
+
+  call domain_checksame( tdomain, ldomain, tgridmap )
+
   do lev = 1,nlay
      call gridmap_areaave(tgridmap, organic_i(:,lev), organic_o(:,lev))
   end do
@@ -1236,6 +1192,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
   if (ier/=0) call abort()
   ns_o = ldomain%ns
 
+  write (6,*) 'Open soil fmax file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
   call check_ret(nf_inq_varid (ncid, 'FMAX', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, fmax_i), subname)
@@ -1249,33 +1206,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
 
   ! Error checks for domain and map consistencies
 
-  if (tdomain%ns /= tgridmap%na) then
-     write(6,*)'input domain size and gridmap source size are not the same size'
-     write(6,*)' domain size = ',tdomain%ns
-     write(6,*)' map src size= ',tgridmap%na
-     stop
-  end if
-  do n = 1,tgridmap%ns
-     ni = tgridmap%src_indx(n)
-     if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-        write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-        write(6,*)' domain  mask= ',tdomain%mask(ni)
-        write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-        stop
-     end if
-     if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-        write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-        write(6,*)' domain  lon= ',tdomain%lonc(ni)
-        write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-        stop
-     end if
-     if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-        write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-        write(6,*)' domain  lat= ',tdomain%latc(ni)
-        write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-        stop
-     end if
-  end do
+  call domain_checksame( tdomain, ldomain, tgridmap )
 
   ! Determine fmax_o on output grid
  

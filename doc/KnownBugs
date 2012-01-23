@@ -1,23 +1,402 @@
-Known Bugs in CLM4.0    		                          Jul/14/2011
+Known Bugs in CLM4.0    		                          Oct/03/2011
 
 ====================================================================================
-Bug Number: 1378
-Some domain files for use by DATM for I cases are incorrect.
+Bug Number: 1404
+Inconsistent domain and fatmlndfrc files
 
-There was a bug in mkdatadomain that was fixed, but it looks like
 there are still some domain files that are used in the latest clm/datm in cesm1_0_3
-from the bad mkdatadomain.
+from the bad mkdatadomain.  This makes for inconsistent domain and fatmlndfrc files:
 
+T85_T85
+T42_T42
 T31_T31
 f10_f10
 f45_45
 f19_f19
 f09_f09
+f05_f05
+f02_f02
+
+and the pt1_pt1 datasets: 1x1_tropicAtl_test, 1x1_camdenNJ_navy, and
+1x1_asphaltjungleNJ_navy
 
 these would only affect I cases for the above resolutions. Since, standard
 simulations are done with ocean land/mask. And simulations with datm for other
 components would be with a ocean mask as well (T31_gx3v7, f19_gx1v6,
 f09_gx1v6).
+
+Here are the updated filenames to use in the datm template in models/atm/datm7/bld:
+
+[yong:atm/datm/bld] erik% svn diff datm.cpl7.template 
+Index: datm.cpl7.template
+===================================================================
+--- datm.cpl7.template	(revision 36)
++++ datm.cpl7.template	(working copy)
+@@ -35,11 +35,11 @@
+ 
+ if ( $ATM_GRID =~ $OCN_GRID ) then
+    if ( $ATM_GRID =~ 10x15     ) then
+-                                 set DOMAINFILE = 'domain.lnd.fv10x15_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.fv10x15_USGS.110713.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 4x5       ) then
+-                                 set DOMAINFILE = 'domain.lnd.fv4x5_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.fv4x5_USGS.110713.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 2.65x3.33 ) then
+@@ -51,40 +51,40 @@
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7
+    endif
+    if ( $ATM_GRID =~ 1.9x2.5   ) then
+-                                 set DOMAINFILE = 'domain.lnd.fv1.9x2.5_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.fv1.9x2.5_USGS.110713.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 0.9x1.25  ) then
+-                                 set DOMAINFILE = 'domain.lnd.fv0.9x1.25_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.fv0.9x1.25_USGS.110713.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 0.47x0.63 ) then
+-                                 set DOMAINFILE =
+                                  'domain.lnd.fv0.47x0.63_USGS.090106.nc'
++                                 set DOMAINFILE =
+'domain.lnd.fv0.47x0.63_USGS.111004.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 0.23x0.31 ) then
+-                                 set DOMAINFILE =
+                                  'domain.lnd.fv0.23x0.31_USGS.090106.nc'
++                                 set DOMAINFILE =
+'domain.lnd.fv0.23x0.31_USGS.111004.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+ 
+    if ( $ATM_GRID =~ 8x16      ) then
+-                                 set DOMAINFILE = 'domain.lnd.T5_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.T5_USGS.111004.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 32x64     ) then
+-                                 set DOMAINFILE = 'domain.lnd.T21_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.T21_USGS.111004.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 48x96     ) then
+-                                 set DOMAINFILE = 'domain.lnd.T31_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.T31_USGS.110713.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 64x128    ) then
+-                                 set DOMAINFILE = 'domain.lnd.T42_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.T42_USGS.111004.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+    if ( $ATM_GRID =~ 128x256   ) then
+-                                 set DOMAINFILE = 'domain.lnd.T85_USGS.090106.nc'
++                                 set DOMAINFILE = 'domain.lnd.T85_USGS.111004.nc'
+                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    endif
+ endif
+@@ -93,9 +93,9 @@
+ 
+    set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
+    if ( $CLM_PT1_NAME =~ 1x1_brazil          ) set DOMAINFILE =
+'domain.lnd.1x1pt-brazil_navy.090715.nc'
+-   if ( $CLM_PT1_NAME =~ 1x1_camdenNJ        ) set DOMAINFILE =
+    'domain.lnd.1x1pt-camdenNJ_navy.071220.nc'
+-   if ( $CLM_PT1_NAME =~ 1x1_tropicAtl       ) set DOMAINFILE =
+    'domain.lnd.1x1pt-tropicAtl_test.071010.nc'
+-   if ( $CLM_PT1_NAME =~ 1x1_asphaltjungleNJ ) set DOMAINFILE =
+    'domain.lnd.1x1pt-camdenNJ_navy.071220.nc'
++   if ( $CLM_PT1_NAME =~ 1x1_camdenNJ        ) set DOMAINFILE =
+'domain.lnd.1x1pt-camdenNJ_navy.111004.nc'
++   if ( $CLM_PT1_NAME =~ 1x1_tropicAtl       ) set DOMAINFILE =
+'domain.lnd.1x1pt-tropicAtl_test.111004.nc'
++   if ( $CLM_PT1_NAME =~ 1x1_asphaltjungleNJ ) set DOMAINFILE =
+'domain.lnd.1x1pt-camdenNJ_navy.111004.nc'
+    if ( $CLM_PT1_NAME =~ 1x1_mexicocityMEX   ) set DOMAINFILE =
+'domain.lnd.1x1pt-mexicocityMEX_navy.090715.nc'
+    if ( $CLM_PT1_NAME =~ 1x1_vancouverCAN    ) set DOMAINFILE =
+'domain.lnd.1x1pt-vancouverCAN_navy.090715.nc'
+    if ( $CLM_PT1_NAME =~ 1x1_urbanc_alpha    ) set DOMAINFILE =
+'domain.lnd.1x1pt-urbanc_alpha_test.110201.nc'
+
+====================================================================================
+Bug Number: 1397
+c2l_scale_type not specified for many history fields 
+
+Bill Sacks reports the following problem...
+
+Many history fields do not have a c2l_scale_type parameter (in histFldsMod),
+but it seems they should. For example, there is a set of water flux variables,
+starting with QFLX_RAIN_GRND and ending with QFLX_DEW_SNOW, most of which do
+not have a c2l_scale_type. From talking with Keith Oleson, it seems that at
+least some and maybe all of these should have c2l_scale_type='urbanf', by
+analogy with similar fluxes that do have a c2l_scale_type specified.
+
+From talking with Keith Oleson: it sounds like most fluxes should have
+c2l_scale_type='urbanf', but this isn't necessarily always true. So this will
+require more investigation to determine the appropriate scale type for each
+history field. 
+
+Most (all?) of the fields that do not have a c2l_scale_type are ones that were
+added after the urban model came in - for example, fields that were added when
+the CN code came in. So my guess is that whoever added these fields didn't
+realize that a c2l_scale_type was required.
+
+After these fields are fixed, perhaps scale_type_c2l should be made a required
+argument to hist_addfld1d and hist_addfld2d to prevent this problem from
+arising again in the future.
+
+====================================================================================
+Bug Number: 1393
+Error when running gregorian calendar as input
+
+With an input file that has a Gregorian calendar, for the US-UMB site, Keith
+Oleson found the following error...
+
+
+20110811 154401.626948 INFO     PET0 Running with ESMF Version 5.2.0
+20110811 154403.041866 ERROR    PET0 ESMCI_Calendar.C 1004
+ESMCI::Calendar::convertToTime() Input argument out of range ; Gregorian
+0/0/0 (1-12/>=1/>=-4800).
+20110811 154403.041883 ERROR    PET0 ESMCI_Time.C 292 ESMCI::Time::set() Input
+argument out of range Internal subroutine call return
+ed Error
+20110811 154403.041889 ERROR    PET0 ESMF_Time.F90 1278 ESMF_TimeSet() Input
+argument out of range - Internal subroutine call return
+ed Error
+
+No other error information in any other log file.
+
+Atmospheric forcing file time information looks like:
+
+        double time(time) ;
+                time:long_name = "observation time" ;
+                time:units = "days since 1999-01-01 00:00:00" ;
+                time:calendar = "gregorian" ;
+
+This is with...
+
+USE_ESMF_LIB is set to TRUE
+ESMF_LIBDIR is set to /contrib/esmf_5_2_0-64-0-mpiuni/lib/  (so that I can run
+with USE_MPISERIAL = TRUE)
+
+This error happens both for CALENDAR=NO_LEAP and CALENDAR=GREGORIAN.
+
+The following allows the model to run and it looks like the Feb 29th day of the
+atmospheric forcing files are being read in gregorian calendar mode.  The model
+flux output also seems to line up well with the observed fluxes which have leap
+days.
+
+In shr_cal_mod.F90, Replaced this line:
+
+-      call
+ESMF_TimeSet(ltime,d=eday,s=0,calendarType=ESMF_CAL_GREGORIAN,rc=rc)
+
+with this:
+
++      call
+ESMF_TimeSet(ltime,d=eday,s=0,calendarType=ESMF_CAL_JULIANDAY,rc=rc)
++      call ESMF_TimeSet(ltime,calendarType=ESMF_CAL_GREGORIAN,rc=rc)
+
+It looked to me like ESMF_TimeSet needs to be called first with the Julianday
+calendar to get a base time and then called again to convert to the gregorian.
+
+====================================================================================
+Bug Number: 1392
+US-UMB site has some incorrect data
+
+Soil data for the US-UMB site is backwards and slightly off.
+
+it is...
+
+US-UMB,-999,1,-999,0.6,92.8
+
+Index: PTCLM_sitedata/EXAMPLE_soildata.txt
+===================================================================
+--- PTCLM_sitedata/EXAMPLE_soildata.txt    (revision 29431)
++++ PTCLM_sitedata/EXAMPLE_soildata.txt    (working copy)
+@@ -1,2 +1,2 @@
+ site_code,soil_depth,n_layers,layer_depth,layer_sand%,layer_clay%
+-US-UMB,-999,1,-999,0.6,92.8
++US-UMB,-999,1,-999,92.6,0.6
+
+Also the US-UMB site has a "noleap" calendar, but actually has 366 days for
+leap years. This makes the calendar screwy (but see bug 1393 above).
+
+Keith Oleson noticed this.
+
+====================================================================================
+Bug Number: 1381
+Can't change monthly average files to NOT be one per month
+
+Hanna and Sean found that if you do the following...
+
+hist_mfilt = 12
+hist_nhtfrq = 0
+
+instead of getting 12 monthly time-samples on a yearly file -- you get a file
+per month. It would be nice to get what you ask for in this case. I also have
+examples of doing this sort of thing in the User's Guide so people will be led
+astray by the examples.
+
+Looks like the issue is this piece of code in histFileMod.F90...
+
+[yong:clm/src/main] erik% svn diff histFileMod.F90 
+Index: histFileMod.F90
+===================================================================
+--- histFileMod.F90    (revision 29486)
++++ histFileMod.F90    (working copy)
+@@ -522,7 +522,6 @@
+        tape(t)%begtime = day + sec/secspday
+        tape(t)%dov2xy = hist_dov2xy(t)
+        tape(t)%nhtfrq = hist_nhtfrq(t)
+-       if (hist_nhtfrq(t) == 0) hist_mfilt(t) = 1
+        tape(t)%mfilt = hist_mfilt(t)
+        if (hist_ndens(t) == 1) then
+           tape(t)%ncprec = ncd_double
+
+
+Although if you do the above, the filenames for monthly frequencies will still
+have year-month, even if they are a years worth of files or something. I
+suppose there's no way around that though...
+
+
+====================================================================================
+Bug Number: 1379
+All spinup tests fail for PTCLM testcases.csh
+
+All of the spinup tests fail for PTCLM on: jaguar, edinburgh, bluefire, and
+yong.
+
+Creating
+/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup
+
+Locking file
+/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup/env_case.xml
+Successfully created the case for bluefire
+Write
+/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup/README.PTCLM
+with command line
+Number of simulation nyears to run:                             600
+WARNING: nopointdata option was selected.  Model will crash if the site level
+data have not been created
+
+Run command: ./xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1pt_US-UMB
+Run command: ./xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val
+1x1pt_US-UMB
+Run command: ./xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
+Run command: ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_START -val 1999
+Run command: ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_END -val 2006
+Run command: ./xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val '-mask
+navy'
+Run command: ./xmlchange -file env_conf.xml -id USE_MPISERIAL -val TRUE
+Run command: ./xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS -val '-bgc cn
+-ad_spinup on'
+Run command: ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val 'on'
+Run command: ./xmlchange -file env_run.xml -id STOP_DATE -val 06010101
+Run command: ./xmlchange -file env_run.xml -id STOP_N -val 600
+Run command: ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+Run command: ./xmlchange -file env_run.xml -id REST_OPTION -val nyears
+Run command: ./xmlchange -file env_run.xml -id REST_N -val 120
+Run command: ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val
+/blhome/erik/inputdata
+&clm_inparm
+ hist_nhtfrq = -8760
+ hist_mfilt  = 100
+ fpftcon =
+'/blhome/erik/inputdata/lnd/clm2/pftdata/pft-physiology.c110425.US-UMB.nc'
+/
+Scripts created successfully
+
+cd
+/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup
+and then...
+Configure, build and run your case as normal
+
+unset echo
+14 PTCLM.1491722_US-UMB_ICN_ad_spinup.config\t\t\t
+Generating resolved namelist, prestage, and build scripts
+configure done.
+adding clm user file defaults for var domainfile with val
+/blhome/erik/inputdata/atm/datm7/domain.clm/domain.lnd.1x1pt_US-UMB_navy.nc
+adding clm user file defaults for var fatmgrid with val
+/blhome/erik/inputdata/lnd/clm2/griddata/griddata_1x1pt_US-UMB.nc
+adding clm user file defaults for var fatmlndfrc with val
+/blhome/erik/inputdata/lnd/clm2/griddata/fracdata_1x1pt_US-UMB_navy.nc
+adding clm user file defaults for var fsurdat with val
+/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata_1x1pt_US-UMB_simyr2000.nc
+adding clm user file defaults for var stream_fldfilename_ndep with val
+/blhome/erik/inputdata/lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_1x1pt_US-UMB.nc
+adding use_case 2000_control defaults for var sim_year with val 2000
+adding use_case 2000_control defaults for var sim_year_range with val constant
+adding use_case 2000_control defaults for var stream_year_first_ndep with val
+2000
+adding use_case 2000_control defaults for var stream_year_last_ndep with val
+2000
+adding use_case 2000_control defaults for var use_case_desc with val Conditions
+to simulate 2000 land-use
+Successfully generated resolved namelist, prestage, and build scripts
+Locking file env_conf.xml
+Generating clean_build script
+Generating submit script
+Generating build script
+Generating run script
+Locking file env_mach_pes.xml
+Successfully configured the case for bluefire
+If an old build exists for this case, you might want to
+   run the *.clean_build script before building
+14 PTCLM.1491722_US-UMB_ICN_ad_spinup.build\t\t\t
+-------------------------------------------------------------------------
+ CCSM BUILDNML SCRIPT STARTING
+ - To prestage restarts, untar a restart.tar file into
+/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/run
+ - Create modelio namelist input files
+ CCSM BUILDNML SCRIPT HAS FINISHED SUCCESSFULLY
+-------------------------------------------------------------------------
+ CCSM PRESTAGE SCRIPT STARTING
+ - CCSM input data directory, DIN_LOC_ROOT_CSMDATA, is /blhome/erik/inputdata
+ - Case input data directory, DIN_LOC_ROOT, is /blhome/erik/inputdata
+ - Checking the existence of input datasets in DIN_LOC_ROOT
+ CCSM PRESTAGE SCRIPT HAS FINISHED SUCCESSFULLY
+-------------------------------------------------------------------------
+ CCSM BUILDEXE SCRIPT STARTING
+ - Build Libraries: mct pio csm_share
+Tue Jul 26 14:14:02 MDT 2011
+/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/mct/mct.bldlog.110726-141401
+Tue Jul 26 14:15:00 MDT 2011
+/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/pio/pio.bldlog.110726-141401
+ERROR: pio.buildlib failed, see
+/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/pio/pio.bldlog.110726-141401
+ERROR: cat
+/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/pio/pio.bldlog.110726-141401
+14 PTCLM.1491722_US-UMB_ICN_ad_spinup.run\t\t\t
+BUILD_COMPLETE is not TRUE
+Please rebuild the model interactively via
+   ./PTCLM.1491722_US-UMB_ICN_ad_spinup.bluefire.build
+No match.
+14 PTCLM.1491722_US-UMB_ICN_ad_spinup.file\t\t\t
+CCSM PTCLM.1491722_US-UMB_ICN_ad_spinup clean_build FINISHED SUCCESSFULLY
+Run PTCLM for PTCLM.1491722_US-UMB_ICN_exit_spinup options =
+--caseidprefix=/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722
+--exit_spinup --verbose --aerdepgrid --ndepgrid --cesm_root
+/fis/cgd/home/erik/clm_trunk/ --finidat
+14 PTCLM.1491722_US-UMB_ICN_exit_spinup.PTCLM\t\t\t
+./PTCLM.py -d /blhome/erik/inputdata -m bluefire -s US-UMB -c ICN --rmold
+--nopointdata
+--caseidprefix=/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722
+--exit_spinup --verbose --aerdepgrid --ndepgrid --cesm_root
+/fis/cgd/home/erik/clm_trunk/ --finidat
+Usage: PTCLM.py [options] -d inputdatadir -m machine -s sitename
+
+PTCLM.py: error: --finidat option requires an argument
+unset echo
+/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_exit_spinup:
+A file or directory in the path name does not exist.
 
 ====================================================================================
 Bug Number: 1377
@@ -32,6 +411,30 @@ Here's one way to fix this issue after a case is built...
 
    sed "s/'extend','cycle'/'cycle','cycle'/g" Buildconf/datm.buildnml.csh > datm.bld
    mv datm.bld Buildconf/datm.buildnml.csh
+
+See bug 1368 below for a case where this causes a major problem with a 
+simulation.
+
+====================================================================================
+Bug Number: 1372
+Problem running at the same resolution as RTM / also running with 23 processors
+
+There was a PIO issue running with 23 processors, and also the following problem...
+
+Jim Edwards investigated this issue and found that...
+
+"...this one is a bug in clm.   In this case the clm dimensions
+(lon,lat) and the runoff dimensions (lonrof,latrof)
+have the same values - but I think that the data decompositions are different 
+- ncd_inqiodesc matchs them and tries
+to use the same iodesc which then causes an error in pio when you try to write
+the first runoff variable.   
+
+I think a possible solution is to change the iodesc_plus_type structure so that
+instead of storing the ndims and dims(:)
+you store dimids(:)  which will be different."
+
+The changes to fix this are fairly extensive. So we won't give a fix here.
 
 ====================================================================================
 Bug Number: 1370
@@ -70,6 +473,8 @@ I ran a spinup with PTCLM (to test the procedure and to get initial conditions
 for US-UMB, and be able to work the transient issue). For the final_spinup
 phase GPP was identically zero.
 
+This was fixed by setting taxmode='cycle'. See bug 1377 above.
+ 
 ====================================================================================
 Bug Number: 1367
 final_spinup stop time isn't right for PTCLM

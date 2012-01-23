@@ -335,12 +335,18 @@ SCRIP format grid data file
 <!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
+<entry id="mksrf_filename" type="char*256" category="mksurfdata"
+       group="default_settings" 
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_fglctopo,mksrf_flndtopo,mksrf_firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai" >
+Filename for mksurfdata_map to remap raw data into the output surface dataset
+</entry>
+
 <entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Plant Function Type dataset for mksurfdata
 </entry>
 
-<entry id="mksrf_glacier" type="char*256" category="mksurfdata"
+<entry id="mksrf_fglacier" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Dataset for percent glacier land-unit for mksurfdata
 </entry>
@@ -350,17 +356,22 @@ Dataset for percent glacier land-unit for mksurfdata
 Dataset for glacier topography
 </entry>
 
+<entry id="mksrf_flndtopo" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Dataset for land topography
+</entry>
+
 <entry id="mksrf_flai" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Leaf Area Index dataset for mksurfdata
 </entry>
 
-<entry id="mksrf_soitex" type="char*256" category="mksurfdata"
+<entry id="mksrf_fsoitex" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Soil texture dataset for mksurfdata
 </entry>
 
-<entry id="mksrf_soicol" type="char*256" category="mksurfdata"
+<entry id="mksrf_fsoicol" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Soil color dataset for mksurfdata
 </entry>
@@ -399,7 +410,7 @@ High resolution topography dataset for mksurfdata
 (used for glacier_mec land-units)
 </entry>
 
-<entry id="mksrf_irrig" type="char*256" category="mksurfdata"
+<entry id="mksrf_firrig" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Irrigation dataset for mksurfdata
 </entry>
@@ -409,9 +420,14 @@ Irrigation dataset for mksurfdata
 Organic soil dataset for mksurfdata
 </entry>
 
-<entry id="mksrf_flanwat" type="char*256" category="mksurfdata"
+<entry id="mksrf_flakwat" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
-Land water dataset for mksurfdata
+Lake water dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fwetlnd" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Wetland dataset for mksurfdata
 </entry>
 
 <entry id="mksrf_furban" type="char*256" category="mksurfdata"
@@ -1820,7 +1836,7 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 
 <entry id="lmask" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="nomask,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP">
+       valid_values="nomask,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE">
 Land mask description for mksurfdata input files
 </entry> 
 

@@ -31,7 +31,13 @@
        <li>Crop model (crop)</li>
        <li>Irrigation model (irrig)</li>
        <li>Data model forcing source (forcing)</li>
+       <li>Representative concentration pathway for future scenarios (rcp)</li>
+       <li>New good wood harvest (newwoodharv)</li>
        <li>Accelerated Decomposition spin-up mode (ad_spin-up)</li>
+       <li>Type of file (type)</li>
+       <li>Grid mapping to (to_hgrid)</li>
+       <li>Land-mask mapping to (to_lmask)</li>
+       <li>High resolution file? (hires)</li>
     </ol>
 
     <table border="1" cellpadding="10">
@@ -58,6 +64,9 @@
         <xsl:when test="string-length(@hgrid)>0">
              <xsl:value-of select="@hgrid"/>
         </xsl:when>
+        <xsl:when test="string-length(@frm_hgrid)>0">
+             <xsl:value-of select="@frm_hgrid"/>
+        </xsl:when>
         <xsl:otherwise>
              All res
         </xsl:otherwise>
@@ -67,6 +76,15 @@
         <xsl:choose>
         <xsl:when test="string-length(@mask)>0">
              <xsl:value-of select="@mask"/>
+        </xsl:when>
+        <xsl:when test="string-length(@lmask)>0">
+             <xsl:value-of select="@lmask"/>
+        </xsl:when>
+        <xsl:when test="string-length(@frm_lmask)>0">
+             <xsl:value-of select="@frm_lmask"/>
+        </xsl:when>
+        <xsl:when test="name()='mksrf_fvegtyp'">
+             MODIS
         </xsl:when>
         <xsl:otherwise>
              All masks
@@ -132,6 +150,24 @@
         </xsl:if>
         <xsl:if test="string-length(@source)>0">
         forcing=<xsl:value-of select="@source"/>
+        </xsl:if>
+        <xsl:if test="string-length(@rcp)>0">
+        rcp=<xsl:value-of select="@rcp"/>
+        </xsl:if>
+        <xsl:if test="string-length(@ngwh)>0">
+        newwoodharv=<xsl:value-of select="@ngwh"/>
+        </xsl:if>
+        <xsl:if test="string-length(@type)>0">
+        type=<xsl:value-of select="@type"/>
+        </xsl:if>
+        <xsl:if test="string-length(@to_hgrid)>0">
+        to_hgrid=<xsl:value-of select="@to_hgrid"/>
+        </xsl:if>
+        <xsl:if test="string-length(@to_lmask)>0">
+        to_lmask=<xsl:value-of select="@to_lmask"/>
+        </xsl:if>
+        <xsl:if test="string-length(@hires)>0">
+        hires=<xsl:value-of select="@hires"/>
         </xsl:if>
         </td>
       </tr>

@@ -51,7 +51,9 @@ my %opts = (
                rcp=>"-999.9", 
                debug=>0,
                exedir=>undef,
+               allownofile=>undef,
                crop=>undef,
+               hires=>undef,
                irrig=>undef, 
                years=>"1850,2000",
                glc_nec=>0,
@@ -82,6 +84,8 @@ sub usage {
 SYNOPSIS
      $ProgName [options]
 OPTIONS
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
      -crop                         Add in crop datasets
      -dinlc [or -l]                Enter the directory location for inputdata 
                                    (default $opts{'csmdata'})
@@ -91,6 +95,8 @@ OPTIONS
                                    (rather than create it on the fly) 
                                    (must be consistent with first year)
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
+     -hires                        If you want to use high-resolution input datasets rather than the default
+                                   lower resolution datasets (low resolution is typically at half-degree)
      -irrig                        If you want to include irrigated crop in the output file.
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
@@ -214,9 +220,11 @@ sub trim($)
 
    my $cmdline = "@ARGV";
    GetOptions(
+        "allownofile"  => \$opts{'allownofile'},
         "r|res=s"      => \$opts{'hgrid'},
         "crop"         => \$opts{'crop'},
         "irrig"        => \$opts{'irrig'},
+        "hires"        => \$opts{'hires'},
         "c|rcp=s"      => \$opts{'rcp'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
@@ -364,20 +372,42 @@ EOF
       #
       # Mapping files
       #
-      my %map; my %hgrd; my %lmsk;
+      my %map; my %hgrd; my %lmsk; my %datfil;
+      my $hires = "off";
+      if ( defined($opts{'hires'}) ) {
+         $hires = "on";
+      }
+      my $mopts  = "$queryopts -namelist default_settings $usrnam";
+      my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       foreach my $typ ( "lak", "veg", "voc", "top", "irr", "tex", "col", 
-                        "fmx", "lai", "urb", "org", "glc", "gtp" ) {
-         my $mopts = "$queryopts -silent -justvalue -namelist default_settings $usrnam";
-         my $lmask = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec -var lmask`;
+                        "fmx", "lai", "urb", "org", "glc", "gtp", "wet" ) {
+         my $lmask = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec,hires=$hires -var lmask`;
          $lmask = trim($lmask);
-         my $hgrid = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec -var hgrid`;
+         my $hgrid = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec,hires=$hires -var hgrid`;
          $hgrid = trim($hgrid);
+         my $filnm = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ -var mksrf_filename`;
+         $filnm = trim($filnm);
          $hgrd{$typ} = $hgrid;
          $lmsk{$typ} = $lmask;
          $map{$typ} = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts -namelist clmexp -options frm_hgrid=$hgrid,frm_lmask=$lmask,to_hgrid=$res,to_lmask=nomask -var map`;
          $map{$typ} = trim($map{$typ});
+         if ( $map{$typ} !~ /[^ ]+/ ) {
+            die "ERROR: could NOT find a mapping file for this resolution: $res and type: $typ at $hgrid and $lmask.\n";
+         }
+         if ( ! defined($opts{'allownofile'}) && ! -f $map{$typ} ) {
+            die "ERROR: mapping file for this resolution does NOT exist ($map{$typ}).\n";
+         }
+         $datfil{$typ} = `$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,glc_nec=$glc_nec -var $filnm`;
+         $datfil{$typ} = trim($datfil{$typ});
+         if ( $datfil{$typ} !~ /[^ ]+/ ) {
+            die "ERROR: could NOT find a $filnm data file for this resolution: $res and type: $typ at $hgrid and $lmask.\n";
+         }
+         if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
+            die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
+         }
          if ( $typ eq "irr" && ! defined($opts{'irrig'}) ) {
-            $map{$typ} = " ";
+            $map{$typ}    = " ";
+            $datfil{$typ} = " ";
          }
       }
       #
@@ -433,19 +463,10 @@ EOF
                $sim_year = $actual;
             }
             #
-            # Get glacier dataset
-            #
-            my $glcdata = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts -options glc_nec=$glc_nec,lmask=$lmsk{'glc'} -res $hgrd{'glc'} -namelist clmexp -var mksrf_glacier`;
-            $glcdata = trim($glcdata);
-            my $glctopo = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts -options glc_nec=$glc_nec,lmask=$lmsk{'gtp'} -res $hgrd{'gtp'} -namelist clmexp -var mksrf_fglctopo`;
-            $glctopo = trim($glctopo);
-            #
             # Irrigation dataset
             #
-            my $irrig = " ";
             my $irrdes = "";
             if ( defined($opts{'irrig'}) ) {
-              $irrig = "$CSMDATA/lnd/clm2/rawdata/mksrf_irrig_2160x4320_simyr2000.c110527.nc";
               $irrdes = "irrcr_";
             }
             #
@@ -465,28 +486,30 @@ EOF
  map_forganic   = '$map{'org'}'
  map_flai       = '$map{'lai'}'
  map_fharvest   = '$map{'lai'}'
- map_flanwat    = '$map{'lak'}'
+ map_flakwat    = '$map{'lak'}'
+ map_fwetlnd    = '$map{'wet'}'
  map_fvocef     = '$map{'voc'}'
  map_fsoitex    = '$map{'tex'}'
  map_firrig     = '$map{'irr'}'
  map_fglctopo   = '$map{'gtp'}'
  map_flndtopo   = '$map{'top'}'
- mksrf_fsoitex  = '$CSMDATA/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
- mksrf_forganic = '$CSMDATA/lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc'
- mksrf_flanwat  = '$CSMDATA/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
- mksrf_fmax     = '$CSMDATA/lnd/clm2/rawdata/mksrf_fmax.070406.nc'
- mksrf_fglacier = '$glcdata'
- mksrf_fvocef   = '$CSMDATA/lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c110531.nc'
- mksrf_fglctopo = '$glctopo'
- mksrf_flndtopo = '$CSMDATA/lnd/clm2/rawdata/topodata_10min_USGS_071205.nc'
- mksrf_firrig   = '$irrig'
+ mksrf_fsoitex  = '$datfil{'tex'}'
+ mksrf_forganic = '$datfil{'org'}'
+ mksrf_flakwat  = '$datfil{'lak'}'
+ mksrf_fwetlnd  = '$datfil{'wet'}'
+ mksrf_fmax     = '$datfil{'fmx'}'
+ mksrf_fglacier = '$datfil{'glc'}'
+ mksrf_fvocef   = '$datfil{'voc'}'
+ mksrf_fglctopo = '$datfil{'gtp'}'
+ mksrf_flndtopo = '$datfil{'top'}'
+ mksrf_firrig   = '$datfil{'irr'}'
  outnc_double   = $double
  all_urban      = $all_urb
 EOF
             my $urbdesc = "urb3den";
             if ( ! $urb_pt ) {
                print $fh <<"EOF";
- mksrf_furban   = '$CSMDATA/lnd/clm2/rawdata/mksrf_urban_3den_0.5x0.5_simyr2000.c090223_v1.nc'
+ mksrf_furban   = '$datfil{'urb'}'
 EOF
             } else {
                my $urbdata = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts -var fsurdat -filenameonly`;
@@ -501,7 +524,7 @@ EOF
 
             my $resol = "";
             if ( $res ne "1x1_tropicAtl" ) {
-               $resol = "-res 0.5x0.5";
+               $resol = "-res $hgrd{'veg'}";
             }
             my $sim_yr0 = $sim_year;
             my $sim_yrn = $sim_year;
@@ -530,7 +553,6 @@ EOF
                $options = "-options $mkcrop";
                $crpdes  = "mp20_";
             }
-            my $mksrf_flai = `$scrdir/../../bld/queryDefaultNamelist.pl $queryopts $resol $options -var mksrf_flai -namelist clmexp`;
             my $pftdyntext_file;
 	    if ( $sim_year ne $sim_yr0 ) {
 		if ( ! defined($opts{'dynpft'}) && ! $opts{'pft_override'} ) {
@@ -586,8 +608,8 @@ EOF
 
             print $fh <<"EOF";
  mksrf_fvegtyp  = '$vegtyp'
- mksrf_fsoicol  = '$CSMDATA/lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
- mksrf_flai     = '$mksrf_flai'
+ mksrf_fsoicol  = '$datfil{'col'}'
+ mksrf_flai     = '$datfil{'lai'}'
 EOF
 	    my $ofile = "surfdata_${res}_${desc_yr0}_${sdate}";
 	    print $fh <<"EOF";
@@ -684,14 +706,14 @@ EOF
                }
                my $ofile = "surfdata_${res}_${crpdes}${desc_yr0}_${irrdes}${sdate}";
                my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
-               print "$mvcmd\n";
                if ( ! $opts{'debug'} && $opts{'mv'} ) {
+                  print "$mvcmd\n";
                   system( "$mvcmd" );
                   chmod( 0444, "$outdir/$ofile.nc" );
                }
                my $mvcmd = "/bin/mv -f $lfiles[0] $outdir/$ofile.log";
-               print "$mvcmd\n";
                if ( ! $opts{'debug'} && $opts{'mv'} ) {
+                  print "$mvcmd\n";
                   system( "$mvcmd" );
                   chmod( 0444, "$outdir/$ofile.log" );
                }
@@ -707,8 +729,8 @@ EOF
                if ( $sim_year ne $sim_yr0 ) {
                   $ofile = "surfdata.pftdyn_${res}_${desc}_${sdate}";
                   $mvcmd = "/bin/mv -f $pfiles[0] $outdir/$ofile.nc";
-                  print "$mvcmd\n";
                   if ( ! $opts{'debug'} && $opts{'mv'} ) {
+                     print "$mvcmd\n";
                      system( "$mvcmd" );
                      chmod( 0444, "$outdir/$ofile.nc" );
                   }
@@ -722,7 +744,7 @@ EOF
             } else {
               die "ERROR files were NOT created: nc=$ncfiles[0] log=$lfiles[0]\n";
             }
-            if ( (! $opts{'debug'}) && (-f "$ncfiles[0]" || -f "$lfiles[0]") ) {
+            if ( (! $opts{'debug'}) && $opts{'mv'} && (-f "$ncfiles[0]" || -f "$lfiles[0]") ) {
               die "ERROR files were NOT moved: nc=$ncfiles[0] log=$lfiles[0]\n";
             }
             if ( ! $opts{'debug'} ) {

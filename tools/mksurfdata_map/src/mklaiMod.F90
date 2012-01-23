@@ -14,6 +14,7 @@ module mklaiMod
 !-----------------------------------------------------------------------
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
+  use mkdomainMod , only : domain_checksame
   use mkvarctl    
 
   implicit none
@@ -122,6 +123,7 @@ subroutine mklai(ldomain, mapfname, datfname, firrig, ndiag, ncido)
   call domain_read(tdomain,datfname)
   ns_i = tdomain%ns
 
+  write (6,*) 'Open LAI file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncidi), subname)
   call check_ret(nf_inq_dimid(ncidi, 'pft', dimid), subname)
   call check_ret(nf_inq_dimlen(ncidi, dimid, numpft_i), subname)
@@ -162,33 +164,7 @@ subroutine mklai(ldomain, mapfname, datfname, firrig, ndiag, ncido)
 
   ! Error checks for domain and map consistencies
 
-  if (tdomain%ns /= tgridmap%na) then
-     write(6,*)'input domain size and gridmap source size are not the same size'
-     write(6,*)' domain size = ',tdomain%ns
-     write(6,*)' map src size= ',tgridmap%na
-     stop
-  end if
-  do n = 1,tgridmap%ns
-     ni = tgridmap%src_indx(n)
-     if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-        write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-        write(6,*)' domain  mask= ',tdomain%mask(ni)
-        write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-        stop
-     end if
-     if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-        write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-        write(6,*)' domain  lon= ',tdomain%lonc(ni)
-        write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-        stop
-     end if
-     if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-        write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-        write(6,*)' domain  lat= ',tdomain%latc(ni)
-        write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-        stop
-     end if
-  end do
+  call domain_checksame( tdomain, ldomain, tgridmap )
 
   ! Determine number of dimensions in input by querying MONTHLY_LAI
 

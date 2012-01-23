@@ -1411,8 +1411,8 @@ contains
     character(len= 5) :: zone
     character(len=18) :: datetime
     character(len=256):: version = &
-         "$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/trunk_tags/clm4_0_22/models/lnd/clm/tools/interpinic/addglobal.F90 $"
-    character(len=256)  :: revision_id = "$Id: addglobal.F90 9114 2008-03-06 17:07:01Z erik $"
+         "$HeadURL$"
+    character(len=256)  :: revision_id = "$Id$"
     character(len=16)   :: logname
     character(len=16)   :: hostname
     character(len=256)  :: str

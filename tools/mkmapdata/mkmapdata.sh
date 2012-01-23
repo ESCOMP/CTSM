@@ -10,12 +10,13 @@
 # mkmapdata.sh -r 4x5
 #
 # valid arguments: 
-# -r <res> Output resolution
-# -i       interactive usage
-# -l       list mapping files required (so can use check_input_data to get them)
-# -d       debug usage -- display mkmapdata that will be run but don't execute them
-# -v       verbose usage -- log more information on what is happening
-# -h       displays this help message
+# -r <res>   Output resolution
+# -i         interactive usage
+# -l         list mapping files required (so can use check_input_data to get them)
+# -d         debug usage -- display mkmapdata that will be run but don't execute them
+# -o <ogrid> Also map to the input ocean-grid resolution"
+# -v         verbose usage -- log more information on what is happening
+# -h         displays this help message
 #
 # You can also set the following env variables:
 #
@@ -57,6 +58,7 @@ usage() {
   echo "         (also writes data to $outfilelist)"
   echo "-d       debug-only  usage (don't actually run mkmapdata just echo what would happen)"
   echo "-h       displays this help message"
+  echo "-o <ogrid> Also map to the input ocean-grid resolution"
   echo "-v       verbose usage -- log more information on what is happening"
   echo ""
   echo "**pass environment variables by preceding above commands "
@@ -95,6 +97,7 @@ interactive="no"
 debug="no"
 res="10x15"
 verbose="no"
+ocean="no"
 list="no"
 declare -i narg=1
 for arg in $@; do
@@ -118,6 +121,10 @@ until ((narg>${#ARGV[*]})); do
       debug="YES"
       interactive="YES"
       list="YES"
+      ;;
+      [oO]* )
+      narg=narg+1
+      ocean=${ARGV[narg]}
       ;;
       [rR]* )
       narg=narg+1
@@ -178,10 +185,10 @@ CDATE="c"`date +%y%m%d`
 declare -i nfile=1
 
 
-# List of gri id files for mksurfdata_map
+# List of grid files for mksurfdata_map
 grids=("0.5x0.5_nomask"  "0.5x0.5_USGS"     "0.5x0.5_AVHRR"    "0.5x0.5_MODIS" \
-       "5x5min_nomask"   "5x5min_IGBP-GSDP" "10x10min_nomask"                  \
-       "10x10min_IGBPmergeICESatGIS")
+       "5x5min_nomask"   "5x5min_IGBP-GSDP" "10x10min_nomask"  "3x3min_MODIS"  \
+       "10x10min_IGBPmergeICESatGIS"        "5x5min_ISRIC-WISE")
 for gridmask in ${grids[*]}
 do
    grd=${gridmask%_*}
@@ -195,10 +202,23 @@ do
       echo "ingrid = ${INGRID[nfile]}"
       echo "ingrid = ${INGRID[nfile]}" >> $outfilelist
    fi
+   if [ "$gridmask" = "3x3min_MODIS" ]; then
+      LRGFIL[nfile]="yes"
+   else
+      LRGFIL[nfile]="no"
+   fi
    OUTGRID[nfile]=$OUTGRID
    OUTFILE[nfile]=map_${grd}_${lmask}_to_${res}_nomask_aave_da_$CDATE.nc
    nfile=nfile+1
 done
+
+# Add main mapping file from ocean to atmosphere
+if [ "$ocean" != "no" ]; then
+   INGRID[nfile]=`$QUERY -var scripgriddata -options hgrid=$ocean,lmask=$ocean`
+   OUTGRID[nfile]=$OUTGRID
+   OUTFILE[nfile]=map_${ocean}_to_${res}_aave_da_$CDATE.nc
+   nfile=nfile+1
+fi
 
 # RTM grid for clm
 grd=0.5x0.5
@@ -254,8 +274,11 @@ case $hostname in
   export LAPI_DEBUG_QP_NOTIFICATION=no
   export LAPI_DEBUG_RC_INIT_SETUP=no	#try both = yes and = no
 
+  source /contrib/Modules/3.2.6/init/bash
+  module load netcdf/4.1.3_seq
+
   if [ -z "$ESMFBIN_PATH" ]; then
-     ESMFBIN_PATH=/contrib/esmf-5.2.0r-64-O/bin
+     ESMFBIN_PATH=/contrib/esmf-5.2.0rp1bs09-64/bin
   fi
   if [ -z "$MPIEXEC" ]; then
     MPIEXEC="mpirun.lsf"
@@ -357,6 +380,9 @@ until ((nfile>${#INGRID[*]})); do
    fi
    cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
    cmd="$cmd -d ${OUTGRID[nfile]} -m conserve -w ${OUTFILE[nfile]}"
+   if [ "${LRGFIL[nfile]}" = "yes" ]; then
+      cmd="$cmd --64bit_offset "
+   fi
    runcmd $cmd
 
    if [ "$debug" != "YES" ] && [ ! -f "${OUTFILE[nfile]}" ]; then

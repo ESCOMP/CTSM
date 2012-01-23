@@ -1736,55 +1736,6 @@ type, public :: landunit_pstate_type
 end type landunit_pstate_type
 
 !----------------------------------------------------
-! landunit energy state variables structure
-!----------------------------------------------------
-type, public :: landunit_estate_type
-   type(column_estate_type):: ces_a            !column-level energy state variables averaged to landunit
-end type landunit_estate_type
-
-!----------------------------------------------------
-! landunit water state variables structure
-!----------------------------------------------------
-type, public :: landunit_wstate_type
-   type(column_wstate_type):: cws_a            !column-level water state variables averaged to landunit
-end type landunit_wstate_type
-
-!----------------------------------------------------
-! landunit carbon state variables structure
-!----------------------------------------------------
-type, public :: landunit_cstate_type
-   type(column_cstate_type):: ccs_a            !column-level carbon state variables averaged to landunit
-end type landunit_cstate_type
-
-!----------------------------------------------------
-! landunit nitrogen state variables structure
-!----------------------------------------------------
-type, public :: landunit_nstate_type
-   type(column_nstate_type):: cns_a            !column-level nitrogen state variables averaged to landunit
-end type landunit_nstate_type
-
-!----------------------------------------------------
-! landunit VOC state variables structure
-!----------------------------------------------------
-type, public :: landunit_vstate_type
-   real(r8):: dummy_entry
-end type landunit_vstate_type
-
-!----------------------------------------------------
-! landunit DGVM state variables structure
-!----------------------------------------------------
-type, public :: landunit_dgvstate_type
-   real(r8):: dummy_entry
-end type landunit_dgvstate_type
-
-!----------------------------------------------------
-! landunit dust state variables structure
-!----------------------------------------------------
-type, public :: landunit_dstate_type
-   type(column_dstate_type):: cds_a            !column-level dust state variables averaged to landunit
-end type landunit_dstate_type
-
-!----------------------------------------------------
 ! landunit energy flux variables structure
 !----------------------------------------------------
 type, public :: landunit_eflux_type
@@ -1797,52 +1748,9 @@ type, public :: landunit_eflux_type
 end type landunit_eflux_type
 
 !----------------------------------------------------
-! landunit momentum flux variables structure
-!----------------------------------------------------
-type, public :: landunit_mflux_type
-   type(pft_mflux_type):: pmf_a                !pft-level momentum flux variables averaged to landunit
-end type landunit_mflux_type
-
-!----------------------------------------------------
-! landunit water flux variables structure
-!----------------------------------------------------
-type, public :: landunit_wflux_type
-   type(column_wflux_type):: cwf_a             !column-level water flux variables averaged to landunit
-end type landunit_wflux_type
-
-!----------------------------------------------------
-! landunit carbon flux variables structure
-!----------------------------------------------------
-type, public :: landunit_cflux_type
-   type(column_cflux_type):: ccf_a             !column-level carbon flux variables averaged to landunit
-end type landunit_cflux_type
-
-!----------------------------------------------------
-! landunit nitrogen flux variables structure
-!----------------------------------------------------
-type, public :: landunit_nflux_type
-   type(column_nflux_type):: cnf_a             !column-level nitrogen flux variables averaged to landunit
-end type landunit_nflux_type
-
-!----------------------------------------------------
-! landunit VOC flux variables structure
-!----------------------------------------------------
-type, public :: landunit_vflux_type
-   type(pft_vflux_type):: pvf_a                !pft-level VOC flux variables averaged to landunit
-end type landunit_vflux_type
-
-!----------------------------------------------------
-! landunit dust flux variables structure
-!----------------------------------------------------
-type, public :: landunit_dflux_type
-   type(pft_dflux_type):: pdf_a                !pft-level dust flux variables averaged to landunit
-end type landunit_dflux_type
-
-!----------------------------------------------------
 ! End definition of structures defined at the landunit_type level
 !----------------------------------------------------
 !*******************************************************************************
-
 
 !*******************************************************************************
 !----------------------------------------------------
@@ -1980,111 +1888,6 @@ end type gridcell_dflux_type
 !----------------------------------------------------
 !*******************************************************************************
 
-
-!*******************************************************************************
-!----------------------------------------------------
-! Begin definition of structures defined at the CLM level
-!----------------------------------------------------
-! CLM physical state variables structure
-!----------------------------------------------------
-type, public :: model_pstate_type
-   type(column_pstate_type) :: cps_a           !column-level physical state variables globally averaged
-end type model_pstate_type
-
-!----------------------------------------------------
-! CLM energy state variables structure
-!----------------------------------------------------
-type, public :: model_estate_type
-   type(column_estate_type):: ces_a            !column-level energy state variables globally averaged
-end type model_estate_type
-
-!----------------------------------------------------
-! CLM water state variables structure
-!----------------------------------------------------
-type, public :: model_wstate_type
-   type(column_wstate_type):: cws_a            !column-level water state variables globally averaged
-end type model_wstate_type
-
-!----------------------------------------------------
-! CLM carbon state variables structure
-!----------------------------------------------------
-type, public :: model_cstate_type
-   type(column_cstate_type):: ccs_a            !column-level carbon state variables globally averaged
-end type model_cstate_type
-
-!----------------------------------------------------
-! CLM nitrogen state variables structure
-!----------------------------------------------------
-type, public :: model_nstate_type
-   type(column_nstate_type):: cns_a            !column-level nitrogen state variables globally averaged
-end type model_nstate_type
-
-!----------------------------------------------------
-! CLM VOC state variables structure
-!----------------------------------------------------
-type, public :: model_vstate_type
-   type(column_vstate_type):: cvs_a            !column-level VOC state variables globally averaged
-end type model_vstate_type
-
-!----------------------------------------------------
-! CLM dust state variables structure
-!----------------------------------------------------
-type, public :: model_dstate_type
-   type(column_dstate_type):: cds_a            !column-level dust state variables globally averaged
-end type model_dstate_type
-
-!----------------------------------------------------
-! CLM energy flux variables structure
-!----------------------------------------------------
-type, public :: model_eflux_type
-   type(column_eflux_type):: cef_a             !column-level energy flux variables globally averaged
-end type model_eflux_type
-
-!----------------------------------------------------
-! CLM momentum flux variables structure
-!----------------------------------------------------
-type, public :: model_mflux_type
-   type(pft_mflux_type):: pmf_a                !pft-level momentum flux variables globally averaged
-end type model_mflux_type
-
-!----------------------------------------------------
-! CLM water flux variables structure
-!----------------------------------------------------
-type, public :: model_wflux_type
-   type(column_wflux_type):: cwf_a             !column-level water flux variables globally averaged
-end type model_wflux_type
-
-!----------------------------------------------------
-! CLM carbon flux variables structure
-!----------------------------------------------------
-type, public :: model_cflux_type
-   type(column_cflux_type):: ccf_a             !column-level carbon flux variables globally averaged
-end type model_cflux_type
-
-!----------------------------------------------------
-! CLM nitrogen flux variables structure
-!----------------------------------------------------
-type, public :: model_nflux_type
-   type(column_nflux_type):: cnf_a             !column-level nitrogen flux variables globally averaged
-end type model_nflux_type
-
-!----------------------------------------------------
-! CLM VOC flux variables structure
-!----------------------------------------------------
-type, public :: model_vflux_type
-   type(pft_vflux_type):: pvf_a                !pft-level VOC flux variables globally averaged
-end type model_vflux_type
-
-!----------------------------------------------------
-! CLM dust flux variables structure
-!----------------------------------------------------
-type, public :: model_dflux_type
-   type(pft_dflux_type):: pdf_a                !pft-level dust flux variables globally averaged
-end type model_dflux_type
-
-!----------------------------------------------------
-! End definition of structures defined at the model_type level
-!----------------------------------------------------
 
 !*******************************************************************************
 !----------------------------------------------------
@@ -2238,29 +2041,11 @@ type, public :: landunit_type
    logical , pointer :: urbpoi(:)       !BOOL: true=>urban point
    logical , pointer :: glcmecpoi(:)    !BOOL: true=>glacier_mec point
 
-   ! conservation check structures for the landunit level
-   type(energy_balance_type)   :: lebal !energy balance structure
-   type(water_balance_type)    :: lwbal !water balance structure
-   type(carbon_balance_type)   :: lcbal !carbon balance structure
-   type(nitrogen_balance_type) :: lnbal !nitrogen balance structure
-   
    ! state variables defined at the land unit level
    type(landunit_pstate_type) :: lps    !land unit physical state variables
-   type(landunit_estate_type) :: les    !average of energy states all columns
-   type(landunit_wstate_type) :: lws    !average of water states all columns
-   type(landunit_cstate_type) :: lcs    !average of carbon states all columns
-   type(landunit_nstate_type) :: lns    !average of nitrogen states all columns
-   type(landunit_vstate_type) :: lvs    !average of VOC states all columns
-   type(landunit_dstate_type) :: lds    !average of dust states all columns
    
    ! flux variables defined at the landunit level
    type(landunit_eflux_type) :: lef     !average of energy fluxes all columns
-   type(landunit_mflux_type) :: lmf     !average of momentum fluxes all columns
-   type(landunit_wflux_type) :: lwf     !average of water fluxes all columns
-   type(landunit_cflux_type) :: lcf     !average of carbon fluxes all columns
-   type(landunit_nflux_type) :: lnf     !average of nitrogen fluxes all columns
-   type(landunit_vflux_type) :: lvf     !average of VOC fluxes all columns
-   type(landunit_dflux_type) :: ldf     !average of dust fluxes all columns
 end type landunit_type
 
 !----------------------------------------------------
@@ -2300,34 +2085,19 @@ type, public :: gridcell_type
    real(r8), pointer :: aais_mask(:)    !Antarctic ice sheet mask 
    real(r8), pointer :: aais_area(:)    !Antarctic ice-covered area per gridcell (km^2)
 
-   ! conservation check structures for the gridcell level
-   type(energy_balance_type)   :: gebal !energy balance structure
-   type(water_balance_type)    :: gwbal !water balance structure
-   type(carbon_balance_type)   :: gcbal !carbon balance structure
-   type(nitrogen_balance_type) :: gnbal !nitrogen balance structure
-
 #if (defined CNDV)
    ! dgvm variables defined at the gridcell level
    type(gridcell_dgvstate_type):: gdgvs !gridcell DGVM structure
 #endif
-   
+
    ! state variables defined at the gridcell level
-   type(gridcell_pstate_type) :: gps    !gridcell physical state variables
    type(gridcell_estate_type) :: ges    !average of energy states all landunits
    type(gridcell_wstate_type) :: gws    !average of water states all landunits
-   type(gridcell_cstate_type) :: gcs    !average of carbon states all landunits
-   type(gridcell_nstate_type) :: gns    !average of nitrogen states all landus
-   type(gridcell_vstate_type) :: gvs    !average of VOC states all landunits
    type(gridcell_efstate_type):: gve	!gridcell VOC emission factors
-   type(gridcell_dstate_type) :: gds    !average of dust states all landunits
    
    ! flux variables defined at the gridcell level
    type(gridcell_eflux_type) :: gef     !average of energy fluxes all landunits
    type(gridcell_wflux_type) :: gwf     !average of water fluxes all landunits
-   type(gridcell_cflux_type) :: gcf     !average of carbon fluxes all landunits
-   type(gridcell_nflux_type) :: gnf     !average of nitrogen fluxes all landus
-   type(gridcell_vflux_type) :: gvf     !average of VOC fluxes all landunits
-   type(gridcell_dflux_type) :: gdf     !average of dust fluxes all landunits
 
 end type gridcell_type
 
@@ -2341,28 +2111,6 @@ type, public :: model_type
    integer  :: ngridcells      !number of gridcells for this process
    real(r8) :: area            !total land area for all gridcells (km^2)
 
-   ! conservation check structures for the clm (global) level
-   type(energy_balance_type)   :: mebal !energy balance structure
-   type(water_balance_type)    :: mwbal !water balance structure
-   type(carbon_balance_type)   :: mcbal !carbon balnace structure
-   type(nitrogen_balance_type) :: mnbal !nitrogen balance structure
-   
-   ! globally average state variables 
-   type(model_pstate_type) ::  mps      !clm physical state variables
-   type(model_estate_type) ::  mes      !average of energy states all gridcells
-   type(model_wstate_type) ::  mws      !average of water states all gridcells
-   type(model_cstate_type) ::  mcs      !average of carbon states all gridcells
-   type(model_nstate_type) ::  mns      !average of nitrogen states all gcells
-   type(model_vstate_type) ::  mvs      !average of VOC states all gridcells
-   type(model_dstate_type) ::  mds      !average of dust states all gridcells
-   
-   ! globally averaged flux variables 
-   type(model_eflux_type) ::   mef      !average of energy fluxes all gridcells
-   type(model_wflux_type) ::   mwf      !average of water fluxes all gridcells
-   type(model_cflux_type) ::   mcf      !average of carbon fluxes all gridcells
-   type(model_nflux_type) ::   mnf      !average of nitrogen fluxes all gcells
-   type(model_vflux_type) ::   mvf      !average of VOC fluxes all gridcells
-   type(model_dflux_type) ::   mdf      !average of dust fluxes all gridcells
 end type model_type
 
 !----------------------------------------------------

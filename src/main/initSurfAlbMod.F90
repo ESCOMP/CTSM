@@ -67,7 +67,6 @@ contains
 #if (defined CN)
     use CNEcosystemDynMod   , only : CNEcosystemDyn
     use CNVegStructUpdateMod, only : CNVegStructUpdate
-    use CNSetValueMod       , only : CNZeroFluxes
 #else
     use STATICEcosysDynMod  , only : EcosystemDyn, interpMonthlyVeg
 #endif

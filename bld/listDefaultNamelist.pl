@@ -248,6 +248,8 @@ sub GetListofNeededFiles {
         # Loop over all possible simulation year: 1890, 2000, 2100 etc.
         #
         $settings{'sim_year_range'} = "constant";
+        my @rcps = $definition->get_valid_values( "rcp", 'noquotes'=>1 );
+        $settings{'rcp'} = $rcps[0];   
 YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
            print "sim_year = $sim_year\n" if $printing;
            $settings{'sim_year'} = $sim_year;   
@@ -317,7 +319,6 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
         #
         # Now do sim-year ranges
         #
-        my @rcps = $definition->get_valid_values( "rcp", 'noquotes'=>1 );
         $settings{'bgc'}       = "cn";
         $settings{'irrig'}     = ".false.";
         $settings{'glc_grid'}  = "none";

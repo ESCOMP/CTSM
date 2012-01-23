@@ -1432,6 +1432,9 @@ for( my $i = 2; $i <= $nensemble; $i++ ) {
 }
 
 
+# Groups to go through for clm namelists
+my @groups = qw(clm_inparm ndepdyn_nml);
+
 #-----------------------------------------------------------------------------------------------
 # Read in user_nl_clm namelists specific for each ensemble member
 # Bringing in changes from user_nl_clm/user_nl_clm_* files for each
@@ -1495,6 +1498,21 @@ for( my $i = 1; $i <= $nensemble; $i++ ) {
         print "Skipped ensemble member infile namelist for member: $i $eol"; 
      }
   }
+  # Go through all variables and for all of the string variables
+  # replace any instance of %{lnd_inst_counter} with the ensemble member #
+  foreach my $group ( @groups ) {
+    foreach my $var ( $nl[$i-1]->get_variable_names($group) ) {
+      if ($definition->get_str_len($var) > 0) {
+         my $val = $nl[$i-1]->get_value($var);
+         my $newval = $val;
+         $newval =~ s/%{lnd_inst_counter}/$i/;
+         if ( $newval ne $val ) {
+            my $group = $definition->get_group_name($var);
+            $nl[$i-1]->set_variable_value( $group, $var, $newval );
+         } 
+      }
+    }
+  }
   $definition->validate($nl[$i-1]);
 }
 
@@ -1507,7 +1525,6 @@ my $note = "Comment:\n" .
            "For help on options use: $cfgdir/$ProgName -help";
 
 # CLM component
-my @groups = qw(clm_inparm ndepdyn_nml);
 my $outfile;
 if ( $nensemble == 1 ) {
    $outfile = "$opts{'dir'}/lnd_in";

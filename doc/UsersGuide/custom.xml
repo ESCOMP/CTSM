@@ -731,6 +731,34 @@ determines which year in that range of years the simulation will start with.
 </variablelist>
 </sect2>
 
+<sect2 id="datm_forc_data">
+<title>Downloading DATM Forcing Data</title>
+<para>
+In Chapter One of the
+<ulink url="&cesmwebmodelrel;cesm/cesm_doc/book1.html">&cesm; User's Guide</ulink>
+there is a section on "Downloading input data". The normal process of setting up
+cases will use the "scripts/ccsm_utils/Tools/check_input_data" script to retrieve
+data from the &cesm; subversion inputdata repository. However, the DATM forcing data
+is unique -- because it is large compared to the rest of the input data (56 Gbytes). Most of the
+data is stored in the directory set by the &envrun; variable 
+<envar>DIN_LOC_ROOT_CSMDATA</envar>. The &CLMQIAN; forcing data is in a (possibly)
+separate directory using the &envrun; variable <envar>DIN_LOC_ROOT_CLMQIAN</envar>.
+In most cases this directory will be in the directory:
+<filename>atm/datm7/atm_forcing.datm7.Qian.T62.c080727</filename> under
+<envar>DIN_LOC_ROOT_CSMDATA</envar>. On bluefire there is a separate path for
+the &CLMQIAN; forcing data. We have the full set of data available on a few of
+the machines we use: bluefire, jaguarpf, and edinburgh. As of October, 18th, 2011
+we've uploaded the entire set of forcing data into the input data repository so
+now it can be treated like other input datasets and the check_input_data script
+can retreive it for you. Previously only two years of data was available.
+You can also download the data from the 
+Earth System Grid for other machines. See the 
+<ulink url="&cesmwebmodelrel;clm/clm_forcingdata_esg.html">Model Forcing Data</ulink>
+link under the 
+<ulink url="&cesmwebmodelrel;clm">&clm; Documentation Page</ulink>
+</para>
+</sect2>
+
 <sect2 id="templates">
 <title>Customizing via the template files</title>
 <para>

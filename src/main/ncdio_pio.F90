@@ -22,6 +22,7 @@ module ncdio_pio
   use decompMod      , only : get_clmlevel_gsize,get_clmlevel_gsmap
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
+  use nanMod         , only : nan
   use clm_mct_mod
   use pio
 !
@@ -2163,22 +2164,24 @@ contains
 !
 ! !INTERFACE:
   subroutine ncd_io_real_var1(varname, data, dim1name, &
-                              flag, ncid, nt, readvar)
+                              flag, ncid, nt, readvar, cnvrtnan2fill)
 !
 ! !DESCRIPTION:
 ! I/O for 1d real field
 !
 ! !USES:
+    use shr_infnan_mod  , only : shr_infnan_isnan
 !
 ! !ARGUMENTS:
     implicit none
-    type(file_desc_t),intent(inout) :: ncid             ! netcdf file id
-    character(len=*), intent(in)  :: flag               ! 'read' or 'write'
-    character(len=*), intent(in)  :: varname            ! variable name
-    real(r8)        , pointer     :: data(:)            ! local decomposition data
-    character(len=*), intent(in)  :: dim1name           ! dimension name
-    integer         , optional, intent(in) :: nt        ! time sample index
-    logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
+    type(file_desc_t),intent(inout) :: ncid                 ! netcdf file id
+    character(len=*), intent(in)  :: flag                   ! 'read' or 'write'
+    character(len=*), intent(in)  :: varname                ! variable name
+    real(r8)        , pointer     :: data(:)                ! local decomposition data
+    character(len=*), intent(in)  :: dim1name               ! dimension name
+    integer         , optional, intent(in) :: nt            ! time sample index
+    logical         , optional, intent(in) :: cnvrtnan2fill ! true => convert any NaN's to _FillValue (spval)
+    logical         , optional, intent(out):: readvar       ! true => variable is on initial dataset (read only)
 !
 ! !REVISION HISTORY:
 !
@@ -2210,6 +2213,12 @@ contains
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     endif
+
+    if ( present(cnvrtnan2fill) )then
+       if (.not. cnvrtnan2fill) then
+          call endrun( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+       endif
+    end if
 
     if (flag == 'read') then
 
@@ -2246,6 +2255,13 @@ contains
              end if
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
           end if
+          if ( present(cnvrtnan2fill) )then
+             do n = lbound(data,dim=1), ubound(data,dim=1)
+                if ( data(n) == spval )then
+                   data(n) = nan
+                end if
+             end do
+          end if
        end if
        if (present(readvar)) readvar = varpresent
        
@@ -2269,6 +2285,13 @@ contains
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
+       end if
+       if ( present(cnvrtnan2fill) )then
+          do n = lbound(data,dim=1), ubound(data,dim=1)
+             if ( shr_infnan_isnan( data(n) ) )then
+                data(n) = spval
+             end if
+          end do
        end if
        call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
        
@@ -2430,12 +2453,13 @@ contains
 !
 ! !INTERFACE:
   subroutine ncd_io_real_var2(varname, data, dim1name, &
-                               lowerb2, upperb2, flag, ncid, nt, readvar, switchdim)
+                               lowerb2, upperb2, flag, ncid, nt, readvar, switchdim, cnvrtnan2fill)
 !
 ! !DESCRIPTION:
 ! Netcdf i/o of 2d initial integer field out to netCDF file
 !
 ! !USES:
+    use shr_infnan_mod  , only : shr_infnan_isnan
 !
 ! !ARGUMENTS:
     implicit none
@@ -2446,6 +2470,7 @@ contains
     character(len=*) , intent(in)  :: dim1name        ! dimension 1 name
     integer, optional, intent(in)  :: nt              ! time sample index
     integer, optional, intent(in)  :: lowerb2,upperb2 ! lower and upper bounds of second dimension
+    logical, optional, intent(in)  :: cnvrtnan2fill   ! true => convert any NaN's to _FillValue (spval)
     logical, optional, intent(out) :: readvar         ! true => variable is on initial dataset (read only)
     logical, optional, intent(in)  :: switchdim       ! true=> permute dim1 and dim2 for output
 !
@@ -2485,11 +2510,17 @@ contains
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
     end if
 
+    if ( present(cnvrtnan2fill) )then
+       if (.not. cnvrtnan2fill) then
+          call endrun( subname//' ERROR: cnvrtnan2fill present but NOT set to true -- MUST set it to TRUE if used' )
+       endif
+    end if
+
+    lb1 = lbound(data, dim=1)
+    ub1 = ubound(data, dim=1)
+    lb2 = lbound(data, dim=2)
+    ub2 = ubound(data, dim=2)
     if (present(switchdim)) then
-       lb1 = lbound(data, dim=1)
-       ub1 = ubound(data, dim=1)
-       lb2 = lbound(data, dim=2)
-       ub2 = ubound(data, dim=2)
        if (present(lowerb2)) lb2 = lowerb2
        if (present(upperb2)) ub2 = upperb2
        allocate(temp(lb2:ub2,lb1:ub1))
@@ -2566,6 +2597,15 @@ contains
                 call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
              end if
           end if
+          if ( present(cnvrtnan2fill) )then
+             do j = lb2,ub2
+             do i = lb1,ub1
+                if ( data(i,j) == spval )then
+                   data(i,j) = nan
+                end if
+             end do
+             end do
+          end if
        end if
        if (present(readvar)) readvar = varpresent
 
@@ -2600,14 +2640,23 @@ contains
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
        end if
        if (present(switchdim)) then
-        do j = lb2,ub2
-        do i = lb1,ub1
+          do j = lb2,ub2
+          do i = lb1,ub1
              temp(j,i) = data(i,j)
           end do
           end do
           call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status, fillval=spval)
        else
           call pio_write_darray(ncid, vardesc, iodesc_plus%iodesc, data, status, fillval=spval)
+       end if
+       if ( present(cnvrtnan2fill) )then
+          do j = lb2,ub2
+          do i = lb1,ub1
+             if ( shr_infnan_isnan(data(i,j)) )then
+                data(i,j) = spval
+             end if
+          end do
+          end do
        end if
 
     else

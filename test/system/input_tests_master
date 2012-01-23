@@ -174,6 +174,11 @@ erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN nav
 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:3600 1x1_vancouverCAN navy 72+72   arb_ic
 blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb    19920812:3600 1x1_vancouverCAN navy 331     arb_ic
 
+smGp4 TSM.sh _scnv_ds clm_irrig  20000101:1800 1.9x2.5 gx1v6 -6    startup
+erGp4 TER.sh _scnv_ds clm_irrig  20000101:1800 1.9x2.5 gx1v6 10+38 startup
+brGp4 TBR.sh _scnv_ds clm_irrig  20000101:1800 1.9x2.5 gx1v6 -3+-3 startup
+blGp4 TBL.sh _scnv_ds clm_irrig  20000101:1800 1.9x2.5 gx1v6 48    startup
+
 smCP1 TSM.sh _sc_dh clm_drydep^nl_urb    20020214:1800 1.9x2.5 gx1v6  -10   startup
 erCP1 TER.sh _sc_dh clm_drydep^nl_urb    20020214:1800 1.9x2.5 gx1v6  -3+-7 startup
 brCP1 TBR.sh _sc_dh clm_drydep^nl_urb_br 20020214:1800 1.9x2.5 gx1v6  -5+-5 startup

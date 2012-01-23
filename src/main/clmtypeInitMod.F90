@@ -142,17 +142,11 @@ contains
 
     call init_energy_balance_type(begp, endp, clm3%g%l%c%p%pebal)
     call init_energy_balance_type(begc, endc, clm3%g%l%c%cebal)
-    call init_energy_balance_type(begl, endl, clm3%g%l%lebal)
-    call init_energy_balance_type(begg, endg, clm3%g%gebal)
-    call init_energy_balance_type(1,       1, clm3%mebal)
 
     ! water balance structures (all levels)
 
     call init_water_balance_type(begp, endp, clm3%g%l%c%p%pwbal)
     call init_water_balance_type(begc, endc, clm3%g%l%c%cwbal)
-    call init_water_balance_type(begl, endl, clm3%g%l%lwbal)
-    call init_water_balance_type(begg, endg, clm3%g%gwbal)
-    call init_water_balance_type(1,       1, clm3%mwbal)
 
     ! carbon balance structures (pft and column levels)
 
@@ -261,65 +255,48 @@ contains
     call init_pft_depvd_type(begp, endp, clm3%g%l%c%p%pdd)
 
     ! column physical state variables at column level and averaged to
-    ! the landunit and gridcell and model
+    ! the landunit
 
     call init_column_pstate_type(begc, endc, clm3%g%l%c%cps)
     call init_column_pstate_type(begl, endl, clm3%g%l%lps%cps_a)
-    call init_column_pstate_type(begg, endg, clm3%g%gps%cps_a)
-    call init_column_pstate_type(1,       1, clm3%mps%cps_a)
 
     ! column energy state variables at column level and averaged to
-    ! the landunit and gridcell and model
+    ! the gridcell
 
     call init_column_estate_type(begc, endc, clm3%g%l%c%ces)
-    call init_column_estate_type(begl, endl, clm3%g%l%les%ces_a)
     call init_column_estate_type(begg, endg, clm3%g%ges%ces_a)
-    call init_column_estate_type(1,       1, clm3%mes%ces_a)
 
     ! column water state variables at column level and averaged to
-    ! the landunit and gridcell and model
+    ! the gridcell
 
     call init_column_wstate_type(begc, endc, clm3%g%l%c%cws)
-    call init_column_wstate_type(begl, endl, clm3%g%l%lws%cws_a)
     call init_column_wstate_type(begg, endg, clm3%g%gws%cws_a)
-    call init_column_wstate_type(1,       1, clm3%mws%cws_a)
 
-    ! column carbon state variables at column level and averaged to
-    ! the landunit and gridcell and model
+    ! column carbon state variables at column level
 
     call init_column_cstate_type(begc, endc, clm3%g%l%c%ccs)
-    call init_column_cstate_type(begl, endl, clm3%g%l%lcs%ccs_a)
-    call init_column_cstate_type(begg, endg, clm3%g%gcs%ccs_a)
-    call init_column_cstate_type(1,       1, clm3%mcs%ccs_a)
 #if (defined C13)
     ! 4/14/05: PET
     ! Adding isotope code
     call init_column_cstate_type(begc, endc, clm3%g%l%c%cc13s)
 #endif
 
-    ! column nitrogen state variables at column level and averaged to
-    ! the landunit and gridcell and model
+    ! column nitrogen state variables at column level
 
     call init_column_nstate_type(begc, endc, clm3%g%l%c%cns)
-    call init_column_nstate_type(begl, endl, clm3%g%l%lns%cns_a)
-    call init_column_nstate_type(begg, endg, clm3%g%gns%cns_a)
-    call init_column_nstate_type(1,       1, clm3%mns%cns_a)
 
     ! column energy flux variables at column level and averaged to
-    ! the landunit and gridcell and model
+    ! the landunit and gridcell
 
     call init_column_eflux_type(begc, endc, clm3%g%l%c%cef)
     call init_column_eflux_type(begl, endl, clm3%g%l%lef%cef_a)
     call init_column_eflux_type(begg, endg, clm3%g%gef%cef_a)
-    call init_column_eflux_type(1,       1, clm3%mef%cef_a)
 
     ! column water flux variables at column level and averaged to
-    ! landunit, gridcell and model level
+    ! gridcell
 
     call init_column_wflux_type(begc, endc, clm3%g%l%c%cwf)
-    call init_column_wflux_type(begl, endl, clm3%g%l%lwf%cwf_a)
     call init_column_wflux_type(begg, endg, clm3%g%gwf%cwf_a)
-    call init_column_wflux_type(1,       1, clm3%mwf%cwf_a)
 
     ! column carbon flux variables at column level
 
@@ -350,7 +327,6 @@ contains
 
     ! gridcell physical state variables
 
-    call init_gridcell_pstate_type(begg, endg, clm3%g%gps)
 
     ! gridcell: water flux variables
 

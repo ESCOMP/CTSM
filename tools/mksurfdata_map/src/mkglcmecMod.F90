@@ -14,6 +14,7 @@ module mkglcmecMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
+  use mkdomainMod , only : domain_checksame
   implicit none
 
   private           ! By default make data private
@@ -166,7 +167,6 @@ subroutine mkglcmec(ldomain, mapfname, &
 ! !LOCAL VARIABLES:
 !EOP
   type(domain_type)     :: tdomain_topo        ! local domain: topo_ice , topo_bedrock
-  type(domain_type)     :: tdomain_glac        ! local domain: fracdata
   type(gridmap_type)    :: tgridmap            ! local gridmap
   real(r8), allocatable :: pctglac_g(:)        ! input glacier percentage (on input glacier grid)
   real(r8), allocatable :: topoice_g(:)        ! topo of ice surface (on input topo grid - same as input glacier grid)
@@ -229,6 +229,7 @@ subroutine mkglcmec(ldomain, mapfname, &
        pctglc_ground_g(nst), pctglc_float_g(nst), stat=ier)
   if (ier/=0) call abort()
 
+  write (6,*) 'Open glacier topo file: ', trim(datfname_fglctopo)
   call check_ret(nf_open(datfname_fglctopo, 0, ncid), subname)
   call check_ret(nf_inq_varid (ncid, 'TOPO_ICE', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, topoice_g), subname)
@@ -269,17 +270,12 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   ! Get raw glacier data 
 
-  call domain_read(tdomain_glac, datfname_fglacier)
-  if (tdomain_glac%ns /= tdomain_topo%ns) then
-     write(6,*)'glacier domain size differs from topo domain size'
-     write(6,*)' glacier domain size = ',tdomain_glac%ns
-     write(6,*)' topo domain size = ',tdomain_topo%ns
-     stop
-  end if
+  call domain_read(tdomain_topo, datfname_fglacier)
 
   allocate(pctglac_g(nst), stat=ier)
   if (ier/=0) call abort()
 
+  write (6,*) 'Open glacier file: ', trim(datfname_fglacier)
   call check_ret(nf_open(datfname_fglacier, 0, ncid), subname)
   call check_ret(nf_inq_varid (ncid, 'PCT_GLACIER', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, pctglac_g), subname)
@@ -291,41 +287,7 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   ! Error checks for domain and map consistencies: ensure that both the topo and glacier
   ! domains are consistent with the given mapping file
-
-  ! note: we have already ensured above that tdomain_glac%ns == tdomain_topo%ns
-  if (tdomain_topo%ns /= tgridmap%na) then
-     write(6,*)'input domain size and gridmap source size are not the same size'
-     write(6,*)' domain size = ',tdomain_topo%ns
-     write(6,*)' map src size= ',tgridmap%na
-     stop
-  end if
-  do n = 1,tgridmap%ns
-     ni = tgridmap%src_indx(n)
-     ! Note that the topo dataset has no landmask, but the glacier dataset does;
-     ! the mapping file should be consistent with the landmask of the glacier dataset
-     if (tdomain_glac%mask(ni) /= tgridmap%mask_src(ni)) then
-        write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-        write(6,*)' domain  mask= ',tdomain_glac%mask(ni)
-        write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-        stop
-     end if
-     if (tdomain_topo%lonc(ni) /= tgridmap%xc_src(ni) .or. &
-         tdomain_glac%lonc(ni) /= tgridmap%xc_src(ni)) then
-        write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-        write(6,*)'    topo domain  lon= ',tdomain_topo%lonc(ni)
-        write(6,*)' glacier domain  lon= ',tdomain_glac%lonc(ni)
-        write(6,*)'         gridmap lon= ',tgridmap%xc_src(ni)
-        stop
-     end if
-     if (tdomain_topo%latc(ni) /= tgridmap%yc_src(ni) .or. &
-         tdomain_glac%latc(ni) /= tgridmap%yc_src(ni)) then
-        write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-        write(6,*)'    topo domain  lat= ',tdomain_topo%latc(ni)
-        write(6,*)' glacier domain  lat= ',tdomain_glac%latc(ni)
-        write(6,*)'         gridmap lat= ',tgridmap%yc_src(ni)
-        stop
-     end if
-  end do
+  call domain_checksame( tdomain_topo, ldomain, tgridmap )
 
   ! -------------------------------------------------------------------- 
   ! Compute fields on the output grid
@@ -498,7 +460,6 @@ subroutine mkglcmec(ldomain, mapfname, &
   ! Deallocate dynamic memory
 
   call domain_clean(tdomain_topo)
-  call domain_clean(tdomain_glac)
   call gridmap_clean(tgridmap)
   deallocate (topoice_g, pctglc_gic_g, pctglc_icesheet_g, pctglc_ground_g, pctglc_float_g,&
        pctglac_g)
@@ -578,6 +539,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o, glac_
   allocate(glac_i(ns), stat=ier)
   if (ier/=0) call abort()
 
+  write (6,*) 'Open glacier file: ', trim(datfname)
   call check_ret(nf_open(datfname, 0, ncid), subname)
   call check_ret(nf_inq_varid (ncid, 'PCT_GLACIER', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, glac_i), subname)
@@ -598,35 +560,8 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o, glac_
      call gridmap_mapread(tgridmap, mapfname )
 
      ! Error checks for domain and map consistencies
+     call domain_checksame( tdomain, ldomain, tgridmap )
      
-     if (tdomain%ns /= tgridmap%na) then
-        write(6,*)'input domain size and gridmap source size are not the same size'
-        write(6,*)' domain size = ',tdomain%ns
-        write(6,*)' map src size= ',tgridmap%na
-        stop
-     end if
-     do n = 1,tgridmap%ns
-        ni = tgridmap%src_indx(n)
-        if (tdomain%mask(ni) /= tgridmap%mask_src(ni)) then
-           write(6,*)'input domain mask and gridmap mask are not the same at ni = ',ni
-           write(6,*)' domain  mask= ',tdomain%mask(ni)
-           write(6,*)' gridmap mask= ',tgridmap%mask_src(ni)
-           stop
-        end if
-        if (tdomain%lonc(ni) /= tgridmap%xc_src(ni)) then
-           write(6,*)'input domain lon and gridmap lon not the same at ni = ',ni
-           write(6,*)' domain  lon= ',tdomain%lonc(ni)
-           write(6,*)' gridmap lon= ',tgridmap%xc_src(ni)
-           stop
-        end if
-        if (tdomain%latc(ni) /= tgridmap%yc_src(ni)) then
-           write(6,*)'input domain lat and gridmap lat not the same at ni = ',ni
-           write(6,*)' domain  lat= ',tdomain%latc(ni)
-           write(6,*)' gridmap lat= ',tgridmap%yc_src(ni)
-           stop
-        end if
-     end do
-
      ! Determine glac_o on output grid
 
      call gridmap_areaave(tgridmap, glac_i, glac_o)

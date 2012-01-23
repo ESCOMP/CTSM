@@ -1,0 +1,5 @@
+-mode clm_stndln
+-use_mpiserial -nosmp
+-debug
+-voc off
+-s

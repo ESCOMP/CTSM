@@ -21,7 +21,7 @@ program mksurfdat
                               soil_color, mksoilcol, mkorganic, &
                               soil_fmax, mkfmax
     use mkvocefMod   , only : mkvocef
-    use mklanwatMod  , only : mklanwat
+    use mklanwatMod  , only : mklakwat, mkwetlnd
     use mkglcmecMod  , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
     use mkharvestMod , only : mkharvest, mkharvest_init, mkharvest_fieldname, &
                               mkharvest_numtypes, mkharvest_parse_oride
@@ -119,11 +119,11 @@ program mksurfdat
          mksrf_forganic,           &
          mksrf_fsoicol,            &
          mksrf_fvocef,             &
-         mksrf_flanwat,            &
+         mksrf_flakwat,            &
+         mksrf_fwetlnd,            &
          mksrf_fglacier,           &
          mksrf_fglctopo,           &
          mksrf_flndtopo,           &
-         mksrf_ffrac,              &
          mksrf_fmax,               &
          mksrf_furban,             &
          mksrf_flai,               &
@@ -139,7 +139,8 @@ program mksurfdat
          pft_frc,                  &
          all_urban,                &
          map_fpft,                 &
-         map_flanwat,              &
+         map_flakwat,              &
+         map_fwetlnd,              &
          map_fglacier,             &
          map_fsoitex,              &
          map_fsoicol,              &
@@ -170,10 +171,10 @@ program mksurfdat
     ! ======================================
     ! Must specify settings for input high resolution datafiles
     ! ======================================
-    !    mksrf_ffrac ---- land fraction and land mask dataset
     !    mksrf_fglacier - Glacier dataset
     !    mksrf_flai ----- Leaf Area Index dataset
-    !    mksrf_flanwat -- Land water dataset
+    !    mksrf_flakwat -- Lake water dataset
+    !    mksrf_fwetlnd -- Wetland water dataset
     !    mksrf_forganic - Organic soil carbon dataset
     !    mksrf_fmax ----- Max fractional saturated area dataset
     !    mksrf_fsoicol -- Soil color dataset
@@ -187,7 +188,8 @@ program mksurfdat
     ! Must specify mapping file for the different datafiles above
     ! ======================================
     !    map_fpft -------- Mapping for mksrf_fvegtyp
-    !    map_flanwat ----- Mapping for mksrf_flanwat
+    !    map_flakwat ----- Mapping for mksrf_flakwat
+    !    map_fwetlnd ----- Mapping for mksrf_fwetlnd
     !    map_fglacier ---- Mapping for mksrf_fglacier
     !    map_fsoitex ----- Mapping for mksrf_fsoitex
     !    map_fsoicol ----- Mapping for mksrf_fsoicol
@@ -294,8 +296,8 @@ program mksurfdat
     
     ! Invalidate mask and frac for ldomain 
 
-    ldomain%mask = bigint
-    ldomain%frac = nan
+    !ldomain%mask = bigint
+    !ldomain%frac = nan
 
     ! Determine if will have 1d output
 
@@ -374,7 +376,8 @@ program mksurfdat
     write(ndiag,*) '           with:            ', nglcec, ' glacier elevation classes'
     write(ndiag,*) 'land topography from:       ',trim(mksrf_flndtopo)
     write(ndiag,*) 'urban from:                 ',trim(mksrf_furban)
-    write(ndiag,*) 'inland water from:          ',trim(mksrf_flanwat)
+    write(ndiag,*) 'inland lake from:           ',trim(mksrf_flakwat)
+    write(ndiag,*) 'inland wetland from:        ',trim(mksrf_fwetlnd)
     write(ndiag,*) 'soil texture from:          ',trim(mksrf_fsoitex)
     write(ndiag,*) 'soil organic from:          ',trim(mksrf_forganic)
     write(ndiag,*) 'soil color from:            ',trim(mksrf_fsoicol)
@@ -384,7 +387,8 @@ program mksurfdat
                    'irrigated area from:        ',trim(mksrf_firrig)
     end if
     write(ndiag,*)' mapping for pft             ',trim(map_fpft)
-    write(ndiag,*)' mapping for lanwat          ',trim(map_flanwat)
+    write(ndiag,*)' mapping for lake water      ',trim(map_flakwat)
+    write(ndiag,*)' mapping for wetland         ',trim(map_fwetlnd)
     write(ndiag,*)' mapping for glacier         ',trim(map_fglacier)
     write(ndiag,*)' mapping for soil texture    ',trim(map_fsoitex)
     write(ndiag,*)' mapping for soil color      ',trim(map_fsoicol)
@@ -418,16 +422,19 @@ program mksurfdat
             ndiag=ndiag, irrig_o=pctirr)
     endif
 
-    ! Make PFTs [pctpft] from dataset [fvegtyp] (1/2 degree PFT data)
+    ! Make PFTs [pctpft] from dataset [fvegtyp]
 
     call mkpft(ldomain, mapfname=map_fpft, fpft=mksrf_fvegtyp, &
          firrig=mksrf_firrig, ndiag=ndiag, pctlnd_o=pctlnd_pft, pctirr_o=pctirr, &
          pctpft_o=pctpft )
 
-    ! Make inland water [pctlak, pctwet] from Cogley's one degree data [flanwat]
+    ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
 
-    call mklanwat (ldomain, mapfname=map_flanwat, datfname=mksrf_flanwat, &
-         ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak, swmp_o=pctwet)
+    call mklakwat (ldomain, mapfname=map_flakwat, datfname=mksrf_flakwat, &
+         ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)
+
+    call mkwetlnd (ldomain, mapfname=map_fwetlnd, datfname=mksrf_fwetlnd, &
+         ndiag=ndiag, zero_out=all_urban.or.all_veg, swmp_o=pctwet)
 
     ! Make glacier fraction [pctgla] from [fglacier] dataset
 
@@ -435,11 +442,11 @@ program mksurfdat
          ndiag=ndiag, zero_out=all_urban.or.all_veg, glac_o=pctgla, &
          glac_uncorrected=pctgla_uncorrected)
 
-    ! Make soil texture [pctsand, pctclay] from IGBP 5 minute data [fsoitex]
+    ! Make soil texture [pctsand, pctclay]  [fsoitex]
 
     call mksoiltex (ldomain, mapfname=map_fsoitex, datfname=mksrf_fsoitex, &
          ndiag=ndiag, pctglac_o=pctgla, sand_o=pctsand, clay_o=pctclay)
-    ! Make soil color classes [soicol] from BATS T42 data [fsoicol]
+    ! Make soil color classes [soicol] [fsoicol]
 
     call mksoilcol (ldomain, mapfname=map_fsoicol, datfname=mksrf_fsoicol, &
          ndiag=ndiag, pctglac_o=pctgla, soil_color_o=soicol, nsoicol=nsoicol)
@@ -478,15 +485,14 @@ program mksurfdat
     call mkelev (ldomain, mapfname=map_flndtopo, datfname=mksrf_flndtopo, &
          varname='TOPO', ndiag=ndiag, elev_o=topo)
 
-    ! Make organic matter density [organic] from Global Soil Data Task [forganic]
+    ! Make organic matter density [organic] [forganic]
     allocate (organic(ns_o,nlevsoi))
     organic(:,:) = spval
     call mkorganic (ldomain, mapfname=map_forganic, datfname=mksrf_forganic, &
          ndiag=ndiag, organic_o=organic)
 
     ! Make VOC emission factors for isoprene &
-    ! [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp] from 
-    ! MEGAN data [fvocef] (heald, 04/06)
+    ! [ef1_btr,ef1_fet,ef1_fdt,ef1_shr,ef1_grs,ef1_crp]
 
     allocate ( ef1_btr(ns_o) , & 
                ef1_fet(ns_o) , & 
@@ -548,9 +554,9 @@ program mksurfdat
        ! subtract excess from most dominant land cover.
        
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma > 130._r4) then
+       if (suma > 250._r4) then
           write (6,*) subname, ' error: sum of pctlak, pctwet,', &
-               'pcturb and pctgla is greater than 130%'
+               'pcturb and pctgla is greater than 250%'
           write (6,*)'n,pctlak,pctwet,pcturb,pctgla= ', &
                n,pctlak(n),pctwet(n),pcturb(n),pctgla(n)
           call abort()

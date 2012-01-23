@@ -30,13 +30,13 @@ module mkvarctl
   character(len=256), public :: mksrf_fsoitex  = ' '  ! soil texture data file name
   character(len=256), public :: mksrf_forganic = ' '  ! organic matter data file name
   character(len=256), public :: mksrf_fsoicol  = ' '  ! soil color data file name
-  character(len=256), public :: mksrf_flanwat  = ' '  ! inland water data file name
+  character(len=256), public :: mksrf_flakwat  = ' '  ! inland lake data file name
+  character(len=256), public :: mksrf_fwetlnd  = ' '  ! inland wetlands data file name
   character(len=256), public :: mksrf_furban   = ' '  ! urban data file name
   character(len=256), public :: mksrf_firrig   = ' '  ! irrigated area data file name
   character(len=256), public :: mksrf_fglacier = ' '  ! glacier data file name
   character(len=256), public :: mksrf_fglctopo = ' '  ! glc topography data file name
   character(len=256), public :: mksrf_flndtopo = ' '  ! land topography data file name
-  character(len=256), public :: mksrf_ffrac    = ' '  ! grid fraction data file name
   character(len=256), public :: mksrf_fmax     = ' '  ! fmax data file name
   character(len=256), public :: mksrf_flai     = ' '  ! lai data filename
   character(len=256), public :: mksrf_fdynuse  = ' '  ! ascii file containing names of dynamic land use files
@@ -45,7 +45,8 @@ module mkvarctl
   integer           , public :: numpft         = 16   ! number of plant types
 
   character(len=256), public :: map_fpft        = ' ' ! Mapping file for PFT
-  character(len=256), public :: map_flanwat     = ' ' ! Mapping file for land water
+  character(len=256), public :: map_flakwat     = ' ' ! Mapping file for lake water
+  character(len=256), public :: map_fwetlnd     = ' ' ! Mapping file for wetland water
   character(len=256), public :: map_fglacier    = ' ' ! Mapping file for glacier
   character(len=256), public :: map_fsoitex     = ' ' ! Mapping file for soil texture
   character(len=256), public :: map_fsoicol     = ' ' ! Mapping file for soil color

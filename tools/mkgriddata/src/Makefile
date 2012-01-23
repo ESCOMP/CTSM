@@ -65,6 +65,10 @@ ifeq ($(OPT),$(null))
   OPT := TRUE
 endif
 
+ifeq ($(OPT),TRUE)
+  CPPDEF := -DOPT
+endif
+
 # Determine platform 
 UNAMES := $(shell uname -s)
 

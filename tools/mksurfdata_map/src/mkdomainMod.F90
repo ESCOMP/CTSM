@@ -35,16 +35,18 @@ module mkdomainMod
      real(r8),pointer :: lonw(:)    ! grid cell longitude, W edge (deg)
      real(r8),pointer :: lone(:)    ! grid cell longitude, E edge (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2) (only used for output grid)
+     logical          :: fracset    ! if frac is set
+     logical          :: maskset    ! if mask is set
   end type domain_type
 
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public domain_init          
   public domain_clean         
   public domain_check         
   public domain_read 
   public domain_read_map
   public domain_write         
+  public domain_checksame
 !
 !
 ! !REVISION HISTORY:
@@ -55,6 +57,9 @@ module mkdomainMod
   character*16,parameter :: unset = 'NOdomain_unsetNO'
 
   real(r8) :: flandmin = 0.001            !minimum land frac for land cell
+!
+! !PRIVATE MEMBER FUNCTIONS:
+  private domain_init          
 !
 !EOP
 !------------------------------------------------------------------------------
@@ -115,6 +120,8 @@ contains
     domain%lonc     = nan
     domain%area     = nan
     domain%set      = set
+    domain%fracset  = .false.
+    domain%maskset  = .false.
     
   end subroutine domain_init
 
@@ -162,8 +169,10 @@ contains
        write(6,*) 'domain_clean WARN: clean domain unecessary '
     endif
 
-    domain%ns         = bigint
-    domain%set        = unset
+    domain%ns       = bigint
+    domain%set      = unset
+    domain%fracset  = .false.
+    domain%maskset  = .false.
 
 end subroutine domain_clean
 
@@ -300,6 +309,8 @@ end subroutine domain_check
       call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
       domain%area = domain%area * re**2
     end if
+    domain%maskset = .true.
+    domain%fracset = .true.
 
     call check_ret(nf_close(ncid), subname)
 
@@ -417,7 +428,7 @@ end subroutine domain_check
        call domain_init(domain,nlon*nlat)
     else
        write(6,*) trim(subname),' ERROR: dims not set for domain_init'
-       stop
+       call abort()
     endif
     ns = domain%ns
 
@@ -449,7 +460,7 @@ end subroutine domain_check
        write(6,*)'lon/lat values not set' 
        write(6,*)'currently assume either that lon/lat or LONGXY/LATIXY', &
             ' variables are on input dataset'
-       stop
+       call abort()
     end if
 
     ! ----- Set landmask/landfrac  ------
@@ -523,6 +534,8 @@ end subroutine domain_check
           end if
        end do
     endif
+    domain%maskset = maskset
+    domain%fracset = landfracset
 
   end subroutine domain_read
 
@@ -564,18 +577,6 @@ end subroutine domain_check
 
     call check_ret(nf_inq_varid(ncid, 'AREA', varid), subname)
     call check_ret(nf_put_var_double(ncid, varid, domain%area), subname)
-
-    call check_ret(nf_inq_varid(ncid, 'LATN', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, domain%latn), subname)
-
-    call check_ret(nf_inq_varid(ncid, 'LONE', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, domain%lone), subname)
-
-    call check_ret(nf_inq_varid(ncid, 'LATS', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, domain%lats), subname)
-
-    call check_ret(nf_inq_varid(ncid, 'LONW', varid), subname)
-    call check_ret(nf_put_var_double(ncid, varid, domain%lonw), subname)
 
     call check_ret(nf_inq_varid(ncid, 'LONGXY', varid), subname)
     call check_ret(nf_put_var_double(ncid, varid, domain%lonc), subname)
@@ -622,5 +623,127 @@ end subroutine domain_check
     end if
 
   end subroutine check_ret
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: domain_checksame
+!
+! !INTERFACE:
+  subroutine domain_checksame( srcdomain, dstdomain, tgridmap )
+!
+! !DESCRIPTION:
+! Check that the input domains agree with the input map
+!
+! USES:
+    use mkgridmapMod, only : gridmap_type, gridmap_setptrs
+! !ARGUMENTS:
+    implicit none
+    type(domain_type), intent(in) :: srcdomain ! input domain
+    type(domain_type), intent(in) :: dstdomain ! output domain
+    type(gridmap_type),intent(in) :: tgridmap  ! grid map
+!
+! !REVISION HISTORY:
+!
+!EOP
+!-----------------------------------------------------------------------
+     integer :: na, nb, ns             ! gridmap sizes
+     integer :: n, ni                  ! indices
+     real(r8), pointer :: xc_src(:)    ! Source longitude
+     real(r8), pointer :: yc_src(:)    ! Source latitude
+     real(r8), pointer :: frac_src(:)  ! Source fraction
+     integer,  pointer :: mask_src(:)  ! Source mask
+     integer,  pointer :: src_indx(:)  ! Source index
+     real(r8), pointer :: xc_dst(:)    ! Destination longitude
+     real(r8), pointer :: yc_dst(:)    ! Destination latitude
+     real(r8), pointer :: frac_dst(:)  ! Destination fraction
+     integer,  pointer :: mask_dst(:)  ! Destination mask
+     integer,  pointer :: dst_indx(:)  ! Destination index
+     character(len= 32) :: subname = 'domain_checksame'
+
+     if (srcdomain%set == unset) then
+        write(6,*) trim(subname)//'ERROR: source domain is unset!'
+        call abort()
+     end if
+     if (srcdomain%set == unset) then
+        write(6,*) trim(subname)//'ERROR: destination domain is unset!'
+        call abort()
+     end if
+
+     call gridmap_setptrs( tgridmap, nsrc=na, ndst=nb, ns=ns,    &
+                           xc_src=xc_src, yc_src=yc_src,         &
+                           xc_dst=xc_dst, yc_dst=yc_dst,         &
+                           mask_src=mask_src, mask_dst=mask_dst, &
+                           src_indx=src_indx, dst_indx=dst_indx  &
+                         )
+       
+     if (srcdomain%ns /= na) then
+        write(6,*) trim(subname)// &
+              ' ERROR: input domain size and gridmap source size are not the same size'
+        write(6,*)' domain size = ',srcdomain%ns
+        write(6,*)' map src size= ',na
+        call abort()
+     end if
+     if (dstdomain%ns /= nb) then
+        write(6,*) trim(subname)// &              
+           ' ERROR: output domain size and gridmap destination size are not the same size'
+        write(6,*)' domain size = ',dstdomain%ns
+        write(6,*)' map dst size= ',nb
+        call abort()
+     end if
+     do n = 1,ns
+        ni = src_indx(n)
+        if ( srcdomain%maskset )then
+           if (srcdomain%mask(ni) /= mask_src(ni)) then
+              write(6,*) trim(subname)// &              
+                 ' ERROR: input domain mask and gridmap mask are not the same at ni = ',ni
+              write(6,*)' domain  mask= ',srcdomain%mask(ni)
+              write(6,*)' gridmap mask= ',mask_src(ni)
+              call abort()
+           end if
+        end if
+        if (srcdomain%lonc(ni) /= xc_src(ni)) then
+           write(6,*) trim(subname)// &
+               ' ERROR: input domain lon and gridmap lon not the same at ni = ',ni
+           write(6,*)' domain  lon= ',srcdomain%lonc(ni)
+           write(6,*)' gridmap lon= ',xc_src(ni)
+           call abort()
+        end if
+        if (srcdomain%latc(ni) /= yc_src(ni)) then
+           write(6,*) trim(subname)// &               
+               ' ERROR: input domain lat and gridmap lat not the same at ni = ',ni
+           write(6,*)' domain  lat= ',srcdomain%latc(ni)
+           write(6,*)' gridmap lat= ',yc_src(ni)
+           call abort()
+        end if
+     end do
+     do n = 1,ns
+        ni = dst_indx(n)
+        if ( dstdomain%maskset )then
+           if (dstdomain%mask(ni) /= mask_dst(ni)) then
+              write(6,*) trim(subname)// &                              
+                  ' ERROR: output domain mask and gridmap mask are not the same at ni = ',ni
+              write(6,*)' domain  mask= ',dstdomain%mask(ni)
+              write(6,*)' gridmap mask= ',mask_dst(ni)
+              call abort()
+           end if
+        end if
+        if (dstdomain%lonc(ni) /= xc_dst(ni)) then
+           write(6,*) trim(subname)// &
+               ' ERROR: output domain lon and gridmap lon not the same at ni = ',ni
+           write(6,*)' domain  lon= ',dstdomain%lonc(ni)
+           write(6,*)' gridmap lon= ',xc_dst(ni)
+           call abort()
+        end if
+        if (dstdomain%latc(ni) /= yc_dst(ni)) then
+           write(6,*) trim(subname)// &
+                ' ERROR: output domain lat and gridmap lat not the same at ni = ',ni
+           write(6,*)' domain  lat= ',dstdomain%latc(ni)
+           write(6,*)' gridmap lat= ',yc_dst(ni)
+           call abort()
+        end if
+     end do
+
+  end subroutine domain_checksame
 
 end module mkdomainMod

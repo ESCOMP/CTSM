@@ -687,7 +687,11 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/0.9x1.25/map_5minx5min_soitex_to_0.9x1.25_aave_da_110722.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="0.9x1.25" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.9x1.25/map_5minx5min_irrig_to_0.9x1.25_aave_da_110529.nc</map>
-<!-- Remove 1.9x2.5 RTM mapping file as gives different answers and causes POP to blow up
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="0.9x1.25" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.9x1.25/map_5x5min_ISRIC-WISE_to_0.9x1.25_nomask_aave_da_c111116.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.9x1.25"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.9x1.25/map_3x3min_MODIS_to_0.9x1.25_nomask_aave_da_c111109.nc</map>
+<!-- Remove 0.9x1.25 RTM mapping file as gives different answers and causes POP to blow up
 <map frm_hgrid="0.9x1.25" frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.9x1.25/map_0.9x1.25_to_0.5x0.5rtm_aave_da_110307.nc</map>
 -->
@@ -704,7 +708,11 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="1.9x2.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_5minx5min_soitex_to_1.9x2.5_aave_da_110307.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="1.9x2.5" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1.9x2.5/map_5minx5min_irrig_to_1.9x2.5_aave_da_110307.nc</map>
+>lnd/clm2/mappingdata/maps/1.9x2.5/map_5minx5min_irrig_simyr2000_to_1.9x2.5_aave_da_110307.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="1.9x2.5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/1.9x2.5/map_5x5min_ISRIC-WISE_to_1.9x2.5_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="1.9x2.5"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/1.9x2.5/map_3x3min_MODIS_to_1.9x2.5_nomask_aave_da_c111111.nc</map>
 <!-- Remove 1.9x2.5 RTM mapping file as gives different answers and causes POP to blow up
 <map frm_hgrid="1.9x2.5"  frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_1.9x2.5_to_0.5x0.5rtm_aave_da_110307.nc</map>
@@ -723,6 +731,10 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/10x15/map_5minx5min_soitex_to_10x15_aave_da_110307.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="10x15"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/10x15/map_5minx5min_irrig_simyr2000_to_10x15_aave_da_110307.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="10x15" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/10x15/map_5x5min_ISRIC-WISE_to_10x15_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="10x15"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/10x15/map_3x3min_MODIS_to_10x15_nomask_aave_da_c111111.nc</map>
 <!-- Remove 10x15 RTM mapping file as gives different answers
 <map frm_hgrid="10x15"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/10x15/map_10x15_to_0.5x0.5rtm_aave_da_110307.nc</map>
@@ -732,15 +744,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="512x1024"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/512x1024/map_0.5x0.5_MODIS_to_512x1024_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="512x1024"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/512x1024/map_0.5x0.5_AVHRR_lanwat_to_512x1024_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/512x1024/map_0.5x0.5_AVHRR_to_512x1024_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="512x1024"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/512x1024/map_0.5x0.5_USGS_to_512x1024_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="512x1024"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/512x1024/map_10minx10min_nomask_to_512x1024_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/512x1024/map_10x10min_nomask_to_512x1024_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="512x1024"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/512x1024/map_5minx5min_IGBP-GSDP_to_512x1024_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/512x1024/map_5x5min_IGBP-GSDP_to_512x1024_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="512x1024"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/512x1024/map_5minx5min_nomask_to_512x1024_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/512x1024/map_5x5min_nomask_to_512x1024_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="512x1024" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/512x1024/map_5x5min_ISRIC-WISE_to_512x1024_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="512x1024"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/512x1024/map_3x3min_MODIS_to_512x1024_nomask_aave_da_c111111.nc</map>
 <!-- Remove 512x1024 RTM mapping file as gives different answers
 <map frm_hgrid="512x1024"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/512x1024/map_512x1024_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
@@ -750,15 +766,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="128x256"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/128x256/map_0.5x0.5_MODIS_to_128x256_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="128x256"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/128x256/map_0.5x0.5_AVHRR_lanwat_to_128x256_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/128x256/map_0.5x0.5_AVHRR_to_128x256_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="128x256"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/128x256/map_0.5x0.5_USGS_to_128x256_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="128x256"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/128x256/map_10minx10min_nomask_to_128x256_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/128x256/map_10x10min_nomask_to_128x256_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="128x256"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/128x256/map_5minx5min_IGBP-GSDP_to_128x256_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/128x256/map_5x5min_IGBP-GSDP_to_128x256_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="128x256"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/128x256/map_5minx5min_nomask_to_128x256_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/128x256/map_5x5min_nomask_to_128x256_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="128x256" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/128x256/map_5x5min_ISRIC-WISE_to_128x256_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="128x256"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/128x256/map_3x3min_MODIS_to_128x256_nomask_aave_da_c111111.nc</map>
 <!-- Remove 128x256 RTM mapping file as gives different answers
 <map frm_hgrid="128x256"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/128x256/map_128x256_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
@@ -768,15 +788,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="64x128"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/64x128/map_0.5x0.5_MODIS_to_64x128_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="64x128"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/64x128/map_0.5x0.5_AVHRR_lanwat_to_64x128_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/64x128/map_0.5x0.5_AVHRR_to_64x128_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="64x128"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/64x128/map_0.5x0.5_USGS_to_64x128_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="64x128"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/64x128/map_10minx10min_nomask_to_64x128_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/64x128/map_10x10min_nomask_to_64x128_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="64x128"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/64x128/map_5minx5min_IGBP-GSDP_to_64x128_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/64x128/map_5x5min_IGBP-GSDP_to_64x128_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="64x128"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/64x128/map_5minx5min_nomask_to_64x128_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/64x128/map_5x5min_nomask_to_64x128_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="64x128" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/64x128/map_5x5min_ISRIC-WISE_to_64x128_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="64x128"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/64x128/map_3x3min_MODIS_to_64x128_nomask_aave_da_c111111.nc</map>
 <!-- Remove 64x128 RTM mapping file as gives different answers
 <map frm_hgrid="64x128"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/64x128/map_64x128_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
@@ -786,15 +810,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="48x96"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/48x96/map_0.5x0.5_MODIS_to_48x96_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="48x96"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/48x96/map_0.5x0.5_AVHRR_lanwat_to_48x96_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/48x96/map_0.5x0.5_AVHRR_to_48x96_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="48x96"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/48x96/map_0.5x0.5_USGS_to_48x96_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="48x96"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/48x96/map_10minx10min_nomask_to_48x96_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/48x96/map_10x10min_nomask_to_48x96_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="48x96"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/48x96/map_5minx5min_IGBP-GSDP_to_48x96_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/48x96/map_5x5min_IGBP-GSDP_to_48x96_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="48x96"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/48x96/map_5minx5min_nomask_to_48x96_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/48x96/map_5x5min_nomask_to_48x96_nomask_aave_da_c110822.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="48x96" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/48x96/map_5x5min_ISRIC-WISE_to_48x96_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="48x96"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/48x96/map_3x3min_MODIS_to_48x96_nomask_aave_da_c111111.nc</map>
 <!-- Remove 48x96 RTM mapping file as gives different answers
 <map frm_hgrid="48x96"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/48x96/map_48x96_nomask_to_0.5x0.5_nomask_aave_da_c110822.nc</map>
@@ -804,15 +832,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="32x64"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/32x64/map_0.5x0.5_MODIS_to_32x64_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="32x64"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/32x64/map_0.5x0.5_AVHRR_lanwat_to_32x64_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/32x64/map_0.5x0.5_AVHRR_to_32x64_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="32x64"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/32x64/map_0.5x0.5_USGS_to_32x64_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="32x64"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/32x64/map_10minx10min_nomask_to_32x64_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/32x64/map_10x10min_nomask_to_32x64_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="32x64"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/32x64/map_5minx5min_IGBP-GSDP_to_32x64_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/32x64/map_5x5min_IGBP-GSDP_to_32x64_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="32x64"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/32x64/map_5minx5min_nomask_to_32x64_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/32x64/map_5x5min_nomask_to_32x64_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="32x64" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/32x64/map_5x5min_ISRIC-WISE_to_32x64_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="32x64"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/32x64/map_3x3min_MODIS_to_32x64_nomask_aave_da_c111111.nc</map>
 <!-- Remove 32x64 RTM mapping file as gives different answers
 <map frm_hgrid="32x64"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/32x64/map_32x64_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
@@ -822,15 +854,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="8x16"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/8x16/map_0.5x0.5_MODIS_to_8x16_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="8x16"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/8x16/map_0.5x0.5_AVHRR_lanwat_to_8x16_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/8x16/map_0.5x0.5_AVHRR_to_8x16_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="8x16"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/8x16/map_0.5x0.5_USGS_to_8x16_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="8x16"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/8x16/map_10minx10min_nomask_to_8x16_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/8x16/map_10x10min_nomask_to_8x16_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="8x16"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/8x16/map_5minx5min_IGBP-GSDP_to_8x16_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/8x16/map_5x5min_IGBP-GSDP_to_8x16_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="8x16"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/8x16/map_5minx5min_nomask_to_8x16_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/8x16/map_5x5min_nomask_to_8x16_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="8x16" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/8x16/map_5x5min_ISRIC-WISE_to_8x16_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="8x16"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/8x16/map_3x3min_MODIS_to_8x16_nomask_aave_da_c111111.nc</map>
 <!-- Remove 8x16 RTM mapping file as gives different answers
 <map frm_hgrid="8x16"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/8x16/map_8x16_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
@@ -841,15 +877,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="4x5"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/4x5/map_0.5x0.5_MODIS_to_4x5_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="4x5"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/4x5/map_0.5x0.5_AVHRR_lanwat_to_4x5_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/4x5/map_0.5x0.5_AVHRR_to_4x5_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="4x5"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/4x5/map_0.5x0.5_USGS_to_4x5_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="4x5"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/4x5/map_10minx10min_nomask_to_4x5_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/4x5/map_10x10min_nomask_to_4x5_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="4x5"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/4x5/map_5minx5min_IGBP-GSDP_to_4x5_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/4x5/map_5x5min_IGBP-GSDP_to_4x5_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="4x5"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/4x5/map_5minx5min_nomask_to_4x5_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/4x5/map_5x5min_nomask_to_4x5_nomask_aave_da_c110822.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="4x5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/4x5/map_5x5min_ISRIC-WISE_to_4x5_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="4x5"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/4x5/map_3x3min_MODIS_to_4x5_nomask_aave_da_c111111.nc</map>
 <!-- Remove 4x5 RTM mapping file as gives different answers
 <map frm_hgrid="4x5"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/4x5/map_4x5_nomask_to_0.5x0.5_nomask_aave_da_c110822.nc</map>
@@ -857,35 +897,47 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="0.23x0.31"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.23x0.31/map_0.5x0.5_MODIS_to_0.23x0.31_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_0.5x0.5_MODIS_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="0.23x0.31"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.23x0.31/map_0.5x0.5_AVHRR_lanwat_to_0.23x0.31_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_0.5x0.5_AVHRR_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="0.23x0.31"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.23x0.31/map_0.5x0.5_USGS_to_0.23x0.31_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_0.5x0.5_USGS_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="0.23x0.31"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.23x0.31/map_10minx10min_nomask_to_0.23x0.31_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_10x10min_nomask_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="0.23x0.31"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.23x0.31/map_5minx5min_IGBP-GSDP_to_0.23x0.31_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_5x5min_IGBP-GSDP_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="0.23x0.31"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.23x0.31/map_5minx5min_nomask_to_0.23x0.31_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_5x5min_nomask_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="0.23x0.31" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_5x5min_ISRIC-WISE_to_0.23x0.31_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.23x0.31"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_3x3min_MODIS_to_0.23x0.31_nomask_aave_da_c110930.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.23x0.31"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_3x3min_MODIS_to_0.23x0.31_nomask_aave_da_c110930.nc</map>
 <!-- Remove 0.23x0.31 RTM mapping file as gives different answers
 <map frm_hgrid="0.23x0.31"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.23x0.31/map_0.23x0.31_nomask_to_0.5x0.5_nomask_aave_da_c110822.nc</map>
+>lnd/clm2/mappingdata/maps/0.23x0.31/map_5x5min_nomask_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
 -->
 
 
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="0.47x0.63"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.47x0.63/map_0.5x0.5_MODIS_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="0.47x0.63"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.47x0.63/map_0.5x0.5_AVHRR_lanwat_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_0.5x0.5_AVHRR_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="0.47x0.63"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.47x0.63/map_0.5x0.5_USGS_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="0.47x0.63"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.47x0.63/map_10minx10min_nomask_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_10x10min_nomask_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="0.47x0.63"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.47x0.63/map_5minx5min_IGBP-GSDP_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_5x5min_IGBP-GSDP_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="0.47x0.63"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.47x0.63/map_5minx5min_nomask_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_5x5min_nomask_to_0.47x0.63_nomask_aave_da_c110823.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="0.47x0.63" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_5x5min_ISRIC-WISE_to_0.47x0.63_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.47x0.63"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_3x3min_MODIS_to_0.47x0.63_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.47x0.63"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.47x0.63/map_3x3min_MODIS_to_0.47x0.63_nomask_aave_da_c111111.nc</map>
 <!-- Remove 0.47x0.63 RTM mapping file as gives different answers
 <map frm_hgrid="0.47x0.63"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/0.47x0.63/map_0.47x0.63_nomask_to_0.5x0.5_nomask_aave_da_c110823.nc</map>
@@ -894,19 +946,82 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="2.5x3.33"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/2.5x3.33/map_0.5x0.5_MODIS_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="2.5x3.33"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/2.5x3.33/map_0.5x0.5_AVHRR_lanwat_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_0.5x0.5_AVHRR_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="2.5x3.33"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/2.5x3.33/map_0.5x0.5_USGS_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="2.5x3.33"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/2.5x3.33/map_10minx10min_nomask_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_10x10min_nomask_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="2.5x3.33"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/2.5x3.33/map_5minx5min_IGBP-GSDP_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_5x5min_IGBP-GSDP_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="2.5x3.33"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/2.5x3.33/map_5minx5min_nomask_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
-<!-- Remove 0.47x0.63 RTM mapping file as gives different answers
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_5x5min_nomask_to_2.5x3.33_nomask_aave_da_c110823.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="2.5x3.33" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_5x5min_ISRIC-WISE_to_2.5x3.33_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="2.5x3.33"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/2.5x3.33/map_3x3min_MODIS_to_2.5x3.33_nomask_aave_da_c111111.nc</map>
+<!-- Remove 2.5x3.33 RTM mapping file as gives different answers
 <map frm_hgrid="2.5x3.33"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/2.5x3.33/map_2.5x3.33_nomask_to_0.5x0.5_nomask_aave_da_c110823.nc</map>
 -->
+
+<map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_0.5x0.5_MODIS_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_0.5x0.5_AVHRR_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_0.5x0.5_USGS_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+<map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_10x10min_nomask_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_5x5min_IGBP-GSDP_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_5x5min_nomask_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="0.5x0.5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_5x5min_ISRIC-WISE_to_0.5x0.5_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="0.5x0.5"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_3x3min_MODIS_to_0.5x0.5_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="0.5x0.5"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_0.5x0.5_nomask_to_0.5x0.5_nomask_aave_da_c111021.nc</map>
+
+
+<map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="ne4np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne4np4/map_0.5x0.5_MODIS_to_ne4np4_nomask_aave_da_c110923.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="ne4np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne4np4/map_0.5x0.5_AVHRR_to_ne4np4_nomask_aave_da_c110923.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="ne4np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne4np4/map_0.5x0.5_USGS_to_ne4np4_nomask_aave_da_c110923.nc</map>
+<map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="ne4np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_10x10min_nomask_to_ne4np4_nomask_aave_da_c110923.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="ne4np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_IGBP-GSDP_to_ne4np4_nomask_aave_da_c110923.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne4np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_nomask_to_ne4np4_nomask_aave_da_c110923.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne4np4" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_ISRIC-WISE_to_ne4np4_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne4np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_MODIS_to_ne4np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="ne4np4"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne4np4/map_ne4np4_nomask_to_0.5x0.5_nomask_aave_da_c110923.nc</map>
+
+
+<map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="ne16np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne16np4/map_0.5x0.5_MODIS_to_ne16np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="ne16np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne16np4/map_0.5x0.5_AVHRR_to_ne16np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="ne16np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne16np4/map_0.5x0.5_USGS_to_ne16np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="ne16np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_10x10min_nomask_to_ne16np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="ne16np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_5x5min_IGBP-GSDP_to_ne16np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne16np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_5x5min_nomask_to_ne16np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne16np4" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_5x5min_ISRIC-WISE_to_ne16np4_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne16np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_3x3min_MODIS_to_ne16np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="ne16np4"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne16np4/map_ne16np4_nomask_to_0.5x0.5_nomask_aave_da_c110922.nc</map>
 
 
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="ne30np4" to_lmask="nomask" 
@@ -920,9 +1035,33 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="ne30np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne30np4/map_5minx5min_soitex_to_ne30np4_aave_da_110320.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne30np4" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne30np4/map_5minx5min_irrig_to_ne30np4_aave_da_110320.nc</map>
+>lnd/clm2/mappingdata/maps/ne30np4/map_5minx5min_irrig_to_ne30np4_aave_da_110720.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne30np4" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne30np4/map_5x5min_ISRIC-WISE_to_ne30np4_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne30np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne30np4/map_3x3min_MODIS_to_ne30np4_nomask_aave_da_c111111.nc</map>
 <map frm_hgrid="ne30np4"  frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne30np4/map_ne30np4_to_0.5x0.5rtm_aave_da_110320.nc</map>
+
+
+<map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="ne60np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne60np4/map_0.5x0.5_MODIS_to_ne60np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="ne60np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne60np4/map_0.5x0.5_AVHRR_to_ne60np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="ne60np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne60np4/map_0.5x0.5_USGS_to_ne60np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="ne60np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_10x10min_nomask_to_ne60np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="ne60np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_5x5min_IGBP-GSDP_to_ne60np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne60np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_5x5min_nomask_to_ne60np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne60np4" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_5x5min_ISRIC-WISE_to_ne60np4_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne60np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_3x3min_MODIS_to_ne60np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="ne60np4"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne60np4/map_ne60np4_nomask_to_0.5x0.5_nomask_aave_da_c110922.nc</map>
 
 
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="ne120np4" to_lmask="nomask" 
@@ -943,19 +1082,42 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="5x5_amazon"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/5x5_amazon/map_0.5x0.5_MODIS_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="5x5_amazon"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/5x5_amazon/map_0.5x0.5_AVHRR_lanwat_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_0.5x0.5_AVHRR_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="5x5_amazon"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/5x5_amazon/map_0.5x0.5_USGS_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="5x5_amazon"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/5x5_amazon/map_10minx10min_nomask_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_10x10min_nomask_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="5x5_amazon"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/5x5_amazon/map_5minx5min_IGBP-GSDP_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_5x5min_IGBP-GSDP_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="5x5_amazon"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/5x5_amazon/map_5minx5min_nomask_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_5x5min_nomask_to_5x5_amazon_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="5x5_amazon" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_5x5min_ISRIC-WISE_to_5x5_amazon_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="5x5_amazon"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/5x5_amazon/map_3x3min_MODIS_to_5x5_amazon_nomask_aave_da_c111111.nc</map>
 <!-- Remove 5x5_amazon RTM mapping file as gives different answers
 <map frm_hgrid="5x5_amazon"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/5x5_amazon/map_5x5_amazon_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
 -->
+
+<map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="ne240np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne240np4/map_0.5x0.5_MODIS_to_ne240np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="AVHRR"  to_hgrid="ne240np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne240np4/map_0.5x0.5_AVHRR_to_ne240np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="0.5x0.5"  frm_lmask="USGS"   to_hgrid="ne240np4"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/ne240np4/map_0.5x0.5_USGS_to_ne240np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="10x10min" frm_lmask="nomask" to_hgrid="ne240np4"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_10x10min_nomask_to_ne240np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="IGBP-GSDP" to_hgrid="ne240np4"  to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_5x5min_IGBP-GSDP_to_ne240np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne240np4"     to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_5x5min_nomask_to_ne240np4_nomask_aave_da_c110922.nc</map>
+<map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne240np4" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_5x5min_ISRIC-WISE_to_ne240np4_nomask_aave_da_c111115.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne240np4"    to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_3x3min_MODIS_to_ne240np4_nomask_aave_da_c111111.nc</map>
+<map frm_hgrid="ne240np4"    frm_lmask="nomask" to_hgrid="0.5x0.5"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/ne240np4/map_ne240np4_nomask_to_0.5x0.5_nomask_aave_da_c110922.nc</map>
 
 
 <!-- =========================================  -->

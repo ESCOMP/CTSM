@@ -1,4 +1,247 @@
 ===============================================================
+Tag name:  clm4_0_38
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Jan 23 13:56:45 MST 2012
+One-line Summary: Fix some minor issues with tools, add high resolution option and
+datasets to mksurfdata, remove crap from clmtype so C13 will work on bluefire, convert
+nans to FillValue for some cases, fix datasets, update doc
+
+Purpose of changes:
+
+Update externals to new version of scripts/Machines. Fix some bugs. Add in maps for:
+ne4np4, ne16np4, ne60np4, and ne240np4 resolutions. Begin adding _FillValue/missing_value
+to restart files. Start adding in new high-resolution datasets for mksurfdata. Add an
+option to mksurfdata.pl to run at hi-res let default be standard half-degree datasets.
+Add in 3x3min PFT dataset for 2000, and 5x5min organic. Add in maps for 3x3min and
+5x5min_ISRIC_WISE to output grids. Separate out wetland and lake datasets, add in 3x3min
+lake dataset. Get mksurfdata to work with T31, fix maps. Have both mksurfdata_map and clm
+check files for consistencies. Add initial version of a script to check that maps in the
+XML database are correct. Make sure keywords are set in tools, and OPT correctly added to
+meta-data. Update gen_domain. Correct some typo's in filenames. Remove some unused data
+in clmtype.F90. Update documentation to cesm1_0_4.
+
+Requirements for tag:
+    Testing on bluefire-only, Fix bugs: 1432 (part X), 1424X, 1423X, 1401 (part)X, 1309,
+    mksurfdata works at regular and hi-res and for f09, and at regular for: 128x256,
+    512x1024, ne4np4, ne16np4, ne30np4, ne60np4, and ne240np4 resolutions, T31 and T31
+    mksurfdata rcp's work
+
+Test level of tag: critical
+
+Bugs fixed (include bugzilla ID):
+                                 1432 (Several resolutions fail for new mksurfdata_map)
+                                 1424 (variables written out as gdir)
+                                 1423 (Problem building clmtype on bluefire)
+                                 1398 (clm and mksurfdata_map needs to check map files -- partial)
+
+Known bugs (include bugzilla ID):
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  935 (RTM warning NOT an error)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1404 (Inconsistent domain and fatmlndfrc files)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: 
+     Correct and add new mapping datasets and datasets for mksurfdata_map
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): most
+
+   scripts   to scripts4_111108
+   Machines  to Machines_111101
+   drv       to drvseq4_0_08
+   cism      to cism1_111004
+   csm_share to share3_111027
+   timing    to timing_111101
+   MCT       to MCT2_7_0-111101
+   pio       to pio1_3_12
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+   A    models/lnd/clm/test/system/config_files/_scnv_ds - Add serial option
+   A    models/lnd/clm/bld/namelist_files/checkmapfiles.ncl - check that map files
+          are consistent
+
+List all existing files that have been modified, and describe the changes:
+
+  M    models/lnd/clm/test/system/input_tests_master - Add serial irrig test
+
+  M    models/lnd/clm/test/system/test_driver.sh ----- Fix issues on bluefire,
+          update some paths on edinburgh
+
+>>>>>>>>>>>>>> Update documentation
+  M    models/lnd/clm/doc/UsersGuide/single_point.xml
+  M    models/lnd/clm/doc/UsersGuide/special_cases.xml
+  M    models/lnd/clm/doc/UsersGuide/custom.xml
+  M    models/lnd/clm/doc/KnownBugs
+
+>>>>>>>>>>>>>> Get svn keywords set on tools, and make sure OPT is set
+  M    models/lnd/clm/tools/mkmapdata/mvNimport.sh -------- Fix syntax error
+  M    models/lnd/clm/tools/mkmapdata/mkmapdata.sh -------- Add in 3x3 grid and ISRIC-WISE
+          mask, add option to build ocean-land mask, and large-file format option,
+  M    models/lnd/clm/tools/interpinic/src/interpinic.F90 - Fix svn keywords
+  M    models/lnd/clm/tools/interpinic/src/Makefile ------- Set OPT CPP if OPT=TRUE
+  M    models/lnd/clm/tools/mkgriddata/src/Makefile ------- Set OPT CPP if OPT=TRUE
+  M    models/lnd/clm/tools/mkdatadomain/src/Makefile ----- Set OPT CPP if OPT=TRUE
+  M    models/lnd/clm/tools/mkmapgrids/src/mkmapgrids.F90 - Add more meta-data
+  M    models/lnd/clm/tools/mkmapgrids/src/Makefile-------- Set OPT CPP if OPT=TRUE
+
+>>>>>>>>>>>>>> Add call to domain_checksame to check if domains are the same,
+>>>>>>>>>>>>>> split lake and wetland processing, add write statment for each file
+>>>>>>>>>>>>>> opened, add -hires and -allownofile options to mksurfdata.pl
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkglcmecMod.F90 ---- Use domain_checksame
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkvarctl.F90 ------- Split lake/wetland
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkvocefMod.F90 ----- Use domain_checksame
+  M    models/lnd/clm/tools/mksurfdata_map/src/mklaiMod.F90 ------- Use domain_checksame
+  M    models/lnd/clm/tools/mksurfdata_map/src/mksoilMod.F90 ------ Use domain_checksame
+          increase kmap_max_min from 50 to 90 (so T31 can be run)
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkdomainMod.F90 ---- Add domain_checksame,
+          make domain_init private, add metadata if frac/mask set, eliminate
+          lats/n,lone/w, use call abort in place of stop, 
+  M    models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90 ------ Split lake/wetland
+          remove documentation on specific datasets, increase allowed sum of special
+          landunits from 120 to 250
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkurbanparMod.F90 -- Use domain_checksame
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkharvestMod.F90 --- Use domain_checksame
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkfileMod.F90 ------ Fix meta-data, 
+          remove lats/n,lone/w
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90 --- Add headers, more
+          checking, add gridmap_setptrs method private gridmap_checkifset method,
+          
+  M    models/lnd/clm/tools/mksurfdata_map/src/mklanwatMod.F90 ---- Split mklanwat
+          into mklakwat/mkwetlnd subroutines, use domain_checksame, 
+  M    models/lnd/clm/tools/mksurfdata_map/src/Makefile ----------- Set OPT CPP if OPT=TRUE
+  M    models/lnd/clm/tools/mksurfdata_map/src/mkpftMod.F90 ------- Use domain_checksame
+  M    models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl ---------- Add -hires and
+          -allownofile options, split lake and wetland
+
+     -allownofile                  Allow the script to run even if one of the input files
+                                   does NOT exist.
+     -hires                        If you want to use high-resolution input datasets rather than the default
+                                   lower resolution datasets (low resolution is typically at half-degree)
+
+  M    models/lnd/clm/tools/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt Use $CSMDATA
+           directory path rather than /cgd/tss path
+  M    models/lnd/clm/tools/mksurfdata_map/mksurfdata_map.namelist  Split lake and wetland
+
+>>>>>>>>>>>>>> Minor changes
+  M    models/lnd/clm/bld/build-namelist --------- Move groups earlier, start adding
+              code to handle lnd_inst_counter
+  M    models/lnd/clm/bld/listDefaultNamelist.pl - Get rcp list sooner
+
+>>>>>>>>>>>>>> Fix some filename typos, add new mapping files, add hi-res
+>>>>>>>>>>>>>> datasets
+   M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ------ Add 
+               ne4np4, ne16np4, ne60np4, ne240np4 mapping files
+   M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Correct
+               some typo's in filenames (ne4np4 scripgrid, ngwh mksurfdata pftdyn file
+               for rcp 6 for year 2006
+  M    models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Add mksrf_filename,
+               correct mksrf_* filenames to mksrf_f*, add ISRIC-WISE lmask
+  M    models/lnd/clm/bld/namelist_files/datm-build-namelist ------- Only require
+              datm_data_dir for CPLHIST3HrWx
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Add ISRIC-WISE,
+              3x3min_MODIS mapping datasets, correct some map dataset names,
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults.xsl ----- Add more data
+              to output table
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml Correct and
+              add new scrip grid files, add hires option for some data, add
+              mksrf_filename for types of files, add in all mksurfdata raw
+              datasets, add new hires datasets, correct mksrf_fvegtyp filenames,
+
+>>>>>>>>>>>>>> Remove initialization of unused data types (allows C13 on bluefire)
+>>>>>>>>>>>>>> Add option to convert nan to fillvalue on output files 
+>>>>>>>>>>>>>> (and vica-versa on input)
+  M    models/lnd/clm/src/main/clmtypeInitMod.F90 - Remove initialization of unused
+              data types
+  M    models/lnd/clm/src/main/clm_atmlnd.F90 ----- Remove unused pdf variable
+  M    models/lnd/clm/src/main/initSurfAlbMod.F90 - Remove unused CNZeroFluxes
+  M    models/lnd/clm/src/main/ncdio_pio.F90 ------ Add cnvrtnan2fill option
+              to convert from spval to nan on read and from nan to spval on write
+  M    models/lnd/clm/src/main/clmtype.F90 -------- Remove unused variables
+  M    models/lnd/clm/src/main/histFldsMod.F90 ---- Add some documentation, change
+              longname of QSOIL, correct: CISUN, CISHA, ALPHAPSNSUN, ALPHAPSNSHA
+  M    models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90
+
+
+Summary of testing:
+
+  bluefire testing:
+018 brX51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+020 smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4
+021 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -3+-7 cold ................FAIL! rc= 5
+022 brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -5+-5 cold ................FAIL! rc= 5
+023 blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4
+028 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4
+029 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -3+-7 arb_ic ............FAIL! rc= 5
+030 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -5+-5 arb_ic ............FAIL! rc= 5
+031 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4
+032 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 96 cold ...............FAIL! rc= 4
+033 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 10+38 cold ............FAIL! rc= 5
+034 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:1800 10x15 USGS@2000 72+72 cold .........FAIL! rc= 5
+035 blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 48 cold ...............FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+031 erAK4 TER.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 7
+032 brAK4 TBR.sh _nrsc_ds clm_std^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 6
+036 brAK8 TBR.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 6
+037 blAK8 TBL.sh _nrsc_ds clm_std^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 4
+067 bl5@4 TBLtools.sh gen_domain tools__ds namelist .............................................FAIL! rc= 7
+003 sm774 TSMtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 5
+004 bl774 TBLtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 4
+008 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......FAIL! rc= 6
+011 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 6
+012 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 4
+013 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+014 bl9T4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 4
+015 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+016 bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 4
+  bluefire/CESM testing: All PASS except... (compare tests fail because clm4_0_37 file did not exist)
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_37
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_37
 Originator(s):  erik (Erik Kluzek)
 Date:  Mon Sep 26 10:35:24 MDT 2011
@@ -44,6 +287,7 @@ Known bugs (include bugzilla ID):
                                  1409 (ne120 is having restart trouble on jaguar with NetCDF3)
                                  1410 (Problem running PST.f09_g16.I.jaguarpf)
                                  1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1423 (Problem building clmtype on bluefire)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

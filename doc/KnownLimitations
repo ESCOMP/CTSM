@@ -131,6 +131,13 @@ directory
  ENDRUN: called without a message string
 
 ====================================================================================
+Bug number: 896
+CLM won't run at T62
+
+We aren't quite sure why. But we've found that CLM currently won't run at T62 resolution
+the same resolution as the input CLM-Qian atmosphere forcing data.
+
+====================================================================================
 Bug number: 652
 Output different for different number of threads PGF90
 

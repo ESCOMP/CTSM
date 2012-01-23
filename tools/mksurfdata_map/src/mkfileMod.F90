@@ -94,11 +94,11 @@ contains
          'Source', len_trim(str), trim(str)), subname)
 
     str = &
-'$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/trunk_tags/clm4_0_22/models/lnd/clm/tools/mksurfdata/mkfileMod.F90 $'
+'$HeadURL$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Version', len_trim(str), trim(str)), subname)
 
-    str = '$Id: mkfileMod.F90 25173 2010-10-15 23:39:33Z erik $'
+    str = '$Id$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Revision_Id', len_trim(str), trim(str)), subname)
 
@@ -131,9 +131,13 @@ contains
             'VOC_EF_raw_data_file_name', len_trim(str), trim(str)), subname)
     end if
 
-    str = get_filename(mksrf_flanwat)
+    str = get_filename(mksrf_flakwat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Inland_water_raw_data_file_name', len_trim(str), trim(str)), subname)
+         'Inland_lake_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_fwetlnd)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Inland_wetland_raw_data_file_name', len_trim(str), trim(str)), subname)
 
     str = get_filename(mksrf_fglacier)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -146,10 +150,6 @@ contains
     str = get_filename(mksrf_flndtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Land_Topography_raw_data_file_name', len_trim(str), trim(str)), subname)
-
-    str = get_filename(mksrf_ffrac)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'Fracdata_raw_data_file_name', len_trim(str), trim(str)), subname)
 
     str = get_filename(mksrf_furban)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -179,9 +179,13 @@ contains
        xtype = nf_double
     end if
 
-    str = get_filename(map_flanwat)
+    str = get_filename(map_flakwat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_lanwat_file', len_trim(str), trim(str)), subname)
+         'map_lakwat_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_fwetlnd)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_wetlnd_file', len_trim(str), trim(str)), subname)
 
     str = get_filename(map_fglacier)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -244,46 +248,6 @@ contains
     call mksoilAtt( ncid, dynlanduse, xtype )
 
     call mkpftAtt(  ncid, dynlanduse, xtype )
-
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='LATN' , xtype=nf_double, &
-            dim1name='gridcell', &
-            long_name='latitude of north edge', units='degrees north')
-    else
-       call ncd_defvar(ncid=ncid, varname='LATN' , xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='latitude of north edge', units='degrees north')
-    end if
-       
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='LONE' , xtype=nf_double, &
-            dim1name='gridcell', &
-            long_name='longitude of east edge', units='degrees east')
-    else
-       call ncd_defvar(ncid=ncid, varname='LONE' , xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='longitude of east edge', units='degrees east')
-    end if
-
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='LATS' , xtype=nf_double, &
-            dim1name='gridcell',&
-            long_name='latitude of south edge', units='degrees north')
-    else
-       call ncd_defvar(ncid=ncid, varname='LATS' , xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='latitude of south edge', units='degrees north')
-    end if
-
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='LONW' , xtype=nf_double, &
-            dim1name='gridcell',&
-            long_name='longitude of west edge', units='degrees east')
-    else
-       call ncd_defvar(ncid=ncid, varname='LONW' , xtype=nf_double, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='longitude of west edge', units='degrees east')
-    end if
 
     if (outnc_1d) then
        call ncd_defvar(ncid=ncid, varname='AREA' , xtype=nf_double, &

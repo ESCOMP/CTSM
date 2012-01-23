@@ -668,7 +668,7 @@ $inputopts{'yearlast'}   = $end_year;
 if ( defined($opts{'datm_data_dir'}) ) {
    $inputopts{'filepath'} = $opts{'datm_data_dir'};
 } else {
-   if ( $datm_source ne "CLM1PT" ) {
+   if ( $datm_source eq "CPLHIST3HrWx" ) {
       die "$ProgName ERROR:: Need to specify datm_data_dir directory of where " .
           " datm data is for datasource=$datm_source.\n";
    }
