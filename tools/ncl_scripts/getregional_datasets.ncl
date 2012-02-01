@@ -110,10 +110,10 @@ begin
   ; Setup the namelist query script
   ;
   ldate     = systemfunc( "date" );
-  clmroot  = getenv("CLM_ROOT");
-  querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
-  queryopts= " -options bgc=cn,mask="+lmask+",rcp="+rcp;
-  querynyr = ",sim_year="+sim_year+",sim_year_range="+sim_yr_rng;      ; Query for standard file years
+  clmroot   = getenv("CLM_ROOT");
+  querynml  = "bld/queryDefaultNamelist.pl -silent -justvalue ";
+  queryopts = " -options bgc=cn,mask="+lmask+",rcp="+rcp;
+  querynyr  = ",sim_year="+sim_year+",sim_year_range="+sim_yr_rng;      ; Query for standard file years
   if ( sim_yr_rng .eq. "constant" )then
      queryyrs = ",sim_year=1850,sim_year_range=1850-2000";             ; Query for files that are always transient
   else
@@ -127,7 +127,11 @@ begin
   else
      querynml = clmroot+"/models/lnd/clm/"+querynml;
   end if
-  gridfile  = systemfunc( querynml+queryopts+querynyr+" -res "+res+" -var fatmgrid" );
+  gridqry  = querynml+queryopts+querynyr+" -res "+res+" -var domainfile -namelist shr_strdata_nml"
+  gridfile = systemfunc( gridqry );
+  if ( printn .eq. True )then
+     print( "          query = "+gridqry )
+  end if
   ;
   ; Open file
   ;
@@ -143,15 +147,15 @@ begin
   if ( debug .eq. True )then
     print( "Env:      mycsmdata="+csmdata+" query="+querynml+queryopts+querynyr );
   end if
-  indx = region_ind ( (/ncg->LATIXY/), (/ncg->LONGXY/), latS, latN, lonW, lonE );
+  indx = region_ind ( (/ncg->yc/), (/ncg->xc/), latS, latN, lonW, lonE );
 
-  latdim = dimsizes(ncg->LATIXY)
-  londim = dimsizes(ncg->LONGXY)
+  latdim = dimsizes(ncg->yc)
+  londim = dimsizes(ncg->xc)
   if ( any( ismissing(indx)) )then
      print( "Indices:"+indx );
      print( "Missing indices found" );
-     print( "LATIXY: "+ncg->LATIXY );
-     print( "LONGXY: "+ncg->LONGXY );
+     print( "LATIXY: "+ncg->yc );
+     print( "LONGXY: "+ncg->xc );
      exit
   end if
 
@@ -162,11 +166,11 @@ begin
      latdim = indx(3) - indx(2) + 1;
      londim = indx(1) - indx(0) + 1;
      print( "Grid size:"+latdim+"x"+londim );
-     LOLAT = ncg->LATIXY(indx(2),indx(0));
-     HILAT = ncg->LATIXY(indx(3),indx(1));
+     LOLAT = ncg->yc(indx(2),indx(0));
+     HILAT = ncg->yc(indx(3),indx(1));
      print( "Actual grid span: Latitude="+LOLAT+"-"+HILAT );
-     LOLON = ncg->LONGXY(indx(2),indx(0));
-     HILON = ncg->LONGXY(indx(3),indx(1));
+     LOLON = ncg->xc(indx(2),indx(0));
+     HILON = ncg->xc(indx(3),indx(1));
      print( "Actual grid span: Longitude="+LOLON+"-"+HILON );
   end if
 
@@ -174,11 +178,11 @@ begin
   ; Setup filenames to process
   ;
 
-  files     = (/ "fatmgrid", "fatmlndfrc", "fsurdat", "fpftdyn", "flndtopo", "faerdep", "stream_fldfilename_ndep", "domainfile"      /);
-  qryopt    = (/ querynyr,   querynyr,     querynyr,  querynyr,  querynyr,   queryyrs, queryyrs,                  querynyr          /);
-  qnamelist = (/ " ",        " ",          " ",       " ",       " ",        "clmexp", "ndepdyn_nml",             "shr_strdata_nml" /);
-  filelatnm = (/ "lsmlat",   "lsmlat",     "lsmlat",  "lsmlat",  "lsmlat",   "lat", "lat",                     "nj"              /);
-  filelonnm = (/ "lsmlon",   "lsmlon",     "lsmlon",  "lsmlon",  "lsmlon",   "lon", "lon",                     "ni"              /);
+  files     = (/ "fsurdat", "fpftdyn", "faerdep", "stream_fldfilename_ndep", "domainfile"      /);
+  qryopt    = (/ querynyr,  querynyr,  queryyrs,  queryyrs,                  querynyr          /);
+  qnamelist = (/ " ",       " ",       "clmexp",  "ndepdyn_nml",             "shr_strdata_nml" /);
+  filelatnm = (/ "lsmlat",  "lsmlat",  "lat",     "lat",                     "nj"              /);
+  filelonnm = (/ "lsmlon",  "lsmlon",  "lon",     "lon",                     "ni"              /);
 
   ;
   ; Loop over each of the files to process...

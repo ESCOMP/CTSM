@@ -238,7 +238,7 @@ export CLM_RESTART_THREADS=1
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=7
 
-export PGI=/usr/local/pgi-pgcc-pghf-11.5
+export PGI=/usr/local/pgi
 export LAHEY=/usr/local/lf6481
 export INTEL=/usr/local/intel-cluster
 export P4_GLOBMEMSIZE=500000000
@@ -250,28 +250,6 @@ if [ "\$CLM_FC" = "PGI" ]; then
     export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${PGI}/linux86/bin:\${MPICH_PATH}/bin:\${PATH}
     export CESM_MACH="edinburgh_pgi"
-    export TOOLS_MAKE_STRING=""
-elif [ "\$CLM_FC" = "INTEL" ]; then
-    export NETCDF_PATH=/usr/local/netcdf-4.1.3-intel-cluster-2011.0.013
-    export MPICH_PATH=/usr/local/mpich-intel
-    export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/lib/intel64:\${LD_LIBRARY_PATH}
-    export PATH=\${INTEL}/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_MACH="edinburgh_intel"
-    export TOOLS_MAKE_STRING="USER_FC=ifort "
-    $INTEL/intel-login-script.sh
-elif [ "\$CLM_FC" = "GENLF" ]; then
-    export NETCDF_PATH=/usr/local/netcdf-4.1.3-gcc-4.4.4-13-lf9581
-    export MPICH_PATH=/usr/local/mpich-gcc-lf64
-    export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${LAHEY}/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_MACH="generic_linux_lahey"
-    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
-elif [ "\$CLM_FC" = "GENPG" ]; then
-    export NETCDF_PATH=/usr/local/netcdf-4.1.3-pgi-hpf-cc-11.5-0
-    export MPICH_PATH=/usr/local/mpich-pgi
-    export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${PGI}/linux86/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_MACH="generic_linux_pgi"
     export TOOLS_MAKE_STRING=""
 else
     export NETCDF_PATH=/usr/local/netcdf-4.1.3-gcc-4.4.4-13-lf9581
@@ -312,7 +290,7 @@ cat > ./${submit_script} << EOF
 #PBS -q regular
 # 
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l mppwidth=24
+#PBS -l mppwidth=48
 #PBS -l walltime=06:00:00
 # output file base name
 #PBS -N test_dr
@@ -367,47 +345,51 @@ export MPICH_DBMASK=0x200
 # Modules
 #-------------------------------------------------------------------------------
 
-alias modulecmd=/opt/modules/3.1.6.5/bin/modulecmd
-source /opt/modules/default/init/$shell
+. /opt/modules/default/init/$shell
+
+module rm pgi
+module rm intel
+module rm pathscale
+module rm cray
+module rm PrgEnv-pathscale
+module rm PrgEnv-cray
+module rm PrgEnv-pgi
+
 
 if [ "\$CLM_FC" = "PATH" ]; then
-   modulecmd $shell remove PrgEnv-pgi
-   modulecmd $shell remove pgi
-   modulecmd $shell purge
-   modulecmd $shell load pathscale
-   modulecmd $shell load PrgEnv-pathscale
-   modulecmd $shell load netcdf/4.0.1.3
-   modulecmd $shell load torque
+   module load PrgEnv-pathscale
+   module load netcdf
+   module load torque
+   module load netcdf/4.0.1.3
    export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pathscale
    export CESM_MACH="lynx_pathscale"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 elif [ "\$CLM_FC" = "INTEL" ]; then
-   modulecmd $shell remove PrgEnv-pgi
-   modulecmd $shell remove pgi
-   modulecmd $shell load intel
-   modulecmd $shell load PrgEnv-intel
-   modulecmd $shell load netcdf/4.0.1.3
+   module load PrgEnv-intel
+   module load netcdf
+   module switch intel intel/12.1.0
+   module switch xt-mpt    xt-mpt/5.1.4
+   module switch xt-libsci xt-libsci/10.5.02
+   module load netcdf/4.0.1.3
    export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-intel
    export CESM_MACH="lynx_intel"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
-elif [ "\$CLM_FC" = "GENXT" ]; then
-   modulecmd $shell load netcdf/4.0.1.3
-   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
-   export CESM_MACH="generic_xt"
-   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
-   export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 else
-   modulecmd $shell switch pgi       pgi/10.3.0        
-   modulecmd $shell switch xt-mpt    xt-mpt/4.0.3     
-   modulecmd $shell switch xt-libsci xt-libsci/10.4.3 
-   modulecmd $shell load netcdf/4.0.1.3
+   module load PrgEnv-pgi
+   module switch pgi       pgi/11.10.0        
+   module switch xt-mpt    xt-mpt/4.0.3     
+   module switch xt-libsci xt-libsci/10.4.3 
+   module load netcdf/4.0.1.3
    export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
    export CESM_MACH="lynx_pgi"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 fi
+
+module load esmf/5.2.0p1
+module load subversion
 
 export CFG_STRING=""
 
@@ -481,21 +463,17 @@ export CLM_RESTART_TASKS=129
 
 source /opt/modules/default/init/sh
 
-module remove netcdf
-if [ "\$CLM_FC" = "GENXT" ]; then
-  export CESM_MACH="generic_xt"
-else
-  module switch pgi       pgi/11.0.0         #  11.0.0 tested for bfb on 2011-mar
-  module switch xt-mpt    xt-mpt/3.5.1      #  3.5.1 tested for bfb on 2010-mar-12
-  module switch xt-libsci xt-libsci/10.4.1  # 10.4.1 tested for bfb on 2010-mar-12
-  module swap xt-asyncpe xt-asyncpe/3.7
-  export CESM_MACH="jaguarpf"
-fi
-
-module load netcdf/3.6.2
-module load p-netcdf/1.1.1
-module load   ncl
+module switch pgi       pgi/11.10.0        
+module switch xt-mpich2    xt-mpich2/5.4.0.6      
+module switch xt-libsci xt-libsci/11.0.04.4
+module swap xt-asyncpe xt-asyncpe/5.05
+module load szip/2.1
+module load hdf5/1.8.7
+module load netcdf/4.1.3
+module load parallel-netcdf/1.2.0
 module load subversion
+export CESM_MACH="jaguarpf"
+module load   ncl
 module load esmf/5.2.0-p1_with-netcdf_g
 
 export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes

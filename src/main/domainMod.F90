@@ -530,6 +530,7 @@ end subroutine latlon_setsame
 ! This subroutine write latlon info
 !
 ! !USES:
+    use shr_infnan_mod  , only : shr_infnan_isnan
 !
 ! !ARGUMENTS:
     implicit none
@@ -550,10 +551,12 @@ end subroutine latlon_setsame
     write(iulog,*) '  latlon_check set       = ',latlon%set
     write(iulog,*) '  latlon_check lonc = ',minval(latlon%lonc),maxval(latlon%lonc)
     write(iulog,*) '  latlon_check latc = ',minval(latlon%latc),maxval(latlon%latc)
-    write(iulog,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)
-    write(iulog,*) '  latlon_check lone = ',minval(latlon%lone),maxval(latlon%lone)
-    write(iulog,*) '  latlon_check lats = ',minval(latlon%lats),maxval(latlon%lats)
-    write(iulog,*) '  latlon_check latn = ',minval(latlon%latn),maxval(latlon%latn)
+    if ( .not. shr_infnan_isnan(latlon%lonw(1)) )then
+       write(iulog,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)
+       write(iulog,*) '  latlon_check lone = ',minval(latlon%lone),maxval(latlon%lone)
+       write(iulog,*) '  latlon_check lats = ',minval(latlon%lats),maxval(latlon%lats)
+       write(iulog,*) '  latlon_check latn = ',minval(latlon%latn),maxval(latlon%latn)
+    end if
     write(iulog,*) ' '
   endif
 

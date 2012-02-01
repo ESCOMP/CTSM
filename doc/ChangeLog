@@ -1,4 +1,481 @@
 ===============================================================
+Tag name:  clm4_0_39
+Originator(s):  erik (Erik Kluzek)
+Date: Wed Feb  1 11:40:11 MST 2012
+One-line Summary: Bring newgrid branch to trunk
+
+Purpose of changes:
+
+Move newgrid branch from Mariana to trunk. Add ne4np4, ne16np4, ne240np4 surface
+datasets. Replace all T31 surface datasets. Start removing CASA and fine-mesh testing
+and support. Bring in Tony's updates to ESMF5.2.0.
+
+Requirements for tag:
+
+run on lynx-pgi/bluefire/mirage-intel, fix bugs: 1446, 1444, 1442, 1404, 1430, 1425, 1420
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+                                 1458 (Problem using fsurdat for fatmgrid as no verticies)
+                                 1444 (attempt to read unallocated variable)
+                                 1442 (Make clm-template same as CAM template)
+                                 1430 (Remove DIN_LOC_ROOT_CLMQIAN -- add ...CLM_FORC)
+                                 1425 (Double quotes causes Namelist.pm to hang)
+                                 1420 (Bad history output for TREFMNAV, TREFMXAV)
+                                 1404 (Inconsistent domain and fatmlndfrc files)
+
+Known bugs (include bugzilla ID):
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  935 (RTM warning NOT an error)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1454 (lack of 1D history files in CLM testing)
+                                 1455 (bad time-stamp in CLM testing)
+                                 1457 (bug in soil color in mksurfdata_map)
+                                 1459 (PTSMODE fails)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+   Move rtm, voc, and glc_nec from configure-time to run-time namelist options
+
+   Remove the -rtm -glc_nec and -voc options from "configure"
+   (NO longer available to CLM_CONFIG_OPTS)
+
+
+Describe any changes made to the namelist:
+
+   Add "-glc_nec, -glc_smb, -rtm options to build-namelist
+   (now available to CLM_BLDNML_OPTS)
+
+   Remove fine-mesh option to build-namelist "-lnd_res" 
+   (NO longer available to CLM_BLDNML_OPTS)
+
+   Add following to clm_inparm namelist:
+
+      do_rtm             => If TRUE, turn on rtm river routing
+      maxpatch_glcmec    => Number of  multiple elevation classes over glacier points.
+         Normally this is ONLY used when running CESM with the active glacier model.
+
+   Add following to the driver namelist to pass extra fields
+
+      flds_voc
+      flds_co2a
+      flds_co2a
+      flds_co2c
+      flds_co2_dmsa
+      cplflds_custom
+      glc_nec
+
+List any changes to the defaults for the boundary datasets:
+    Replace T31 surface datasets, remove T31 finidat datasets
+    Add T31 fpftdyn datasets for all cases
+    Add ne240np4 datasets, ne4np4, ne16np4 surface datasets
+
+    remove ALL fatmtopo datasets and all but T31, f09, f19 for glc_nec flndtopo
+
+    Remove fatmlndfrc datasets -- use datm domainfiles in their place
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self,mvertens,tcraig (ESMF update)
+
+List any svn externals directories updated (csm_share, mct, etc.): almost all
+   scripts        to scripts4_120123
+   Machines       to Machines_120123
+   drv            to drvseq4_1_01
+   datm           to datm8_120123
+   socn/sice/sglc to stubs1_3_01
+   cism           to cism1_120123
+   csm_share      to share3_120123
+   esmf_wrf_tmgr  to esmf_wrf_timemgr_120123
+   gen_domain     to gen_domain_120117
+
+List all files eliminated:
+
+>>>>>>>>>>>>>> Get rid of mkgriddata as no longer needed
+>>>>>>>>>>>>>> Use gen_domain or models/lnd/clm/tools/mkmapdata/mknoocnmap.pl
+  D         mkgriddata/mkgriddata.namelist
+  D         mkgriddata/mkgriddata.regional
+  D         mkgriddata/src/mkvarpar.F90
+  D         mkgriddata/src/mkvarctl.F90
+  D         mkgriddata/src/clm_varpar.F90
+  D         mkgriddata/src/clm_varctl.F90
+  D         mkgriddata/src/shr_sys_mod.F90
+  D         mkgriddata/src/shr_file_mod.F90
+  D         mkgriddata/src/ncdio.F90
+  D         mkgriddata/src/shr_log_mod.F90
+  D         mkgriddata/src/Filepath
+  D         mkgriddata/src/Macros.custom
+  D         mkgriddata/src/shr_kind_mod.F90
+  D         mkgriddata/src/shr_const_mod.F90
+  D         mkgriddata/src/mkgriddata.F90
+  D         mkgriddata/src/domainMod.F90
+  D         mkgriddata/src/areaMod.F90
+  D         mkgriddata/src/creategridMod.F90
+  D         mkgriddata/src/nanMod.F90
+  D         mkgriddata/src/Srcfiles
+  D         mkgriddata/src/Mkdepends
+  D         mkgriddata/src/Makefile
+  D         mkgriddata/src
+  D         mkgriddata/mkgriddata.singlept
+  D         mkgriddata/mkgriddata.cesm_dom
+  D         mkgriddata/README
+  D         mkgriddata
+
+>>>>>>>>>>>>>> Remove config files for CASA or that turn off RTM, or 
+>>>>>>>>>>>>>> turn on VOC or glc_mec
+  D       models/lnd/clm/test/system/config_files/_nrsc_dh
+  D       models/lnd/clm/test/system/config_files/4p_casasc_dh
+  D       models/lnd/clm/test/system/config_files/4p_casasc_dm
+  D       models/lnd/clm/test/system/config_files/4p_casasc_do
+  D       models/lnd/clm/test/system/config_files/4p_casasc_ds
+  D       models/lnd/clm/test/system/config_files/4p_casasc_h
+  D       models/lnd/clm/test/system/config_files/4p_casasc_m
+  D       models/lnd/clm/test/system/config_files/4p_casasc_o
+  D       models/lnd/clm/test/system/config_files/17p_nrsc_ds
+  D       models/lnd/clm/test/system/config_files/_nrsc_dm
+  D       models/lnd/clm/test/system/config_files/_nrsc_do
+  D       models/lnd/clm/test/system/config_files/4p_nrcasasc_ds
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_h
+  D       models/lnd/clm/test/system/config_files/_nrsc_ds
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_m
+  D       models/lnd/clm/test/system/config_files/17p_nrcnsc_do
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_o
+  D       models/lnd/clm/test/system/config_files/17p_nrcnsc_ds
+  D       models/lnd/clm/test/system/config_files/_nrmexsc_ds
+  D       models/lnd/clm/test/system/config_files/_mec10sc_dh
+  D       models/lnd/clm/test/system/config_files/_nrcnsc_do
+  D       models/lnd/clm/test/system/config_files/_mec10sc_dm
+  D       models/lnd/clm/test/system/config_files/_nrcnsc_ds
+  D       models/lnd/clm/test/system/config_files/_mec10sc_do
+  D       models/lnd/clm/test/system/config_files/_mec10sc_ds
+  D       models/lnd/clm/test/system/config_files/_nrsc_s
+  D       models/lnd/clm/test/system/config_files/_nrvansc_ds
+  D       models/lnd/clm/test/system/config_files/_nrnil3sc_dh
+  D       models/lnd/clm/test/system/config_files/_nrnil3sc_dm
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_dh
+  D       models/lnd/clm/test/system/config_files/21p_nrcncrpsc_s
+  D       models/lnd/clm/test/system/config_files/21p_nrcncrpsc_ds
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_dm
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_do
+  D       models/lnd/clm/test/system/config_files/17p_vorsc_ds
+  D       models/lnd/clm/test/system/config_files/_mec10sc_h
+  D       models/lnd/clm/test/system/config_files/_mec10sc_m
+  D       models/lnd/clm/test/system/config_files/_mec10sc_o
+
+>>>>>>>>>>>>>> Remove mkdatadomain always use gen_domain
+  D       models/lnd/clm/tools/mkdatadomain
+  D       models/lnd/clm/tools/mkdatadomain/mkdatadomain.namelist
+  D       models/lnd/clm/tools/mkdatadomain/src
+  D       models/lnd/clm/tools/mkdatadomain/src/addglobal.F90
+  D       models/lnd/clm/tools/mkdatadomain/src/create_domain.F90
+  D       models/lnd/clm/tools/mkdatadomain/src/Mkdepends
+  D       models/lnd/clm/tools/mkdatadomain/src/Srcfiles
+  D       models/lnd/clm/tools/mkdatadomain/src/Filepath
+  D       models/lnd/clm/tools/mkdatadomain/src/Macros.custom
+  D       models/lnd/clm/tools/mkdatadomain/src/Makefile
+  D       models/lnd/clm/tools/mkdatadomain/src/shr_kind_mod.F90
+  D       models/lnd/clm/tools/mkdatadomain/src/shr_const_mod.F90
+  D       models/lnd/clm/tools/mkdatadomain/README
+>>>>>>>>>>>>>> fine-mesh no longer supported don't worry about topo files anymore
+  D       models/lnd/clm/bld/namelist_files/checktopofiles.ncl
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>> Rename without RTM off option
+  A  +    models/lnd/clm/test/system/config_files/17p_cnsc_ds
+  A  +    models/lnd/clm/test/system/config_files/_mexsc_ds
+  A  +    models/lnd/clm/test/system/config_files/_vansc_ds
+
+>>>>>>>>>>>>>> namelist to turn on VOC and RTM off, and gen_domain options
+  A  +    models/lnd/clm/test/system/nl_files/nl_voc
+  A  +    models/lnd/clm/test/system/nl_files/clm_nortm
+  A  +    models/lnd/clm/test/system/nl_files/gen_domain.ne30.runoptions
+  A  +    models/lnd/clm/test/system/nl_files/gen_domain.T31.runoptions
+
+>>>>>>>>>>>>>> Add scripts to create SCRIP grid/map files for region/single-point domains
+  A  +    models/lnd/clm/tools/mkmapdata/mkunitymap.ncl
+  A  +    models/lnd/clm/tools/mkmapdata/mknoocnmap.pl
+  A  +    models/lnd/clm/tools/mkmapgrids/mkscripgrid.ncl
+
+     mknoocnmap.pl [options]      Gets map and grid files for a single land-only point.
+ REQUIRED OPTIONS
+     -centerpoint [or -p] <lat,lon> Center latitude,longitude of the grid to create.
+     -name [-or -n] <name>      Name to use to describe point
+
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Remove rtm off from config files and update README file
+  M       models/lnd/clm/test/system/config_files/_nil3sc_dh
+  M       models/lnd/clm/test/system/config_files/_nil3sc_dm
+  M       models/lnd/clm/test/system/config_files/README
+
+>>>>>>>>>>>>>> Change tests
+  M       models/lnd/clm/test/system/README.testnames --- Update test names
+                6, A, J, Q, S, V, X, and Z  configurations are now unused
+                resolutions: 3, F, G and H are now unused
+  M       models/lnd/clm/test/system/mknamelist --------- Remove fine-mesh option
+  M       models/lnd/clm/test/system/test_driver.sh ----- Update paths for
+               edinburgh/jaguar
+  M       models/lnd/clm/test/system/input_tests_master - Remove nr,vo,mec in configure
+               files for tests and move to namelist, remove compile-only test names
+  M       models/lnd/clm/test/system/TSMtools.sh -------- Allow run files to
+               be in test directory
+
+>>>>>>>>>>>>>> Change testnames
+                6, A, J, Q, S, V,  X, and Z  configurations are now unused
+                resolutions: 3, F, G and H are now unused
+  M       models/lnd/clm/test/system/tests_posttag_purempi_regression
+  M       models/lnd/clm/test/system/tests_posttag_hybrid_regression
+  M       models/lnd/clm/test/system/tests_posttag_yong
+  M       models/lnd/clm/test/system/tests_posttag_lynx_nompi
+  M       models/lnd/clm/test/system/tests_pretag_bluefire
+  M       models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+  M       models/lnd/clm/test/system/tests_pretag_edinburgh
+  M       models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+  M       models/lnd/clm/test/system/tests_posttag_kraken
+  MM      models/lnd/clm/test/system/tests_pretag_jaguarpf
+  MM      models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi
+  M       models/lnd/clm/test/system/tests_posttag_mirage
+  M       models/lnd/clm/test/system/tests_posttag_intrepid
+  M       models/lnd/clm/test/system/tests_posttag_intrepid_nompi
+  M       models/lnd/clm/test/system/tests_posttag_nompi_regression
+  M       models/lnd/clm/test/system/tests_posttag_lynx
+
+>>>>>>>>>>>>>> Fix run-time options
+  M       models/lnd/clm/test/system/nl_files/clm_usrdat ----- Add rtm off
+  M       models/lnd/clm/test/system/nl_files/mkmapdata_if10 - Remove -i option
+
+>>>>>>>>>>>>>> Add option to create datasets NOT entered into XML database
+  M       models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl - Use domainfile
+               rather than fatmgrid file, which changes variable names as well
+  M       models/lnd/clm/tools/README.testing --------------- Note that run files
+               can be in tool directory or test directory
+  M       models/lnd/clm/tools/README ----------------------- Update information on
+               process
+  MM      models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl - Add usrspc option
+  M       models/lnd/clm/tools/mkmapdata/regridbatch.sh ----- Use -b instead of -i
+  M       models/lnd/clm/tools/mkmapdata/mkmapdata.sh ------- Replace -i option with
+               -b for batch, add option to read input SCRIP grid file (-f) and (-t)
+               option for regional or global type, update usage
+  M       models/lnd/clm/tools/mksurfdata_map/README -------- Update usage info
+  M       models/lnd/clm/tools/mkmapdata/README ------------- Update usage info
+
+ New options for unsupported resolutions to mksurfdata.pl
+
++     For unsupported, user-specified resolutions:      
++     $ProgName -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
++        -usr_gname "user_gname"    User resolution name to find grid file with 
++                                   (only used if -res is set to 'usrspec')
++        -usr_gdate "user_gdate"    User map date to find mapping files with
++                                   (only used if -res is set to 'usrspec')
++                                   NOTE: all mapping files are assumed to be in mkmapdata
++                                    - and the user needs to have invoked mkmapdata in
++                                      that directory first
++
+
+>>>>>>>>>>>>>> Move rtm, glc_nec, voc from configure to build-namelist
+  M       models/lnd/clm/bld/configure -------------- Remove -rtm, -glc_nec, -voc options
+  M       models/lnd/clm/bld/listDefaultNamelist.pl - Get datm namelist files as well
+  M       models/lnd/clm/bld/build-namelist --------- Add: glc_nec, glc_smb, rtm options
+              Remove: lnd_res fine-mesh option
+  M       models/lnd/clm/bld/clm.cpl7.template ------ Move rtm, glc_nec settings from
+              configure to build-namelist, set fatmlndfrc from domain file set in scripts
+              add processing for LND_GRID=reg, set glc_smb, loop over namelists for DART,
+  M       models/lnd/clm/bld/README
+  M       models/lnd/clm/bld/config_files/config_definition.xml - Remove rtm, glc_nec, voc
+
+>>>>>>>>>>>>>>  Add new namelist items, remove CASA, fine-mesh, update T31
+>>>>>>>>>>>>>>  add ne4np4, ne16np4, ne240np4 datasets
+  M       models/lnd/clm/bld/namelist_files/namelist_definition.xml ------ 
+              Add:    rtm, maxpatch_glcmec, do_rtm, new cpl files, navy lmask
+              remove: fatmtopo, CASA namelist items,
+  M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - rtm/glc_nec
+  M       models/lnd/clm/bld/namelist_files/namelist_definition.xsl ------- rm CASA
+  M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -----
+               Add:    do_rtm, new T31 fsurdat/fpftdyn files, new ne4np4, ne16np4,
+                       fsurdat and ne240np4 fsurdat/fatmlndfrc, missing map files (f19,T31)
+               Remove: T31 finidat, remove fatmtopo, and most flndtopo
+  M       models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ---- Change
+              paths of domainfiles to share/domains
+  M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml Add 10min
+              navy grid file
+
+>>>>>>>>>>>>>> Add glc_nec
+  M       models/lnd/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+  M       models/lnd/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+  M       models/lnd/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+  M       models/lnd/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+
+
+>>>>>>>>>>>>>> Remove RTM, GLC_NEC, ESMF5.2.0 updates, don't require extents on fsurdat
+  M       models/lnd/clm/src/main/clm_varpar.F90 -- Change for glc_nec
+  M       models/lnd/clm/src/main/accumulMod.F90 -- Initialize val to zero if period=1
+  M       models/lnd/clm/src/main/clm_initializeMod.F90 - Change order of calls, rm RTM
+  M       models/lnd/clm/src/main/clm_glclnd.F90 -- Use maxpatch_glcmec NOT glc_nec
+  M       models/lnd/clm/src/main/subgridMod.F90 -- Use maxpatch_glcmec NOT glc_nec
+  M       models/lnd/clm/src/main/histFileMod.F90 - Remove RTM add do_rtm
+                make sure ninst suffix is in restart history filename
+  M       models/lnd/clm/src/main/restFileMod.F90 - Remove RTM add do_rtm
+  M       models/lnd/clm/src/main/controlMod.F90 -- Remove RTM add do_rtm,
+                maxpatch_glcmec, glc_grid, use fatmlndfrc for fatmgrid if empty
+                broadcast glc_topomax if create_glacier_mec_landunit
+  M       models/lnd/clm/src/main/clm_time_manager.F90 - Changes from Tony to update
+                to ESMF5.2.0
+  M       models/lnd/clm/src/main/clm_varctl.F90 ---- Remove RTM, use do_rtm, and remove
+                GLC_NEC use arrays for glc_nec variables
+  M       models/lnd/clm/src/main/clm_driver.F90 ---- Remove RTM use do_rtm
+  M       models/lnd/clm/src/main/initGridCellsMod.F90 - Write more info on error
+  M       models/lnd/clm/src/main/pftvarcon.F90 ----- Remove unused MPI vars
+  M       models/lnd/clm/src/main/surfrdMod.F90 ----- Don't require LATS/N,LONE/W on
+                files set to nan if not used, use maxpatch_glcmec NOT glc_nec
+  M       models/lnd/clm/src/main/domainMod.F90 ----- Don't write LATS/N,LONE/W if
+                first lonw is nan
+  M       models/lnd/clm/src/main/decompMod.F90 ----- Remove RTM use do_rtm
+  M       models/lnd/clm/src/main/histFldsMod.F90 --- Remove RTM use do_rtm
+  M       models/lnd/clm/src/riverroute/RtmMod.F90 -- Remove RTM use run_rtm NOT do_rtm
+  M       models/lnd/clm/src/riverroute/RunoffMod.F90 Remove RTM
+
+>>>>>>>>>>>>>> ESMF5.2.0 updates, remove RTM, GLC_NEC
+  M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 - ESMF5.2.0 updates, remove RTM
+                 use do_rtm, remove GLC_NEC use arrays of glc_nec
+  M       models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90 -- ESMF5.2.0 updates
+  M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 --- ESMF4.2.0 updates
+  M       models/lnd/clm/src/cpl_share/clm_cpl_indices.F90 - Updated for new coupler fields spec
+                Remove RTM, GLC_NEC CPP tokens, make glc_nec variables arrays
+                some updates to ESMF5.2.0
+
+Summary of testing:
+
+  bluefire: All PASS except...
+004 blC91 TBL.sh _sc_dh clm_std^nl_urb 20030101:3600 4x5 gx3v7 -6 arb_ic ........................FAIL! rc= 7
+008 blTZ1 TBL.sh 21p_cncrpsc_dh clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS -10 cold ..........FAIL! rc= 7
+011 blD91 TBL.sh _persc_dh clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 7
+015 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -10 cold FAIL! rc= 7
+018 brW51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+019 blW51 TBL.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -5 cold .................FAIL! rc= 7
+020 smHO2 TSM.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4 (bluefire compiler error)
+021 erHO2 TER.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -3+-7 cold ................FAIL! rc= 5 (bluefire compiler error)
+022 brHO2 TBR.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -5+-5 cold ................FAIL! rc= 5 (bluefire compiler error)
+023 blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 4 (bluefire compiler error)
+027 blHo1 TBL.sh 17p_cnsc_dh clm_drydep 20000101:1800 10x15 USGS@2000 -10 cold ..................FAIL! rc= 7 (bluefire compiler error)
+028 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4 (bluefire compiler error)
+029 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -3+-7 arb_ic ............FAIL! rc= 5 (bluefire compiler error)
+030 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -5+-5 arb_ic ............FAIL! rc= 5 (bluefire compiler error)
+031 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:3600 10x15 USGS@1850-2000 -10 arb_ic ..............FAIL! rc= 4 (bluefire compiler error)
+032 smH52 TSM.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 96 cold ...............FAIL! rc= 4 (bluefire compiler error)
+033 erH52 TER.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 10+38 cold ............FAIL! rc= 5 (bluefire compiler error)
+034 brH52 TBR.sh 17p_cnsc_dm clm_std^nl_urb_br 20020115:1800 10x15 USGS@2000 72+72 cold .........FAIL! rc= 5 (bluefire compiler error)
+035 blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 48 cold ...............FAIL! rc= 4 (bluefire compiler error)
+036 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 10 (bluefire compiler error)
+037 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 5 (bluefire compiler error)
+038 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 5 (bluefire compiler error)
+039 blU61 TBL.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 48 cold ......FAIL! rc= 4 (bluefire compiler error)
+  bluefire interactive testing:
+008 blC97 TBL.sh _sc_do clm_spin^nl_urb 20030101:1800 4x5 gx3v7@1850 -6 arb_ic ..................FAIL! rc= 7
+012 blHS3 TBL.sh 17p_cnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic .....FAIL! rc= 7
+016 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic ...............FAIL! rc= 7
+020 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:3600 1x1_mexicocityMEX navy 158 arb_ic ....FAIL! rc= 5
+024 blJ74 TBL.sh 4p_casasc_ds clm_std^nl_urb 10001230:3600 1x1_tropicAtl test -100 arb_ic .......FAIL! rc= 7
+028 blCA8 TBL.sh _sc_ds clm_std^nl_urb 20021230:3600 1x1_asphaltjungleNJ navy -90 arb_ic ........FAIL! rc= 7
+029 smCK4 TSM.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10 cold ...............FAIL! rc= 10
+030 erCK4 TER.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 5
+031 brCK4 TBR.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 5
+032 blCK4 TBL.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10 cold ...............FAIL! rc= 4
+033 smCK8 TSM.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -10 cold ...........FAIL! rc= 10
+034 erCK8 TER.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 5
+035 brCK8 TBR.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 5
+036 blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 4
+042 blF93 TBL.sh 17p_sc_do clm_std^nl_voc 20021230:1800 4x5 gx3v7 48 cold .......................FAIL! rc= 5
+046 blC83 TBL.sh _sc_do clm_std^nl_urb 20020115:3600 5x5_amazon navy -10 arb_ic .................FAIL! rc= 7
+054 blC63 TBL.sh _sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ........................FAIL! rc= 5
+058 blHQ4 TBL.sh 17p_cnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -150 cold ............FAIL! rc= 5
+062 blH43 TBL.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000 -10 startup FAIL! rc= 7
+066 bl514 TBLtools.sh gen_domain tools__ds T31.runoptions .......................................FAIL! rc= 5
+075 sm774 TSMtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 5
+076 bl774 TBLtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 4
+083 bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6FAIL! rc= 7
+085 bl953 TBLscript_tools.sh mkmapdata mkmapdata.sh mkmapdata_if10 ..............................FAIL! rc= 7
+090 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 6
+091 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 4
+092 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+093 bl9T4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 4
+094 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+095 bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 4
+  bluefire/CESM testing: All PASS except, compare_hist 
+FAIL  SMS_RLA.f45_f45.I.bluefire  - bug 1459
+FAIL  SMS_RLB.f45_f45.I.bluefire  - bug 1459
+FAIL  SMS_ROA.f45_f45.I.bluefire  - bug 1459
+  bluefire/PTCLM testing: All FAIL
+  lynx/pgi: All PASS except...
+004 blC92 TBL.sh _sc_dm clm_std^nl_urb 20030101:3600 4x5 gx3v7 -6 arb_ic ........................FAIL! rc= 7
+007 blD92 TBL.sh _persc_dm clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 7
+011 blF92 TBL.sh 17p_sc_dm clm_std^nl_voc 20021230:1800 4x5 gx3v7 48 cold .......................FAIL! rc= 5
+015 blH52 TBL.sh 17p_cnsc_dm clm_std^nl_urb 20020115:1800 10x15 USGS@2000 48 cold ...............FAIL! rc= 7
+019 blJ92 TBL.sh 4p_casasc_dm clm_std^nl_urb 20021230:1800 4x5 gx3v7 48 cold ....................FAIL! rc= 7
+023 blL52 TBL.sh _sc_dm clm_std^nl_urb 20020115:1800 10x15 USGS 48 arb_ic .......................FAIL! rc= 7
+  lynx/pgi interactive testing:  All PASS except..
+008 blTZ3 TBL.sh 21p_cncrpsc_do clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS -10 cold ..........FAIL! rc= 7
+009 smCL4 TSM.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 10
+010 erCL4 TER.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 5
+011 brCL4 TBR.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 10x15 USGS -5+-5 cold ................FAIL! rc= 5
+012 blCL4 TBL.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 4
+016 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic ...............FAIL! rc= 7
+020 blOC4 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:3600 1x1_vancouverCAN navy 331 arb_ic .....FAIL! rc= 5
+024 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:3600 1x1_mexicocityMEX navy 158 arb_ic ....FAIL! rc= 5
+025 sm978 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds .....FAIL! rc= 6
+026 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+027 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+  mirage,storm/ifort interactive testing:
+007 blD94 TBL.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 7
+011 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic ...............FAIL! rc= 7
+015 blCA8 TBL.sh _sc_ds clm_std^nl_urb 20021230:3600 1x1_asphaltjungleNJ navy -90 arb_ic ........FAIL! rc= 7
+019 blL54 TBL.sh _sc_ds clm_std^nl_urb 20020115:1800 10x15 USGS 48 arb_ic .......................FAIL! rc= 7
+023 blR53 TBL.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:1800 10x15 USGS@1850 48 cold ............FAIL! rc= 7
+  jaguarpf:  Currently NOT available:
+  edinburgh: Currently not supported
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_38
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_38
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Jan 23 13:56:45 MST 2012

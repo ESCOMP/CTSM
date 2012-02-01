@@ -5,7 +5,7 @@ module clm_time_manager
    use abortutils  , only: endrun
    use clm_varctl  , only: iulog
    use clm_varcon  , only: isecspday
-   use ESMF_Mod
+   use ESMF
 
    implicit none
    private
@@ -775,21 +775,21 @@ subroutine init_calendar( )
   ! Local variables
   !
   character(len=*), parameter :: sub = 'clm::init_calendar'
-  type(ESMF_CalendarType) :: cal_type        ! calendar type
+  type(ESMF_CalKind_Flag) :: cal_type        ! calendar type
   character(len=len(calendar)) :: caltmp
   integer :: rc                              ! return code
   !---------------------------------------------------------------------------------
 
   caltmp = to_upper(calendar)
   if ( trim(caltmp) == 'NO_LEAP' ) then
-     cal_type = ESMF_CAL_NOLEAP
+     cal_type = ESMF_CALKIND_NOLEAP
   else if ( trim(caltmp) == 'GREGORIAN' ) then
-     cal_type = ESMF_CAL_GREGORIAN
+     cal_type = ESMF_CALKIND_GREGORIAN
   else
      write(iulog,*)sub,': unrecognized calendar specified: ',calendar
      call endrun
   end if
-  tm_cal = ESMF_CalendarCreate( name=caltmp, calendarType=cal_type, rc=rc )
+  tm_cal = ESMF_CalendarCreate( name=caltmp, calkindflag=cal_type, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_CalendarSet')
 end subroutine init_calendar
 

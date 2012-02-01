@@ -345,6 +345,7 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
         #
         my $nml = "shr_strdata_nml";
         print "nml = $nml\n" if $printing;
+        $inputopts{'namelist'} = $nml;
         &GetListofNeededFiles( \%inputopts, \%settings, \%files );
         #
         # And the datm internal namelist (mask, resolution and datm_presaero)

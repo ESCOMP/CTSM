@@ -75,8 +75,6 @@ OPTIONS
                          be ignored.
      -exit_spinup <name> Turn on EXIT_SPINUP mode for BGC setting of CN [on | off] 
                          (default is off).
-     -glc_nec <name>     Glacier number of elevation classes [0 | 3 | 5 | 10] 
-                         (default is 0) (standard option with land-ice model is 10)
      -help [or -h]       Print usage to STDOUT.
      -maxpft <n>         Value of maxpatch_pft (default is $maxpatchpft{$crpmode}) 
                          (required to be $maxpatchpft{'nocrop'} for CN or CNDV or 
@@ -89,7 +87,6 @@ OPTIONS
      -noio               Turn history output completely off (typically for testing).
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] 
                          (default is off)
-     -rtm <name>         Turn on River Transport Model (RTM)  [on | off] (default is on)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] 
                          (default is off)
@@ -118,8 +115,6 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -[no]smp            Switch on [off] SMP parallelism.
      -[no]use_mpiserial  Switch on [off] use of serial-only MPI.
      -pio_dir <dir>      Directory to PIO to either build or use pre-built PIO
-     -voc <name>         Turn on passing of Volatile Organic Compounds (VOC's) to driver 
-                         [on | off] (default is on)
 EOF
 }
 
@@ -158,7 +153,6 @@ my %opts = (
             noio        => undef,
             nc_path     => undef,
             mpi_path    => undef,
-            glc_nec     => undef,
             clm_root    => undef,
             mct_dir     => undef,
             pio_dir     => undef,
@@ -178,14 +172,12 @@ GetOptions(
     "debug"                     => \$opts{'debug'},
     "defaults=s"                => \$opts{'defaults'},
     "exit_spinup=s"             => \$opts{'exit_spinup'}, 
-    "glc_nec=i"                 => \$opts{'glc_nec'},
     "mct_dir=s"                 => \$opts{'mct_dir'},
     "pio_dir=s"                 => \$opts{'pio_dir'},
     "mach=s"                    => \$opts{'mach'},
     "h|help"                    => \$opts{'help'},
     "maxpft=s"                  => \$opts{'maxpft'},
     "mode=s"                    => \$opts{'mode'},
-    "nadv=s"                    => \$opts{'nadv'},
     "nofire"                    => \$opts{'nofire'},
     "noio"                      => \$opts{'noio'},
     "ninst_lnd=i"               => \$opts{'ninst_lnd'},
@@ -193,7 +185,6 @@ GetOptions(
     "mpi_path=s"                => \$opts{'mpi_path'},
     "pergro=s"                  => \$opts{'pergro'}, 
     "snicar_frc=s"              => \$opts{'snicar_frc'}, 
-    "rtm=s"                     => \$opts{'rtm'}, 
     "s|silent"                  => \$opts{'silent'},
     "smp!"                      => \$opts{'smp'},
     "use_mpiserial!"            => \$opts{'use_mpiserial'},
@@ -202,7 +193,6 @@ GetOptions(
     "usr_src=s"                 => \$opts{'usr_src'},
     "v|verbose"                 => \$opts{'verbose'},
     "version"                   => \$opts{'version'},
-    "voc=s"                     => \$opts{'voc'}, 
     "crop=s"                    => \$opts{'crop'}, 
 )  or usage();
 
@@ -403,14 +393,6 @@ if ($print>=2) { print "The configuration cache file will be created in $config_
 
 
 #-----------------------------------------------------------------------------------------------
-# glacier multiple elevation classes
-
-if( defined($opts{'glc_nec'}) ) {
-  $cfg_ref->set('glc_nec', $opts{'glc_nec'});
-}
-my $glc_nec = $cfg_ref->get('glc_nec');
-if ($print>=2) { print "Using $glc_nec for number of elevation classes over glacier.$eol"; }
-#-----------------------------------------------------------------------------------------------
 # urban single point configurations
 if( defined($opts{'sitespf_pt'}) ) {
   $cfg_ref->set('sitespf_pt', $opts{'sitespf_pt'});
@@ -510,16 +492,6 @@ if ($print>=2) { print "Using $c13 for c13 for cn mode.$eol"; }
 
 
 #-----------------------------------------------------------------------------------------------
-# RTM option
-if (defined $opts{'rtm'}) {
-    $cfg_ref->set('rtm', $opts{'rtm'});
-} elsif( defined($opts{'sitespf_pt'}) ) {
-    $cfg_ref->set('rtm', "off");
-}
-my $rtm = $cfg_ref->get('rtm');
-if ($print>=2) { print "Using $rtm for rtm.$eol"; }
-
-#-----------------------------------------------------------------------------------------------
 # comp_intf option
 if (defined $opts{'comp_intf'}) {
     $cfg_ref->set('comp_intf', $opts{'comp_intf'});
@@ -558,21 +530,6 @@ EOF
     if ($print>=2) { print "Using $ninst_atm for ninst_atm.$eol"; }
 }
 
-
-#-----------------------------------------------------------------------------------------------
-# VOC option
-if (defined $opts{'voc'}) {
-    $cfg_ref->set('voc', $opts{'voc'});
-}
-my $voc = $cfg_ref->get('voc');
-if ( $voc eq "on" && $clm_mode eq "ext_cesm" ) {
-   die <<"EOF";
-** Can NOT turn on passing of VOC to driver just in CLM -- must also do this in the driver as well.
-** 
-**** Turn passing VOCs to and from the driver with the CCSM_VOC env_conf variable.
-EOF
-}
-if ($print>=2) { print "Using $voc for passing voc to driver.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # CROP option
@@ -793,12 +750,6 @@ if ( $clm_mode ne "ext_cesm" && $cesm_bld ne "on" ) {
 
 $cfg_cppdefs .= " -DMAXPATCH_PFT=$maxpft";
 
-if ($rtm eq 'on') { 
-    $cfg_cppdefs .= " -DRTM";
-}
-if ($voc eq 'on') { 
-    $cfg_cppdefs .= " -DVOC";
-}
 if ($bgc_mode eq 'cn') { 
     $cfg_cppdefs .= " -DCN";
 }
@@ -843,9 +794,6 @@ if ( $sitespf_pt  eq '1x1_vancouverCAN' ) {
 # Always build with PIO
 $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
 if ( ($clm_mode eq "clm_stndln") && ($use_mpiserial eq "on") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
-if ($glc_nec > 0 ) { 
-    $cfg_cppdefs .= " -DGLC_NEC_" . $glc_nec;
-}
 if ( $clm_mode eq "clm_stndln" ) {
    my $NINST_LND = $cfg_ref->get( "ninst_lnd" );
    my $NINST_ATM = $cfg_ref->get( "ninst_atm" );
@@ -1151,7 +1099,6 @@ sub write_filepath_cesmbld
     my $usr_src       = $cfg_ref->get('usr_src');
     my $clm_root      = $cfg_ref->get('clm_root');
     my $use_mpiserial = $cfg_ref->get('use_mpiserial');
-    my $rtm           = $cfg_ref->get('rtm');
     my $mode          = $cfg_ref->get('mode');
     my $comp_intf     = $cfg_ref->get('comp_intf');
 
@@ -1223,10 +1170,7 @@ sub write_filepath_cesmbld
           print $fh "../SourceMods/src.clm\n";
        }
 
-       my @dirs = ( "cpl_share", "main", "biogeophys", "biogeochem" );
-       if ( $rtm eq "on" ) { 
-	   push( @dirs, "riverroute" );
-       }
+       my @dirs = ( "cpl_share", "main", "biogeophys", "biogeochem", "riverroute");
        if ( $comp_intf eq "MCT" ) { 
 	   push( @dirs, "cpl_mct" );
        } elsif ( $comp_intf eq "ESMF" ) { 
@@ -1280,12 +1224,6 @@ sub write_macros
     my $use_mpiserial = $cfg_ref->get('use_mpiserial') ? 'TRUE' : 'FALSE';
     my $smp           = $cfg_ref->get('smp') ? 'TRUE' : 'FALSE';
     my $clm_root      = $cfg_ref->get('clm_root');
-    my $voc;
-    if ( $cfg_ref->get('voc') eq "on" ) {
-       $voc = "TRUE";
-    } else {
-       $voc = "FALSE";
-    }
     my $compile_threaded = "false";
     if ( $smp eq "TRUE" ) {
        $compile_threaded = "true";
@@ -1310,8 +1248,6 @@ DEBUG                   := $debug
 BUILD_THREADED          := $smp
 FRAMEWORK               := MCT
 CCSM_BGC                := none
-CCSM_VOC                := $voc
-GLC_NEC                 := 0
 USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CESM_cppdefs)
 NETCDF_PATH             := $nc_path
 MPICH_PATH              := $mpi_path

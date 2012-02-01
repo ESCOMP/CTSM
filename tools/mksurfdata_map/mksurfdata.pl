@@ -44,7 +44,7 @@ my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition.xml";
 
 my $definition = Build::NamelistDefinition->new( $nldef_file );
 
-my $CSMDATA = "/fs/cgd/csm/inputdata";
+my $CSMDATA = "/glade/proj3/cseg/inputdata";
 
 my %opts = ( 
                hgrid=>"all", 
@@ -81,8 +81,23 @@ my $numpft = 16;
 #-----------------------------------------------------------------------------------------------
 sub usage {
     die <<EOF;
-SYNOPSIS
-     $ProgName [options]
+SYNOPSIS 
+
+     For supported resolutions:
+     $ProgName -res <res>  [OPTIONS]
+        -res [or -r] is the supported resolution(s) to use for files (by default $opts{'hgrid'} ).
+
+      
+     For unsupported, user-specified resolutions:	
+     $ProgName -res usrspec -usr_gname <user_gname> -usr_gdate <user_gdate>  [OPTIONS]
+        -usr_gname "user_gname"    User resolution name to find grid file with 
+                                   (only used if -res is set to 'usrspec')
+        -usr_gdate "user_gdate"    User map date to find mapping files with
+                                   (only used if -res is set to 'usrspec')
+                                   NOTE: all mapping files are assumed to be in mkmapdata
+                                    - and the user needs to have invoked mkmapdata in 
+                                      that directory first
+
 OPTIONS
      -allownofile                  Allow the script to run even if one of the input files
                                    does NOT exist.
@@ -95,25 +110,28 @@ OPTIONS
                                    (rather than create it on the fly) 
                                    (must be consistent with first year)
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
-     -hires                        If you want to use high-resolution input datasets rather than the default
-                                   lower resolution datasets (low resolution is typically at half-degree)
+     -hires                        If you want to use high-resolution input datasets rather 
+                                   than the default lower resolution datasets 
+                                   (low resolution is typically at half-degree)
      -irrig                        If you want to include irrigated crop in the output file.
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
-     -mv                           If you want to move the files after creation to the correct location in inputdata
+     -mv                           If you want to move the files after creation to the 
+                                   correct location in inputdata
                                    (by default -nomv is assumed so files are NOT moved)
      -new_woodharv                 Use the new good wood harvesting (for rcp6 and rcp8.5)
                                    (by default use the old harvesting used for IPCC simulations)
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
-     -res   [or -r] "resolution"   Resolution(s) to use for files (by default $opts{'hgrid'} ).
+     
      -rcp   [or -c] "rep-con-path" Representative concentration pathway(s) to use for 
                                    future scenarios 
                                    (by default $opts{'rcp'}, where -999.9 means historical ).
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
 
-NOTE: years, res, and rcp can be comma delimited lists.
+      NOTE: years, res, and rcp can be comma delimited lists.
+
 
 OPTIONS to override the mapping of the input gridded data with hardcoded input
 
@@ -222,6 +240,8 @@ sub trim($)
    GetOptions(
         "allownofile"  => \$opts{'allownofile'},
         "r|res=s"      => \$opts{'hgrid'},
+        "usr_gname=s"  => \$opts{'usr_gname'},
+        "usr_gdate=s"  => \$opts{'usr_gdate'},
         "crop"         => \$opts{'crop'},
         "irrig"        => \$opts{'irrig'},
         "hires"        => \$opts{'hires'},
@@ -263,9 +283,13 @@ sub trim($)
    # set filenames, and short-date-name
    #
    my @hresols;
-   my @all_hresols = $definition->get_valid_values( "res" );
+   my $mapdate; 
    if ( $opts{'hgrid'} eq "all" ) {
+      my @all_hresols = $definition->get_valid_values( "res" );
       @hresols = @all_hresols;
+   } elsif ( $opts{'hgrid'} eq "usrspec" ) {
+      @hresols = $opts{'usr_gname'}; 
+      $mapdate = $opts{'usr_gdate'}; 
    } else {
       @hresols = split( ",", $opts{'hgrid'} );
       # Check that resolutions are valid
@@ -348,8 +372,6 @@ EOF
    my $svnmesg = "Update fsurdat files with mksurfdata_map";
    my $surfdir = "lnd/clm2/surfdata";
 
-   system( "/bin/rm -f surfdata_*.nc surfdata_*.log" );
-
    #
    # Loop over all resolutions listed
    #
@@ -357,8 +379,13 @@ EOF
       #
       # Query the XML default file database to get the appropriate files
       #
-      my $queryopts    = "-res $res -csmdata $CSMDATA -silent -justvalue";
-      my $queryfilopts = "$queryopts -onlyfiles ";
+      my $queryopts, my $queryfilopts; 
+      if ( $opts{'hgrid'} eq "usrspec" ) {
+	  $queryopts = "-csmdata $CSMDATA -silent -justvalue";
+      } else {
+	  $queryopts = "-res $res -csmdata $CSMDATA -silent -justvalue";
+      }
+      $queryfilopts = "$queryopts -onlyfiles ";
       my $mkcrop = "";
       my $setnumpft = "";
       if ( defined($opts{'crop'}) ) {
@@ -389,7 +416,11 @@ EOF
          $filnm = trim($filnm);
          $hgrd{$typ} = $hgrid;
          $lmsk{$typ} = $lmask;
-         $map{$typ} = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts -namelist clmexp -options frm_hgrid=$hgrid,frm_lmask=$lmask,to_hgrid=$res,to_lmask=nomask -var map`;
+	 if ( $opts{'hgrid'} eq "usrspec" ) {
+	     $map{$typ} = "../mkmapdata/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
+	 } else {
+	     $map{$typ} = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts -namelist clmexp -options frm_hgrid=$hgrid,frm_lmask=$lmask,to_hgrid=$res,to_lmask=nomask -var map`;
+	 }	     
          $map{$typ} = trim($map{$typ});
          if ( $map{$typ} !~ /[^ ]+/ ) {
             die "ERROR: could NOT find a mapping file for this resolution: $res and type: $typ at $hgrid and $lmask.\n";
@@ -474,6 +505,7 @@ EOF
             #
             my $fh = IO::File->new;
             $fh->open( ">$nl" ) or die "** can't open file: $nl\n";
+	    print "CSMDATA is $CSMDATA \n";
             print $fh <<"EOF";
 &clmexp
  nglcec         = $glc_nec
@@ -644,6 +676,10 @@ EOF
             }
             $fh->close;
             #
+            # Delete previous versions of files that will be created
+            #
+            system( "/bin/rm -f $ofile.nc $ofile.log" );
+            #
             # Run mksurfdata_map with the namelist file
             #
             my $exedir = $scrdir;
@@ -701,9 +737,6 @@ EOF
             my $lsvnmesg = "'$svnmesg $urbdesc $desc'";
             if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
                my $outdir = "$CSMDATA/$surfdir";
-               if ( $opts{'mv'} ) {
-                  $outdir = ".";
-               }
                my $ofile = "surfdata_${res}_${crpdes}${desc_yr0}_${irrdes}${sdate}";
                my $mvcmd = "/bin/mv -f $ncfiles[0]  $outdir/$ofile.nc";
                if ( ! $opts{'debug'} && $opts{'mv'} ) {

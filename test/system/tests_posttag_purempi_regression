@@ -2,9 +2,8 @@ smC92 erC92 brC92 blC92
 smTZ2 erTZ2 brTZ2 blTZ2
 smB92 erB92 brB92 blB92
 smD92 erD92       blD92 smD96
-smE92 erE92 brE92 blE92 smE96
 smF92 erF92 brF92 blF92 smF96
-smX52 erX52 brX52 blX5
+smW52 erW52 brW52 blW5
 smW72 erW72 brW72 blW72
 smH12 erH12 brH12 blH12 smH16
 smHO2 erHO2 brHO2 blHO2
@@ -14,17 +13,15 @@ smH52 erH52 brH52 blH52
 smP52 erP52 brP52 blP52
 smH62 erH62 brH62 blH62
 smH42 erH42 brH42 blH42
-smSJ2 erSJ2 brSJ2 blSJ2
-smS22 erS22 brS22 blS22
-smS62 erS62 brS62 blS62
-smSn2 erSn2 brSn2 blSn2
-smSw2 erSw2 brSw2 blSw2
-smSx2 erSx2 brSx2 blSx2
-smJ92 erJ92 brJ92 blJ92 smJ96
-smJ06
+smCJ2 erCJ2 brCJ2 blCJ2
+smC22 erC22 brC22 blC22
+smC62 erC62 brC62 blC62
+smCn2 erCn2 brCn2 blCn2
+smCw2 erCw2 brCw2 blCw2
+smCx2 erCx2 brCx2 blCx2
 smI59
 smL52 erL52 brL52 blL52
 smL62 erL62 brL62 blL62
-smL82 erL82 brL82 blL82
+smC82 erC82 brC82 blC82
 smR52 erR52 brR52 blR52
 smC52 erC52 brC52 blC52

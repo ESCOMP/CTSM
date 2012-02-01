@@ -49,7 +49,8 @@ so that it leaves the files created in the current directory.
 5.) Either <toolname>.* namelist files exist or <toolname>.runoptions files
 
 To specify options for the running of the tool, either sample namelist files
-are provided or a sample run options file.
+are provided or a sample run options file. These files can EITHER be in the 
+tool directory OR the ../test/system/nl_files directory.
 
   a. Namelist files
 

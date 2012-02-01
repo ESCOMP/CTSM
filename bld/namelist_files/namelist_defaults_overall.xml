@@ -44,6 +44,30 @@ determine default values for namelists.
 <!-- Default irrigation -->
 <irrig>.false.</irrig>
 
+<!-- Default River Transport Model (RTM) mode -->
+<rtm sitespf_pt="none"                             >on</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_brazil"          >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_tropicAtl"       >off</rtm>
+<rtm sitespf_pt="none" hgrid="5x5_amazon"          >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_camdenNJ"        >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_vancouverCAN"    >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_mexicocityMEX"   >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_asphaltjungleNJ" >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_urbanc_alpha"    >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_numaIA"          >off</rtm>
+<rtm sitespf_pt="none" hgrid="1x1_smallvilleIA"    >off</rtm>
+<rtm sitespf_pt="none" clm_usr_name_set=".true."   >off</rtm>
+<rtm sitespf_pt="1x1_brazil"                       >off</rtm>
+<rtm sitespf_pt="1x1_tropicAtl"                    >off</rtm>
+<rtm sitespf_pt="5x5_amazon"                       >off</rtm>
+<rtm sitespf_pt="1x1_camdenNJ"                     >off</rtm>
+<rtm sitespf_pt="1x1_vancouverCAN"                 >off</rtm>
+<rtm sitespf_pt="1x1_mexicocityMEX"                >off</rtm>
+<rtm sitespf_pt="1x1_asphaltjungleNJ"              >off</rtm>
+<rtm sitespf_pt="1x1_urbanc_alpha"                 >off</rtm>
+<rtm sitespf_pt="1x1_numaIA"                       >off</rtm>
+<rtm sitespf_pt="1x1_smallvilleIA"                 >off</rtm>
+
 <!-- Default RTM resolution -->
 <rtm_res rtm="on">R05</rtm_res>
 
@@ -52,7 +76,6 @@ determine default values for namelists.
 <mask hgrid="0.47x0.63"           >gx1v6</mask>
 <mask hgrid="0.9x1.25"            >gx1v6</mask>
 <mask hgrid="1.9x2.5"             >gx1v6</mask>
-<mask hgrid="2.65x3.33"           >USGS</mask>
 <mask hgrid="2.5x3.33"            >gx3v7</mask>
 <mask hgrid="4x5"                 >gx3v7</mask>
 <mask hgrid="10x15"               >USGS</mask>
@@ -81,8 +104,16 @@ determine default values for namelists.
 <mask                             >gx1v6</mask>
 
 <!-- Default glacier model grid/resolution -->
-<glc_grid glc_nec="0"  >none</glc_grid>
-<glc_grid glc_nec="10" >gland20</glc_grid>
+
+<glc_grid glc_nec="0">none</glc_grid>
+<glc_grid            >gland20</glc_grid>
+<glc_dyntopo         >.false.</glc_dyntopo>
+<glc_smb             >.true.</glc_smb>
+<glc_nec glc_nec="0" >0</glc_nec>
+<glc_nec glc_nec="1" >1</glc_nec>
+<glc_nec glc_nec="3" >3</glc_nec>
+<glc_nec glc_nec="5" >5</glc_nec>
+<glc_nec glc_nec="10">10</glc_nec>
 
 <!-- Whether aerosol comes from datm or clm (none) -->
 <datm_presaero hgrid="1x1_brazil"          sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
@@ -93,20 +124,20 @@ determine default values for namelists.
 <datm_presaero hgrid="1x1_mexicocityMEX"   sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
 <datm_presaero hgrid="1x1_urbanc_alpha"    sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
 <datm_presaero hgrid="5x5_amazon"          sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero                 sim_year_range="1850-2100" rcp="2.6" >rcp2.6</datm_presaero>
-<datm_presaero                 sim_year_range="1850-2100" rcp="4.5" >rcp4.5</datm_presaero>
-<datm_presaero                 sim_year_range="1850-2100" rcp="6"   >rcp6.0</datm_presaero>
-<datm_presaero                 sim_year_range="1850-2100" rcp="8.5" >rcp8.5</datm_presaero>
-<datm_presaero                 sim_year_range="2000-2100" rcp="2.6" >rcp2.6</datm_presaero>
-<datm_presaero                 sim_year_range="2000-2100" rcp="4.5" >rcp4.5</datm_presaero>
-<datm_presaero                 sim_year_range="2000-2100" rcp="6"   >rcp6.0</datm_presaero>
-<datm_presaero                 sim_year_range="2000-2100" rcp="8.5" >rcp8.5</datm_presaero>
-<datm_presaero                 sim_year_range="1850-2000"           >trans_1850-2000</datm_presaero>
-<datm_presaero                 sim_year_range="1000-1002"           >clim_2000</datm_presaero>
-<datm_presaero                 sim_year_range="1000-1004"           >clim_2000</datm_presaero>
-<datm_presaero sim_year="1850" sim_year_range="constant"            >clim_1850</datm_presaero>
-<datm_presaero sim_year="2000" sim_year_range="constant"            >clim_2000</datm_presaero>
-<datm_presaero sim_year="1000" sim_year_range="constant"            >clim_2000</datm_presaero>
-<datm_presaero                                                      >none</datm_presaero>
+<datm_presaero                             sim_year_range="1850-2100" rcp="2.6" >rcp2.6</datm_presaero>
+<datm_presaero                             sim_year_range="1850-2100" rcp="4.5" >rcp4.5</datm_presaero>
+<datm_presaero                             sim_year_range="1850-2100" rcp="6"   >rcp6.0</datm_presaero>
+<datm_presaero                             sim_year_range="1850-2100" rcp="8.5" >rcp8.5</datm_presaero>
+<datm_presaero                             sim_year_range="2000-2100" rcp="2.6" >rcp2.6</datm_presaero>
+<datm_presaero                             sim_year_range="2000-2100" rcp="4.5" >rcp4.5</datm_presaero>
+<datm_presaero                             sim_year_range="2000-2100" rcp="6"   >rcp6.0</datm_presaero>
+<datm_presaero                             sim_year_range="2000-2100" rcp="8.5" >rcp8.5</datm_presaero>
+<datm_presaero                             sim_year_range="1850-2000"           >trans_1850-2000</datm_presaero>
+<datm_presaero                             sim_year_range="1000-1002"           >clim_2000</datm_presaero>
+<datm_presaero                             sim_year_range="1000-1004"           >clim_2000</datm_presaero>
+<datm_presaero sim_year="1850"             sim_year_range="constant"            >clim_1850</datm_presaero>
+<datm_presaero sim_year="2000"             sim_year_range="constant"            >clim_2000</datm_presaero>
+<datm_presaero sim_year="1000"             sim_year_range="constant"            >clim_2000</datm_presaero>
+<datm_presaero                                                                  >none</datm_presaero>
 
 </namelist_defaults>

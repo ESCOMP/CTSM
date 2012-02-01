@@ -10,8 +10,6 @@ module clm_varctl
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varpar, only: maxpatch_glcmec
-!
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -64,7 +62,6 @@ module clm_varctl
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
-  character(len=256), public :: fglcmask     = ' '      ! glacier mask file name
   logical         ,   public :: downscale               ! true => do downscaling with fine mesh
                                                         ! ASSUMES that all grids are lat/lon
 !
@@ -84,37 +81,37 @@ module clm_varctl
   real(r8), public :: co2_ppmv     = 355._r8            ! atmospheric CO2 molar ratio (by volume) (umol/mol)
 
 ! glacier_mec control variables: default values (may be overwritten by namelist)
-! NOTE: glc_nec and glc_smb must have the same values for CLM and GLC
+! NOTE: glc_smb must have the same values for CLM and GLC
 
-  logical, public :: create_glacier_mec_landunit = .false.  ! glacier_mec landunit is not created
-  logical, public :: glc_dyntopo = .false.                  ! true => CLM glacier topography changes dynamically
-  logical, public :: glc_smb = .false.                      ! if true, pass surface mass balance info to GLC
+  logical , public :: create_glacier_mec_landunit = .false. ! glacier_mec landunit is not created (set in controlMod)
+  logical , public :: glc_smb = .true.                      ! if true, pass surface mass balance info to GLC
                                                             ! if false, pass positive-degree-day info to GLC
-  integer , public :: glc_nec = 0                           ! number of elevation classes for glacier_mec landunits
-  real(r8), public :: glc_topomax(0:maxpatch_glcmec)        ! upper limit of each class (m)
+  logical , public :: glc_dyntopo = .false.                 ! true => CLM glacier topography changes dynamically
+  real(r8), public, allocatable :: glc_topomax(:)           ! upper limit of each class (m)  (set in surfrd)
+  character(len=256), public :: glc_grid = ' '              ! glc_grid used to determine fglcmask  
+  character(len=256), public :: fglcmask = ' '              ! glacier mask file name (based on glc_grid)
 !
 ! single column control variables
 !
   logical,  public :: single_column = .false.           ! true => single column mode
-  real(r8), public:: scmlat         = rundef            ! single column lat
-  real(r8), public:: scmlon         = rundef            ! single column lon
+  real(r8), public :: scmlat        = rundef            ! single column lat
+  real(r8), public :: scmlon        = rundef            ! single column lon
 !
 ! instance control
 !
   integer, public :: inst_index
   character(len=16), public :: inst_name
   character(len=16), public :: inst_suffix
-#ifdef RTM
 !
 ! Rtm control variables
 !
+  logical           , public :: do_rtm = .true.         ! turn on river routining
   character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
   integer,            public :: rtm_nsteps = iundef     ! if > 1, average rtm over rtm_nsteps time steps
   logical,            public :: ice_runoff = .true.     ! true => runoff is split into liquid and ice 
                                                         ! otherwise just liquid
   character(len=256), public :: fmapinp_rtm = ' '       ! mapping file from clm to rtm grid
                                                         ! if blank - then rtm calculates the mapping matrix at runtime
-#endif
 !
 ! Decomp control variables
 !
@@ -231,8 +228,8 @@ contains
     else
        allocate_all_vegpfts = .false.
 #ifdef CROP
-       write(iulog,*)'maxpatch_pft = ',maxpatch_pft,' does NOT equal numpft+1 = ', &
-                      numpft+1
+       write(iulog,*)'maxpatch_pft = ',maxpatch_pft,&
+            ' does NOT equal numpft+1 = ',numpft+1
        call shr_sys_abort( subname//' ERROR:: Can NOT turn CROP on without all PFTs' )
 #endif
     end if
@@ -260,40 +257,10 @@ contains
 #endif
        end if
 
-       if (create_glacier_mec_landunit) then
-
-#if (defined GLC_NEC_1)
-          glc_nec = 1
-#elif (defined GLC_NEC_3)
-          glc_nec = 3
-#elif (defined GLC_NEC_5)
-          glc_nec = 5
-#elif (defined GLC_NEC_10)
-          glc_nec = 10
-#else
-          call shr_sys_abort( subname//' ERROR:: glc_nec must be 1, 3, 5, or 10 to create glacier_mec landunit')
-#endif
-
-       else  ! no glacier_mec landunit
-
-          if (glc_nec /= 0) then
-             write(iulog,*) 'glc_nec =', glc_nec
-             call shr_sys_abort( subname//' ERROR:: no glacier_mec landunit; must have glc_nec = 0')
-          endif
-          if (glc_smb ) then
-             call shr_sys_abort( subname//' ERROR:: glc_smb true, but create_glacier_mec NOT true')
-          endif
-          if (glc_dyntopo) then
-             call shr_sys_abort( subname//' ERROR:: glc_dyntopo true, but create_glacier_mec NOT true')
-          endif
-
-       endif ! create_glacier_mec_landunit
-
-#if (defined RTM)
        ! If rtm_nsteps was not entered in the namelist, give it the following default value
-
-       if (rtm_nsteps == iundef) rtm_nsteps = (3600*3)/dtime ! 3 hours
-#endif
+       if (do_rtm) then
+          if (rtm_nsteps == iundef) rtm_nsteps = (3600*3)/dtime ! 3 hours
+       end if
 
        ! Check on run type
 

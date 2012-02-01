@@ -23,8 +23,9 @@ module clm_glclnd
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan
   use spmdMod     , only : masterproc
-  use clm_varctl  , only : iulog
-  use clm_varctl  , only : glc_nec
+  use clm_varpar  , only : maxpatch_glcmec
+  use clm_varctl  , only : iulog, glc_smb
+  use abortutils  , only : endrun
 !
 ! !REVISION HISTORY:
 ! Created by William Lipscomb, Dec. 2007, based on clm_atmlnd.F90.
@@ -96,11 +97,11 @@ contains
   real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
-  allocate(x2s%frac(beg:end,glc_nec))
-  allocate(x2s%topo(beg:end,glc_nec))
-  allocate(x2s%rofi(beg:end,glc_nec))
-  allocate(x2s%rofl(beg:end,glc_nec))
-  allocate(x2s%hflx(beg:end,glc_nec))
+  allocate(x2s%frac(beg:end,maxpatch_glcmec))
+  allocate(x2s%topo(beg:end,maxpatch_glcmec))
+  allocate(x2s%rofi(beg:end,maxpatch_glcmec))
+  allocate(x2s%rofl(beg:end,maxpatch_glcmec))
+  allocate(x2s%hflx(beg:end,maxpatch_glcmec))
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
@@ -138,9 +139,9 @@ end subroutine init_glc2lnd_type
   real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
-  allocate(s2x%tsrf(beg:end,glc_nec))
-  allocate(s2x%topo(beg:end,glc_nec))
-  allocate(s2x%qice(beg:end,glc_nec))
+  allocate(s2x%tsrf(beg:end,maxpatch_glcmec))
+  allocate(s2x%topo(beg:end,maxpatch_glcmec))
+  allocate(s2x%qice(beg:end,maxpatch_glcmec))
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
@@ -194,7 +195,7 @@ end subroutine init_lnd2glc_type
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
-  do n = 1, glc_nec
+  do n = 1, maxpatch_glcmec
  
      ix = 0
      ix=ix+1; asrc(:,ix) = s2x_src%tsrf(:,n)  
@@ -265,7 +266,7 @@ end subroutine clm_maps2x
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
-  do n = 1, glc_nec
+  do n = 1, maxpatch_glcmec
  
      ix = 0
      ix=ix+1; asrc(:,ix) = x2s_src%frac(:,n)  
@@ -308,7 +309,6 @@ end subroutine clm_maps2x
 ! Assign values to clm_s2x based on the appropriate derived types
 !
 ! !USES:
-  use clm_varctl  , only : glc_smb
   use clmtype     , only : clm3
   use domainMod   , only : ldomain
   use clm_varcon  , only : istice_mec
@@ -333,34 +333,31 @@ end subroutine clm_maps2x
 
     ! Assign local pointers to derived type members
 
-    clandunit     => clm3%g%l%c%landunit
-    cgridcell     => clm3%g%l%c%gridcell
-    ityplun       => clm3%g%l%itype
+    clandunit => clm3%g%l%c%landunit
+    cgridcell => clm3%g%l%c%gridcell
+    ityplun   => clm3%g%l%itype
 
     ! Get processor bounds
-
     call get_proc_bounds(begg, endg, begc=begc, endc=endc)
 
-    ! initialize to be safe
+    ! Initialize to be safe
     clm_s2x%tsrf(:,:) = 0._r8
     clm_s2x%topo(:,:) = 0._r8
     clm_s2x%qice(:,:) = 0._r8
 
-    ! fill the clm_s2x vector on the clm grid
+    ! Fill the clm_s2x vector on the clm grid
 
     if (glc_smb) then   ! send surface mass balance info
-
        do c = begc, endc
           l = clandunit(c)
           g = cgridcell(c)
 
+          ! Following assumes all elevation classes are populated
           if (ityplun(l) == istice_mec) then
              n = c - clm3%g%l%coli(l) + 1    ! elevation class index
-                                             ! (assumes all elevation classes are populated)
              clm_s2x%tsrf(g,n) = clm3%g%l%c%ces%t_soisno(c,1)
              clm_s2x%qice(g,n) = clm3%g%l%c%cwf%qflx_glcice(c)
              clm_s2x%topo(g,n) = clm3%g%l%c%cps%glc_topo(c)
-
              ! Check for bad values of qice
              if ( abs(clm_s2x%qice(g,n)) > 1.0_r8 .and. clm_s2x%qice(g,n) /= spval) then
                 write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
@@ -368,29 +365,25 @@ end subroutine clm_maps2x
 
            endif    ! istice_mec
        enddo        ! c
-
     else  ! Pass PDD info (same info in each elevation class)
-             ! It might make sense to require glc_nec = 1 for this case
-             
-
-       do n = 1, glc_nec
-          do g = begg, endg
-             clm_s2x%tsrf(g,n) = clm_l2a%t_ref2m(g)
-             clm_s2x%qice(g,n) = clm_a2l%forc_snow(g)   ! Assume rain runs off
-             clm_s2x%topo(g,n) = ldomain%topo(g)
-
-             ! Check for bad values of qice
-             if (clm_s2x%qice(g,n) > -1.0_r8 .and. clm_s2x%qice(g,n) < 1.0_r8) then
-                continue
-             else
-                write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
-                write(iulog,*) 'forc_rain =', clm_a2l%forc_rain(g)
-                write(iulog,*) 'forc_snow =', clm_a2l%forc_snow(g)
-             endif
-
-          enddo
+       ! Require maxpatch_glcmec = 1 for this case 
+       if (maxpatch_glcmec .ne. 1) then
+          call endrun('create_clm_s2x error: maxpatch_glcmec must be 1 if glc_smb is false') 
+       end if
+       n = 1
+       do g = begg, endg
+          clm_s2x%tsrf(g,n) = clm_l2a%t_ref2m(g)
+          clm_s2x%qice(g,n) = clm_a2l%forc_snow(g)   ! Assume rain runs off
+          clm_s2x%topo(g,n) = ldomain%topo(g)
+          ! Check for bad values of qice
+          if (clm_s2x%qice(g,n) > -1.0_r8 .and. clm_s2x%qice(g,n) < 1.0_r8) then
+             continue
+          else
+             write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
+             write(iulog,*) 'forc_rain =', clm_a2l%forc_rain(g)
+             write(iulog,*) 'forc_snow =', clm_a2l%forc_snow(g)
+          endif
        enddo
-
     endif   ! glc_smb
 
 end subroutine create_clm_s2x

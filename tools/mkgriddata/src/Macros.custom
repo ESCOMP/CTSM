@@ -1,7 +1,0 @@
-EXENAME = ../mkgriddata
-
-# Set optimization off by default
-ifeq ($(OPT),$(null))
-  OPT := FALSE
-endif
-

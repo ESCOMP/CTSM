@@ -2,5 +2,4 @@
 -nouse_mpiserial -nosmp
 -debug
 -ninst_lnd 3
--rtm off
 -s

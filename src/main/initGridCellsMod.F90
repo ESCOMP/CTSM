@@ -441,6 +441,13 @@ contains
     if (minval(gptr%pftf) < begp .or. maxval(gptr%pftf) > endp) error=.true.
     if (error) then
        write(iulog,*) '   clm_ptrs_check: g index ranges - ERROR'
+       write(iulog,*)'minval,beg,maxval,end'
+       write(iulog,*) minval(gptr%luni),begl,maxval(gptr%luni),endl
+       write(iulog,*) minval(gptr%lunf),begl,maxval(gptr%lunf),endl
+       write(iulog,*) minval(gptr%coli),begc,maxval(gptr%coli),endc
+       write(iulog,*) minval(gptr%colf),begc,maxval(gptr%colf),endc
+       write(iulog,*) minval(gptr%pfti),begp,maxval(gptr%pfti),endp
+       write(iulog,*) minval(gptr%pftf),begp,maxval(gptr%pftf),endp
        call endrun()
     endif
     if (masterproc) write(iulog,*) '   clm_ptrs_check: g index ranges - OK'
@@ -733,7 +740,6 @@ end subroutine clm_ptrs_check
     use clm_varcon, only : istice, istwet, istdlak, istice_mec
     use clm_varpar, only : npatch_lake, npatch_glacier, npatch_wet
     use clm_varpar, only : npatch_glacier_mec
-    use clm_varctl, only : glc_nec 
 
 !
 ! !ARGUMENTS:

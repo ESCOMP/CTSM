@@ -175,7 +175,7 @@ contains
                            ncd_inqdid, ncd_inqdlen
     use clm_varctl, only : fpftcon
     use clm_varcon, only : tfrz
-    use spmdMod   , only : masterproc, mpicom, MPI_REAL8, MPI_CHARACTER, MPI_INTEGER
+    use spmdMod   , only : masterproc
     use nanMod    , only : nan
 !
 ! !ARGUMENTS:

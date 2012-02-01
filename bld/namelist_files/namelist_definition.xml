@@ -8,6 +8,7 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
+
 <entry id="clump_pproc" type="integer" category="clm_performance"
        group="clm_inparm" valid_values="" >
 Clumps per processor.
@@ -27,9 +28,9 @@ Type of CO2 feedback.
     diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
-<entry id="albice" type="real(2)" category="clm_physics"
-       group="clm_inparm" >
-Visible and Near-infrared albedo's for glacier ice
+<entry id="do_rtm" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, turn on rtm river routing
 </entry>
 
 <entry id="ice_runoff" type="logical" category="clm_physics"
@@ -52,26 +53,38 @@ over-productive. It does act as a proxy for fertilization for crops however.
 If TRUE, separate the vegetated landunit into a crop landunit and a natural vegetation landunit
 </entry>
 
-<entry id="create_glacier_mec_landunit" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, turn on multiple elevation classes over glacier points.
+<entry id="maxpatch_glcmec" type="integer"  category="clm_physics"
+       group="clm_inparm" valid_values="0,1,3,5,10" >
+Number of  multiple elevation classes over glacier points.
 Normally this is ONLY used when running CESM with the active glacier model.
-Only works when GLC_NEC is greater than zero.
+</entry>
+
+<entry id="glc_grid" type="char*10" category="clm_physics"
+        group="clm_inparm" valid_values="gland20,gland10,gland5" >
+Glacier model grid
+    gland20 = Greenland at 20km resolution
+    gland10 = Greenland at 10km resolution
+    gland5  = Greenland at  5km resolution
 </entry>
 
 <entry id="glc_smb" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, calculate surface mass balance for glacier multi-elevation class points.
 If false use growing degree day information for glaciers multi-elevation class points.
-Only works when create_glacier_mec_landunit is true.
-(Only tested with glc_smb=.true. when create_glacier_mec_landunit is .true., setting it to .false. is NOT tested)
+Only works when glc_nec is greater than 0.
+(Only tested with glc_smb=.true., setting it to .false. is NOT tested)
 </entry>
 
 <entry id="glc_dyntopo" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, dynamically change topographic height over glacier points.
-Only works when create_glacier_mec_landunit is true.
+Only works when glc_nec is greater than zero.
 (EXPERIMENTAL AND NOT FUNCTIONAL!)
+</entry>
+
+<entry id="albice" type="real(2)" category="clm_physics"
+       group="clm_inparm" >
+Visible and Near-infrared albedo's for glacier ice
 </entry>
 
 <entry id="outnc_large_files" type="logical" category="history"
@@ -106,12 +119,6 @@ Input archive device prefix to retrieve input files from (used by shr/shr_file_m
 Full pathname of land fraction data file (on atm grid).
 </entry>
 
-<entry id="fatmtopo" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of topography data file (on atm grid). Only required
-when fine-mesh activated. (fine-mesh is EXPERIMENTAL NOT SUPPORTED!)
-</entry>
-
 <entry id="fglcmask" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of land-ice mask data file (on lnd grid).
@@ -125,9 +132,8 @@ arbitrary initial conditions.
 
 <entry id="flndtopo" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of topography data file (on lnd grid). Only required
-when fine-mesh is activated or when land-ice model is active. 
-(fine-mesh is EXPERIMENTAL NOT SUPPORTED!)
+Full pathname of topography data file. Only required when 
+land-ice model is active.
 </entry>
 
 <entry id="fpftcon" type="char*256" category="datasets"
@@ -461,11 +467,6 @@ zero for other land-use types.
 Number of Plant Functional Types (excluding bare-soil)
 </entry>
 
-<entry id="nglcec" type="integer" category="mksurfdata"
-       group="clmexp" value="0" valid_values="0,1,3,5,10" >
-Number of glacier multiple elevation classes
-</entry>
-
 <entry id="pft_idx" type="integer" category="mksurfdata"
        group="clmexp"
        valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20" >
@@ -603,48 +604,6 @@ Full pathname of output domain dataset (only used for mkdatadomain).
 <entry id="dtype" type="char*5" category="tools"
        group="domain_nl" valid_values="datm,docn" >
 Type of domain file to create (ocean or atmosphere) (only used for mkdatadomain)
-</entry>
-
-<!--                                                              -->
-<!-- CASA namelist items  CASA is experimental and NOT supported  -->
-<!--                                                              -->
-<entry id="lnpp" type="integer" category="casa"
-       group="clm_inparm" valid_values="1,2" >
-CASA Net Primary Production format: 
-    1=gpp*gppfact
-    2=fn(lgrow)*gppfact 
-(CASA is EXPERIMENTAL NOT SUPPORTED!)
-<default>Default: 2</default>
-</entry>
-
-<entry id="lalloc" type="integer" category="casa"
-       group="clm_inparm" valid_values="0,1" >
-CASA allocation type: 
-     0=fixed allocation
-     1=dynamic allocation
-(CASA is EXPERIMENTAL NOT SUPPORTED!)
-<default>Default: 1</default>
-</entry>
-
-<entry id="q10" type="real" category="casa"
-       group="clm_inparm" valid_values="" >
-CASA Temperature dependence (CASA is EXPERIMENTAL NOT SUPPORTED!)
-<default>Default: 2.0</default>
-</entry>
-
-<entry id="spunup" type="integer" category="casa"
-       group="clm_inparm" valid_values="0,1" >
-CASA flag if input file spunup or not: 
-    0=no
-    1=yes 
-(CASA is EXPERIMENTAL NOT SUPPORTED!)
-<default>Default: 0</default>
-</entry>
-
-<entry id="fcpool" type="integer" category="casa"
-       group="clm_inparm" valid_values="" >
-CASA Carbon Pool initial state filename (CASA is EXPERIMENTAL NOT SUPPORTED!)
-<default>Default: blank</default>
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1049,6 +1008,43 @@ Tolerance to match ocean and ice grid masks
 <entry id="eps_oarea" type="real"  category="driver"
        group="seq_infodata_inparm" valid_values="" >
 Tolerance to match ocean and ice grid areas
+</entry>
+
+<!-- Coupler fields -->
+<entry id="flds_voc" type="logical"  category="driver"
+       group="seq_cplflds_inparm" valid_values="" value=".true.">
+If TRUE, pass VOC fields in driver
+</entry>
+
+<entry id="flds_co2a" type="logical"  category="driver"
+       group="seq_cplflds_inparm" valid_values="" value=".false.">
+If TRUE, pass CO2 from atmosphere to land
+</entry>
+
+<entry id="flds_co2b" type="logical"  category="driver"
+       group="seq_cplflds_inparm" valid_values="" value=".false.">
+If TRUE, pass CO2 from atmosphere to land and back
+</entry>
+
+<entry id="flds_co2c" type="logical"  category="driver"
+       group="seq_cplflds_inparm" valid_values="" value=".false.">
+If TRUE, pass CO2 from atmosphere to land and back and also to ocean
+</entry>
+
+<entry id="flds_co2_dmsa" type="logical"  category="driver"
+       group="seq_cplflds_inparm" valid_values="" value=".false.">
+If TRUE, pass CO2 from atmosphere to land and back and also to ocean and DMS to ocean
+</entry>
+
+<entry id="cplflds_custom" type="char*256"  category="driver"
+       group="seq_cplflds_inparm" valid_values="" >
+Custom fields to pass in the driver
+</entry>
+
+<entry id="glc_nec" type="integer"  category="driver"
+       group="seq_cplflds_inparm" valid_values="0,1,3,5,10" >
+Number of  multiple elevation classes over glacier points to pass to coupler.
+Normally this is ONLY used when running CESM with the active glacier model.
 </entry>
 
 <!-- Task/Thread layouts -->
@@ -1663,11 +1659,6 @@ Fill mask
 
 <entry id="fillread" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="">
-Fill mapping file to read
-</entry>
-
-<entry id="fillwrite" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="">
 Fill mapping file to write
 </entry>
 
@@ -1836,7 +1827,7 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 
 <entry id="lmask" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="nomask,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE">
+       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE">
 Land mask description for mksurfdata input files
 </entry> 
 
@@ -1860,15 +1851,6 @@ CLM run type.
     'startup' is an initial run with initial conditions provided.  
     'continue' is a restart run.
     'branch' is a restart run in which properties of the output history files may be changed.
-</entry>
-
-<entry id="glc_grid" type="char*10" category="default_settings"
-        group="default_settings" valid_values="gland20,gland10,gland5,none" >
-Glacier model grid
-    gland20 = Greenland at 20km resolution
-    gland10 = Greenland at 10km resolution
-    gland5  = Greenland at  5km resolution
-    none    = no glacier model grid
 </entry>
 
 <entry id="res" type="char*30" category="default_settings"
@@ -1947,6 +1929,14 @@ Prescribed aerosol mode for the atmosphere model
     rcp4.5 = For datm use rcp=4.5 future scenario 
     rcp6   = For datm use rcp=6.0 future scenario 
     rcp8.5 = For datm use rcp=8.5 future scenario
+</entry>
+
+<entry id="rtm" type="char*3" category="default_settings"
+       group="default_settings"
+       valid_values="on,off" value="off"
+>
+Toggle to turn on river transport module (RTM), to run global river routing model to
+ocean
 </entry>
 
 <!-- ========================================================================================  -->

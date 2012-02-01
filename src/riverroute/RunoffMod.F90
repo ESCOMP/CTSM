@@ -1,7 +1,5 @@
-
 module RunoffMod
 
-#if (defined RTM)
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -187,6 +185,5 @@ contains
   end subroutine get_proc_rof_global
 
 !-----------------------------------------------------------------------
-#endif
 
 end module RunoffMod

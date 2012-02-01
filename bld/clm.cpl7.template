@@ -11,21 +11,17 @@ set cfgdir = $CASEBUILD/clmconf
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
-# Global River Transport model off for pt1 mode
-if ($LND_GRID == pt1 || $PTS_MODE == TRUE ) then
-   set rtm = "off"
-else
-   set rtm = "on"
-endif
-
 setenv COMP "unknown"
 if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
 if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
-set config_opts = "-mode ext_cesm -rtm $rtm -glc_nec $GLC_NEC"
-set config_opts = "$config_opts -ninst_lnd $NINST_LND"
+set config_opts = "-mode ext_cesm "
 set config_opts = "$config_opts $CLM_CONFIG_OPTS"
-$CODEROOT/lnd/clm/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
+
+$CODEROOT/lnd/clm/bld/configure $config_opts \
+    -comp_intf cpl_\$COMP \
+    -clm_root \$CODEROOT/lnd/clm \
+    -usr_src \$CASEROOT/SourceMods/src.clm || exit -1 
 
 #--------------------------------------------------------------------
 # Invoke build-namelist
@@ -36,26 +32,22 @@ $CODEROOT/lnd/clm/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/c
 # BUT -- we don't have CLM datasets available for these resolutions
 setenv CLM_RTM_RES "R05"
 
-
-# --- set hybrid run initial dataset 
 set finidat = " "
-if ($RUN_TYPE == hybrid) set finidat = " finidat = '${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc' "
-
-# --- set branch run restart dataset 
+if ($RUN_TYPE == hybrid) set finidat = " finidat = '${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-${RUN_REFTOD}.nc' "
 set nrevsn = " "
-if ($RUN_TYPE == branch) set nrevsn   = " nrevsn = '${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc' "
+if ($RUN_TYPE == branch) set nrevsn   = " nrevsn = '${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-${RUN_REFTOD}.nc' "
 
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
 
 set rtm_tstep = " -rtm_tstep 10800 "             # RTM time-step every 3 hours
 set rtm_res   = " -rtm_res $CLM_RTM_RES"
+set co2ppmv   = " -co2_ppmv $CCSM_CO2_PPMV"
 set co2type   = " co2_type  =  '$CLM_CO2_TYPE'"
-
-set co2ppmv = " -co2_ppmv $CCSM_CO2_PPMV"
 
 cat >> $cfgdir/cesm_namelist << EOF1
  &clm_inparm
  dtime            =  $clm_dtime
+ fatmlndfrc       =  '${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}'
 $co2type
 $finidat
 $nrevsn
@@ -64,9 +56,7 @@ EOF1
 
 # Allow the user to supply namelist values by putting them in the file
 # $CASEROOT/user_nl_clm.  The file should contain
-# a valid namelist. If you are running with multiple ensembles it can
-# a directory full of files called $CASEROOT/user_nl_clm/user_nl_clm_*
-# with the wildcard for each ensemble member.
+# a valid namelist.
 set USER_NL = "-infile cesm_namelist"
 if (-f "$CASEROOT/user_nl_clm" || -d "$CASEROOT/user_nl_clm" ) then
    set USER_NL = "${USER_NL},$CASEROOT/user_nl_clm"
@@ -85,14 +75,24 @@ endif
 
 set mask = " "
 if ($ATM_GRID != $OCN_GRID) then
-  set mask = "-mask $OCN_GRID"
+   set mask = "-mask $OCN_GRID"
 endif
 
-if ($LND_GRID == pt1 ) then
-   set RESOLUTION = $CLM_PT1_NAME
-   if ( $RESOLUTION == "" ) set RESOLUTION = "default"
-else
-   set RESOLUTION = $LND_GRID
+set RESOLUTION = $LND_GRID
+if ($LND_GRID == reg ) then
+   if ( $GRID == CLM_USRDAT ) then
+      if ( ! $?CLM_USRDAT_NAME ) then
+         echo "ERROR: must set CLM_USRDAT_NAME xml variable if GRID is CLM_USRDAT"
+         exit -1
+      else if ( ?CLM_USRDAT_NAME == UNSET ) then
+         echo "ERROR: must set CLM_USRDAT_NAME variable to a value other than UNSET "
+         echo "ERROR: for cases where GRID is CLM_USRDAT"
+         exit -1
+      endif
+      set RESOLUTION = "$CLM_USRDAT_NAME"
+   else
+      set RESOLUTION = $GRID
+   endif
 endif
 
 # following logic may need tweaking to account for configurations where start year is important
@@ -108,26 +108,39 @@ else
     set usecase = "-use_case $CLM_NML_USE_CASE"
 endif
 
-set options    = ""
-if ( "$CLM_USRDAT_NAME" != "UNSET" )then
-   set options    = "-clm_usr_name $CLM_USRDAT_NAME"
-   if ( "$RESOLUTION" == "" || "$RESOLUTION" == "UNSET" ) set RESOLUTION = "$CLM_USRDAT_NAME"
+# Global River Transport model off for single point mode
+if ($LND_GRID == reg || $PTS_MODE == TRUE ) then
+   set rtm = "-rtm off"
+else
+   set rtm = " "
 endif
-set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
-set options = "$options $USER_NL -clm_start_type $START_TYPE $CLM_BLDNML_OPTS"
-set options = "$options $rtm_res $rtm_tstep $co2ppmv"
+
+set options    = ""
+if ( $CLM_USRDAT_NAME != UNSET ) then
+    set options = "-clm_usr_name $CLM_USRDAT_NAME"
+endif
+set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase"
+set options = "$options $USER_NL -clm_start_type $START_TYPE"
+set options = "$options -glc_nec $GLC_NEC"
+set options = "$options $rtm $rtm_res $rtm_tstep $co2ppmv"
 if ("$COMP_ATM" == "datm" )then
    set options = "$options  -datm_presaero $DATM_PRESAERO"
 else
    set options = "$options  -datm_presaero prognostic"
 endif
 if ("$COMP_GLC" != "sglc" )then
-    set options = "$options -glc_grid $GLC_GRID"
+   set GLC_SMB = .$GLC_SMB. # for fortran logicals
+   set options = "$options -glc_grid $GLC_GRID -glc_smb $GLC_SMB"
 endif
-$CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT \-inputdata $CASEBUILD/clm.input_data_list || exit -1
+set options = "$options $CLM_BLDNML_OPTS"
+
+$CODEROOT/lnd/clm*/bld/build-namelist $options \
+    -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" \
+    -csmdata \$DIN_LOC_ROOT \
+    -inputdata $CASEBUILD/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------
-#  Create namelist and prestage data script
+#  Create clm.buildnml.csg
 # ---------------------------------------------------------------------------
 
 cat >! $CASEBUILD/clm.buildnml.csh << EOF1
@@ -141,19 +154,35 @@ cat >! $CASEBUILD/clm.buildnml.csh << EOF1
 
 set exedir = \$RUNDIR; cd \$exedir
 
+set default_lnd_in_filename = "lnd_in"
+
+set lnd_inst_counter = 1
+
+while (\$lnd_inst_counter <= \$NINST_LND)
+
+    set lnd_in_filename = \$default_lnd_in_filename
+
+    if (\$NINST_LND > 1) then
+        set lnd_inst_string = \$lnd_inst_counter
+        if (\$lnd_inst_counter <= 999) set lnd_inst_string = 0\$lnd_inst_string
+        if (\$lnd_inst_counter <=  99) set lnd_inst_string = 0\$lnd_inst_string
+        if (\$lnd_inst_counter <=   9) set lnd_inst_string = 0\$lnd_inst_string
+        set lnd_in_filename = \${default_lnd_in_filename}_\${lnd_inst_string}
+    endif
+
+    cat >! \$lnd_in_filename << EOF
+
 EOF1
 
-foreach lnd_in_filename ( lnd_in* )
-
-    cat >> $CASEBUILD/clm.buildnml.csh << EOF1
-cat >! $lnd_in_filename << EOF
-EOF1
-    cat $lnd_in_filename >> $CASEBUILD/clm.buildnml.csh || exit -1
+    cat lnd_in >> $CASEBUILD/clm.buildnml.csh || exit -1
 cat >> $CASEBUILD/clm.buildnml.csh << EOF1
 EOF
-EOF1
+
+    @ lnd_inst_counter = \$lnd_inst_counter + 1
 
 end
+
+EOF1
 
 #
 # Remove temporary namelist in the clmconf directory

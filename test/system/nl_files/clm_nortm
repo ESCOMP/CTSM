@@ -2,6 +2,4 @@
 -silent 
 -drv_case clmrun 
 -datm_source CLM_QIAN
--clm_usr_name 13x12pt_f19_alaskaUSA
--datm_presaero clim_2000
 -rtm off

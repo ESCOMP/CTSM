@@ -30,10 +30,6 @@ CLM Biogeochemistry mode
 <entry id="crop" valid_values="on,off" value="off">
 Toggle to turn on the prognostic crop model
 </entry>
-<entry id="glc_nec" valid_values="0,1,3,5,10" value="0" category="physics">
-Glacier model number of elevation classes
-(Setting glc_nec to anything other than 0 or 10 is EXPERIMENTAL NOT SUPPORTED!)
-</entry>
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
 </entry>
@@ -107,9 +103,6 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scr
 <entry id="pergro" valid_values="on,off" value="off" category="physics">
 Toggle to turn on perturbation error growth test
 </entry>
-<entry id="rtm" valid_values="on,off" value="on" category="physics">
-Toggle to turn on river transport module (RTM), to run global river routing model to ocean
-</entry>
 <entry id="nofire" valid_values="on,off" value="off" category="bgc">
 Toggle to make wild-fires inactive for biogeochemistry=CN mode
 </entry>
@@ -123,11 +116,6 @@ Number of instances of CLM to run at the same time (for data assimilation ensemb
 OS for which CLM is being built.  The value is the name returned by the "uname -s"
 command on the target platform.  This parameter is to allow cross-compilation
 (linux,aix,darwin,bgp etc.).
-</entry>
-<entry id="voc" valid_values="on,off" value="off" category="standalone_test">
-Toggle to turn on coupling of Volatile Organic Compounds module to atmosphere model.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts.
-This is turned on with the CCSM_VOC env_conf.xml in the standard cesm scripts.
 </entry>
 <entry id="ninst_atm" value="" category="standalone_test">
 Number of instances of datm to run at the same time (for data assimilation ensemble work)

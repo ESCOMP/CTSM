@@ -13,11 +13,10 @@ module clm_initializeMod
   use spmdMod         , only : masterproc
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, downscale
-  use clm_varctl      , only : iulog
-  use clm_varctl      , only : create_glacier_mec_landunit
-  use clm_varsur      , only : wtxy,vegxy
-  use clm_varsur      , only : topoxy
+  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, &
+                               downscale, create_glacier_mec_landunit, &
+                               iulog, do_rtm 
+  use clm_varsur      , only : wtxy, vegxy, topoxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use perf_mod        , only : t_startf, t_stopf
   use ncdio_pio
@@ -117,9 +116,9 @@ contains
        call shr_sys_flush(iulog)
     endif
 
+    call control_init()
     call clm_varpar_init()
-    call control_init( )
-    call ncd_pio_init( )
+    call ncd_pio_init()
 
     if (masterproc) call control_print()
 
@@ -429,9 +428,7 @@ contains
     use CASAPhenologyMod, only : initCASAPhenology
     use CASAiniTimeVarMod,only : CASAiniTimeVar
 #endif
-#if (defined RTM) 
     use RtmMod          , only : Rtmini
-#endif
     use clm_time_manager, only : get_curr_date, get_nstep, advance_timestep, &
                                  timemgr_init, timemgr_restart_io, timemgr_restart
     use clm_time_manager, only : get_step_size, get_curr_calday
@@ -641,14 +638,14 @@ contains
     ! Initialize river routing model
     ! --------------------------------------------------------------
 
-#if (defined RTM)
-    if (masterproc) write(iulog,*)'Attempting to initialize RTM'
-    call shr_sys_flush(iulog)
-    call t_startf('init_rtm')
-    call Rtmini()
-    call t_stopf('init_rtm')
-    if (masterproc) write(iulog,*)'Successfully initialized RTM'
-#endif
+    if (do_rtm) then 
+       if (masterproc) write(iulog,*)'Attempting to initialize RTM'
+       call shr_sys_flush(iulog)
+       call t_startf('init_rtm')
+       call Rtmini()
+       call t_stopf('init_rtm')
+       if (masterproc) write(iulog,*)'Successfully initialized RTM'
+    end if
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

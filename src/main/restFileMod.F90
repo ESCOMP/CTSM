@@ -12,7 +12,7 @@ module restFileMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, do_rtm
   use surfrdMod   , only : crop_prog
   use ncdio_pio       
 !
@@ -66,9 +66,7 @@ contains
     use CNRestMod        , only : CNRest
     use CropRestMod      , only : CropRest
 #endif
-#if (defined RTM)
     use RtmMod           , only : RTMRest
-#endif
 #if (defined CASA)
     use CASAMod          , only : CASARest
 #endif
@@ -129,9 +127,9 @@ contains
 #if (defined CASA)
     call CASARest( ncid, flag='define' )
 #endif
-#if (defined RTM)
-    call RtmRest( ncid, flag='define' )
-#endif
+    if (do_rtm) then
+       call RtmRest( ncid, flag='define' )
+    end if
     call accumulRest( ncid, flag='define' )
 
     call hist_restart_ncd ( ncid, flag='define', rdate=rdate )
@@ -157,9 +155,9 @@ contains
     call CASARest( ncid, flag='write' )
 #endif
 
-#if (defined RTM)
-    call RtmRest( ncid, flag='write' )
-#endif
+    if (do_rtm) then
+       call RtmRest( ncid, flag='write' )
+    end if
 
     call accumulRest( ncid, flag='write' )
     
@@ -202,9 +200,7 @@ contains
     use CNRestMod        , only : CNRest
     use CropRestMod      , only : CropRest
 #endif
-#if (defined RTM)
     use RtmMod           , only : RTMRest
-#endif
 #if (defined CASA)
     use CASAMod          , only : CASARest
 #endif
@@ -247,9 +243,9 @@ contains
     call CASARest( ncid, flag='read' )
 #endif
 
-#if (defined RTM)
-    call RtmRest( ncid, flag='read' )
-#endif
+    if (do_rtm) then
+       call RtmRest( ncid, flag='read' )
+    end if
 
     call accumulRest( ncid, flag='read' )
     
@@ -586,9 +582,7 @@ contains
                              conventions, source
     use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevgrnd
     use decompMod   , only : get_proc_bounds, get_proc_global
-#ifdef RTM
-!    use RunoffMod   , only : get_proc_rof_global
-#endif
+    !use RunoffMod  , only : get_proc_rof_global
 #if (defined CASA)
   use CASAMod       , only : nlive, npools, npool_types
 #endif
@@ -640,10 +634,10 @@ contains
     call ncd_defdim (ncid, 'npools'  , npools         , dimid)
     call ncd_defdim (ncid, 'npool_types', npool_types , dimid)
 #endif
-#if (defined RTM)
-    call ncd_defdim(ncid, 'rtmlon'  , rtmlon         , dimid)
-    call ncd_defdim(ncid, 'rtmlat'  , rtmlat         , dimid)
-#endif
+    if (do_rtm) then
+       call ncd_defdim(ncid, 'rtmlon'  , rtmlon         , dimid)
+       call ncd_defdim(ncid, 'rtmlat'  , rtmlat         , dimid)
+    end if
     call ncd_defdim(ncid, 'string_length', 64        , dimid)
        
     ! Define global attributes

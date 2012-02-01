@@ -493,7 +493,7 @@ contains
        !time average field reset every accumulation period
        !normalize at end of accumulation period
 
-       if ((mod(nstep,accum(nf)%period) == 1) .and. (nstep /= 0)) then
+       if ((mod(nstep,accum(nf)%period) == 1 .or. accum(nf)%period == 1) .and. (nstep /= 0))then
           accum(nf)%val(beg:end,1) = 0._r8
        end if
        accum(nf)%val(beg:end,1) =  accum(nf)%val(beg:end,1) + field(beg:end)
@@ -605,7 +605,7 @@ contains
        !time average field reset every accumulation period
        !normalize at end of accumulation period
 
-       if ((mod(nstep,accum(nf)%period) == 1) .and. (nstep /= 0)) then
+       if ((mod(nstep,accum(nf)%period) == 1 .or. accum(nf)%period == 1) .and. (nstep /= 0))then
           accum(nf)%val(beg:end,1:numlev) = 0._r8
        endif
        accum(nf)%val(beg:end,1:numlev) =  accum(nf)%val(beg:end,1:numlev) + field(beg:end,1:numlev)

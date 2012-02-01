@@ -226,9 +226,9 @@ contains
              if (glcmask == 1) then      ! create a virtual column 
                 npfts_per_lunit = npfts_per_lunit + 1
                 n = m - npatch_glacier    ! elevation class index
-                if (m < npatch_glacier_mec) then   ! classes 1 to glc_nec-1 
+                if (m < npatch_glacier_mec) then   ! classes 1 to maxpatch_glcmec-1 
                    topoxy(nw,m) = 0.5_r8 * (glc_topomax(n-1) + glc_topomax(n))
-                else                               ! class glc_nec
+                else                               ! class maxpatch_glcmec
                    topoxy(nw,m) = 2.0_r8*glc_topomax(n-1) - glc_topomax(n-2)     ! somewhat arbitrary
                 endif 
              endif  ! glcmask = 1 

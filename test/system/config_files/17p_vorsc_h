@@ -1,6 +1,0 @@
--mode clm_stndln
--nouse_mpiserial -smp
--maxpft 17
--rtm on
--voc on
--s

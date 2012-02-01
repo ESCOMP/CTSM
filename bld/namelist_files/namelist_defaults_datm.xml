@@ -5,7 +5,7 @@
 <namelist_defaults>
 
 <!--
-Values to use by default for creation of CLM model driver namelists.
+Values to use by default for creation of CLM model datm namelists.
 The element names are the same as the corresponding namelist
 variables.  Values that depend on the model configuration use
 attributes to express the dependency.  The recognized attributes
@@ -54,56 +54,50 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <streamstemplate >atm/datm/bld/datm.template.streams.xml</streamstemplate>
 
 <!-- Domain files, grids and land mask -->
-<domainfile hgrid="1x1_brazil"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.090715.nc</domainfile>
-<domainfile hgrid="1x1_numaIA"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-numaIA_navy.110106.nc</domainfile>
-<domainfile hgrid="1x1_smallvilleIA"    mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-smallvilleIA_test.110106.nc</domainfile>
-<domainfile hgrid="1x1_camdenNJ"        mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
-<domainfile hgrid="1x1_asphaltjungleNJ" mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
-<domainfile hgrid="1x1_mexicocityMEX"   mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-mexicocityMEX_navy.090715.nc</domainfile>
-<domainfile hgrid="1x1_vancouverCAN"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-vancouverCAN_navy.090715.nc</domainfile>
-<domainfile hgrid="1x1_urbanc_alpha"    mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-urbanc_alpha_test.110201.nc</domainfile>
-<domainfile hgrid="1x1_tropicAtl"       mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
-<domainfile hgrid="1x1_numaIA"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-numaIA_navy.1101106nc</domainfile>
-<domainfile hgrid="1x1_smallvilleIA"    mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-smallvilleIA_test.1101106nc</domainfile>
-<domainfile hgrid="5x5_amazon"          mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.090715.nc</domainfile>
-<domainfile hgrid="360x720"             mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.090106.nc</domainfile>
-
-<domainfile hgrid="8x16"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.T5_USGS.090106.nc</domainfile>
-<domainfile hgrid="32x64"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T21_USGS.090106.nc</domainfile>
-<domainfile hgrid="48x96"       mask="gx3v7">atm/datm7/domain.lnd.T31_gx3v7.090928.nc</domainfile>
-<domainfile hgrid="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.110713.nc</domainfile>
-<domainfile hgrid="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.090106.nc</domainfile>
-<domainfile hgrid="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.090106.nc</domainfile>
-<domainfile hgrid="94x192"      mask="T62"  >atm/datm7/domain.lnd.T62_T62.090129.nc</domainfile>
-<domainfile hgrid="94x192"      mask="gx1v6">atm/datm7/domain.lnd.T62_gx1v6.090320.nc</domainfile>
-<domainfile hgrid="94x192"      mask="gx3v7">atm/datm7/domain.lnd.T62_gx3v7.090928.nc</domainfile>
-
-<domainfile hgrid="wr50a"       mask="wr50a">atm/datm7/domain.lnd.wr50a_wr50a.090310.nc</domainfile>
-<domainfile hgrid="ar9v1"       mask="ar9v1">atm/datm7/domain.lnd.ar9v1_ar9v1.090521.nc</domainfile>
-<domainfile hgrid="ar9v2"       mask="ar9v2">atm/datm7/domain.lnd.ar9v2_ar9v2.090521.nc</domainfile>
-<domainfile hgrid="wr50a"       mask="ar9v2">atm/datm7/domain.lnd.wr50a_ar9v2.090614.nc</domainfile>
-
-<domainfile hgrid="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
-<domainfile hgrid="0.23x0.31"   mask="gx1v6"  >atm/datm7/domain.lnd.fv0.23x0.31_gx1v6.100517.nc</domainfile>
-<domainfile hgrid="0.23x0.31"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.23x0.31_USGS.090106.nc</domainfile>
-<domainfile hgrid="0.47x0.63"   mask="gx1v6"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v6.090407.nc</domainfile>
-<domainfile hgrid="0.47x0.63"   mask="USGS"  >atm/datm7/domain.clm/domain.lnd.fv0.47x0.63_USGS.090106.nc</domainfile>
-<domainfile hgrid="0.47x0.63"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.110713.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="gx1v6"  >atm/datm7/domain.lnd.fv0.9x1.25_gx1v6.090309.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="tx0.1v2">atm/datm7/domain.lnd.fv0.9x1.25_tx0.1v2_070928.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_USGS.110713.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="gx1v6"  >atm/datm7/domain.lnd.fv1.9x2.5_gx1v6.090206.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="tx1v1"  >atm/datm7/domain.lnd.fv1.9x2.5_tx1v1_090713.nc</domainfile>
-<domainfile hgrid="2.65x3.33"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.65x3.33_USGS.090106.nc</domainfile>
-<domainfile hgrid="2.5x3.33"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.5x3.33_USGS.091012.nc</domainfile>
-<domainfile hgrid="2.5x3.33"    mask="gx3v7"  >atm/datm7/domain.lnd.fv2.5x3.33_gx3v7.110223.nc</domainfile>
-<domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.110713.nc</domainfile>
-<domainfile hgrid="4x5"         mask="gx3v7"  >atm/datm7/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
-<domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.110713.nc</domainfile>
-
-<domainfile hgrid="ne30np4"     mask="gx1v6"  >atm/datm7/domain.lnd.ne30np4_gx1v6.110905.nc</domainfile>
-<domainfile hgrid="ne120np4"    mask="gx1v6"  >atm/datm7/domain.lnd.ne120np4_gx1v6.110502.nc</domainfile>
+<domainfile hgrid="1x1_brazil"                >share/domains/domain.clm/domain.lnd.1x1pt-brazil_navy.090715.nc</domainfile>
+<domainfile hgrid="1x1_numaIA"                >share/domains/domain.clm/domain.lnd.1x1pt-numaIA_navy.110106.nc</domainfile>
+<domainfile hgrid="1x1_smallvilleIA"          >share/domains/domain.clm/domain.lnd.1x1pt-smallvilleIA_test.110106.nc</domainfile>
+<domainfile hgrid="1x1_camdenNJ"              >share/domains/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.111004.nc</domainfile>
+<domainfile hgrid="1x1_asphaltjungleNJ"       >share/domains/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.111004.nc</domainfile>
+<domainfile hgrid="1x1_mexicocityMEX"         >share/domains/domain.clm/domain.lnd.1x1pt-mexicocityMEX_navy.090715.nc</domainfile>
+<domainfile hgrid="1x1_vancouverCAN"          >share/domains/domain.clm/domain.lnd.1x1pt-vancouverCAN_navy.090715.nc</domainfile>
+<domainfile hgrid="1x1_urbanc_alpha"          >share/domains/domain.clm/domain.lnd.1x1pt-urbanc_alpha_test.110201.nc</domainfile>
+<domainfile hgrid="1x1_tropicAtl"             >share/domains/domain.clm/domain.lnd.1x1pt-tropicAtl_test.111004.nc</domainfile>
+<domainfile hgrid="5x5_amazon"                >share/domains/domain.clm/domain.lnd.5x5pt-amazon_navy.090715.nc</domainfile>
+<domainfile hgrid="360x720"                   >share/domains/domain.clm/domain.lnd.360x720pt-global_USGS.090106.nc</domainfile>
+<domainfile hgrid="8x16"                      >share/domains/domain.clm/domain.lnd.T5_USGS.111004.nc</domainfile>
+<domainfile hgrid="32x64"                     >share/domains/domain.clm/domain.lnd.T21_USGS.111004.nc</domainfile>
+<domainfile hgrid="48x96"       mask="gx3v7"  >share/domains/domain.lnd.T31_gx3v7.090928.nc</domainfile>
+<domainfile hgrid="48x96"       mask="USGS"   >share/domains/domain.clm/domain.lnd.T31_USGS.110713.nc</domainfile>
+<domainfile hgrid="64x128"                    >share/domains/domain.clm/domain.lnd.T42_USGS.111004.nc</domainfile>
+<domainfile hgrid="128x256"                   >share/domains/domain.clm/domain.lnd.T85_USGS.111004.nc</domainfile>
+<domainfile hgrid="94x192"      mask="T62"    >share/domains/domain.lnd.T62_T62.090129.nc</domainfile>
+<domainfile hgrid="94x192"      mask="gx1v6"  >share/domains/domain.lnd.T62_gx1v6.090320.nc</domainfile>
+<domainfile hgrid="94x192"      mask="gx3v7"  >share/domains/domain.lnd.T62_gx3v7.090928.nc</domainfile>
+<domainfile hgrid="wr50a"                     >share/domains/domain.lnd.wr50a_wr50a.090310.nc</domainfile>
+<domainfile hgrid="ar9v1"                     >share/domains/domain.lnd.ar9v1_ar9v1.090521.nc</domainfile>
+<domainfile hgrid="ar9v2"                     >share/domains/domain.lnd.ar9v2_ar9v2.090521.nc</domainfile>
+<domainfile hgrid="wr50a"                     >share/domains/domain.lnd.wr50a_ar9v2.090614.nc</domainfile>
+<domainfile hgrid="ne30np4"                   >share/domains/domain.lnd.ne30np4_gx1v6.110905.nc</domainfile>
+<domainfile hgrid="ne120np4"                  >share/domains/domain.lnd.ne120np4_gx1v6.110502.nc</domainfile>
+<domainfile hgrid="ne240np4"                  >share/domains/domain.lnd.ne240np4_gx1v6.120126.nc</domainfile>
+<domainfile hgrid="0.23x0.31"   mask="tx0.1v2">share/domains/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
+<domainfile hgrid="0.23x0.31"   mask="gx1v6"  >share/domains/domain.lnd.fv0.23x0.31_gx1v6.100517.nc</domainfile>
+<domainfile hgrid="0.23x0.31"   mask="USGS"   >share/domains/domain.clm/domain.lnd.fv0.23x0.31_USGS.111004.nc</domainfile>
+<domainfile hgrid="0.47x0.63"   mask="gx1v6"  >share/domains/domain.lnd.fv0.47x0.63_gx1v6.090407.nc</domainfile>
+<domainfile hgrid="0.47x0.63"   mask="USGS"   >share/domains/domain.clm/domain.lnd.fv0.47x0.63_USGS.111004.nc</domainfile>
+<domainfile hgrid="0.47x0.63"   mask="tx0.1v2">share/domains/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="USGS"   >share/domains/domain.clm/domain.lnd.fv0.9x1.25_USGS.110713.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="gx1v6"  >share/domains/domain.lnd.fv0.9x1.25_gx1v6.090309.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="tx0.1v2">share/domains/domain.lnd.fv0.9x1.25_tx0.1v2_070928.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="USGS"   >share/domains/domain.clm/domain.lnd.fv1.9x2.5_USGS.110713.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="gx1v6"  >share/domains/domain.lnd.fv1.9x2.5_gx1v6.090206.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="tx1v1"  >share/domains/domain.lnd.fv1.9x2.5_tx1v1_090713.nc</domainfile>
+<domainfile hgrid="2.5x3.33"    mask="USGS"   >share/domains/domain.clm/domain.lnd.fv2.5x3.33_USGS.091012.nc</domainfile>
+<domainfile hgrid="2.5x3.33"    mask="gx3v7"  >share/domains/domain.lnd.fv2.5x3.33_gx3v7.110223.nc</domainfile>
+<domainfile hgrid="4x5"         mask="USGS"   >share/domains/domain.clm/domain.lnd.fv4x5_USGS.110713.nc</domainfile>
+<domainfile hgrid="4x5"         mask="gx3v7"  >share/domains/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
+<domainfile hgrid="10x15"       mask="USGS"   >share/domains/domain.clm/domain.lnd.fv10x15_USGS.110713.nc</domainfile>
 
 <factorfn >null</factorfn>
 

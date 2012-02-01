@@ -1,38 +1,29 @@
-smA74 erA74 brA74 blA74
+smC74 erC74 brC74 blC74
 smTZ4 erTZ4 brTZ4 blTZ4
-smVT4 erVT4 brVT4 blVT4
-smVU4 erVU4 brVU4 blVU4
+smUT4 erUT4 brUT4 blUT4
+smUU4 erUU4 brUU4 blUU4
 smB93 erB93 brB93 blB93
 smP53 erP53 brP53 blP53
-smE93 erE93 brE93 blE93 smE97
-smQ74             blQ74
-smQQ4 erQQ4 brQQ4 blQQ4
-smQS3 erQS3 brQS3 blQS3
-smJ74 erJ74 brJ74 blJ74 smJ05
-smL74 erL74 brL74 blL74
+smF93 erF93 brF93 blF93 smF97
+smH74             blH74
+smHQ4 erHQ4 brHQ4 blHQ4
+smHS3 erHS3 brHS3 blHS3
 smK74 erK74 brK74 blK74
-smL78             blL78
-smAK4 erAK4 brAK4 blAK4
-smAK8 erAK8 brAK8 blAK8
+smC78             blC78
+smCK4 erCK4 brCK4 blCK4
+smCK8 erCK8 brCK8 blCK8
 smH43 erH43 brH43 blH43
-smAL4 erAL4 brAL4 blAL4
-smS63 erS63 brS63 blS63
-smSn3 erSn3 brSn3 blSn3
-smVw3 erVw3 brVw3 blVw3
-smVx3 erVx3 brVx3 blVx3
-smVy3 erVy3 brVy3 blVy3
+smCL4 erCL4 brCL4 blCL4
+smC63 erC63 brC63 blC63
+smCn3 erCn3 brCn3 blCn3
 smCE4 erCE4 brCE4 blCE4
 smCA4 erCA4 brCA4 blCA4
 smCA8 erCA8 brCA8 blCA8
 smNB4 erNB4 brNB4 blNB4
 smOC4 erOC4 brOC4 blOC4
-sm654             bl654
-sm674             bl674
-sm694             bl694
 sm754             bl754
 sm774             bl774
 sm754             bl754
-smZ94             blZ94
 sm854             bl854
 sm853             bl853
 sm954             bl954
@@ -42,5 +33,5 @@ sm9C4             bl9C4
 sm9S4             bl9S4
 bl859             bl859
 bl813             bl813
-bl8y3             bl8ys
+bl8y3             bl8y3
 sm8Z3             bl8Z3

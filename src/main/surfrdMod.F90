@@ -22,15 +22,15 @@ module surfrdMod
   use clm_varpar  , only : nlevsoi, numpft, &
                            maxpatch_pft, numcft, maxpatch, &
                            npatch_urban, npatch_lake, npatch_wet, &
-                           npatch_glacier,maxpatch_urb, npatch_glacier_mec
-  use clm_varctl  , only : create_glacier_mec_landunit, iulog, &
-                           scmlat, scmlon, single_column
+                           npatch_glacier,maxpatch_urb, npatch_glacier_mec, &
+                           maxpatch_glcmec
+  use clm_varctl  , only : glc_topomax, iulog, scmlat, scmlon, single_column, &
+                           create_glacier_mec_landunit
   use clm_varsur  , only : wtxy, vegxy, topoxy, pctspec
   use decompMod   , only : get_proc_bounds
   use clmtype
   use spmdMod                         
   use ncdio_pio
-!DEBUG
   use pio
 !
 ! !PUBLIC TYPES:
@@ -81,6 +81,7 @@ contains
     use clm_varcon, only : spval, re
     use domainMod , only : latlon_type, latlon_init
     use fileutils , only : getfil
+    use nanMod    , only : nan
 !
 ! !ARGUMENTS:
     implicit none
@@ -191,25 +192,31 @@ contains
           latlon%latn(:) = rdata3d(3,1,:)
           deallocate(rdata3d)
        else
-          latlon%latn(:) = spval
-          latlon%lats(:) = spval
-          latlon%lone(:) = spval
-          latlon%lonw(:) = spval
+          latlon%latn(:) = nan
+          latlon%lats(:) = nan
+          latlon%lone(:) = nan
+          latlon%lonw(:) = nan
        end if
     else
+       latlon%latn(:) = nan
+       latlon%lats(:) = nan
+       latlon%lone(:) = nan
+       latlon%lonw(:) = nan
        if (isgrid2d) then
           call ncd_io(ncid=ncid, varname='LATN',data=rdata2d,flag='read', readvar=readvar)
           if (readvar) latlon%latn(:) = rdata2d(1,:)
        else
           call ncd_io(ncid=ncid, varname='LATN',data=latlon%latn,flag='read', readvar=readvar)
        end if
+       if (.not. readvar) write(iulog,*) trim(subname)//' WARNING: LATN NOT on file'
+
        if (isgrid2d) then
           call ncd_io(ncid=ncid, varname='LONE',data=rdata2d,flag='read', readvar=readvar)
           if (readvar) latlon%lone(:) = rdata2d(:,1)
        else
           call ncd_io(ncid=ncid, varname='LONE',data=latlon%lone,flag='read', readvar=readvar)
        end if
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: LONE NOT on file' )
+       if (.not. readvar) write(iulog,*) trim(subname)//' WARNING: LONE NOT on file'
 
        if (isgrid2d) then
           call ncd_io(ncid=ncid, varname='LATS',data=rdata2d,flag='read', readvar=readvar)
@@ -217,7 +224,7 @@ contains
        else
           call ncd_io(ncid=ncid, varname='LATS',data=latlon%lats,flag='read', readvar=readvar)
        end if
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: LATS NOT on file' )
+       if (.not. readvar) write(iulog,*) trim(subname)//' WARNING: LATS NOT on file'
        
        if (isgrid2d) then
           call ncd_io(ncid=ncid, varname='LONW',data=rdata2d,flag='read', readvar=readvar)
@@ -225,7 +232,7 @@ contains
        else
           call ncd_io(ncid=ncid, varname='LONW',data=latlon%lonw,flag='read', readvar=readvar)
        end if
-       if (.not. readvar) call endrun( trim(subname)//' ERROR: LONW NOT on file' )
+       if (.not. readvar) write(iulog,*) trim(subname)//' WARNING: LONW NOT on file'
     end if
 
     call ncd_pio_closefile(ncid)
@@ -926,12 +933,12 @@ contains
     use pftvarcon     , only : noveg
     use UrbanInputMod , only : urbinp
     use domainMod     , only : domain_type
-    use clm_varctl    , only : glc_nec, glc_topomax
+    use clm_varpar    , only : maxpatch_glcmec
 !
 ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    type(domain_type), intent(in) :: domain ! domain associated with wtxy
+    type(domain_type), intent(in)    :: domain ! domain associated with wtxy
 !
 ! !CALLED FROM:
 ! subroutine surfrd in this module
@@ -969,9 +976,10 @@ contains
     allocate(pctgla(begg:endg),pctlak(begg:endg))
     allocate(pctwet(begg:endg),pcturb(begg:endg))
     if (create_glacier_mec_landunit) then
-       allocate(pctglc_mec(begg:endg,glc_nec))
+       allocate(pctglc_mec(begg:endg,maxpatch_glcmec))
        allocate(pctglc_mec_tot(begg:endg))
-       allocate(topoglc_mec(begg:endg,glc_nec))
+       allocate(topoglc_mec(begg:endg,maxpatch_glcmec))
+       allocate(glc_topomax(0:maxpatch_glcmec))
     endif
 
     call check_dim(ncid, 'nlevsoi', nlevsoi)
@@ -996,8 +1004,8 @@ contains
 
     if (create_glacier_mec_landunit) then          ! call ncd_io_gs_int2d
 
-       call check_dim(ncid, 'nglcec',   glc_nec   )
-       call check_dim(ncid, 'nglcecp1', glc_nec+1 )
+       call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
+       call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
 
        call ncd_io(ncid=ncid, varname='GLC_MEC', flag='read', data=glc_topomax, &
             readvar=readvar)
@@ -1012,7 +1020,7 @@ contains
        if (.not. readvar) call endrun( trim(subname)//' ERROR: TOPO_GLC_MEC NOT on surfdata file' )
 
        pctglc_mec_tot(:) = 0._r8
-       do n = 1, glc_nec
+       do n = 1, maxpatch_glcmec
           do nl = begg,endg
              pctglc_mec_tot(nl) = pctglc_mec_tot(nl) + pctglc_mec(nl,n)
           enddo
@@ -1181,14 +1189,14 @@ contains
     ! Initialize glacier_mec weights
 
     if (create_glacier_mec_landunit) then
-       do n = 1, glc_nec
-          npatch = npatch_glacier_mec - glc_nec + n
+       do n = 1, maxpatch_glcmec
+          npatch = npatch_glacier_mec - maxpatch_glcmec + n
           do nl = begg, endg
              vegxy (nl,npatch) = noveg
              wtxy  (nl,npatch) = pctglc_mec(nl,n)/100._r8
              topoxy(nl,npatch) = topoglc_mec(nl,n)
           enddo   ! nl
-       enddo      ! glc_nec
+       enddo      ! maxpatch_glcmec
        deallocate(pctglc_mec, pctglc_mec_tot, topoglc_mec)
     endif          ! create_glacier_mec_landunit
 

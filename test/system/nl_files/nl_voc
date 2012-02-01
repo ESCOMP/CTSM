@@ -1,0 +1,7 @@
+&drv_in
+ brnch_retain_casename=.true.
+ flds_voc=.true.
+/
+&clm_inparm
+ hist_ndens=1,1
+/

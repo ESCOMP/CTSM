@@ -1,12 +1,7 @@
-vo    => voc                    is on
-nv    => voc                    is off
-r     => rtm                    is on
-nr    => rtm                    is off
 per   => pergro                 is on
 sc    => standalone clm         is on
 van   => VANCOUVER              is on
 mex   => MEXICOCITY             is on
-mec10 => Glacier multiple elev classes = 10, green-land 20km mask
 nil3  => Number of land instances = 3
 snf   => snicar_frc             is on
 

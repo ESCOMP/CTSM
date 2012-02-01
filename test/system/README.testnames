@@ -15,41 +15,41 @@ n is the configuration type:
 3 -- unused
 4 -- mkmapgrids
 5 -- gen_domain
-6 -- mkgriddata
+6 -- unused
 7 -- mksurfdata
 8 -- interpinic
 9 -- tools scripts
 0 -- unused
-A -- Standard default RTM off
+A -- unused
 B -- Standard default with SNICAR_FRC on
 C -- Standard default
 D -- Pergro
 E -- unused
-F -- numpft=17, VOC, RTM
+F -- numpft=17
 G -- unused
 H -- numpft=17, CN
 I -- CN spinup test series (ad_spinup, exit_spinup, final_spinup)
-J -- numpft=4, CASA
-K -- numpft=10, CNDV
-L -- Standard default
+J -- unused
+K -- CNDV
+L -- Standard default (second set)
 M -- ncl scripts (such as ndepregrid)
-N -- MEXICOCITY no-RTM
-O -- VANCOUVER no-RTM
+N -- MEXICOCITY
+O -- VANCOUVER
 P -- numpft=17, CN, NOFIRE
-Q -- numpft=17, CN no-RTM
+Q -- unused
 R -- numpft=17, CN, C13
-S -- Standard default, with glc_mec=10
+S -- unused
 T -- numpft=21, CN, CROP
 U -- numpft=21, CNDV, CROP
-V -- numpft=21, CN, CROP RTM off
-W -- ninst_lnd=3, no-RTM
-X -- ninst_lnd=3
+V -- unused
+W -- ninst_lnd=3
+X -- unused
 
 m is the resolution
 
 1 -- 48x96
-2 -- 48x96 debug mode
-3 -- 64x128 with 360x720 fine mesh
+2 -- 48x96 (second set)
+3 -- unused
 4 -- 1.9x2.5 with transient 1850-2000
 5 -- 10x15
 6 -- 1.9x2.5
@@ -62,9 +62,9 @@ B -- 1x1 Mexicocity Mexico (Urban test)
 C -- 1x1 Vancouver Canada  (Urban test)
 D -- 2.65x3.33
 E -- 1x1 urbanc_alpha      (Urban CLM1PT_URBANC test)
-F -- 1.9x2.5 with 0.47x0.63 fine mesh
-G -- 1.9x2.5 with 0.23x0.31 fine mesh
-H -- 1.9x2.5 with 0.9x1.25  fine mesh
+F -- unused
+G -- unused
+H -- unused
 I -- T62
 J -- 0.9x1.25
 K -- 1.9x2.5 with single point mode

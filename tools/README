@@ -1,19 +1,20 @@
-models/lnd/clm/tools/README					Jul/12/2011
+models/lnd/clm/tools/README					Jan/13/2012
 
 CLM tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.
 	
 I.  General directory structure:
 
-        SVN_EXTERNAL_DIRECTORIES - File to use to point to external tools for gen_domain and cprnc
-	interpinic ------- Interpolate initial datasets to a different resolution. (has optimized and OMP option)
-        mkgriddata ------- Create CLM-specific grid datasets from either CESM domain
-                           files, CAM input files, or from our Navy orography file.
-        mkdatadomain ----- Create data model domain datasets from clm datasets.
-        mkmapgrids ------- Convert CLM grid datasets into SCRIP format grid files
+        SVN_EXTERNAL_DIRECTORIES - File to use to point to external tools (such as cprnc)
+	mksurfdata_map --- Create surface datasets.
+        mkmapgrids ------- Create SCRIP grid files needed by mkmapdata 
+                           [input is CLM grid files]
+                           (deprecated)
         mkmapdata -------- Create SCRIP mapping data from SCRIP grid files (uses ESMF)
         gen_domain ------- Create data model domain datasets from SCRIP mapping datasets.
-	mksurfdata_map --- Create surface datasets.
+                           (also in the top level mapping directory [../../../../mapping])
+	interpinic ------- Interpolate initial datasets to a different resolution. 
+                           (has optimized and OMP options)
 	cprnc ------------ Compare output history files. (stand-alone tool)
         mkprocdata_map --- Convert output unstructured grids into a 2D format that
                            can be plotted easily
@@ -21,24 +22,29 @@ I.  General directory structure:
 
 II. Notes on building/running for each of the above tools:
 
-    Each tool (except cprnc as it's stand-alone) has the following files:
+    Each tool that has FORTRAN source code (except cprnc as it's stand-alone) has 
+    the following files:
 
-	README ------- Specific help for using the specific tool and help on specific files in that directory.
-	src/Filepath ----- List of directories needed to build the tool (some files in ../src directories are required).
-	src/Makefile ----- GNU Makefile to build the tool (these are identical between tools.
+	README ------- Specific help for using the specific tool and help on specific 
+                       files in that directory.
+	src/Filepath ----- List of directories needed to build the tool 
+                           (some files in ../src directories are required).
+	src/Makefile ----- GNU Makefile to build the tool 
+                           (these are identical between tools.
 	src/Macros.custom  Customization of make macros for the particular tool in question
 	src/Srcfiles ----- List of source files that are needed.
         src/Mkdepends ---- Dependency generator program
 
     cprnc is a tool shared by other CESM components as it's a general tool for comparing
-    NetCDF files with a time coordinate. As such it has it's own standalone Makefile 
-    and is a little different than the other tools.
+    NetCDF files with a time coordinate. As such it has it's own stand-alone Makefile 
+    and is a little different than the other tools. mkmapdata and ncl_scripts only contain
+    scripts so don't have the above build files either.
 
-    The tools have copies of files from other directories -- see the README.filecopies
+    Most tools have copies of files from other directories -- see the README.filecopies
     file for more information on this.
 
-    Tools also have files with the directory name followed by: namelist, runoptions, regional, or singlept
-    these are sample namelists:
+    Tools may also have files with the directory name followed by: namelist, runoptions, 
+    regional, or singlept these are sample namelists:
 
 	<directory>.namelist ------ Namelist to create a global file.
 	<directory>.regional ------ Namelist to create a regional file.
@@ -48,8 +54,8 @@ II. Notes on building/running for each of the above tools:
     These files are also used by the test scripts to test the tools (see the
     README.testing) file.
 
-    NOTE: Be sure to change the path of the datasets references by these namelists to point to where you
-    have untarred your datasets.
+    NOTE: Be sure to change the path of the datasets references by these namelists to 
+    point to where you have exported your CESM inputdata datasets.
 
     To build:
 
@@ -61,17 +67,16 @@ II. Notes on building/running for each of the above tools:
     The process will create a file called "Depends" which has the dependencies
     for the build of each file on other files.
 
-      By default some codes (mkdatadomain and mkgridata) are compiled non-optimized 
+      By default some codes may be compiled non-optimized 
       so that you can use the debugger, and with bounds-checking, and float trapping on. 
       To speed up do the following...
 
-   gmake OPT=TRUE  (by default already on for interpinic and mksurfdata)
+   gmake OPT=TRUE  (by default already on for interpinic and mksurfdata_map)
 
       Also some of the tools allow for OpenMP shared memory parallelism 
       (such as interpinic and mksurfdata) with
 
    gmake SMP=TRUE
-
 
     To run a program with a namelist:
 
@@ -87,17 +92,39 @@ II. Notes on building/running for each of the above tools:
 
         run normally as above
 
-III Process sequence to create input datasets needed to run CLM
+III. Process sequence to create input datasets needed to run CLM
 
-    1.) Create new grid with mkgriddata
-        (ONLY needed for regional/single-point grids)
-        (See mkgriddata/README for more help on doing this)
+    1.) Create SCRIP grid files (if needed)
 
-    2.) Convert CLM grid files to SCRIP format using mkmapgrid
+       a.) For standard resolutions these files will already be created. (done)
 
-        (See mkmapgrid/README for more help on doing this)
+       b.) To create regular lat-lon regional/single-point grids run mknoocnmap.pl
 
-       a.) example format
+        This will create both SCRIP grid files and a mapping file that will
+        be valid if the region includes NO ocean whatsoever (so you can skip step 2).
+        You can also use this script to create SCRIP grid files for a region
+        (or even a global grid) that DOES include ocean if you use step 2 to
+        create mapping files for it (simply discard the non-ocean map created by
+        this script).
+
+        Example, for single-point over Boulder Colorado.
+
+           cd mkmapdata
+           ./mknoocnmap.pl -p 40,255 -n 1x1_boulderCO
+
+       c.) To convert from CLM or CAM grid files
+
+        To convert CLM grid files or CAM grid files to SCRIP grid files use
+        the deprecated mkgriddata program if you have to. This is also a required
+        step if you want to run fine-mesh as it's the only way to get CLM topo files.
+
+       d.) General case
+
+        You'll need to convert or create SCRIP grid files on your own (using scripts
+        or other tools) for the general case where you have an unstructured grid, or 
+        a grid that is not regular in latitude and longitude.
+
+       example format
          ==================	
           netcdf fv1.9x2.5_090205 {				   
           dimensions:						   
@@ -117,94 +144,161 @@ III Process sequence to create input datasets needed to run CLM
                int grid_imask(grid_size) ;			   
                        grid_imask:units = "unitless" ;            
 
-          - TODO: this must be extended to also generate lat/lon grids and
-            other non-uniform grids -bring in original mkgriddata logic in 
-            mkgriddata_map in order to generate...?
-     
-          example: for ne30np4 use already generated ne30np4_091226_pentagons.nc
+    2.) Create atmosphere to ocean mapping file (if needed)
 
-    3.) Add SCRIP grid files created in (2) into XML database in CLM (optional)
+        a.) Standard resolutions (done)
+
+        If this is a standard resolution with a standard ocean resolution -- this
+        step is already done, the files already exist.
+
+        b.) Region without Ocean (done in step 1.b)
+
+        IF YOU RAN mknoocnmap.pl FOR A REGION WITHOUT OCEAN THIS STEP IS ALREADY DONE.
+
+        c.) New atmosphere or ocean resolution
+
+        If the region DOES include ocean, use gen_domain/gen_maps.sh to create a 
+        mapping file for it.
+
+    Example:
+
+    cd gen_domain
+    ./gen_maps.sh -focn <ocngrid> -fatm <atmgrid> -nocn <ocnname> -natm <atmname>
+
+
+    3.) Add SCRIP grid file(s) created in (1) into XML database in CLM (optional)
 
         See the "Adding New Resolutions or New Files to the build-namelist Database" 
         Chapter in the CLM User's Guide
 
   http://www.cesm.ucar.edu/models/cesm1.0/clm/models/lnd/clm/doc/UsersGuide/book1.html
 
-         If you don't do this step, you'll need to specify the files to mkmapdata by
-         hand.
+         If you don't do this step, you'll need to specify the file to mkmapdata 
+         in step (3) using the "-f" option.
 
     4.) Create mapping files for use by mksurfdata_map with mkmapdata
         (See mkmapdata/README for more help on doing this)
 
-       - see /fs/cgd/csm/inputdata/lnd/clm2/mappingdata/maps/<grid-resolution>
-         for map outputs
-       - this step uses the results of (2) that were entered into the XML database
-         by step (3). If you don't enter datasets in, you need to specify SCRIPGRIDFIL
-         to mkmapdata.sh.
-       - also edit namelist_defaults_clm.xml to incorporate new mapping files
-            example: env RES=ne30np4  mkmapdata.sh to generate all necessary mapping files
-               for the ne30np4 grid
+       - this step uses the results of (1) that were entered into the XML database
+         by step (3). If you don't enter datasets in, you need to specify the 
+         SCRIP grid file using the "-f" option to mkmapdata.sh.
 
-    5.) Convert grid for use by DATM with mkdatadomain (or gen_domain)
-        (See mkdatadomain/README for more help on doing this)
+       Example: to generate all necessary mapping files for the ne30np4 grid
 
-        (use mkdatadomain for grids without datm domain files)
-        (use gen_domain for global grids for use by all CESM model components)
+           cd mkmapdata
+           ./mkmapdata.sh -r ne30np4
 
-       - gen_domain uses the maps from step 4 (or previously created CESM maps)
+    5.) Add mapping file(s) created in step (4) into XML database in CLM (optional)
 
-        a) cd clm/tools/gen_domain 
-        b) edit namelist file 
-          example: following namelists to generate domain file for ne30np4_gx1v6
-            &in_parm
-              fn_in  = '/fs/cgd/csm/inputdata/cpl/cpl6/map_gx1v6_ne30np4_aave_110121.nc'
-              fn1_out = 'domain.ocn.gx1v6.110217.nc '
-              fn2_out = 'domain.lnd.ne30np4_gx1v6.110217.nc '
-              usercomment = 'Standard CESM1.0 domain specification file' 
-            /
-        c) gen_domain < gen_domain.nml > gen_domain.out
+       See notes on doing this in step (3) above. 
+       Edit ../bld/namelist_files/namelist_defaults_map.xml to incorporate new 
+       mapping files.
 
-    6.) Create surface datasets with mksurfdata_map
+       If you don't do this step, you'll need to specify the grid resolution name
+       and file creation dates to mksurfdata_map in step (5) below.
+
+    6.) Convert map of atm to ocean for use by DATM and CLM with gen_domain
+        (See mapping/README for more help on doing this)
+
+       - gen_domain uses the map from step (2) (or previously created CESM maps)
+
+       Example:
+
+        cd ../../../../mapping/src
+        gmake
+        cd ..
+        setenv CDATE       090206
+        setenv OCNGRIDNAME gx1v6
+        setenv ATMGRIDNAME fv1.9x2.5
+        setenv MAPFILE $CSMDATA/cpl/cpl6/map_${ATMGRIDNAME}_to_${OCNGRIDNAME}_aave_da_${CDATE}.nc
+        ./gen_domain -m $MAPFILE -o $OCNGRIDNAME -l $ATMGRIDNAME
+
+        Normally for I compsets running CLM only you will discard the ocean domain 
+        file, and only use the atmosphere domain file for datm and as the fatmlndfrc 
+        file for CLM. Output domain files will be named according to the input OCN/LND
+        gridnames.
+
+    7.) Create surface datasets with mksurfdata_map
         (See mksurfdata_map/README for more help on doing this)
 
-       - run /mksurfdata_map/mksurfdata.pl
-       - this step uses the results of (5)
+       - Run mksurfdata_map/mksurfdata.pl
+       - This step uses the results of step (4) entered into the XML database
+         in step (5).
+       - If datasets were NOT entered into the XML database, set the resolution
+         to "usrspec" and use the "-usr_gname", and "-usr_gdate" options.
 
-       a) cd clm/tools/mksurfdata_map/ 
-       b) build mksurfdata_map
-       c) run it for your new grid with the mksurfdata.pl script
+       Example: for 0.9x1.25 resolution
+
+       cd mksurfdata_map/src
+       gmake
+       cd ..
+       ./mksurfdata.pl -r 0.9x1.25
    
        NOTE that surface dataset will be used by default for fatmgrid - and it will 
        contain the lat,lon,edges and area values for the atm grid - ASSUMING that 
        the atm and land grid are the same 
 
-    7.) Interpolate initial conditions using interpinic (optional)
+    8.) Interpolate initial conditions using interpinic (optional)
         (See interpinic/README for more help on doing this)
 
+    9.) Add new files to XML data or using user_nl_clm (optional)
 
-    8.) Add new files to XML data or using user_nl_clm (optional)
+       See notes on doing this in step (3) above. 
 
-        See the "Adding New Resolutions or New Files to the build-namelist Database" 
-        Chapter in the CLM User's Guide
+IV. Example of creating single-point datasets without entering into XML database.
 
-  http://www.cesm.ucar.edu/models/cesm1.0/clm/models/lnd/clm/doc/UsersGuide/book1.html
+    Here we apply the process described in III. for a single-point dataset
+    where we don't enter the datasets into the XML database (thus skipping
+    steps 3, 5 and 9), but use the needed command line options to specify where the
+    files are. This also skips step (2) since step 1 creates the needed mapping file.
+    We also skip step (8) and do NOT create a finidat file.
 
-IV Notes on which input datasets are needed for CLM
+    0.) Set name of grid to use and the creation date to be used later...
+       setenv GRIDNAME 1x1_boulderCO
+       setenv CDATE    `date +%y%m%d`
+    1.) SCRIP grid and atm to ocn mapping file
+       cd mkmapdata
+       ./mknoocnmap.pl -p 40,255 -n $GRIDNAME
+       # Set pointer to MAPFILE that will be used in step (6)
+       setenv MAPFILE `pwd`/map_${GRIDNAME}_nomask_to_${GRIDNAME}_noocean_aave_da_${CDATE}.nc
+       cd ..
+    2.) skip
+    3.) skip
+    4.) Mapping files needed for mksurfdata_map
+       cd mkmapdata
+       setenv GRIDFILE ../mkmapgrids/SCRIPgrid_${GRIDNAME}_nomask_${CDATE}.nc
+       ./mkmapdata.sh -r $GRIDNAME -f $GRIDFILE -t regional
+       cd ..
+    5.) skip
+    6.) Generate domain file for datm and CLM
+        cd ../../../../mapping/src
+        gmake
+        cd ..
+        setenv OCNDOM domain.ocn_noocean.nc
+        setenv ATMDOM domain.lnd.{$GRIDNAME}_noocean.nc
+        ./gen_domain -m $MAPFILE -o $OCNDOM -l $ATMDOM
+    7.) Create surface dataset for CLM
+       cd mksurfdata_map/src
+       gmake
+       cd ..
+       ./mksurfdata.pl -r usrspec -usrgname $GRIDNAME -usr_gdate $CDATE
+    8.) skip
+    9.) skip
+
+V.  Notes on which input datasets are needed for CLM
 
        Fine mesh is when you are running CLM at a finer resolution than you are
        coupling it to the atmosphere. So the course resolution is the "atm" grid
        and the fine mesh is the "lnd" grid.
 
-       single-point/regional grids (no fine mesh):
-         - need fsurdata (land mask is 1)
-         - need fatmlndfrc if land mask is NOT 1
-       global grids (NO fine mesh)
+       global or regional/single-point grids (NO fine mesh)
          - need fsurdata and fatmlndfrc
        global grids (with fine mesh)
          - assume lat/lon grids only 
            (can't use unstructured grids for either atm or lnd grid)
-         - need fsurdata, fatmgrid, fatmlndfrc and fatmtopo
+         - need fsurdata, fatmgrid, fatmlndfrc and fatmtopo 
+           (use deprecated mkgriddata to get fatmgrid, fatmlndfrc and fatmtopo)
 
-      fsurdata comes from mksurfdata and 
-      fatmlndfrc, fatmgrid, fatmtopo comes from mkgriddata
+      fsurdata ---- from mksurfdata_map in step (III.7)
+      fatmlndfrc -- use the domain.lnd file from gen_domain in step (III.6)
 

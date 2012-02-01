@@ -117,19 +117,6 @@
       <xsl:apply-templates select="entry[@category='clm_performance']"/>
     </table>
 
-    <table border="1" cellpadding="10">
-    <caption>CASA Namelist items in clm_inparm namelist (EXPERIMENTAL NOT SUPPORTED!)</caption>
-      <tr>
-      <th rowspan="2">Name</th>
-      <th rowspan="2">Type</th>
-      <th>Description</th>
-      </tr>
-      <tr>
-      <th colspan="1">Valid values</th>
-      </tr>
-      <xsl:apply-templates select="entry[@category='casa']"/>
-    </table>
-
 <p>
 </p>
 <hr/>

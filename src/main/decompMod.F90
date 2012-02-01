@@ -8,7 +8,7 @@ module decompMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, do_rtm
   use clm_mct_mod
   use abortutils  , only : endrun
 !
@@ -444,9 +444,7 @@ contains
   use clmtype  , only : gratm, grlnd, namea, nameg, namel, namec, &
                         namep, allrof
   use domainMod, only : adomain,ldomain
-#ifdef RTM
   use clm_varpar,only : rtmlon,rtmlat
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -476,10 +474,10 @@ contains
        get_clmlevel_gsize = numc
     case(namep)
        get_clmlevel_gsize = nump
-#ifdef RTM
     case(allrof)
-       get_clmlevel_gsize = rtmlon*rtmlat
-#endif
+       if (do_rtm) then
+          get_clmlevel_gsize = rtmlon*rtmlat
+       end if
     case default
        write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
        call endrun()
@@ -499,10 +497,7 @@ contains
 !
 ! !USES:
     use clmtype  , only : gratm, grlnd, nameg, namel, namec, namep, allrof
-
-#if (defined RTM)
     use RunoffMod, only : gsMap_rtm_gdc2glo
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -537,10 +532,10 @@ contains
     case(namep)
        gsmap => gsmap_pft_gdc2glo
 
-#if (defined RTM)
     case(allrof)
-       gsmap => gsmap_rtm_gdc2glo
-#endif
+       if (do_rtm) then
+          gsmap => gsmap_rtm_gdc2glo
+       end if
 
     case default
 

@@ -1,7 +1,5 @@
 module RtmMod
 
-#if (defined RTM)
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -1025,7 +1023,7 @@ contains
 ! !IROUTINE: RtmInput
 !
 ! !INTERFACE:
-  subroutine RtmInput(do_rtm, begg, endg, qflx_runoffg, qflx_snwcp_iceg)
+  subroutine RtmInput(run_rtm, begg, endg, qflx_runoffg, qflx_snwcp_iceg)
 !
 ! !DESCRIPTION:
 ! Update RTM inputs.
@@ -1037,7 +1035,7 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    logical , intent(out) :: do_rtm
+    logical , intent(out) :: run_rtm
     integer , intent(in)  :: begg, endg                 ! per-proc gridcell ending gridcell indices
     real(r8), intent(in)  :: qflx_runoffg(begg:endg)    ! total runoff (mm H2O /s)
     real(r8), intent(in)  :: qflx_snwcp_iceg(begg:endg) ! excess snowfall due to snow capping (mm H2O /s)
@@ -1107,9 +1105,9 @@ contains
        end do
        end do
        ncount_rtm = 0                          !reset counter to 0
-       do_rtm = .true.
+       run_rtm = .true.
     else
-       do_rtm = .false.
+       run_rtm = .false.
     endif
 
   end subroutine RtmInput
@@ -1477,7 +1475,5 @@ contains
     runoff%volr_nt2(:) = runoff%volrlnd(:,2)
 
   end subroutine rtm_sethist
-
-#endif
 
 end module RtmMod

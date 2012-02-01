@@ -42,6 +42,13 @@ OPTIONS
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
                               "-clm_demand list" to list valid options.
                               (can include a list member "null" which does nothing)
+     -clm_start_type "type"   Start type of simulation 
+                              (default, cold, arb_ic, startup, continue, or branch)
+                              (default=do the default type for this configuration)
+                              (cold=always start with arbitrary initial conditions)
+                              (arb_ic=start with arbitrary initial conditions if 
+                               initial conditions don't exist)
+                              (startup=ensure that initial conditions are being used)
      -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. 
                               Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
@@ -53,8 +60,16 @@ OPTIONS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
-     -glc_grid "grid"         Glacier model grid and resolution when glacier model is active
+     -glc_grid "grid"         Glacier model grid and resolution when glacier model, 
+                              Only used if glc_nec > 0 for determining fglcmask 
+                              Default:  gland20
                               (i.e. gland20, gland10 etcetera)
+     -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10] 
+                              (default is 0) (standard option with land-ice model is 10)
+     -glc_smb                 Only used if glc_nec > 0
+                              If .true., pass surface mass balance info to GLC
+                              If .false., pass positive-degree-day info to GLC
+                              Default: true
      -help [or -h]            Print usage to STDOUT.
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
@@ -75,12 +90,6 @@ OPTIONS
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
      -irrig                   Seek surface datasets with irrigation turned on.
-     -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
-                              (if different than resolution coupling to atmosphere)
-                              Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
-			      (dlat and dlon are the grid cell size in degrees for 
-                               latitude and longitude).
-                              "-lnd_res list" to list valid resolutions.
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
@@ -93,6 +102,8 @@ OPTIONS
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
+     -rtm <name>              Turn on River Transport Model (RTM)  
+                              [on | off] (default is on)
      -rtm_tstep "seconds"     Specify river transport model time step size (seconds) 
                               (used to set rtm_nsteps if RTM on)
      -rtm_res "resolution"    Specify river transport model resolution. (used if RTM on)
@@ -100,13 +111,6 @@ OPTIONS
      -sim_year "year"         Year to simulate for input datasets 
                               (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
-     -clm_start_type "type"   Start type of simulation 
-                              (default, cold, arb_ic, startup, continue, or branch)
-                              (default=do the default type for this configuration)
-                              (cold=always start with arbitrary initial conditions)
-                              (arb_ic=start with arbitrary initial conditions if 
-                               initial conditions don't exist)
-                              (startup=ensure that initial conditions are being used)
      -test                    Enable checking that input datasets exist on local filesystem.
      -verbose [or -v]         Turn on verbose echoing of informational messages.
      -use_case "case"         Specify a use case which will provide default values.
@@ -137,6 +141,7 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -drv_runlength "length"  Length of simulation (e.g. default, 10d, 5s, 2y)
                               (Corresponding to: default, 10 days, 5 steps, or 2 years)
                               classifiers (d=days, s=steps, y=years)
+
 
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
@@ -190,17 +195,19 @@ my %opts = ( config                => $cfg_cache,
              datm_cycle_init_year  => "default",
              clm_demand            => "null",
 	     help                  => 0,
+             glc_nec               => "default",
              glc_grid              => "default",
+	     glc_smb               => "default",
 	     dir                   => $outdirname,
 	     rcp                   => "default",
 	     drv_final_spinup      => undef,
+             rtm                   => "default",
              sim_year              => "default",
 	     drv_drydep            => 0,
              irrig                 => undef,
 	     res                   => "default",
 	     rtm_res               => "default",
 	     rtm_tstep             => undef,
-	     lnd_res               => "default",
 	     silent                => 0,
              datm_source           => "default",
              datm_presaero         => "default",
@@ -224,11 +231,12 @@ GetOptions(
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "datm_presaero=s"           => \$opts{'datm_presaero'},
     "drv_drydep"                => \$opts{'drv_drydep'},
+    "glc_nec=i"                 => \$opts{'glc_nec'},
     "glc_grid=s"                => \$opts{'glc_grid'},
+    "glc_smb=s"                 => \$opts{'glc_smb'},	   
     "irrig"                     => \$opts{'irrig'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
-    "lnd_res=s"                 => \$opts{'lnd_res'},
     "ignore_ic_date"            => \$opts{'ignore_ic_date'},
     "ignore_ic_year"            => \$opts{'ignore_ic_year'},
     "infile=s"                  => \$opts{'infile'},
@@ -236,6 +244,7 @@ GetOptions(
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
+    "rtm=s"                     => \$opts{'rtm'},
     "rtm_res=s"                 => \$opts{'rtm_res'},
     "rtm_tstep=i"               => \$opts{'rtm_tstep'},
     "rcp=s"                     => \$opts{'rcp'},
@@ -319,7 +328,7 @@ EOF
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
-                          "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                          "$cfgdir/namelist_files/namelist_defaults_drv.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
 if (defined $opts{'use_case'}) {
@@ -462,7 +471,7 @@ my $nensemble = $cfg->get('ninst_lnd');
 #
 # First get the command-line specified overall values or their defaults
 # Obtain default values for the following build-namelist input arguments
-# : res, mask, rcp, lnd_res, sim_year, and sim_year_range.
+# : res, mask, rcp, sim_year, and sim_year_range.
 #
 
 
@@ -510,23 +519,67 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 }
 if ($print>=2) { print "CLM land mask is $mask $eol"; }
 
-# glc_grid
-$var = "glc_grid";
+# glc_nec
+$var = "glc_nec";
 if ( $opts{$var} ne "default" ) {
     $val = $opts{$var};
 } else {
     $val = $defaults->get_value($var);
 }
-my $glc_grid = $val;
-$opts{'glc_grid'} = $glc_grid;
-$val = &quote_string( $val );
+my $glc_nec = $val;
+$opts{'glc_nec'} = $glc_nec;
 $group = $definition->get_group_name($var);
 $nl[0]->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
 }
-if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
+if ($print>=2) { print "Glacier number of elevation classes is $glc_nec $eol"; }
+
+# glc_grid
+my $glc_grid = undef;
+if ( $glc_nec > 0 ) {
+  $var = "glc_grid";
+  if ( $opts{$var} ne "default" ) {
+      $val = $opts{$var};
+  } else {
+      my %settings;
+      $settings{'glc_nec'} = $glc_nec;
+      $val = $defaults->get_value($var, \%settings);
+  }
+  $glc_grid = $val;
+  $opts{'glc_grid'} = $glc_grid;
+  $val = &quote_string( $val );
+  $group = $definition->get_group_name($var);
+  $nl[0]->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+     my @valid_values   = $definition->get_valid_values( $var );
+     die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
+}
+  
+# glc_smb
+my $glc_smb = undef;
+if ( $glc_nec > 0 ) {
+  $var = "glc_smb";
+  if ( $opts{$var} ne "default" ) {
+      $val = $opts{$var};
+  } else {
+      my %settings;
+      $settings{'glc_nec'} = $glc_nec;
+      $val = $defaults->get_value($var, \%settings);
+  }
+  $glc_smb = $val;
+  $opts{'glc_smb'} = $glc_smb;
+  $group = $definition->get_group_name($var);
+  $nl[0]->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+     my @valid_values   = $definition->get_valid_values( $var );
+     die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
+  if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
+}
 
 # irrigation
 $var = "irrig";
@@ -542,7 +595,7 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
 }
-if ( $irrig =~ /$TRUE/ && $crop eq "on" ) {
+if ( $irrig =~ /$TRUE/i && $crop eq "on" ) {
    print "You've turned on both irrigation and crop. Irrigation is only applied to generic crop currently, which negates it's practical usage.\n" . 
          "We also have a known problem when both are on (see bug 1326 in the models/lnd/clm/doc/KnownBugs file)\n";
    die "$nm both irrigation and crop should NOT be on.\n";
@@ -604,25 +657,6 @@ if ( $val ne "constant" ) {
    if ($print>=2) { print "CLM sim_year_range is $sim_year_range $eol"; }
 }
 
-# land resolution
-my $lnd_res;
-if ($opts{'lnd_res'} eq "default") { 
-    $lnd_res = $res;
-} else {
-    $lnd_res = $opts{'lnd_res'};
-}
-if ($print>=2) { print "CLM land resolution is $lnd_res $eol"; }
-$opts{'lnd_res'} = $lnd_res;
-my $var = "res";
-my $val = &quote_string( $res );
-my $group = $definition->get_group_name($var);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
-      die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-   }
-}
-
 # prescribed aerosol options
 my $datm_presaero;
 if ( $opts{'datm_presaero'} eq "default" ) {
@@ -641,15 +675,41 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 @valid_values\n";
 }
 
-# RTM resolution
-my $rtm     = $cfg->get('rtm');
+# rtm
+$var = "rtm";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    my %settings;
+    $settings{'hgrid'} = $res;
+    if (defined $opts{'clm_usr_name'}) {
+       $settings{'clm_usr_name_set'} = ".true.";
+    }
+    $val = $defaults->get_value( $var, \%settings );
+}
+my $rtm = $val;
+$opts{'rtm'} = $rtm;
+$val = &quote_string( $val );
+$group = $definition->get_group_name($var);
+$nl[0]->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "River Transport Model (RTM) will be $rtm $eol"; }
+
+
+# RTM flag and RTM resolution
+my $var = "do_rtm";
+add_default($nl[0], $var, 'rtm'=>$rtm );
 my $rtm_res;
 if ( $rtm eq "on" ) {
    $var = "rtm_res";
    if ( $opts{$var} ne "default" ) {
        $val = $opts{$var};
    } else {
-       $val= $defaults->get_value($var);
+       my %opts = ( 'rtm'=>$rtm );
+       $val= $defaults->get_value($var, \%opts);
    }
    $rtm_res = $val;
    if ($print>=2) { print "CLM river transport model resolution is $rtm_res $eol"; }
@@ -871,10 +931,10 @@ if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
 if ($mode eq "clm_stndln") {
 
    # stop_option and stop_n
-   add_default($nl[0], 'stop_option', 'hgrid'=>$lnd_res, 'mask'=>$mask,
+   add_default($nl[0], 'stop_option', 'hgrid'=>$res, 'mask'=>$mask,
                'final_spinup'=>$drv_final_spinup);
    unless (defined $nl[0]->get_value('stop_ymd')) { 
-     add_default($nl[0], 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask,
+     add_default($nl[0], 'stop_n', 'hgrid'=>$res, 'mask'=>$mask,
                'final_spinup'=>$drv_final_spinup);
    }
    # Case name
@@ -959,6 +1019,11 @@ if ($mode eq "clm_stndln") {
    add_default($nl[0], 'do_budgets'  );
    add_default($nl[0], 'budget_inst'  );
 
+   #######################################
+   # namelist group: seq_cplflds_inparm #
+   #######################################
+   add_default($nl[0], 'glc_nec', 'val'=>$glc_nec );
+
 }
 
 ############################
@@ -1011,16 +1076,16 @@ if ($mode eq "clm_stndln") {
    add_default($nl[0], 'end_restart');
 
    # Start date
-   my %opts = ( 'hgrid'=>$lnd_res, 'mask'=>$mask );
+   my %opts = ( 'hgrid'=>$res, 'mask'=>$mask );
    my $start_ymd = $defaults->get_value('run_startdate', \%opts );
    $start_ymd =~ s/-//g;
    add_default($nl[0], 'start_ymd', 'val'=>$start_ymd );
 
    # Start tod
-   add_default($nl[0], 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+   add_default($nl[0], 'start_tod', 'hgrid'=>$res, 'mask'=>$mask);
 
    # Coupling interval
-   add_default($nl[0], 'atm_cpl_dt', 'hgrid'=>$lnd_res);
+   add_default($nl[0], 'atm_cpl_dt', 'hgrid'=>$res);
 }
 
 ##############################
@@ -1077,7 +1142,7 @@ if ( defined($nsrest) ) {
    }
 }
 
-add_default($nl[0], 'dtime', 'hgrid'=>$lnd_res);
+add_default($nl[0], 'dtime', 'hgrid'=>$res);
 
 if ( $my_start_type =~ /branch/ ) {
    if (not defined $nl[0]->get_value('nrevsn')) {
@@ -1090,48 +1155,45 @@ if ( $my_start_type =~ /branch/ ) {
 }
 
 # Get the fraction file
-add_default($nl[0], 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask, 'nofail'=>1 );
-# If can't find a fraction file, get the datm domain file instead
-if ( not defined $nl[0]->get_value( "fatmlndfrac" ) ) {
-   my $datm_nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_datm.xml";
-   $defaults->add( "$datm_nl_defaults_file" );
-   add_default($nl[0], 'domainfile', 'hgrid'=>$res, 'mask'=>$mask);
-   add_default($nl[0], 'fatmlndfrc', 'val'=>$nl[0]->get_value( "domainfile" ) );
+if (defined $nl[0]->get_value('fatmlndfrc')) {
+    # do nothing - use value provided by config_grid.xml and clm.cpl7.template
+} else {
+    # If can't find a fraction file, get the datm domain file instead
+    add_default($nl[0], 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask, 'nofail'=>1 );
+    if ( not defined $nl[0]->get_value( "fatmlndfrac" ) ) {
+	my $stndln_nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_datm.xml";
+	$defaults->add( "$stndln_nl_defaults_file" );
+	add_default($nl[0], 'domainfile', 'hgrid'=>$res, 'mask'=>$mask);
+	add_default($nl[0], 'fatmlndfrc', 'val'=>$nl[0]->get_value( "domainfile" ) );
+    }
 }
-
 
 add_default($nl[0], 'outnc_large_files' );
 add_default($nl[0], 'fsnowoptics' );
 add_default($nl[0], 'fsnowaging' );
-
-if ($res ne $lnd_res) {
-    add_default($nl[0], 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
-    add_default($nl[0], 'fatmtopo'  , 'hgrid'=>$res,     'mask'=>$mask );
-}
-
 #
 # Glacier multiple elevation class options
 #
-my $glc_nec  = $cfg->get( "glc_nec" );
+add_default($nl[0], 'maxpatch_glcmec', 'val'=>$glc_nec );
 if ( $glc_nec > 0 ) {
-  if ( $glc_grid eq "none" ) {
-     die "$ProgName ERROR:: glc_grid is equal to none, but glc_nec is positive\n";
+  if ( ! defined($glc_grid) ) {
+     die "$ProgName ERROR:: glc_grid is NOT set, but glc_nec is positive\n";
   }
-  add_default($nl[0], 'create_glacier_mec_landunit');
-  add_default($nl[0], 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
-  add_default($nl[0], 'fglcmask'  , 'hgrid'=>$lnd_res, 'glc_grid'=>$glc_grid );
-  add_default($nl[0], 'glc_smb'   , 'glc_nec'=>$glc_nec );
+  add_default($nl[0], 'flndtopo'  , 'hgrid'=>$res, 'mask'=>$mask );
+  add_default($nl[0], 'fglcmask'  , 'hgrid'=>$res, 'glc_grid'=>$glc_grid );
   add_default($nl[0], 'albice'    , 'glc_nec'=>$glc_nec );
 } else {
-  if ( $glc_grid ne "none" ) {
+  if ( defined($glc_grid) ) {
      die "$ProgName ERROR:: glc_grid is set, but glc_nec is zero\n";
   }
   # Error checking for glacier multiple elevation class options when glc_nec off
-  # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask is NOT set
+  # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask
+  # is NOT set
   my $create_glcmec = $nl[0]->get_value('create_glacier_mec_landunit');
   if ( defined($create_glcmec) ) {
      if ( $create_glcmec =~ /$TRUE/i ) {
-        die "$ProgName ERROR:: create_glacer_mec_landunit is true, but glc_nec is equal to zero\n";
+        die "$ProgName ERROR:: create_glacer_mec_landunit is true, but glc_nec is equal to
+ zero\n";
      }
   }
   my $glc_smb = $nl[0]->get_value('glc_smb');
@@ -1150,10 +1212,6 @@ if ( $glc_nec > 0 ) {
   if ( defined($fglcmask) ) {
       die "$ProgName ERROR:: fglcmask is set, but glc_nec is equal to zero\n";
   }
-}
-
-if ($res ne $lnd_res) {
-    add_default($nl[0], 'fatmgrid'  , 'hgrid'=>$res, , 'nofail'=>1 );
 }
 
 add_default($nl[0], 'fpftcon');
@@ -1187,10 +1245,10 @@ add_default($nl[0], 'urban_traffic');
 # If River Transport Model turned on
 if ( $rtm eq "on" ) {
    if ( ! defined $nl[0]->get_value('fmapinp_rtm')) {
-      my %rtmsettings = ( 'type'=>$rtm_res );
+      my %rtmsettings = ( 'type'=>$rtm_res, 'rtm'=>$rtm );
       my $rres = $defaults->get_value("hgrid", \%rtmsettings );
       my $lmask= $defaults->get_value("lmask", \%rtmsettings );
-      my %mapsettings = ( 'frm_hgrid'=>$lnd_res, 'to_hgrid'=>$rres,
+      my %mapsettings = ( 'frm_hgrid'=>$res, 'to_hgrid'=>$rres,
                           'frm_lmask'=>"nomask", 'to_lmask'=>$lmask );
       my $map  = $defaults->get_value("map", \%mapsettings );
       if ( ! defined($map) ) {
@@ -1200,8 +1258,8 @@ if ( $rtm eq "on" ) {
          add_default($nl[0], 'fmapinp_rtm', 'val'=>$map );
       }
    }
-   add_default($nl[0], 'frivinp_rtm', 'rtm_res'=>$rtm_res );
-   add_default($nl[0], 'ice_runoff',  'hgrid'=>$res );
+   add_default($nl[0], 'frivinp_rtm', 'rtm'=>$rtm, 'rtm_res'=>$rtm_res );
+   add_default($nl[0], 'ice_runoff',  'rtm'=>$rtm, 'hgrid'=>$res );
    if ( defined($opts{'rtm_tstep'}) ) {
        my $dtime = $nl[0]->get_value('dtime');
        if ( $opts{'rtm_tstep'} < $dtime ) {
@@ -1213,7 +1271,11 @@ if ( $rtm eq "on" ) {
    }
 }
 
+my $do_rtm = $nl[0]->get_value('do_rtm');
 if ( $rtm eq "off" ) {
+   if (defined $do_rtm && $do_rtm =~ /$TRUE/i ) {
+      die "$ProgName ERROR:: when RTM is off you can NOT set do_rtm to .true..\n";
+   }
    if (defined $nl[0]->get_value('frivinp_rtm')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
    }
@@ -1226,13 +1288,17 @@ if ( $rtm eq "off" ) {
    if (defined $nl[0]->get_value('rtm_nsteps')) {
       die "$ProgName ERROR:: when RTM is off you can NOT set rtm_nsteps.\n";
    }
+} else {
+   if ($do_rtm !~ /$TRUE/i ) {
+      die "$ProgName ERROR:: when RTM is on you can NOT set do_rtm to .false..\n";
+   }
 }
 
 #
 # Get aerosol deposition rates from datasets, if NOT coming from atmosphere model
 #
 if ( $datm_presaero eq "none" ) {
-   add_default($nl[0], 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
+   add_default($nl[0], 'faerdep', 'hgrid'=>$res, 'sim_year'=>$sim_year,
                'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
 }
 
@@ -1244,8 +1310,10 @@ $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
+$settings{'crop'}           = $crop;
 $settings{'irrig'}          = $irrig;
 $settings{'rcp'}            = $rcp;
+$settings{'glc_nec'}        = $glc_nec;
 my $demand           = $nl[0]->get_value('clm_demand');
 $demand              =~ s/\'//g;   # Remove quotes
 if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
@@ -1265,7 +1333,8 @@ $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/'//;
 $fpftdyn =~ s/"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
-add_default($nl[0], 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'irrig'=>$irrig );
+add_default($nl[0], 'fsurdat', 'hgrid'=>$res, 'sim_year'=>$sim_year, 
+            'irrig'=>$irrig,   'crop'=>$crop, 'glc_nec'=>$glc_nec );
 my $fsurdat = $nl[0]->get_value( 'fsurdat' );
 
 # Initial conditions
@@ -1289,33 +1358,25 @@ if (not defined $nl[0]->get_value('finidat')) {
            if ( $crop eq "on" ) {
               die "$ProgName ERROR:: using ignore_ic_date is incompatable with crop!\n";
            }
-	   add_default($nl[0], $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+	   add_default($nl[0], $var, 'hgrid'=>$res, 'mask'=>$mask, 
                     'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-                    'irrig'=>$irrig );
+                    'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
     } elsif ($opts{'ignore_ic_year'}) {
-	   add_default($nl[0], $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+	   add_default($nl[0], $var, 'hgrid'=>$res, 'mask'=>$mask, 
                     'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-                    'irrig'=>$irrig );
+                    'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
     } else {
-	   add_default($nl[0], $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+	   add_default($nl[0], $var, 'hgrid'=>$res, 'mask'=>$mask, 
                     'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-                    'irrig'=>$irrig );
+                    'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
     }
     my $finidat = $nl[0]->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
        my $group = $definition->get_group_name($var);
        $nl[0]->set_variable_value($group, $var, "' '" );
-    }
-}
-
-#
-# If fatmgrid was not found for fine-mesh mode use fsurdat file
-if ($res ne $lnd_res) {
-    if ( not defined $nl[0]->get_value( "fatmgrid" ) ) {
-       add_default($nl[0], 'fatmgrid'  , 'val'=>$fsurdat );
     }
 }
 
@@ -1542,7 +1603,7 @@ if ( $nensemble == 1 ) {
 
 if ($mode eq "clm_stndln") {
     # Driver
-    @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
+    @groups = qw(seq_cplflds_inparm seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
     $outfile = "$opts{'dir'}/drv_in";
     $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
@@ -2036,7 +2097,7 @@ sub list_options {
     my $optsref = shift;   # reference to hash that contains the options
 
     # options to list values that are in the defaults files
-    my @opts_list = ( "res", "lnd_res", "mask", "sim_year", "rcp" );
+    my @opts_list = ( "res", "mask", "sim_year", "rcp" );
     my %opts;
     foreach my $var ( "res", "mask", "sim_year", "rcp" ) {
        my $val;
@@ -2056,7 +2117,6 @@ sub list_options {
 
            if ( $optsref->{$opt} eq "list" ) {
                $var = $opt;
-               if ( $var eq "lnd_res" ) { $var = "res"; }
                my @valid_values   = $definition->get_valid_values( $var );
                if ( $opt eq "sim_year" ) { 
                    unshift( @valid_values, 
@@ -2069,7 +2129,6 @@ sub list_options {
                   if ( $valid_values[$i] eq "constant" ) { $valid_values[$i] = undef; }
                }
                $val= $defaults->get_value($var, \%opts);
-               if ( $opt eq "lnd_res" ) { $val = "same as atm resolution given in res option"; }
                my $doc = $definition->get_var_doc( $var );
                $doc =~ s/\n//;
                chomp( $doc );

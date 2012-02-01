@@ -9,8 +9,7 @@ fi
 optfile=${1%^*}
 nlfile=${1#*^}
 info=$2
-res=${3%^*}
-land_res=${3#*^}
+res=${3}
 mask=${4%@*}
 sim_year=${4#*@}
 config_file=$5
@@ -23,9 +22,6 @@ if [ "$optfile" = "$1" ]; then
 fi
 if [ "$mask" = "$4" ]; then
    sim_year="default"
-fi
-if [ "$res" = "$3" ]; then
-   land_res="default"
 fi
 
 start_ymd=`echo $info | awk -F: '{print $1}'`
@@ -107,7 +103,7 @@ fi
 
 
 echo "env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
-echo "                 -infile $clmnl -res $res -lnd_res $land_res -clm_start_type $6 \ "
+echo "                 -infile $clmnl -res $res -clm_start_type $6 \ "
 echo "                 -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \ "
 echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
 echo "                             &seq_infodata_inparm $restart_file $logfile / "
@@ -116,7 +112,7 @@ echo "                             &clm_inparm dtime=$dtime "
 echo "                             $hist_samp $nrevsnfile $hist_freq /\""
 
 env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
-                       -infile $clmnl -res $res -lnd_res $land_res -clm_start_type $6 \
+                       -infile $clmnl -res $res -clm_start_type $6 \
                        -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
                                   &seq_infodata_inparm $restart_file $logfile / \

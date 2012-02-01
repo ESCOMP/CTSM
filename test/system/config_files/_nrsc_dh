@@ -1,5 +1,0 @@
--mode clm_stndln
--nouse_mpiserial -smp
--debug
--rtm off
--s

@@ -10,17 +10,18 @@
 # mkmapdata.sh -r 4x5
 #
 # valid arguments: 
-# -r <res>   Output resolution
-# -i         interactive usage
-# -l         list mapping files required (so can use check_input_data to get them)
-# -d         debug usage -- display mkmapdata that will be run but don't execute them
-# -o <ogrid> Also map to the input ocean-grid resolution"
-# -v         verbose usage -- log more information on what is happening
-# -h         displays this help message
+# -f <scripfilename> Input grid filename 
+# -t <type>          Output type, supported values are [regional, global]
+# -r <res>           Output resolution
+# -b                 use batch mode (not default)
+# -l                 list mapping files required (so can use check_input_data to get them)
+# -d                 debug usage -- display mkmapdata that will be run but don't execute them
+# -o <ogrid>         Also map to the input ocean-grid resolution"
+# -v                 verbose usage -- log more information on what is happening
+# -h                 displays this help message
 #
 # You can also set the following env variables:
 #
-# SCRIPGRIDFIL - Full pathname of SCRIP grid file to use (in place of resolution)
 # ESMFBIN_PATH - Path to ESMF binaries
 # CSMDATA ------ Path to CESM input data
 # MPIEXEC ------ Name of mpirun executable
@@ -38,10 +39,10 @@ outfilelist="clm.input_data_list"
 # SET SOME DEFAULTS -- if not set via env variables outside
 
 if [ -z "$CSMDATA" ]; then
-   CSMDATA=/fis/cgd/cseg/csm/inputdata
+   CSMDATA=/glade/proj3/cseg/inputdata
 fi
 if [ -z "$REGRID_PROC" ]; then
-  REGRID_PROC=8
+   REGRID_PROC=8
 fi
 #----------------------------------------------------------------------
 # Usage subroutine
@@ -52,23 +53,54 @@ usage() {
   echo "./mkmapdata.sh"
   echo ""
   echo "valid arguments: "
-  echo "-r <res> resolution"
-  echo "-i       interactive usage"
-  echo "-l       list mapping files required (so can use check_input_data to get them)"
-  echo "         (also writes data to $outfilelist)"
-  echo "-d       debug-only  usage (don't actually run mkmapdata just echo what would happen)"
-  echo "-h       displays this help message"
-  echo "-o <ogrid> Also map to the input ocean-grid resolution"
-  echo "-v       verbose usage -- log more information on what is happening"
+  echo "[-f|--gridfile <gridname>] "
+  echo "     Full pathname of model SCRIP grid file to use "
+  echo "     This variable should be set if this is not a supported grid" 
+  echo "     This variable will override the automatic generation of the"
+  echo "     filename generated from the -res argument "
+  echo "     the filename is generated ASSUMING that this is a supported "
+  echo "     grid that has entries in the file namelist_defaults_clm.xml"
+  echo "     the -r|--res argument MUST be specied if this argument is specified" 
+  echo "[-r|--res <res>]"
+  echo "     Model output resolution (default is 10x15)"
+  echo "[-t|--gridtype <type>]"
+  echo "     Model output grid type"
+  echo "     supported values are [regional,global], (default is global)"
+  echo "[-b|--batch]"
+  echo "     Toggles batch mode usage. If you want to run in batch mode"
+  echo "     you need to have a separate batch script for a supported machine"
+  echo "     that calls this script interactively - you cannot submit submit this"
+  echo "     script directory to the batch system"
+  echo "[-l|--list]"
+  echo "     List mapping files required (use check_input_data to get them)"
+  echo "     also writes data to $outfilelist"
+  echo "[-d|--debug]"
+  echo "     Toggles debug-only (don't actually run mkmapdata just echo what would happen)"
+  echo "[-o|--ocn] <ogrid>"
+  echo "     Also map to the input ocean-grid resolution"
+  echo "[-h|--help]  "
+  echo "     Displays this help message"
+  echo "[-v|--verbose]"
+  echo "     Toggle verbose usage -- log more information on what is happening "
+  echo ""
+  echo " You can also set the following env variables:"
+  echo "  ESMFBIN_PATH - Path to ESMF binaries "
+  echo "                 (default is /contrib/esmf-5.2.0r-64-O/bin)"
+  echo "  CSMDATA ------ Path to CESM input data"
+  echo "                 (default is /glade/proj3/cseg/inputdata)"
+  echo "  MPIEXEC ------ Name of mpirun executable"
+  echo "                 (default is mpirun.lsf)"
+  echo "  REGRID_PROC -- Number of MPI processors to use"
+  echo "                 (default is 8)"
   echo ""
   echo "**pass environment variables by preceding above commands "
   echo "  with 'env var1=setting var2=setting '"
-  echo ""
   echo "**********************"
 }
 #----------------------------------------------------------------------
-#----------------------------------------------------------------------
 # runcmd subroutine
+#----------------------------------------------------------------------
+
 runcmd() {
    cmd=$@
    if [ -z "$cmd" ]; then
@@ -87,113 +119,134 @@ runcmd() {
    if [ $rc != 0 ]; then
        echo "Error status returned from mkmapdata script"
        exit 4
+undo
    fi
    return 0
 }
+
+#----------------------------------------------------------------------
+# Process input arguments
 #----------------------------------------------------------------------
 
-# Process input arguments
-interactive="no"
+interactive="YES"
 debug="no"
 res="10x15"
+type="global"
 verbose="no"
 ocean="no"
 list="no"
-declare -i narg=1
-for arg in $@; do
-   ARGV[narg]=$arg
-   narg=narg+1
-done
+outgrid=""
 
-declare -i narg=1
-until ((narg>${#ARGV[*]})); do
-   arg1=${ARGV[narg]}
-   arg1=${arg1##*-}
-   case $arg1 in
-      [iI]* )
-      interactive="YES"
-      ;;
-      [dD]* )
-      debug="YES"
-      interactive="YES"
-      ;;
-      [lL]* )
-      debug="YES"
-      interactive="YES"
-      list="YES"
-      ;;
-      [oO]* )
-      narg=narg+1
-      ocean=${ARGV[narg]}
-      ;;
-      [rR]* )
-      narg=narg+1
-      res=${ARGV[narg]} 
-      ;;
-      [vV]* )
-      verbose="YES"
-      ;;
-      [hH]* )
-      usage
-      exit 0
-
-      ;;
-      * )
-      echo "ERROR:: invalid argument sent in: ${ARGV[narg]}"
-      usage
-      exit 1
-      ;;
+while [ $# -gt 0 ]; do
+   case $1 in
+       -v|-V)
+	   verbose="YES"
+	   ;;
+       -b|--batch) 
+	   interactive="NO"
+	   ;;
+       -d|--debug)
+	   debug="YES"
+	   ;;
+       -l|--list)
+	   debug="YES"
+	   list="YES"
+	   ;;
+       -r|--res)
+	   res=$2
+	   shift
+	   ;;
+       -o|--ocn)
+	   ocn=$2
+	   shift
+	   ;;
+       -f|--gridfile)
+	   gridfile=$2
+	   shift
+	   ;;
+       -t|--gridtype)
+	   type=$2
+	   shift
+	   ;;
+       -h|--help )
+	   usage
+	   exit 0
+	   ;;
+       * )
+	   echo "ERROR:: invalid argument sent in: $2"
+	   usage
+	   exit 1
+	   ;;
    esac
-   narg=narg+1
+   shift
 done
 
+echo "Script to create mapping files required by mksurfdata_map"
+echo "Output grid resolution is $res"
 
-echo "Script to create mapping files for use by mksurfdata_map"
-echo "Output resolution will be $res"
+#----------------------------------------------------------------------
+# Determine output scrip grid file
+#----------------------------------------------------------------------
 
-# Find the output grid file for this resolution using the XML database
+# Set general query command used below
 QUERY="$dir/../../bld/queryDefaultNamelist.pl -silent -namelist clmexp -onlyfiles "
 QUERY="$QUERY -justvalue -options sim_year=2000 -csmdata $CSMDATA"
-if [ ! -z "$SCRIPGRIDFIL" ]; then
-   OUTGRID=$SCRIPGRIDFIL
-else
-   QRYSCRIPGRID="$QUERY -var scripgriddata -res $res -options lmask=nomask"
-   if [ "$verbose" = "YES" ]; then
-      echo $QRYSCRIPGRID
-   fi
-   OUTGRID=`$QRYSCRIPGRID`
-fi
+echo "query command is $QUERY"
 
-if [ -z "$OUTGRID" ]; then
+echo ""
+if [ ! -z "$gridfile" ]; then
+    GRIDFILE=$gridfile
+    echo "Using user specified scrip grid file: $GRIDFILE" 
+else
+    # Find the output grid file for this resolution using the XML database
+    QUERYFIL="$QUERY -var scripgriddata -res $res -options lmask=nomask"
+    if [ "$verbose" = "YES" ]; then
+	echo $QUERYFIL
+    fi
+    GRIDFILE=`$QUERYFIL`
+    echo "Using default scrip grid file: $GRIDFILE" 
+fi
+if [ -z "$GRIDFILE" ]; then
    echo "Output grid file was NOT found for this resolution: $res\n";
    exit 1
 fi
+
 if [ "$list" = "YES" ]; then
-   echo "outgrid = $OUTGRID"
-   echo "outgrid = $OUTGRID" > $outfilelist
-elif [ ! -f "$OUTGRID" ]; then
-   echo "Output SCRIP grid file does NOT exist: $OUTGRID\n";
+   echo "outgrid = $GRIDFILE"
+   echo "outgrid = $GRIDFILE" > $outfilelist
+elif [ ! -f "$GRIDFILE" ]; then
+   echo "Output SCRIP grid file does NOT exist: $GRIDFILE\n";
    echo "Make sure CSMDATA environment variable is set correctly"
    exit 1
 fi
+
 #----------------------------------------------------------------------
-# Set the creation date for the output files
+# Determine all input grid files and output file names 
+#----------------------------------------------------------------------
+
+grids=("0.5x0.5_nomask"    \ 
+       "0.5x0.5_USGS"      \
+       "0.5x0.5_AVHRR"     \
+       "0.5x0.5_MODIS"     \
+       "3x3min_MODIS"      \
+       "5x5min_nomask"     \
+       "5x5min_IGBP-GSDP"  \
+       "5x5min_ISRIC-WISE" \
+       "10x10min_nomask"   \
+       "10x10min_IGBPmergeICESatGIS")
+
+# Set timestamp for names below 
 CDATE="c"`date +%y%m%d`
 
-#
-# Set the list of files to create mapping files for
+# Set name of each output mapping file OTHER than RTM
+# First determine the name of the input scrip grid file  
+# for each of the above grids
 declare -i nfile=1
-
-
-# List of grid files for mksurfdata_map
-grids=("0.5x0.5_nomask"  "0.5x0.5_USGS"     "0.5x0.5_AVHRR"    "0.5x0.5_MODIS" \
-       "5x5min_nomask"   "5x5min_IGBP-GSDP" "10x10min_nomask"  "3x3min_MODIS"  \
-       "10x10min_IGBPmergeICESatGIS"        "5x5min_ISRIC-WISE")
 for gridmask in ${grids[*]}
 do
-   grd=${gridmask%_*}
+   grid=${gridmask%_*}
    lmask=${gridmask#*_}
-   QUERYFIL="$QUERY -var scripgriddata -res $grd -options lmask=$lmask"
+   QUERYFIL="$QUERY -var scripgriddata -res $grid -options lmask=$lmask"
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
    fi
@@ -207,73 +260,45 @@ do
    else
       LRGFIL[nfile]="no"
    fi
-   OUTGRID[nfile]=$OUTGRID
-   OUTFILE[nfile]=map_${grd}_${lmask}_to_${res}_nomask_aave_da_$CDATE.nc
+   GRIDFILE[nfile]=$GRIDFILE
+   OUTFILE[nfile]=map_${grid}_${lmask}_to_${res}_nomask_aave_da_$CDATE.nc
    nfile=nfile+1
 done
 
 # Add main mapping file from ocean to atmosphere
 if [ "$ocean" != "no" ]; then
    INGRID[nfile]=`$QUERY -var scripgriddata -options hgrid=$ocean,lmask=$ocean`
-   OUTGRID[nfile]=$OUTGRID
+   OUTGRID[nfile]=$GRIDFILE
    OUTFILE[nfile]=map_${ocean}_to_${res}_aave_da_$CDATE.nc
    nfile=nfile+1
 fi
 
-# RTM grid for clm
-grd=0.5x0.5
+# Set name of RTM output mapping file
+grid=0.5x0.5
 lmask=nomask
-INGRID[nfile]=$OUTGRID
-QUERYFIL="$QUERY -var scripgriddata -res $grd -options lmask=$lmask"
+INGRID[nfile]=$GRIDFILE
+QUERYFIL="$QUERY -var scripgriddata -res $grid -options lmask=$lmask"
 if [ "$verbose" = "YES" ]; then
    echo $QUERYFIL
 fi
-OUTGRID[nfile]=`$QUERYFIL`
-OUTFILE[nfile]=map_${res}_${lmask}_to_${grd}_${lmask}_aave_da_$CDATE.nc
+GRIDFILE[nfile]=`$QUERYFIL`
+OUTFILE[nfile]=map_${res}_${lmask}_to_${grid}_${lmask}_aave_da_$CDATE.nc
 if [ "$list" = "YES" ]; then
-   echo "ingrid = ${OUTGRID[nfile]}"
-   echo "ingrid = ${OUTGRID[nfile]}" >> $outfilelist
+   echo "ingrid = ${GRIDFILE[nfile]}"
+   echo "ingrid = ${GRIDFILE[nfile]}" >> $outfilelist
    echo "Succesffully found and listed all required mapping files"
    exit 0
 fi
 nfile=nfile+1
 
 #----------------------------------------------------------------------
-# Machine specific env stuff
-#
-# Bluefire specific environment settings to run MPI
-#
+# Determine supported machine specific stuff
+#----------------------------------------------------------------------
+
 hostname=`hostname`
 case $hostname in
   ##bluefire
   be* )
-  export TARGET_CPU_LIST="-1"
-
-  export MP_RC_USE_LMC=yes
-
-  export LAPI_DEBUG_ENABLE_AFFINITY=YES 
-  export LAPI_DEBUG_BINDPROC_AFFINITY=YES 
-  export LAPI_DEBUG_MTU_4K=YES
-  export MP_SYNC_QP=YES
-  export MP_RFIFO_SIZE=16777216
-  export MP_SHM_ATTACH_THRESH=500000 # default is better sometimes
-  export MP_EUIDEVELOP=min 
-  export MP_LABELIO=yes
-
-  export MP_SINGLE_THREAD=NO #do NOT use if more than one application 
-                             #(including OpenMP) thread is making comm. calls
-
-  export OMP_NUM_THREADS=1
-  export XLSMPOPTS=stack=256000000
-  export MP_PULSE=0
-  export MP_USE_BULK_XFER=yes
-
-  export MP_BULK_MIN_MSG_SIZE=64k
-  export MP_RC_MAX_QP=8192
-  export LAPI_DEBUG_RC_DREG_THRESHOLD=1000000
-  export LAPI_DEBUG_QP_NOTIFICATION=no
-  export LAPI_DEBUG_RC_INIT_SETUP=no	#try both = yes and = no
-
   source /contrib/Modules/3.2.6/init/bash
   module load netcdf/4.1.3_seq
 
@@ -281,14 +306,12 @@ case $hostname in
      ESMFBIN_PATH=/contrib/esmf-5.2.0rp1bs09-64/bin
   fi
   if [ -z "$MPIEXEC" ]; then
-    MPIEXEC="mpirun.lsf"
+     MPIEXEC="mpirun.lsf"
   fi
-
   if [ "$interactive" != "no" ]; then
     # Bluefire specific commands to prepare to run interactively
     export MP_PROCS=$REGRID_PROC
     export MP_EUILIB=ip
-                                                                                                                                                                          
     hostname > hostfile
     declare -i p=2
     until ((p>$MP_PROCS)); do
@@ -300,6 +323,7 @@ case $hostname in
   ;;
 
   ##jaguarpf
+  ## NOTE that for jaguarpf there is no batch script for now
   jaguarpf* )
   if [ -z "$ESMFBIN_PATH" ]; then
      module load esmf/5.2.0-p1_with-netcdf_g
@@ -310,11 +334,29 @@ case $hostname in
   fi
   ;;
 
+  ##no other machine currently supported    
   *)
   echo "Machine $hostname NOT recognized"
   ;;
 
 esac
+
+# Error checks
+if [ ! -d "$ESMFBIN_PATH" ]; then
+    echo "Path to ESMF binary directory does NOT exist: $ESMFBIN_PATH"
+    echo "Set the environment variable: ESMFBIN_PATH"
+    exit 1
+fi
+
+#----------------------------------------------------------------------
+# Generate the mapping files needed for surface dataset generation
+# and the RTM run time mapping
+#----------------------------------------------------------------------
+ 
+# Resolve interactive or batch mode command
+# NOTE - if you want to run in batch mode - you need to have a separate
+# batch file that calls this script interactively - you cannot submit
+# this script to the batch system
 
 if [ "$interactive" = "no" ]; then
   echo "Running in batch mode using MPI"
@@ -329,22 +371,12 @@ if [ "$interactive" = "no" ]; then
      exit 1
   fi
   mpirun=$MPIEXEC
+  echo "Running in batch mode"
 else
   mpirun=""
-  echo "Running interactively"
 fi
   
-
-#----------------------------------------------------------------------
-
-if [ ! -d "$ESMFBIN_PATH" ]; then
-    echo "Path to ESMF binary directory does NOT exist: $ESMFBIN_PATH"
-    echo "Set the environment variable: ESMFBIN_PATH"
-    exit 1
-fi
-
 ESMF_REGRID="$ESMFBIN_PATH/ESMF_RegridWeightGen"
-
 if [ ! -x "$ESMF_REGRID" ]; then
     echo "ESMF_RegridWeightGen does NOT exist in ESMF binary directory: $ESMFBIN_PATH\n"
     echo "Upgrade to a newer version of ESMF with this utility included"
@@ -352,10 +384,8 @@ if [ ! -x "$ESMF_REGRID" ]; then
     exit 1
 fi
 
-
 # Remove previous log files
 rm PET*.Log
-
 
 #
 # Now run the mapping for each file, checking that input files exist
@@ -363,10 +393,11 @@ rm PET*.Log
 #
 declare -i nfile=1
 until ((nfile>${#INGRID[*]})); do
-   echo "Creating ${OUTFILE[nfile]}"
+   echo "Creating mapping file: ${OUTFILE[nfile]}"
    echo "From input grid: ${INGRID[nfile]}"
-   echo "For output grid: ${OUTGRID[nfile]}"
-   if [ -z "${INGRID[nfile]}" ] || [ -z "${OUTGRID[nfile]}" ] || [ -z "${OUTFILE[nfile]}" ]; then
+   echo "For output grid: ${GRIDFILE[nfile]}"
+   echo " "
+   if [ -z "${INGRID[nfile]}" ] || [ -z "${GRIDFILE[nfile]}" ] || [ -z "${OUTFILE[nfile]}" ]; then
       echo "Either input or output grid or output mapping file is NOT set"
       exit 3
    fi
@@ -374,12 +405,16 @@ until ((nfile>${#INGRID[*]})); do
       echo "Input grid file does NOT exist: ${INGRID[nfile]}"
       exit 2
    fi
-   if [ ! -f "${OUTGRID[nfile]}" ]; then
-      echo "Output grid file does NOT exist: ${OUTGRID[nfile]}"
+   if [ ! -f "${GRIDFILE[nfile]}" ]; then
+      echo "Output grid file does NOT exist: ${GRIDFILE[nfile]}"
       exit 3
    fi
    cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
-   cmd="$cmd -d ${OUTGRID[nfile]} -m conserve -w ${OUTFILE[nfile]}"
+   cmd="$cmd -d ${GRIDFILE[nfile]} -m conserve -w ${OUTFILE[nfile]}"
+   if [ $type == "regional" ]; then
+     cmd="$cmd --dst_regional"
+   fi
+
    if [ "${LRGFIL[nfile]}" = "yes" ]; then
       cmd="$cmd --64bit_offset "
    fi

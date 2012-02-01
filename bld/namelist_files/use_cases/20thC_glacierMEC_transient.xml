@@ -15,13 +15,14 @@
 
 <clm_demand >fpftdyn</clm_demand>
 
-<!-- create_glc_lu and glc_smb will already be set if glc_nec is set, but set explicitly here -->
-<create_glacier_mec_landunit >.true.</create_glacier_mec_landunit>
-<glc_smb                     >.true.</glc_smb>
+<glc_nec>10</glc_nec>
 
-<hist_fincl2                 >QICEYR</hist_fincl2>
-<hist_mfilt                  >1,1</hist_mfilt>
-<hist_nhtfrq                 >0,-8760</hist_nhtfrq>
+<!-- glc_smb will already be set if glc_nec is set, but set explicitly here -->
+<glc_smb    >.true.</glc_smb>
+
+<hist_fincl2>QICEYR</hist_fincl2>
+<hist_mfilt >1,1</hist_mfilt>
+<hist_nhtfrq>0,-8760</hist_nhtfrq>
 
 <stream_year_first_ndep bgc="cn"   >1850</stream_year_first_ndep>
 <stream_year_last_ndep  bgc="cn"   >2005</stream_year_last_ndep>

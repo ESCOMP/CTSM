@@ -1,5 +1,0 @@
--mode clm_stndln
--glc_nec 10
--use_mpiserial -nosmp
--debug
--s

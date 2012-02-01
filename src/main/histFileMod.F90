@@ -14,13 +14,11 @@ module histFileMod
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
   use clm_varcon  , only : spval,ispval
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, do_rtm
   use clmtype     , only : gratm, grlnd, namea, nameg, namel, namec, namep, allrof
   use decompMod   , only : get_proc_bounds, get_proc_global
   use decompMod   , only : get_proc_bounds_atm, get_proc_global_atm
-#if (defined RTM)
   use RunoffMod   , only : get_proc_rof_bounds, get_proc_rof_global
-#endif
   use ncdio_pio
   implicit none
   save
@@ -341,10 +339,10 @@ contains
     call get_proc_global(numg, numl, numc, nump)
     call get_proc_bounds_atm(begg_atm, endg_atm)
     call get_proc_global_atm(numa)
-#if (defined RTM)
-    call get_proc_rof_bounds(beg_rof, end_rof)
-    call get_proc_rof_global(num_rtm)
-#endif
+    if (do_rtm) then
+       call get_proc_rof_bounds(beg_rof, end_rof)
+       call get_proc_rof_global(num_rtm)
+    end if
     ! Ensure that new field is not all blanks
 
     if (fname == ' ') then
@@ -417,12 +415,12 @@ contains
        masterlist(f)%field%beg1d = begp
        masterlist(f)%field%end1d = endp
        masterlist(f)%field%num1d = nump
-#if (defined RTM)
     case (allrof)
-       masterlist(f)%field%beg1d = beg_rof
-       masterlist(f)%field%end1d = end_rof
-       masterlist(f)%field%num1d = num_rtm
-#endif
+       if (do_rtm) then
+          masterlist(f)%field%beg1d = beg_rof
+          masterlist(f)%field%end1d = end_rof
+          masterlist(f)%field%num1d = num_rtm
+       end if
     case default
        write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
        call endrun()
@@ -927,11 +925,9 @@ contains
     integer :: num2d                ! size of second dimension (e.g. .number of vertical levels)
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
     integer :: num1d_out            ! history output 1d size
-#if (defined RTM)
     integer :: beg_rof              ! per-proc beginning land runoff index
     integer :: end_rof              ! per-proc ending land runoff index
     integer :: num_rtm              ! total number of rtm cells on all procs
-#endif
     character(len=*),parameter :: subname = 'htape_addfld'
 !-----------------------------------------------------------------------
 
@@ -956,10 +952,10 @@ contains
     call get_proc_global(numg, numl, numc, nump)
     call get_proc_bounds_atm(begg_atm, endg_atm)
     call get_proc_global_atm(numa)
-#if (defined RTM)
-    call get_proc_rof_bounds(beg_rof, end_rof)
-    call get_proc_rof_global(num_rtm)
-#endif
+    if (do_rtm) then
+       call get_proc_rof_bounds(beg_rof, end_rof)
+       call get_proc_rof_global(num_rtm)
+    end if
 
     ! Modify type1d_out if necessary
 
@@ -1039,12 +1035,12 @@ contains
        beg1d_out = begp
        end1d_out = endp
        num1d_out = nump
-#if (defined RTM)
     else if (type1d_out == allrof) then
-       beg1d_out = beg_rof
-       end1d_out = end_rof
-       num1d_out = num_rtm
-#endif
+       if (do_rtm) then
+          beg1d_out = beg_rof
+          end1d_out = end_rof
+          num1d_out = num_rtm
+       end if
     else
        write(iulog,*) trim(subname),' ERROR: incorrect value of type1d_out= ',type1d_out
        call endrun()
@@ -1699,9 +1695,7 @@ contains
     use clm_varpar  , only : nlevgrnd, nlevlak, numrad, rtmlon, rtmlat
     use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, fpftcon, &
                              version, hostname, username, conventions, source
-#ifdef RTM
     use clm_varctl  , only : frivinp_rtm
-#endif
     use domainMod   , only : llatlon,alatlon
     use fileutils   , only : get_filename
 #if (defined CASA)
@@ -1735,11 +1729,9 @@ contains
     integer :: numl                ! total number of landunits across all processors
     integer :: numg                ! total number of gridcells across all processors
     integer :: numa                ! total number of atm cells across all processors
-#if (defined RTM)
     integer :: num_lndrof          ! total number of land runoff across all procs
     integer :: num_ocnrof          ! total number of ocean runoff across all procs
     integer :: num_rtm             ! total number of rtm cells on all procs
-#endif
     logical :: lhistrest           ! local history restart flag
     type(file_desc_t) :: lnfid     ! local file id
     character(len=  8) :: curdate  ! current date
@@ -1760,9 +1752,9 @@ contains
 
     call get_proc_global_atm(numa)
     call get_proc_global(numg, numl, numc, nump)
-#if (defined RTM)
-    call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
-#endif
+    if (do_rtm) then
+       call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
+    end if
 
     ! define output write precsion for tape
 
@@ -1821,12 +1813,12 @@ contains
     call ncd_putatt(lnfid, ncd_global, 'Initial_conditions_dataset', trim(str))
     str = get_filename(fpftcon)
     call ncd_putatt(lnfid, ncd_global, 'PFT_physiological_constants_dataset', trim(str))
-#if (defined RTM)
-    if (frivinp_rtm /= ' ') then
-       str = get_filename(frivinp_rtm)
-       call ncd_putatt(lnfid, ncd_global, 'RTM_input_dataset', trim(str))
-    endif
-#endif
+    if (do_rtm) then
+       if (frivinp_rtm /= ' ') then
+          str = get_filename(frivinp_rtm)
+          call ncd_putatt(lnfid, ncd_global, 'RTM_input_dataset', trim(str))
+       endif
+    end if
 
     ! Define dimensions.
     ! Time is an unlimited dimension. Character string is treated as an array of characters.
@@ -1841,10 +1833,10 @@ contains
        call ncd_defdim(lnfid, trim(gratm), alatlon%ns, dimid)
        call ncd_defdim(lnfid, trim(grlnd), llatlon%ns, dimid)
     end if
-#if (defined RTM)
-    call ncd_defdim( lnfid, 'lonrof', rtmlon, dimid)
-    call ncd_defdim( lnfid, 'latrof', rtmlat, dimid)
-#endif
+    if (do_rtm) then
+       call ncd_defdim( lnfid, 'lonrof', rtmlon, dimid)
+       call ncd_defdim( lnfid, 'latrof', rtmlat, dimid)
+    end if
 
     ! Global compressed dimensions (not including non-land points)
     call ncd_defdim(lnfid, trim(namea), numa, dimid)
@@ -1852,11 +1844,11 @@ contains
     call ncd_defdim(lnfid, trim(namel), numl, dimid)
     call ncd_defdim(lnfid, trim(namec), numc, dimid)
     call ncd_defdim(lnfid, trim(namep), nump, dimid)
-#if (defined RTM)
-    call ncd_defdim(lnfid, 'ocnrof', num_ocnrof, dimid)
-    call ncd_defdim(lnfid, 'lndrof', num_lndrof, dimid)
-    call ncd_defdim(lnfid, trim(allrof), num_rtm, dimid)
-#endif
+    if (do_rtm) then
+       call ncd_defdim(lnfid, 'ocnrof', num_ocnrof, dimid)
+       call ncd_defdim(lnfid, 'lndrof', num_lndrof, dimid)
+       call ncd_defdim(lnfid, trim(allrof), num_rtm, dimid)
+    end if
 
     ! "level" dimensions
     call ncd_defdim(lnfid, 'levgrnd', nlevgrnd, dimid)
@@ -2075,9 +2067,7 @@ contains
     use clmtype
     use clm_varcon   , only : zsoi, zlak, secspday
     use domainMod    , only : ldomain,llatlon,adomain,alatlon,gatm
-#if (defined RTM)
     use RunoffMod    , only : runoff
-#endif	
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date
 !
@@ -2391,12 +2381,12 @@ contains
                long_name='atm grid cell areas', units='km^2', ncid=nfid(t), &
                missing_value=spval, fill_value=spval)
       end if
-#if (defined RTM)
-      call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
-             long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
-      call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
-             long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
-#endif
+      if (do_rtm) then
+         call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
+              long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
+         call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
+              long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
+      end if
 
     ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
     ! But, some may change for dynamic PFT mode for example
@@ -2440,10 +2430,10 @@ contains
 !       call ncd_io(varname='indxupsc', data=gatm        , dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='areaatm' , data=adomain%area, dim1name=gratm, ncid=nfid(t), flag='write')
 
-#if (defined RTM)
-       call ncd_io(varname='lonrof', data=runoff%rlon, ncid=nfid(t), flag='write')
-       call ncd_io(varname='latrof', data=runoff%rlat, ncid=nfid(t), flag='write')
-#endif
+       if (do_rtm) then
+          call ncd_io(varname='lonrof', data=runoff%rlon, ncid=nfid(t), flag='write')
+          call ncd_io(varname='latrof', data=runoff%rlat, ncid=nfid(t), flag='write')
+       end if
 
     end if  ! (define/write mode
 
@@ -3182,13 +3172,11 @@ contains
     integer :: numl                 ! total number of landunits across all processors
     integer :: numc                 ! total number of columns across all processors
     integer :: nump                 ! total number of pfts across all processors
-#if (defined RTM)
     integer :: beg_rof              ! per-proc beginning ocean runoff index
     integer :: end_rof              ! per-proc ending ocean runoff index
     integer :: num_rtm              ! total number of rtm cell on all procs
     integer :: num_lndrof           ! total number of land runoff across all procs
     integer :: num_ocnrof           ! total number of ocean runoff across all procs
-#endif
     character(len=max_namlen) :: name            ! variable name
     character(len=max_namlen) :: name_acc        ! accumulator variable name
     character(len=max_namlen) :: long_name       ! long name of variable
@@ -3279,9 +3267,9 @@ contains
 
        call get_proc_global(numg, numl, numc, nump)
        call get_proc_global_atm(numa)
-#if (defined RTM)
-       call get_proc_rof_global(num_rtm)
-#endif
+       if (do_rtm) then
+          call get_proc_rof_global(num_rtm)
+       end if
        ! Loop over tapes - write out namelist information to each restart-history tape
        ! only read/write accumulators and counters if needed
 
@@ -3291,7 +3279,8 @@ contains
           ! Create the restart history filename and open it
           !
           write(hnum,'(i1.1)') t-1
-          locfnhr(t) = "./"//trim(caseid)//".clm2.rh"//hnum//"."//trim(rdate)//".nc"
+          locfnhr(t) = "./" // trim(caseid) //".clm2"// trim(inst_suffix) &
+                        // ".rh" // hnum //"."// trim(rdate) //".nc"
 
           call htape_create( t, histrest=.true. )
 
@@ -3584,10 +3573,10 @@ contains
        call get_proc_global(numg, numl, numc, nump)
        call get_proc_bounds_atm(begg_atm, endg_atm)
        call get_proc_global_atm(numa)
-#if (defined RTM)
-       call get_proc_rof_bounds(beg_rof, end_rof)
-       call get_proc_rof_global(num_rtm)
-#endif
+       if (do_rtm) then
+          call get_proc_rof_bounds(beg_rof, end_rof)
+          call get_proc_rof_global(num_rtm)
+       end if
        
        start(1)=1
 
@@ -3696,12 +3685,12 @@ contains
                 num1d_out = nump
                 beg1d_out = begp
                 end1d_out = endp
-#if (defined RTM)
              case (allrof)
-                num1d_out = num_rtm
-                beg1d_out = beg_rof
-                end1d_out = end_rof
-#endif
+                if (do_rtm) then
+                   num1d_out = num_rtm
+                   beg1d_out = beg_rof
+                   end1d_out = end_rof
+                end if
              case default
                 write(iulog,*) trim(subname),' ERROR: read unknown 1d output type=',trim(type1d_out)
                 call endrun ()
@@ -3748,12 +3737,12 @@ contains
                 num1d = nump
                 beg1d = begp
                 end1d = endp
-#if (defined RTM)
              case (allrof)
-                num1d = num_rtm
-                beg1d = beg_rof
-                end1d = end_rof
-#endif
+                if (do_rtm) then
+                   num1d = num_rtm
+                   beg1d = beg_rof
+                   end1d = end_rof
+                end if
              case default
                 write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
                 call endrun ()
@@ -4292,14 +4281,10 @@ end function max_nFields
              if (clm3%g%l%ifspecial(l)) ptr_pft(p) = set_spec
           end do
        end if
-
-#if (defined RTM)
     else if (present(ptr_rof)) then
        l_type1d = allrof
        l_type1d_out = allrof
        clmptr_rs(hpindex)%ptr => ptr_rof
-
-#endif
     else
        write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are [ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_pft] ', &

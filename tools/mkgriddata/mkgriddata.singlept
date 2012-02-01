@@ -1,9 +1,0 @@
-&clmexp
- mksrf_fnavyoro="/glade/proj3/cseg/inputdata/lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc"
- mksrf_lsmlon = 1
- mksrf_lsmlat = 1
- mksrf_edgee = 306.0
- mksrf_edgew = 304.0
- mksrf_edges = -8.0
- mksrf_edgen = -6.0
-/

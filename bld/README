@@ -49,9 +49,8 @@ namelist_files/namelist_definition.xml ---------- Definition of all namelist ite
 namelist_files/namelist_definition.xsl ---------- Describes how to view the xml file as html
 namelist_files/use_cases ------------------------ Specific configurations that build-namelist uses
 
----------- XML Files describing namelists only used in stand-alone CLM testing
-namelist_files/namelist_defaults_datm.xml -- List of default values for the datm model namelist
-namelist_files/namelist_defaults_drv.xml --- List of default values for the drv namelist
-namelist_files/namelist_defaults_drydep.xml  List of default values for the dry
-                                             deposition module.
+---------- XML Files describing namelists ONLY USED in stand-alone CLM testing
+namelist_files/namelist_defaults_stndln.xml --- List of default values for the datm and drv model 
+                                                for offline generation used in testing
+namelist_files/namelist_defaults_drydep.xml --- List of default values for the dry deposition module.
 

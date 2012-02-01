@@ -67,17 +67,23 @@ else
    toolrun="${CLM_TESTDIR}/TCBtools.$1.$2/$1"
 fi
 
-if [ ! -f "${cfgdir}/$1.$3" ]; then
-    echo "TSMtools.sh: error ${cfgdir}/$1.$3 input run file not found"
-    echo "FAIL.job${JOBID}" > TestStatus
-    exit 5
+runfile="${cfgdir}/$1.$3"
+
+if [ ! -f "${runfile}" ]; then
+    runfile="${CLM_SCRIPTDIR}/nl_files/$1.$3"
+    if [ ! -f "${runfile}" ]; then
+        echo "TSMtools.sh: error ${runfile} input run file not found"
+        echo "FAIL.job${JOBID}" > TestStatus
+        exit 5
+    fi
 fi
 
-if [ $3 == "runoptions" ]; then
-  echo "$toolrun "`cat ${cfgdir}/$1.$3`
+echo "Run file type = ${3#*.}"
+if [ ${3#*.} == "runoptions" ]; then
+  echo "$toolrun "`cat ${runfile}`
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
-     $toolrun  `cat ${cfgdir}/$1.$3` >> test.log 2>&1
+     $toolrun  `cat ${runfile}` >> test.log 2>&1
      rc=$?
      status="PASS"
   else
@@ -86,9 +92,9 @@ if [ $3 == "runoptions" ]; then
      rc=0
   fi
 else
-  echo "$toolrun < ${cfgdir}/$1.$3"
+  echo "$toolrun < ${runfile}"
   if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
-     $toolrun < ${cfgdir}/$1.$3 >> test.log 2>&1
+     $toolrun < ${runfile} >> test.log 2>&1
      rc=$?
      status="PASS"
   else

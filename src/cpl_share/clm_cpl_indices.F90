@@ -11,17 +11,23 @@ module clm_cpl_indices
 !
 ! !USES:
 
+  use shr_sys_mod,    only : shr_sys_abort
   implicit none
 
   SAVE
   private                              ! By default make data private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+
   public :: clm_cpl_indices_set        ! Set the coupler indices
 
 !
 ! !PUBLIC DATA MEMBERS:
 !
+  integer , public :: glc_nec     ! number of elevation classes for glacier_mec landunits 
+                                  ! (from coupler) - must equal maxpatch_glcmec from namelist
+  integer , parameter, private:: glc_nec_max = 100
+
   ! lnd -> drv (required)
 
   integer, public ::index_l2x_Sl_t            ! temperature
@@ -48,6 +54,7 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxdst2    ! dust flux size bin 2    
   integer, public ::index_l2x_Fall_flxdst3    ! dust flux size bin 3    
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
+
   integer, public ::index_l2x_Fall_flxvoc1    ! voc flux size bin 1    
   integer, public ::index_l2x_Fall_flxvoc2    ! voc flux size bin 2    
   integer, public ::index_l2x_Fall_flxvoc3    ! voc flux size bin 3    
@@ -101,91 +108,20 @@ module clm_cpl_indices
   integer, public :: nflds_x2l = 0
 
   ! sno -> drv (only if land-ice model is NOT a stub model)
-  integer, public ::index_s2x_Ss_tsrf01   = 0   ! glc MEC temperature
-  integer, public ::index_s2x_Ss_tsrf02   = 0
-  integer, public ::index_s2x_Ss_tsrf03   = 0
-  integer, public ::index_s2x_Ss_tsrf04   = 0
-  integer, public ::index_s2x_Ss_tsrf05   = 0
-  integer, public ::index_s2x_Ss_tsrf06   = 0
-  integer, public ::index_s2x_Ss_tsrf07   = 0
-  integer, public ::index_s2x_Ss_tsrf08   = 0
-  integer, public ::index_s2x_Ss_tsrf09   = 0
-  integer, public ::index_s2x_Ss_tsrf10   = 0
-  integer, public ::index_s2x_Ss_topo01   = 0   ! glc MEC topo height
-  integer, public ::index_s2x_Ss_topo02   = 0
-  integer, public ::index_s2x_Ss_topo03   = 0
-  integer, public ::index_s2x_Ss_topo04   = 0
-  integer, public ::index_s2x_Ss_topo05   = 0
-  integer, public ::index_s2x_Ss_topo06   = 0
-  integer, public ::index_s2x_Ss_topo07   = 0
-  integer, public ::index_s2x_Ss_topo08   = 0
-  integer, public ::index_s2x_Ss_topo09   = 0
-  integer, public ::index_s2x_Ss_topo10   = 0
-  integer, public ::index_s2x_Fgss_qice01 = 0   ! glc MEC ice flux
-  integer, public ::index_s2x_Fgss_qice02 = 0
-  integer, public ::index_s2x_Fgss_qice03 = 0
-  integer, public ::index_s2x_Fgss_qice04 = 0
-  integer, public ::index_s2x_Fgss_qice05 = 0
-  integer, public ::index_s2x_Fgss_qice06 = 0
-  integer, public ::index_s2x_Fgss_qice07 = 0
-  integer, public ::index_s2x_Fgss_qice08 = 0
-  integer, public ::index_s2x_Fgss_qice09 = 0
-  integer, public ::index_s2x_Fgss_qice10 = 0
+
+  integer, public :: index_s2x_Ss_tsrf(glc_nec_max)   = 0 ! glc MEC temperature
+  integer, public :: index_s2x_Ss_topo(glc_nec_max)   = 0 ! glc MEC topo height
+  integer, public :: index_s2x_Fgss_qice(glc_nec_max) = 0 ! glc MEC ice flux
 
   integer, public :: nflds_s2x = 0
 
   ! drv -> sno (only if land-ice model is NOT a stub model)
 
-  integer, public ::index_x2s_Sg_frac01   = 0   ! Fraction of glacier in glc MEC class 1
-  integer, public ::index_x2s_Sg_topo01   = 0   ! Topo height in glc MEC class 1
-  integer, public ::index_x2s_Fsgg_rofi01 = 0   ! Ice runoff from glc model
-  integer, public ::index_x2s_Fsgg_rofl01 = 0   ! Liquid runoff from glc model
-  integer, public ::index_x2s_Fsgg_hflx01 = 0
-  integer, public ::index_x2s_Sg_frac02   = 0
-  integer, public ::index_x2s_Sg_topo02   = 0
-  integer, public ::index_x2s_Fsgg_rofi02 = 0
-  integer, public ::index_x2s_Fsgg_rofl02 = 0
-  integer, public ::index_x2s_Fsgg_hflx02 = 0
-  integer, public ::index_x2s_Sg_frac03   = 0
-  integer, public ::index_x2s_Sg_topo03   = 0
-  integer, public ::index_x2s_Fsgg_rofi03 = 0
-  integer, public ::index_x2s_Fsgg_rofl03 = 0
-  integer, public ::index_x2s_Fsgg_hflx03 = 0
-  integer, public ::index_x2s_Sg_frac04   = 0
-  integer, public ::index_x2s_Sg_topo04   = 0
-  integer, public ::index_x2s_Fsgg_rofi04 = 0
-  integer, public ::index_x2s_Fsgg_rofl04 = 0
-  integer, public ::index_x2s_Fsgg_hflx04 = 0
-  integer, public ::index_x2s_Sg_frac05   = 0
-  integer, public ::index_x2s_Sg_topo05   = 0
-  integer, public ::index_x2s_Fsgg_rofi05 = 0
-  integer, public ::index_x2s_Fsgg_rofl05 = 0
-  integer, public ::index_x2s_Fsgg_hflx05 = 0
-  integer, public ::index_x2s_Sg_frac06   = 0
-  integer, public ::index_x2s_Sg_topo06   = 0
-  integer, public ::index_x2s_Fsgg_rofi06 = 0
-  integer, public ::index_x2s_Fsgg_rofl06 = 0
-  integer, public ::index_x2s_Fsgg_hflx06 = 0
-  integer, public ::index_x2s_Sg_frac07   = 0
-  integer, public ::index_x2s_Sg_topo07   = 0
-  integer, public ::index_x2s_Fsgg_rofi07 = 0
-  integer, public ::index_x2s_Fsgg_rofl07 = 0
-  integer, public ::index_x2s_Fsgg_hflx07 = 0
-  integer, public ::index_x2s_Sg_frac08   = 0
-  integer, public ::index_x2s_Sg_topo08   = 0
-  integer, public ::index_x2s_Fsgg_rofi08 = 0
-  integer, public ::index_x2s_Fsgg_rofl08 = 0
-  integer, public ::index_x2s_Fsgg_hflx08 = 0
-  integer, public ::index_x2s_Sg_frac09   = 0
-  integer, public ::index_x2s_Sg_topo09   = 0
-  integer, public ::index_x2s_Fsgg_rofi09 = 0
-  integer, public ::index_x2s_Fsgg_rofl09 = 0
-  integer, public ::index_x2s_Fsgg_hflx09 = 0
-  integer, public ::index_x2s_Sg_frac10   = 0
-  integer, public ::index_x2s_Sg_topo10   = 0
-  integer, public ::index_x2s_Fsgg_rofi10 = 0
-  integer, public ::index_x2s_Fsgg_rofl10 = 0
-  integer, public ::index_x2s_Fsgg_hflx10 = 0
+  integer, public :: index_x2s_Sg_frac(glc_nec_max)   = 0   ! Fraction of glacier in glc MEC class 1
+  integer, public :: index_x2s_Sg_topo(glc_nec_max)   = 0   ! Topo height in glc MEC class 1
+  integer, public :: index_x2s_Fsgg_rofi(glc_nec_max) = 0   ! Ice runoff from glc model
+  integer, public :: index_x2s_Fsgg_rofl(glc_nec_max) = 0   ! Liquid runoff from glc model
+  integer, public :: index_x2s_Fsgg_hflx(glc_nec_max) = 0
 
   integer, public :: nflds_x2s = 0
 !
@@ -193,6 +129,7 @@ module clm_cpl_indices
 ! Created by Mariana Vertenstein
 ! 01/19/2011, Erik Kluzek:         Added protex headers
 ! 01/20/2011, Erik Kluzek:         Set nflds
+! 12/11/2011, Mariana Vertenstein  Updated for new coupler fields spec
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -234,11 +171,14 @@ contains
 ! 01/2011, Erik Kluzek:         Added protex headers
 !
 ! !LOCAL VARIABLES:
-    type(mct_aVect) :: l2x      ! temporary, land to coupler
-    type(mct_aVect) :: x2l      ! temporary, coupler to land
-    type(mct_aVect) :: r2x      ! temporary, runoff to coupler
-    type(mct_aVect) :: s2x      ! temporary, glacier to coupler
-    type(mct_aVect) :: x2s      ! temporary, coupler to glacier
+    type(mct_aVect)   :: l2x      ! temporary, land to coupler
+    type(mct_aVect)   :: x2l      ! temporary, coupler to land
+    type(mct_aVect)   :: r2x      ! temporary, runoff to coupler
+    type(mct_aVect)   :: s2x      ! temporary, glacier to coupler
+    type(mct_aVect)   :: x2s      ! temporary, coupler to glacier
+    integer           :: num 
+    character(len= 2) :: cnum
+    character(len=64) :: name
     character(len=32) :: subname = 'clm_cpl_indices_set'  ! subroutine name
 !EOP
 !
@@ -250,7 +190,10 @@ contains
     call mct_aVect_init(x2l, rList=seq_flds_x2l_fields, lsize=1)
     call mct_aVect_init(l2x, rList=seq_flds_l2x_fields, lsize=1)
 
-    ! lnd -> drv 
+    !-------------------------------------------------------------
+    ! clm -> drv 
+    !-------------------------------------------------------------
+
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')
     index_l2x_Sl_snowh      = mct_avect_indexra(l2x,'Sl_snowh')
     index_l2x_Sl_avsdr      = mct_avect_indexra(l2x,'Sl_avsdr')
@@ -260,6 +203,14 @@ contains
     index_l2x_Sl_tref       = mct_avect_indexra(l2x,'Sl_tref')
     index_l2x_Sl_qref       = mct_avect_indexra(l2x,'Sl_qref')
     index_l2x_Sl_u10        = mct_avect_indexra(l2x,'Sl_u10')
+    index_l2x_Sl_ram1       = mct_avect_indexra(l2x,'Sl_ram1')
+    index_l2x_Sl_fv         = mct_avect_indexra(l2x,'Sl_fv')
+    if ( lnd_drydep )then
+       index_l2x_Sl_ddvel = mct_avect_indexra(l2x, trim(drydep_fields_token))
+    else
+       index_l2x_Sl_ddvel = 0
+    end if
+
     index_l2x_Fall_taux     = mct_avect_indexra(l2x,'Fall_taux')
     index_l2x_Fall_tauy     = mct_avect_indexra(l2x,'Fall_tauy')
     index_l2x_Fall_lat      = mct_avect_indexra(l2x,'Fall_lat')
@@ -267,27 +218,24 @@ contains
     index_l2x_Fall_lwup     = mct_avect_indexra(l2x,'Fall_lwup')
     index_l2x_Fall_evap     = mct_avect_indexra(l2x,'Fall_evap')
     index_l2x_Fall_swnet    = mct_avect_indexra(l2x,'Fall_swnet')
-    index_l2x_Sl_ram1       = mct_avect_indexra(l2x,'Sl_ram1')
-    index_l2x_Sl_fv         = mct_avect_indexra(l2x,'Sl_fv')
     index_l2x_Fall_flxdst1  = mct_avect_indexra(l2x,'Fall_flxdst1')
     index_l2x_Fall_flxdst2  = mct_avect_indexra(l2x,'Fall_flxdst2')
     index_l2x_Fall_flxdst3  = mct_avect_indexra(l2x,'Fall_flxdst3')
     index_l2x_Fall_flxdst4  = mct_avect_indexra(l2x,'Fall_flxdst4')
+
+    index_l2x_Fall_fco2_lnd = mct_avect_indexra(l2x,'Fall_fco2_lnd',perrwith='quiet')
     index_l2x_Fall_flxvoc1  = mct_avect_indexra(l2x,'Fall_flxvoc1' ,perrwith='quiet')
     index_l2x_Fall_flxvoc2  = mct_avect_indexra(l2x,'Fall_flxvoc2' ,perrwith='quiet')
     index_l2x_Fall_flxvoc3  = mct_avect_indexra(l2x,'Fall_flxvoc3' ,perrwith='quiet')
     index_l2x_Fall_flxvoc4  = mct_avect_indexra(l2x,'Fall_flxvoc4' ,perrwith='quiet')
     index_l2x_Fall_flxvoc5  = mct_avect_indexra(l2x,'Fall_flxvoc5' ,perrwith='quiet')
-    index_l2x_Fall_fco2_lnd = mct_avect_indexra(l2x,'Fall_fco2_lnd',perrwith='quiet')
-    if ( lnd_drydep )then
-       index_l2x_Sl_ddvel = mct_avect_indexra(l2x, trim(drydep_fields_token))
-    else
-       index_l2x_Sl_ddvel = 0
-    end if
 
     nflds_l2x = mct_avect_nRattr(l2x)
 
-    ! drv -> lnd
+    !-------------------------------------------------------------
+    ! drv -> clm
+    !-------------------------------------------------------------
+
     index_x2l_Sa_z          = mct_avect_indexra(x2l,'Sa_z')
     index_x2l_Sa_u          = mct_avect_indexra(x2l,'Sa_u')
     index_x2l_Sa_v          = mct_avect_indexra(x2l,'Sa_v')
@@ -295,6 +243,9 @@ contains
     index_x2l_Sa_pbot       = mct_avect_indexra(x2l,'Sa_pbot')
     index_x2l_Sa_tbot       = mct_avect_indexra(x2l,'Sa_tbot')
     index_x2l_Sa_shum       = mct_avect_indexra(x2l,'Sa_shum')
+    index_x2l_Sa_co2prog    = mct_avect_indexra(x2l,'Sa_co2prog',perrwith='quiet')
+    index_x2l_Sa_co2diag    = mct_avect_indexra(x2l,'Sa_co2diag',perrwith='quiet')
+
     index_x2l_Faxa_lwdn     = mct_avect_indexra(x2l,'Faxa_lwdn')
     index_x2l_Faxa_rainc    = mct_avect_indexra(x2l,'Faxa_rainc')
     index_x2l_Faxa_rainl    = mct_avect_indexra(x2l,'Faxa_rainl')
@@ -318,15 +269,15 @@ contains
     index_x2l_Faxa_dstwet2  = mct_avect_indexra(x2l,'Faxa_dstwet2')
     index_x2l_Faxa_dstwet3  = mct_avect_indexra(x2l,'Faxa_dstwet3')
     index_x2l_Faxa_dstwet4  = mct_avect_indexra(x2l,'Faxa_dstwet4')
-    index_x2l_Sa_co2prog    = mct_avect_indexra(x2l,'Sa_co2prog',perrwith='quiet')
-    index_x2l_Sa_co2diag    = mct_avect_indexra(x2l,'Sa_co2diag',perrwith='quiet')
 
     nflds_x2l = mct_avect_nRattr(x2l)
 
     call mct_aVect_clean(x2l)
     call mct_aVect_clean(l2x)
 
+    !-------------------------------------------------------------
     ! runoff
+    !-------------------------------------------------------------
 
     call mct_aVect_init(r2x, rList=seq_flds_r2x_fields, lsize=1)
 
@@ -337,117 +288,66 @@ contains
 
     call mct_aVect_clean(r2x)
 
-    ! sno (for land-ice model)
+    !-------------------------------------------------------------
+    ! drv->sno (for cism coupling)
+    !-------------------------------------------------------------
 
-    call mct_aVect_init(x2s, rList=seq_flds_x2s_fields, lsize=1)
-    call mct_aVect_init(s2x, rList=seq_flds_s2x_fields, lsize=1)
+    glc_nec = 0
 
-#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 || defined GLC_NEC_1)
-    index_x2s_Sg_frac01   = mct_avect_indexra(x2s,'Sg_frac01')
-    index_x2s_Sg_topo01   = mct_avect_indexra(x2s,'Sg_topo01')
-    index_x2s_Fsgg_rofi01 = mct_avect_indexra(x2s,'Fsgg_rofi01')
-    index_x2s_Fsgg_rofl01 = mct_avect_indexra(x2s,'Fsgg_rofl01')
-    index_x2s_Fsgg_hflx01 = mct_avect_indexra(x2s,'Fsgg_hflx01')
-#endif
-#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 )
-    index_x2s_Sg_frac02   = mct_avect_indexra(x2s,'Sg_frac02')
-    index_x2s_Sg_topo02   = mct_avect_indexra(x2s,'Sg_topo02')
-    index_x2s_Sg_frac03   = mct_avect_indexra(x2s,'Sg_frac03')
-    index_x2s_Sg_topo03   = mct_avect_indexra(x2s,'Sg_topo03')
-    index_x2s_Fsgg_rofi02 = mct_avect_indexra(x2s,'Fsgg_rofi02')
-    index_x2s_Fsgg_rofl02 = mct_avect_indexra(x2s,'Fsgg_rofl02')
-    index_x2s_Fsgg_hflx02 = mct_avect_indexra(x2s,'Fsgg_hflx02')
-    index_x2s_Fsgg_rofi03 = mct_avect_indexra(x2s,'Fsgg_rofi03')
-    index_x2s_Fsgg_rofl03 = mct_avect_indexra(x2s,'Fsgg_rofl03')
-    index_x2s_Fsgg_hflx03 = mct_avect_indexra(x2s,'Fsgg_hflx03')
-#endif
-#if (defined GLC_NEC_10 || defined GLC_NEC_5 )
-    index_x2s_Sg_frac04   = mct_avect_indexra(x2s,'Sg_frac04')
-    index_x2s_Sg_topo04   = mct_avect_indexra(x2s,'Sg_topo04')
-    index_x2s_Sg_frac05   = mct_avect_indexra(x2s,'Sg_frac05')
-    index_x2s_Sg_topo05   = mct_avect_indexra(x2s,'Sg_topo05')
-    index_x2s_Fsgg_rofi04 = mct_avect_indexra(x2s,'Fsgg_rofi04')
-    index_x2s_Fsgg_rofl04 = mct_avect_indexra(x2s,'Fsgg_rofl04')
-    index_x2s_Fsgg_hflx04 = mct_avect_indexra(x2s,'Fsgg_hflx04')
-    index_x2s_Fsgg_rofi05 = mct_avect_indexra(x2s,'Fsgg_rofi05')
-    index_x2s_Fsgg_rofl05 = mct_avect_indexra(x2s,'Fsgg_rofl05')
-    index_x2s_Fsgg_hflx05 = mct_avect_indexra(x2s,'Fsgg_hflx05')
-#endif
-#if (defined GLC_NEC_10 )
-    index_x2s_Sg_frac06   = mct_avect_indexra(x2s,'Sg_frac06')
-    index_x2s_Sg_topo06   = mct_avect_indexra(x2s,'Sg_topo06')
-    index_x2s_Sg_frac07   = mct_avect_indexra(x2s,'Sg_frac07')
-    index_x2s_Sg_topo07   = mct_avect_indexra(x2s,'Sg_topo07')
-    index_x2s_Sg_frac08   = mct_avect_indexra(x2s,'Sg_frac08')
-    index_x2s_Sg_topo08   = mct_avect_indexra(x2s,'Sg_topo08')
-    index_x2s_Sg_frac09   = mct_avect_indexra(x2s,'Sg_frac09')
-    index_x2s_Sg_topo09   = mct_avect_indexra(x2s,'Sg_topo09')
-    index_x2s_Sg_frac10   = mct_avect_indexra(x2s,'Sg_frac10')
-    index_x2s_Sg_topo10   = mct_avect_indexra(x2s,'Sg_topo10')
-    index_x2s_Fsgg_rofi06 = mct_avect_indexra(x2s,'Fsgg_rofi06')
-    index_x2s_Fsgg_rofl06 = mct_avect_indexra(x2s,'Fsgg_rofl06')
-    index_x2s_Fsgg_hflx06 = mct_avect_indexra(x2s,'Fsgg_hflx06')
-    index_x2s_Fsgg_rofi07 = mct_avect_indexra(x2s,'Fsgg_rofi07')
-    index_x2s_Fsgg_rofl07 = mct_avect_indexra(x2s,'Fsgg_rofl07')
-    index_x2s_Fsgg_hflx07 = mct_avect_indexra(x2s,'Fsgg_hflx07')
-    index_x2s_Fsgg_rofi08 = mct_avect_indexra(x2s,'Fsgg_rofi08')
-    index_x2s_Fsgg_rofl08 = mct_avect_indexra(x2s,'Fsgg_rofl08')
-    index_x2s_Fsgg_hflx08 = mct_avect_indexra(x2s,'Fsgg_hflx08')
-    index_x2s_Fsgg_rofi09 = mct_avect_indexra(x2s,'Fsgg_rofi09')
-    index_x2s_Fsgg_rofl09 = mct_avect_indexra(x2s,'Fsgg_rofl09')
-    index_x2s_Fsgg_hflx09 = mct_avect_indexra(x2s,'Fsgg_hflx09')
-    index_x2s_Fsgg_rofi10 = mct_avect_indexra(x2s,'Fsgg_rofi10')
-    index_x2s_Fsgg_rofl10 = mct_avect_indexra(x2s,'Fsgg_rofl10')
-    index_x2s_Fsgg_hflx10 = mct_avect_indexra(x2s,'Fsgg_hflx10')
-#endif
+    if (seq_flds_x2s_fields /= ' ') then
+       call mct_aVect_init(x2s, rList=seq_flds_x2s_fields, lsize=1)
 
-    nflds_x2s = mct_avect_nRattr(x2s)
+       do num = 1,glc_nec_max
+          write(cnum,'(i2.2)') num
+          name = 'Sg_frac' // cnum
+          index_x2s_Sg_frac(num)   = mct_avect_indexra(x2s,trim(name),perrwith='quiet') 
+          name = 'Sg_topo' // cnum
+          index_x2s_Sg_topo(num)   = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
+          name = 'Fsgg_rofi' // cnum
+          index_x2s_Fsgg_rofi(num) = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
+          name = 'Fsgg_rofl' // cnum
+          index_x2s_Fsgg_rofl(num) = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
+          name = 'Fsgg_hflx' // cnum
+          index_x2s_Fsgg_hflx(num) = mct_avect_indexra(x2s,trim(name),perrwith='quiet')
+          if ( index_x2s_Sg_frac(num)   == 0 .and. &
+               index_x2s_Sg_topo(num)   == 0 .and. &
+               index_x2s_Fsgg_rofi(num) == 0 .and. &
+               index_x2s_fsgg_rofl(num) == 0 .and. &
+               index_x2s_Fsgg_hflx(num) == 0 ) then
+             exit
+          end if
+          glc_nec = num
+       end do
+       if (glc_nec == glc_nec_max) then
+          write(6,*)subname, 'glc_nec_max value has been reached ' 
+          call shr_sys_abort (subname // 'error: glc_nec_cpl cannot equal glc_nec_max')
+       end if
 
-    ! sno -> drv
+       nflds_x2s = mct_avect_nRattr(x2s)
+       call mct_aVect_clean(x2s)
+    end if
 
-#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 || defined GLC_NEC_1)
-    index_s2x_Ss_tsrf01   = mct_avect_indexra(s2x,'Ss_tsrf01')
-    index_s2x_Ss_topo01   = mct_avect_indexra(s2x,'Ss_topo01')
-    index_s2x_Fgss_qice01 = mct_avect_indexra(s2x,'Fgss_qice01')
-#endif
-#if (defined GLC_NEC_10 || defined GLC_NEC_5 || defined GLC_NEC_3 )
-    index_s2x_Ss_tsrf02   = mct_avect_indexra(s2x,'Ss_tsrf02')
-    index_s2x_Ss_topo02   = mct_avect_indexra(s2x,'Ss_topo02')
-    index_s2x_Ss_tsrf03   = mct_avect_indexra(s2x,'Ss_tsrf03')
-    index_s2x_Ss_topo03   = mct_avect_indexra(s2x,'Ss_topo03')
-    index_s2x_Fgss_qice02 = mct_avect_indexra(s2x,'Fgss_qice02')
-    index_s2x_Fgss_qice03 = mct_avect_indexra(s2x,'Fgss_qice03')
-#endif
-#if (defined GLC_NEC_10 || defined GLC_NEC_5 )
-    index_s2x_Ss_tsrf04   = mct_avect_indexra(s2x,'Ss_tsrf04')
-    index_s2x_Ss_topo04   = mct_avect_indexra(s2x,'Ss_topo04')
-    index_s2x_Ss_tsrf05   = mct_avect_indexra(s2x,'Ss_tsrf05')
-    index_s2x_Ss_topo05   = mct_avect_indexra(s2x,'Ss_topo05')
-    index_s2x_Fgss_qice04 = mct_avect_indexra(s2x,'Fgss_qice04')
-    index_s2x_Fgss_qice05 = mct_avect_indexra(s2x,'Fgss_qice05')
-#endif
-#if (defined GLC_NEC_10 )
-    index_s2x_Ss_tsrf06   = mct_avect_indexra(s2x,'Ss_tsrf06')
-    index_s2x_Ss_topo06   = mct_avect_indexra(s2x,'Ss_topo06')
-    index_s2x_Ss_tsrf07   = mct_avect_indexra(s2x,'Ss_tsrf07')
-    index_s2x_Ss_topo07   = mct_avect_indexra(s2x,'Ss_topo07')
-    index_s2x_Ss_tsrf08   = mct_avect_indexra(s2x,'Ss_tsrf08')
-    index_s2x_Ss_topo08   = mct_avect_indexra(s2x,'Ss_topo08')
-    index_s2x_Ss_tsrf09   = mct_avect_indexra(s2x,'Ss_tsrf09')
-    index_s2x_Ss_topo09   = mct_avect_indexra(s2x,'Ss_topo09')
-    index_s2x_Ss_tsrf10   = mct_avect_indexra(s2x,'Ss_tsrf10')
-    index_s2x_Ss_topo10   = mct_avect_indexra(s2x,'Ss_topo10')
-    index_s2x_Fgss_qice06 = mct_avect_indexra(s2x,'Fgss_qice06')
-    index_s2x_Fgss_qice07 = mct_avect_indexra(s2x,'Fgss_qice07')
-    index_s2x_Fgss_qice08 = mct_avect_indexra(s2x,'Fgss_qice08')
-    index_s2x_Fgss_qice09 = mct_avect_indexra(s2x,'Fgss_qice09')
-    index_s2x_Fgss_qice10 = mct_avect_indexra(s2x,'Fgss_qice10')
-#endif
+    !-------------------------------------------------------------
+    ! sno -> drv (for cism coupling)
+    !-------------------------------------------------------------
 
-    nflds_s2x = mct_avect_nRattr(s2x)
+    if (seq_flds_s2x_fields /= ' ') then
+       call mct_aVect_init(s2x, rList=seq_flds_s2x_fields, lsize=1)
 
-    call mct_aVect_clean(x2s)
-    call mct_aVect_clean(s2x)
+       do num = 1,glc_nec
+          write(cnum,'(i2.2)') num
+
+          name = 'Ss_tsrf' // cnum
+          index_s2x_Ss_tsrf(num)   = mct_avect_indexra(s2x,trim(name))
+          name = 'Ss_topo' // cnum
+          index_s2x_Ss_topo(num)   = mct_avect_indexra(s2x,trim(name))
+          name = 'Fgss_qice' // cnum
+          index_s2x_Fgss_qice(num) = mct_avect_indexra(s2x,trim(name))
+       end do
+
+       nflds_s2x = mct_avect_nRattr(s2x)
+       call mct_aVect_clean(s2x)
+    end if
 
   end subroutine clm_cpl_indices_set
 

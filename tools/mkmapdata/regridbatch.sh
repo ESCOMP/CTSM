@@ -15,7 +15,6 @@
 #BSUB -J regrid          # job name
 #BSUB -W 6:00
 #BSUB -q regular         # queue
-##BSUB -a tv             #use totalview debugger
 
 #----------------------------------------------------------------------
 
@@ -45,7 +44,7 @@ for res in $resols; do
   #----------------------------------------------------------------------
   cmdargs="-r $res"
   if [ -z $LSF_PJL_TYPE ]; then
-    cmdargs="$cmdargs -i"
+    cmdargs="$cmdargs -b"
   fi
   time env REGRID_PROC=8 mkmapdata.sh $cmdargs
 done
