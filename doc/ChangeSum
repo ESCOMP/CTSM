@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_40         erik 02/16/2012 Back out update to new T31 surface datasets
    clm4_0_39         erik 02/01/2012 Bring newgrid branch to trunk
    clm4_0_38         erik 01/23/2012 Fix f09 surface datasets
    clm4_0_37         erik 09/26/2011 Fix unstructured grids history files
