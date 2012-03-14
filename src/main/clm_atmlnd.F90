@@ -6,13 +6,13 @@ module clm_atmlnd
 ! !MODULE: clm_atmlnd
 !
 ! !DESCRIPTION:
-! Handle atm2lnd, lnd2atm mapping/downscaling/upscaling/data
+! Handle atm2lnd, lnd2atm mapping
 !
 ! !USES:
   use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins.
   use clm_varcon  , only : rair, grav, cpair, hfus, tfrz
   use clm_varctl  , only : iulog
-  use decompMod   , only : get_proc_bounds, get_proc_bounds_atm
+  use decompMod   , only : get_proc_bounds
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan
   use spmdMod     , only : masterproc
@@ -83,22 +83,12 @@ module clm_atmlnd
      real(r8), pointer :: flxvoc(:,:)       ! VOC flux (size bins)
   end type lnd2atm_type
   
-  type(atm2lnd_type),public,target :: atm_a2l      ! a2l fields on atm grid
-  type(lnd2atm_type),public,target :: atm_l2a      ! l2a fields on atm grid
-
   type(atm2lnd_type),public,target :: clm_a2l      ! a2l fields on clm grid
   type(lnd2atm_type),public,target :: clm_l2a      ! l2a fields on clm grid
 
-  real(r8), pointer, public :: adiag_arain(:)
-  real(r8), pointer, public :: adiag_asnow(:)
-  real(r8), pointer, public :: adiag_aflux(:)
-  real(r8), pointer, public :: adiag_lflux(:)
-
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: init_adiag_type
   public :: init_atm2lnd_type
   public :: init_lnd2atm_type
-  public :: clm_downscale_a2l
   public :: clm_map2gcell
 !
 ! !REVISION HISTORY:
@@ -110,44 +100,6 @@ module clm_atmlnd
 !----------------------------------------------------
 
 contains
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_adiag_type
-!
-! !INTERFACE:
-  subroutine init_adiag_type
-!
-! !DESCRIPTION:
-! Initialize downscaling diagnostics
-!
-! !ARGUMENTS:
-  implicit none
-!
-! !REVISION HISTORY:
-! Created by T Craig for downscaling diagnostics, 4/2007
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-!
-  integer :: beg,end
-!------------------------------------------------------------------------
-
-  call get_proc_bounds(beg, end)
-  allocate(adiag_lflux(beg:end))
-  adiag_lflux = 0.0_r8
-
-  call get_proc_bounds_atm(beg, end)
-  allocate(adiag_arain(beg:end))
-  allocate(adiag_asnow(beg:end))
-  allocate(adiag_aflux(beg:end))
-  adiag_arain = 0.0_r8
-  adiag_asnow = 0.0_r8
-  adiag_aflux = 0.0_r8
-
-end subroutine init_adiag_type
 
 !------------------------------------------------------------------------
 !BOP
@@ -317,355 +269,6 @@ end subroutine init_atm2lnd_type
 
 end subroutine init_lnd2atm_type
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_downscale_a2l
-!
-! !INTERFACE:
-subroutine clm_downscale_a2l(a2l_src, a2l_dst)
-!
-! !DESCRIPTION:
-! Maps atm2lnd fields from external grid to clm grid
-!
-! !USES:
-  use downscaleMod, only : map1dl_a2l, map1dl_l2a, map_setptrs
-  use decompMod   , only : ldecomp,adecomp
-  use domainMod   , only : ldomain,adomain
-  use QSatMod     , only : QSat
-
-!
-! !ARGUMENTS:
-  implicit none
-  type(atm2lnd_type), intent(in)  :: a2l_src
-  type(atm2lnd_type), intent(out) :: a2l_dst
-!
-! !REVISION HISTORY:
-! 2005.11.15  T Craig  Creation.
-! 2006.3.30   P Worley Restructuring for improved vector performance
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-  integer :: n                     ! loop counter
-  integer :: ix                    ! field index
-  integer :: nflds                 ! number of fields to be mapped
-  integer :: nradflds              ! size of 2nd dim in arrays
-  integer :: begg_s,endg_s         ! beg,end of input grid
-  integer :: begg_d,endg_d         ! beg,end of output grid
-  integer          :: nmap         ! size of map
-  integer          :: mo           ! size of map
-  integer, pointer :: src(:)       ! map src index
-  integer, pointer :: dst(:)       ! map dst index
-  real(r8),pointer :: wts(:)       ! map wts values
-  integer  :: ns                    !source (atm) indexes
-  integer  :: nd                    !destination (lnd) indexes
-  ! temporaries for topo downscaling:
-  real(r8) :: hsurf_a,hsurf_l,Hbot,Hsrf,lapse
-  real(r8) :: zbot_a, tbot_a, pbot_a, thbot_a, qbot_a, qs_a, es_a
-  real(r8) :: zbot_l, tbot_l, pbot_l, thbot_l, qbot_l, qs_l, es_l
-  real(r8) :: tsrf_l, psrf_l, egcm_l, rhos_l
-  real(r8) :: dum1,dum2,sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
-  real(r8) :: mu
-  real(r8) :: precip_max
-  real(r8) :: rand_num(6)             ! random number
-  real(r8),allocatable :: rain_l(:),snow_l(:)
-  real(r8),allocatable :: pnorm(:)
-  real(r8),allocatable :: pchance(:),pamount(:)
-  integer ,allocatable :: pchance_min(:)
-  real(r8),allocatable :: qsum(:)
-  integer  :: ier
-  logical  :: first_call = .true.
-
-!------------------------------------------------------------------------------
-
-  if (first_call .and. masterproc) then
-    write(iulog,*) 'clm_downscale_a2l subroutine'
-  endif
-
-  nradflds = size(a2l_src%forc_solad,dim=2)
-  if (nradflds /= numrad) then
-    write(iulog,*) 'clm_mapa2l ERROR: nradflds ne numrad ',nradflds,numrad
-    call endrun()
-  endif
-
-  call get_proc_bounds_atm(begg_s, endg_s)
-  call get_proc_bounds    (begg_d, endg_d)
-
-  !-topographic downscaling
-  !-only call this if there is more than 1 land cell / atm cell somewhere
-
-  call map_setptrs(map1dl_l2a, dstmo=mo)
-
-  if (mo > 1) then
-
-     if (first_call.and.masterproc) then
-        write(iulog,*) 'clm_mapa2l downscaling ON'
-     endif
-
-     call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst,dstmo=mo)
-     if (mo /= 1) then
-        write(iulog,*)' clm_mapa2l ERROR: map1dl_a2l mo not 1 ',mo
-        call endrun()
-     endif
-
-     lapse   = 0.0065_r8     ! hardwired in multiple places in cam
-     mu = 0.20               ! chance of precip coverage [0.,1.]
-     precip_max = 10.0_r8    ! mm/hr
-     allocate(pchance(begg_d:endg_d),pamount(begg_d:endg_d))
-
-     do n = 1,nmap
-        ns = src(n)
-        nd = dst(n)
-        
-        hsurf_a = adomain%topo(ns)        ! atm elevation
-        hsurf_l = ldomain%ntop(nd)        ! lnd elevation
-        !tcx DOWNSCALING turns off topo downscaling
-        !    hsurf_l = hsurf_a
-
-        if (abs(hsurf_a - hsurf_l) .gt. 0.1_r8) then
-
-           !tcx DOWNSCALING if atm lapse rate is available
-           !       lapse  = a2l_src%lapse(ns)         ! atm lapse rate
-           tbot_a = a2l_src%forc_t(ns)        ! atm temp at bot
-           thbot_a= a2l_src%forc_th(ns)       ! atm pot temp at bot
-           pbot_a = a2l_src%forc_pbot(ns)     ! atm press at bot
-           qbot_a = a2l_src%forc_q(ns)        ! atm sp humidity at bot
-           zbot_a = a2l_src%forc_hgt(ns)      ! atm ref height
-           
-           zbot_l = zbot_a
-           tbot_l = tbot_a-lapse*(hsurf_l-hsurf_a)          ! lnd temp for topo
-           
-           Hbot   = rair*0.5_r8*(tbot_a+tbot_l)/grav        ! scale ht at avg temp
-           pbot_l = pbot_a*exp(-(hsurf_l-hsurf_a)/Hbot)     ! lnd press for topo
-           thbot_l= tbot_l*exp((zbot_l/Hbot)*(rair/cpair))  ! pot temp calc
-           
-           tsrf_l = tbot_l-lapse*(-zbot_l)                  ! lnd temp at surface
-           Hsrf   = rair*0.5_r8*(tbot_l+tsrf_l)/grav        ! scale ht at avg temp
-           psrf_l = pbot_l*exp(-(zbot_l)/Hsrf)              ! lnd press for topo
-           
-           call Qsat(tbot_a,pbot_a,es_a,dum1,qs_a,dum2)
-           call Qsat(tbot_l,pbot_l,es_l,dum1,qs_l,dum2)
-           qbot_l = qbot_a*(qs_l/qs_a)
-           
-           a2l_dst%forc_hgt(nd)  = zbot_l
-           a2l_dst%forc_t(nd)    = tbot_l
-           a2l_dst%forc_pbot(nd) = pbot_l
-           a2l_dst%forc_th(nd)   = thbot_l
-           a2l_dst%forc_q(nd)    = qbot_l
-           a2l_dst%forc_vp(nd)   = es_l
-           a2l_dst%forc_psrf(nd) = psrf_l
-           
-        endif
-        
-        ! DOWNSCALING set random numbers (must be "reproducible") for downscaling
-        
-        rand_num(1) = mod(abs(a2l_dst%forc_t(nd))            *1.0e3_r8,1.0_r8)
-        rand_num(2) = 0.5_r8
-        rand_num(3) = mod(abs(sin(ldecomp%gdc2glo(nd)*1._r8))*1.0e3_r8,1.0_r8)
-        rand_num(4) = mod(abs(a2l_dst%forc_psrf(nd))         *1.0e1_r8,1.0_r8)
-        rand_num(5) = 0.5_r8
-        rand_num(6) = mod(abs(cos(ldecomp%gdc2glo(nd)*1._r8))*1.0e3_r8,1.0_r8)
-        
-        pchance(nd) = mod(rand_num(1)+rand_num(2)+rand_num(3),1.0_r8)
-        pamount(nd) = -log(max(1.0_r8-(mod(rand_num(4)+rand_num(5)+rand_num(6),1.0_r8)),1.0e-20_r8))
-        
-        !tcx DOWNSCALING this will remove random aspects, turn on either or both
-        !    pchance(nd) = 0._r8    ! sets all fine gridcells to precip true
-        !    pamount(nd) = 1._r8    ! sets all precip gridcells to equal amount
-        
-     enddo
-
-     !tcx diagnostics
-     !  write(iulog,*) 'tcx mm1 ',minval(a2l_dst%forc_t),maxval(a2l_dst%forc_t)
-     !  write(iulog,*) 'tcx mm2 ',minval(a2l_dst%forc_psrf),maxval(a2l_dst%forc_psrf)
-     !  write(iulog,*) 'tcx mm3 ',minval(a2l_dst%forc_q),maxval(a2l_dst%forc_q)
-     !  write(iulog,*) 'tcx mm4 ',minval(a2l_dst%forc_th),maxval(a2l_dst%forc_th)
-     !  write(iulog,*) 'tcx mm5 ',minval(pchance),maxval(pchance)
-     !  write(iulog,*) 'tcx mm6 ',minval(pamount),maxval(pamount)
-     
-     call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
-     
-     ! compute precipitation disaggregation
-     !--- find min pchance in finemesh cells of coarse mesh, set that cell's
-     !--- pchance to 0. to force it to be below mu and take precip
-     allocate(pchance_min(begg_s:endg_s))
-     pchance_min = -999
-     do n = 1,nmap
-        ns = dst(n)
-        nd = src(n)
-        if (pchance_min(ns) < 1) pchance_min(ns) = nd
-        if (pchance(nd) < pchance(pchance_min(ns))) pchance_min(ns) = nd
-     enddo
-     do n = begg_s,endg_s
-        if (pchance_min(n) > 0) pchance(pchance_min(n)) = 0._r8
-     enddo
-     deallocate(pchance_min)
-     
-     !--- set rain/snow amounts and compute sums for normalization
-     allocate(rain_l(begg_s:endg_s),snow_l(begg_s:endg_s))
-     rain_l = 0.0_r8
-     snow_l = 0.0_r8
-     do n = 1,nmap
-        ns = dst(n)
-        nd = src(n)
-        !tcx DOWNSCALING turn off precip disaggr completely
-        if (pchance(nd) < mu) then
-           !--- rain/snow refractionation
-           !--- set to 100% snow < -5C and 100% rain > 0C
-           dum2 = (a2l_dst%forc_t(nd)-tfrz + 5.0_r8)/(5.0_r8)
-           dum2 = max(dum2,0.0_r8)
-           dum2 = min(dum2,1.0_r8)
-           
-           !tcx DOWNSCALING turn on refractionation and spatial variability
-           a2l_dst%forc_rain(nd) = (         dum2) * pamount(nd)
-           a2l_dst%forc_snow(nd) = (1.0_r8 - dum2) * pamount(nd)
-           !tcx DOWNSCALING turn on just spatial variability but not refractionation
-           ! comment out lines above and comment in the two lines below
-           !        a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd)* pamount(nd)
-           !        a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd)* pamount(nd)
-           !
-        else
-           a2l_dst%forc_rain(nd) = 0._r8
-           a2l_dst%forc_snow(nd) = 0._r8
-        endif
-        rain_l(ns) = rain_l(ns) + a2l_dst%forc_rain(nd) * wts(n)
-        snow_l(ns) = snow_l(ns) + a2l_dst%forc_snow(nd) * wts(n)
-     enddo
-     deallocate(pchance,pamount)
-     
-     !--- compute normalization of disaggregation amounts
-     allocate(pnorm(begg_s:endg_s))
-     pnorm = 0.0_r8
-     do ns = begg_s, endg_s
-        if (rain_l(ns) + snow_l(ns) == 0._r8) then
-           if (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns) /= 0._r8) then
-              write(iulog,*)' clm_mapa2l ERROR: rain/snow normalization',rain_l(ns),snow_l(ns), &
-                   a2l_src%forc_rain(ns),a2l_src%forc_snow(ns)
-              call endrun()
-           endif
-        else
-           pnorm(ns) = (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns)) / (rain_l(ns)+snow_l(ns))
-        endif
-        !--- set pnorm=1 if close, for bfb consitency when coarse=finemesh cases
-        if (abs(pnorm(ns) - 1.0_r8) < 1.0e-12) pnorm(ns) = 1.0_r8
-     enddo
-     deallocate(rain_l,snow_l)
-     
-     !--- apply normalization
-     do n = 1,nmap
-        ns = dst(n)
-        nd = src(n)
-        a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd) * pnorm(ns)
-        a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd) * pnorm(ns)
-     enddo
-     deallocate(pnorm)
-     
-     !--- compute q normalization amounts
-     call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
-     allocate(qsum(begg_s:endg_s))
-     qsum = 0.0_r8
-     do n = 1,nmap
-        ns = dst(n)
-        nd = src(n)
-        qsum(ns) = qsum(ns) + wts(n)* a2l_dst%forc_q(nd)
-     enddo
-     
-     call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst)
-     do n = 1,nmap
-        ns = src(n)
-        nd = dst(n)
-        
-        qbot_a = a2l_src%forc_q(ns)        ! atm specific humidity
-        qbot_l = a2l_dst%forc_q(nd)        ! lnd specific humidity
-        pbot_l = a2l_dst%forc_pbot(nd)  
-        tbot_l = a2l_dst%forc_t(nd)  
-        
-        qbot_l = qbot_l - (qsum(ns) - qbot_a)        ! normalize
-        egcm_l = qbot_l*pbot_l/(0.622+0.378*qbot_l)
-        rhos_l = (pbot_l-0.378*egcm_l) / (rair*tbot_l)
-        
-        a2l_dst%forc_q(nd)    = qbot_l
-        a2l_dst%forc_rho(nd)  = rhos_l
-        
-     enddo
-     
-     deallocate(qsum)
-     
-     ! --- check ---
-     call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
-     adiag_arain = 0.0_r8
-     adiag_asnow = 0.0_r8
-     adiag_aflux = 0.0_r8
-     adiag_lflux = 0.0_r8
-     do ns = begg_s,endg_s
-        sum1 = 0.0_r8
-        sum2 = 0.0_r8
-        sum3 = 0.0_r8
-        sum4 = 0.0_r8
-        sum5 = 0.0_r8
-        sum6 = 0.0_r8
-        sum7 = 0.0_r8
-        sum8 = 0.0_r8
-        do n = 1,nmap
-           if (dst(n) == ns) then
-              nd = src(n)
-              sum1 = sum1 + ldomain%ntop(nd)      * wts(n)
-              sum2 = sum2 + a2l_dst%forc_t(nd)    * wts(n)
-              sum3 = sum3 + a2l_dst%forc_q(nd)    * wts(n)
-              sum4 = sum4 + a2l_dst%forc_hgt(nd)  * wts(n)
-              sum5 = sum5 + a2l_dst%forc_pbot(nd) * wts(n)
-              sum6 = sum6 + a2l_dst%forc_th(nd)   * wts(n)
-              sum7 = sum7 + a2l_dst%forc_rain(nd) * wts(n)
-              sum8 = sum8 + a2l_dst%forc_snow(nd) * wts(n)
-              adiag_lflux(nd) = (a2l_dst%forc_snow(nd) - a2l_src%forc_snow(ns))*wts(n)*hfus
-           endif
-        enddo
-        adiag_arain(ns) = sum7
-        adiag_asnow(ns) = sum8
-        adiag_aflux(ns) = (sum8 - a2l_src%forc_snow(ns))*hfus
-        
-        !--- add up rain and snow, compute relative diff vs source
-        dum1 = (sum7 + sum8 - a2l_src%forc_rain(ns) - a2l_src%forc_snow(ns))
-        if ((sum7+sum8) == 0.0_r8 .and. &
-             (a2l_src%forc_rain(ns)+a2l_src%forc_snow(ns)) == 0.0_r8) then
-           dum1 = 0.0_r8
-        else
-           dum1 = dum1 / (max(sum7+sum8,a2l_src%forc_rain(ns)+a2l_src%forc_snow(ns)))
-        endif
-        
-        if   ((abs(sum1 - adomain%topo(ns))      > 1.0e-8) &
-             .or.(abs(sum2 - a2l_src%forc_t(ns))    > 1.0e-3) &
-             .or.(abs(sum3 - a2l_src%forc_q(ns))    > 1.0e-8) &
-             .or.(abs(sum4 - a2l_src%forc_hgt(ns))  > 1.0e-6) &
-             !      .or.(abs(sum5 - a2l_src%forc_pbot(ns)) > 1.0e-6) &
-             !      .or.(abs(sum6 - a2l_src%forc_th(ns))   > 1.0e-6) &
-             .or.(abs(dum1)                         > 1.0e-8) &
-             ) then
-           write(iulog,*) 'clm_map2l check ERROR topo ',ns,sum1,adomain%topo(ns)
-           write(iulog,*) 'clm_map2l check ERROR t    ',ns,sum2,a2l_src%forc_t(ns)
-           write(iulog,*) 'clm_map2l check ERROR q    ',ns,sum3,a2l_src%forc_q(ns)
-           write(iulog,*) 'clm_map2l check ERROR hgt  ',ns,sum4,a2l_src%forc_hgt(ns)
-           write(iulog,*) 'clm_map2l check ERROR pbot ',ns,sum5,a2l_src%forc_pbot(ns)
-           write(iulog,*) 'clm_map2l check ERROR th   ',ns,sum6,a2l_src%forc_th(ns)
-           write(iulog,*) 'clm_map2l check ERROR rain ',ns,sum7,a2l_src%forc_rain(ns)
-           write(iulog,*) 'clm_map2l check ERROR snow ',ns,sum8,a2l_src%forc_snow(ns)
-           write(iulog,*) 'clm_map2l check ERROR adiag',ns,adiag_arain(ns),adiag_asnow(ns)
-           call endrun()
-        endif
-     enddo
-     
-  else    ! mx_ovr > 1
-     
-     write(iulog,*)' need mx_ovr > 1 for downscaling'
-     call endrun()
-
-  endif   ! mx_ovr > 1
-
-  first_call = .false.
-
-end subroutine clm_downscale_a2l
-
 !------------------------------------------------------------------------
 !BOP
 !
@@ -824,10 +427,6 @@ subroutine clm_map2gcell(init)
      call c2g(begc, endc, begl, endl, begg, endg, &
           cptr%ccf%nee, clm_l2a%nee, &
           c2l_scale_type= 'unity', l2g_scale_type='unity')
-#elif (defined CASA)
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pps%co2flux, clm_l2a%nee, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 #else
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pcf%fco2, clm_l2a%nee, &
@@ -866,11 +465,6 @@ subroutine clm_map2gcell(init)
 
      do g = begg,endg
         clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
-     end do
-
-     ! DOWNSCALING add rain snow conversion heat flux to latent heat flux
-     do g = begg,endg
-        clm_l2a%eflx_lh_tot(g) = clm_l2a%eflx_lh_tot(g) + adiag_lflux(g)
      end do
 
   end if

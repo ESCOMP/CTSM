@@ -19,7 +19,7 @@ module clm_glclnd
 ! 'ice' refers to sea ice, not land ice.
 !
 ! !USES:
-  use decompMod   , only : get_proc_bounds, get_proc_bounds_atm
+  use decompMod   , only : get_proc_bounds
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan
   use spmdMod     , only : masterproc
@@ -56,14 +56,9 @@ module clm_glclnd
   type (lnd2glc_type), public, target :: clm_s2x  ! s2x fields on clm grid
   type (glc2lnd_type), public, target :: clm_x2s  ! x2s fields on clm grid
 
-  type (lnd2glc_type), public, target :: atm_s2x  ! s2x fields on atm grid
-  type (glc2lnd_type), public, target :: atm_x2s  ! x2s fields on atm grid
-
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_glc2lnd_type
   public :: init_lnd2glc_type
-  public :: clm_maps2x
-  public :: clm_mapx2s
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 
@@ -152,151 +147,6 @@ end subroutine init_glc2lnd_type
 
 end subroutine init_lnd2glc_type
 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_maps2x
-!
-! !INTERFACE:
-  subroutine clm_maps2x(s2x_src, s2x_dst)
-!
-! !DESCRIPTION:
-! Maps lnd2glc fields from clm grid to external grid
-!
-! !USES:
-  use downscaleMod  , only : map_maparrayl, map1dl_l2a
-!
-! !ARGUMENTS:
-  implicit none
-  type(lnd2glc_type), intent(in)  :: s2x_src
-  type(lnd2glc_type), intent(out) :: s2x_dst
-!
-! !REVISION HISTORY:
-! Created by William Lipscomb based on clm_mapl2a 
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-  integer :: n                     ! loop counter
-  integer :: ix                    ! field index
-  integer :: nflds                 ! number of fields to be mapped
-  integer :: begg_s,endg_s         ! beg,end of input grid
-  integer :: begg_d,endg_d         ! beg,end of output grid
-  real(r8),pointer :: asrc(:,:)    ! temporary source data
-  real(r8),pointer :: adst(:,:)    ! temporary dest data
-!------------------------------------------------------------------------------
- 
-  !--- allocate temporaries
-  call get_proc_bounds    (begg_s, endg_s)
-  call get_proc_bounds_atm(begg_d, endg_d)
- 
-  nflds = 3    
- 
-  allocate(asrc(begg_s:endg_s,nflds))
-  allocate(adst(begg_d:endg_d,nflds))
-
-  do n = 1, maxpatch_glcmec
- 
-     ix = 0
-     ix=ix+1; asrc(:,ix) = s2x_src%tsrf(:,n)  
-     ix=ix+1; asrc(:,ix) = s2x_src%topo(:,n)  
-     ix=ix+1; asrc(:,ix) = s2x_src%qice(:,n)  
- 
-     call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_l2a)
- 
-     ix = 0
-     ix=ix+1; s2x_dst%tsrf(:,n) = adst(:,ix)
-     ix=ix+1; s2x_dst%topo(:,n) = adst(:,ix)
-     ix=ix+1; s2x_dst%qice(:,n) = adst(:,ix)
- 
-  enddo  ! loop over elevation classes
-
-  deallocate(asrc)
-  deallocate(adst)
- 
-end subroutine clm_maps2x
- 
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: clm_mapx2s
-!
-! !INTERFACE:
-  subroutine clm_mapx2s(x2s_src, x2s_dst)
-!
-! !DESCRIPTION:
-! Maps glc2lnd fields from external grid to clm grid
-!
-! !USES:
-  use downscaleMod, only : map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
-  use decompMod   , only : ldecomp,adecomp
-  use domainMod   , only : ldomain,adomain
-!
-! !ARGUMENTS:
-  implicit none
-  type(glc2lnd_type), intent(in)  :: x2s_src
-  type(glc2lnd_type), intent(out) :: x2s_dst
-!
-! !REVISION HISTORY:
-! Created by William Lipscomb based on clm_mapa2l 
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-  integer :: n                     ! loop counter
-  integer :: ix                    ! field index
-  integer :: nflds                 ! number of fields to be mapped
-  integer :: begg_s,endg_s         ! beg,end of input grid
-  integer :: begg_d,endg_d         ! beg,end of output grid
-  real(r8),pointer :: asrc(:,:)    ! temporary source data
-  real(r8),pointer :: adst(:,:)    ! temporary dest data
-  logical  :: first_call = .true.
-!------------------------------------------------------------------------------
- 
-  if (first_call .and. masterproc) then
-    write(iulog,*) 'clm_mapx2s subroutine'
-  endif
- 
-  !--- allocate temporaries
-  call get_proc_bounds_atm(begg_s, endg_s)
-  call get_proc_bounds    (begg_d, endg_d)
- 
-  nflds = 5
- 
-  allocate(asrc(begg_s:endg_s,nflds))
-  allocate(adst(begg_d:endg_d,nflds))
-
-  do n = 1, maxpatch_glcmec
- 
-     ix = 0
-     ix=ix+1; asrc(:,ix) = x2s_src%frac(:,n)  
-     ix=ix+1; asrc(:,ix) = x2s_src%topo(:,n)  
-     ix=ix+1; asrc(:,ix) = x2s_src%rofi(:,n)  
-     ix=ix+1; asrc(:,ix) = x2s_src%rofl(:,n)  
-     ix=ix+1; asrc(:,ix) = x2s_src%hflx(:,n)  
- 
-     call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
- 
-     ix = 0
-     ix=ix+1; x2s_dst%frac(:,n)  =   adst(:,ix)
-     ix=ix+1; x2s_dst%topo(:,n)  =   adst(:,ix)
-     ix=ix+1; x2s_dst%rofi(:,n)  =   adst(:,ix)
-     ix=ix+1; x2s_dst%rofl(:,n)  =   adst(:,ix)
-     ix=ix+1; x2s_dst%hflx(:,n)  =   adst(:,ix)
-
-  enddo
-
-  deallocate(asrc)
-  deallocate(adst)
-
-  if (first_call.and.masterproc) then
-    write(iulog,*) 'clm_mapx2s mapping complete'
-  endif
-
-  first_call = .false.
-
-  end subroutine clm_mapx2s
- 
 !------------------------------------------------------------------------------
 !BOP
 !

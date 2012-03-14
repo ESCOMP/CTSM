@@ -154,7 +154,7 @@ contains
     use clmtype
     use decompMod       , only : get_proc_bounds, get_proc_global
     use clm_varpar      , only : maxpatch_pft
-    use domainMod       , only : ldomain, llatlon
+    use domainMod       , only : ldomain
     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                                  frivinp_rtm, iulog
     use clm_varcon      , only : spval
@@ -300,11 +300,11 @@ contains
     ! Define dimensions.
     ! -----------------------------------------------------------------------
     
-    if (llatlon%isgrid2d) then
-       call ncd_defdim (ncid, 'lon' ,llatlon%ni, dimid)
-       call ncd_defdim (ncid, 'lat' ,llatlon%nj, dimid)
+    if (ldomain%isgrid2d) then
+       call ncd_defdim (ncid, 'lon' ,ldomain%ni, dimid)
+       call ncd_defdim (ncid, 'lat' ,ldomain%nj, dimid)
     else
-       call ncd_defdim (ncid, 'gridcell', llatlon%ns, dimid)
+       call ncd_defdim (ncid, 'gridcell', ldomain%ns, dimid)
     end if
     call ncd_defdim (ncid, 'pft' , maxpatch_pft , dimid)
     call ncd_defdim (ncid, 'time', ncd_unlimited, dimid)
@@ -316,7 +316,7 @@ contains
     
     ! Define coordinate variables (including time)
     
-    if (llatlon%isgrid2d) then
+    if (ldomain%isgrid2d) then
        call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon', &
             long_name='coordinate longitude', units='degrees_east')
     
@@ -341,7 +341,7 @@ contains
        
     ! Define surface grid (coordinate variables, latitude, longitude, surface type).
     
-    if (llatlon%isgrid2d) then
+    if (ldomain%isgrid2d) then
        call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, &
             dim1name='lon', dim2name='lat', &
             long_name='longitude', units='degrees_east')
@@ -386,7 +386,7 @@ contains
 
     ! Define time dependent variables
 
-    if (llatlon%isgrid2d) then
+    if (ldomain%isgrid2d) then
        call ncd_defvar(ncid=ncid, varname='FPCGRID', xtype=ncprec, &
             dim1name='lon', dim2name='lat', dim3name='pft', dim4name='time', &
             long_name='plant functional type cover', units='fraction of vegetated area', &
@@ -416,10 +416,6 @@ contains
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    if (llatlon%isgrid2d) then
-       call ncd_io(ncid=ncid, varname='lon', data=llatlon%lonc, flag='write')
-       call ncd_io(ncid=ncid, varname='lat', data=llatlon%latc, flag='write')
-    end if
     call ncd_io(ncid=ncid, varname='longxy'  , data=ldomain%lonc, flag='write', &
          dim1name=grlnd)
     call ncd_io(ncid=ncid, varname='latixy'  , data=ldomain%latc, flag='write', &

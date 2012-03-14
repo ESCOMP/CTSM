@@ -12,7 +12,7 @@ module ncdio_pio
   use shr_kind_mod   , only : r8 => shr_kind_r8, i8=>shr_kind_i8, shr_kind_cl
   use spmdMod        , only : masterproc, mpicom, iam, npes,  &
                               MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
-  use clmtype        , only : gratm, grlnd, nameg, namel, namec, namep, allrof
+  use clmtype        , only : grlnd, nameg, namel, namec, namep, allrof
   use clm_varcon     , only : spval,ispval
   use clm_varctl     , only : single_column, iulog
   use shr_sys_mod    , only : shr_sys_flush
@@ -1765,6 +1765,7 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
+          data   = ' '
           status = pio_get_var(ncid, varid, data)
        endif
        if (present(readvar)) readvar = varpresent
@@ -1826,6 +1827,7 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
+          data   = ' '
           status = pio_get_var(ncid, varid, data)
        endif
        if (present(readvar)) readvar = varpresent
@@ -1952,7 +1954,7 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 if (present(nt)) start(3) = nt
              else
                 if (present(nt)) start(2) = nt
@@ -2080,7 +2082,7 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 if (present(nt)) start(3) = nt
              else
                 if (present(nt)) start(2) = nt
@@ -2228,7 +2230,7 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 if (present(nt)) start(3) = nt
              else
                 if (present(nt)) start(2) = nt
@@ -2373,7 +2375,7 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              status = pio_get_var(ncid, vardesc, start, count, data)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)    ! Correct ????
                 if (present(nt)) start(4) = nt
              else
@@ -2534,7 +2536,7 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)    ! Correct ????
                 if (present(switchdim)) then
                    itemp    = count(1)
@@ -2737,7 +2739,7 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)    ! Correct ????
                 count(4) = size(data,dim=3)    ! Correct ????
                 if (present(nt)) start(5) = nt
@@ -2877,7 +2879,7 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
-             if (trim(clmlevel) == gratm .or. trim(clmlevel) == grlnd) then
+             if (trim(clmlevel) == grlnd) then
                 count(3) = size(data,dim=2)    ! Correct ????
                 count(4) = size(data,dim=3)    ! Correct ????
                 if (present(nt)) start(5) = nt

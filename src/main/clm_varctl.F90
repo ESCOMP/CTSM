@@ -62,8 +62,7 @@ module clm_varctl
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
-  logical         ,   public :: downscale               ! true => do downscaling with fine mesh
-                                                        ! ASSUMES that all grids are lat/lon
+
 !
 ! Landunit logic
 !
@@ -252,8 +251,6 @@ contains
        if (fpftdyn /= ' ') then
 #if (defined CNDV)
           call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CNDV option' )
-#elif (defined CASA)
-          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CASA option' )
 #endif
        end if
 

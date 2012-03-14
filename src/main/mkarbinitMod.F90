@@ -525,9 +525,9 @@ contains
              endif
           end do
 
-#if (defined CN) || (defined CASA)
+#if (defined CN) 
           ! soil water potential (added 10/21/03, PET)
-          ! required for CN and CASA code
+          ! required for CN code
           if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
              nlevs = nlevgrnd
              do j = 1, nlevs

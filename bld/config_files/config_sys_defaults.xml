@@ -5,34 +5,29 @@
 <use_mpiserial
 aix="0"
 darwin="1"
-dec_osf="0"
-es="0"
-irix="0"
 linux="0"
-solaris="0"
-super-ux="0"
-unicosmp="0"
 bgl="0"
 />
 
 <smp
 aix="1"
 darwin="0"
-dec_osf="1"
-es="0"
-irix="1"
 linux="0"
-solaris="0"
-super-ux="0"
-unicosmp="0"
 bgl="0"
 />
 
 <mach
-aix="generic_ibm"
-linux="generic_linux_pgi"
-darwin="generic_linux_pgi"
+aix="generic_aix"
+linux="generic_linux"
+darwin="generic_linux"
 bgl="intrepid"
+/>
+
+<comp
+aix="ibm"
+linux="pgi"
+darwin="intel"
+bgl="ibm"
 />
 
 </system_defaults>

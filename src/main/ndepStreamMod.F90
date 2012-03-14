@@ -25,7 +25,7 @@ module ndepStreamMod
   use abortutils  , only: endrun
   use fileutils   , only: getavu, relavu
   use decompMod   , only: get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo 
-  use domainMod   , only: llatlon
+  use domainMod   , only: ldomain
 
 ! !PUBLIC TYPES:
   implicit none
@@ -128,7 +128,7 @@ contains
         pio_iotype=seq_io_getiotype(inst_name),    &
         mpicom=mpicom, compid=comp_id,             &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
-        nxg=llatlon%ni, nyg=llatlon%nj,            &
+        nxg=ldomain%ni, nyg=ldomain%nj,            &
         yearFirst=stream_year_first_ndep,          &
         yearLast=stream_year_last_ndep,            &
         yearAlign=model_year_align_ndep,           &

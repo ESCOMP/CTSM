@@ -127,17 +127,16 @@ end subroutine
 !
 ! !USES:
     use abortutils       , only : endrun
-    use downscaleMod     , only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
-                                  downscale, inst_index, inst_suffix, inst_name, do_rtm
+                                  inst_index, inst_suffix, inst_name, do_rtm
     use clm_varctl       , only : create_glacier_mec_landunit 
     use controlMod       , only : control_setNL
-    use decompMod        , only : get_proc_bounds, get_proc_bounds_atm
-    use domainMod        , only : adomain
+    use decompMod        , only : get_proc_bounds
+    use domainMod        , only : ldomain
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use abortutils       , only : endrun
@@ -154,7 +153,7 @@ end subroutine
     use seq_flds_mod
     use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x, nflds_x2l
-    use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
+    use clm_glclnd       , only : clm_s2x, create_clm_s2x
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     implicit none
 !
@@ -202,7 +201,7 @@ end subroutine
     logical :: atm_aero                              ! Flag if aerosol data sent from atm model
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
-    integer :: begg_l, endg_l, begg_a, endg_a
+    integer :: begg, endg    
     integer :: LNDID                                 ! cesm ID value
     real(R8), pointer :: fptr(:, :)
     character(len=32), parameter :: sub = 'lnd_init_esmf'
@@ -353,15 +352,6 @@ end subroutine
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     end if
 
-    ! If trigrid AND downscale -- abort as an error
-
-    if ( (.not. samegrid_al) .and. downscale )then
-       write(iulog,format) "Incompatible inputs, atmosphere and land are on different grids"
-       write(iulog,format) "But, you are also trying to use the CLM fine-mesh to downscale to a finer grid"
-       write(iulog,format) "When using CLM finemesh mode -- you must NOT run the atmosphere on a different grid"
-       call endrun( sub//' ERROR: downscaling using finemesh AND running atmosphere on a different grid' )
-    end if
-
     ! Determine if aerosol and dust deposition come from atmosphere component
 
     rc = ESMF_SUCCESS
@@ -477,11 +467,10 @@ end subroutine
     ! Create land export state then map this from the 
     ! clm internal grid to the clm driver (atm) grid 
 
-    call get_proc_bounds_atm(begg_a, endg_a) ! clm grid - driver 
-    call get_proc_bounds    (begg_l, endg_l) ! clm grid - internal (atm)
+    call get_proc_bounds(begg, endg) ! clm grid - internal (atm)
 
-    allocate(fptr_x2l_clm(nflds_x2l, endg_l-begg_l+1))
-    allocate(fptr_l2x_clm(nflds_l2x, endg_l-begg_l+1))
+    allocate(fptr_x2l_clm(nflds_x2l, endg-begg+1))
+    allocate(fptr_l2x_clm(nflds_l2x, endg-begg+1))
 
     call ESMF_ArrayGet(l2x, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -496,7 +485,7 @@ end subroutine
     ! Export sno for cism
 
     if (create_glacier_mec_landunit) then
-       call sno_export_esmf( atm_s2x, s2x, rc=rc)
+       call sno_export_esmf( clm_s2x, s2x, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     endif   
 
@@ -508,9 +497,9 @@ end subroutine
 
     call ESMF_AttributeSet(export_state, name="lnd_prognostic", value=.true., rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_AttributeSet(export_state, name="lnd_nx", value=adomain%ni, rc=rc)
+    call ESMF_AttributeSet(export_state, name="lnd_nx", value=ldomain%ni, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_AttributeSet(export_state, name="lnd_ny", value=adomain%nj, rc=rc)
+    call ESMF_AttributeSet(export_state, name="lnd_ny", value=ldomain%nj, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     if (do_rtm) then
@@ -530,9 +519,9 @@ end subroutine
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.true., rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_nx", value=adomain%ni, rc=rc)
+       call ESMF_AttributeSet(export_state, name="sno_nx", value=ldomain%ni, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_ny", value=adomain%nj, rc=rc)
+       call ESMF_AttributeSet(export_state, name="sno_ny", value=ldomain%nj, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     else
        call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
@@ -544,16 +533,8 @@ end subroutine
     call set_nextsw_cday( nextsw_cday )
 
     ! Create land export state 
-    ! If downscale, map this from the clm internal grid (dst) to the clm driver grid (src)
-    ! Reset landfrac on atmosphere grid to have the right domain
 
-    if (downscale) then
-       call lnd_export_esmf(clm_l2a, fptr_l2x_clm, begg_l, endg_l)
-       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-                          fptr_l2x_clm, fptr, map1dl_l2a, reverse_order=.true.)
-    else
-       call lnd_export_esmf(clm_l2a, fptr, begg_l, endg_l)
-    end if
+    call lnd_export_esmf(clm_l2a, fptr, begg, endg)
     
     if (do_rtm) then
        call rof_export_esmf( r2x , rc=rc)
@@ -636,17 +617,16 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
 !
 ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
-    use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
-    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
+    use clm_atmlnd      ,only : clm_l2a, clm_a2l
     use clm_driver      ,only : clm_drv
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use domainMod       ,only : adomain, ldomain
-    use decompMod       ,only : get_proc_bounds_atm, get_proc_bounds
+    use domainMod       ,only : ldomain
+    use decompMod       ,only : get_proc_bounds
     use abortutils      ,only : endrun
     use esmf
-    use clm_varctl      ,only : iulog, downscale, do_rtm
+    use clm_varctl      ,only : iulog, do_rtm
     use clm_varctl      ,only : create_glacier_mec_landunit 
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
@@ -654,7 +634,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
+    use clm_glclnd      ,only : clm_s2x, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
@@ -696,9 +676,9 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     real(r8):: declinp1                   ! solar declination angle in radians for nstep+1
     real(r8):: eccf                       ! earth orbit eccentricity factor
     integer :: shrlogunit,shrloglev       ! old values
-    integer :: begg_l, endg_l, begg_a, endg_a ! Beginning and ending gridcell index numbers
-    integer :: lbnum                          ! input to memory diagnostic
-    integer :: g,i,ka                         ! counters
+    integer :: begg, endg                 ! Beginning and ending gridcell index numbers
+    integer :: lbnum                      ! input to memory diagnostic
+    integer :: g,i,ka                     ! counters
     logical,save :: first_call = .true.   ! first call work
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_esmf"
@@ -753,8 +733,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
 
-    call get_proc_bounds_atm(begg_a, endg_a)
-    call get_proc_bounds    (begg_l, endg_l)
+    call get_proc_bounds(begg, endg)
 
     if (first_call) then
        call ESMF_StateGet(export_state, itemName="domain_l", array=dom_l, rc=rc)
@@ -763,12 +742,9 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        ka = esmfshr_util_ArrayGetIndex(dom_l,'ascale',rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       do g = begg_a,endg_a
-          i = 1 + (g - begg_a)
-          adomain%ascale(g) = fptr(ka, i)
-          if ( .not. downscale )then
-             ldomain%ascale(g) = adomain%ascale(g)
-          end if
+       do g = begg,endg
+          i = 1 + (g - begg)
+          ldomain%ascale(g) = fptr(ka,i)
        end do
     endif
     call t_stopf ('lc_lnd_run1')
@@ -781,15 +757,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_ArrayGet(x2l, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    if (downscale) then
-       call lnd_import_esmf( fptr, atm_a2l, begg_a, endg_a )
-       call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
-	                  fptr, fptr_x2l_clm, map1dl_a2l, reverse_order=.true.)
-       call lnd_import_esmf( fptr_x2l_clm, clm_a2l, begg_l, endg_l )
-       call clm_downscale_a2l(atm_a2l, clm_a2l)
-    else
-       call lnd_import_esmf( fptr, clm_a2l, begg_l, endg_l )
-    end if
+    call lnd_import_esmf( fptr, clm_a2l, begg, endg )
     
     ! Map to clm (only when state and/or fluxes need to be updated)
 
@@ -799,14 +767,8 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
        if (update_glc2sno_fields) then
-          if (downscale) then
-             call sno_import_esmf( x2s, atm_x2s, rc=rc )
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-             call clm_mapx2s(atm_x2s, clm_x2s)
-          else
-             call sno_import_esmf( x2s, clm_x2s, rc=rc )
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          end if
+          call sno_import_esmf( x2s, clm_x2s, rc=rc )
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           call unpack_clm_x2s(clm_x2s)
        endif   ! update_glc2sno
     endif   ! create_glacier_mec_landunit
@@ -867,14 +829,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_ArrayGet(l2x, localDe=0, farrayPtr=fptr, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-       if (downscale) then
-          call lnd_export_esmf( clm_l2a, fptr_l2x_clm, begg_l, endg_l )
-          call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-	            	     fptr_l2x_clm, fptr, map1dl_l2a)
-       else
-          call lnd_export_esmf( clm_l2a, fptr, begg_l, endg_l )
-       end if
+       call lnd_export_esmf( clm_l2a, fptr, begg, endg )
        call t_stopf ('lc_lnd_export')
        
        ! Compute snapshot attribute vector for accumulation
@@ -901,15 +856,8 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
           call create_clm_s2x(clm_s2x)
           call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          if (downscale) then
-             call clm_maps2x(clm_s2x, atm_s2x)
-             call sno_export_esmf( atm_s2x, s2x, rc=rc )
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          else
-             call sno_export_esmf( clm_s2x, s2x, rc=rc )
-             if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          end if
-
+          call sno_export_esmf( clm_s2x, s2x, rc=rc )
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           if (nstep <= 1) then
              call esmfshr_util_ArrayCopy(s2x, s2x_s_SUM, rc=rc)
              if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -932,7 +880,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     end do
 
     call t_stopf ('lc_lnd_run2')
-    call t_startf ('lc_lnd_run3')
+    call t_startf('lc_lnd_run3')
 
     ! Finish accumulation of attribute vector and average and zero out partial sum and counter
     call esmfshr_util_ArrayAvg(l2x_SUM, avg_count, rc=rc)
@@ -1068,8 +1016,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 !
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
-    use decompMod    , only : get_proc_bounds_atm, adecomp
-    use domainMod    , only : adomain
+    use decompMod    , only : get_proc_bounds, ldecomp
+    use domainMod    , only : ldomain
 !
 ! !ARGUMENTS:
     integer, intent(out) :: gsize   ! grid size
@@ -1096,17 +1044,17 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     
     rc = ESMF_SUCCESS
 
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     allocate(gindex(begg:endg),stat=ier)
 
     ! number the local grid
 
     do n = begg, endg
-        gindex(n) = adecomp%gdc2glo(n)
+        gindex(n) = ldecomp%gdc2glo(n)
     end do
     lsize = endg-begg+1
-    gsize = adomain%ni*adomain%nj
+    gsize = ldomain%ni * ldomain%nj
 
     lnd_DistGrid_esmf = mct2esmf_init(gindex, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -1135,7 +1083,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd      , only : lnd2atm_type
-    use domainMod       , only : adomain
     use seq_drydep_mod  , only : n_drydep
     use clm_cpl_indices
     implicit none
@@ -1223,7 +1170,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use clm_varcon      , only: c13ratio
 #endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
-    use decompMod       , only: get_proc_bounds_atm
     use clm_varctl      , only: iulog
     use clm_cpl_indices
     implicit none
@@ -1408,8 +1354,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
-    use domainMod   , only : adomain
-    use decompMod   , only : get_proc_bounds_atm, adecomp
+    use domainMod   , only : ldomain
+    use decompMod   , only : get_proc_bounds, ldecomp
     implicit none
 ! !ARGUMENTS:
     type(ESMF_Array), intent(inout)     :: dom         ! CLM domain data
@@ -1450,7 +1396,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
     ! Determine bounds
 
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     ! Fill in correct values for domain components
     ! Note aream will be filled in in the atm-lnd mapper
@@ -1459,11 +1405,11 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     fptr(kmask,:) = -0.0_R8
     do g = begg,endg
        i = 1 + (g - begg)
-       fptr(klon, i) = adomain%lonc(g)
-       fptr(klat, i) = adomain%latc(g)
-       fptr(karea, i) = adomain%area(g)/(re*re)
-       fptr(kmask, i) = real(adomain%mask(g), r8)
-       fptr(kfrac, i) = real(adomain%frac(g), r8)
+       fptr(klon, i)  = ldomain%lonc(g)
+       fptr(klat, i)  = ldomain%latc(g)
+       fptr(karea, i) = ldomain%area(g)/(re*re)
+       fptr(kmask, i) = real(ldomain%mask(g), r8)
+       fptr(kfrac, i) = real(ldomain%frac(g), r8)
     end do
 
   end subroutine lnd_domain_esmf
@@ -1750,7 +1696,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     !-----------------------------------------------------
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_glclnd      , only : lnd2glc_type
-    use decompMod       , only : get_proc_bounds_atm
+    use decompMod       , only : get_proc_bounds
     use clm_cpl_indices
     !
     ! Arguments
@@ -1768,7 +1714,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
     rc = ESMF_SUCCESS
 
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     call ESMF_ArrayGet(s2x_array, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -1795,7 +1741,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     !-----------------------------------------------------
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_glclnd      , only: glc2lnd_type
-    use decompMod       , only: get_proc_bounds_atm
+    use decompMod       , only: get_proc_bounds
     use clm_cpl_indices
     !
     ! Arguments
@@ -1817,7 +1763,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     call ESMF_ArrayGet(x2s_array, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     do g = begg,endg
        i = 1 + (g - begg)

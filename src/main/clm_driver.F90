@@ -59,9 +59,7 @@ module clm_driver
 !  -> SnowAge_grain       update snow effective grain size for snow radiative transfer
 !   + CNEcosystemDyn      Carbon Nitrogen model ecosystem dynamics:     [CN]
 !                         vegetation phenology and soil carbon  
-!   + casa_ecosystemDyn   CASA Prime Carbon model ecosystem dynamics:   [CASA]
-!                         vegetation phenology and soil carbon  
-!   + EcosystemDyn        "static" ecosystem dynamics:                  [! CN or ! CASA]
+!   + EcosystemDyn        "static" ecosystem dynamics:                  [! CN ]
 !                         vegetation phenology and soil carbon  
 !  -> BalanceCheck        check for errors in energy and water balances
 !  -> SurfaceAlbedo       albedos for next time step
@@ -134,9 +132,6 @@ module clm_driver
   use seq_drydep_mod      , only : n_drydep, drydep_method, DD_XLND
   use STATICEcosysDynMod  , only : interpMonthlyVeg
   use DryDepVelocity      , only : depvel_compute
-#if (defined CASA)
-  use CASAMod             , only : casa_ecosystemDyn
-#endif
   use RtmMod              , only : RtmInput, RtmMapl2r, Rtm
   use abortutils          , only : endrun
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
@@ -193,6 +188,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 ! 3/6/09, Peter Thornton: Added declin as new argument, for daylength control on Vcmax
 ! 2008.11.12  B. Kauffman: morph routine casa() in casa_ecosytemDyn(), so casa
 !    is more similar to CN & DGVM
+! 2/25/2012 M. Vertenstein: Removed CASA references 
 !
 !EOP
 !
@@ -622,15 +618,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call CNAnnualUpdate(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)
-#elif (defined CASA)
-     ! Prescribed biogeography,
-     ! prescribed canopy structure, some prognostic carbon fluxes
-     call casa_ecosystemDyn(begc, endc, begp, endp, &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, doalb)
-     call EcosystemDyn(begp, endp, &
-                       filter(nc)%num_nolakep, filter(nc)%nolakep, &
-                       doalb)
 #else
      ! Prescribed biogeography,
      ! prescribed canopy structure, some prognostic carbon fluxes

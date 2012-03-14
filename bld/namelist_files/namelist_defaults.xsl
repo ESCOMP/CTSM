@@ -145,8 +145,8 @@
         <xsl:if test="string-length(@irrig)>0">
         irrig=<xsl:value-of select="@irrig"/>
         </xsl:if>
-        <xsl:if test="string-length(@ad_spinup)>0">
-        ad_spinup=<xsl:value-of select="@ad_spinup"/>
+        <xsl:if test="string-length(@spinup)>0">
+        spinup=<xsl:value-of select="@spinup"/>
         </xsl:if>
         <xsl:if test="string-length(@source)>0">
         forcing=<xsl:value-of select="@source"/>

@@ -453,6 +453,9 @@ if ($print>=2) { print "CLM mode is $mode $eol"; }
 # Get BGC mode
 my $bgc = $cfg->get('bgc');
 
+# Get spinup mode
+my $spinup = $cfg->get('spinup');
+
 # Get max number of Plant function types
 my $maxpft = $cfg->get('maxpft');
 
@@ -1295,14 +1298,6 @@ if ( $rtm eq "off" ) {
 }
 
 #
-# Get aerosol deposition rates from datasets, if NOT coming from atmosphere model
-#
-if ( $datm_presaero eq "none" ) {
-   add_default($nl[0], 'faerdep', 'hgrid'=>$res, 'sim_year'=>$sim_year,
-               'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
-}
-
-#
 # Deal with options that the user has said are required...
 #
 my %settings                = {};
@@ -1437,17 +1432,11 @@ if ( defined($suplnitro) ) {
    if ( $crop ne "on" && $suplnitro =~ /PROG_CROP_ONLY/i ) {
       die "$ProgName ERROR:: supplemental Nitrogen is set to run over prognostic crops, but prognostic crop is NOT active!\n";
    }
-   my $ad_spinup   = $cfg->get('ad_spinup');
-   my $exit_spinup = $cfg->get('exit_spinup');
 
    if ( $suplnitro =~ /ALL/i ) {
-      if ( $ad_spinup eq "on" ) {
+      if ( $spinup ne "normal" ) {
         print "There is no need to use a spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen\n";
-        die "$ProgName ERROR:: when ad_spinup is on you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
-      }
-      if ( $exit_spinup eq "on" ) {
-        print "There is no need to use a spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen\n";
-        die "$ProgName ERROR:: when exit_spinup is on you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
+        die "$ProgName ERROR:: when spinup != normal you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
       }
    }
 }
@@ -1848,7 +1837,7 @@ sub check_input_files {
 
 		if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
-                        $pathname =~ s:$inputdata_rootdir::;
+                        #MV $pathname =~ s:$inputdata_rootdir::;
                         print OUTFILE "$var = $pathname\n";
                     }
                     else {
@@ -1869,7 +1858,7 @@ sub check_input_files {
 		    $rootdir =~ s/['"]//g;
                     if ($inputdata_rootdir) {
                         $pathname = "$rootdir/$pathname";
-                        $pathname =~ s:$inputdata_rootdir::;
+                        #MV $pathname =~ s:$inputdata_rootdir::;
                         print OUTFILE "$var = $pathname\n";
                     }
                     else {

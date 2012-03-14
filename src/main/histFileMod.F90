@@ -15,9 +15,8 @@ module histFileMod
   use abortutils  , only : endrun
   use clm_varcon  , only : spval,ispval
   use clm_varctl  , only : iulog, do_rtm
-  use clmtype     , only : gratm, grlnd, namea, nameg, namel, namec, namep, allrof
+  use clmtype     , only : grlnd, nameg, namel, namec, namep, allrof
   use decompMod   , only : get_proc_bounds, get_proc_global
-  use decompMod   , only : get_proc_bounds_atm, get_proc_global_atm
   use RunoffMod   , only : get_proc_rof_bounds, get_proc_rof_global
   use ncdio_pio
   implicit none
@@ -322,7 +321,6 @@ contains
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
-    integer :: begg_atm, endg_atm   ! per-proc atm cells ending gridcell indices
     integer :: numa         ! total number of atm cells across all processors
     integer :: numg         ! total number of gridcells across all processors
     integer :: numl         ! total number of landunits across all processors
@@ -337,8 +335,6 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
-    call get_proc_bounds_atm(begg_atm, endg_atm)
-    call get_proc_global_atm(numa)
     if (do_rtm) then
        call get_proc_rof_bounds(beg_rof, end_rof)
        call get_proc_rof_global(num_rtm)
@@ -387,14 +383,6 @@ contains
     masterlist(f)%field%l2g_scale_type = l2g_scale_type
 
     select case (type1d)
-    case (gratm)
-       masterlist(f)%field%beg1d = begg_atm
-       masterlist(f)%field%end1d = endg_atm
-       masterlist(f)%field%num1d = numa
-    case (namea)
-       masterlist(f)%field%beg1d = begg_atm
-       masterlist(f)%field%end1d = endg_atm
-       masterlist(f)%field%num1d = numa
     case (grlnd)
        masterlist(f)%field%beg1d = begg
        masterlist(f)%field%end1d = endg
@@ -455,7 +443,6 @@ contains
 !
 ! !USES:
     use clm_time_manager, only: get_prev_time
-    use domainMod       , only: llatlon
     use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:
@@ -895,7 +882,6 @@ contains
 ! the master field list to the active list for the tape.
 !
 ! !USES:
-    use domainMod, only : llatlon
 !
 ! !ARGUMENTS:
     implicit none
@@ -916,7 +902,6 @@ contains
     integer :: begc, endc           ! per-proc beginning and ending column indices
     integer :: begl, endl           ! per-proc beginning and ending landunit indices
     integer :: begg, endg           ! per-proc gridcell ending gridcell indices
-    integer :: begg_atm, endg_atm   ! per-proc atm cells ending gridcell indices
     integer :: numa                 ! total number of atm cells across all processors
     integer :: numg                 ! total number of gridcells across all processors
     integer :: numl                 ! total number of landunits across all processors
@@ -950,8 +935,6 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
-    call get_proc_bounds_atm(begg_atm, endg_atm)
-    call get_proc_global_atm(numa)
     if (do_rtm) then
        call get_proc_rof_bounds(beg_rof, end_rof)
        call get_proc_rof_global(num_rtm)
@@ -973,9 +956,8 @@ contains
            type1d == namep) then
           tape(t)%hlist(n)%field%type1d_out = grlnd
        end if
-
-       if (type1d == gratm) then
-          tape(t)%hlist(n)%field%type1d_out = gratm
+       if (type1d == grlnd) then
+          tape(t)%hlist(n)%field%type1d_out = grlnd
        end if
 
     else if (hist_type1d_pertape(t) /= ' ') then
@@ -1007,15 +989,7 @@ contains
     ! Determine output 1d dimensions
 
     type1d_out = tape(t)%hlist(n)%field%type1d_out
-    if (type1d_out == gratm) then
-       beg1d_out = begg_atm
-       end1d_out = endg_atm
-       num1d_out = numa
-    else if (type1d_out == namea) then
-       beg1d_out = begg_atm
-       end1d_out = endg_atm
-       num1d_out = numa
-    else if (type1d_out == grlnd) then
+    if (type1d_out == grlnd) then
        beg1d_out = begg
        end1d_out = endg
        num1d_out = numg
@@ -1696,11 +1670,8 @@ contains
     use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, fpftcon, &
                              version, hostname, username, conventions, source
     use clm_varctl  , only : frivinp_rtm
-    use domainMod   , only : llatlon,alatlon
+    use domainMod   , only : ldomain
     use fileutils   , only : get_filename
-#if (defined CASA)
-    use CASAMod,    only : nlive, npools, npool_types
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -1742,6 +1713,7 @@ contains
     character(len=  1) :: avgflag  ! time averaging flag
     character(len=*),parameter :: subname = 'htape_create'
 !-----------------------------------------------------------------------
+
     if ( present(histrest) )then
        lhistrest = histrest
     else
@@ -1750,7 +1722,6 @@ contains
 
     ! Determine necessary indices
 
-    call get_proc_global_atm(numa)
     call get_proc_global(numg, numl, numc, nump)
     if (do_rtm) then
        call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
@@ -1824,14 +1795,13 @@ contains
     ! Time is an unlimited dimension. Character string is treated as an array of characters.
 
     ! Global uncompressed dimensions (including non-land points)
-    if (llatlon%isgrid2d) then
-       call ncd_defdim(lnfid, 'lon'   , llatlon%ni, dimid)
-       call ncd_defdim(lnfid, 'lat'   , llatlon%nj, dimid)
-       call ncd_defdim(lnfid, 'lonatm', alatlon%ni, dimid)
-       call ncd_defdim(lnfid, 'latatm', alatlon%nj, dimid)
+    if (ldomain%isgrid2d) then
+       call ncd_defdim(lnfid, 'lon'   , ldomain%ni, dimid)
+       call ncd_defdim(lnfid, 'lat'   , ldomain%nj, dimid)
+       call ncd_defdim(lnfid, 'lonatm', ldomain%ni, dimid)
+       call ncd_defdim(lnfid, 'latatm', ldomain%nj, dimid)
     else
-       call ncd_defdim(lnfid, trim(gratm), alatlon%ns, dimid)
-       call ncd_defdim(lnfid, trim(grlnd), llatlon%ns, dimid)
+       call ncd_defdim(lnfid, trim(grlnd), ldomain%ns, dimid)
     end if
     if (do_rtm) then
        call ncd_defdim( lnfid, 'lonrof', rtmlon, dimid)
@@ -1839,7 +1809,6 @@ contains
     end if
 
     ! Global compressed dimensions (not including non-land points)
-    call ncd_defdim(lnfid, trim(namea), numa, dimid)
     call ncd_defdim(lnfid, trim(nameg), numg, dimid)
     call ncd_defdim(lnfid, trim(namel), numl, dimid)
     call ncd_defdim(lnfid, trim(namec), numc, dimid)
@@ -1854,11 +1823,6 @@ contains
     call ncd_defdim(lnfid, 'levgrnd', nlevgrnd, dimid)
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
-#if (defined CASA)
-    call ncd_defdim(lnfid, 'nlive'  , nlive , dimid)
-    call ncd_defdim(lnfid, 'npools' , npools , dimid)
-    call ncd_defdim(lnfid, 'npool_t', npool_types, dimid)
-#endif
 
     do n = 1,num_subs
        call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
@@ -1905,7 +1869,7 @@ contains
     use subgridAveMod , only : c2g
     use clm_varpar    , only : nlevgrnd
     use shr_string_mod, only : shr_string_listAppend
-    use domainMod     , only : llatlon
+    use domainMod     , only : ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -1969,7 +1933,7 @@ contains
              call endrun( subname//' ERROR: bad 3D time-constant field index' )
           end if
           if (tape(t)%dov2xy) then
-             if (llatlon%isgrid2d) then
+             if (ldomain%isgrid2d) then
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levgrnd', &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval)
@@ -2030,7 +1994,7 @@ contains
              call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, histi, histo, &
                   c2l_scale_type='urbanh', l2g_scale_type='unity')
 
-             if (llatlon%isgrid2d) then
+             if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnames(ifld)), dim1name=grlnd, &
                      data=histo, ncid=nfid(t), flag='write')
              else
@@ -2066,7 +2030,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon   , only : zsoi, zlak, secspday
-    use domainMod    , only : ldomain,llatlon,adomain,alatlon,gatm
+    use domainMod    , only : ldomain, lon1d, lat1d
     use RunoffMod    , only : runoff
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date
@@ -2218,7 +2182,7 @@ contains
     ! For define mode -- only do this for first time-sample
     if (mode == 'define' .and. tape(t)%ntimes == 1) then
 
-       if (llatlon%isgrid2d) then
+       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
               long_name='coordinate longitude', units='degrees_east', &
               ncid=nfid(t), missing_value=spval, fill_value=spval)
@@ -2228,7 +2192,7 @@ contains
               long_name='coordinate longitude', units='degrees_east', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        end if
-       if (llatlon%isgrid2d) then
+       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
               long_name='coordinate latitude', units='degrees_north', &
               ncid=nfid(t), missing_value=spval, fill_value=spval)
@@ -2238,82 +2202,29 @@ contains
               long_name='coordinate latitude', units='degrees_north', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        end if
-       if (llatlon%isgrid2d) then
-          call ncd_defvar(varname='lonatm', xtype=tape(t)%ncprec, &
-               dim1name='lonatm', &
-               long_name='atm coordinate longitude', units='degrees_east', ncid=nfid(t), &
-               missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='lonatm', xtype=tape(t)%ncprec, &
-              dim1name=gratm, &
-              long_name='atm coordinate longitude', units='degrees_east', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (llatlon%isgrid2d) then
-          call ncd_defvar(varname='latatm', xtype=tape(t)%ncprec, &
-               dim1name='latatm', &
-               long_name='atm coordinate latitude', units='degrees_north', ncid=nfid(t), &
-               missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='latatm', xtype=tape(t)%ncprec, &
-              dim1name=gratm, &
-              long_name='atm coordinate latitude', units='degrees_north', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (llatlon%isgrid2d) then !only lat/lon
-          call ncd_defvar(varname='longxy',   xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat', &
-              long_name='longitude', units='degrees_east',  ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-          call ncd_defvar(varname='latixy',   xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
-              long_name='latitude', units='degrees_north', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-          call ncd_defvar(varname='longxyatm',   xtype=tape(t)%ncprec, &
-              dim1name='lonatm', dim2name='latatm', &
-              long_name='atm longitude', units='degrees_east',  ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-          call ncd_defvar(varname='latixyatm',   xtype=tape(t)%ncprec, &
-              dim1name='lonatm', dim2name='latatm',&
-              long_name='atm latitude', units='degrees_north', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (llatlon%isgrid2d) then
-          call ncd_defvar(varname='area',     xtype=tape(t)%ncprec, &
+       if (ldomain%isgrid2d) then
+          call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        else
-          call ncd_defvar(varname='area',     xtype=tape(t)%ncprec, &
+          call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
               dim1name=grlnd, &
               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        end if
-       if (llatlon%isgrid2d) then
-          call ncd_defvar(varname='topo',     xtype=tape(t)%ncprec, &
+       if (ldomain%isgrid2d) then
+          call ncd_defvar(varname='topo', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='grid cell topography', units='m', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        else
-          call ncd_defvar(varname='topo',     xtype=tape(t)%ncprec, &
+          call ncd_defvar(varname='topo', xtype=tape(t)%ncprec, &
               dim1name=grlnd, &
               long_name='grid cell topography', units='m', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        end if
-       if (llatlon%isgrid2d) then
-          call ncd_defvar(varname='topodnsc', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
-              long_name='normalized grid cell topography related to downscaling', &
-              units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='topodnsc', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='normalized grid cell topography related to downscaling', &
-              units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (llatlon%isgrid2d) then
+       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat', &
               long_name='land fraction', ncid=nfid(t), &
@@ -2324,7 +2235,7 @@ contains
               long_name='land fraction', ncid=nfid(t), &
               missing_value=spval, fill_value=spval)
        end if
-       if (llatlon%isgrid2d) then
+       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='landmask', xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
@@ -2335,7 +2246,7 @@ contains
               long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
        end if
-       if (llatlon%isgrid2d) then
+       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
@@ -2346,52 +2257,17 @@ contains
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
        end if
-!      if (llatlon%isgrid2d) then
-!         call ncd_defvar(varname='indxupsc', xtype=ncd_int, &
-!             dim1name='lon', dim2name='lat', &
-!             long_name='upscaling atm global grid index', ncid=nfid(t), &
-!             imissing_value=ispval, ifill_value=ispval)
-!      else
-!         call ncd_defvar(varname='indxupsc', xtype=ncd_int, &
-!             dim1name=grlnd, &
-!             long_name='upscaling atm global grid index', ncid=nfid(t), &
-!             imissing_value=ispval, ifill_value=ispval)
-!      end if
-       if (llatlon%isgrid2d) then  
-          call ncd_defvar(varname='areaupsc', xtype=tape(t)%ncprec, &
-               dim1name='lon', dim2name='lat',&
-               long_name='normalized grid cell areas related to upscaling', &
-               units='km^2', ncid=nfid(t), &
-               missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='areaupsc', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='normalized grid cell areas related to upscaling', &
-              units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+       if (do_rtm) then
+          call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
+               long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
+          call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
+               long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
        end if
-       if (llatlon%isgrid2d) then
-          call ncd_defvar(varname='areaatm',     xtype=tape(t)%ncprec, &
-              dim1name='lonatm', dim2name='latatm',&
-              long_name='atm grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       else
-         call ncd_defvar(varname='areaatm',     xtype=tape(t)%ncprec, &
-               dim1name=gratm, &
-               long_name='atm grid cell areas', units='km^2', ncid=nfid(t), &
-               missing_value=spval, fill_value=spval)
-      end if
-      if (do_rtm) then
-         call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
-              long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
-         call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
-              long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
-      end if
 
-    ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
-    ! But, some may change for dynamic PFT mode for example
     else if (mode == 'write') then
 
+       ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
+       ! But, some may change for dynamic PFT mode for example
        ! Set pointers into derived type and get necessary bounds
 
        lptr => clm3%g%l
@@ -2399,36 +2275,17 @@ contains
 
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
-       if (llatlon%isgrid2d) then
-          call ncd_io(varname='lon'   , data=llatlon%lonc, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lat'   , data=llatlon%latc, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lonatm', data=alatlon%lonc, ncid=nfid(t), flag='write')
-          call ncd_io(varname='latatm', data=alatlon%latc, ncid=nfid(t), flag='write')
-       end if
-
-       if (llatlon%isgrid2d) then
-          call ncd_io(varname='longxy'  , data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='latixy'  , data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='longxyatm', data=adomain%lonc, dim1name=gratm, ncid=nfid(t), flag='write')
-          call ncd_io(varname='latixyatm', data=adomain%latc, dim1name=gratm, ncid=nfid(t), flag='write')
+       if (ldomain%isgrid2d) then
+          call ncd_io(varname='lon', data=lon1d, ncid=nfid(t), flag='write')
+          call ncd_io(varname='lat', data=lat1d, ncid=nfid(t), flag='write')
        else
-          call ncd_io(varname='lon'      , data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          call ncd_io(varname='lat'      , data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
-          !--- Comment out fine-mesh lon/lat for HOMME grids as this option doesn't work -
-          !--- Code blows up if you uncomment this out, see bug 1415, EBK Sep/26/2011
-          !call ncd_io(varname='lonatm'   , data=adomain%lonc, dim1name=namea, ncid=nfid(t), flag='write')
-          !call ncd_io(varname='latatm'   , data=adomain%latc, dim1name=namea, ncid=nfid(t), flag='write')
-          !-------------------------------------------------------------------------------
+          call ncd_io(varname='lon', data=ldomain%lonc, dim1name=grlnd, ncid=nfid(t), flag='write')
+          call ncd_io(varname='lat', data=ldomain%latc, dim1name=grlnd, ncid=nfid(t), flag='write')
        end if
        call ncd_io(varname='area'    , data=ldomain%area, dim1name=grlnd, ncid=nfid(t), flag='write')
-       call ncd_io(varname='areaupsc', data=ldomain%nara, dim1name=grlnd, ncid=nfid(t), flag='write')
-       call ncd_io(varname='topo    ', data=ldomain%topo, dim1name=grlnd, ncid=nfid(t), flag='write')
-       call ncd_io(varname='topodnsc', data=ldomain%ntop, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t), flag='write')
        call ncd_io(varname='pftmask' , data=ldomain%pftm, dim1name=grlnd, ncid=nfid(t), flag='write')
-!       call ncd_io(varname='indxupsc', data=gatm        , dim1name=grlnd, ncid=nfid(t), flag='write')
-       call ncd_io(varname='areaatm' , data=adomain%area, dim1name=gratm, ncid=nfid(t), flag='write')
 
        if (do_rtm) then
           call ncd_io(varname='lonrof', data=runoff%rlon, ncid=nfid(t), flag='write')
@@ -2452,7 +2309,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use domainMod , only : llatlon
+    use domainMod , only : ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -2531,14 +2388,14 @@ contains
              write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag; call endrun()
           end select
 
-          if (type1d_out == gratm) then
-             if (llatlon%isgrid2d) then
+          if (type1d_out == grlnd) then
+             if (ldomain%isgrid2d) then
                 dim1name = 'lonatm'   ; dim2name = 'latatm'
              else
-                dim1name = trim(gratm); dim2name = 'undefined'
+                dim1name = trim(grlnd); dim2name = 'undefined'
              end if
           else if (type1d_out == grlnd) then
-             if (llatlon%isgrid2d) then
+             if (ldomain%isgrid2d) then
                 dim1name = 'lon'      ; dim2name = 'lat'
              else
                 dim1name = trim(grlnd); dim2name = 'undefined'
@@ -2628,7 +2485,7 @@ contains
 ! !USES:
     use clmtype
     use decompMod   , only : ldecomp
-    use domainMod   , only : ldomain, llatlon
+    use domainMod   , only : ldomain, ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -3139,12 +2996,9 @@ contains
 ! !USES:
     use clm_varctl, only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
     use fileutils , only : getfil
-    use clmtype   , only : gratm, grlnd, namea, nameg, namel, namec, namep, allrof
-    use domainMod , only : ldomain,llatlon,adomain,alatlon
+    use clmtype   , only : grlnd, nameg, namel, namec, namep, allrof
+    use domainMod , only : ldomain
     use clm_varpar, only : nlevgrnd, nlevlak, numrad, rtmlon, rtmlat
-#if (defined CASA)
-    use CASAMod,    only : nlive, npools, npool_types
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -3166,7 +3020,6 @@ contains
     integer :: begc, endc           ! per-proc beginning and ending column indices
     integer :: begl, endl           ! per-proc beginning and ending landunit indices
     integer :: begg, endg           ! per-proc gridcell ending gridcell indices
-    integer :: begg_atm, endg_atm   ! per-proc atm cells ending gridcell indices
     integer :: numa                 ! total number of atm cells across all processors
     integer :: numg                 ! total number of gridcells across all processors
     integer :: numl                 ! total number of landunits across all processors
@@ -3266,7 +3119,6 @@ contains
        max_nflds = max_nFields()
 
        call get_proc_global(numg, numl, numc, nump)
-       call get_proc_global_atm(numa)
        if (do_rtm) then
           call get_proc_rof_global(num_rtm)
        end if
@@ -3301,18 +3153,12 @@ contains
                 nacs           => tape(t)%hlist(f)%nacs
                 hbuf           => tape(t)%hlist(f)%hbuf
                
-                if (type1d_out == gratm) then
-                   if (llatlon%isgrid2d) then
-                      dim1name = 'lonatm'   ; dim2name = 'latatm'
+                if (type1d_out == grlnd) then
+                   if (ldomain%isgrid2d) then
+                      dim1name = 'lon'      ; dim2name = 'lat'
                    else
-                      dim1name = trim(gratm); dim2name = 'undefined'
+                      dim1name = trim(grlnd); dim2name = 'undefined'
                    end if
-                 else if (type1d_out == grlnd) then
-                    if (llatlon%isgrid2d) then
-                       dim1name = 'lon'      ; dim2name = 'lat'
-                    else
-                       dim1name = trim(grlnd); dim2name = 'undefined'
-                    end if
                 else if (type1d_out == allrof) then
                     dim1name = 'lonrof'   ; dim2name = 'latrof'
                 else
@@ -3571,8 +3417,6 @@ contains
        
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
        call get_proc_global(numg, numl, numc, nump)
-       call get_proc_bounds_atm(begg_atm, endg_atm)
-       call get_proc_global_atm(numa)
        if (do_rtm) then
           call get_proc_rof_bounds(beg_rof, end_rof)
           call get_proc_rof_global(num_rtm)
@@ -3661,10 +3505,6 @@ contains
 
              type1d_out = trim(tape(t)%hlist(f)%field%type1d_out)
              select case (trim(type1d_out))
-             case (gratm)
-                num1d_out = numa
-                beg1d_out = begg_atm
-                end1d_out = endg_atm
              case (grlnd)
                 num1d_out = numg
                 beg1d_out = begg
@@ -3713,10 +3553,6 @@ contains
 
              type1d = tape(t)%hlist(f)%field%type1d
              select case (type1d)
-             case (gratm)
-                num1d = numa
-                beg1d = begg_atm
-                end1d = endg_atm
              case (grlnd)
                 num1d = numg
                 beg1d = begg
@@ -4123,7 +3959,6 @@ end function max_nFields
 !
 ! !USES:
     use clmtype
-    use domainMod , only : alatlon
     use clm_varpar, only : rtmlon, rtmlat
 !
 ! !ARGUMENTS:
@@ -4178,12 +4013,7 @@ end function max_nFields
 
     hpindex = pointer_index()
 
-    if (present(ptr_atm)) then
-       l_type1d = gratm
-       l_type1d_out = gratm
-       clmptr_rs(hpindex)%ptr => ptr_atm
-
-    else if (present(ptr_lnd)) then
+    if (present(ptr_lnd)) then
        l_type1d = grlnd
        l_type1d_out = grlnd
        clmptr_rs(hpindex)%ptr => ptr_lnd
@@ -4343,9 +4173,6 @@ end function max_nFields
 ! !USES:
     use clmtype
     use clm_varpar, only : nlevgrnd, nlevlak, numrad
-#if (defined CASA)
-    use CASAMod,    only : nlive, npools, npool_types
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -4400,21 +4227,9 @@ end function max_nFields
        num2d = nlevlak
     case ('numrad')
        num2d = numrad
-#if (defined CASA)
-    case ('nlive')
-       num2d = nlive
-    case ('npools')
-       num2d = npools
-    case ('npool_t')
-       num2d = npool_types
-#endif
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
-          ' currently supported types for multi level fields are [levgrnd,levlak,numrad', &
-#if (defined CASA)
-          ',nlive,npools,npool_t', &
-#endif
-          ']'
+          ' currently supported types for multi level fields are [levgrnd,levlak,numrad]'
        call endrun()
     end select
 
@@ -4426,12 +4241,7 @@ end function max_nFields
 
     hpindex = pointer_index()
 
-    if (present(ptr_atm)) then
-       l_type1d = gratm
-       l_type1d_out = gratm
-       clmptr_ra(hpindex)%ptr => ptr_atm
-
-    else if (present(ptr_lnd)) then
+    if (present(ptr_lnd)) then
        l_type1d = grlnd
        l_type1d_out = grlnd
        clmptr_ra(hpindex)%ptr => ptr_lnd

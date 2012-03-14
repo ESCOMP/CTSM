@@ -255,8 +255,6 @@ contains
        if (fpftdyn /= ' ') then
 #if (defined CNDV)
           call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CNDV option' )
-#elif (defined CASA)
-          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CASA option' )
 #endif
        end if
 

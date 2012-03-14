@@ -67,9 +67,6 @@ contains
     use CropRestMod      , only : CropRest
 #endif
     use RtmMod           , only : RTMRest
-#if (defined CASA)
-    use CASAMod          , only : CASARest
-#endif
     use accumulMod       , only : accumulRest
     use histFileMod      , only : hist_restart_ncd
 !
@@ -124,9 +121,6 @@ contains
     if ( crop_prog ) call CropRest( ncid, flag='define' )
 #endif
 
-#if (defined CASA)
-    call CASARest( ncid, flag='define' )
-#endif
     if (do_rtm) then
        call RtmRest( ncid, flag='define' )
     end if
@@ -149,10 +143,6 @@ contains
 #if (defined CN)
     call CNRest( ncid, flag='write' )
     if ( crop_prog ) call CropRest( ncid, flag='write' )
-#endif
-
-#if (defined CASA)
-    call CASARest( ncid, flag='write' )
 #endif
 
     if (do_rtm) then
@@ -201,9 +191,6 @@ contains
     use CropRestMod      , only : CropRest
 #endif
     use RtmMod           , only : RTMRest
-#if (defined CASA)
-    use CASAMod          , only : CASARest
-#endif
     use accumulMod       , only : accumulRest
     use histFileMod      , only : hist_restart_ncd
 !
@@ -237,10 +224,6 @@ contains
 #if (defined CN)
     call CNRest( ncid, flag='read' )
     if ( crop_prog ) call CropRest( ncid, flag='read' )
-#endif
-
-#if (defined CASA)
-    call CASARest( ncid, flag='read' )
 #endif
 
     if (do_rtm) then
@@ -582,10 +565,6 @@ contains
                              conventions, source
     use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevgrnd
     use decompMod   , only : get_proc_bounds, get_proc_global
-    !use RunoffMod  , only : get_proc_rof_global
-#if (defined CASA)
-  use CASAMod       , only : nlive, npools, npool_types
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -629,11 +608,6 @@ contains
     call ncd_defdim(ncid, 'levsno1'  , nlevsno+1     , dimid)
     call ncd_defdim(ncid, 'levtot'  , nlevsno+nlevgrnd, dimid)
     call ncd_defdim(ncid, 'numrad'  , numrad         , dimid)
-#if (defined CASA)
-    call ncd_defdim (ncid, 'nlive'   , nlive          , dimid)
-    call ncd_defdim (ncid, 'npools'  , npools         , dimid)
-    call ncd_defdim (ncid, 'npool_types', npool_types , dimid)
-#endif
     if (do_rtm) then
        call ncd_defdim(ncid, 'rtmlon'  , rtmlon         , dimid)
        call ncd_defdim(ncid, 'rtmlat'  , rtmlat         , dimid)
@@ -706,13 +680,6 @@ contains
     call check_dim(ncid, 'levsno'  , nlevsno)
     call check_dim(ncid, 'levgrnd' , nlevgrnd)
     call check_dim(ncid, 'levlak'  , nlevlak) 
-#if (defined CASA)
-    ! Dimensions should be checked, but this will only work for initial
-    ! datasets created with CASA enabled so do not normally do this.
-    ! call check_dim(ncid, 'nlive'   , nlive)
-    ! call check_dim(ncid, 'npools'  , npools)
-    ! call check_dim(ncid, 'npool_types'  , npool_types)
-#endif
 
   end subroutine restFile_dimcheck
 

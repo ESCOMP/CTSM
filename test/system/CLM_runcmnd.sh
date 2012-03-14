@@ -178,39 +178,6 @@ case $hostname in
     fi
     ;;
 
-    ##intrepid
-    login* | R*-M*-N*-J* )
-    ##search config options file for parallelization info;
-    if grep -ic NOUSE_MPISERIAL ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-        if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="cobalt-mpirun -np ${CLM_TASKS} -mode vn -verbose 2 -cwd `pwd` -env \"XLSMPOPTS=stack=64000000 DCMF_COLLECTIVES=1 BG_MAPPING=TXYZ\""
-        elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##hybrid
-            if [ $CLM_THREADS = 2 ]; then
-               mode=dual
-            else
-               mode=smp
-            fi
-
-	    cmnd="cobalt-mpirun -np ${CLM_TASKS} -mode $mode -verbose 2 -cwd `pwd` -env \"XLSMPOPTS=stack=64000000 OMP_NUM_THREADS=${CLM_THREADS} DCMF_COLLECTIVES=1 BG_MAPPING=TXYZ\""
-        else
-            ##mpi only
-	    cmnd="cobalt-mpirun -np ${CLM_TASKS} -mode vn -verbose 2 -cwd `pwd` -env \"XLSMPOPTS=stack=64000000 DCMF_COLLECTIVES=1 BG_MAPPING=TXYZ\""
-        fi
-    else
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""
-	elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	else
-            ##serial
-	    cmnd=""
-	fi
-    fi ;;
-
     * ) 
     echo "CLM_runcmnd.sh: unable to construct run command for unsupported machine $hostname "
     exit 3;;

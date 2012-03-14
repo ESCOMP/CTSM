@@ -1,7 +1,6 @@
 -mode clm_stndln
 -nouse_mpiserial -nosmp
--ad_spinup on
+-spinup AD
 -debug
--maxpft 17
 -bgc cn
 -s

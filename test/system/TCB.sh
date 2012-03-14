@@ -50,7 +50,7 @@ if [ ! -f ${CLM_SCRIPTDIR}/config_files/$1 ]; then
 fi
 
 ##construct string of args to configure
-config_string="$CFG_STRING -mach $CESM_MACH -nc_path $NETCDF_PATH "
+config_string="$CFG_STRING -mach $CESM_MACH -comp $CESM_COMP -nc_path $NETCDF_DIR "
 config_string="${config_string} -mct_dir $MCT_LIBDIR -pio_dir $PIO_LIBDIR "
 while read config_arg; do
     config_string="${config_string}${config_arg} "

@@ -1,4 +1,354 @@
 ===============================================================
+Tag name:  clm4_0_41
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Mar 13 23:43:45 MDT 2012
+One-line Summary: Bring rmfmesh/rtmmap branches to trunk
+
+Purpose of changes:
+
+Get working with latest scripts and have clm template call build-namelist directly.  Move
+rmfmesh/rtmmap branch to trunk. Remove CASA completely. Start using RTM mapping files.
+Allow bigger tolerance for mksurfdata_map frac up to 1.e-5 so can work for f4x5. New
+half-degree mapping files. Remove code to calculate RTM mapping. Remove ability to set
+maxpatch_pft to something different than numpft in CLM configure. Remove
+-ad_spinup/-exit_spinup options in configure make generic -spinup option with a few
+allowed values (similar to the clm45sci version of configure). New 1850 fsurdat dataset
+for ne240np4. Update externals to the latest, get test_driver working.
+
+Requirements for tag: test on bluefire (CESM,int,bat), lynx/pgi (CESM), mirage,
+template calls build-namelist. Fix 1477, 1476, 1468, 1467
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+                                 1477 (Bad f05 datasets)
+                                 1476 (Problem with stand-alone build on bluefire)
+                                 1468 (Bad f09, f19 SCRIP Grid files)
+                                 1467 (Remove runinit_ibm.csh script)
+                                 1449 (Remove fine-mesh)
+                                 1448 (Remove CASA)
+                                 1432 (Several resolutions fail for new mksurfdata_map)
+
+Known bugs (include bugzilla ID):
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  935 (RTM warning NOT an error)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1454 (lack of 1D history files in CLM testing)
+                                 1455 (bad time-stamp in CLM testing)
+                                 1457 (bug in soil color in mksurfdata_map)
+                                 1459 (PTSMODE fails)
+                                 1474 (Missing eulerian domain files)
+                                 1479 (fails on jaguarpf)
+                                 1480 (Darwin_intel build)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+    Remove CASA option, don't allow maxpft to be set.
+    CESM scripts/Machines updated.
+
+Describe any changes made to the namelist:
+
+  BuildConf/clm.buildnml.csh now becomes a script that simply calls the clm 
+  build-namelist script to build your namelist. This means you effectively treat it
+  as a READ-only script that you don't put changes into! Instead you use 
+  the "user_nl_clm" file to put your custom changes to the namelist into.
+  The use of user_nl_clm is documented in the CLM User's Guide at...
+
+  http://www.cesm.ucar.edu/models/cesm1.0/clm/models/lnd/clm/doc/UsersGuide/x1423.html#config_time_nml
+
+  Use preview_namelists to see full namelists that will be created.
+
+List any changes to the defaults for the boundary datasets: Activate RTM mapping files
+     New 1840 ne240 fsurdat file, replace all f05 mapping files, replace all f05 mapping
+     files, and f05, f09, and f19 SCRIP grid files
+
+Describe any substantial timing or memory changes: Yes!
+   Much less global memory needed now! Only one temporary global integer array
+   used.
+
+Code reviewed by: self, mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, Machines,
+          drv, csm_share, esmf_wrf_timemgr, datm
+
+     scripts          to datm8_120219
+     Machines         to Machines_120309
+     drv              to drvseq4_1_02
+     csm_share        to share3_120308
+     esmf_wrf_timemgr to esmf_wrf_timemgr_120218
+     datm             to datm8_120219
+
+List all files eliminated:
+
+>>>>>>> Eliminate stand-alone intrepid/kraken testing files, CASA, fine-mesh, 
+>>>>>>> and RTM mapping calc. Elimanate interpinic run script, too hard to support.
+D       models/lnd/clm/test/system/tests_posttag_intrepid
+D       models/lnd/clm/test/system/tests_posttag_intrepid_nompi
+D       models/lnd/clm/test/system/tests_posttag_kraken
+D       models/lnd/clm/tools/interpinic/runinit_ibm.csh
+D       models/lnd/clm/src/biogeochem/CASAPhenologyMod.F90
+D       models/lnd/clm/src/biogeochem/CASAMod.F90
+D       models/lnd/clm/src/main/CASAiniTimeVarMod.F90
+D       models/lnd/clm/src/main/downscaleMod.F90
+D       models/lnd/clm/src/riverroute/RtmMapMod.F90
+
+List all files added and what they do: Add config defaults files for supported
+     single point datasets, add empty user_nl_clm file
+
+A  +    models/lnd/clm/bld/user_nl_clm
+A  +    models/lnd/clm/bld/config_files/config_defaults_1x1_smallvilleIA.xml
+A  +    models/lnd/clm/bld/config_files/config_defaults_1x1_mexicocityMEX.xml
+A  +    models/lnd/clm/bld/config_files/config_defaults_1x1_numaIA.xml
+A  +    models/lnd/clm/bld/config_files/config_defaults_1x1_vancouverCAN.xml
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>> Changes to config_file for changes to configure
+>>>>>>>>>>>>> eliminate use of maxpft, ad_spinup and exit_spinup use spinup option
+M       models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dh
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_m
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_m
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_o
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_o
+M       models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dm
+M       models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_do
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_s
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_s
+M       models/lnd/clm/test/system/config_files/17p_sc_dh
+M       models/lnd/clm/test/system/config_files/17p_sc_dm
+M       models/lnd/clm/test/system/config_files/17p_sc_do
+M       models/lnd/clm/test/system/config_files/17p_sc_ds
+M       models/lnd/clm/test/system/config_files/17p_cnsc_h
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_h
+M       models/lnd/clm/test/system/config_files/17p_cnsc_dh
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_dh
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_m
+M       models/lnd/clm/test/system/config_files/17p_cnsc_m
+M       models/lnd/clm/test/system/config_files/17p_cnsc_o
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_o
+M       models/lnd/clm/test/system/config_files/17p_cnsc_dm
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_dm
+M       models/lnd/clm/test/system/config_files/17p_cnsc_do
+M       models/lnd/clm/test/system/config_files/17p_cnc13sc_dh
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_do
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_s
+M       models/lnd/clm/test/system/config_files/17p_sc_h
+M       models/lnd/clm/test/system/config_files/21p_cncrpsc_ds
+M       models/lnd/clm/test/system/config_files/17p_cnsc_ds
+M       models/lnd/clm/test/system/config_files/17p_cnc13sc_dm
+M       models/lnd/clm/test/system/config_files/17p_cnc13sc_do
+M       models/lnd/clm/test/system/config_files/17p_sc_m
+M       models/lnd/clm/test/system/config_files/17p_sc_o
+M       models/lnd/clm/test/system/config_files/17p_cnnfsc_dh
+M       models/lnd/clm/test/system/config_files/17p_cnnfsc_dm
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_dh
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_dh
+M       models/lnd/clm/test/system/config_files/17p_cnnfsc_do
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_dm
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_dm
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_do
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_do
+M       models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dh
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_ds
+M       models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dm
+M       models/lnd/clm/test/system/config_files/17p_cnadspinupsc_do
+M       models/lnd/clm/test/system/config_files/README
+M       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_h
+M       models/lnd/clm/test/system/config_files/17p_cndvsc_h
+
+>>>>>>>>>>>>> Get working with latest scripts, eliminate intrepid.
+M       models/lnd/clm/test/system/TCB.sh --------- Send -comp to configure
+M       models/lnd/clm/test/system/test_driver.sh - Eliminate intrepid, get working
+           with latest CESM scripts/Machines, update env settings to Machines
+M       models/lnd/clm/test/system/CLM_runcmnd.sh - Eliminate intrepid
+M       models/lnd/clm/test/system/tests_pretag_bluefire - Correct test name
+
+>>>>>>>>>>>>> Eliminate CASA
+M       models/lnd/clm/tools/interpinic/src/interpinic.F90
+M       models/lnd/clm/tools/mksurfdata_map/src/clm_varctl.F90
+
+>>>>>>>>>>>>> Eliminate CASA, and maxpft. Read site specific config_defaults
+>>>>>>>>>>>>> Change spinup option, get working with latest scripts.
+M       models/lnd/clm/bld/configure --------- Use clm45sci API (use -spinup in
+             place of ad_spinup/exit_spinup), read site specific config_defaults
+             file when sitespf_pt option is used. Eliminate CASA, and maxpft option.
+             Get configure working with latest CESM scripts. Add mct/pio subdirectory
+             for SMP=on/off so will build on bluefire. Add -comp option required
+             for new CESM scripts (for stand-alone test).
+M       models/lnd/clm/bld/build-namelist ---- Remove faerdep, use spinup from 
+             configure rather than ad/exit_spinup, remove substition of CSMDATA
+             in filenames.
+M       models/lnd/clm/bld/clm.cpl7.template - Use sitespf_pt for regional case
+             when CLM_USRDAT NOT used and don't use clm_root in configure.
+M       models/lnd/clm/bld/config_files/config_sys_defaults.xml - Add comp settings
+             and change mach settings to NOT include compiler. Remove: dec_osf,
+              es, irix, solaris, super-ux, unicosmp as no longer tested on
+M       models/lnd/clm/bld/config_files/config_definition.xml --- Remove CASA option
+              mxpft can only be 17 or 21. Add comp, remove ad_spinup/exit_spinup
+              for spinup option. Change description of sitespf_pt option.
+
+>>>>>>>>>>>>> Eliminate CASA, move ad/exit_spinup to spinup, add 1850 ne240 fsurdat
+>>>>>>>>>>>>> Activate all RTM maps, replace all f05 maps.
+M       models/lnd/clm/bld/namelist_files/namelist_definition.xml - Rm fget_archdev
+              only allow R05 for rtm_res
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - ad_spinup
+              to spinup
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+              add 1840 ne240 fsurdat, remove null setting of findat for maxpft=4
+              activate RTM maps, replace all 0.47x0.63 mapping files
+M       models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Use
+              standard shared SCRIP-grid files for: f05, f09, f19 resolutions
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml ------- Change
+              ad/exit_spinup to spinup
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml - Remove
+              fatmgrid, flndtopo, fatmtopo, and fatmlndfrc files
+M       models/lnd/clm/doc/IMPORTANT_NOTES - Remove CASA, fine-mesh, and fget_archdev
+
+>>>>>>>>>>>>> Eliminate CASA, fine-mesh and atm data, change llatlon for ldomain
+>>>>>>>>>>>>> Require RTM map files to be read. Require fatmlndfrc files to be
+>>>>>>>>>>>>> in CESM domain file format. Require maxpft=numpft+1. Fix a pnetcdf issue.
+M       models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 - Remove CASA use ldomain
+              in place of llatlon
+M       models/lnd/clm/src/biogeochem/CNDVMod.F90 ------ ldomain replaces llatlon
+M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90  --- Get rid of fine-mesh
+              downscaling, use ldomain in place of llatlon remove atm, lnd versions
+              of everything (adomain, adecomp, get_proc_bounds_atm, begg_a/l, atm_sx for example. 
+M       models/lnd/clm/src/main/organicFileMod.F90 ---- llatlon becomes ldomain
+M       models/lnd/clm/src/main/decompInitMod.F90 ----- Remove decompInit_atm, acid
+              remove atm grid stuff for: decompInit_lnd and decompInit_glcp
+M       models/lnd/clm/src/main/clm_initializeMod.F90 - Remove downscaling and atm/lnd
+              grid stuff as well as CASA.
+M       models/lnd/clm/src/main/clm_glclnd.F90 -------- Remove clm_maps2x and clm_mapx2s
+              and atm_s2x and atm_x2s 
+M       models/lnd/clm/src/main/clmtypeInitMod.F90 ---- Remove CASA stuff
+M       models/lnd/clm/src/main/ndepStreamMod.F90 ----- Replace llatlon with ldomain
+M       models/lnd/clm/src/main/histFileMod.F90 ------- Remove atm grid stuff such
+              as gratm, namea grids, remove CASA
+M       models/lnd/clm/src/main/clm_atmlnd.F90 -------- Remove downscaling/upscaling
+              init_adiag_type, clm_downscale_a2l and data: atm_a2l, atm_l2a, adiag_arain
+M       models/lnd/clm/src/main/restFileMod.F90 ------- Remove CASA
+M       models/lnd/clm/src/main/controlMod.F90 -------- Remove fatmgrid, CASA, fatmtopo
+              add write about flndtopo (still needed for glc_nec)
+M       models/lnd/clm/src/main/initSurfAlbMod.F90 ---- Remove CASA
+M       models/lnd/clm/src/main/clm_varctl.F90 -------- Remove downscale and CASA
+M       models/lnd/clm/src/main/clm_driver.F90 -------- Remove CASA
+M       models/lnd/clm/src/main/initGridCellsMod.F90 -- Remove setting of _a domain
+               info, gindex_a, longdeg_a, latdeg_a, lon_a, lat_a
+M       models/lnd/clm/src/main/ncdio_pio.F90 --------- Remove use of gratm, set
+               data=' ' needed for pnetcdf
+M       models/lnd/clm/src/main/surfrdMod.F90 --------- Remove surfrd_get_latlon, 
+               surfrd_get_frac, surfrd_wtxy_veg_rank, surfrd_mkrank, add 
+               surfrd_get_globmask in place of surfrd_get_latlon, get rid of
+               ability to read in CLM frac datasets and only read in CESM domain file
+               format. Abort if allocate_all_vegpfts is NOT true.
+M       models/lnd/clm/src/main/domainMod.F90 --------- Remove latlon_type, 
+               nara, and ntop add isgrid2d, adomain, alatlon, llatlon, gatm, amask, pftm
+               methods: domain_setptrs, latlon_init, latlon_check, latlon_clean,
+                        latlon_setsame
+M       models/lnd/clm/src/main/decompMod.F90 --------- Remove get_proc_global_atm, 
+               get_proc_bounds_atm, and atmosphere decomposition data
+M       models/lnd/clm/src/main/clmtype.F90 ----------- Remove CASA, gratm
+M       models/lnd/clm/src/main/histFldsMod.F90 ------- Remove use of atm_a2l,
+-              adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux, downscale
+               remove CASA and downscale if's
+M       models/lnd/clm/src/main/mkarbinitMod.F90 ------ Remove CASA
+M       models/lnd/clm/src/riverroute/RtmMod.F90 ------ Remove some global RTM
+               data.  Replace call's to endrun to shr_sys_abort as intial
+               step of the move to having RTM on it's own component.
+               Add rtm_celledge. 
+M       models/lnd/clm/src/biogeophys/UrbanInputMod.F90 ---- llatlon to ldomain
+M       models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 - formatting change
+M       models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 ---- Remove CASA
+M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 ------ Remove downscaling
+
+Summary of testing:
+
+  bluefire: TBL tests fail because of use of RTM mapping files and NetCDF issue and
+018 brW51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+036 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 10
+037 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 5
+038 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 5
+044 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 2
+045 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 2
+046 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 2
+  bluefire interactive testing: All PASS except, TBL tests fail because of NetCDF build issue and
+026 erCK4 TER.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 7
+027 brCK4 TBR.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .............FAIL! rc= 6
+031 brCK8 TBR.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 6
+  bluefire/CESM testing: All PASS except 
+                         (and ALL compare tests fail couldn't find base result)
+FAIL  SMS.1x1_numaIA.ICN.bluefire_ibm 
+FAIL  ERP.1x1_mexicocityMEX.I.bluefire_ibm 
+  bluefire/PTCLM testing: All FAIL
+  lynx/pgi testing: ALL FAIL
+  lynx/pgi interactive testing: ALL FAIL
+  lynx CESM testing: ALL PASS except... (don't compare as no baselines for clm4_0_40)
+CFAIL ERI.f10_f10.IRCP60CN.lynx_pathscale.162157 
+FAIL  PST.f19_g16.I.lynx_pgi 
+RUN   ERS.1x1_vancouverCAN.I.lynx_pgi.162157 
+  mirage,storm/ifort interactive testing: All PASS!
+  jaguarpf CESM testing: All FAIL
+RUN   ERS_D.f09_g16.I1850.titan_pgi.182111 
+FAIL  ERI.f10_f10.IRCP60CN.titan_pgi 
+FAIL  PST.f09_g16.I.titan_pgi 
+FAIL  PET_PT.f10_f10.I20TRCN.titan_pgi 
+FAIL  ERP.f19_g16.I4804CN.titan_pgi 
+RUN   ERS.1x1_mexicocityMEX.I.titan_pgi.182111 
+FAIL  ERI_D.ne30_g16.I1850CN.titan_pgi 
+TFAIL ERH.ne120_g16.I2000CN.titan_pgi.182111
+RUN   ERS.f09_g16.IRCP26CN.titan_pgi.182111 
+FAIL  SMS.f10_f10.IRCP45CN.titan_pgi 
+RUN   ERS.f19_g16.IRCP60CN.titan_pgi.182111 
+FAIL  SMS_D.f10_f10.IRCP85CN.titan_pgi 
+RUN   ERS.f09_g16.IG1850.titan_pgi.182111
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_40
+
+Changes answers relative to baseline: Yes (using RTM mapping files now)
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: RTM mapping for f05
+    - what platforms/compilers:
+    - nature of change larger than roundoff/same climate
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_40
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Feb 16 14:19:28 MST 2012
@@ -47,6 +397,8 @@ Known bugs (include bugzilla ID):
                                  1455 (bad time-stamp in CLM testing)
                                  1457 (bug in soil color in mksurfdata_map)
                                  1459 (PTSMODE fails)
+                                 1468 (Bad f09, f19 SCRIP Grid files)
+                                 1476 (Problem with stand-alone build on bluefire)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -189,6 +541,8 @@ Known bugs (include bugzilla ID):
                                  1455 (bad time-stamp in CLM testing)
                                  1457 (bug in soil color in mksurfdata_map)
                                  1459 (PTSMODE fails)
+                                 1468 (Bad f09, f19 SCRIP Grid files)
+                                 1476 (Problem with stand-alone build on bluefire)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -672,6 +1026,8 @@ Known bugs (include bugzilla ID):
                                  1409 (ne120 is having restart trouble on jaguar with NetCDF3)
                                  1410 (Problem running PST.f09_g16.I.jaguarpf)
                                  1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1468 (Bad f09, f19 SCRIP Grid files)
+                                 1476 (Problem with stand-alone build on bluefire)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:

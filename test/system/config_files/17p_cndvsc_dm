@@ -2,6 +2,5 @@
 -nouse_mpiserial 
 -nosmp
 -debug
--maxpft 17
 -bgc cndv
 -s

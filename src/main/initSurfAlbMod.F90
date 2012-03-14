@@ -61,9 +61,6 @@ contains
     use clm_time_manager        , only : get_step_size
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
-#if (defined CASA)
-  use CASAMod             , only : CASA_ecosystemDyn
-#endif
 #if (defined CN)
     use CNEcosystemDynMod   , only : CNEcosystemDyn
     use CNVegStructUpdateMod, only : CNVegStructUpdate
@@ -229,16 +226,10 @@ contains
        end do
 
        ! ============================================================================
-       ! Ecosystem dynamics: Uses CASA, CN, or static parameterizations
+       ! Ecosystem dynamics: Uses CN, or static parameterizations
        ! ============================================================================
 
-#if (defined CASA)
-     call casa_ecosystemDyn(begc, endc, begp, endp,    &
-               filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_soilp, filter(nc)%soilp, init=.true.)
-#endif
-
-#if (defined CASA) || (defined CN)
+#if (defined CN)
        do j = 1, nlevgrnd
           do fc = 1, filter(nc)%num_soilc
              c = filter(nc)%soilc(fc)

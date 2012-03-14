@@ -1,6 +1,5 @@
 -mode clm_stndln
 -smp
 -use_mpiserial
--maxpft 17
 -bgc cndv
 -s

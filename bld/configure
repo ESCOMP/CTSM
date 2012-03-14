@@ -52,69 +52,69 @@ OPTIONS
      or double leading dashes.  A consequence of this is that single letter options may
      NOT be bundled.
 
-     -ad_spinup <name>   Turn on AD_SPINUP mode for BGC setting of CN [on | off] 
-                         (default is off).
-     -bgc <name>         Build CLM with BGC package [ none | cn | casa | cndv ] 
-                         (default is none).
-     -c13 <name>         Turn on C13 mode for BGC setting of CN [on | off] 
-                         (default is off).
-     -cache <file>       Name of output cache file (default: config_cache.xml).
-     -cachedir <file>    Name of directory where output cache file is written 
-                         (default: CLM build directory).
-     -clm_root <dir>     Root directory of clm source code 
-                         (default: directory above location of this script)
-     -cppdefs <string>   A string of user specified CPP defines.  Appended to
-                         Makefile defaults.  e.g. -cppdefs '-DVAR1 -DVAR2'
-     -crop <name>        Toggle for prognostic crop model. [on | off] (default is off) 
-                         (can ONLY be turned on when BGC type is CN or CNDV)
-     -comp_intf <name>   Component interface to use (ESMF, MCT or cpl_\$COMP) (default MCT)
-     -defaults <file>    Specify full path to a configuration file which will be used 
-                         to supply defaults instead of the defaults in bld/config_files.
-                         This file is used to specify model configuration parameters only.
-                         Parameters relating to the build which are system dependent will
-                         be ignored.
-     -exit_spinup <name> Turn on EXIT_SPINUP mode for BGC setting of CN [on | off] 
-                         (default is off).
-     -help [or -h]       Print usage to STDOUT.
-     -maxpft <n>         Value of maxpatch_pft (default is $maxpatchpft{$crpmode}) 
-                         (required to be $maxpatchpft{'nocrop'} for CN or CNDV or 
-                          transient cases without crop)
-                         (required to be $maxpatchpft{'crop'} when crop is on)
-     -ninst_lnd <number> Number of instances (ensembles) of CLM to run (normally 1)
-                         Normally used for Data Assimilation
-     -nofire             Turn off wildfires for BGC setting of CN 
-                         (default includes fire for CN)
-     -noio               Turn history output completely off (typically for testing).
-     -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] 
-                         (default is off)
-     -silent [or -s]     Turns on silent mode - only fatal messages issued.
-     -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] 
-                         (default is off)
-     -target_os          Override the os setting for cross platform compilation 
-                         [aix | darwin | dec_osf | irix | linux | solaris | super-ux | bgl | bgp ].
-                         Default: OS on which configure is executing as defined by the 
-                         perl \$OSNAME variable.
-     -sitespf_pt <name>  Setup for the given site specific single-point resolution.
+     -bgc <name>            Build CLM with BGC package [ none | cn | cndv ] 
+                            (default is none).
+     -c13 <name>            Turn on C13 mode for BGC setting of CN [on | off] 
+                            (default is off).
+     -cache <file>          Name of output cache file (default: config_cache.xml).
+     -cachedir <file>       Name of directory where output cache file is written 
+                            (default: CLM build directory).
+     -clm_root <dir>        Root directory of clm source code 
+                            (default: directory above location of this script)
+     -cppdefs <string>      A string of user specified CPP defines.  Appended to
+                            Makefile defaults.  e.g. -cppdefs '-DVAR1 -DVAR2'
+     -crop <name>           Toggle for prognostic crop model. [on | off] (default is off) 
+                            (can ONLY be turned on when BGC type is CN or CNDV)
+     -comp_intf <name>      Component interface to use (ESMF, MCT or cpl_\$COMP) (default MCT)
+     -defaults <file>       Specify full path to a configuration file which will be used 
+                            to supply defaults instead of the defaults in bld/config_files.
+                            This file is used to specify model configuration parameters only.
+                            Parameters relating to the build which are system dependent will
+                            be ignored.
+     -help [or -h]          Print usage to STDOUT.
+     -ninst_lnd <number>    Number of instances (ensembles) of CLM to run (normally 1)
+                            Normally used for Data Assimilation
+     -nofire                Turn off wildfires for BGC setting of CN 
+                            (default includes fire for CN)
+     -noio                  Turn history output completely off (typically for testing).
+     -pergro <name>         Switch enables building CLM for perturbation growth tests. [on | off] 
+                            (default is off)
+     -silent [or -s]        Turns on silent mode - only fatal messages issued.
+     -sitespf_pt <name>     Setup for the given site specific single-point resolution.
+     -snicar_frc <name>     Turn on SNICAR radiative forcing calculation. [on | off] 
+                            (default is off)
+     -spinup <name>         Turn on given spinup mode for BGC setting of CN		  (level)
+                              AD            Turn on Accelerated Decomposition from	      (5)
+                                            bare-soil
+                              exit          Jump directly from AD spinup to normal mode	      (2)
+                              normal        Normal decomposition ("final spinup mode")	      (0)
+                                            (default)
+                            Valid sequence: 5-2-0
+     -target_os             Override the os setting for cross platform compilation 
+                            [aix | darwin | linux | solaris | bgl | bgp ].
+                            Default: OS on which configure is executing as defined by the 
+                            perl \$OSNAME variable.
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
-                         Directories containing user source code.
-     -verbose [or -v]    Turn on verbose echoing of settings made by configure.
-     -version            Echo the SVN tag name used to check out this CLM distribution.
-
+                            Directories containing user source code.
+     -verbose [or -v]       Turn on verbose echoing of settings made by configure.
+     -version               Echo the SVN tag name used to check out this CLM distribution.
 
 OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stndln)
 
     The CESM scripts already take care of everything here. These options exist for
     use with the CLM standalone testing in the models/lnd/clm/test/system directory.
 
-     -mach <name>        Machine name to use for CESM build.
-     -mode <name>        CLM mode [clm_stndln | ext_cesm]
-     -debug              Switch to turn on building CLM with debugging compiler options.
-     -nc_path <dir>      Path to NetCDF (lib and include directories should reside beneath it)
-     -mct_dir <dir>      Directory to MCT to either build or use pre-built MCT
-     -mpi_path <dir>     Path to MPI (lib and include directories should reside beneath it)
-     -[no]smp            Switch on [off] SMP parallelism.
-     -[no]use_mpiserial  Switch on [off] use of serial-only MPI.
-     -pio_dir <dir>      Directory to PIO to either build or use pre-built PIO
+     -mach <name>           Machine name to use
+     -mode <name>           CLM mode [clm_stndln | ext_cesm]
+     -debug                 Switch to turn on building CLM with debugging compiler options.
+     -nc_path <dir>         Path to NetCDF 
+                            (lib and include directories should reside beneath it)
+     -mct_dir <dir>         Directory to MCT to either build or use pre-built MCT
+     -mpi_path <dir>        Path to MPI
+                            (lib and include directories should reside beneath it)
+     -[no]smp               Switch on [off] SMP parallelism.
+     -[no]use_mpiserial     Switch on [off] use of serial-only MPI.
+     -pio_dir <dir>         Directory to PIO to either build or use pre-built PIO
 EOF
 }
 
@@ -154,14 +154,15 @@ my %opts = (
             nc_path     => undef,
             mpi_path    => undef,
             clm_root    => undef,
+            spinup      => "normal",
             mct_dir     => undef,
             pio_dir     => undef,
             ninst_lnd   => 1,
             ninst_atm   => 1,
 	    );
 GetOptions(
-    "ad_spinup=s"               => \$opts{'ad_spinup'}, 
-    "c13=s"                     => \$opts{'c13'}, 
+    "c13=s"                     => \$opts{'c13'},
+    "spinup=s"                  => \$opts{'spinup'}, 
     "bgc=s"                     => \$opts{'bgc'}, 
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
@@ -169,14 +170,13 @@ GetOptions(
     "clm_root=s"                => \$opts{'clm_root'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
     "comp_intf=s"               => \$opts{'comp_intf'},
+    "comp=s"                    => \$opts{'comp'},
     "debug"                     => \$opts{'debug'},
     "defaults=s"                => \$opts{'defaults'},
-    "exit_spinup=s"             => \$opts{'exit_spinup'}, 
     "mct_dir=s"                 => \$opts{'mct_dir'},
     "pio_dir=s"                 => \$opts{'pio_dir'},
     "mach=s"                    => \$opts{'mach'},
     "h|help"                    => \$opts{'help'},
-    "maxpft=s"                  => \$opts{'maxpft'},
     "mode=s"                    => \$opts{'mode'},
     "nofire"                    => \$opts{'nofire'},
     "noio"                      => \$opts{'noio'},
@@ -202,7 +202,7 @@ usage() if $opts{'help'};
 # Echo version info.
 version($cfgdir) if $opts{'version'};    
 
-# Check for unparsed argumentss
+# Check for unparsed arguments
 if (@ARGV) {
     print "ERROR: unrecognized arguments: @ARGV\n";
     usage();
@@ -233,13 +233,22 @@ EOF
 # The configuration defaults file modifies the generic defaults in the configuration
 # definition file.  Note that the -defaults option has precedence over all other options.
 my $config_defaults_file;
-if    ($opts{'defaults'})  {$config_defaults_file = $opts{'defaults'}}
-else                       {$config_defaults_file = "$cfgdir/config_files/config_defaults.xml"}
+my $std_config_defaults_file = "$cfgdir/config_files/config_defaults.xml";
+if    ($opts{'defaults'})           {
+    $config_defaults_file = $opts{'defaults'};
+} elsif (defined($opts{'sitespf_pt'})) {
+    $config_defaults_file = "$cfgdir/config_files/config_defaults_$opts{'sitespf_pt'}.xml";
+    if ( ! -f $config_defaults_file ) {
+       $config_defaults_file = "$std_config_defaults_file";
+    }
+} else {
+    $config_defaults_file = "$std_config_defaults_file";
+}
 (-f "$config_defaults_file")  or  die <<"EOF";
 ** Cannot find configuration defaults file \"$config_defaults_file\" **
 EOF
 
-# System defaults (currently for use_mpiserial, mach and smp settings)
+# System defaults (currently for use_mpiserial, mach, comp and smp settings)
 my $sys_defaults_file = 'config_sys_defaults.xml';
 (-f "$cfgdir/config_files/$sys_defaults_file")  or  die <<"EOF";
 ** Cannot find system defaults file \"$sys_defaults_file\" in directory 
@@ -265,7 +274,8 @@ if ($print>=2) { print "Using configuration defaults file $config_defaults_file$
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-my @dirs = (  $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib");
+my $casecfgdir = "$cfgdir/../../../../scripts/ccsm_utils/Case.template";
+my @dirs = (  $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib", $casecfgdir);
 unshift @INC, @dirs;
 require XML::Lite;
 require Build::Config;
@@ -393,14 +403,14 @@ if ($print>=2) { print "The configuration cache file will be created in $config_
 
 
 #-----------------------------------------------------------------------------------------------
-# urban single point configurations
+# supported single point configurations
 if( defined($opts{'sitespf_pt'}) ) {
   $cfg_ref->set('sitespf_pt', $opts{'sitespf_pt'});
 }
 my $sitespf_pt = $cfg_ref->get('sitespf_pt');
 if ($print>=2) { 
    if( defined($opts{'sitespf_pt'}) ) { 
-      print "Using $sitespf_pt for urban single point configuration.$eol"; 
+      print "Using $sitespf_pt for supported single point configuration.$eol"; 
    }
 }
 
@@ -432,51 +442,27 @@ if ( ($nofire eq "on") && ($bgc_mode ne "cn") ) {
 ** Cannot turn nofire mode on -- without cn for bgc mode** 
 EOF
 }
-if ($print>=2) { 
-   if ( $nofire eq "on") { print "Wildfires are active as normal.$eol"; }
-   else                  { print "Wildfires are turned off.$eol";       }
+if ($print>=2 && $bgc_mode =~ /^cn/ ) { 
+   if ( $nofire eq "off") { print "Wildfires are active as normal.$eol"; }
+   else                   { print "Wildfires are turned off.$eol";       }
 }
 
-# AD_SPINUP option for BGC/CN mode only
-if (defined $opts{'ad_spinup'}) {
-    $cfg_ref->set('ad_spinup', $opts{'ad_spinup'});
+#-----------------------------------------------------------------------------------------------
+# SPINUP option for BGC/CN mode only
+if (defined $opts{'spinup'}) {
+    $cfg_ref->set('spinup', $opts{'spinup'});
 }
-my $ad_spinup = $cfg_ref->get('ad_spinup');
-if ( ($ad_spinup eq "on" ) && ($bgc_mode ne "cn") ) {
+my $spinup = $cfg_ref->get('spinup');
+if ( ($spinup ne "normal" ) && ($bgc_mode ne "cn") ) {
    die <<"EOF";
-** Cannot turn ad_spinup mode on -- without cn for bgc mode** 
+** Cannot turn spinup mode on -- without cn for bgc mode** 
 ** 
 ** Set the bgc mode by the following means from highest to lowest precedence:
 ** * by the command-line option -bgc cn
 ** * by a default configuration file, specified by -defaults 
 EOF
 }
-if ($print>=2) { print "Using $ad_spinup for ad_spinup for cn mode.$eol"; }
-
-# EXIT_SPINUP option for BGC/CN mode only
-if (defined $opts{'exit_spinup'}) {
-    $cfg_ref->set('exit_spinup', $opts{'exit_spinup'});
-}
-my $exit_spinup = $cfg_ref->get('exit_spinup');
-if ( ($exit_spinup eq "on" ) && ($bgc_mode ne "cn") ) {
-   die <<"EOF";
-** Cannot turn exit_spinup mode on -- without cn for bgc mode** 
-** 
-** Set the bgc mode by the following means from highest to lowest precedence:
-** * by the command-line option -bgc cn
-** * by a default configuration file, specified by -defaults 
-EOF
-}
-if ( ($exit_spinup eq "on") && ($ad_spinup eq "on") ) {
-   die <<"EOF";
-** Cannot turn exit_spinup mode on -- when ad_spinup mode is on.
-** 
-** Set the spinup modes by the following means from highest to lowest precedence:
-** * by the command-line option -bgc cn
-** * by a default configuration file, specified by -defaults 
-EOF
-}
-if ($print>=2) { print "Using $exit_spinup for exit_spinup for cn mode.$eol"; }
+if ($print>=2) { print "Using $spinup for spinup for cn mode.$eol"; }
 
 # C13 option for BGC/CN mode only
 if (defined $opts{'c13'}) {
@@ -489,7 +475,6 @@ if ( ($c13 eq "on" ) && ($bgc_mode ne "cn") ) {
 EOF
 }
 if ($print>=2) { print "Using $c13 for c13 for cn mode.$eol"; }
-
 
 #-----------------------------------------------------------------------------------------------
 # comp_intf option
@@ -562,11 +547,7 @@ if ($print>=2) { print "Using $crop for crop.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # MAXPFT option
-if (defined $opts{'maxpft'}) {
-    $cfg_ref->set('maxpft', $opts{'maxpft'});
-} else {
-    $cfg_ref->set('maxpft', $maxpatchpft{$crpmode} );
-}
+$cfg_ref->set('maxpft', $maxpatchpft{$crpmode} );
 my $maxpft = $cfg_ref->get('maxpft');
 if ( (($bgc_mode eq "cn") || ($bgc_mode eq "cndv")) && ($maxpft != $maxpatchpft{$crpmode}) ) {
    die <<"EOF";
@@ -681,22 +662,36 @@ my $mach_val = (defined $opts{'mach'}) ? $opts{'mach'} : $sys_defaults{'mach'};
 $cfg_ref->set('mach', $mach_val);
 my $mach = $mach_val;
 
-if ($print>=2) { print "CESM machine/compiler: $mach$eol";}
+if ($print>=2) { print "CESM machine: $mach$eol";}
+
+#-----------------------------------------------------------------------------------------------
+# compiler
+my $comp_val = (defined $opts{'comp'}) ? $opts{'comp'} : $sys_defaults{'comp'};
+
+$cfg_ref->set('comp', $comp_val);
+my $comp = $comp_val;
+
+if ($print>=2) { print "CESM compiler: $comp$eol";}
 
 #-----------------------------------------------------------------------------------------------
 # PIO and MCT build directories
 my($mct_dir,$pio_dir,$sub_dir);
 if ($clm_mode eq "clm_stndln" ) {
    # subdirectory for both
-   if ( $debug ) {
+   if ( $debug eq "on" ) {
       $sub_dir .= "/debug"
    } else {
       $sub_dir .= "/opt"
    }
-   if ( $use_mpiserial ) {
+   if ( $use_mpiserial eq "on" ) {
       $sub_dir .= "-mpiserial"
    } else {
       $sub_dir .= "-mpi"
+   }
+   if ( $smp eq "on" ) {
+      $sub_dir .= "-smp"
+   } else {
+      $sub_dir .= "-nosmp"
    }
    # MCT
    if (defined $opts{'mct_dir'}){
@@ -759,22 +754,19 @@ if ($crop eq 'on') {
 if ($bgc_mode eq 'cndv') { 
     $cfg_cppdefs .= " -DCNDV -DCN";
 }
-if ($bgc_mode eq 'casa') { 
-    $cfg_cppdefs .= " -DCASA";
-}
 if ($nofire eq 'on') {
     $cfg_cppdefs .= " -DNOFIRE";
 }
 if ($noio eq 'on') {
     $cfg_cppdefs .= " -D_NOIO";
 }
-if ($ad_spinup eq 'on') { 
-    $cfg_cppdefs .= " -DAD_SPINUP";
-}
 if ($c13 eq 'on') { 
     $cfg_cppdefs .= " -DC13";
 }
-if ($exit_spinup eq 'on') { 
+if ($spinup eq 'AD') { 
+    $cfg_cppdefs .= " -DAD_SPINUP";
+}
+if ($spinup eq 'exit') { 
     $cfg_cppdefs .= " -DEXIT_SPINUP";
 }
 if ( $pergro eq 'on' ) {
@@ -782,14 +774,6 @@ if ( $pergro eq 'on' ) {
 }
 if ( $snicar_frc eq 'on' ) {
     $cfg_cppdefs .= " -DSNICAR_FRC";
-}
-if ( $sitespf_pt  eq '1x1_mexicocityMEX' ) {
-    if ($print>=2) { print "Using MEXICOCITY configuration.$eol"; }
-    $cfg_cppdefs .= " -DMEXICOCITY";
-}
-if ( $sitespf_pt  eq '1x1_vancouverCAN' ) {
-    if ($print>=2) { print "Using VANCOUVER configuration.$eol"; }
-    $cfg_cppdefs .= " -DVANCOUVER";
 }
 # Always build with PIO
 $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
@@ -975,7 +959,20 @@ if ($clm_mode eq "ext_cesm" ) {
 
 } elsif ( $cesm_bld eq "on" ) {
 
-    # Create all the directories and subdirecties needed
+    # The ConfigCase module provides utilities to store and manipulate the configuration.
+    (-f "$casecfgdir/ConfigCase.pm")  or  die <<"EOF";
+** Cannot find perl module \"ConfigCase.pm\" in directory 
+  \"$casecfgdir\" **
+EOF
+    require ConfigCase;
+
+    my $macro      = "Macros";
+    my $envset     = "Macros.env_conf-build";
+    my $config_dir = "$cfgdir/config_files";
+    my $scriptsdir = "$cfgdir/../../../../scripts/ccsm_utils/Machines";
+    my $builddir   = "$scriptsdir";
+
+    # Create all the directories and subdirectories needed
     my @dirs = ( "$clm_bld",                    "$clm_bld/lib", "$clm_bld/include", 
                  "$clm_bld/SourceMods/src.clm", "$clm_bld/SourceMods/src.cesm",
                  "$clm_bld/cesm_lib",           "$clm_bld/lnd" );
@@ -985,7 +982,7 @@ if ($clm_mode eq "ext_cesm" ) {
     # Create and build MCT and PIO
 
     if(-d $mct_dir){
-       print "Using existing mct_dir: $mct_dir";
+       print "Using existing mct_dir: $mct_dir\n";
     }else{
        print "creating $mct_dir\n" if($print);
        my $mct_root = "$clm_root/../../utils/mct";
@@ -1002,7 +999,7 @@ if ($clm_mode eq "ext_cesm" ) {
 
     # PIO library
     if(-d $pio_dir){
-       print "Using existing pio_dir: $pio_dir";
+       print "Using existing pio_dir: $pio_dir\n";
     }else{
        my $pio_root= "$clm_root/../../utils/pio";
        print "creating $pio_dir\n" if($print);
@@ -1013,28 +1010,39 @@ if ($clm_mode eq "ext_cesm" ) {
     write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
     if ($print>=2) { print "creating $clm_bld/$cpp_filename\n"; }
 
-    # Write the Macro's file for machine dependent build information
-    my $macro      = "Macros.$mach";
-    my $cppmacro   = "Macros.cppdefs";
-    my $postmacro  = "Macros.postdefs";
-    my $config_dir = "$cfgdir/config_files";
-    my $scriptsdir = "$cfgdir/../../../../scripts/ccsm_utils/Machines";
-    my $builddir   = "$cfgdir/../../../../scripts/ccsm_utils/Build";
-    foreach my $mac ( $macro, $cppmacro, $postmacro ) {
-       if ( ! -f "$scriptsdir/$mac" ) {
-	   die <<"EOF";
-** Could not find a $mac file in $scriptsdir
-** 
+    # Machines definition file.
+    my $machine_file = 'config_machines.xml';
+    (-f "$scriptsdir/$machine_file")  or  die <<"EOF";
+** Cannot find machine parameters file \"$machine_file\" in directory 
+    \"$scriptsdir\" **
 EOF
-       }
+
+    # Compiler definition file.
+    my $compiler_file = 'config_compilers.xml';
+    (-f "$scriptsdir/$compiler_file")  or  die <<"EOF";
+** Cannot find compiler parameters file \"$compiler_file\" in directory 
+    \"$scriptsdir\" **
+EOF
+
+    # Create new config object
+    my $cfgcas_ref = ConfigCase->new("$casecfgdir/$config_def_file");
+
+    if($mach =~ /generic_(.*)/){
+      $cfgcas_ref->set('OS',$1);
+      $cfgcas_ref->set('MACH','generic');
+    }else{
+      $cfgcas_ref->set_machine("$scriptsdir/$machine_file", $mach, $print);
     }
-    write_macros("$scriptsdir/$macro", "$scriptsdir/$cppmacro", "$scriptsdir/$postmacro", 
-                 "$clm_bld/$macro", $cfg_ref );
+
+    # Write the Macro's file for machine dependent build information
+    $cfgcas_ref->set_compiler("$scriptsdir/$compiler_file",$comp, $mach, $print, "$scriptsdir/$macro");
+    write_envset("$clm_bld/$envset", $cfg_ref, $cfgcas_ref );
+    write_macros("$scriptsdir/$macro", "$clm_bld/$macro" );
     if ($print>=2) { print "creating $clm_bld/$macro\n"; }
 
     # Write the cesm top level Makefile.
-    write_cesm_makefile("$builddir/Makefile", "$clm_bld/Makefile",
-                        "cesm", "$macro", $cfg_ref );
+    write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/Makefile",
+                        "$clm_bld/$envset", "cesm", "$macro", $cfg_ref );
     if ($print>=2) { print "creating $clm_bld/cesm_lib/Makefile\n"; }
 
     # Write the top level filepath file for cesm build
@@ -1042,8 +1050,8 @@ EOF
     if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
 
     # Write the cesm_lib level Makefile.
-    write_cesm_makefile("$builddir/Makefile", "$clm_bld/cesm_lib/Makefile", 
-                        "cesm_lib", "../$macro", $cfg_ref );
+    write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/cesm_lib/Makefile", 
+                        "$clm_bld/$envset", "cesm_lib", "../$macro", $cfg_ref );
     if ($print>=2) { print "creating $clm_bld/cesm_lib/Makefile\n"; }
 
     # Write the cesm_lib level filepath file for cesm build
@@ -1051,8 +1059,8 @@ EOF
     if ($print>=2) { print "creating $clm_bld/cesm_lib/$fp_filename\n"; }
 
     # Write the lnd level Makefile.
-    write_cesm_makefile("$builddir/Makefile", "$clm_bld/lnd/Makefile", 
-                        "clm", "../$macro", $cfg_ref );
+    write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/lnd/Makefile", 
+                        "$clm_bld/$envset", "clm", "../$macro", $cfg_ref );
     if ($print>=2) { print "creating $clm_bld/lnd/Makefile\n"; }
 
     # Write the filepath file for cesm build of clm library
@@ -1083,7 +1091,7 @@ if ($print) { print "configure done.\n"; }
 exit;
 
 #-----------------------------------------------------------------------------------------------
-# FINNISHED ####################################################################################
+# FINISHED ####################################################################################
 #-----------------------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
@@ -1209,35 +1217,39 @@ sub write_cppdefs
 
 #-------------------------------------------------------------------------------
 
-sub write_macros
+sub write_envset
 {
-    my ($file_in, $cppfile_in, $postfile_in, $file_out, $cfg_ref) = @_;
-    my  $fh_in  = new IO::File;
-    my  $fh_out = new IO::File;
-
-    $fh_in->open("<$file_in") or die "** can't open macros file: $file_in\n";
-    $fh_out->open(">$file_out") or die "** can't open macros file: $file_out\n";
+    my ($envset, $cfg_ref, $cfgcas_ref) = @_;
 
     # configuration parameters
     my $nc_path       = $cfg_ref->get('nc_path');
     my $debug         = $cfg_ref->get('debug') ? 'TRUE' : 'FALSE';
-    my $use_mpiserial = $cfg_ref->get('use_mpiserial') ? 'TRUE' : 'FALSE';
+    my $os            = $cfgcas_ref->get('OS');
+    my $mpilibs       = $cfgcas_ref->get('MPILIBS');
+    my @mpilibs       = split ",", $mpilibs, -1;
+    my $mpilib        = $cfg_ref->get('use_mpiserial') ? 'mpi-serial' : $mpilibs[0];
     my $smp           = $cfg_ref->get('smp') ? 'TRUE' : 'FALSE';
     my $clm_root      = $cfg_ref->get('clm_root');
+    my $compiler      = $cfg_ref->get('comp');
     my $compile_threaded = "false";
     if ( $smp eq "TRUE" ) {
        $compile_threaded = "true";
     }
 
-    my $casetools = absolute_path( "$clm_root/../../../scripts/ccsm_utils/Build" );
+    my $casetools = absolute_path( "$clm_root/../../../scripts/ccsm_utils/Machines" );
     my $coderoot  = absolute_path( "$clm_root/../../../models" );
 
     my $mpi_path     = $cfg_ref->get('mpi_path');
     my $mct_libdir   = $cfg_ref->get('mct_dir');
     my $pio_libdir   = $cfg_ref->get('pio_dir');
+
+    my  $fh_out = new IO::File;
+
+    $fh_out->open(">$envset") or die "** can't open env_settings file: $envset\n";
     print $fh_out  <<"EOF";
-# Make macro settings for building CLM using the CESM build files.
+# env_conf and env_build settings for building CLM using the CESM build files.
 BLDROOT                 := $clm_bld
+CASEROOT                := $clm_bld
 CASETOOLS               := $casetools
 CODEROOT                := $coderoot
 LIBROOT                 := \$(BLDROOT)/lib
@@ -1247,26 +1259,38 @@ compile_threaded        := $compile_threaded
 DEBUG                   := $debug
 BUILD_THREADED          := $smp
 FRAMEWORK               := MCT
-CCSM_BGC                := none
 USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CESM_cppdefs)
-NETCDF_PATH             := $nc_path
+NETCDF_DIR              := $nc_path
 MPICH_PATH              := $mpi_path
-USE_MPISERIAL           := $use_mpiserial
+MPILIBS                 := $mpilibs
+MPILIB                  := $mpilib
+COMPILER                := $comp
+OS                      := $os
 USE_ESMF_LIB            := FALSE
 MCT_LIBDIR              := $mct_libdir
 PIO_LIBDIR              := $pio_libdir
 
 EOF
+    $fh_out->close;
+}
 
-    foreach my $mac ( $cppfile_in, $file_in, $postfile_in ) {
-       # Copy the "template" cpp Macros file to the new file.
-       $fh_in->open("<$mac") or die "** can't open file: $mac\n";
-       while (<$fh_in>) {
-	  print $fh_out $_;
-       }
+#-------------------------------------------------------------------------------
+
+sub write_macros
+{
+    my ($file_in, $file_out) = @_;
+    my  $fh_in  = new IO::File;
+    my  $fh_out = new IO::File;
+
+    $fh_in->open("<$file_in") or die "** can't open macros file: $file_in\n";
+    $fh_out->open(">$file_out") or die "** can't open macros file: $file_out\n";
+
+    # Copy the "template" cpp Macros file to the new file.
+    $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
+    while (<$fh_in>) {
+      print $fh_out $_;
     }
     $fh_in->close;
-
     $fh_out->close;
 }
 
@@ -1276,7 +1300,7 @@ sub write_cesm_makefile
 {
     # Add macro definitions to the beginning of the cesm Makefile that will be written
 
-    my ($file_in, $file_out, $model, $macfile, $cfg_ref) = @_;
+    my ($file_in, $file_out, $envset, $model, $macfile, $cfg_ref) = @_;
     my  $fh_in = new IO::File;
     my  $fh_out = new IO::File;
 
@@ -1300,10 +1324,10 @@ sub write_cesm_makefile
        $target      = "mkcomplib";
     }
     print $fh_out  <<"EOF";
-# Make macros for CLM.
+# env conf and build settings for CLM.
 MODEL   := $model
-MACFILE := $macfile
--include \$(MACFILE)
+ENVFILE := $envset
+-include \$(ENVFILE)
 $target_name
 
 target: $target
@@ -1395,7 +1419,7 @@ sub get_sys_defaults
     $name eq "system_defaults" or die
 	"file $file is not a system defaults file\n";
 
-    my @vars = ( "use_mpiserial", "smp", "mach" );
+    my @vars = ( "use_mpiserial", "smp", "mach", "comp" );
     foreach my $var ( @vars ) {
        $e = $xml->elements_by_name( $var );
        %a = $e->get_attributes();

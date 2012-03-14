@@ -1,7 +1,6 @@
 -mode clm_stndln
 -use_mpiserial -smp
 -debug
--maxpft 17
 -bgc cn
 -c13 on
 -s

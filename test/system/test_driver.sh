@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on mirage, edinburgh, bluefire, intrepid (will submit itself to batch): 
+# usage on mirage, edinburgh, bluefire (will submit itself to batch): 
 #
 # ./test_driver.sh
 #
@@ -125,15 +125,16 @@ export LAPI_DEBUG_RC_INIT_SETUP=no
 
 . /contrib/Modules/3.2.6/init/sh
 module load netcdf/4.1.3_seq
-export NETCDF_PATH=\$NETCDF
 if [ "\$CLM_FC" = "GENIBM" ]; then
-  export CESM_MACH="generic_ibm"
+  export CESM_MACH="generic_AIX"
 else
   export CESM_MACH="bluefire"
 fi
+export CESM_COMP="ibm"
 
-export INC_NETCDF=\$NETCDF_PATH/include
-export LIB_NETCDF=\$NETCDF_PATH/lib
+export NETCDF_DIR=\$NETCDF
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
 export MAKE_CMD="gmake -j "
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
@@ -174,12 +175,14 @@ export CLM_TASKS=4
 export CLM_RESTART_TASKS=3
 
 export NETCDF_PATH=/contrib/netcdf-3.6.3/intel-10-64
+export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
 export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
-export CESM_MACH="generic_linux_intel"
+export CESM_MACH="generic_LINUX"
+export CESM_COMP="intel"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
@@ -244,21 +247,23 @@ export INTEL=/usr/local/intel-cluster
 export P4_GLOBMEMSIZE=500000000
 
 
+export CESM_MACH="edinburgh"
 if [ "\$CLM_FC" = "PGI" ]; then
     export NETCDF_PATH=/usr/local/netcdf-4.1.3-pgi-hpf-cc-11.5-0
     export MPICH_PATH=/usr/local/mpich-pgi
     export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${PGI}/linux86/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_MACH="edinburgh_pgi"
+    export CESM_COMP="pgi"
     export TOOLS_MAKE_STRING=""
 else
     export NETCDF_PATH=/usr/local/netcdf-4.1.3-gcc-4.4.4-13-lf9581
     export MPICH_PATH=/usr/local/mpich-gcc-lf64
     export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${LAHEY}/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_MACH="edinburgh_lahey"
+    export CESM_COMP="lahey"
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
+export NETCDF_DIR=\$NETCDF_PATH
 export CFG_STRING=""
 export INC_NETCDF=\${NETCDF_PATH}/include
 export LIB_NETCDF=\${NETCDF_PATH}/lib
@@ -326,20 +331,25 @@ export CLM_TASKS=8
 export CLM_RESTART_TASKS=7
 
 #-------------------------------------------------------------------------------
-# Runtime environment variables (from scripts4_100830)
+# Runtime environment variables (from Machines_120309)
 #-------------------------------------------------------------------------------
+
+# fix for file system problem with empty namelists, june 2011
+export DVS_MAXNODES=1
 
 export MPICH_MAX_SHORT_MSG_SIZE=8000 # default is 128000 bytes
 export MPICH_PTL_UNEX_EVENTS=960000  # default is  90000 (unexpected recv queue size)
 export MPICH_MSGS_PER_PROC=160000    # default is  32768
 export MPICH_PTL_SEND_CREDITS=-1
-
 export MPICH_ENV_DISPLAY=1
 export MPICH_VERSION_DISPLAY=1
+limit coredumpsize unlimited
 
 # The environment variables below produce corefiles and maybe (?) should be
 # moved to DEBUG mode at some point
 export MPICH_DBMASK=0x200
+export MPSTKZ=64M
+export OMP_STACKSIZE=64M
 
 #-------------------------------------------------------------------------------
 # Modules
@@ -347,22 +357,27 @@ export MPICH_DBMASK=0x200
 
 . /opt/modules/default/init/$shell
 
-module rm pgi
-module rm intel
-module rm pathscale
-module rm cray
-module rm PrgEnv-pathscale
-module rm PrgEnv-cray
+module rm PrgEnv-intel
 module rm PrgEnv-pgi
+module rm PrgEnv-cray
+module rm PrgEnv-gnu
+module rm PrgEnv-pathscale
+module rm intel
+module rm pgi
+module rm cray
+module rm pathscale
+module rm netcdf
+module load subversion
 
 
+export CESM_MACH="lynx_linux"
 if [ "\$CLM_FC" = "PATH" ]; then
    module load PrgEnv-pathscale
    module load netcdf
    module load torque
-   module load netcdf/4.0.1.3
-   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pathscale
-   export CESM_MACH="lynx_pathscale"
+   module load netcdf
+   export CESM_COMP="pathscale"
+   export NETCDF_DIR=\$CRAY_NETCDF_DIR/netcdf-pathscale
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 elif [ "\$CLM_FC" = "INTEL" ]; then
@@ -371,9 +386,9 @@ elif [ "\$CLM_FC" = "INTEL" ]; then
    module switch intel intel/12.1.0
    module switch xt-mpt    xt-mpt/5.1.4
    module switch xt-libsci xt-libsci/10.5.02
-   module load netcdf/4.0.1.3
-   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-intel
-   export CESM_MACH="lynx_intel"
+   module load netcdf
+   export NETCDF_DIR=\$CRAY_NETCDF_DIR/netcdf-intel
+   export CESM_COMP="intel"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 else
@@ -381,20 +396,20 @@ else
    module switch pgi       pgi/11.10.0        
    module switch xt-mpt    xt-mpt/4.0.3     
    module switch xt-libsci xt-libsci/10.4.3 
-   module load netcdf/4.0.1.3
-   export NETCDF_PATH=\$CRAY_NETCDF_DIR/netcdf-pgi
-   export CESM_MACH="lynx_pgi"
+   module load PGI/netcdf4/4.1.3_seq
+   export NETCDF_DIR=\$NETCDF
+   export CESM_COMP="pgi"
    export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 fi
 
-module load esmf/5.2.0p1
+module load esmf/5.2.0rp1
 module load subversion
 
 export CFG_STRING=""
 
-export INC_NETCDF=\${NETCDF_PATH}/include
-export LIB_NETCDF=\${NETCDF_PATH}/lib
+export INC_NETCDF=\${NETCDF_DIR}/include
+export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_MPI=""
 export LIB_MPI=""
 export MACH_WORKSPACE="/ptmp"
@@ -464,7 +479,7 @@ export CLM_RESTART_TASKS=129
 source /opt/modules/default/init/sh
 
 module switch pgi       pgi/11.10.0        
-module switch xt-mpich2    xt-mpich2/5.4.0.6      
+module switch xt-mpich2    xt-mpich2/5.4.1
 module switch xt-libsci xt-libsci/11.0.04.4
 module swap xt-asyncpe xt-asyncpe/5.05
 module load szip/2.1
@@ -472,33 +487,25 @@ module load hdf5/1.8.7
 module load netcdf/4.1.3
 module load parallel-netcdf/1.2.0
 module load subversion
-export CESM_MACH="jaguarpf"
+export CESM_MACH="titan"
+export CESM_COMP="pgi"
 module load   ncl
-module load esmf/5.2.0-p1_with-netcdf_g
-
-export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
-export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)
-export MPICH_UNEX_BUFFER_SIZE=1000M   # default is    60M (unexpected short msgs buff size)
-export MPICH_MSGS_PER_PROC=160000     # default is  32768
-export MPICH_PTL_SEND_CREDITS=-1
-
-export MPICH_ENV_DISPLAY=1
-export MPICH_VERSION_DISPLAY=1
-
-# These environment variables were suggested by Helen He to help get around compiler issues
-# with pgi9
-export MALLOC_MMAP_MAX_=0
-export MALLOC_TRIM_THRESHOLD_=536870912
+module load esmf/5.2.0r_with-lapack+netcdf_O
 
 # The environment variables below produce corefiles and maybe (?) should be
 # moved to DEBUG mode at some point
 export MPICH_DBMASK=0x200
+#limit coredumpsize unlimited
 
-#export NETCDF_PATH=\${CRAY_NETCDF_DIR}/netcdf-pgi  # For NetCDF4
-export NETCDF_PATH=\${NETCDF_DIR}
-export LIB_NETCDF=\${NETCDF_PATH}/lib
-export INC_NETCDF=\${NETCDF_PATH}/include
-export MOD_NETCDF=\${NETCDF_PATH}/include
+# The environment variable below increase the stack size, which is necessary for
+# CICE to run threaded on this machine. 
+export MPSTKZ=64M
+export OMP_STACKSIZE=64M
+
+
+export LIB_NETCDF=\${NETCDF_DIR}/lib
+export INC_NETCDF=\${NETCDF_DIR}/include
+export MOD_NETCDF=\${NETCDF_DIR}/include
 export INC_PNETCDF=\${PNETCDF_DIR}/include
 export LIB_PNETCDF=\${PNETCDF_DIR}/lib
 export CFG_STRING=""
@@ -534,13 +541,14 @@ export CLM_RESTART_THREADS=1
 export CLM_TASKS=2
 export CLM_RESTART_TASKS=1
 
+export CESM_MACH="generic_Darwin"
 if [ "\$CLM_FC" = "PGI" ]; then
-   export CESM_MACH="generic_darwin_pgi"
+   export CESM_COMP="pgi"
    export NETCDF_PATH=/usr/local/netcdf-3.6.3-pgi-10.9
    export CFG_STRING=""
    export TOOLS_MAKE_STRING=""
 else
-   export CESM_MACH="generic_darwin_intel"
+   export CESM_COMP="intel"
    export NETCDF_PATH=/usr/local/netcdf-3.6.3-intel-11.1
    export MPICH_PATH=/usr/local/mpich2-1.3.1-intel-11.1
    export PATH="\$MPICH_PATH/bin:$PATH"
@@ -548,6 +556,7 @@ else
    export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort USER_CC=icc "
    export DYLD_LIBRARY_PATH=/opt/intel/Compiler/11.1/067/lib
 fi
+export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="make -j 4"
@@ -564,63 +573,6 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##intrepid
-    login* )
-    submit_script="test_driver_intrepid_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-if [ -n "\$COBALT_JOBID" ]; then    #batch job
-    export JOBID=\`echo \${COBALT_JOBID} | cut -f1 -d'.'\`
-    initdir=\`pwd\`
-    interactive="NO"
-    input_file="tests_posttag_intrepid"
-else
-    interactive="YES"
-    input_file="tests_posttag_intrepid_nompi"
-fi
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=4
-fi
-export CLM_RESTART_THREADS=2
-
-##mpi tasks
-export CLM_TASKS=256
-export CLM_RESTART_TASKS=120
-
-export CESM_MACH="intrepid"
-
-export OBJECT_MODE=32
-export OMP_DYNAMIC=FALSE
-export AIXTHREAD_SCOPE=S
-export MALLOCMULTIHEAP=TRUE
-export MPI_TYPE_MAX=100000
-
-export NETCDF_PATH=/soft/apps/netcdf-3.6.2
-export INC_NETCDF=\$NETCDF_PATH/include
-export LIB_NETCDF=\$NETCDF_PATH/lib
-export MAKE_CMD="make -j 5"
-export CFG_STRING=""
-export TOOLS_MAKE_STRING=""
-export MACH_WORKSPACE="/intrepid-fs0/users/$USER/scratch"
-dataroot="/gpfs/home/projects/ccsm"
-CPRNC_EXE="\$dataroot/tools/cprnc/cprnc"
-newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
-/bin/cp -fp \$CPRNC_EXE \$newcprnc
-export CPRNC_EXE="\$newcprnc"
-export DATM_QIAN_DATA_DIR="\$dataroot/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
-echo_arg=""
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-
-    * ) echo "ERROR: machine $hostname not currently supported"; exit 1 ;;
 esac
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -912,7 +864,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluefire, edinburgh, lynx, mirage, intrepid: "
+    echo "usage on bluefire, edinburgh, lynx, mirage: "
     echo "./test_driver.sh"
     echo ""
     echo "usage on jaguarpf: (compile interactively before submitting)"
@@ -947,9 +899,6 @@ case $hostname in
 
     ##jaguarpf
     jaguarpf* )  qsub ${submit_script};;
-
-    #intrepid
-    login* )  qsub -n 256 -t 60 -q prod-devel --mode script ${submit_script};;
 
     #default
     * )

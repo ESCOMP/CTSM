@@ -6,21 +6,9 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
    C13 		(-c13)
        The C13 mode for bgc=cn is NOT scientifically validated or documented and NOT recommended to be used.
 
-   CASA 	(-bgc casa)
-       The bgc=casa mode is NOT scientifically validated or documented and NOT recommended to be used.
-
    SNICAR_FRC 	(-snicar_frc)
        This mode is tested and functional, but is NOT constantly scientifcally validated, and should be 
        considered experimental.
-
-build-namelist items that are NOT recommended:
-
--lnd_res 
-
-This is the option to turn on the fine-mesh mode of CLM, running CLM at a finer
-resolution than the atmospheric forcing. This is an experimental mode and NOT recommend
-for general use. This is turned on adding topo files to the namelist and entering
-datasets at different resolutions for the atm and lnd grids.
 
 Namelist items that should NOT be exercised:
 
@@ -28,21 +16,6 @@ Namelist items that should NOT be exercised:
                          The suplemental Nitrogen mode of the CN model is known 
                          to be too productive.
   urban_traffic:         Not currently functional
-
-  fine-mesh namelist options: fatmtopo and flndtopo
-
-        As above the fine-mesh mode is experimental and NOT recommended for use.
-        Although "flndtopo" is used when the land-ice model is active.
-
-  casa namelist options: lnpp, lalloc, q10, spunup, and fcpool
-
-        As above CASA is NOT scientifically validated and hence we don't recommend using it, thus we don't
-        recommend using the casa namelist options (they are only available when running with CASA).
-
-   fget_archdev:         This retrieves files on the namelist from an archival storage
-                         system. In general the CESM scripts take care of this before
-                         namelists are generated and hence this is redundant. As such
-                         this feature isn't tested and NOT recommended for use.
 
 See KnownBugs/KnownLimitations files for Known Problems:
 

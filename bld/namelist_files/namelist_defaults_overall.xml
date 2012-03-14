@@ -14,7 +14,7 @@ determine default values for namelists.
 
 <!-- Default CLM start-type -->
 <clm_start_type                >arb_ic</clm_start_type>
-<clm_start_type ad_spinup="on" >cold</clm_start_type>
+<clm_start_type    spinup="AD" >cold</clm_start_type>
 
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>

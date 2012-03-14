@@ -1,7 +1,6 @@
 -mode clm_stndln
 -nouse_mpiserial -nosmp
--exit_spinup on
+-spinup exit
 -debug
--maxpft 17
 -bgc cn
 -s

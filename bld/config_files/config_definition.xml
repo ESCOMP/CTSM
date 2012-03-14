@@ -4,8 +4,12 @@
 
 <config_definition>
 
-<entry id="ad_spinup" valid_values="on,off" value="off" category="bgc">
-Toggle to turn on accelerated decomposition spinup for CN biogeochemistry model
+<entry id="spinup" valid_values="AD,exit,normal" 
+        value="normal" category="bgc">
+ Spinup mode for the CN Carbon Nitrogen BGC model
+    AD            turn on accelerated decomposition spinup for CN biogeochemistry model
+    exit          jump from AD spinup mode to normal mode
+    normal        no acceleration of decompositon (i.e. "final spinup")
 </entry>
 <entry id="snicar_frc" valid_values="on,off" value="off" category="physics">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
@@ -15,17 +19,14 @@ Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) r
 valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA" 
 value="none" category="physics">
 Flag to turn on site specific special configuration flags for supported single 
-point resolutions.
-Currently the only special settings are for MEXICOCITY and VANCOUVER, which make
-changes to urban parameters.
+point resolutions. See the specific config_defaults_*.xml file for the special 
+settings that are set for a particular site.
 </entry>
-<entry id="bgc" valid_values="none,cn,cndv,casa" value="none" category="bgc">
+<entry id="bgc" valid_values="none,cn,cndv" value="none" category="bgc">
 CLM Biogeochemistry mode
    none = Satellite Phenology (SP)
    cn   = Carbon Nitrogen model
    cndv = Carbon Nitrogen with Dynamic Global Vegetation Model
-   casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
-(CASA is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="crop" valid_values="on,off" value="off">
 Toggle to turn on the prognostic crop model
@@ -63,10 +64,10 @@ Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
 (C13 is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="mach" value="bluefire" category="mach_options">
-CESM build machine name and compiler (set by create_newcase)
+CESM build machine name (set by create_newcase)
 </entry>
-<entry id="exit_spinup" valid_values="on,off" value="off" category="bgc">
-Toggle to turn on exit spinup mode on for CN biogeochemistry after ad_spinup was run.
+<entry id="comp" value="ibm" category="mach_options">
+CESM build compiler (set by create_newcase)
 </entry>
 <entry id="use_mpiserial" valid_values="0,1" value="" category="mach_options">
 Switch to enable or disable building with a serial-only version of MPI: 0=off, 1=on.
@@ -82,7 +83,7 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scr
 </entry>
 
 <entry id="maxpft"  value="" 
-valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,21" category="physics">
+valid_values="17,21" category="physics">
 Maximum number of plant function types (PFT)  per gridcell
 (Setting maxpft to anything other than 17 (or 21 for CROP) is EXPERIMENTAL NOT SUPPORTED!)
 </entry>

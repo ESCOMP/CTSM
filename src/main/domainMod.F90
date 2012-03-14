@@ -19,15 +19,14 @@ module domainMod
   private
 !
   public :: domain_type
-  public :: latlon_type
 
   !--- this typically contains local domain info with arrays dim begg:endg ---
   type domain_type
      integer          :: ns         ! global size of domain
      integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
+     logical          :: isgrid2d   ! true => global grid is lat/lon
      integer          :: nbeg,nend  ! local beg/end indices
      character(len=8) :: clmlevel   ! grid type
-     logical          :: decomped   ! decomposed locally or global copy
      integer ,pointer :: mask(:)    ! land mask: 1 = land, 0 = ocean
      real(r8),pointer :: frac(:)    ! fractional land
      real(r8),pointer :: topo(:)    ! topography
@@ -35,50 +34,20 @@ module domainMod
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
      real(r8),pointer :: ascale(:)  ! area scaling from CESM driver
-     integer ,pointer :: glcmask(:) ! glc mask: 1=sfc mass balance required by GLC component
-                                    !           0=SMB not required (default)
-     character*16     :: set        ! flag to check if domain is set
-     !--- following are valid only for land domain ---
      integer ,pointer :: pftm(:)    ! pft mask: 1=real, 0=fake, -1=notset
-     real(r8),pointer :: nara(:)    ! normalized area in upscaling (km**2),
-     real(r8),pointer :: ntop(:)    ! normalized topo for downscaling (m)
+     integer ,pointer :: glcmask(:) ! glc mask: 1=sfc mass balance required by GLC component
+                                    ! 0=SMB not required (default)
+     character*16     :: set        ! flag to check if domain is set
+     logical          :: decomped   ! decomposed locally or global copy
   end type domain_type
 
-  !--- this contains global info about a grid, lats and lons are 1d
-  !--- global arrays of size ni or nj which assume regular lat/lon grids only
-  type latlon_type
-     integer          :: ns         ! global size of domain
-     integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
-     logical          :: isgrid2d   ! true => file is 2d
-     character*16     :: set        ! flag to check if domain is set
-     real(r8),pointer :: latc(:)    ! latitude of 1d grid cell (deg)
-     real(r8),pointer :: lonc(:)    ! longitude of 1d grid cell (deg)
-     real(r8),pointer :: lats(:)    ! latitude of 1d south grid cell edge (deg)
-     real(r8),pointer :: latn(:)    ! latitude of 1d north grid cell edge (deg)
-     real(r8),pointer :: lonw(:)    ! longitude of 1d west grid cell edge (deg)
-     real(r8),pointer :: lone(:)    ! longitude of 1d east grid cell edge (deg)
-  end type latlon_type
-
-  type(domain_type),public    :: adomain
-  type(domain_type),public    :: ldomain
-
-  type(latlon_type),public    :: alatlon
-  type(latlon_type),public    :: llatlon
-
-  integer ,pointer,public     :: gatm(:)   ! gatm pulled out of domain
-  integer ,pointer,public     :: amask(:)  ! global atm mask
-  integer, pointer,public     :: pftm(:)   ! pft mask for lnd grid
+  type(domain_type)    , public :: ldomain
+  real(r8), allocatable, public :: lon1d(:), lat1d(:) ! 1d lat/lons for 2d grids
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
   public domain_clean         ! deallocates domain types
-  public domain_setptrs       ! sets external pointer arrays into domain
   public domain_check         ! write out domain info
-  public latlon_init          ! allocates/nans domain types
-  public latlon_check         ! write out domain info
-  public latlon_clean         ! deallocate domain info
-  public latlon_setsame          ! copy one domain to another
-!
 !
 ! !REVISION HISTORY:
 ! Originally clm_varsur by Mariana Vertenstein
@@ -98,7 +67,7 @@ contains
 ! !IROUTINE: domain_init
 !
 ! !INTERFACE:
-  subroutine domain_init(domain,ni,nj,nbeg,nend,clmlevel)
+  subroutine domain_init(domain,isgrid2d,ni,nj,nbeg,nend,clmlevel)
 !
 ! !DESCRIPTION:
 ! This subroutine allocates and nans the domain type
@@ -107,10 +76,11 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    type(domain_type) :: domain        ! domain datatype
-    integer           :: ni,nj         ! grid size, 2d
-    integer,optional  :: nbeg,nend     ! beg/end indices
-    character(len=*),optional:: clmlevel      ! grid type
+    type(domain_type)   :: domain        ! domain datatype
+    logical, intent(in) :: isgrid2d      ! true => global grid is lat/lon
+    integer, intent(in) :: ni,nj         ! grid size, 2d
+    integer         , intent(in), optional  :: nbeg,nend  ! beg/end indices
+    character(len=*), intent(in), optional  :: clmlevel   ! grid type
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -137,8 +107,7 @@ contains
     endif
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
-             domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
-             domain%ascale(nb:ne),domain%glcmask(nb:ne),stat=ier)
+             domain%topo(nb:ne),domain%ascale(nb:ne),domain%glcmask(nb:ne),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
@@ -148,6 +117,7 @@ contains
        domain%clmlevel = clmlevel
     endif
 
+    domain%isgrid2d = isgrid2d
     domain%ns       = ni*nj
     domain%ni       = ni
     domain%nj       = nj
@@ -169,9 +139,7 @@ contains
 
     domain%pftm     = -9999
     domain%glcmask  = 0  
-    domain%nara     = 0._r8
-    domain%ntop     = -1.0e36
-    domain%ascale     = 1._r8
+    domain%ascale   = 1._r8
 
 end subroutine domain_init
 !------------------------------------------------------------------------------
@@ -206,8 +174,7 @@ end subroutine domain_init
        endif
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
-                  domain%nara,domain%topo,domain%ntop, &
-                  domain%ascale,domain%glcmask,stat=ier)
+                  domain%topo,domain%ascale,domain%glcmask,stat=ier)
        if (ier /= 0) then
           write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           call endrun()
@@ -228,103 +195,6 @@ end subroutine domain_init
     domain%decomped   = .true.
 
 end subroutine domain_clean
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: domain_setptrs
-!
-! !INTERFACE:
-  subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped, &
-                            mask,pftm,glcmask,clmlevel, &
-                            frac,topo,latc,lonc,area,nara,ntop,ascale)
-!
-! !DESCRIPTION:
-! This subroutine sets external pointer arrays to arrays in domain
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(domain_type),intent(in)  :: domain    ! domain datatype
-    integer ,optional :: ns,ni,nj,nbeg,nend    ! grid size, 2d, beg/end
-    character(len=*),optional :: clmlevel      ! grid type
-    logical, optional :: decomped              ! decomped or global
-    integer ,optional,pointer  :: mask(:)  
-    integer ,optional,pointer  :: pftm(:)  
-    integer ,optional,pointer  :: glcmask(:)  
-    real(r8),optional,pointer  :: frac(:)  
-    real(r8),optional,pointer  :: topo(:)  
-    real(r8),optional,pointer  :: latc(:)  
-    real(r8),optional,pointer  :: lonc(:)  
-    real(r8),optional,pointer  :: area(:)  
-    real(r8),optional,pointer  :: nara(:)  
-    real(r8),optional,pointer  :: ntop(:)  
-    real(r8),optional,pointer  :: ascale(:)  
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-!
-!EOP
-!------------------------------------------------------------------------------
-    if (present(ns)) then
-      ns = domain%ns
-    endif
-    if (present(ni)) then
-      ni = domain%ni
-    endif
-    if (present(nj)) then
-      nj = domain%nj
-    endif
-    if (present(nbeg)) then
-      nbeg = domain%nbeg
-    endif
-    if (present(nend)) then
-      nend = domain%nend
-    endif
-    if (present(clmlevel)) then
-      clmlevel = domain%clmlevel
-    endif
-    if (present(decomped)) then
-      decomped = domain%decomped
-    endif
-    if (present(mask)) then
-      mask => domain%mask
-    endif
-    if (present(pftm)) then
-      pftm => domain%pftm
-    endif
-    if (present(glcmask)) then
-      glcmask => domain%glcmask
-    endif
-    if (present(frac)) then
-      frac => domain%frac
-    endif
-    if (present(topo)) then
-      topo => domain%topo
-    endif
-    if (present(latc)) then
-      latc => domain%latc
-    endif
-    if (present(lonc)) then
-      lonc => domain%lonc
-    endif
-    if (present(area)) then
-      area => domain%area
-    endif
-    if (present(nara)) then
-      nara => domain%nara
-    endif
-    if (present(ntop)) then
-      ntop => domain%ntop
-    endif
-    if (present(ascale)) then
-      ascale => domain%ascale
-    endif
-
-end subroutine domain_setptrs
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -365,202 +235,13 @@ end subroutine domain_setptrs
     write(iulog,*) '  domain_check topo      = ',minval(domain%topo),maxval(domain%topo)
     write(iulog,*) '  domain_check area      = ',minval(domain%area),maxval(domain%area)
     write(iulog,*) '  domain_check pftm      = ',minval(domain%pftm),maxval(domain%pftm)
-    write(iulog,*) '  domain_check nara      = ',minval(domain%nara),maxval(domain%nara)
-    write(iulog,*) '  domain_check ntop      = ',minval(domain%ntop),maxval(domain%ntop)
-    write(iulog,*) '  domain_check ascale    = ',minval(domain%ascale),maxval(domain%ascale)
+    write(iulog,*) '  domain_check ascale    = ',minval(domain%ascale) ,maxval(domain%ascale)
     write(iulog,*) '  domain_check glcmask   = ',minval(domain%glcmask),maxval(domain%glcmask)
     write(iulog,*) ' '
   endif
 
 end subroutine domain_check
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: latlon_init
-!
-! !INTERFACE:
-  subroutine latlon_init(latlon,ni,nj)
-!
-! !DESCRIPTION:
-! This subroutine allocates and nans the latlon type
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(latlon_type) :: latlon        ! latlon datatype
-    integer           :: ni,nj         ! grid size, 2d
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-    integer ier
-!
-!EOP
-!------------------------------------------------------------------------------
 
-    if (latlon%set == set) then
-       call latlon_clean(latlon)
-    endif
-
-    allocate(latlon%latc(nj),latlon%lonc(ni), &
-             latlon%lats(nj),latlon%latn(nj), &
-             latlon%lonw(ni),latlon%lone(ni), &
-             stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'latlon_init ERROR: allocate '
-       call endrun()
-    endif
-
-    latlon%ns       = ni*nj
-    latlon%ni       = ni
-    latlon%nj       = nj
-    latlon%latc     = nan
-    latlon%lonc     = nan
-    latlon%lats     = nan
-    latlon%latn     = nan
-    latlon%lonw     = nan
-    latlon%lone     = nan
-    latlon%set      = set
-
-end subroutine latlon_init
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: latlon_clean
-!
-! !INTERFACE:
-  subroutine latlon_clean(latlon)
-!
-! !DESCRIPTION:
-! This subroutine allocates and nans the latlon type
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(latlon_type) :: latlon        ! latlon datatype
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-    integer ier
-!
-!EOP
-!------------------------------------------------------------------------------
-
-    if (latlon%set == unset) then
-       return
-    endif
-
-    deallocate(latlon%latc,latlon%lonc, &
-               latlon%lats,latlon%latn, &
-               latlon%lonw,latlon%lone, &
-               stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'latlon_clean ERROR: deallocate '
-       call endrun()
-    endif
-
-    latlon%ns       = bigint
-    latlon%ni       = bigint
-    latlon%nj       = bigint
-    latlon%set      = unset
-
-end subroutine latlon_clean
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: latlon_setsame
-!
-! !INTERFACE:
-  subroutine latlon_setsame(latlon1,latlon2)
-!
-! !DESCRIPTION:
-! This subroutine copies parts of latlon2 = latlon1 specifically for
-! setting a finemesh lats/lons to coarsemesh grid
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(latlon_type),intent(in)    :: latlon1        ! latlon datatype
-    type(latlon_type),intent(inout) :: latlon2        ! latlon datatype
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-    integer ier
-!
-!EOP
-!------------------------------------------------------------------------------
-
-    if (latlon1%ni /= latlon2%ni .or. latlon1%nj /= latlon2%nj) then
-       write(iulog,*) 'latlon_setsame: error on size',latlon1%ni,latlon1%nj,latlon2%ni,latlon2%nj
-       call endrun()
-    endif
-
-    if (masterproc) then
-       write(iulog,*) 'latlon_setsame: copying ',latlon1%ni,latlon1%nj
-    endif
-    latlon2%latc     = latlon1%latc
-    latlon2%lonc     = latlon1%lonc
-    latlon2%lats     = latlon1%lats
-    latlon2%latn     = latlon1%latn
-    latlon2%lonw     = latlon1%lonw
-    latlon2%lone     = latlon1%lone
-    latlon2%set      = latlon1%set
-
-end subroutine latlon_setsame
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: latlon_check
-!
-! !INTERFACE:
-  subroutine latlon_check(latlon)
-!
-! !DESCRIPTION:
-! This subroutine write latlon info
-!
-! !USES:
-    use shr_infnan_mod  , only : shr_infnan_isnan
-!
-! !ARGUMENTS:
-    implicit none
-    type(latlon_type),intent(in)  :: latlon        ! latlon datatype
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!
-! !LOCAL VARIABLES:
-!
-!EOP
-!------------------------------------------------------------------------------
-
-  if (masterproc .and. latlon%set == set) then
-    write(iulog,*) '  latlon_check ns        = ',latlon%ns
-    write(iulog,*) '  latlon_check ni,nj     = ',latlon%ni,latlon%nj
-    write(iulog,*) '  latlon_check set       = ',latlon%set
-    write(iulog,*) '  latlon_check lonc = ',minval(latlon%lonc),maxval(latlon%lonc)
-    write(iulog,*) '  latlon_check latc = ',minval(latlon%latc),maxval(latlon%latc)
-    if ( .not. shr_infnan_isnan(latlon%lonw(1)) )then
-       write(iulog,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)
-       write(iulog,*) '  latlon_check lone = ',minval(latlon%lone),maxval(latlon%lone)
-       write(iulog,*) '  latlon_check lats = ',minval(latlon%lats),maxval(latlon%lats)
-       write(iulog,*) '  latlon_check latn = ',minval(latlon%latn),maxval(latlon%latn)
-    end if
-    write(iulog,*) ' '
-  endif
-
-end subroutine latlon_check
 !------------------------------------------------------------------------------
 
 end module domainMod

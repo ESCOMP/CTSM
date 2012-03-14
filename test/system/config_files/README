@@ -9,7 +9,6 @@ _cn   => bgc is in cn   mode
 _cndv => bgc is in cndv mode
 _cnc13=> bgc is in cn   mode with C13 on as well
 _cnnf => bgc is in cn   mode with NOFIRE turned on as well
-_casa => bgc is in casa mode
 _cncrp=> bgc is in cn   model with crop on
 
 _dh   => debug on, hybrid   on

@@ -225,80 +225,6 @@ type, public :: pft_pstate_type
    real(r8), pointer :: rb1(:)         ! aerodynamical resistance (s/m)
    real(r8), pointer :: annlai(:,:)    ! 12 months of monthly lai from input data set  
 
-   
-#if (defined CASA)
-   real(r8), pointer :: Closs(:,:)  ! C lost to atm
-   real(r8), pointer :: Ctrans(:,:) ! C transfers out of pool types
-   real(r8), pointer :: Resp_C(:,:) ! C respired
-   real(r8), pointer :: Tpool_C(:,:)! Total C pool size
-   real(r8), pointer :: eff(:,:)
-   real(r8), pointer :: frac_donor(:,:)
-   real(r8), pointer :: livefr(:,:) !live fraction
-   real(r8), pointer :: pet(:)      !potential evaporation (mm h2o/s)
-   real(r8), pointer :: co2flux(:)  ! net CO2 flux (g C/m2/sec) [+= atm]
-   real(r8), pointer :: fnpp(:)     ! NPP  (g C/m2/sec)
-   real(r8), pointer :: soilt(:)    !soil temp for top 30cm
-   real(r8), pointer :: smoist(:)   !soil moisture for top 30cm
-   real(r8), pointer :: sz(:)       !thickness of soil layers contributing to output
-   real(r8), pointer :: watopt(:)   !optimal soil water content for et for top 30cm (mm3/mm3)
-   real(r8), pointer :: watdry(:)   !soil water when et stops for top 30cm (mm3/mm3)
-   real(r8), pointer :: soiltc(:)   !soil temp for entire column
-   real(r8), pointer :: smoistc(:)  !soil moisture for entire column
-   real(r8), pointer :: szc(:)      !thickness of soil layers contributing to output
-   real(r8), pointer :: watoptc(:)  !optimal soil water content for et for entire column (mm3/mm3)
-   real(r8), pointer :: watdryc(:)  !soil water when et stops for entire column (mm3/mm3)
-   real(r8), pointer :: Wlim(:)     !Water limitation min value
-   real(r8), pointer :: litterscalar(:)
-   real(r8), pointer :: rootlitscalar(:)
-   real(r8), pointer :: stressCD(:) ! cold and drought stress function (sec-1)
-                                    ! add to "annK(m,LEAF)" and "annK(m,FROOT)"
-                                    ! in casa_litterfall.F
-   real(r8), pointer :: excessC(:)  ! excess Carbon (gC/m2/timestep)
-   real(r8), pointer :: bgtemp(:)   ! temperature dependence
-   real(r8), pointer :: bgmoist(:)  ! moisture dependence
-   real(r8), pointer :: plai(:)     ! prognostic LAI (m2 leaf/m2 ground)
-   real(r8), pointer :: Cflux(:)    ! Carbon flux
-   real(r8), pointer :: XSCpool(:)
-   real(r8), pointer :: tday(:)      ! daily accumulated temperature (deg C)
-   real(r8), pointer :: tdayavg(:)   ! daily averaged temperature (deg C)
-   real(r8), pointer :: tcount(:)    ! counter for daily avg temp
-   real(r8), pointer :: degday(:)    ! accumulated degree days (deg C)
-   real(r8), pointer :: ndegday(:)   ! counter for number of degree days
-   real(r8), pointer :: stressT(:)   ! temperature stress function for leaf
-                                     ! loss apply to Litterfall of deciduous veg   
-   real(r8), pointer :: stressW(:)   ! water stress function for leaf loss
-   real(r8), pointer :: iseabeg(:)   ! index for start of growing season
-   real(r8), pointer :: nstepbeg(:)  ! nstep at start of growing season
-   real(r8), pointer :: lgrow(:)     ! growing season index (0 or 1) to be
-                                     ! passed daily to CASA to get NPP
-   ! Summary variables added for the C-LAMP Experiments
-   real(r8), pointer :: casa_agnpp(:)        ! above-ground net primary production [gC/m2/s]
-   real(r8), pointer :: casa_ar(:)           ! autotrophic respiration [gC/m2/s]
-   real(r8), pointer :: casa_bgnpp(:)        ! below-ground net primary production [gC/m2/s]
-   real(r8), pointer :: casa_cwdc(:)         ! coarse woody debris C [gC/m2]
-   real(r8), pointer :: casa_cwdc_hr(:)      ! cwd heterotrophic respiration [gC/m2/s]
-   real(r8), pointer :: casa_cwdc_loss(:)    ! cwd C loss [gC/m2/s]
-   real(r8), pointer :: casa_frootc(:)       ! fine root C [gC/m2]
-   real(r8), pointer :: casa_frootc_alloc(:) ! fine root C allocation [gC/m2/s]
-   real(r8), pointer :: casa_frootc_loss(:)  ! fine root C loss [gC/m2/s]
-   real(r8), pointer :: casa_gpp(:)          ! gross primary production [gC/m2/s]
-   real(r8), pointer :: casa_hr(:)           ! total heterotrophic respiration [gC/m2/s]
-   real(r8), pointer :: casa_leafc(:)        ! leaf C [gC/m2]
-   real(r8), pointer :: casa_leafc_alloc(:)  ! leaf C allocation [gC/m2/s]
-   real(r8), pointer :: casa_leafc_loss(:)   ! leaf C loss [gC/m2/s]
-   real(r8), pointer :: casa_litterc(:)      ! total litter C (excluding cwd C) [gC/m2]
-   real(r8), pointer :: casa_litterc_hr(:)   ! litter heterotrophic respiration [gC/m2/s]
-   real(r8), pointer :: casa_litterc_loss(:) ! litter C loss [gC/m2/s]
-   real(r8), pointer :: casa_nee(:)          ! net ecosystem exchange [gC/m2/s]
-   real(r8), pointer :: casa_nep(:)          ! net ecosystem production [gC/m2/s]
-   real(r8), pointer :: casa_npp(:)          ! net primary production [gC/m2/s]
-   real(r8), pointer :: casa_soilc(:)        ! total soil organic matter C (excluding cwd and litter C) [gC/m2]
-   real(r8), pointer :: casa_soilc_hr(:)     ! soil heterotrophic respiration [gC/m2/s]
-   real(r8), pointer :: casa_soilc_loss(:)   ! total soil organic matter C loss [gC/m2/s]
-   real(r8), pointer :: casa_woodc(:)        ! wood C [gC/m2]
-   real(r8), pointer :: casa_woodc_alloc(:)  ! wood C allocation [gC/m2/s]
-   real(r8), pointer :: casa_woodc_loss(:)   ! wood C loss [gC/m2/s]
-#endif
 end type pft_pstate_type
 
 !----------------------------------------------------
@@ -2136,7 +2062,6 @@ type(pft_epc_type), public, target, save :: pftcon
 type(pft_dgvepc_type), public, target, save :: dgv_pftcon
 #endif
 
-character(len=16), parameter, public :: gratm  = 'atmgrid'      ! name of atmgrid
 character(len=16), parameter, public :: grlnd  = 'lndgrid'      ! name of lndgrid
 character(len=16), parameter, public :: namea  = 'gridcellatm'  ! name of atmgrid
 character(len=16), parameter, public :: nameg  = 'gridcell'     ! name of gridcells

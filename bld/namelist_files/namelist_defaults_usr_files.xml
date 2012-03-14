@@ -32,19 +32,6 @@ provided they are in the valid list expressed above.
 <fpftdyn                                        >lnd/clm2/surfdata/surfdata.pftdyn_rcp${rcp}_${clm_usr_name}_simyr${sim_year_range}.nc</fpftdyn>
 <fpftdyn sim_year_range="1850-2000"             >lnd/clm2/surfdata/surfdata.pftdyn_rcp${rcp}_${clm_usr_name}_simyr1849-2006.nc</fpftdyn>
 
-<!-- Grid dataset (relative to ${csmdata}) -->
-<fatmgrid >lnd/clm2/griddata/griddata_${clm_usr_name}.nc</fatmgrid>
-
-<!-- Land topo dataset (when running land at different resolution than atm coupling) (relative to ${csmdata})  -->
-<flndtopo >lnd/clm2/griddata/topodata_${clm_usr_name}.nc</flndtopo>
-
-<!-- Atmosphere topo dataset (when running land at different resolution than atm coupling) (relative to ${csmdata})  -->
-<fatmtopo >lnd/clm2/griddata/topodata_${clm_usr_name}.nc</fatmtopo>
-
-<!-- Fraction dataset (relative to ${csmdata})  -->
-
-<fatmlndfrc >lnd/clm2/griddata/fracdata_${clm_usr_name}_${mask}.nc</fatmlndfrc>
-
 <!-- Aerosol deposition fluxes for datm -->
 <datm_file_aero sim_year_range="constant"  rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year}_${clm_usr_name}.nc</datm_file_aero>
 <datm_file_aero                            rcp="-999.9">atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_${sim_year_range}_${clm_usr_name}.nc</datm_file_aero>

@@ -1,7 +1,6 @@
 -mode clm_stndln
 -nouse_mpiserial
 -nosmp
--maxpft 21
 -bgc cn
 -crop on
 -s

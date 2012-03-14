@@ -88,19 +88,18 @@ contains
 !
 ! !USES:
     use abortutils       , only : endrun
-    use downscaleMod     , only : map1dl_a2l, map1dl_l2a, map_maparrayl
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
-                                  downscale, inst_index, inst_suffix, inst_name, do_rtm
+                                  inst_index, inst_suffix, inst_name, do_rtm
     use clm_varctl       , only : create_glacier_mec_landunit 
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
-    use decompMod        , only : get_proc_bounds, get_proc_bounds_atm
-    use domainMod        , only : adomain
+    use decompMod        , only : get_proc_bounds
+    use domainMod        , only : ldomain
     use shr_kind_mod     , only : r8 => shr_kind_r8
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                   shr_file_getLogUnit, shr_file_getLogLevel, &
@@ -112,7 +111,7 @@ contains
                                   seq_infodata_start_type_brnch
     use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use spmdMod          , only : masterproc, spmd_init
-    use clm_glclnd       , only : clm_maps2x, clm_s2x, atm_s2x, create_clm_s2x
+    use clm_glclnd       , only : clm_s2x, create_clm_s2x
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x
     use seq_flds_mod
@@ -169,7 +168,7 @@ contains
     logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
-    integer :: begg_l, endg_l, begg_a, endg_a
+    integer :: begg, endg
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
 !
@@ -284,15 +283,6 @@ contains
        return
     end if
 
-    ! If trigrid AND downscale -- abort as an error
-
-    if ( (.not. samegrid_al) .and. downscale )then
-       write(iulog,format) "Incompatible inputs, atmosphere and land are on different grids"
-       write(iulog,format) "But, you are also trying to use the CLM fine-mesh to downscale to a finer grid"
-       write(iulog,format) "When using CLM finemesh mode -- you must NOT run the atmosphere on a different grid"
-       call endrun( sub//' ERROR: downscaling using finemesh AND running atmosphere on a different grid' )
-    end if
-
     ! Determine if aerosol and dust deposition come from atmosphere component
 
     call seq_infodata_GetData(infodata, atm_aero=atm_aero )
@@ -343,25 +333,17 @@ contains
 
     ! Create new attribute vectors for the clm internal grid (dst)
 
-    call get_proc_bounds_atm(begg_a, endg_a) ! clm grid - driver (src)
-    call get_proc_bounds    (begg_l, endg_l) ! clm grid - internal (dst)
+    call get_proc_bounds(begg, endg) 
 
-    call mct_aVect_init(x2l_l_clm, rList=seq_flds_x2l_fields, lsize=endg_l-begg_l+1)
+    call mct_aVect_init(x2l_l_clm, rList=seq_flds_x2l_fields, lsize=endg-begg+1)
     call mct_aVect_zero(x2l_l_clm)
 
-    call mct_aVect_init(l2x_l_clm, rList=seq_flds_l2x_fields, lsize=endg_l-begg_l+1)
+    call mct_aVect_init(l2x_l_clm, rList=seq_flds_l2x_fields, lsize=endg-begg+1)
     call mct_aVect_zero(l2x_l_clm)
     
     ! Create land export state 
-    ! If downscale, map this from the clm internal grid (dst) to the clm driver grid (src)
 
-    if (downscale) then
-       call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
-       call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-           	          l2x_l_clm, l2x_l, map1dl_l2a)
-    else
-       call lnd_export_mct( clm_l2a, l2x_l, begg_l, endg_l )
-    end if
+    call lnd_export_mct( clm_l2a, l2x_l, begg, endg )
 
     if (do_rtm) then
        ! Initialize rof gsMap
@@ -404,12 +386,7 @@ contains
 
        ! Create mct sno export state
        call create_clm_s2x(clm_s2x)
-       if (downscale) then
-          call clm_maps2x(clm_s2x, atm_s2x)
-          call sno_export_mct(atm_s2x, s2x_s)
-       else
-          call sno_export_mct(clm_s2x, s2x_s)
-       end if
+       call sno_export_mct(clm_s2x, s2x_s)
     endif   ! create_glacier_mec_landunit
 
     ! Initialize averaging counter
@@ -419,13 +396,13 @@ contains
     ! Set land modes
 
     call seq_infodata_PutData( infodata, lnd_prognostic=.true.)
-    call seq_infodata_PutData( infodata, lnd_nx = adomain%ni, lnd_ny = adomain%nj)
+    call seq_infodata_PutData( infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
     call seq_infodata_PutData( infodata, rof_present=do_rtm)
     call seq_infodata_PutData( infodata, rof_nx = rtmlon, rof_ny = rtmlat)
 
     if (create_glacier_mec_landunit) then
        call seq_infodata_PutData( infodata, sno_present=.true.)
-       call seq_infodata_PutData( infodata, sno_nx = adomain%ni, sno_ny = adomain%nj)
+       call seq_infodata_PutData( infodata, sno_nx=ldomain%ni, sno_ny=ldomain%nj)
     else
        call seq_infodata_PutData( infodata, sno_present=.false.)
     endif
@@ -476,15 +453,14 @@ contains
 !
 ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
-    use downscaleMod    ,only : map1dl_a2l, map1dl_l2a, map_maparrayl
-    use clm_atmlnd      ,only : clm_l2a, atm_a2l, clm_a2l, clm_downscale_a2l
+    use clm_atmlnd      ,only : clm_l2a, clm_a2l
     use clm_driver      ,only : clm_drv
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use domainMod       ,only : adomain, ldomain
-    use decompMod       ,only : get_proc_bounds_atm, get_proc_bounds
+    use domainMod       ,only : ldomain
+    use decompMod       ,only : get_proc_bounds
     use abortutils      ,only : endrun
-    use clm_varctl      ,only : iulog, downscale, do_rtm
+    use clm_varctl      ,only : iulog, do_rtm
     use clm_varctl      ,only : create_glacier_mec_landunit 
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
@@ -495,7 +471,7 @@ contains
     use seq_infodata_mod,only : seq_infodata_type, seq_infodata_GetData
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_glclnd      ,only : clm_maps2x, clm_mapx2s, clm_s2x, atm_s2x, atm_x2s, clm_x2s
+    use clm_glclnd      ,only : clm_s2x, clm_x2s
     use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
@@ -543,12 +519,11 @@ contains
     type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
     real(r8),               pointer :: data(:)  ! temporary
     integer :: g,i,lsize                        ! counters
-    integer :: begg_l, endg_l, begg_a, endg_a   ! bounds
     logical,save :: first_call = .true.         ! first call work
     character(len=32)            :: rdate       ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
-    logical :: glcrun_alarm    ! if true, sno data is averaged and sent to glc this step
-    logical :: update_glc2sno_fields  ! if true, update glacier_mec fields
+    logical  :: glcrun_alarm          ! if true, sno data is averaged and sent to glc this step
+    logical  :: update_glc2sno_fields ! if true, update glacier_mec fields
     real(r8) :: calday                ! calendar day for nstep
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
@@ -588,19 +563,15 @@ contains
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
 
-    call get_proc_bounds_atm(begg_a, endg_a)
-    call get_proc_bounds    (begg_l, endg_l)
+    call get_proc_bounds(begg, endg)
 
     if (first_call) then
        lsize = mct_gGrid_lsize(dom_l)
        allocate(data(lsize))
        call mct_gGrid_exportRattr(dom_l,"ascale",data,lsize) 
-       do g = begg_a,endg_a
-          i = 1 + (g - begg_a)
-          adomain%ascale(g) = data(i)
-          if (.not. downscale) then
-             ldomain%ascale(g) = adomain%ascale(g)
-          end if
+       do g = begg,endg
+          i = 1 + (g - begg)
+          ldomain%ascale(g) = data(i)
        end do
        deallocate(data)
     endif
@@ -609,15 +580,7 @@ contains
     ! Perform downscaling if appropriate
 
     call t_startf ('lc_lnd_import')
-    if (downscale) then
-       call lnd_import_mct( x2l_l, atm_a2l, begg_a, endg_a )
-       call map_maparrayl(begg_a, endg_a, begg_l, endg_l, nflds_x2l, &
-   	                  x2l_l, x2l_l_clm, map1dl_a2l)
-       call lnd_import_mct( x2l_l_clm, clm_a2l, begg_l, endg_l )
-       call clm_downscale_a2l(atm_a2l, clm_a2l)
-    else
-       call lnd_import_mct( x2l_l, clm_a2l, begg_l, endg_l )
-    end if
+    call lnd_import_mct( x2l_l, clm_a2l, begg, endg )
     
     ! Map to clm (only when state and/or fluxes need to be updated)
 
@@ -625,12 +588,7 @@ contains
        update_glc2sno_fields  = .false.
        call seq_infodata_GetData(infodata, glc_g2supdate = update_glc2sno_fields)
        if (update_glc2sno_fields) then
-          if (downscale) then
-             call sno_import_mct( x2s_s, atm_x2s )
-             call clm_mapx2s(atm_x2s, clm_x2s)
-          else
-             call sno_import_mct( x2s_s, clm_x2s )
-          end if
+          call sno_import_mct( x2s_s, clm_x2s )
           call unpack_clm_x2s(clm_x2s)
        endif ! update_glc2sno
     endif ! create_glacier_mec_landunit
@@ -688,13 +646,7 @@ contains
        ! Map land data type to MCT
        
        call t_startf ('lc_lnd_export')
-       if (downscale) then
-          call lnd_export_mct( clm_l2a, l2x_l_clm, begg_l, endg_l )
-          call map_maparrayl(begg_l, endg_l, begg_a, endg_a, nflds_l2x, &
-                             l2x_l_clm, l2x_l, map1dl_l2a)
-       else
-          call lnd_export_mct( clm_l2a, l2x_l, begg_l, endg_l )
-       end if
+       call lnd_export_mct( clm_l2a, l2x_l, begg, endg )
        call t_stopf ('lc_lnd_export')
 
        ! Compute snapshot attribute vector for accumulation
@@ -715,13 +667,7 @@ contains
 
        if (create_glacier_mec_landunit) then
           call create_clm_s2x(clm_s2x)
-          if (downscale) then
-             call clm_maps2x(clm_s2x, atm_s2x)
-             call sno_export_mct(atm_s2x, s2x_s)
-          else
-             call sno_export_mct(clm_s2x, s2x_s)
-          end if
-
+          call sno_export_mct(clm_s2x, s2x_s)
           if (nstep <= 1) then
              call mct_aVect_copy( s2x_s, s2x_s_SUM )
              avg_count_sno = 1
@@ -852,8 +798,8 @@ contains
 !-------------------------------------------------------------------
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
-    use decompMod    , only : get_proc_bounds_atm, adecomp
-    use domainMod    , only : adomain
+    use decompMod    , only : get_proc_bounds, ldecomp
+    use domainMod    , only : ldomain
     use mct_mod      , only : mct_gsMap, mct_gsMap_init
     implicit none
 ! !ARGUMENTS:
@@ -878,17 +824,17 @@ contains
     ! NOTE:  Numbering scheme is: West to East and South to North
     ! starting at south pole.  Should be the same as what's used in SCRIP
     
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     allocate(gindex(begg:endg),stat=ier)
 
     ! number the local grid
 
     do n = begg, endg
-        gindex(n) = adecomp%gdc2glo(n)
+       gindex(n) = ldecomp%gdc2glo(n)
     end do
     lsize = endg-begg+1
-    gsize = adomain%ni*adomain%nj
+    gsize = ldomain%ni * ldomain%nj
 
     call mct_gsMap_init( gsMap_lnd, gindex, mpicom_lnd, LNDID, lsize, gsize )
 
@@ -916,7 +862,6 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clm_time_manager   , only : get_nstep  
     use clm_atmlnd         , only : lnd2atm_type
-    use domainMod          , only : adomain
     use seq_drydep_mod     , only : n_drydep
     use clm_cpl_indices
     implicit none
@@ -1195,8 +1140,8 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
-    use domainMod   , only : adomain
-    use decompMod   , only : get_proc_bounds_atm, adecomp
+    use domainMod   , only : ldomain
+    use decompMod   , only : get_proc_bounds
     use spmdMod     , only : iam
     use mct_mod     , only : mct_gsMap, mct_gGrid, mct_gGrid_importIAttr, &
                              mct_gGrid_importRAttr, mct_gGrid_init,       &
@@ -1251,38 +1196,38 @@ contains
     !
     ! Determine bounds
     !
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
     !
     ! Fill in correct values for domain components
     ! Note aream will be filled in in the atm-lnd mapper
     !
     do g = begg,endg
        i = 1 + (g - begg)
-       data(i) = adomain%lonc(g)
+       data(i) = ldomain%lonc(g)
     end do
     call mct_gGrid_importRattr(dom_l,"lon",data,lsize) 
 
     do g = begg,endg
        i = 1 + (g - begg)
-       data(i) = adomain%latc(g)
+       data(i) = ldomain%latc(g)
     end do
     call mct_gGrid_importRattr(dom_l,"lat",data,lsize) 
 
     do g = begg,endg
        i = 1 + (g - begg)
-       data(i) = adomain%area(g)/(re*re)
+       data(i) = ldomain%area(g)/(re*re)
     end do
     call mct_gGrid_importRattr(dom_l,"area",data,lsize) 
 
     do g = begg,endg
        i = 1 + (g - begg)
-       data(i) = real(adomain%mask(g), r8)
+       data(i) = real(ldomain%mask(g), r8)
     end do
     call mct_gGrid_importRattr(dom_l,"mask",data,lsize) 
 
     do g = begg,endg
        i = 1 + (g - begg)
-       data(i) = real(adomain%frac(g), r8)
+       data(i) = real(ldomain%frac(g), r8)
     end do
     call mct_gGrid_importRattr(dom_l,"frac",data,lsize) 
 
@@ -1595,7 +1540,7 @@ contains
   subroutine sno_export_mct( s2x, s2x_s )   
 
     use clm_glclnd      , only : lnd2glc_type
-    use decompMod       , only : get_proc_bounds_atm
+    use decompMod       , only : get_proc_bounds
     use clm_cpl_indices 
 
     type(lnd2glc_type), intent(inout) :: s2x
@@ -1605,7 +1550,7 @@ contains
     integer :: begg, endg    ! beginning and ending gridcell indices
     !-----------------------------------------------------
 
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     ! qice is positive if ice is growing, negative if melting
 
@@ -1626,7 +1571,7 @@ contains
   subroutine sno_import_mct( x2s_s, x2s )
 
     use clm_glclnd      , only: glc2lnd_type
-    use decompMod       , only: get_proc_bounds_atm
+    use decompMod       , only: get_proc_bounds
     use mct_mod         , only: mct_aVect
     use clm_cpl_indices
     !
@@ -1641,7 +1586,7 @@ contains
     integer  :: begg, endg   ! beginning and ending gridcell indices
     !-----------------------------------------------------
 
-    call get_proc_bounds_atm(begg, endg)
+    call get_proc_bounds(begg, endg)
 
     do g = begg,endg
        i = 1 + (g - begg)

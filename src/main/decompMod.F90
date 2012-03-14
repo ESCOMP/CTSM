@@ -17,19 +17,15 @@ module decompMod
   integer, public :: clump_pproc ! number of clumps per MPI process
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public get_clump_bounds        ! beg and end gridcell, landunit, column,
-                                 ! pft indices for clump
-  public get_proc_clumps         ! number of clumps for this processor
-  public get_proc_bounds_atm     ! beg and end gridcell for atm
-  public get_proc_bounds         ! beg and end gridcell, landunit, column,
-                                 ! pft indices for this processor
-  public get_proc_total          ! total number of gridcells, landunits,
-                                 ! columns and pfts for any processor
-  public get_proc_global         ! total gridcells, landunits, columns, pfts
-                                 ! across all processors
-  public get_proc_global_atm     ! total atm cells on all pes
-  public get_clmlevel_gsize      ! get global size associated with clmlevel
-  public get_clmlevel_gsmap      ! get gsmap associated with clmlevel
+  public get_clump_bounds   ! clump beg and end gridcell,landunit,column,pft
+  public get_proc_clumps    ! number of clumps for this processor
+  public get_proc_bounds    ! this processor beg and end gridcell,landunit,column,pft
+  public get_proc_total     ! total number of gridcells, landunits,
+                            ! columns and pfts for any processor
+  public get_proc_global    ! total gridcells, landunits, columns, pfts
+                            ! across all processors
+  public get_clmlevel_gsize ! get global size associated with clmlevel
+  public get_clmlevel_gsmap ! get gsmap associated with clmlevel
 !
 ! !DESCRIPTION:
 ! Module provides a descomposition into a clumped data structure which can
@@ -49,7 +45,6 @@ module decompMod
   integer,public :: numl        ! total number of landunits on all procs
   integer,public :: numc        ! total number of columns on all procs
   integer,public :: nump        ! total number of pfts on all procs
-  integer,public :: numa        ! total number of atm gridcells on all procs
 
   !---global information on each pe
   type processor_type
@@ -63,7 +58,6 @@ module decompMod
      integer :: begl, endl       ! beginning and ending landunit index
      integer :: begc, endc       ! beginning and ending column index
      integer :: begp, endp       ! beginning and ending pft index
-     integer :: abegg,aendg      ! beginning and ending atm gridcell index
   end type processor_type
   public processor_type
   type(processor_type),public :: procinfo
@@ -94,11 +88,8 @@ module decompMod
   end type decomp_type
   public decomp_type
   type(decomp_type),public,target :: ldecomp
-  type(decomp_type),public,target :: adecomp
 
-  type(mct_gsMap)  ,public,target :: gsMap_atm_gdc2glo
   type(mct_gsMap)  ,public,target :: gsMap_lnd_gdc2glo
-
   type(mct_gsMap)  ,public,target :: gsMap_gce_gdc2glo
   type(mct_gsMap)  ,public,target :: gsMap_lun_gdc2glo
   type(mct_gsMap)  ,public,target :: gsMap_col_gdc2glo
@@ -118,30 +109,23 @@ contains
 ! !IROUTINE: get_clump_bounds
 !
 ! !INTERFACE:
-   subroutine get_clump_bounds (n, begg, endg, begl, endl, begc, endc, &
-                                begp, endp)
+   subroutine get_clump_bounds (n, begg, endg, begl, endl, begc, endc, begp, endp)
 !
 ! !USES:
 !
 ! !ARGUMENTS:
      implicit none
      integer, intent(in)  :: n           ! proc clump index
-     integer, intent(out) :: begp, endp  ! clump beginning and ending
-                                         ! pft indices
-     integer, intent(out) :: begc, endc  ! clump beginning and ending
-                                         ! column indices
-     integer, intent(out) :: begl, endl  ! clump beginning and ending
-                                         ! landunit indices
-     integer, intent(out) :: begg, endg  ! clump beginning and ending
-                                         ! gridcell indices
+     integer, intent(out) :: begp, endp  ! clump beg and end pft indices
+     integer, intent(out) :: begc, endc  ! clump beg and end column indices
+     integer, intent(out) :: begl, endl  ! clump beg and end landunit indices
+     integer, intent(out) :: begg, endg  ! clump beg and end gridcell indices
 !
 ! !DESCRIPTION:
-! Determine clump beginning and ending pft, column, landunit and
-! gridcell indices.
+! Determine clump beginning and ending pft, column, landunit and gridcell indices.
 !
 ! !REVISION HISTORY:
 ! 2003.09.12  Mariana Vertenstein  Creation.
-!
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -179,21 +163,16 @@ contains
 ! !IROUTINE: get_proc_bounds
 !
 ! !INTERFACE:
-   subroutine get_proc_bounds (begg, endg, begl, endl, begc, endc, &
-                               begp, endp)
+   subroutine get_proc_bounds (begg, endg, begl, endl, begc, endc, begp, endp)
 !
 ! !USES:
 !
 ! !ARGUMENTS:
      implicit none
-     integer, optional, intent(out) :: begp, endp  ! proc beginning and ending
-                                                   ! pft indices
-     integer, optional, intent(out) :: begc, endc  ! proc beginning and ending
-                                                   ! column indices
-     integer, optional, intent(out) :: begl, endl  ! proc beginning and ending
-                                                   ! landunit indices
-     integer, optional, intent(out) :: begg, endg  ! proc beginning and ending
-                                                   ! gridcell indices
+     integer, optional, intent(out) :: begp, endp  ! proc beg and end pft indices
+     integer, optional, intent(out) :: begc, endc  ! proc beg and end column indices
+     integer, optional, intent(out) :: begl, endl  ! proc beg and end landunit indices
+     integer, optional, intent(out) :: begg, endg  ! proc beg and end gridcell indices
 ! !DESCRIPTION:
 ! Retrieve gridcell, landunit, column, and pft bounds for process.
 !
@@ -216,74 +195,16 @@ contains
      end if
 #endif
 
-     if (present(begp)) then
-        begp = procinfo%begp
-     endif
-     if (present(endp)) then
-        endp = procinfo%endp
-     endif
-     if (present(begc)) then
-        begc = procinfo%begc
-     endif
-     if (present(endc)) then
-        endc = procinfo%endc
-     endif
-     if (present(begl)) then
-        begl = procinfo%begl
-     endif
-     if (present(endl)) then
-        endl = procinfo%endl
-     endif
-     if (present(begg)) then
-        begg = procinfo%begg
-     endif
-     if (present(endg)) then
-        endg = procinfo%endg
-     endif
+     if (present(begp)) begp = procinfo%begp
+     if (present(endp)) endp = procinfo%endp
+     if (present(begc)) begc = procinfo%begc
+     if (present(endc)) endc = procinfo%endc
+     if (present(begl)) begl = procinfo%begl
+     if (present(endl)) endl = procinfo%endl
+     if (present(begg)) begg = procinfo%begg
+     if (present(endg)) endg = procinfo%endg
 
    end subroutine get_proc_bounds
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: get_proc_bounds_atm
-!
-! !INTERFACE:
-   subroutine get_proc_bounds_atm (begg, endg)
-!
-! !USES:
-!
-! !ARGUMENTS:
-     implicit none
-     integer, intent(out) :: begg, endg  ! proc beginning and ending
-                                         ! gridcell indices for atm grid
-! !DESCRIPTION:
-! Retrieve gridcell begg, endg for atm decomp
-!
-! !REVISION HISTORY:
-! 2005.12.15  T Craig Added
-!
-!------------------------------------------------------------------------------
-! !LOCAL VARIABLES:
-!EOP
-     character(len=32), parameter :: subname = 'get_proc_bounds_atm'  ! Subroutine name
-#ifdef _OPENMP
-     integer, external :: OMP_GET_NUM_THREADS
-#endif
-!------------------------------------------------------------------------------
-!
-!    Make sure this is NOT being called from a threaded region
-!
-#ifdef _OPENMP
-     if ( OMP_GET_NUM_THREADS() > 1 )then
-        call endrun( trim(subname)//' ERROR: Calling from inside a threaded region -- this is illegal' )
-     end if
-#endif
-
-   begg = procinfo%abegg
-   endg = procinfo%aendg
-
-   end subroutine get_proc_bounds_atm
 
 !------------------------------------------------------------------------------
 !BOP
@@ -350,14 +271,10 @@ contains
 !
 ! !ARGUMENTS:
      implicit none
-     integer, intent(out) :: ng  ! total number of gridcells
-                                 ! across all processors
-     integer, intent(out) :: nl  ! total number of landunits
-                                 ! across all processors
-     integer, intent(out) :: nc  ! total number of columns
-                                 ! across all processors
-     integer, intent(out) :: np  ! total number of pfts
-                                 ! across all processors
+     integer, intent(out) :: ng  ! total number of gridcells across all processors
+     integer, intent(out) :: nl  ! total number of landunits across all processors
+     integer, intent(out) :: nc  ! total number of columns across all processors
+     integer, intent(out) :: np  ! total number of pfts across all processors
 ! !REVISION HISTORY:
 ! 2003.09.12  Mariana Vertenstein  Creation.
 !
@@ -370,35 +287,6 @@ contains
      ng = numg
 
    end subroutine get_proc_global
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: get_proc_global_atm
-!
-! !INTERFACE:
-   subroutine get_proc_global_atm(na)
-!
-! !DESCRIPTION:
-! Return number of gridcells, landunits, columns, and pfts across all
-! processes.
-!
-! !USES:
-!
-! !ARGUMENTS:
-     implicit none
-     integer, intent(out) :: na  ! total number of atm gridcells
-                                 ! across all processors
-! !REVISION HISTORY:
-! 2003.09.12  Mariana Vertenstein  Creation.
-!
-!EOP
-!------------------------------------------------------------------------------
-
-     na = numa
-
-   end subroutine get_proc_global_atm
-
 
 !------------------------------------------------------------------------------
 !BOP
@@ -441,9 +329,8 @@ contains
 ! Determine 1d size from clmlevel
 !
 ! !USES:
-  use clmtype  , only : gratm, grlnd, namea, nameg, namel, namec, &
-                        namep, allrof
-  use domainMod, only : adomain,ldomain
+  use clmtype  , only : grlnd, nameg, namel, namec, namep, allrof
+  use domainMod, only : ldomain
   use clm_varpar,only : rtmlon,rtmlat
 !
 ! !ARGUMENTS:
@@ -457,15 +344,10 @@ contains
 !EOP
 
 !-----------------------------------------------------------------------
-    ! Determine necessary indices
 
     select case (clmlevel)
-    case(gratm)
-       get_clmlevel_gsize = adomain%ns
     case(grlnd)
        get_clmlevel_gsize = ldomain%ns
-    case (namea)
-       get_clmlevel_gsize = numa
     case(nameg)
        get_clmlevel_gsize = numg
     case(namel)
@@ -475,15 +357,14 @@ contains
     case(namep)
        get_clmlevel_gsize = nump
     case(allrof)
-       if (do_rtm) then
-          get_clmlevel_gsize = rtmlon*rtmlat
-       end if
+       if (do_rtm) get_clmlevel_gsize = rtmlon*rtmlat
     case default
        write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
        call endrun()
     end select
 
   end function get_clmlevel_gsize
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -496,7 +377,7 @@ contains
 ! Compute arguments for gatherv, scatterv for vectors
 !
 ! !USES:
-    use clmtype  , only : gratm, grlnd, nameg, namel, namec, namep, allrof
+    use clmtype  , only : grlnd, nameg, namel, namec, namep, allrof
     use RunoffMod, only : gsMap_rtm_gdc2glo
 !
 ! !ARGUMENTS:
@@ -514,34 +395,21 @@ contains
 !----------------------------------------------------------------------
 
     select case (clmlevel)
-    case(gratm)
-       gsmap => gsmap_atm_gdc2glo
-
     case(grlnd)
        gsmap => gsmap_lnd_gdc2glo
-
     case(nameg)
        gsmap => gsmap_gce_gdc2glo
-
     case(namel)
        gsmap => gsmap_lun_gdc2glo
-
     case(namec)
        gsmap => gsmap_col_gdc2glo
-
     case(namep)
        gsmap => gsmap_pft_gdc2glo
-
     case(allrof)
-       if (do_rtm) then
-          gsmap => gsmap_rtm_gdc2glo
-       end if
-
+       if (do_rtm) gsmap => gsmap_rtm_gdc2glo
     case default
-
        write(iulog,*) 'get_clmlevel_gsmap: Invalid expansion character: ',trim(clmlevel)
        call endrun
-
     end select
 
   end subroutine get_clmlevel_gsmap

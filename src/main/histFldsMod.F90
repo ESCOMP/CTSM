@@ -45,16 +45,12 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon , only : spval
-    use clm_atmlnd , only : clm_a2l, atm_a2l, &
-	                    adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux
-    use clm_varctl , only : downscale, do_rtm, create_glacier_mec_landunit 
+    use clm_atmlnd , only : clm_a2l
+    use clm_varctl , only : do_rtm, create_glacier_mec_landunit 
     use RunoffMod  , only : runoff, nt_rtm, rtm_tracers
     use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
                             hist_printflds
     use surfrdMod  , only : crop_prog
-#if (defined CASA)
-    use CASAMod    , only : nlive, npools, npool_types
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -916,38 +912,6 @@ contains
 
     ! Atmospheric forcing
 
-    if (downscale) then
-       call hist_addfld1d (fname='RAINATM', units='mm/s',  &
-            avgflag='A', long_name='atmospheric rain forcing', &
-            ptr_atm=atm_a2l%forc_rain)
-       call hist_addfld1d (fname='SNOWATM', units='mm/s',  &
-            avgflag='A', long_name='atmospheric snow forcing', &
-            ptr_atm=atm_a2l%forc_snow)
-    else
-       call hist_addfld1d (fname='RAINATM', units='mm/s',  &
-            avgflag='A', long_name='atmospheric rain forcing', &
-            ptr_lnd=clm_a2l%forc_rain)
-       call hist_addfld1d (fname='SNOWATM', units='mm/s',  &
-            avgflag='A', long_name='atmospheric snow forcing', &
-            ptr_lnd=clm_a2l%forc_snow)
-    end if
-
-    call hist_addfld1d (fname='RAINFM2A', units='mm/s',  &
-         avgflag='A', long_name='land rain on atm grid', &
-         ptr_atm=adiag_arain)
-
-    call hist_addfld1d (fname='SNOWFM2A', units='mm/s',  &
-         avgflag='A', long_name='land snow on atm grid', &
-         ptr_atm=adiag_asnow)
-
-    call hist_addfld1d (fname='FLUXFM2A', units='W/m2',  &
-         avgflag='A', long_name='heat flux for rain to snow conversion', &
-         ptr_atm=adiag_aflux)
-
-    call hist_addfld1d (fname='FLUXFMLND', units='W/m2',  &
-         avgflag='A', long_name='heat flux from rain to snow conversion', &
-         ptr_lnd=adiag_lflux)
-
     call hist_addfld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain', &
          ptr_lnd=clm_a2l%forc_rain)
@@ -1042,7 +1006,7 @@ contains
          ptr_pft=clm3%g%l%c%p%pdgvs%agdd)
 #endif
 
-#if (defined CASA) || (defined CN)
+#if (defined CN)
     call hist_addfld2d (fname='SOILPSI', units='MPa', type2d='levgrnd', &
          avgflag='A', long_name='soil water potential in each soil layer', &
          ptr_col=clm3%g%l%c%cps%soilpsi)
@@ -4480,226 +4444,6 @@ contains
          ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_snow, default='inactive')
 
     
-#endif
-
-#if (defined CASA)
-    call hist_addfld1d (fname='CO2FLUX', units='g/m2/s',  &
-         avgflag='A', long_name='net CO2 flux', &
-         ptr_pft=clm3%g%l%c%p%pps%co2flux, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FNPP', units='g/m2/s',  &
-         avgflag='A', long_name='net primary production', &
-         ptr_pft=clm3%g%l%c%p%pps%fnpp, set_lake=0._r8)
-
-    call hist_addfld1d (fname='PLAI', units='m2/m2',  &
-         avgflag='A', long_name='Prognostic Leaf Area Index', &
-         ptr_pft=clm3%g%l%c%p%pps%plai, set_lake=0._r8)
-
-    call hist_addfld1d (fname='PET', units='mm h2o/s',  &
-         avgflag='A', long_name='Potential Evapotranspiration', &
-         ptr_pft=clm3%g%l%c%p%pps%pet, set_lake=0._r8)
-
-    call hist_addfld1d (fname='DEGDAY', units='deg C',  &
-         avgflag='A', long_name='Accumulated degree days', &
-         ptr_pft=clm3%g%l%c%p%pps%degday, set_lake=0._r8)
-
-    call hist_addfld1d (fname='TDAYAVG', units='deg C',  &
-         avgflag='A', long_name='Daily Averaged Temperature', &
-         ptr_pft=clm3%g%l%c%p%pps%tdayavg, set_lake=0._r8)
-
-    ! the next three will not give bfb upon restart, due to the frequency of
-    ! calculation; however, they do not affect other variables (slevis)
-
-    call hist_addfld1d (fname='STRESST', units=' ',  &
-         avgflag='A', long_name='temperature stress function for leaf loss', &
-         ptr_pft=clm3%g%l%c%p%pps%stressT, set_lake=0._r8)
-
-    call hist_addfld1d (fname='STRESSW', units=' ',  &
-         avgflag='A', long_name='water stress function for leaf loss', &
-         ptr_pft=clm3%g%l%c%p%pps%stressW, set_lake=0._r8)
-
-    call hist_addfld1d (fname='STRESSCD', units=' ', &
-         avgflag='A', long_name='cold + drought stress function for leaf loss',&
-         ptr_pft=clm3%g%l%c%p%pps%stressCD, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LGROW', units=' ',  &
-         avgflag='A', long_name='growing season index (0 or 1)', &
-         ptr_pft=clm3%g%l%c%p%pps%lgrow, set_lake=0._r8)
-
-    call hist_addfld1d (fname='ISEABEG', units=' ',  &
-         avgflag='A', long_name='index for start of growing season', &
-         ptr_pft=clm3%g%l%c%p%pps%iseabeg, set_lake=0._r8)
-
-    call hist_addfld1d (fname='NSTEPBEG', units=' ',  &
-         avgflag='A', long_name='nstep at start of growing season', &
-         ptr_pft=clm3%g%l%c%p%pps%nstepbeg, set_lake=0._r8)
-
-    call hist_addfld1d (fname='BGTEMP', units=' ',  &
-         avgflag='A', long_name='temperature dependence', &
-         ptr_pft=clm3%g%l%c%p%pps%bgtemp, set_lake=0._r8)
-
-    call hist_addfld1d (fname='BGMOIST', units=' ',  &
-         avgflag='A', long_name='moisture dependence', &
-         ptr_pft=clm3%g%l%c%p%pps%bgmoist, set_lake=0._r8)
-
-    call hist_addfld1d (fname='EXCESSC', units='g/m2/timestep',  &
-         avgflag='A', long_name='excess carbon', &
-         ptr_pft=clm3%g%l%c%p%pps%excessC, set_lake=0._r8)
-
-    call hist_addfld1d (fname='CFLUX', units='g/m2/s',  &
-         avgflag='A', long_name='total carbon flux', &
-         ptr_pft=clm3%g%l%c%p%pps%Cflux, set_lake=0._r8)
-
-    call hist_addfld1d (fname='XSCPOOL', units='g/m2',  &
-         avgflag='A', long_name='total excess carbon', &
-         ptr_pft=clm3%g%l%c%p%pps%XSCpool, set_lake=0._r8)
-
-    call hist_addfld1d (fname='WLIM', units=' ',  &
-         avgflag='A', long_name='Water limitation used in bgmoist (atmp factor)', &
-         ptr_pft=clm3%g%l%c%p%pps%Wlim, set_lake=0._r8)
-
-    call hist_addfld1d (fname='SOILT', units='deg C',  &
-         avgflag='A', long_name='Soil temperature for top 30cm', &
-         ptr_pft=clm3%g%l%c%p%pps%soilt, set_lake=0._r8)
-
-    call hist_addfld1d (fname='SMOIST', units='mm3/mm3',  &
-         avgflag='A', long_name='Soil moisture for top 30cm', &
-         ptr_pft=clm3%g%l%c%p%pps%smoist, set_lake=0._r8)
-
-    call hist_addfld1d (fname='WATOPT', units='mm3/mm3',  &
-         avgflag='A', long_name='watopt for entire column', &
-         ptr_pft=clm3%g%l%c%p%pps%watoptc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='WATDRY', units='mm3/mm3',  &
-         avgflag='A', long_name='watdry for entire column', &
-         ptr_pft=clm3%g%l%c%p%pps%watdryc, set_lake=0._r8)
-
-   call hist_addfld2d (fname='LIVEFR', units='g/m2', type2d='nlive', &
-        avgflag='A', long_name='live fraction for leaf, wood, froot', &
-        ptr_pft=clm3%g%l%c%p%pps%livefr, set_lake=0._r8)
-
-   call hist_addfld2d (fname='CLOSS', units='g/m2/s', type2d='npools', & 
-        avgflag='A', long_name='Amt. of carbon lost by pool', &
-        ptr_pft=clm3%g%l%c%p%pps%Closs, set_lake=0._r8)
-
-   call hist_addfld2d (fname='CTRANS', units='g/m2/s', type2d='npool_t', & 
-        avgflag='A', long_name='Amt. of carbon transferred out of pool types', &
-        ptr_pft=clm3%g%l%c%p%pps%Ctrans, set_lake=0._r8)
-
-   call hist_addfld2d (fname='RESP_C', units='g/m2/s', type2d='npools', &  
-        avgflag='A', long_name='Amt. of carbon lost to atm by pool', &
-        ptr_pft=clm3%g%l%c%p%pps%Resp_C, set_lake=0._r8)
-
-   call hist_addfld2d (fname='TPOOL_C', units='g/m2', type2d='npools', &  
-        avgflag='A', long_name='Total carbon for pool', &
-        ptr_pft=clm3%g%l%c%p%pps%Tpool_C, set_lake=0._r8)
-
-   ! Summary variables added for the C-LAMP Experiments
-
-    call hist_addfld1d (fname='AGNPP', units='gC/m2/s',  &
-         avgflag='A', long_name='above-ground net primary production', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_agnpp, set_lake=0._r8)
-
-    call hist_addfld1d (fname='AR', units='gC/m2/s',  &
-         avgflag='A', long_name='autotrophic respiration', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_ar, set_lake=0._r8)
-
-    call hist_addfld1d (fname='BGNPP', units='gC/m2/s',  &
-         avgflag='A', long_name='below-ground net primary production', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_bgnpp, set_lake=0._r8)
-
-    call hist_addfld1d (fname='CWDC', units='gC/m2',  &
-         avgflag='A', long_name='coarse woody debris C', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_cwdc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='CWDC_HR', units='gC/m2/s',  &
-         avgflag='A', long_name='coarse woody debris heterotrophic respiration', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_cwdc_hr, set_lake=0._r8)
-
-    call hist_addfld1d (fname='CWDC_LOSS', units='gC/m2/s',  &
-         avgflag='A', long_name='coarse woody debris C loss', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_cwdc_loss, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FROOTC', units='gC/m2',  &
-         avgflag='A', long_name='fine root C', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_frootc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FROOTC_ALLOC', units='gC/m2/s',  &
-         avgflag='A', long_name='fine root C allocation', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_frootc_alloc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FROOTC_LOSS', units='gC/m2/s',  &
-         avgflag='A', long_name='fine root C loss', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_frootc_loss, set_lake=0._r8)
-
-    call hist_addfld1d (fname='GPP', units='gC/m2/s',  &
-         avgflag='A', long_name='gross primary production', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_gpp, set_lake=0._r8)
-
-    call hist_addfld1d (fname='HR', units='gC/m2/s',  &
-         avgflag='A', long_name='total heterotrophic respiration', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_hr, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LEAFC', units='gC/m2',  &
-         avgflag='A', long_name='leaf C', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_leafc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LEAFC_ALLOC', units='gC/m2/s',  &
-         avgflag='A', long_name='leaf C allocation', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_leafc_alloc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LEAFC_LOSS', units='gC/m2/s',  &
-         avgflag='A', long_name='leaf C loss', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_leafc_loss, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LITTERC', units='gC/m2',  &
-         avgflag='A', long_name='litter C', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_litterc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LITTERC_HR', units='gC/m2/s',  &
-         avgflag='A', long_name='litter heterotrophic respiration', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_litterc_hr, set_lake=0._r8)
-
-    call hist_addfld1d (fname='LITTERC_LOSS', units='gC/m2/s',  &
-         avgflag='A', long_name='litter C loss', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_litterc_loss, set_lake=0._r8)
-
-    call hist_addfld1d (fname='NEE', units='gC/m2/s',  &
-         avgflag='A', long_name='net ecosystem exchange (GPP, Re, and fire)', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_nee, set_lake=0._r8)
-
-    call hist_addfld1d (fname='NEP', units='gC/m2/s',  &
-         avgflag='A', long_name='net ecosystem production', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_nep, set_lake=0._r8)
-
-    call hist_addfld1d (fname='NPP', units='gC/m2/s',  &
-         avgflag='A', long_name='net primary production', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_npp, set_lake=0._r8)
-
-    call hist_addfld1d (fname='SOILC', units='gC/m2',  &
-         avgflag='A', long_name='total soil organic matter C (excluding CWDC and LITTERC)', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_soilc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='SOILC_HR', units='gC/m2/s',  &
-         avgflag='A', long_name='soil heterotrophic respiration', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_soilc_hr, set_lake=0._r8)
-
-    call hist_addfld1d (fname='SOILC_LOSS', units='gC/m2/s',  &
-         avgflag='A', long_name='soil C loss', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_soilc_loss, set_lake=0._r8)
-
-    call hist_addfld1d (fname='WOODC', units='gC/m2',  &
-         avgflag='A', long_name='wood C', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_woodc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='WOODC_ALLOC', units='gC/m2/s',  &
-         avgflag='A', long_name='wood C allocation', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_woodc_alloc, set_lake=0._r8)
-
-    call hist_addfld1d (fname='WOODC_LOSS', units='gC/m2/s',  &
-         avgflag='A', long_name='wood C loss', &
-         ptr_pft=clm3%g%l%c%p%pps%casa_woodc_loss, set_lake=0._r8)
-
 #endif
 
     call hist_addfld1d (fname='SNORDSL', units='m^-6', &

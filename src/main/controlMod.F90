@@ -19,7 +19,7 @@ module controlMod
   use clm_varpar   , only : maxpatch_pft, maxpatch_glcmec
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, &
                             model_version=>version,    &
-                            iulog, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc, &
+                            iulog, outnc_large_files, finidat, fsurdat, fatmlndfrc, &
                             fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn, &
                             create_crop_landunit, allocate_all_vegpfts,   &
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
@@ -126,9 +126,6 @@ contains
 !
 ! !USES:
     use clm_time_manager , only : set_timemgr_init, is_perpetual, get_timemgr_defaults
-#if (defined CASA)
-    use CASAMod          , only : lnpp, lalloc, q10, spunup, fcpool
-#endif
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
     use clm_varctl       , only : clmvarctl_init, set_clmvarctl, nsrBranch, nsrStartup, &
@@ -164,7 +161,7 @@ contains
     ! Input datasets
 
     namelist /clm_inparm/  &
-         finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
+         finidat, fsurdat, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, fpftdyn, nrevsn, &
          fsnowoptics, fsnowaging
 
@@ -181,11 +178,6 @@ contains
          outnc_large_files
 
     ! BGC info
-
-#if (defined CASA)
-    namelist /clm_inparm/  &
-         lnpp, lalloc, q10, spunup, fcpool
-#endif
 
 #if (defined CN)
     namelist /clm_inparm/  &
@@ -226,14 +218,6 @@ contains
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
-
-#if (defined CASA)
-    lnpp = 2
-    lalloc = 1
-    q10 = 2.0_r8          ! set Q10 to 2.0  03/11/19
-    spunup = 0
-    fcpool = ' '
-#endif
 
     ! Set clumps per procoessor
 
@@ -316,11 +300,6 @@ contains
            call set_clmvarctl( nsrest_in=override_nsrest )
        end if
        
-       ! If fatmgrid not set - use fraction dataset
-       if (fatmgrid == ' ') then
-          fatmgrid = fatmlndfrc
-       end if
-                                                        
        ! Consistency of elevation classes on namelist to what's sent by the coupler
        if (glc_nec /= maxpatch_glcmec ) then
           write(iulog,*)'glc_nec, maxpatch_glcmec=',glc_nec, maxpatch_glcmec
@@ -369,9 +348,6 @@ contains
 !
 ! !USES:
 !
-#if (defined CASA)
-    use CASAMod,    only : lnpp, lalloc, q10, spunup
-#endif
     use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
     use clm_varctl, only : single_column, scmlat, scmlon, rpntfil
 !
@@ -401,7 +377,6 @@ contains
     call mpi_bcast (nrevsn  , len(nrevsn)  , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (finidat , len(finidat) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsurdat , len(fsurdat) , MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fatmgrid, len(fatmgrid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
@@ -487,13 +462,6 @@ contains
     ! error growth perturbation limit
     call mpi_bcast (pertlim, 1, MPI_REAL8, 0, mpicom, ier)
 
-#if (defined CASA)
-    call mpi_bcast (lnpp  , 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (lalloc, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (spunup, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (q10   , 1, MPI_REAL8  , 0, mpicom, ier)
-#endif
-
   end subroutine control_spmd
 
 !------------------------------------------------------------------------
@@ -543,19 +511,15 @@ contains
     else
        write(iulog,*) '   surface data   = ',trim(fsurdat)
     end if
-    if (flndtopo == ' ') then
-       write(iulog,*) '   flndtopo not set'
-    else
-       write(iulog,*) '   land topographic data = ',trim(flndtopo)
-    end if
-    if (fatmgrid == ' ') then
-       write(iulog,*) '   fatmgrid not set, using fsurdat'
-    end if
-    write(iulog,*) '   atm grid data  = ',trim(fatmgrid)
     if (fatmlndfrc == ' ') then
        write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'
     else
        write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
+    end if
+    if (flndtopo == ' ') then
+       write(iulog,*) '   flndtopo not set'
+    else
+       write(iulog,*) '   land topographic data = ',trim(flndtopo)
     end if
     if (fatmtopo == ' ') then
        write(iulog,*) '   fatmtopo not set'

@@ -2,7 +2,6 @@
 -use_mpiserial
 -nosmp
 -debug
--maxpft 21
 -bgc cndv
 -crop on
 -s

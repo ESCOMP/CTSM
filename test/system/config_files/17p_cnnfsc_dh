@@ -1,7 +1,6 @@
 -mode clm_stndln
 -nouse_mpiserial -smp
 -debug
--maxpft 17
 -nofire
 -bgc cn
 -s

@@ -818,9 +818,6 @@ contains
 ! !USES:
     use clm_varcon, only : spval
     use surfrdMod , only : crop_prog
-#if (defined CASA)
-    use CASAMod   , only : npools, nresp_pools, nlive, npool_types
-#endif
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -923,7 +920,6 @@ contains
     allocate(pps%alphapsnsun(beg:end))
     allocate(pps%alphapsnsha(beg:end))
 #endif
-    ! heald: added from CASA definition
     allocate(pps%sandfrac(beg:end))
     allocate(pps%clayfrac(beg:end))
     pps%sandfrac(beg:end) = nan
@@ -934,79 +930,7 @@ contains
     pps%mlaidiff(beg:end) = nan
     pps%rb1(beg:end) = nan
     pps%annlai(:,:) = nan
-
     
-#if (defined CASA)
-    allocate(pps%Closs(beg:end,npools))  ! C lost to atm
-    allocate(pps%Ctrans(beg:end,npool_types))  ! C transfers out of pool types
-    allocate(pps%Resp_C(beg:end,npools))
-    allocate(pps%Tpool_C(beg:end,npools))! Total C pool size
-    allocate(pps%eff(beg:end,nresp_pools))
-    allocate(pps%frac_donor(beg:end,nresp_pools))
-    allocate(pps%livefr(beg:end,nlive))  !live fraction
-    allocate(pps%pet(beg:end))           !potential evaporation (mm h2o/s)
-    allocate(pps%co2flux(beg:end))       ! net CO2 flux (g C/m2/sec) [+= atm]
-    allocate(pps%fnpp(beg:end))          ! NPP  (g C/m2/sec)
-    allocate(pps%soilt(beg:end))         !soil temp for top 30cm
-    allocate(pps%smoist(beg:end))        !soil moisture for top 30cm
-    allocate(pps%sz(beg:end))
-    allocate(pps%watopt(beg:end))
-    allocate(pps%watdry(beg:end))
-    allocate(pps%soiltc(beg:end))         !soil temp for entire column
-    allocate(pps%smoistc(beg:end))        !soil moisture for entire column
-    allocate(pps%szc(beg:end))
-    allocate(pps%watoptc(beg:end))
-    allocate(pps%watdryc(beg:end))
-    allocate(pps%Wlim(beg:end))
-    allocate(pps%litterscalar(beg:end))
-    allocate(pps%rootlitscalar(beg:end))
-    allocate(pps%stressCD(beg:end))
-    allocate(pps%excessC(beg:end))       ! excess Carbon (gC/m2/timestep)
-    allocate(pps%bgtemp(beg:end))
-    allocate(pps%bgmoist(beg:end))
-    allocate(pps%plai(beg:end))          ! prognostic LAI (m2 leaf/m2 ground)
-    allocate(pps%Cflux(beg:end))
-    allocate(pps%XSCpool(beg:end))
-    allocate(pps%tday(beg:end))     ! daily accumulated temperature (deg C)
-    allocate(pps%tdayavg(beg:end))  ! daily averaged temperature (deg C)
-    allocate(pps%tcount(beg:end))   ! counter for daily avg temp
-    allocate(pps%degday(beg:end))   ! accumulated degree days (deg C)
-    allocate(pps%ndegday(beg:end))  ! counter for number of degree days
-    allocate(pps%stressT(beg:end))
-    allocate(pps%stressW(beg:end))  ! water stress function for leaf loss
-    allocate(pps%iseabeg(beg:end))  ! index for start of growing season
-    allocate(pps%nstepbeg(beg:end)) ! nstep at start of growing season
-    allocate(pps%lgrow(beg:end))    ! growing season index (0 or 1) to be
-                                    ! passed daily to CASA to get NPP
-    ! Summary variables added for the C-LAMP Experiments
-    allocate(pps%casa_agnpp(beg:end))
-    allocate(pps%casa_ar(beg:end))
-    allocate(pps%casa_bgnpp(beg:end))
-    allocate(pps%casa_cwdc(beg:end))
-    allocate(pps%casa_cwdc_hr(beg:end))
-    allocate(pps%casa_cwdc_loss(beg:end))
-    allocate(pps%casa_frootc(beg:end))
-    allocate(pps%casa_frootc_alloc(beg:end))
-    allocate(pps%casa_frootc_loss(beg:end))
-    allocate(pps%casa_gpp(beg:end))
-    allocate(pps%casa_hr(beg:end))
-    allocate(pps%casa_leafc(beg:end))
-    allocate(pps%casa_leafc_alloc(beg:end))
-    allocate(pps%casa_leafc_loss(beg:end))
-    allocate(pps%casa_litterc(beg:end))
-    allocate(pps%casa_litterc_hr(beg:end))
-    allocate(pps%casa_litterc_loss(beg:end))
-    allocate(pps%casa_nee(beg:end))
-    allocate(pps%casa_nep(beg:end))
-    allocate(pps%casa_npp(beg:end))
-    allocate(pps%casa_soilc(beg:end))
-    allocate(pps%casa_soilc_hr(beg:end))
-    allocate(pps%casa_soilc_loss(beg:end))
-    allocate(pps%casa_woodc(beg:end))
-    allocate(pps%casa_woodc_alloc(beg:end))
-    allocate(pps%casa_woodc_loss(beg:end))
-#endif
-
     pps%frac_veg_nosno(beg:end) = bigint
     pps%frac_veg_nosno_alb(beg:end) = 0
     pps%emv(beg:end) = nan
@@ -1097,74 +1021,6 @@ contains
 #if (defined C13)
     pps%alphapsnsun(beg:end) = nan
     pps%alphapsnsha(beg:end) = nan
-#endif
-
-#if (defined CASA)
-    pps%Closs(beg:end,:npools) = spval   !init w/ spval the variables that
-    pps%Ctrans(beg:end,:npool_types) = spval   !init w/ spval the variables that
-    pps%Resp_C(beg:end,:npools) = nan    !go to history, because CASA
-    pps%Tpool_C(beg:end,:npools) = spval !routines do not get called on
-    pps%livefr(beg:end,:nlive) = spval   !first timestep of nsrest=nsrStartup and
-    pps%pet(beg:end) = spval             !history would get nans
-    pps%co2flux(beg:end) = nan           !in the first timestep
-    pps%fnpp(beg:end) = nan
-    pps%excessC(beg:end) = spval
-    pps%bgtemp(beg:end) = spval
-    pps%bgmoist(beg:end) = spval
-    pps%plai(beg:end) = spval
-    pps%Cflux(beg:end) = nan
-    pps%XSCpool(beg:end) = spval
-    pps%tdayavg(beg:end) = spval
-    pps%degday(beg:end) = spval
-    pps%stressT(beg:end) = spval
-    pps%stressW(beg:end) = spval
-    pps%stressCD(beg:end) = spval
-    pps%iseabeg(beg:end) = spval
-    pps%nstepbeg(beg:end) = spval
-    pps%lgrow(beg:end) = spval
-    pps%eff(beg:end,:nresp_pools) = nan
-    pps%frac_donor(beg:end,:nresp_pools) = nan
-    pps%soilt(beg:end) = spval                  ! on history file
-    pps%smoist(beg:end) = spval                 ! on history file
-    pps%sz(beg:end) = nan
-    pps%watopt(beg:end) = nan
-    pps%watdry(beg:end) = nan
-    pps%soiltc(beg:end) = nan
-    pps%smoistc(beg:end) = nan
-    pps%szc(beg:end) = nan
-    pps%watoptc(beg:end) = spval                ! on history file
-    pps%watdryc(beg:end) = spval                ! on history file
-    pps%Wlim(beg:end) = spval                   ! on history file
-    pps%litterscalar(beg:end) = nan
-    pps%rootlitscalar(beg:end) = nan
-    pps%tday(beg:end) = nan
-    pps%tcount(beg:end) = nan
-    pps%ndegday(beg:end) = nan
-    pps%casa_agnpp(beg:end) = nan
-    pps%casa_ar(beg:end) = nan
-    pps%casa_bgnpp(beg:end) = nan
-    pps%casa_cwdc(beg:end) = nan
-    pps%casa_cwdc_hr(beg:end) = nan
-    pps%casa_cwdc_loss(beg:end) = nan
-    pps%casa_frootc(beg:end) = nan
-    pps%casa_frootc_alloc(beg:end) = nan
-    pps%casa_frootc_loss(beg:end) = nan
-    pps%casa_gpp(beg:end) = nan
-    pps%casa_hr(beg:end) = nan
-    pps%casa_leafc(beg:end) = nan
-    pps%casa_leafc_alloc(beg:end) = nan
-    pps%casa_leafc_loss(beg:end) = nan
-    pps%casa_litterc(beg:end) = nan
-    pps%casa_litterc_loss(beg:end) = nan
-    pps%casa_nee(beg:end) = nan
-    pps%casa_nep(beg:end) = nan
-    pps%casa_npp(beg:end) = nan
-    pps%casa_soilc(beg:end) = nan
-    pps%casa_soilc_hr(beg:end) = nan
-    pps%casa_soilc_loss(beg:end) = nan
-    pps%casa_woodc(beg:end) = nan
-    pps%casa_woodc_alloc(beg:end) = nan
-    pps%casa_woodc_loss(beg:end) = nan
 #endif
 
   end subroutine init_pft_pstate_type

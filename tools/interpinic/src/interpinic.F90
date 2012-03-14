@@ -53,8 +53,6 @@ module interpinic
   real(r8) :: volr(rtmlon,rtmlat)     ! water volume in cell (m^3)
 
   ! Other parameter sizes
-  integer, parameter :: nlive  = 3    ! # of live pools
-  integer, parameter :: npools = 12   ! # of C pools
   integer, parameter :: numrad = 2    ! # of radiation bands
 
   ! Parameters
@@ -119,8 +117,6 @@ contains
     integer :: dimidrad            ! netCDF dimension id numrad
     integer :: dimidrtmlat         ! netCDF dimension id rtmlat
     integer :: dimidrtmlon         ! netCDF dimension id rtmlon
-    integer :: dimidnlive          ! netCDF dimension id nlive
-    integer :: dimidnpools         ! netCDF dimension id npools
     integer :: varid               ! netCDF variable id
     integer :: varido              ! netCDF variable id
     integer :: xtype               ! netCDF variable type
@@ -207,24 +203,6 @@ contains
        stop
     end if
  
-    ! If CASA data exist on input file
-    ret = nf_inq_varid (ncidi, 'livefr', varid)
-    if (ret == NF_NOERR) then
-       call check_ret (nf90_inq_dimid(ncidi, "nlive", dimidnlive))
-       call check_ret (nf90_inquire_dimension(ncidi, dimidnlive, len=dimlen))
-       if (dimlen/=nlive) then
-          write (6,*) 'error: input nlive does not equal ',nlive; stop
-       end if
-       call check_ret (nf90_inq_dimid(ncidi, "npools", dimidnpools))
-       call check_ret (nf90_inquire_dimension(ncidi, dimidnpools, len=dimlen))
-       if (dimlen/=npools) then
-          write (6,*) 'error: input npools does not equal ',npools; stop
-       end if
-    else
-       dimidnpools = -1
-       dimidnlive  = -1
-    end if
-
     ! numrad dimension
     ret = nf90_inq_dimid(ncidi, "numrad", dimidrad)
     if (ret/=NF90_NOERR) call handle_error (ret)
@@ -478,12 +456,6 @@ contains
           else if ( dimids(1) == dimidsno1)then
              call interp_ml_real(varname, ncidi, ncido, &
                                  nlev=nlevsno1, nvec=numcols, nveco=numcolso)
-          else if ( dimids(1) == dimidnlive)then
-             call interp_ml_real(varname, ncidi, ncido, &
-                                 nlev=nlive, nvec=numpfts, nveco=numpftso)
-          else if ( dimids(1) == dimidnpools)then
-             call interp_ml_real(varname, ncidi, ncido, &
-                                 nlev=npools, nvec=numpfts, nveco=numpftso)
           else
              write (6,*) 'error: variable = ', varname
              write (6,*) 'error: variables first dimension is not recognized'; stop

@@ -108,12 +108,6 @@ set to 3 meaning branch.
 Full pathname of grid data file on the atm grid.
 </entry>
 
-<entry id="fget_archdev" type="char*8" category="datasets"
-       group="clm_inparm" valid_values="null:,cp:,hpss:" >
-Input archive device prefix to retrieve input files from (used by shr/shr_file_mod.F90)
-(This feature is deprecated and NOT recommended for use).
-</entry>
-
 <entry id="fatmlndfrc" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of land fraction data file (on atm grid).
@@ -1880,11 +1874,9 @@ If TRUE, irrigation will be active (find surface datasets with active irrigation
 </entry> 
 
 <entry id="rtm_res" type="char*20" category="default_settings"
-       group="default_settings" valid_values="R05,RX1,19BASIN" value="R05">
+       group="default_settings" valid_values="R05" value="R05">
 Resolution for River Transport Model (RTM)
    R05 = half degree (default and only option working)
-   RX1 = one degree
-   R19 = 19 basin
 </entry> 
 
 <entry id="sim_year" type="integer" category="default_settings"

@@ -79,7 +79,7 @@ contains
     use spmdMod   , only : masterproc
     use clmtype   , only : grlnd
     use decompMod , only : get_proc_bounds
-    use domainMod , only : llatlon
+    use domainMod , only : ldomain
     use ncdio_pio 
 !
 ! !ARGUMENTS:
@@ -163,11 +163,11 @@ contains
        end if
 
        call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
-       if (llatlon%ns /= ns .or. llatlon%ni /= ni .or. llatlon%nj /= nj) then
-          write(iulog,*)trim(subname), 'llatlon and input file do not match dims '
-          write(iulog,*)trim(subname), 'llatlon%ni,ni,= ',llatlon%ni,ni
-          write(iulog,*)trim(subname), 'llatlon%nj,nj,= ',llatlon%nj,nj
-          write(iulog,*)trim(subname), 'llatlon%ns,ns,= ',llatlon%ns,ns
+       if (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj) then
+          write(iulog,*)trim(subname), 'ldomain and input file do not match dims '
+          write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
+          write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
+          write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
           call endrun()
        end if
 

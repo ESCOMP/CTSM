@@ -136,9 +136,6 @@ contains
     integer , pointer :: pcolumn(:)  ! column index associated with each pft
     real(r8), pointer :: snowdp(:)   ! snow height (m)
     integer , pointer :: ivt(:)      ! pft vegetation type
-#if (defined CASA)
-    real(r8), pointer :: plai(:)     ! Prognostic lai
-#endif
 !
 ! local pointers to implicit out arguments
 !
@@ -176,9 +173,6 @@ contains
        hbot    => clm3%g%l%c%p%pps%hbot
        frac_veg_nosno_alb => clm3%g%l%c%p%pps%frac_veg_nosno_alb
        ivt     => clm3%g%l%c%p%itype
-#if (defined CASA)
-       plai    => clm3%g%l%c%p%pps%plai
-#endif
 
        do fp = 1, num_nolakep
           p = filter_nolakep(fp)
@@ -204,14 +198,6 @@ contains
           tsai(p) = timwt(1)*msai2t(p,1) + timwt(2)*msai2t(p,2)
           htop(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
           hbot(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
-
-#if (defined CASA)
-          ! use PLAI from CASA
-          !! can also choose to use default tlai instead of plai - need option
-          ! 03/03/11: don't reset lai of crops - use default lsm tlai/elai
-
-          if (ivt(p) > noveg .and. ivt(p) < nc3crop) tlai(p) = plai(p)
-#endif
 
           ! adjust lai and sai for burying by snow. if exposed lai and sai
           ! are less than 0.05, set equal to zero to prevent numerical
@@ -327,7 +313,7 @@ contains
     use clm_varpar  , only : numpft
     use pftvarcon   , only : noveg
     use decompMod   , only : get_proc_bounds
-    use domainMod   , only : llatlon
+    use domainMod   , only : ldomain
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
     use shr_scam_mod, only : shr_scam_getCloseLatLon
@@ -374,11 +360,11 @@ contains
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
 
-    if (llatlon%ns /= ns .or. llatlon%ni /= ni .or. llatlon%nj /= nj) then
-       write(iulog,*)trim(subname), 'llatlon and input file do not match dims '
-       write(iulog,*)trim(subname), 'llatlon%ni,ni,= ',llatlon%ni,ni
-       write(iulog,*)trim(subname), 'llatlon%nj,nj,= ',llatlon%nj,nj
-       write(iulog,*)trim(subname), 'llatlon%ns,ns,= ',llatlon%ns,ns
+    if (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj) then
+       write(iulog,*)trim(subname), 'ldomain and input file do not match dims '
+       write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
+       write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
+       write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
        call endrun()
     end if
     call check_dim(ncid, 'lsmpft', numpft+1)
