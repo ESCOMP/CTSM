@@ -54,12 +54,7 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxdst2    ! dust flux size bin 2    
   integer, public ::index_l2x_Fall_flxdst3    ! dust flux size bin 3    
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
-
-  integer, public ::index_l2x_Fall_flxvoc1    ! voc flux size bin 1    
-  integer, public ::index_l2x_Fall_flxvoc2    ! voc flux size bin 2    
-  integer, public ::index_l2x_Fall_flxvoc3    ! voc flux size bin 3    
-  integer, public ::index_l2x_Fall_flxvoc4    ! voc flux size bin 4
-  integer, public ::index_l2x_Fall_flxvoc5    ! voc flux size bin 5
+  integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
 
   integer, public :: nflds_l2x = 0
 
@@ -163,6 +158,8 @@ contains
   use mct_mod       , only: mct_aVect, mct_aVect_init, mct_avect_indexra, &
                             mct_aVect_clean, mct_avect_nRattr
   use seq_drydep_mod, only: drydep_fields_token, lnd_drydep
+  use shr_megan_mod,  only: shr_megan_fields_token, shr_megan_mechcomps_n
+
 ! !ARGUMENTS:
     implicit none
 !
@@ -224,11 +221,13 @@ contains
     index_l2x_Fall_flxdst4  = mct_avect_indexra(l2x,'Fall_flxdst4')
 
     index_l2x_Fall_fco2_lnd = mct_avect_indexra(l2x,'Fall_fco2_lnd',perrwith='quiet')
-    index_l2x_Fall_flxvoc1  = mct_avect_indexra(l2x,'Fall_flxvoc1' ,perrwith='quiet')
-    index_l2x_Fall_flxvoc2  = mct_avect_indexra(l2x,'Fall_flxvoc2' ,perrwith='quiet')
-    index_l2x_Fall_flxvoc3  = mct_avect_indexra(l2x,'Fall_flxvoc3' ,perrwith='quiet')
-    index_l2x_Fall_flxvoc4  = mct_avect_indexra(l2x,'Fall_flxvoc4' ,perrwith='quiet')
-    index_l2x_Fall_flxvoc5  = mct_avect_indexra(l2x,'Fall_flxvoc5' ,perrwith='quiet')
+
+    ! MEGAN fluxes
+    if (shr_megan_mechcomps_n>0) then
+       index_l2x_Fall_flxvoc = mct_avect_indexra(l2x,trim(shr_megan_fields_token))
+    else
+       index_l2x_Fall_flxvoc = 0
+    endif
 
     nflds_l2x = mct_avect_nRattr(l2x)
 

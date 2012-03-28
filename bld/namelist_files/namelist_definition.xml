@@ -672,6 +672,11 @@ Only one of
 <varname>aqua_planet</varname> can be true.
 </entry>
 
+<entry id="esmf_map_flag" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+If TRUE, ESMF mapping is being used
+</entry>
+
 <entry id="brnch_retain_casename" type="logical"  category="driver"
        group="seq_infodata_inparm" valid_values="" >
 If TRUE, use the pre-existing case name for a branch run.
@@ -820,6 +825,15 @@ If TRUE, atmosphere and land grids same lat/lon/size
        group="seq_infodata_inparm" valid_values="">
 Latitude value of single column.
 (Set by PTS_LAT)
+</entry>
+
+<entry id="cpl_decomp" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="0,1,2,3" >
+Coupler decomposition
+   0=default
+   1=comp decomp
+   2=rearr comp decomp
+   3=new single 1d seg
 </entry>
 
 <entry id="scmlon" type="real" category="scam"
@@ -1005,10 +1019,6 @@ Tolerance to match ocean and ice grid areas
 </entry>
 
 <!-- Coupler fields -->
-<entry id="flds_voc" type="logical"  category="driver"
-       group="seq_cplflds_inparm" valid_values="" value=".true.">
-If TRUE, pass VOC fields in driver
-</entry>
 
 <entry id="flds_co2a" type="logical"  category="driver"
        group="seq_cplflds_inparm" valid_values="" value=".false.">
@@ -1030,15 +1040,15 @@ If TRUE, pass CO2 from atmosphere to land and back and also to ocean
 If TRUE, pass CO2 from atmosphere to land and back and also to ocean and DMS to ocean
 </entry>
 
-<entry id="cplflds_custom" type="char*256"  category="driver"
-       group="seq_cplflds_inparm" valid_values="" >
-Custom fields to pass in the driver
-</entry>
-
 <entry id="glc_nec" type="integer"  category="driver"
        group="seq_cplflds_inparm" valid_values="0,1,3,5,10" >
 Number of  multiple elevation classes over glacier points to pass to coupler.
 Normally this is ONLY used when running CESM with the active glacier model.
+</entry>
+
+<entry id="cplflds_custom" type="char*256"  category="driver"
+       group="seq_cplflds_userspec" valid_values="" >
+Custom fields to pass in the driver
 </entry>
 
 <!-- Task/Thread layouts -->
@@ -1063,6 +1073,11 @@ Number of atm tasks.
 Number of threads in each atm task.
 </entry>
 
+<entry id="atm_layout" type="char*32"  category="performance"
+       group="ccsm_pes" valid_values="concurrent,sequential" >
+atm layout type.
+</entry>
+
 <entry id="lnd_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the lnd communicator group.
@@ -1081,6 +1096,11 @@ Number of lnd tasks.
 <entry id="lnd_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each lnd task.
+</entry>
+
+<entry id="lnd_layout" type="char*32"  category="performance"
+       group="ccsm_pes" valid_values="concurrent,sequential" >
+lnd layout type.
 </entry>
 
 <entry id="ice_pestride" type="integer"  category="performance"
@@ -1103,6 +1123,11 @@ Number of ice tasks.
 Number of threads in each ice task.
 </entry>
 
+<entry id="ice_layout" type="char*32"  category="performance"
+       group="ccsm_pes" valid_values="concurrent,sequential" >
+ice layout type.
+</entry>
+
 <entry id="ocn_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the ocn communicator group.
@@ -1121,6 +1146,11 @@ Number of ocn tasks.
 <entry id="ocn_nthreads" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Number of threads in each ocn task.
+</entry>
+
+<entry id="ocn_layout" type="char*32"  category="performance"
+       group="ccsm_pes" valid_values="concurrent,sequential" >
+ocn layout type.
 </entry>
 
 <entry id="glc_pestride" type="integer"  category="performance"
@@ -1143,6 +1173,11 @@ Number of glc tasks.
 Number of threads in each glc task.
 </entry>
 
+<entry id="glc_layout" type="char*32"  category="performance"
+       group="ccsm_pes" valid_values="concurrent,sequential" >
+glc layout type.
+</entry>
+
 <entry id="cpl_pestride" type="integer"  category="performance"
        group="ccsm_pes" valid_values="" >
 Stride used in selecting the processes in the cpl communicator group.
@@ -1162,7 +1197,6 @@ Number of cpl tasks.
        group="ccsm_pes" valid_values="" >
 Number of threads in each cpl task.
 </entry>
-
 
 <!-- Time Manager -->
 
@@ -1265,7 +1299,7 @@ by <varname>restart_option</varname>.
 
 <entry id="restart_option" type="char*8"  category="drv_restart"
        group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
 Set the interval between writing restart files
 using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
@@ -1293,7 +1327,7 @@ by <varname>history_option</varname>.
 
 <entry id="history_option" type="char*8"  category="drv_history"
        group="seq_timemgr_inparm"
-       valid_values="never,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
 Set the interval between writing history files
 using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
@@ -1321,7 +1355,7 @@ by <varname>histavg_option</varname>.
 
 <entry id="histavg_option" type="char*8"  category="drv_history"
        group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
 Set the interval between writing averaged history files
 using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
@@ -1388,7 +1422,7 @@ by <varname>stop_option</varname>.
 
 <entry id="stop_option" type="char*8"  category="time_mgr"
        group="seq_timemgr_inparm" 
-       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0" >
+       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
 Set the length of run as an elapsed time using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
 with <varname>stop_n</varname> to set the number of elapsed time units.
@@ -1419,10 +1453,17 @@ by <varname>tprof_option</varname>.
 
 <entry id="tprof_option" type="char*80"  category="profiling"
        group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nseconds,nminutes,nhours,ndays,nmonths,monthly,yearly,nyears,date,ifdays0,end" >
+       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
 Set the time-profiling write time as an elapsed time using one of the options 'nsteps',
 'ndays', 'nmonths', or 'nyears', in conjunction
 with <varname>tprof_n</varname> to set the number of elapsed time units.
+</entry>
+
+<entry id="tprof_ymd" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Time-profiling write date encoded in an integer as (year*1000 + month*100 + day).
+Used in conjunction with <varname>tprof_option</varname> to set the time-profiling
+write time.
 </entry>
 
 <!-- Time profiler -->
@@ -1626,6 +1667,46 @@ Number of tasks to use for glc PIO
 Type of output files for glc PIO
 </entry>
 
+<entry id="ocn_pio_stride" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Stride to use for ocn PIO tasks
+</entry>
+
+<entry id="ocn_pio_root" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Root PE for ocn PIO output processing
+</entry>
+
+<entry id="ocn_pio_numtasks" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for ocn PIO
+</entry>
+
+<entry id="ocn_pio_typename" type="char*80"  category="performance"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for ocn PIO
+</entry>
+
+<entry id="ice_pio_stride" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Stride to use for ice PIO tasks
+</entry>
+
+<entry id="ice_pio_root" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Root PE for ice PIO output processing
+</entry>
+
+<entry id="ice_pio_numtasks" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for ice PIO
+</entry>
+
+<entry id="ice_pio_typename" type="char*80"  category="performance"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for ice PIO
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- DATM Namelists                                                                            -->
 <!-- ========================================================================================  -->
@@ -1652,6 +1733,11 @@ Fill mask
 </entry>
 
 <entry id="fillread" type="char*256(30)"  category="datm_physics"
+       group="shr_strdata_nml" valid_values="">
+Fill mapping file to write
+</entry>
+
+<entry id="fillwrite" type="char*256(30)"  category="datm_physics"
        group="shr_strdata_nml" valid_values="">
 Fill mapping file to write
 </entry>
@@ -1932,7 +2018,7 @@ ocean
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- drydep Namelists                                                                           -->
+<!-- drydep Namelists                                                                          -->
 <!-- ========================================================================================  -->
 
 <entry id="drydep_method" type="char*16" category="dry-deposition"
@@ -1941,12 +2027,55 @@ ocean
 Where dry deposition is calculated (from land, atmosphere, or from a table)
 </entry>
 
+<!-- List of all of the potential Chemical species that can be use for Dry-Deposition 
+     Anything NOT in this list - can NOT be used. As species are added in
+       seq_drydep_mod.F90 this list needs to be updated.
+     Note: Species from H2 and thereafter are species that "map" 
+           to other previous species in the list. The mapping is laid
+           out in seq_drydep_mod.F90.
+-->
 <entry id="drydep_list" type="char*32(100)" category="dry-deposition"
        group="drydep_inparm" 
        valid_values=
-"OX,H2O2,OH,HO2,CO,CH4,CH3O2,CH3OOH,CH2O,CHOOH,NO,NO2,HNO3,CO2,NH3,N2O5,NO3,CH3OH,HO2NO2,O1D,C2H6,C2H5O2,PO2,MACRO2,ISOPO2,C4H10,CH3CHO,C2H5OOH,C3H6,POOH,C2H4,PAN,CH3COOOH,C10H16,CHOCHO,CH3COCHO,GLYALD,CH3CO3,C3H8,C3H7O2,CH3COCH3,C3H7OOH,RO2,ROOH,Rn,ISOP,MVK,MACR,C2H5OH,ONITR,ONIT,ISOPNO3,HYDRALD,HCN,CH3CN"
+"OX,H2O2,OH,HO2,CO,CH4,CH3O2,CH3OOH,CH2O,CHOOH,NO,NO2,HNO3,CO2,NH3,N2O5,NO3,CH3OH,HO2NO2,O1D,C2H6,C2H5O2,PO2,MACRO2,ISOPO2,C4H10,CH3CHO,C2H5OOH,C3H6,POOH,C2H4,PAN,CH3COOOH,C10H16,CHOCHO,CH3COCHO,GLYALD,CH3CO3,C3H8,C3H7O2,CH3COCH3,C3H7OOH,RO2,ROOH,Rn,ISOP,MVK,MACR,C2H5OH,ONITR,ONIT,ISOPNO3,HYDRALD,HCN,CH3CN,H2,'HYAC','CH3COOH','O3S','O3INERT','MPAN','ISOPOOH','MACROOH','Pb','XOOH','H2SO4','ALKOOH','MEKOOH','TOLOOH','BENOOH','XYLOOH','TERPOOH','SOGM','SOGI','SOGT','SOGB','SOGX','SOA','SO2','SO4','CB1','CB2','OC1','OC2','NH3','NH4','SA1','SA2','SA3','SA4','HCN','CH3CN','HCOOH','SOAM','SOAI','SOAT','SOAB','SOAX','O3A','XMPAN','XPAN','XNO','XNO2','XHNO3','XONIT','XONITR',XHO2NO2','XNH4NO3','COhc','COme','CO01','CO02','CO03','CO04','CO05','CO06','CO07','CO08','CO09','CO10','CO11','CO12','CO13','CO14','CO15','CO16','CO17','CO18','CO19','CO20','CO21','CO22','CO23','CO24','CO25','CO26','CO27','CO28','CO29','CO30','CO31','CO32','CO33','CO34','CO35','CO36','CO37','CO38','CO39','CO40','CO41','CO42','CO43','CO44','CO45','CO46','CO47','CO48','CO49','CO50','NH4NO3'"
 >
 List of chemical constituents that dry deposition will be calculated for
 </entry>
+
+<!-- ========================================================================================  -->
+<!-- MEGAN VOC emissions namelist options                                                      -->
+<!-- ========================================================================================  -->
+
+<entry id="megan_factors_file" type="char*256" input_pathname="abs" category="drv_physics"
+       group="megan_emis_nl" valid_values="" >
+File containing MEGAN emissions factors. Includes the list of MEGAN compounds that can be
+used in the Comp_Name variable on the file.
+</entry>
+
+<entry id="megan_specifier" type="char*512(100)" category="drv_physics"
+       group="megan_emis_nl" valid_values="" >
+MEGAN specifier. This is in the form of: Chem-compound = megan_compound(s)
+where megan_compound(s) can be the sum of megan compounds with a "+" between them.
+In each equation, the item to the left of the equal sign is a CAM chemistry compound, the
+items to the right are compounds known to the MEGAN model (single or combinations). 
+For example,
+megan_specifier = 'ISOP = isoprene',
+                  'C10H16 = pinene_a + carene_3 + thujene_a'
+</entry>
+
+<entry id="megan_mapped_emisfctrs" type="logical" category="drv_physics"
+       group="megan_emis_nl" >
+MEGAN mapped isoprene emissions factors switch
+If TRUE then use mapped MEGAN emissions factors for isoprene.
+</entry>
+
+<entry id="megan_cmpds" type="char*32(150)" category="drv_physics"
+       group="drv_physics" 
+       valid_values=
+"isoprene,myrcene,sabinene,limonene,carene_3,ocimene_t_b,pinene_b,pinene_a,2met_styrene,cymene_p,cymene_o,phellandrene_a,thujene_a,terpinene_a,terpinene_g,terpinolene,phellandrene_b,camphene,bornene,fenchene_a,ocimene_al,ocimene_c_b,tricyclene,estragole,camphor,fenchone,piperitone,thujone_a,thujone_b,cineole_1_8,borneol,linalool,terpineol_4,terpineol_a,linalool_OXD_c,linalool_OXD_t,ionone_b,bornyl_ACT,farnescene_a,caryophyllene_b,acoradiene,aromadendrene,bergamotene_a,bergamotene_b,bisabolene_a,bisabolene_b,bourbonene_b,cadinene_d,cadinene_g,cedrene_a,copaene_a,cubebene_a,cubebene_b,elemene_b,farnescene_b,germacrene_B,germacrene_D,gurjunene_b,humulene_a,humulene_g,isolongifolene,longifolene,longipinene,muurolene_a,muurolene_g,selinene_b,selinene_d,nerolidol_c,nerolidol_t,cedrol,MBO_2m3e2ol,methanol,acetone,methane,ammonia,nitrous_OXD,nitric_OXD,acetaldehyde,ethanol,formic_acid,formaldehyde,acetic_acid,MBO_3m2e1ol,MBO_3m3e1ol,benzaldehyde,butanone_2,decanal,dodecene_1,geranyl_acetone,heptanal,heptane,hexane,met_benzoate,met_heptenone,neryl_acetone,nonanal,nonenal,octanal,octanol,octenol_1e3ol,oxopentanal,pentane,phenyl_CCO,pyruvic_acid,terpinyl_ACT_a,tetradecene_1,toluene,carbon_monoxide,butene,ethane,ethene,hydrogen_cyanide,propane,propene,carbon_2s,carbonyl_s,diallyl_2s,2met_2s,2met_s,met_chloride,met_bromide,met_iodide,hydrogen_s,met_mercaptan,met_propenyl_2s,PPPP_2s,2met_nonatriene,met_salicylate,indole,jasmone,met_jasmonate,3met_3DCTT,hexanal,hexanol_1,hexenal_c3,hexenal_t2,hexenol_c3,hexenyl_ACT_c3,homosalate,Ehsalate,pentanal,heptanone,anisole,verbenene,benzyl-acetate,myrtenal,benzyl-alcohol,meta-cymenene,ipsenol,Napthalene"
+>
+List of possible MEGAN compounds to use
+  (the list used by the simulation is on the megan_factors_file as the Comp_Name)
+</entry> 
 
 </namelist_definition>

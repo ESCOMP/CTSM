@@ -13,7 +13,7 @@ module clmtypeInitMod
   use nanMod      , only : nan, bigint
   use clmtype
   use clm_varpar  , only : maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
-                           numpft, ndst, nvoc, nlevurb, nlevsoi
+                           numpft, ndst, nlevurb, nlevsoi
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -236,10 +236,9 @@ contains
     call init_pft_nflux_type(begp, endp, clm3%g%l%c%p%pnf)
     call init_pft_nflux_type(begc, endc, clm3%g%l%c%cnf%pnf_a)
 
-    ! pft VOC flux variables at pft level and averaged to column
+    ! pft VOC flux variables at pft level
 
     call init_pft_vflux_type(begp, endp, clm3%g%l%c%p%pvf)
-    call init_pft_vflux_type(begc, endc, clm3%g%l%c%cvf%pvf_a)
 
     ! gridcell VOC emission factors (heald, 05/06)
 
@@ -2450,10 +2449,13 @@ contains
 ! Initialize pft VOC flux variables
 !
     use clm_varcon, only : spval
+    use shr_megan_mod, only: shr_megan_megcomps_n
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
     type (pft_vflux_type), intent(inout) :: pvf
+
+    integer :: i
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -2462,13 +2464,10 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
+    if (shr_megan_megcomps_n<1) return
+
     allocate(pvf%vocflx_tot(beg:end))
-    allocate(pvf%vocflx(beg:end,1:nvoc))
-    allocate(pvf%vocflx_1(beg:end))
-    allocate(pvf%vocflx_2(beg:end))
-    allocate(pvf%vocflx_3(beg:end))
-    allocate(pvf%vocflx_4(beg:end))
-    allocate(pvf%vocflx_5(beg:end))
+    allocate(pvf%vocflx(beg:end,1:shr_megan_megcomps_n))
     allocate(pvf%Eopt_out(beg:end))
     allocate(pvf%topt_out(beg:end))
     allocate(pvf%alpha_out(beg:end))
@@ -2485,14 +2484,10 @@ contains
     allocate(pvf%gammaP_out(beg:end))
     allocate(pvf%gammaA_out(beg:end))
     allocate(pvf%gammaS_out(beg:end))
+    allocate(pvf%gammaC_out(beg:end))
 
-    pvf%vocflx_tot(beg:end) = spval
-    pvf%vocflx(beg:end,1:nvoc) = spval
-    pvf%vocflx_1(beg:end) = spval
-    pvf%vocflx_2(beg:end) = spval
-    pvf%vocflx_3(beg:end) = spval
-    pvf%vocflx_4(beg:end) = spval
-    pvf%vocflx_5(beg:end) = spval
+    pvf%vocflx_tot(beg:end) = nan
+    pvf%vocflx(beg:end,1:shr_megan_megcomps_n) = nan
     pvf%Eopt_out(beg:end) = nan
     pvf%topt_out(beg:end) = nan
     pvf%alpha_out(beg:end) = nan
@@ -2509,6 +2504,14 @@ contains
     pvf%gammaP_out(beg:end) = nan
     pvf%gammaA_out(beg:end) = nan
     pvf%gammaS_out(beg:end) = nan
+    pvf%gammaC_out(beg:end) = nan
+
+    allocate(pvf%meg(shr_megan_megcomps_n))
+
+    do i=1,shr_megan_megcomps_n
+       allocate(pvf%meg(i)%flux_out(beg:end))
+       pvf%meg(i)%flux_out(beg:end) = nan
+    enddo
 
   end subroutine init_pft_vflux_type
 

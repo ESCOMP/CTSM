@@ -417,6 +417,10 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! snow accumulation exceeds 10 mm.
      ! ============================================================================
      
+     ! initialize intracellular CO2 (Pa) parameters each timestep for use in VOCEmission
+     clm3%g%l%c%p%pps%cisun(begp:endp) = -999._r8
+     clm3%g%l%c%p%pps%cisha(begp:endp) = -999._r8
+
      ! initialize declination for current timestep
      do c = begc,endc
         clm3%g%l%c%cps%decl(c) = declin

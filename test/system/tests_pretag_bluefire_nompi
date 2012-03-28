@@ -4,8 +4,8 @@ smHS3 erHS3 brHS3 blHS3
 smCA4 erCA4 brCA4 blCA4
 smNB4 erNB4 brNB4 blNB4
 smCA8 erCA8 brCA8 blCA8
-smCK4 erCK4 brCK4 blCK4
-smCK8 erCK8 brCK8 blCK8
+smCK4             blCK4
+smCK8             blCK8
 smC78             blC78
 smF93 erF93 brF93 blF93
 smC83 erC83 brC83 blC83

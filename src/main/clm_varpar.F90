@@ -34,7 +34,6 @@ module clm_varpar
   integer, parameter :: ndst        =   4     ! number of dust size classes (BGC only)
   integer, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
   integer, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
-  integer, parameter :: nvoc        =   5     ! number of voc categories
   integer, parameter :: mxpft       =  20     ! maximum number of PFT's for any mode
   integer, parameter :: numveg      =  16     ! number of veg types (without specific crop)
 #if (defined CROP)

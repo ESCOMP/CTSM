@@ -1,4 +1,377 @@
 ===============================================================
+Tag name:  clm4_0_42
+Originator(s):  erik (Erik Kluzek)
+Date: Tue Mar 27 21:14:59 MDT 2012
+One-line Summary: Bring in Francis Vitt's MEGAN changes.
+
+Purpose of changes:
+
+Bring Francis Vitt's MEGAN branch to the trunk. Replace the five VOC 
+compounds with the MEGAN model that allows up to 150 compounds to be 
+generated and passed to the driver. The mechanism allows the fields to 
+be choosen by a driver namelist which CLM responds to.
+
+Requirements for tag: test on bluefire (CESM, int, bat), lynx/pgi (int,bat), mirage
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+                                 1459 (PTSMODE fails)
+                                 1480 (Darwin_intel build)
+                                 1482 (Problems running 1x1 resolutions for CLM)
+                                 1484 (re-configure removes the user_nl_clm)
+                                 1486 (bad irrigation maps)
+
+Known bugs (include bugzilla ID):
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  935 (RTM warning NOT an error)
+                                 1025 (PTS_MODE can NOT use a global finidat file)
+                                 1017 (PTS_MODE can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1454 (lack of 1D history files in CLM testing)
+                                 1455 (bad time-stamp in CLM testing)
+                                 1457 (bug in soil color in mksurfdata_map)
+                                 1474 (Missing eulerian domain files)
+                                 1479 (fails on jaguarpf)
+                                 1485 (Performance issue with esmf_wrf_timemgr)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist:
+
+    Add new -megan option to CLM build-namelist to add a megan namelist to
+      the drv_flds_in file.
+    Rename -drv_drydep option to -drydep.
+
+    New namelist items for MEGAN: megan_factors_file, megan_specifier, and
+       megan_mapped_emisfctrs go into the megan_emis_nl namelist in drv_flds_in
+
+    History fields removed: BIOGENCO, ISOPRENE (replaced by MEG_isoprene), 
+                            MONOTERP, ORVOC, ORVOC, OVOC
+
+    Units of VOCFLXT changed from uGC/M2/H to moles/m2/sec
+
+    New history fields:
+
++ GAMMAC               = gamma C for VOC calc (0-1)
++ MEG_2met_2s          = MEGAN flux (kg/m2/sec)
++ MEG_2met_nonatriene  = MEGAN flux (kg/m2/sec)
++ MEG_2met_s           = MEGAN flux (kg/m2/sec)
++ MEG_2met_styrene     = MEGAN flux (kg/m2/sec)
++ MEG_3met_3DCTT       = MEGAN flux (kg/m2/sec)
++ MEG_Ehsalate         = MEGAN flux (kg/m2/sec)
++ MEG_MBO_2m3e2ol      = MEGAN flux (kg/m2/sec)
++ MEG_MBO_3m2e1ol      = MEGAN flux (kg/m2/sec)
++ MEG_MBO_3m3e1ol      = MEGAN flux (kg/m2/sec)
++ MEG_Napthalene       = MEGAN flux (kg/m2/sec)
++ MEG_PPPP_2s          = MEGAN flux (kg/m2/sec)
++ MEG_acetaldehyde     = MEGAN flux (kg/m2/sec)
++ MEG_acetic_acid      = MEGAN flux (kg/m2/sec)
++ MEG_acetone          = MEGAN flux (kg/m2/sec)
++ MEG_acoradiene       = MEGAN flux (kg/m2/sec)
++ MEG_ammonia          = MEGAN flux (kg/m2/sec)
++ MEG_anisole          = MEGAN flux (kg/m2/sec)
++ MEG_aromadendrene    = MEGAN flux (kg/m2/sec)
++ MEG_benzaldehyde     = MEGAN flux (kg/m2/sec)
++ MEG_benzyl-acetate   = MEGAN flux (kg/m2/sec)
++ MEG_benzyl-alcohol   = MEGAN flux (kg/m2/sec)
++ MEG_bergamotene_a    = MEGAN flux (kg/m2/sec)
++ MEG_bergamotene_b    = MEGAN flux (kg/m2/sec)
++ MEG_bisabolene_a     = MEGAN flux (kg/m2/sec)
++ MEG_bisabolene_b     = MEGAN flux (kg/m2/sec)
++ MEG_bornene          = MEGAN flux (kg/m2/sec)
++ MEG_borneol          = MEGAN flux (kg/m2/sec)
++ MEG_bornyl_ACT       = MEGAN flux (kg/m2/sec)
++ MEG_bourbonene_b     = MEGAN flux (kg/m2/sec)
++ MEG_butanone_2       = MEGAN flux (kg/m2/sec)
++ MEG_butene           = MEGAN flux (kg/m2/sec)
++ MEG_cadinene_d       = MEGAN flux (kg/m2/sec)
++ MEG_cadinene_g       = MEGAN flux (kg/m2/sec)
++ MEG_camphene         = MEGAN flux (kg/m2/sec)
++ MEG_camphor          = MEGAN flux (kg/m2/sec)
++ MEG_carbon_2s        = MEGAN flux (kg/m2/sec)
++ MEG_carbon_monoxide  = MEGAN flux (kg/m2/sec)
++ MEG_carbonyl_s       = MEGAN flux (kg/m2/sec)
++ MEG_carene_3         = MEGAN flux (kg/m2/sec)
++ MEG_caryophyllene_b  = MEGAN flux (kg/m2/sec)
++ MEG_cedrene_a        = MEGAN flux (kg/m2/sec)
++ MEG_cedrol           = MEGAN flux (kg/m2/sec)
++ MEG_cineole_1_8      = MEGAN flux (kg/m2/sec)
++ MEG_copaene_a        = MEGAN flux (kg/m2/sec)
++ MEG_cubebene_a       = MEGAN flux (kg/m2/sec)
++ MEG_cubebene_b       = MEGAN flux (kg/m2/sec)
++ MEG_cymene_o         = MEGAN flux (kg/m2/sec)
++ MEG_cymene_p         = MEGAN flux (kg/m2/sec)
++ MEG_decanal          = MEGAN flux (kg/m2/sec)
++ MEG_diallyl_2s       = MEGAN flux (kg/m2/sec)
++ MEG_dodecene_1       = MEGAN flux (kg/m2/sec)
++ MEG_elemene_b        = MEGAN flux (kg/m2/sec)
++ MEG_estragole        = MEGAN flux (kg/m2/sec)
++ MEG_ethane           = MEGAN flux (kg/m2/sec)
++ MEG_ethanol          = MEGAN flux (kg/m2/sec)
++ MEG_ethene           = MEGAN flux (kg/m2/sec)
++ MEG_farnescene_a     = MEGAN flux (kg/m2/sec)
++ MEG_farnescene_b     = MEGAN flux (kg/m2/sec)
++ MEG_fenchene_a       = MEGAN flux (kg/m2/sec)
++ MEG_fenchone         = MEGAN flux (kg/m2/sec)
++ MEG_formaldehyde     = MEGAN flux (kg/m2/sec)
++ MEG_formic_acid      = MEGAN flux (kg/m2/sec)
++ MEG_geranyl_acetone  = MEGAN flux (kg/m2/sec)
++ MEG_germacrene_B     = MEGAN flux (kg/m2/sec)
++ MEG_germacrene_D     = MEGAN flux (kg/m2/sec)
++ MEG_gurjunene_b      = MEGAN flux (kg/m2/sec)
++ MEG_heptanal         = MEGAN flux (kg/m2/sec)
++ MEG_heptane          = MEGAN flux (kg/m2/sec)
++ MEG_heptanone        = MEGAN flux (kg/m2/sec)
++ MEG_hexanal          = MEGAN flux (kg/m2/sec)
++ MEG_hexane           = MEGAN flux (kg/m2/sec)
++ MEG_hexanol_1        = MEGAN flux (kg/m2/sec)
++ MEG_hexenal_c3       = MEGAN flux (kg/m2/sec)
++ MEG_hexenal_t2       = MEGAN flux (kg/m2/sec)
++ MEG_hexenol_c3       = MEGAN flux (kg/m2/sec)
++ MEG_hexenyl_ACT_c3   = MEGAN flux (kg/m2/sec)
++ MEG_homosalate       = MEGAN flux (kg/m2/sec)
++ MEG_humulene_a       = MEGAN flux (kg/m2/sec)
++ MEG_humulene_g       = MEGAN flux (kg/m2/sec)
++ MEG_hydrogen_cyanide = MEGAN flux (kg/m2/sec)
++ MEG_hydrogen_s       = MEGAN flux (kg/m2/sec)
++ MEG_indole           = MEGAN flux (kg/m2/sec)
++ MEG_ionone_b         = MEGAN flux (kg/m2/sec)
++ MEG_ipsenol          = MEGAN flux (kg/m2/sec)
++ MEG_isolongifolene   = MEGAN flux (kg/m2/sec)
++ MEG_isoprene         = MEGAN flux (kg/m2/sec)
++ MEG_jasmone          = MEGAN flux (kg/m2/sec)
++ MEG_limonene         = MEGAN flux (kg/m2/sec)
++ MEG_linalool         = MEGAN flux (kg/m2/sec)
++ MEG_linalool_OXD_c   = MEGAN flux (kg/m2/sec)
++ MEG_linalool_OXD_t   = MEGAN flux (kg/m2/sec)
++ MEG_longifolene      = MEGAN flux (kg/m2/sec)
++ MEG_longipinene      = MEGAN flux (kg/m2/sec)
++ MEG_met_benzoate     = MEGAN flux (kg/m2/sec)
++ MEG_met_bromide      = MEGAN flux (kg/m2/sec)
++ MEG_met_chloride     = MEGAN flux (kg/m2/sec)
++ MEG_met_heptenone    = MEGAN flux (kg/m2/sec)
++ MEG_met_iodide       = MEGAN flux (kg/m2/sec)
++ MEG_met_jasmonate    = MEGAN flux (kg/m2/sec)
++ MEG_met_mercaptan    = MEGAN flux (kg/m2/sec)
++ MEG_met_propenyl_2s  = MEGAN flux (kg/m2/sec)
++ MEG_met_salicylate   = MEGAN flux (kg/m2/sec)
++ MEG_meta-cymenene    = MEGAN flux (kg/m2/sec)
++ MEG_methane          = MEGAN flux (kg/m2/sec)
++ MEG_methanol         = MEGAN flux (kg/m2/sec)
++ MEG_muurolene_a      = MEGAN flux (kg/m2/sec)
++ MEG_muurolene_g      = MEGAN flux (kg/m2/sec)
++ MEG_myrcene          = MEGAN flux (kg/m2/sec)
++ MEG_myrtenal         = MEGAN flux (kg/m2/sec)
++ MEG_nerolidol_c      = MEGAN flux (kg/m2/sec)
++ MEG_nerolidol_t      = MEGAN flux (kg/m2/sec)
++ MEG_neryl_acetone    = MEGAN flux (kg/m2/sec)
++ MEG_nitric_OXD       = MEGAN flux (kg/m2/sec)
++ MEG_nitrous_OXD      = MEGAN flux (kg/m2/sec)
++ MEG_nonanal          = MEGAN flux (kg/m2/sec)
++ MEG_nonenal          = MEGAN flux (kg/m2/sec)
++ MEG_ocimene_al       = MEGAN flux (kg/m2/sec)
++ MEG_ocimene_c_b      = MEGAN flux (kg/m2/sec)
++ MEG_ocimene_t_b      = MEGAN flux (kg/m2/sec)
++ MEG_octanal          = MEGAN flux (kg/m2/sec)
++ MEG_octanol          = MEGAN flux (kg/m2/sec)
++ MEG_octenol_1e3ol    = MEGAN flux (kg/m2/sec)
++ MEG_oxopentanal      = MEGAN flux (kg/m2/sec)
++ MEG_pentanal         = MEGAN flux (kg/m2/sec)
++ MEG_pentane          = MEGAN flux (kg/m2/sec)
++ MEG_phellandrene_a   = MEGAN flux (kg/m2/sec)
++ MEG_phellandrene_b   = MEGAN flux (kg/m2/sec)
++ MEG_phenyl_CCO       = MEGAN flux (kg/m2/sec)
++ MEG_pinene_a         = MEGAN flux (kg/m2/sec)
++ MEG_pinene_b         = MEGAN flux (kg/m2/sec)
++ MEG_piperitone       = MEGAN flux (kg/m2/sec)
++ MEG_propane          = MEGAN flux (kg/m2/sec)
++ MEG_propene          = MEGAN flux (kg/m2/sec)
++ MEG_pyruvic_acid     = MEGAN flux (kg/m2/sec)
++ MEG_sabinene         = MEGAN flux (kg/m2/sec)
++ MEG_selinene_b       = MEGAN flux (kg/m2/sec)
++ MEG_selinene_d       = MEGAN flux (kg/m2/sec)
++ MEG_terpinene_a      = MEGAN flux (kg/m2/sec)
++ MEG_terpinene_g      = MEGAN flux (kg/m2/sec)
++ MEG_terpineol_4      = MEGAN flux (kg/m2/sec)
++ MEG_terpineol_a      = MEGAN flux (kg/m2/sec)
++ MEG_terpinolene      = MEGAN flux (kg/m2/sec)
++ MEG_terpinyl_ACT_a   = MEGAN flux (kg/m2/sec)
++ MEG_tetradecene_1    = MEGAN flux (kg/m2/sec)
++ MEG_thujene_a        = MEGAN flux (kg/m2/sec)
++ MEG_thujone_a        = MEGAN flux (kg/m2/sec)
++ MEG_thujone_b        = MEGAN flux (kg/m2/sec)
++ MEG_toluene          = MEGAN flux (kg/m2/sec)
++ MEG_tricyclene       = MEGAN flux (kg/m2/sec)
++ MEG_verbenene        = MEGAN flux (kg/m2/sec)
+
+List any changes to the defaults for the boundary datasets:
+   Correct fpftdyn historical f05 dataset, and add rcp datasets
+   Fix irrig map for f19 and f10
+
+Describe any substantial timing or memory changes: None
+   Although bug 1485 is NOT fixed! (4X performance hit due to updated esmf_wrf_timemgr!)
+
+Code reviewed by: self,fvitt
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, Machines,
+     drv, pio, cprnc, and cism
+
+     scripts      to scripts4_120323
+     Machines     to Machines_120323a
+     drv          to drvseq4_1_04
+     pio          to pio_1_4_2
+     cprnc        to cprnc_120322
+     cism         to cism1_120322
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+A       models/lnd/clm/bld/namelist_files/history_fields.xsl - Style sheet to view history_fields XML file
+A  +    models/lnd/clm/src/biogeochem/MEGANFactorsMod.F90 ---- MEGAN factors file
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>> Remove PTS-MODE restart tests
+M       models/lnd/clm/test/system/tests_posttag_lynx_nompi
+M       models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+M       models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+M       models/lnd/clm/test/system/tests_posttag_yong
+MM      models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi
+M       models/lnd/clm/test/system/tests_posttag_nompi_regression
+M       models/lnd/clm/test/system/test_driver.sh ----- Correct machine name for lynx
+M       models/lnd/clm/test/system/nl_files/nl_voc ---- Add megan namelist
+M       models/lnd/clm/test/system/nl_files/clm_drydep  Add -megan option rename drydep
+to drydep
+M       models/lnd/clm/test/system/input_tests_master - Tests with VOC must use 
+               clm_drydep, make CA8 tests use drydep
+
+M       models/lnd/clm/tools/SVN_EXTERNAL_DIRECTORIES - update cprnc
+
+M       models/lnd/clm/bld/configure --------- Change top level model from cesm to driver
+M       models/lnd/clm/bld/build-namelist ---- Add -megan option/namelist, rename
+           -drv_drydep to drydep, add checking for megan namelist items
+M       models/lnd/clm/bld/clm.cpl7.template - Fix multi-instance issues, and
+           don't overwrite user_nl_clm file if it already exists
+
+M       models/lnd/clm/bld/namelist_files/namelist_definition.xml ----- Update driver
+           namelist items, add megan namelist, more fields to drydep_list, list
+           megan compounds
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml --- Add commented
+           out finidat file for f05, update f05 fpftdyn and add fpftdyn for f05 rcp's
+           update irrig 10x15 mapping file
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_drydep.xml - Add defaults
+           for megan namelist
+
+M       models/lnd/clm/src/cpl_share/clm_cpl_indices.F90 - Change VOC fields to megan
+           fields
+M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 ------ Change VOC fields to megan
+           fields
+M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 ---- Change VOC fiels to megan
+M       models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 - Use Megan_factors_mod,
+           add VOCEmission_init, megan namelist determines the fields that will be
+           output rather than the 5 VOC fields
+MM      models/lnd/clm/src/biogeochem/DryDepVelocity.F90 - More fields that can be
+           "mapped": 'SOAM', 'SOAI', 'SOAT', 'SOAB', 'SOAX'
+M       models/lnd/clm/src/main/clm_varpar.F90 ----------- Remove nvoc
+M       models/lnd/clm/src/main/clm_initializeMod.F90 ---- Add call to VOCEmission_init
+M       models/lnd/clm/src/main/clmtypeInitMod.F90 ------- Remove averaged voc fields
+M       models/lnd/clm/src/main/clm_atmlnd.F90 ----------- Remove voc add megan fields
+M       models/lnd/clm/src/main/findHistFields.pl -------- Add ability to handle new
+           megan fields
+M       models/lnd/clm/src/main/clm_driver.F90 ----------- Initialize cisun/cisha
+           to -999. each time-step for VOCEmission
+M       models/lnd/clm/src/main/ncdio_pio.F90 ------------ Changes from John Truesdale
+           so that PTS_MODE will work
+M       models/lnd/clm/src/main/clmtype.F90 -------------- VOC fields have extra
+           dimension remove averaged field
+M       models/lnd/clm/src/main/histFldsMod.F90 ---------- Remove specific VOC fields
+           add MEG_<compound_name> fields
+
+Summary of testing:
+
+  bluefire: All PASS except...
+018 brW51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+023 blHO2 TBL.sh 17p_cnsc_dm clm_drydep 20000704:1800 10x15 USGS@2000 -90 cold ..................FAIL! rc= 7
+027 blHo1 TBL.sh 17p_cnsc_dh clm_drydep 20000101:1800 10x15 USGS@2000 -10 cold ..................FAIL! rc= 7
+036 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 10
+037 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 5
+038 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 5
+039 blU61 TBL.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 48 cold ......FAIL! rc= 4
+044 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 2
+045 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 2
+046 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 2
+047 blU61 TBL.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 48 cold ......FAIL! rc= 2
+  bluefire interactive testing: All PASS except
+028 blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 4
+034 blF93 TBL.sh 17p_sc_do clm_drydep^nl_voc 20021230:1800 4x5 gx3v7 48 cold ....................FAIL! rc= 7
+050 blHQ4 TBL.sh 17p_cnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -150 cold ............FAIL! rc= 7
+061 sm774 TSMtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 5
+062 bl774 TBLtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 4
+073 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......FAIL! rc= 6
+076 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 6
+077 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 4
+078 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+079 bl9T4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 4
+080 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+081 bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 4
+  bluefire/CESM testing: All PASS except..
+BFAIL PST.f45_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_41 
+BFAIL PET_PT.f45_g37.I1850.bluefire_ibm.compare_hist.clm4_0_41 
+BFAIL SMS.1x1_numaIA.ICN.bluefire_ibm.compare_hist.clm4_0_41 
+BFAIL ERP.1x1_mexicocityMEX.I.bluefire_ibm.compare_hist.clm4_0_41 
+BFAIL PST.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_41 
+BFAIL PET_PT.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_41 
+  bluefire/PTCLM testing: All FAIL
+  lynx interactive testing: ALL PASS up to...
+023 sm978 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds .....FAIL! rc= 6
+  lynx/CESM testing: All PASS except..
+FAIL  ERS_D.T31_g37.I1850.lynx_pgi.generate.clm4_0_42 
+CFAIL ERI.f10_f10.IRCP60CN.lynx_pathscale.GC.121827 
+BFAIL PST.f19_g16.I.lynx_pgi.compare_hist.clm4_0_41 
+BFAIL ERS.1x1_vancouverCAN.I.lynx_pgi.compare_hist.clm4_0_41
+  mirage,storm/ifort interactive testing: All PASS!
+  yong/darwin/ifort interactive testing: All PASS up to...
+005 smCL4 TSM.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_41
+
+Changes answers relative to baseline: bit-for-bit (except cases with MEGAN or VOC)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_41
 Originator(s):  erik (Erik Kluzek)
 Date: Tue Mar 13 23:43:45 MDT 2012
@@ -64,6 +437,8 @@ Known bugs (include bugzilla ID):
                                  1474 (Missing eulerian domain files)
                                  1479 (fails on jaguarpf)
                                  1480 (Darwin_intel build)
+                                 1482 (Problems running 1x1 resolutions for CLM)
+                                 1485 (Performance issue with esmf_wrf_timemgr)
     http://bugs.cgd.ucar.edu/
 
 Known Limitations:
@@ -97,6 +472,8 @@ List any changes to the defaults for the boundary datasets: Activate RTM mapping
 Describe any substantial timing or memory changes: Yes!
    Much less global memory needed now! Only one temporary global integer array
    used.
+
+   4X performance hit due to updated esmf_wrf_timemgr! (see bug 1485)
 
 Code reviewed by: self, mvertens
 

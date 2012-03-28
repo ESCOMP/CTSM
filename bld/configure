@@ -1042,11 +1042,11 @@ EOF
 
     # Write the cesm top level Makefile.
     write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/Makefile",
-                        "$clm_bld/$envset", "cesm", "$macro", $cfg_ref );
+                        "$clm_bld/$envset", "driver", "$macro", $cfg_ref );
     if ($print>=2) { print "creating $clm_bld/cesm_lib/Makefile\n"; }
 
     # Write the top level filepath file for cesm build
-    write_filepath_cesmbld("$clm_bld/$fp_filename", "cesm", $cfg_ref);
+    write_filepath_cesmbld("$clm_bld/$fp_filename", "driver", $cfg_ref);
     if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
 
     # Write the cesm_lib level Makefile.
@@ -1196,7 +1196,7 @@ sub write_filepath_cesmbld
     }
 
     # CESM driver
-    if ( $model eq "cesm" ) {
+    if ( $model eq "driver" ) {
        print $fh absolute_path( "$srcdir/../../../drv/driver" ) . "\n";
     }
     
@@ -1311,7 +1311,7 @@ sub write_cesm_makefile
     my $target_name;
     my $target;
     my $lib_name;
-    if ( $model eq "cesm" ) {
+    if ( $model eq "driver" ) {
        $target_name = "EXEC_SE := $clm_exedir/$clm_exe";
        $target      = "exec_se";
     } else {
@@ -1333,7 +1333,7 @@ $target_name
 target: $target
 
 EOF
-    if ( $model eq "cesm" ) {
+    if ( $model eq "driver" ) {
         if ( $macfile !~ /darwin_intel/ ) {
            print $fh_out  <<"EOF";
 ULIBS        := -L\$(LIBROOT) -lcesm_lib
@@ -1376,7 +1376,7 @@ EOF
     # Copy the "template" makefile to the new makefile.
     $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
     while (<$fh_in>) {
-        if ( $model eq "cesm" ) {
+        if ( $model eq "driver" ) {
            # Add ULIBDEP to end of Depends dependency
            if ( /\$\(CURDIR\)\/Depends\:/ ) {
               chomp( $_ );
@@ -1384,7 +1384,7 @@ EOF
            }
         }
         print $fh_out $_;
-        if ( $model eq "cesm" ) {
+        if ( $model eq "driver" ) {
           if ( /(mostly|real||)clean\:\s*$/ ) {
              my $type = $1;
              $_ = <$fh_in>;

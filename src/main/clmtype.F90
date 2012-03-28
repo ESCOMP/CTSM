@@ -936,16 +936,18 @@ type, public :: pft_nflux_type
 end type pft_nflux_type
 
 !----------------------------------------------------
+! pft VOC fluxes structure for history output
+!----------------------------------------------------
+type, public :: megan_out_type
+   real(r8), pointer :: flux_out(:)   !(n_megan_comps) MEGAN flux [ug C m-2 h-1]
+endtype megan_out_type
+
+!----------------------------------------------------
 ! pft VOC flux variables structure
 !----------------------------------------------------
 type, public :: pft_vflux_type
-   real(r8), pointer :: vocflx_tot(:)     !total VOC flux into atmosphere [ug C m-2 h-1]
-   real(r8), pointer :: vocflx(:,:)       !(nvoc) VOC flux [ug C m-2 h-1]
-   real(r8), pointer :: vocflx_1(:)       !vocflx(1) (for history output) [ug C m-2 h-1]
-   real(r8), pointer :: vocflx_2(:)       !vocflx(2) (for history output) [ug C m-2 h-1]
-   real(r8), pointer :: vocflx_3(:)       !vocflx(3) (for history output) [ug C m-2 h-1]
-   real(r8), pointer :: vocflx_4(:)       !vocflx(4) (for history output) [ug C m-2 h-1]
-   real(r8), pointer :: vocflx_5(:)       !vocflx(5) (for history output) [ug C m-2 h-1]
+   real(r8), pointer :: vocflx_tot(:)     !total VOC flux into atmosphere [moles/m2/sec]
+   real(r8), pointer :: vocflx(:,:)       !(num_mech_comps) MEGAN flux [moles/m2/sec]
    real(r8), pointer :: Eopt_out(:)       !Eopt coefficient
    real(r8), pointer :: topt_out(:)       !topt coefficient
    real(r8), pointer :: alpha_out(:)      !alpha coefficient
@@ -962,6 +964,8 @@ type, public :: pft_vflux_type
    real(r8), pointer :: gammaP_out(:)
    real(r8), pointer :: gammaA_out(:)
    real(r8), pointer :: gammaS_out(:)
+   real(r8), pointer :: gammaC_out(:)
+   type(megan_out_type), pointer :: meg(:) ! points to output fluxes
 end type pft_vflux_type
 
 !----------------------------------------------------
@@ -1600,13 +1604,6 @@ type, public :: column_nflux_type
 end type column_nflux_type
 
 !----------------------------------------------------
-! column VOC flux variables structure
-!----------------------------------------------------
-type, public :: column_vflux_type
-   type(pft_vflux_type):: pvf_a         !pft-level VOC flux variables averaged to the column
-end type column_vflux_type
-
-!----------------------------------------------------
 ! column dust flux variables structure
 !----------------------------------------------------
 type, public :: column_dflux_type
@@ -1796,13 +1793,6 @@ type, public :: gridcell_nflux_type
 end type gridcell_nflux_type
 
 !----------------------------------------------------
-! gridcell VOC flux variables structure
-!----------------------------------------------------
-type, public :: gridcell_vflux_type
-   type(pft_vflux_type):: pvf_a                !pft-level VOC flux variables averaged to gridcell
-end type gridcell_vflux_type
-
-!----------------------------------------------------
 ! gridcell dust flux variables structure
 !----------------------------------------------------
 type, public :: gridcell_dflux_type
@@ -1917,7 +1907,6 @@ type, public :: column_type
    type(column_wflux_type) :: cwf       !column water flux
    type(column_cflux_type) :: ccf       !column carbon flux
    type(column_nflux_type) :: cnf       !column nitrogen flux
-   type(column_vflux_type) :: cvf       !column VOC flux
    type(column_dflux_type) :: cdf       !column dust flux
 
 #if (defined CNDV)

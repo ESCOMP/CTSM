@@ -67,82 +67,82 @@ smD95 TSMpergro.sh _persc_dh clm_per0^nl_per clm_per^nl_per 20021231:1200  4x5 g
 smD96 TSMpergro.sh _persc_dm clm_per0^nl_per clm_per^nl_per 20021231:1200  4x5 gx3v7 144    cold
 smD97 TSMpergro.sh _persc_do clm_per0^nl_per clm_per^nl_per 20021231:1200  4x5 gx3v7 144    cold
 
-smF11 TSM.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    startup
-erF11 TER.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
-brF11 TBR.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
-blF11 TBL.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    startup
+smF11 TSM.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    startup
+erF11 TER.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
+brF11 TBR.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
+blF11 TBL.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    startup
 
-smF12 TSM.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    startup
-erF12 TER.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
-brF12 TBR.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
-blF12 TBL.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    startup
+smF12 TSM.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    startup
+erF12 TER.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
+brF12 TBR.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
+blF12 TBL.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    startup
 
-smF13 TSM.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    startup
-erF13 TER.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
-brF13 TBR.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
-blF13 TBL.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    startup
+smF13 TSM.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    startup
+erF13 TER.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
+brF13 TBR.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
+blF13 TBL.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    startup
 
-smF14 TSM.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    startup
-erF14 TER.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
-brF14 TBR.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
-blF14 TBL.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    startup
+smF14 TSM.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    startup
+erF14 TER.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 startup
+brF14 TBR.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 startup
+blF14 TBL.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    startup
 
-smF15 TSM.sh 17p_sc_h clm_std^nl_voc 20021231:1800  48x96 gx3v7 48 startup
-smF16 TSM.sh 17p_sc_m clm_std^nl_voc 20021231:1800  48x96 gx3v7 48 startup
-smF17 TSM.sh 17p_sc_o clm_std^nl_voc 20021231:1800  48x96 gx3v7 48 startup
+smF15 TSM.sh 17p_sc_h clm_drydep^nl_voc 20021231:1800  48x96 gx3v7 48 startup
+smF16 TSM.sh 17p_sc_m clm_drydep^nl_voc 20021231:1800  48x96 gx3v7 48 startup
+smF17 TSM.sh 17p_sc_o clm_drydep^nl_voc 20021231:1800  48x96 gx3v7 48 startup
 
-smF21 TSM.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    cold
-erF21 TER.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 cold
-brF21 TBR.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 cold
-blF21 TBL.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    cold
+smF21 TSM.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    cold
+erF21 TER.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 cold
+brF21 TBR.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 cold
+blF21 TBL.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    cold
 
-smF22 TSM.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    cold
-erF22 TER.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 cold
-brF22 TBR.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 cold
-blF22 TBL.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    cold
+smF22 TSM.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    cold
+erF22 TER.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 cold
+brF22 TBR.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 cold
+blF22 TBL.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    cold
 
-smF23 TSM.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 96    cold
-erF23 TER.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 10+38 cold
-brF23 TBR.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 72+72 cold
-blF23 TBL.sh 17p_sc_do clm_std^nl_voc    20021230:1800  48x96 gx3v7 48    cold
+smF23 TSM.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 96    cold
+erF23 TER.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 10+38 cold
+brF23 TBR.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 72+72 cold
+blF23 TBL.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  48x96 gx3v7 48    cold
 
-smF25 TSM.sh 17p_sc_h clm_std^nl_voc    20021231:1800  48x96 gx3v7 48 arb_ic
-smF26 TSM.sh 17p_sc_m clm_std^nl_voc    20021231:1800  48x96 gx3v7 48 arb_ic
-smF27 TSM.sh 17p_sc_o clm_std^nl_voc    20021231:1800  48x96 gx3v7 48 arb_ic
+smF25 TSM.sh 17p_sc_h clm_drydep^nl_voc    20021231:1800  48x96 gx3v7 48 arb_ic
+smF26 TSM.sh 17p_sc_m clm_drydep^nl_voc    20021231:1800  48x96 gx3v7 48 arb_ic
+smF27 TSM.sh 17p_sc_o clm_drydep^nl_voc    20021231:1800  48x96 gx3v7 48 arb_ic
 
-smF91 TSM.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  4x5   gx3v7 96    cold
-erF91 TER.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
-brF91 TBR.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
-blF91 TBL.sh 17p_sc_dh clm_std^nl_voc    20021230:1800  4x5   gx3v7 48    cold
+smF91 TSM.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 96    cold
+erF91 TER.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
+brF91 TBR.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
+blF91 TBL.sh 17p_sc_dh clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 48    cold
 
-smF92 TSM.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  4x5   gx3v7 96    cold
-erF92 TER.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
-brF92 TBR.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
-blF92 TBL.sh 17p_sc_dm clm_std^nl_voc    20021230:1800  4x5   gx3v7 48    cold
+smF92 TSM.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 96    cold
+erF92 TER.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
+brF92 TBR.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
+blF92 TBL.sh 17p_sc_dm clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 48    cold
 
-smF93 TSM.sh 17p_sc_do clm_std^nl_voc    20021230:1800  4x5   gx3v7 96    cold
-erF93 TER.sh 17p_sc_do clm_std^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
-brF93 TBR.sh 17p_sc_do clm_std^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
-blF93 TBL.sh 17p_sc_do clm_std^nl_voc    20021230:1800  4x5   gx3v7 48    cold
+smF93 TSM.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 96    cold
+erF93 TER.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
+brF93 TBR.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
+blF93 TBL.sh 17p_sc_do clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 48    cold
 
-smF94 TSM.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  4x5   gx3v7 96    cold
-erF94 TER.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
-brF94 TBR.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
-blF94 TBL.sh 17p_sc_ds clm_std^nl_voc    20021230:1800  4x5   gx3v7 48    cold
+smF94 TSM.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 96    cold
+erF94 TER.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 10+38 cold
+brF94 TBR.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 72+72 cold
+blF94 TBL.sh 17p_sc_ds clm_drydep^nl_voc    20021230:1800  4x5   gx3v7 48    cold
 
-smF95 TSM.sh 17p_sc_h clm_std^nl_voc    20021231:1800  4x5   gx3v7 48 arb_ic
-smF96 TSM.sh 17p_sc_m clm_std^nl_voc    20021231:1800  4x5   gx3v7 48 arb_ic
-smF97 TSM.sh 17p_sc_o clm_std^nl_voc    20021231:1800  4x5   gx3v7 48 arb_ic
+smF95 TSM.sh 17p_sc_h clm_drydep^nl_voc    20021231:1800  4x5   gx3v7 48 arb_ic
+smF96 TSM.sh 17p_sc_m clm_drydep^nl_voc    20021231:1800  4x5   gx3v7 48 arb_ic
+smF97 TSM.sh 17p_sc_o clm_drydep^nl_voc    20021231:1800  4x5   gx3v7 48 arb_ic
 
-smCA4 TSM.sh _sc_ds clm_std^nl_urb    20021001:3600 1x1_camdenNJ navy -90     arb_ic
-erCA4 TER.sh _sc_ds clm_std^nl_urb    20021001:3600 1x1_camdenNJ navy -45+-45 arb_ic
-brCA4 TBR.sh _sc_ds clm_std^nl_urb_br 20021001:3600 1x1_camdenNJ navy -10+-10 arb_ic
-blCA4 TBL.sh _sc_ds clm_std^nl_urb    20021001:3600 1x1_camdenNJ navy -90     arb_ic
+smCA4 TSM.sh _sc_ds clm_drydep^nl_urb    20021001:3600 1x1_camdenNJ navy -90     arb_ic
+erCA4 TER.sh _sc_ds clm_drydep^nl_urb    20021001:3600 1x1_camdenNJ navy -45+-45 arb_ic
+brCA4 TBR.sh _sc_ds clm_drydep^nl_urb_br 20021001:3600 1x1_camdenNJ navy -10+-10 arb_ic
+blCA4 TBL.sh _sc_ds clm_drydep^nl_urb    20021001:3600 1x1_camdenNJ navy -90     arb_ic
 
-smCA8 TSM.sh _sc_ds clm_std^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -90     arb_ic
-erCA8 TER.sh _sc_ds clm_std^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -45+-45 arb_ic
-brCA8 TBR.sh _sc_ds clm_std^nl_urb_br 20021230:3600 1x1_asphaltjungleNJ navy -10+-10 arb_ic
-blCA8 TBL.sh _sc_ds clm_std^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -90     arb_ic
+smCA8 TSM.sh _sc_ds clm_drydep^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -90     arb_ic
+erCA8 TER.sh _sc_ds clm_drydep^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -45+-45 arb_ic
+brCA8 TBR.sh _sc_ds clm_drydep^nl_urb_br 20021230:3600 1x1_asphaltjungleNJ navy -10+-10 arb_ic
+blCA8 TBL.sh _sc_ds clm_drydep^nl_urb    20021230:3600 1x1_asphaltjungleNJ navy -90     arb_ic
 
 smCE4 TSM.sh _sc_ds clm_urb1pt^nl_urb    10812:1800 1x1_urbanc_alpha test -475      arb_ic
 erCE4 TER.sh _sc_ds clm_urb1pt^nl_urb    10812:1800 1x1_urbanc_alpha test -183+-183 arb_ic

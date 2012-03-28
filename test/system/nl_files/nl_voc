@@ -1,6 +1,13 @@
 &drv_in
  brnch_retain_casename=.true.
- flds_voc=.true.
+ megan_specifier = 'ISOP = isoprene',
+                   'C10H16 = pinene_a + carene_3 + thujene_a',
+                   'CH3OH = methanol',
+                   'C2H5OH = ethanol',
+                   'CH2O = formaldehyde',
+                   'CH3CHO = acetaldehyde',
+                   'CH3COOH = acetic_acid',
+                   'CH3COCH3 = acetone'
 /
 &clm_inparm
  hist_ndens=1,1

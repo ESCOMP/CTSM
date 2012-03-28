@@ -370,7 +370,7 @@ module rm netcdf
 module load subversion
 
 
-export CESM_MACH="lynx_linux"
+export CESM_MACH="lynx"
 if [ "\$CLM_FC" = "PATH" ]; then
    module load PrgEnv-pathscale
    module load netcdf

@@ -18,7 +18,7 @@ module clm_atmlnd
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
-  use clm_varpar  , only : nvoc
+  use shr_megan_mod,  only : shr_megan_mechcomps_n
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -236,7 +236,9 @@ end subroutine init_atm2lnd_type
   allocate(l2a%ram1(beg:end))
   allocate(l2a%fv(beg:end))
   allocate(l2a%flxdst(beg:end,1:ndst))
-  allocate(l2a%flxvoc(beg:end,1:nvoc))
+  if (shr_megan_mechcomps_n>0) then
+     allocate(l2a%flxvoc(beg:end,1:shr_megan_mechcomps_n))
+  endif
   if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
      allocate(l2a%ddvel(beg:end,1:n_drydep))
   end if
@@ -262,7 +264,9 @@ end subroutine init_atm2lnd_type
   l2a%ram1(beg:end) = ival
   l2a%fv(beg:end) = ival
   l2a%flxdst(beg:end,1:ndst) = ival
-  l2a%flxvoc(beg:end,1:nvoc) = ival
+  if (shr_megan_mechcomps_n>0) then
+     l2a%flxvoc(beg:end,1:shr_megan_mechcomps_n) = ival
+  endif
   if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
      l2a%ddvel(beg:end, : ) = ival
   end if
@@ -437,26 +441,29 @@ subroutine clm_map2gcell(init)
      end do
 #endif
 
-      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-           pptr%pps%fv, clm_l2a%fv, &
-           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+          pptr%pps%fv, clm_l2a%fv, &
+          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-           pptr%pps%ram1, clm_l2a%ram1, &
-           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+          pptr%pps%ram1, clm_l2a%ram1, &
+          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
-           pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
-           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
+          pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
+          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
-      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, nvoc, &
-           pptr%pvf%vocflx, clm_l2a%flxvoc, &
-           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     if (shr_megan_mechcomps_n>0) then
+        call p2g(begp, endp, begc, endc, begl, endl, begg, endg, shr_megan_mechcomps_n, &
+             pptr%pvf%vocflx, clm_l2a%flxvoc, &
+             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     endif
 
-      if ( n_drydep > 0 .and. drydep_method == DD_XLND ) &
-      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
-           pptr%pdd%drydepvel, clm_l2a%ddvel, &
-           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+        call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
+             pptr%pdd%drydepvel, clm_l2a%ddvel, &
+             p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+     endif
 
      ! Convert from gC/m2/s to kgCO2/m2/s
      do g = begg,endg

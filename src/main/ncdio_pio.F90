@@ -1955,9 +1955,15 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == grlnd) then
-                if (present(nt)) start(3) = nt
+                if (present(nt)) then
+                   start(3) = nt
+                   count(3) = 1
+                end if
              else
-                if (present(nt)) start(2) = nt
+                if (present(nt)) then
+                   start(2) = nt
+                   count(2) = 1
+                end if
              end if
              status = pio_get_var(ncid, varid, start, count, data)
           else
@@ -2083,9 +2089,15 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == grlnd) then
-                if (present(nt)) start(3) = nt
+                if (present(nt)) then
+                   start(3) = nt
+                   count(3) = 1
+                end if
              else
-                if (present(nt)) start(2) = nt
+                if (present(nt)) then
+                   start(2) = nt
+                   count(2) = 1
+                end if
              end if
              status = pio_get_var(ncid, varid, start, count, idata)
           else
@@ -2231,9 +2243,15 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
              if (trim(clmlevel) == grlnd) then
-                if (present(nt)) start(3) = nt
+                if (present(nt)) then
+                   start(3) = nt
+                   count(3) = 1
+                end if
              else
-                if (present(nt)) start(2) = nt
+                if (present(nt)) then
+                   start(2) = nt
+                   count(2) = 1
+                end if
              end if
              status = pio_get_var(ncid, varid, start, count, data)
           else
@@ -2376,11 +2394,17 @@ contains
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              status = pio_get_var(ncid, vardesc, start, count, data)
              if (trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)    ! Correct ????
-                if (present(nt)) start(4) = nt
+                count(3) = size(data,dim=2)
+                if (present(nt)) then
+                   start(4) = nt
+                   count(4) = 1
+                end if
              else
-                count(2) = size(data,dim=2)    ! Correct ????
-                if (present(nt)) start(3) = nt
+                count(2) = size(data,dim=2)
+                if (present(nt)) then
+                   start(3) = nt
+                   count(3) = 1
+                end if
              end if
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
@@ -2537,7 +2561,7 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)    ! Correct ????
+                count(3) = size(data,dim=2)
                 if (present(switchdim)) then
                    itemp    = count(1)
                    count(1) = count(3)
@@ -2546,9 +2570,12 @@ contains
                    start(1) = start(3)
                    start(3) = itemp
                 end if
-                if (present(nt)) start(4) = nt
+                if (present(nt)) then 
+                   start(4) = nt
+                   count(4) = 1
+                end if
              else
-                count(2) = size(data,dim=2)    ! Correct ????
+                count(2) = size(data,dim=2)
                 if (present(switchdim)) then
                    itemp    = count(1)
                    count(1) = count(2)
@@ -2557,7 +2584,10 @@ contains
                    start(1) = start(2)
                    start(2) = itemp
                 end if
-                if (present(nt)) start(3) = nt
+                if (present(nt)) then 
+                   start(3) = nt
+                   count(3) = 1
+                end if
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
           else
@@ -2740,13 +2770,19 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)    ! Correct ????
-                count(4) = size(data,dim=3)    ! Correct ????
-                if (present(nt)) start(5) = nt
+                count(3) = size(data,dim=2)
+                count(4) = size(data,dim=3)
+                if (present(nt)) then
+                   start(5) = nt
+                   count(5) = 1
+                end if
              else
-                count(2) = size(data,dim=2)    ! Correct ????
-                count(3) = size(data,dim=3)    ! Correct ????
-                if (present(nt)) start(4) = nt
+                count(2) = size(data,dim=2)
+                count(3) = size(data,dim=3)
+                if (present(nt)) then
+                   start(4) = nt
+                   count(4) = 1
+                end if
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
           else
@@ -2880,13 +2916,19 @@ contains
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
              if (trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)    ! Correct ????
-                count(4) = size(data,dim=3)    ! Correct ????
-                if (present(nt)) start(5) = nt
+                count(3) = size(data,dim=2)
+                count(4) = size(data,dim=3)
+                if (present(nt)) then 
+                   start(5) = nt
+                   count(5) = 1
+                end if
              else
-                count(2) = size(data,dim=2)    ! Correct ????
-                count(3) = size(data,dim=3)    ! Correct ????
-                if (present(nt)) start(4) = nt
+                count(2) = size(data,dim=2)
+                count(3) = size(data,dim=3)
+                if (present(nt)) then
+                   start(4) = nt
+                   count(4) = 1
+                end if
              end if
              status = pio_get_var(ncid, vardesc, start, count, data)
           else
@@ -3051,6 +3093,7 @@ contains
     use clm_varctl  , only : scmlon,scmlat,single_column
     use nanMod      , only : nan, bigint
     use shr_scam_mod, only : shr_scam_getCloseLatLon
+    use shr_string_mod, only: shr_string_toLower
 !
 ! !ARGUMENTS:
     implicit none
@@ -3087,12 +3130,14 @@ contains
     integer :: totpfts                       ! total number of pfts
     integer :: totcols                       ! total number of columns
     integer :: totlandunits                  ! total number of landunits
+    integer, allocatable :: dids(:)                       ! dim ids
     integer :: dimid                         ! netCDF dimension id
     integer :: varid                         ! netCDF variable id
     integer :: status                        ! return code
     integer :: latidx,lonidx                 ! latitude/longitude indices
     real(r8):: closelat,closelon             ! closest latitude and longitude indices
-    integer :: ndims                         ! number of dimensions in desired variable
+    integer :: ndims,dimlen                  ! number of dimensions in desired variable
+    character(len=32) :: dimname             ! dimension name
     character(len=32) :: subname = 'scam_field_offsets'
 !------------------------------------------------------------------------
 
@@ -3231,13 +3276,25 @@ contains
        count(ndims) = ndata
        
     else
-       
-       start(1) = lonidx
-       count(1) = 1
-       start(2) = latidx
-       count(2) = 1
-       write(iulog,*) trim(subname),' scam_setlatlonidx ',lonidx,latidx
-       
+       status = pio_inq_varndims(ncid, vardesc, ndims)
+       allocate(dids(ndims))
+       status = pio_inq_vardimid(ncid, vardesc, dids)
+       do i = 1,ndims
+          status = pio_inq_dimname(ncid,dids(i),dimname)
+	  dimname=shr_string_toLower(dimname)
+          status = pio_inq_dimlen(ncid,dids(i),dimlen)
+          if ( trim(dimname)=='nj'.or. trim(dimname)=='lat'.or. trim(dimname)=='lsmlat') then
+	     start(i)=latidx
+             count(i)=1
+          else if ( trim(dimname)=='ni'.or. trim(dimname)=='lon'.or. trim(dimname)=='lsmlon') then
+             start(i)=lonidx
+             count(i)=1
+          else
+             start(i)=1
+             count(i)=dimlen
+          end if
+       enddo
+       deallocate(dids)
     endif
 
   end subroutine scam_field_offsets

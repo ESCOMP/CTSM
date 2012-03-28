@@ -1084,6 +1084,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd      , only : lnd2atm_type
     use seq_drydep_mod  , only : n_drydep
+    use shr_megan_mod,    only : shr_megan_mechcomps_n
     use clm_cpl_indices
     implicit none
 ! !ARGUMENTS:
@@ -1134,13 +1135,12 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        if (index_l2x_Fall_flxdst2 /= 0 )  fptr(index_l2x_Fall_flxdst2,i)= -l2a%flxdst(g,2)
        if (index_l2x_Fall_flxdst3 /= 0 )  fptr(index_l2x_Fall_flxdst3,i)= -l2a%flxdst(g,3)
        if (index_l2x_Fall_flxdst4 /= 0 )  fptr(index_l2x_Fall_flxdst4,i)= -l2a%flxdst(g,4)
-       if (index_l2x_Sl_ddvel     /= 0 )  fptr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) &
-                                                                        = l2a%ddvel(g,:n_drydep)
-       if (index_l2x_Fall_flxvoc1 /= 0 )  fptr(index_l2x_Fall_flxvoc1,i)= -l2a%flxvoc(g,1)
-       if (index_l2x_Fall_flxvoc2 /= 0 )  fptr(index_l2x_Fall_flxvoc2,i)= -l2a%flxvoc(g,2)
-       if (index_l2x_Fall_flxvoc3 /= 0 )  fptr(index_l2x_Fall_flxvoc3,i)= -l2a%flxvoc(g,3)
-       if (index_l2x_Fall_flxvoc4 /= 0 )  fptr(index_l2x_Fall_flxvoc4,i)= -l2a%flxvoc(g,4)
-       if (index_l2x_Fall_flxvoc5 /= 0 )  fptr(index_l2x_Fall_flxvoc5,i)= -l2a%flxvoc(g,5)
+       
+       if (index_l2x_Sl_ddvel     /= 0 ) &
+            fptr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = l2a%ddvel(g,:n_drydep)
+       if (index_l2x_Fall_flxvoc  /= 0 ) &
+            fptr(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = &
+                        -l2a%flxvoc(g,:shr_megan_mechcomps_n)
     end do
 
   end subroutine lnd_export_esmf

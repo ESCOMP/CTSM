@@ -292,6 +292,8 @@ contains
     use shr_orb_mod        , only : shr_orb_decl
     use initSurfAlbMod     , only : initSurfAlb, do_initsurfalb 
     use clm_varorb         , only : eccen, mvelpp, lambm0, obliqr
+    use VOCEmissionMod  , only : VOCEmission_init
+
 
 ! !Arguments    
     implicit none
@@ -361,6 +363,10 @@ contains
     call t_startf('init_dust')
     call Dustini()
     call t_stopf('init_dust')
+    
+    ! Initialize MEGAN emissions model 
+
+    call VOCEmission_init( )
 
     ! ------------------------------------------------------------------------
     ! Initialize time constant urban variables

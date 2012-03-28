@@ -47,11 +47,9 @@ Summary of testing:
   bluefire interactive testing:
   bluefire/CESM testing:
   bluefire/PTCLM testing:
-  jaguarpf interactive testing:
-  jaguarpf/CESM testing:
-  edinburgh/lf95 interactive testing:
-  edinburgh/lf95 testing:
-  edinburgh/PTCLM testing:
+  lynx/pgi testing:
+  lynx/pgi interactive testing:
+  lynx/CESM testing:
   mirage,storm/ifort interactive testing:
 
 CLM tag used for the baseline comparison tests if applicable:

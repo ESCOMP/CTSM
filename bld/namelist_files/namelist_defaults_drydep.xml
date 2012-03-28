@@ -19,4 +19,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </drydep_list>
 <drydep_method>xactive_lnd</drydep_method>
 
+<!-- Defaults for megan_emis_nl -->
+
+<megan_specifier>'ISOP = isoprene', 'C10H16 = pinene_a + carene_3 + thujene_a', 'CH3OH = methanol', 'C2H5OH = ethanol', 'CH2O = formaldehyde', 'CH3CHO = acetaldehyde', 'CH3COOH = acetic_acid', 'CH3COCH3 = acetone'</megan_specifier>
+
+<megan_factors_file>atm/cam/chem/trop_mozart/emis/megan21_emis_factors_c20120313.nc</megan_factors_file>
+
 </namelist_defaults>

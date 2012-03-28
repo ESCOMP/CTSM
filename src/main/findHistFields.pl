@@ -33,6 +33,34 @@ if ($ProgDir) {
 } else {
     $cfgdir = $cwd;
 }
+# The namelist definition file contains entries for all namelist variables that
+# can be output by build-namelist.
+my $nl_definition_file = "$cfgdir/../../bld/namelist_files/namelist_definition.xml";
+(-f "$nl_definition_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
+EOF
+print "Using namelist definition file $nl_definition_file\n";
+
+# The Build::NamelistDefinition module provides utilities to get the list of
+# megan compounds
+
+#The root directory to cesm utils Tools
+my $cesm_tools = "$cfgdir/../../../../../scripts/ccsm_utils/Tools";
+
+(-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
+    \"$cesm_tools/perl5lib\" **
+EOF
+# Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
+my @dirs = ( $cfgdir, "$cesm_tools/perl5lib");
+unshift @INC, @dirs;
+require Build::NamelistDefinition;
+# Create a namelist definition object.  This object provides a method for verifying that
+# the
+# output namelist variables are in the definition file, and are output in the correct
+# namelist groups.
+my $definition = Build::NamelistDefinition->new($nl_definition_file);
+
 
 my $mxname  = 0;
 my $mxlongn = 0;
@@ -99,6 +127,13 @@ sub getFieldInfo {
           die "ERROR: Still have rtm_tracers in a line\n";
        }
     }
+    if ( $line =~ /MEG_/ ) {
+       $line =~ s|'//'_'|_'|g;
+       $line =~ s|'//trim\(meg_cmp\%name\)|megancmpd'|gi;
+       if ( $line =~ /meg_cmp\%name/ ) {
+          die "ERROR: Still have meg_cmp in a line\n";
+       }
+    }
     if ( ! defined($fname) ) {
        $fname = &matchKeyword( "fname",     $line, $fh );
     }
@@ -115,6 +150,9 @@ sub getFieldInfo {
 
   } until( (defined($fname) && defined($units) && defined($longn)) ||
            ! defined($line) || defined($endin) );
+  if ( ! defined($fname) ) {
+     die "ERROR: name undefined for field ending with: $line\n";
+  }
   return( $fname, $longn, $units );
 }
 
@@ -184,7 +222,7 @@ chomp( $pwd );
 my $filename = "$pwd/histFldsMod.F90";
 
 my $fh = IO::File->new($filename, '<') or die "** $ProgName - can't open history Fields file: $filename\n";
-
+my @megcmpds =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
 #
 # Read in the list of fields from the source file
 # And output to an XML file
@@ -199,10 +237,19 @@ while (my $line = <$fh>) {
    if ($line =~ /(.*)\!/) {
      $line = $1;
    }
+   my $format = "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n";
    if ($line =~ /call\s*hist_addfld/i ) {
       (my $name, my $longn, my $units) = &getFieldInfo( $fh, $line );
-      &setField( $name, $longn, $units );
-      printf( $outfh "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n", $name, $units, $longn );
+      if ( $name ne "MEG_megancmpd" ) {
+         &setField( $name, $longn, $units );
+         printf( $outfh $format, $name, $units, $longn );
+      } else {
+         foreach my $megcmpd ( @megcmpds ) {
+            my $name = "MEG_${megcmpd}";
+            &setField( $name, $longn, $units );
+            printf( $outfh $format, $name, $units, $longn );
+         }
+      }
    }
 }
 close( $fh );

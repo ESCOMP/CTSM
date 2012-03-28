@@ -19,6 +19,7 @@
 # 2009-01-20  Vertenstein      Original version
 # 2010-04-27  Kluzek           Add ndep streams capability
 # 2011-07-25  Kluzek           Add multiple ensemble's of namelists
+# 2012-03-23  Kluzek           Add megan namelist and do checking on it
 #--------------------------------------------------------------------------------------------
 
 use strict;
@@ -60,6 +61,10 @@ OPTIONS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
+     -drydep                  Also produce a drydep_inparm namelist that will go into the
+                              "drv_flds_in" file for the driver to pass dry-deposition
+                              to the atm.
+                              (Note: buildnml.csh copies the file for use by the driver)
      -glc_grid "grid"         Glacier model grid and resolution when glacier model, 
                               Only used if glc_nec > 0 for determining fglcmask 
                               Default:  gland20
@@ -92,6 +97,10 @@ OPTIONS
      -irrig                   Seek surface datasets with irrigation turned on.
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
+     -megan                   Also produce a megan_emis_nl namelist that will go into the
+                              "drv_flds_in" file for the driver to pass VOC's to atm.
+                              MEGAN (Model of Emissions of Gases and Aerosols from Nature)
+                              (Note: buildnml.csh copies the file for use by the driver)
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
@@ -120,7 +129,6 @@ OPTIONS
 OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stndln)
 
      -drv_case "name"         Case identifier up to 32 characters
-     -drv_drydep              Also produce a drydep namelist
      -drv_final_spinup "mode" If you want to turn on the final_spinup mode to set run length.
                               Mode is "on" or "off"
                               Default: off 
@@ -203,7 +211,8 @@ my %opts = ( config                => $cfg_cache,
 	     drv_final_spinup      => undef,
              rtm                   => "default",
              sim_year              => "default",
-	     drv_drydep            => 0,
+	     drydep                => 0,
+	     megan                 => 0,
              irrig                 => undef,
 	     res                   => "default",
 	     rtm_res               => "default",
@@ -230,7 +239,8 @@ GetOptions(
     "datm_domain=s"             => \$opts{'datm_domain'},
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "datm_presaero=s"           => \$opts{'datm_presaero'},
-    "drv_drydep"                => \$opts{'drv_drydep'},
+    "drydep"                    => \$opts{'drydep'},
+    "megan"                     => \$opts{'megan'},
     "glc_nec=i"                 => \$opts{'glc_nec'},
     "glc_grid=s"                => \$opts{'glc_grid'},
     "glc_smb=s"                 => \$opts{'glc_smb'},	   
@@ -1457,9 +1467,28 @@ if ($mode eq "clm_stndln") {
 #################################
 # namelist group: drydep_inparm #
 #################################
-if ($opts{'drv_drydep'} ) {
+if ($opts{'drydep'} ) {
     add_default($nl[0], 'drydep_list');
     add_default($nl[0], 'drydep_method');
+} else {
+    if ( defined($nl[0]->get_value('drydep_list')) ||
+         defined($nl[0]->get_value('drydep_method')) ) {
+       die "$ProgName - ERROR: drydep_list or drydep_method defined, but drydep option NOT set\n"
+    }
+}
+
+#################################
+# namelist group: megan_emis_nl #
+#################################
+if ($opts{'megan'} ) {
+    add_default($nl[0], 'megan_specifier');
+    check_megan_spec( $nl[0], $definition );
+    add_default($nl[0], 'megan_factors_file');
+} else {
+    if ( defined($nl[0]->get_value('megan_specifier')) ||
+         defined($nl[0]->get_value('megan_factors_file')) ) {
+       die "$ProgName - ERROR: megan_specifier or megan_factors_file defined, but megan option NOT set\n"
+    }
 }
 
 ##############################
@@ -1592,7 +1621,7 @@ if ( $nensemble == 1 ) {
 
 if ($mode eq "clm_stndln") {
     # Driver
-    @groups = qw(seq_cplflds_inparm seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
+    @groups = qw(seq_cplflds_inparm seq_cplflds_userspec seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
     $outfile = "$opts{'dir'}/drv_in";
     $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
@@ -1616,12 +1645,12 @@ if ($mode eq "clm_stndln") {
     }
 }
 
-# Drydep namelist
-if ($opts{'drv_drydep'} ) {
-    @groups = qw(drydep_inparm);
+# Drydep or MEGAN namelist
+if ($opts{'drydep'} || $opts{'megan'} ) {
+    @groups = qw(drydep_inparm megan_emis_nl);
     $outfile = "$opts{'dir'}/drv_flds_in";
     $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing drydep_inparm namelist to $outfile $eol"; }
+    if ($print>=2) { print "Writing @groups namelists to $outfile $eol"; }
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -2155,6 +2184,42 @@ $ProgName - valid values for $opt ($doc):
             will vary depending on what you set for resolution and landmask.
 EOF
         }
+    }
+}
+
+#-------------------------------------------------------------------------------
+
+sub check_megan_spec {
+#
+# Check the megan specifier setting
+#
+    my $nl = shift;
+    my $definition = shift;
+
+    my $megan_spec      = $nl->get_value('megan_specifier');
+    my @megan_spec_list = split( /\s*,\s*/, $megan_spec );
+    foreach $megan_spec ( @megan_spec_list ) {
+       if ( $megan_spec =~ /^['"]+[A-Za-z0-9]+\s*\=\s*([\sA-Za-z0-9+_-]+)["']+$/ ) {
+          my $megan_list = $1;
+          my @megan_cmpds = split( /\s*\+\s*/, $megan_list );
+          my $var = "megan_cmpds";
+          my $warn = 0;
+          foreach my $megan_cmpd ( @megan_cmpds ) {
+             if (  ! $definition->is_valid_value( $var, $megan_cmpd, 'noquotes'=>1 ) ) {
+                print "$ProgName - WARNING: megan_compound $megan_cmpd NOT found in list\n";
+                $warn++;
+             }
+          }
+          if ( $warn > 0 ) {
+             my @valid_values   = $definition->get_valid_values( $var, 'noquotes'=>1 );
+             print "$ProgName - list of megan compounds includes:\n";
+             print "@valid_values\n";
+             print "Does your megan_factors_file include more coumpounds?\n";
+             print "If NOT your simulation will fail.\n";
+          }
+       } else {
+          die "$ProgName - ERROR: Bad format for megan_specifier = $megan_spec\n"
+       }
     }
 }
 
