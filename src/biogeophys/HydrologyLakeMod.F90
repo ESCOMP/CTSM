@@ -83,6 +83,10 @@ contains
     real(r8), pointer :: snowdp(:)        !snow height (m)
     real(r8), pointer :: snowice(:)       !average snow ice lens
     real(r8), pointer :: snowliq(:)       !average snow liquid water
+    real(r8), pointer :: qflx_rain_grnd(:)!rain on ground after interception (mm H2O/s) [+]
+    real(r8), pointer :: qflx_rain_grnd_col(:)!rain on ground after interception (mm H2O/s) [+]
+    real(r8), pointer :: qflx_snow_grnd(:)!snow on ground after interception (mm H2O/s) [+]
+    real(r8), pointer :: qflx_snow_grnd_col(:)!snow on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: eflx_snomelt(:)  !snow melt heat flux (W/m**2)
     real(r8), pointer :: qflx_infl(:)     !infiltration (mm H2O /s)
     real(r8), pointer :: qflx_snomelt(:)  !snow melt (mm H2O /s)
@@ -92,12 +96,24 @@ contains
     real(r8), pointer :: qflx_qrgwl(:)    !qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_runoff(:)   !total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_ice(:)!excess snowfall due to snow capping (mm H2O /s) [+]`
+    real(r8), pointer :: qflx_snwcp_ice_col(:)!excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: qflx_evap_tot_col(:) !pft quantity averaged to the column (assuming one pft)
+    real(r8), pointer :: qflx_evap_grnd(:)! ground surface evaporation rate (mm H2O/s) [+]
+    real(r8), pointer :: qflx_evap_grnd_col(:)! ground surface evaporation rate (mm H2O/s) [+]
+    real(r8), pointer :: qflx_sub_snow(:) ! sublimation rate from snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_sub_snow_col(:) ! sublimation rate from snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_dew_snow(:) ! surface dew added to snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_dew_snow_col(:) ! surface dew added to snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_dew_grnd(:) ! ground surface dew formation (mm H2O /s) [+]
+    real(r8), pointer :: qflx_dew_grnd_col(:) ! ground surface dew formation (mm H2O /s) [+]
     real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
     real(r8), pointer :: zwt(:)           !water table depth
     real(r8), pointer :: fcov(:)          !fractional impermeable area
     real(r8), pointer :: fsat(:)          !fractional area with water table at surface
     real(r8), pointer :: qcharge(:)       !aquifer recharge rate (mm/s)
+    real(r8), pointer :: qflx_top_soil(:)      ! net water input into soil from top (mm/s)
+    real(r8), pointer :: qflx_prec_grnd(:)     ! water onto ground including canopy runoff [kg/(m2 s)]
+    real(r8), pointer :: qflx_prec_grnd_col(:) ! water onto ground including canopy runoff [kg/(m2 s)]
 !
 ! local pointers to implicit out multi-level arrays
 !
@@ -105,6 +121,7 @@ contains
     real(r8), pointer :: h2osoi_vol(:,:)   !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
     real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
+    real(r8), pointer :: qflx_snofrz_col(:)!column-integrated snow freezing rate (kg m-2 s-1) [+]
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -112,10 +129,6 @@ contains
     real(r8), parameter :: snow_bd = 250._r8  !constant snow bulk density
     integer  :: fp, p, c, g    ! indices
     real(r8) :: dtime          ! land model time step (sec)
-    real(r8) :: qflx_evap_grnd ! ground surface evaporation rate (mm h2o/s)
-    real(r8) :: qflx_dew_grnd  ! ground surface dew formation (mm h2o /s) [+]
-    real(r8) :: qflx_sub_snow  ! sublimation rate from snow pack (mm h2o /s) [+]
-    real(r8) :: qflx_dew_snow  ! surface dew added to snow pack (mm h2o /s) [+]
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived type gridcell members
@@ -139,7 +152,7 @@ contains
     qflx_surf      => clm3%g%l%c%cwf%qflx_surf
     qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
     qflx_runoff    => clm3%g%l%c%cwf%qflx_runoff
-    qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    qflx_snwcp_ice_col => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_drain     => clm3%g%l%c%cwf%qflx_drain
     qflx_irrig     => clm3%g%l%c%cwf%qflx_irrig
     qflx_infl      => clm3%g%l%c%cwf%qflx_infl
@@ -153,6 +166,15 @@ contains
     fcov           => clm3%g%l%c%cws%fcov
     fsat           => clm3%g%l%c%cws%fsat
     qcharge        => clm3%g%l%c%cws%qcharge
+    qflx_snofrz_col => clm3%g%l%c%cwf%qflx_snofrz_col
+    qflx_top_soil  => clm3%g%l%c%cwf%qflx_top_soil
+    qflx_prec_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_prec_grnd
+    qflx_evap_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    qflx_dew_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
+    qflx_dew_snow_col  => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
+    qflx_sub_snow_col  => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
+    qflx_rain_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
+    qflx_snow_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
 
     ! Assign local pointers to derived type pft members
 
@@ -160,6 +182,14 @@ contains
     pgridcell     => clm3%g%l%c%p%gridcell
     qflx_evap_soi => clm3%g%l%c%p%pwf%qflx_evap_soi
     qflx_evap_tot => clm3%g%l%c%p%pwf%qflx_evap_tot
+    qflx_evap_grnd => clm3%g%l%c%p%pwf%qflx_evap_grnd
+    qflx_sub_snow  => clm3%g%l%c%p%pwf%qflx_sub_snow
+    qflx_dew_snow  => clm3%g%l%c%p%pwf%qflx_dew_snow
+    qflx_dew_grnd  => clm3%g%l%c%p%pwf%qflx_dew_grnd
+    qflx_rain_grnd => clm3%g%l%c%p%pwf%qflx_rain_grnd
+    qflx_snow_grnd => clm3%g%l%c%p%pwf%qflx_snow_grnd
+    qflx_prec_grnd => clm3%g%l%c%p%pwf%qflx_prec_grnd
+    qflx_snwcp_ice => clm3%g%l%c%p%pwf%qflx_snwcp_ice
 
     ! Determine step size
 
@@ -171,42 +201,54 @@ contains
        g = pgridcell(p)
 
        ! Snow on the lake ice
-       ! Note that these are only local variables, as per the original
-       ! Hydrology_Lake code. So even though these names correspond to
-       ! variables in clmtype, this routine is not updating the
-       ! values of the clmtype variables. (PET, 3/4/02)
 
-       qflx_evap_grnd = 0._r8
-       qflx_sub_snow = 0._r8
-       qflx_dew_snow = 0._r8
-       qflx_dew_grnd = 0._r8
+       qflx_evap_grnd(p) = 0._r8
+       qflx_sub_snow(p) = 0._r8
+       qflx_dew_snow(p) = 0._r8
+       qflx_dew_grnd(p) = 0._r8
 
        if (qflx_evap_soi(p) >= 0._r8) then
 
           ! Sublimation: do not allow for more sublimation than there is snow
           ! after melt.  Remaining surface evaporation used for infiltration.
 
-          qflx_sub_snow = min(qflx_evap_soi(p), h2osno(c)/dtime-qmelt(c))
-          qflx_evap_grnd = qflx_evap_soi(p) - qflx_sub_snow
+          qflx_sub_snow(p) = min(qflx_evap_soi(p), h2osno(c)/dtime-qmelt(c))
+          ! Liquid water evaporation from snow or "ground" is implicitly treated as a term in qrgwl 
+          qflx_evap_grnd(p) = 0._r8
 
        else
 
           if (t_grnd(c) < tfrz-0.1_r8) then
-             qflx_dew_snow = abs(qflx_evap_soi(p))
+             qflx_dew_snow(p) = abs(qflx_evap_soi(p))
           else
-             qflx_dew_grnd = abs(qflx_evap_soi(p))
+             ! Liquid dew on snow or "ground" is implicitly treated as a term in qrgwl
+             qflx_dew_grnd(p) = 0._r8
           end if
 
        end if
 
        ! Update snow pack
+       
+       ! WJS (8-26-11): For consistency with non-lake columns, I am setting the values of
+       ! qflx_rain_grnd and qflx_snow_grnd dependent on do_capsnow. For qflx_snow_grnd,
+       ! this makes sense: as with non-lake columns, this gives the amount of snowfall
+       ! that is added to the snowpack as opposed to running off due to snow capping. For
+       ! qflx_rain_grnd, the definition over lakes is less well defined, since (I believe)
+       ! all rain runs off over lakes (and qflx_snwcp_liq is always 0 over
+       ! lakes). Nevertheless, I am trying to be consistent with the definition of
+       ! qflx_rain_grnd elsewhere, which is: the amount of rainfall reaching the ground,
+       ! but 0 if there is snow capping.
 
        if (do_capsnow(c)) then
-          h2osno(c) = h2osno(c) - (qmelt(c) + qflx_sub_snow)*dtime
-          qflx_snwcp_ice(c) = forc_snow(g) + qflx_dew_snow
+          qflx_rain_grnd(p) = 0._r8
+          qflx_snow_grnd(p) = 0._r8
+          h2osno(c) = h2osno(c) - (qmelt(c) + qflx_sub_snow(p))*dtime
+          qflx_snwcp_ice(p) = forc_snow(g) + qflx_dew_snow(p)
        else
-          h2osno(c) = h2osno(c) + (forc_snow(g)-qmelt(c)-qflx_sub_snow+qflx_dew_snow)*dtime
-          qflx_snwcp_ice(c) = 0._r8
+          qflx_rain_grnd(p) = forc_rain(g)
+          qflx_snow_grnd(p) = forc_snow(g)
+          h2osno(c) = h2osno(c) + (forc_snow(g)-qmelt(c)-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
+          qflx_snwcp_ice(p) = 0._r8
        end if
        h2osno(c) = max(h2osno(c), 0._r8)
 
@@ -249,13 +291,26 @@ contains
        h2osoi_vol(c,:)   = spval
        h2osoi_ice(c,:)   = spval
        h2osoi_liq(c,:)   = spval
-       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - qflx_snwcp_ice(c) - &
+       qflx_snofrz_col(c) = spval
+       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - qflx_snwcp_ice(p) - &
                            (endwb(c)-begwb(c))/dtime
        qflx_runoff(c)    = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
+       qflx_top_soil(c)      = forc_rain(g) + qflx_snomelt(c)
+       qflx_prec_grnd(p)     = forc_rain(g) + forc_snow(g)
 
-       ! The pft average must be done here for output to history tape
+       ! pft averages must be done here for output to history tape and other uses
+       ! (note that pft2col is called before HydrologyLake, so we can't use that routine
+       ! to do these column -> pft averages)
 
        qflx_evap_tot_col(c) = qflx_evap_tot(p)
+       qflx_prec_grnd_col(c) = qflx_prec_grnd(p)
+       qflx_evap_grnd_col(c) = qflx_evap_grnd(p)
+       qflx_dew_grnd_col(c) = qflx_dew_grnd(p)
+       qflx_dew_snow_col(c) = qflx_dew_snow(p)
+       qflx_sub_snow_col(c) = qflx_sub_snow(p)
+       qflx_rain_grnd_col(c) = qflx_rain_grnd(p)
+       qflx_snow_grnd_col(c) = qflx_snow_grnd(p)
+       qflx_snwcp_ice_col(c) = qflx_snwcp_ice(p)
 
     end do
 

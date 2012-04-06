@@ -1798,8 +1798,6 @@ contains
     if (ldomain%isgrid2d) then
        call ncd_defdim(lnfid, 'lon'   , ldomain%ni, dimid)
        call ncd_defdim(lnfid, 'lat'   , ldomain%nj, dimid)
-       call ncd_defdim(lnfid, 'lonatm', ldomain%ni, dimid)
-       call ncd_defdim(lnfid, 'latatm', ldomain%nj, dimid)
     else
        call ncd_defdim(lnfid, trim(grlnd), ldomain%ns, dimid)
     end if
@@ -1891,6 +1889,7 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
+    character(len=8) :: l2g_scale_type    ! scale type for subgrid averaging of landunits to grid cells
     real(r8), pointer :: histi(:,:)       ! temporary
     real(r8), pointer :: histo(:,:)       ! temporary
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
@@ -1974,6 +1973,31 @@ contains
        end if
 
        do ifld = 1,nflds
+
+          ! WJS (10-25-11): Note about l2g_scale_type in the following: ZSOI & DZSOI are
+          ! currently constant in space, except for urban points, so their scale type
+          ! doesn't matter at the moment as long as it excludes urban points. I am using
+          ! 'nonurb' so that the values are output everywhere where the fields are
+          ! constant (i.e., everywhere except urban points). For the other fields, I am
+          ! using 'veg' to be consistent with the l2g_scale_type that is now used for many
+          ! of the 3-d time-variant fields; in theory, though, one might want versions of
+          ! these variables output for different landunits.
+
+          ! Field indices MUST match varnames array order above!
+          if      (ifld == 1) then  ! ZSOI
+             l2g_scale_type = 'nonurb'
+          else if (ifld == 2) then  ! DZSOI
+             l2g_scale_type = 'nonurb'
+          else if (ifld == 3) then  ! WATSAT
+             l2g_scale_type = 'veg'
+          else if (ifld == 4) then  ! SUCSAT
+             l2g_scale_type = 'veg'
+          else if (ifld == 5) then  ! BSW
+             l2g_scale_type = 'veg'
+          else if (ifld == 6) then  ! HKSAT
+             l2g_scale_type = 'veg'
+          end if
+
           histi(:,:) = spval
           do lev = 1,nlevgrnd
              do c = begc, endc
@@ -1992,7 +2016,7 @@ contains
           if (tape(t)%dov2xy) then
              histo(:,:) = spval
              call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, histi, histo, &
-                  c2l_scale_type='urbanh', l2g_scale_type='unity')
+                  c2l_scale_type='unity', l2g_scale_type=l2g_scale_type)
 
              if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnames(ifld)), dim1name=grlnd, &
@@ -2389,12 +2413,6 @@ contains
           end select
 
           if (type1d_out == grlnd) then
-             if (ldomain%isgrid2d) then
-                dim1name = 'lonatm'   ; dim2name = 'latatm'
-             else
-                dim1name = trim(grlnd); dim2name = 'undefined'
-             end if
-          else if (type1d_out == grlnd) then
              if (ldomain%isgrid2d) then
                 dim1name = 'lon'      ; dim2name = 'lat'
              else
@@ -4109,6 +4127,12 @@ end function max_nFields
           do p = begp,endp
              l = clm3%g%l%c%p%landunit(p)
              if (clm3%g%l%ifspecial(l)) ptr_pft(p) = set_spec
+          end do
+       end if
+       if (present(set_noglcmec)) then
+          do p = begp,endp
+             l = clm3%g%l%c%p%landunit(p)
+             if (.not.(clm3%g%l%glcmecpoi(l))) ptr_pft(p) = set_noglcmec
           end do
        end if
     else if (present(ptr_rof)) then

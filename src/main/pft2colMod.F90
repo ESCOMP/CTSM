@@ -71,6 +71,13 @@ contains
        filter_allc(fc) = c
     end do
 
+    ! Note: lake points are excluded from many of the following averages. For some fields,
+    ! this is because the field doesn't apply over lakes. However, for many others, this
+    ! is because the field is computed in HydrologyLake, which is called after this
+    ! routine; thus, for lakes, the column-level values of these fields are explicitly set
+    ! in HydrologyLakeMod. (The fields that are included here for lakes are computed
+    ! elsewhere, e.g., in BiogeophysicsLake.)
+
     ! Averaging for pft water state variables
 
     ptrp => clm3%g%l%c%p%pws%h2ocan
@@ -81,7 +88,7 @@ contains
 
     ptrp => clm3%g%l%c%p%pwf%qflx_evap_tot
     ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
-    call p2c (num_allc, filter_allc, ptrp, ptrc)
+    call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
     ptrp => clm3%g%l%c%p%pwf%qflx_rain_grnd
     ptrc => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
@@ -97,6 +104,10 @@ contains
 
     ptrp => clm3%g%l%c%p%pwf%qflx_snwcp_ice
     ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    ! For lakes, this field is initially set in BiogeophysicsLake (which is called before
+    ! this routine; hence it is appropriate to include lake columns in this p2c call).
+    ! However, it is later overwritten in HydrologyLake, both on the pft and the column
+    ! level.
     call p2c (num_allc, filter_allc, ptrp, ptrc)
 
     ptrp => clm3%g%l%c%p%pwf%qflx_tran_veg
@@ -105,6 +116,14 @@ contains
 
     ptrp => clm3%g%l%c%p%pwf%qflx_evap_grnd
     ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
+
+    ptrp => clm3%g%l%c%p%pwf%qflx_evap_soi
+    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
+    call p2c (num_allc, filter_allc, ptrp, ptrc)
+
+    ptrp => clm3%g%l%c%p%pwf%qflx_prec_grnd
+    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_prec_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
     ptrp => clm3%g%l%c%p%pwf%qflx_dew_grnd

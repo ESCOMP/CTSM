@@ -549,50 +549,6 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 }
 if ($print>=2) { print "Glacier number of elevation classes is $glc_nec $eol"; }
 
-# glc_grid
-my $glc_grid = undef;
-if ( $glc_nec > 0 ) {
-  $var = "glc_grid";
-  if ( $opts{$var} ne "default" ) {
-      $val = $opts{$var};
-  } else {
-      my %settings;
-      $settings{'glc_nec'} = $glc_nec;
-      $val = $defaults->get_value($var, \%settings);
-  }
-  $glc_grid = $val;
-  $opts{'glc_grid'} = $glc_grid;
-  $val = &quote_string( $val );
-  $group = $definition->get_group_name($var);
-  $nl[0]->set_variable_value($group, $var, $val);
-  if (  ! $definition->is_valid_value( $var, $val ) ) {
-     my @valid_values   = $definition->get_valid_values( $var );
-     die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-  }
-  if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
-}
-  
-# glc_smb
-my $glc_smb = undef;
-if ( $glc_nec > 0 ) {
-  $var = "glc_smb";
-  if ( $opts{$var} ne "default" ) {
-      $val = $opts{$var};
-  } else {
-      my %settings;
-      $settings{'glc_nec'} = $glc_nec;
-      $val = $defaults->get_value($var, \%settings);
-  }
-  $glc_smb = $val;
-  $opts{'glc_smb'} = $glc_smb;
-  $group = $definition->get_group_name($var);
-  $nl[0]->set_variable_value($group, $var, $val);
-  if (  ! $definition->is_valid_value( $var, $val ) ) {
-     my @valid_values   = $definition->get_valid_values( $var );
-     die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-  }
-  if ($print>=2) { print "Glacier model grid/resolution is $glc_grid $eol"; }
-}
 
 # irrigation
 $var = "irrig";
@@ -712,9 +668,7 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 if ($print>=2) { print "River Transport Model (RTM) will be $rtm $eol"; }
 
 
-# RTM flag and RTM resolution
-my $var = "do_rtm";
-add_default($nl[0], $var, 'rtm'=>$rtm );
+# RTM resolution
 my $rtm_res;
 if ( $rtm eq "on" ) {
    $var = "rtm_res";
@@ -1167,6 +1121,9 @@ if ( $my_start_type =~ /branch/ ) {
    }
 }
 
+# Set the number of segments per clump
+add_default($nl[0], 'nsegspc', 'hgrid'=>$res);
+
 # Get the fraction file
 if (defined $nl[0]->get_value('fatmlndfrc')) {
     # do nothing - use value provided by config_grid.xml and clm.cpl7.template
@@ -1187,15 +1144,39 @@ add_default($nl[0], 'fsnowaging' );
 #
 # Glacier multiple elevation class options
 #
-add_default($nl[0], 'maxpatch_glcmec', 'val'=>$glc_nec );
+
+my $var = "maxpatch_glcmec";
+add_default($nl[0], $var, 'val'=>$glc_nec );
+$val = $nl[0]->get_value($var);
+if ( $val != $glc_nec ) {
+   die "$nm $var set to $val does NOT agree with -glc_nec argument of $glc_nec\n";
+}
 if ( $glc_nec > 0 ) {
-  if ( ! defined($glc_grid) ) {
-     die "$ProgName ERROR:: glc_grid is NOT set, but glc_nec is positive\n";
+  foreach my $var ( "glc_grid", "glc_smb" ) {
+     if ( $opts{$var} ne "default" ) {
+        add_default($nl[0], $var, 'val'=>$opts{$var} );
+        $val = $nl[0]->get_value($var);
+	$val =~ s/['"]//g;
+        if ( $val ne $opts{$var} ) {
+           die "$nm $var set to $val does NOT agree with -$var argument of $opts{$var}\n";
+        }
+     } else {
+        add_default($nl[0], $var, 'glc_nec'=>$glc_nec );
+     }
+     $val = $nl[0]->get_value($var);
+     if ($print>=2) { print "Glacier model $var is $val $eol"; }
+     if ( ! defined($val) ) {
+        die "$ProgName ERROR:: $var is NOT set, but glc_nec is positive\n";
+     }
   }
+  my $glc_grid = $nl[0]->get_value('glc_grid');
+  $glc_grid =~ s/['"]//g;
   add_default($nl[0], 'flndtopo'  , 'hgrid'=>$res, 'mask'=>$mask );
   add_default($nl[0], 'fglcmask'  , 'hgrid'=>$res, 'glc_grid'=>$glc_grid );
   add_default($nl[0], 'albice'    , 'glc_nec'=>$glc_nec );
 } else {
+  my $glc_grid = $nl[0]->get_value('glc_grid');
+  $glc_grid =~ s/['"]//g;
   if ( defined($glc_grid) ) {
      die "$ProgName ERROR:: glc_grid is set, but glc_nec is zero\n";
   }
@@ -1284,6 +1265,8 @@ if ( $rtm eq "on" ) {
    }
 }
 
+my $var = "do_rtm";
+add_default($nl[0], $var, 'rtm'=>$rtm );
 my $do_rtm = $nl[0]->get_value('do_rtm');
 if ( $rtm eq "off" ) {
    if (defined $do_rtm && $do_rtm =~ /$TRUE/i ) {
@@ -2249,7 +2232,7 @@ sub version {
 
     while (my $line = <$fh>) {
 
-        if ($line =~ /^Tag name:\s*[clm0-9_.-]*\s*[toin]*\s*([clmcesm0-9_.-]+)$/ ) {
+        if ($line =~ /^Tag name:\s*([a-zA-Z0-9_. -]*[clmcesm0-9_.-]+)$/ ) {
 	    print "$1\n";
 	    exit;
 	}

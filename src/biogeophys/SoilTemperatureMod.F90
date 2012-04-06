@@ -905,7 +905,9 @@ contains
     real(r8), pointer :: eflx_snomelt_u(:)!urban snow melt heat flux (W/m**2)
     real(r8), pointer :: eflx_snomelt_r(:)!rural snow melt heat flux (W/m**2)
     real(r8), pointer :: qflx_snofrz_lyr(:,:)  !snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+    real(r8), pointer :: qflx_snofrz_col(:)  !column-integrated snow freezing rate (positive definite) [kg m-2 s-1]
     real(r8), pointer :: qflx_glcice(:)   !flux of new glacier ice (mm H2O/s) [+ = ice grows]
+    real(r8), pointer :: qflx_glcice_melt(:)  !ice melt (positive definite) (mm H2O/s)
 !
 ! local pointers to original implicit in arrays
 !
@@ -967,7 +969,9 @@ contains
     clandunit    => clm3%g%l%c%landunit
     ltype        => clm3%g%l%itype
     qflx_snofrz_lyr => clm3%g%l%c%cwf%qflx_snofrz_lyr
+    qflx_snofrz_col => clm3%g%l%c%cwf%qflx_snofrz_col
     qflx_glcice  => clm3%g%l%c%cwf%qflx_glcice
+    qflx_glcice_melt  => clm3%g%l%c%cwf%qflx_glcice_melt
 
     ! Get step size
 
@@ -977,9 +981,17 @@ contains
 
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
+       l = clandunit(c)
+
        qflx_snomelt(c) = 0._r8
        xmf(c) = 0._r8
        qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
+       qflx_snofrz_col(c) = 0._r8
+       if (ltype(l)==istice_mec) then
+          ! only need to initialize qflx_glcice_melt over ice_mec landunits, because
+          ! those are the only places where it is computed
+          qflx_glcice_melt(c) = 0._r8
+       end if
     end do
 
     do j = -nlevsno+1,nlevgrnd       ! all layers
@@ -1170,6 +1182,7 @@ contains
 
              if (j>=1 .and. h2osoi_liq(c,j) > 0._r8) then   ! ice layer with meltwater
                 ! melting corresponds to a negative ice flux
+                qflx_glcice_melt(c) = qflx_glcice_melt(c) + h2osoi_liq(c,j)/dtime
                 qflx_glcice(c) = qflx_glcice(c) - h2osoi_liq(c,j)/dtime
 
                 ! convert layer back to pure ice by "borrowing" ice from below the column
@@ -1193,6 +1206,13 @@ contains
        else if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
          eflx_snomelt_r(c) = eflx_snomelt(c)
        end if
+    end do
+
+    do j = -nlevsno+1,0
+       do fc = 1,num_nolakec
+          c = filter_nolakec(fc)
+          qflx_snofrz_col(c) = qflx_snofrz_col(c) + qflx_snofrz_lyr(c,j)
+       end do
     end do
 
   end subroutine PhaseChange

@@ -190,9 +190,6 @@ endif
     \$rtm  -glc_nec \$GLC_NEC \
     -config \$CASEBUILD/clmconf/config_cache.xml \$CLM_BLDNML_OPTS
     
-if (\$?DOCDIR) then # only set in preview_namelists utility		    
-  cp \$CASEBUILD/clmconf/lnd_in \$CASEROOT/CaseDocs/\$lnd_in_filename || exit -1
-endif
 if (-d \${RUNDIR}) then
   cp \$CASEBUILD/clmconf/lnd_in \${RUNDIR}/\$lnd_in_filename || exit -2
 endif

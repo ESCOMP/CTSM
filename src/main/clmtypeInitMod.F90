@@ -944,7 +944,7 @@ contains
     pps%rssha(beg:end) = nan
     pps%laisun(beg:end) = nan
     pps%laisha(beg:end) = nan
-    pps%btran(beg:end) = nan
+    pps%btran(beg:end) = spval
     pps%fsun(beg:end) = spval
     pps%tlai(beg:end) = 0._r8
     pps%tsai(beg:end) = 0._r8
@@ -1843,6 +1843,7 @@ contains
 ! Initialize pft carbon flux variables
 !
 ! !USES:
+    use clm_varcon, only : spval
     use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
@@ -2027,7 +2028,7 @@ contains
 
     pcf%psnsun(beg:end) = nan
     pcf%psnsha(beg:end) = nan
-    pcf%fpsn(beg:end) = nan
+    pcf%fpsn(beg:end) = spval
     pcf%fco2(beg:end) = 0._r8
 
     pcf%m_leafc_to_litter(beg:end) = nan
@@ -2916,6 +2917,9 @@ contains
 !------------------------------------------------------------------------
 
     allocate(cws%h2osno(beg:end))
+    allocate(cws%errh2osno(beg:end))
+    allocate(cws%snow_sources(beg:end))
+    allocate(cws%snow_sinks(beg:end))
     allocate(cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd))
     allocate(cws%h2osoi_ice(beg:end,-nlevsno+1:nlevgrnd))
     allocate(cws%h2osoi_liqice_10cm(beg:end))
@@ -2939,6 +2943,9 @@ contains
     allocate(cws%forc_q(beg:end))
 
     cws%h2osno(beg:end) = nan
+    cws%errh2osno(beg:end) = nan
+    cws%snow_sources(beg:end) = nan
+    cws%snow_sinks(beg:end) = nan
     cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd)= spval
     cws%h2osoi_ice(beg:end,-nlevsno+1:nlevgrnd) = spval
     cws%h2osoi_liqice_10cm(beg:end) = spval
@@ -3159,6 +3166,7 @@ contains
     allocate(cwf%qflx_surf(beg:end))
     allocate(cwf%qflx_drain(beg:end))
     allocate(cwf%qflx_top_soil(beg:end))
+    allocate(cwf%qflx_sl_top_soil(beg:end))
     allocate(cwf%qflx_snomelt(beg:end))
     allocate(cwf%qflx_qrgwl(beg:end))
     allocate(cwf%qflx_runoff(beg:end))
@@ -3187,8 +3195,11 @@ contains
     allocate(cwf%flx_dst_dep_wet4(beg:end))
     allocate(cwf%flx_dst_dep(beg:end))
     allocate(cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0))
+    allocate(cwf%qflx_snofrz_col(beg:end))
     allocate(cwf%qflx_irrig(beg:end))
     allocate(cwf%qflx_glcice(beg:end))
+    allocate(cwf%qflx_glcice_frz(beg:end))
+    allocate(cwf%qflx_glcice_melt(beg:end))
     allocate(cwf%glc_rofi(beg:end))
     allocate(cwf%glc_rofl(beg:end))
 
@@ -3196,6 +3207,7 @@ contains
     cwf%qflx_surf(beg:end) = nan
     cwf%qflx_drain(beg:end) = nan
     cwf%qflx_top_soil(beg:end) = spval
+    cwf%qflx_sl_top_soil(beg:end) = nan
     cwf%qflx_snomelt(beg:end) = nan
     cwf%qflx_qrgwl(beg:end) = nan
     cwf%qflx_runoff(beg:end) = nan
@@ -3224,8 +3236,11 @@ contains
     cwf%flx_dst_dep_wet4(beg:end) = nan
     cwf%flx_dst_dep(beg:end) = nan
     cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0) = spval
+    cwf%qflx_snofrz_col(beg:end) = nan
     cwf%qflx_irrig(beg:end)  = nan
-    cwf%qflx_glcice(beg:end) = spval
+    cwf%qflx_glcice(beg:end) = nan
+    cwf%qflx_glcice_frz(beg:end) = nan
+    cwf%qflx_glcice_melt(beg:end) = nan
     cwf%glc_rofi(beg:end)    = nan
     cwf%glc_rofl(beg:end)    = nan
 

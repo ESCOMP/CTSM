@@ -385,7 +385,7 @@ contains
        call mct_aVect_zero(s2x_s_SNAP )
 
        ! Create mct sno export state
-       call create_clm_s2x(clm_s2x)
+       call create_clm_s2x(clm_s2x, init=.true.)
        call sno_export_mct(clm_s2x, s2x_s)
     endif   ! create_glacier_mec_landunit
 

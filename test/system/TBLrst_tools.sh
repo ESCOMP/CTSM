@@ -94,6 +94,7 @@ if [ -z "${files_to_compare}" ] && [ "$debug" != "YES" ]; then
 fi
 
 all_comparisons_good="TRUE"
+compare_file_mismatch=""    # value of last compare_file with a mismatch
 for compare_file in ${files_to_compare}; do
 
     ${CLM_SCRIPTDIR}/CLM_compare.sh \
@@ -106,6 +107,7 @@ for compare_file in ${files_to_compare}; do
     else
         echo "TBLrst_tools.sh: error from CLM_compare.sh= $rc; see ${rundir}/cprnc.${compare_file}.out for details" 
         all_comparisons_good="FALSE"
+	compare_file_mismatch=$compare_file
     fi
 done
 
@@ -124,11 +126,10 @@ if [ "${all_comparisons_good}" = "TRUE" ]; then
         rm *.r*
     fi
 else
-    echo "RMS error of last file that do not match"
-    grep RMS ${rundir}/cprnc.${compare_file}.out | grep -v 0.0000E+00 | tail -200
     echo "TBLrst_tools.sh: at least one file comparison did not pass" 
     echo "Last bit of non-zero RMS errors of last file that did not match"
-    grep RMS ${rundir}/cprnc.${compare_file}.out | grep -v 0.0000E+00 | tail -200
+    echo "${rundir}/cprnc.${compare_file_mismatch}.out"
+    ${CLM_SCRIPTDIR}/get_cprnc_diffs.sh ${rundir}/cprnc.${compare_file_mismatch}.out
     echo "FAIL.job${JOBID}" > TestStatus
     exit 7
 fi

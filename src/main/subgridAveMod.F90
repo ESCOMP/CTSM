@@ -55,11 +55,30 @@ module subgridAveMod
      module procedure l2g_2d
   end interface
 !
+! !PRIVATE MEMBER FUNCTIONS:
+  private :: build_scale_l2g
+  private :: create_scale_l2g_lookup
+!
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
 !EOP
-!-----------------------------------------------------------------------
+
+! WJS (10-14-11): TODO:
+! 
+! - I believe that scale_p2c, scale_c2l and scale_l2g should be included in the sumwt
+! accumulations (e.g., sumwt = sumwt + wtgcell * scale_p2c * scale_c2l * scale_l2g), but
+! that requires some more thought to (1) make sure that is correct, and (2) make sure it
+! doesn't break the urban scaling. (See also my notes in create_scale_l2g_lookup.)
+!   - Once that is done, you could use a scale of 0, avoiding the need for the use of
+!   spval and the special checks that requires.
+!
+! - Currently, there is a lot of repeated code to calculate scale_c2l. This should be
+! cleaned up.
+!   - At a minimum, should collect the repeated code into a subroutine to eliminate this
+!   repitition
+!   - The best thing might be to use a lookup array, as is done for scale_l2g
+! -----------------------------------------------------------------------
 
 contains
 
@@ -426,23 +445,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -583,23 +585,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -707,14 +692,7 @@ contains
     npfts     => clm3%g%npfts
     pfti      => clm3%g%pfti
 
-    if (l2g_scale_type == 'unity') then
-       do l = lbl,ubl
-          scale_l2g(l) = 1.0_r8
-       end do
-    else
-       write(iulog,*)'p2g_1d error: scale type ',l2g_scale_type,' not supported'
-       call endrun()
-    end if
+    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -754,23 +732,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -790,8 +751,8 @@ contains
     do p = lbp,ubp
        if (wtgcell(p) /= 0._r8) then
           c = pcolumn(p)
-          if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
-             l = plandunit(p)
+          l = plandunit(p)
+          if (parr(p) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
              g = pgridcell(p)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
              garr(g) = garr(g) + parr(p) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
@@ -879,14 +840,7 @@ contains
     npfts        => clm3%g%npfts
     pfti         => clm3%g%pfti
 
-    if (l2g_scale_type == 'unity') then
-       do l = lbl,ubl
-          scale_l2g(l) = 1.0_r8
-       end do
-    else
-       write(iulog,*)'p2g_2d error: scale type ',l2g_scale_type,' not supported'
-       call endrun()
-    end if
+    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -926,23 +880,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval 
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -963,8 +900,8 @@ contains
        do p = lbp,ubp
           if (wtgcell(p) /= 0._r8) then
              c = pcolumn(p)
-             if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
-                l = plandunit(p)
+             l = plandunit(p)
+             if (parr(p,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
                 g = pgridcell(p)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
                 garr(g,j) = garr(g,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
@@ -1070,23 +1007,6 @@ contains
                 scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
              end if
           else
              scale_c2l(c) = 1.0_r8
@@ -1212,23 +1132,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1318,14 +1221,7 @@ contains
     ncolumns   => clm3%g%ncolumns
     coli       => clm3%g%coli
 
-    if (l2g_scale_type == 'unity') then
-       do l = lbl,ubl
-          scale_l2g(l) = 1.0_r8
-       end do
-    else
-       write(iulog,*)'c2l_1d error: scale type ',l2g_scale_type,' not supported'
-       call endrun()
-    end if
+    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -1365,23 +1261,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1391,8 +1270,8 @@ contains
     sumwt(:) = 0._r8
     do c = lbc,ubc
        if ( wtgcell(c) /= 0._r8) then
-          if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
-             l = clandunit(c)
+          l = clandunit(c)
+          if (carr(c) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
              g = cgridcell(c)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
              garr(g) = garr(g) + carr(c) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
@@ -1471,14 +1350,8 @@ contains
     ncolumns   => clm3%g%ncolumns
     coli       => clm3%g%coli
 
-    if (l2g_scale_type == 'unity') then
-       do l = lbl,ubl
-          scale_l2g(l) = 1.0_r8
-       end do
-    else
-       write(iulog,*)'c2g_2d error: scale type ',l2g_scale_type,' not supported'
-       call endrun()
-    end if
+    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
@@ -1517,23 +1390,6 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
-    else if (c2l_scale_type == 'urbanh') then
-       do c = lbc,ubc
-          l = clandunit(c) 
-          if (ltype(l) == isturb) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = spval
-             else if (ctype(c) == icol_roof) then
-                scale_c2l(c) = spval
-             end if
-          else
-             scale_c2l(c) = 1.0_r8
-          end if
-       end do
     else
        write(iulog,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1544,8 +1400,8 @@ contains
        sumwt(:) = 0._r8
        do c = lbc,ubc
           if (wtgcell(c) /= 0._r8) then
-             if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
-                l = clandunit(c)
+             l = clandunit(c)
+             if (carr(c,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
                 g = cgridcell(c)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
                 garr(g,j) = garr(g,j) + carr(c,j) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
@@ -1612,20 +1468,13 @@ contains
     nlandunits => clm3%g%nlandunits
     luni       => clm3%g%luni
 
-    if (l2g_scale_type == 'unity') then
-       do l = lbl,ubl
-          scale_l2g(l) = 1.0_r8
-       end do
-    else
-       write(iulog,*)'l2g_1d error: scale type ',l2g_scale_type,' not supported'
-       call endrun()
-    end if
+    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
     garr(:) = spval
     sumwt(:) = 0._r8
     do l = lbl,ubl
        if (wtgcell(l) /= 0._r8) then
-          if (larr(l) /= spval) then
+          if (larr(l) /= spval .and. scale_l2g(l) /= spval) then
              g = lgridcell(l)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
              garr(g) = garr(g) + larr(l) * scale_l2g(l) * wtgcell(l)
@@ -1692,21 +1541,14 @@ contains
     nlandunits => clm3%g%nlandunits
     luni       => clm3%g%luni
 
-    if (l2g_scale_type == 'unity') then
-       do l = lbl,ubl
-          scale_l2g(l) = 1.0_r8
-       end do
-    else
-       write(iulog,*)'l2g_2d error: scale type ',l2g_scale_type,' not supported'
-       call endrun()
-    end if
+    call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
     garr(:,:) = spval
     do j = 1,num2d
        sumwt(:) = 0._r8
        do l = lbl,ubl
           if (wtgcell(l) /= 0._r8) then
-             if (larr(l,j) /= spval) then
+             if (larr(l,j) /= spval .and. scale_l2g(l) /= spval) then
                 g = lgridcell(l)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
                 garr(g,j) = garr(g,j) + larr(l,j) * scale_l2g(l) * wtgcell(l)
@@ -1730,5 +1572,117 @@ contains
     end do
 
   end subroutine l2g_2d
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: build_scale_l2g
+!
+! !INTERFACE:
+  subroutine build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
+!
+! !DESCRIPTION:
+! Fill the scale_l2g(lbl:ubl) array with appropriate values for the given l2g_scale_type.
+! This array can later be used to scale each landunit in forming grid cell averages.
+!
+! !USES:
+     use clm_varcon, only : max_lunit
+!
+! !ARGUMENTS:
+     implicit none
+     character(len=*), intent(in)  :: l2g_scale_type     ! scale factor type for averaging
+     integer         , intent(in)  :: lbl, ubl           ! beginning and ending column indices
+     real(r8)        , intent(out) :: scale_l2g(lbl:ubl) ! scale factor 
+!
+! !REVISION HISTORY:
+! Created by Bill Sacks 10/11
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+     real(r8) :: scale_lookup(max_lunit) ! scale factor for each landunit type
+     integer  :: l                       ! index
+     integer , pointer :: ltype(:)       ! landunit type
+!-----------------------------------------------------------------------
+
+     ltype      => clm3%g%l%itype
+     
+     call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
+
+     do l = lbl,ubl
+        scale_l2g(l) = scale_lookup(ltype(l))
+     end do
+
+  end subroutine build_scale_l2g
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: create_scale_l2g_lookup
+!
+! !INTERFACE:
+  subroutine create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
+! 
+! DESCRIPTION:
+! Create a lookup array, scale_lookup(1..max_lunit), which gives the scale factor for
+! each landunit type depending on l2g_scale_type
+!
+! !USES:
+     use clm_varcon, only : istsoil, istice, istdlak, istslak, istwet, isturb, istice_mec,&
+                            istcrop, max_lunit, spval
+!
+! !ARGUMENTS:
+     implicit none
+     character(len=*), intent(in)  :: l2g_scale_type           ! scale factor type for averaging
+     real(r8)        , intent(out) :: scale_lookup(max_lunit)  ! scale factor for each landunit type
+!
+! !REVISION HISTORY:
+! Created by Bill Sacks 10/11
+!
+!EOP
+!-----------------------------------------------------------------------
+
+     ! ------------ WJS (10-14-11): IMPORTANT GENERAL NOTES ------------
+     !
+     ! Since scale_l2g is not currently included in the sumwt accumulations, you need to
+     ! be careful about the scale values you use. Values of 1 and spval are safe
+     ! (including having multiple landunits with value 1), but only use other values if
+     ! you know what you are doing! For example, using a value of 0 is NOT the correct way
+     ! to exclude a landunit from the average, because the normalization will be done
+     ! incorrectly in this case: instead, use spval to exclude a landunit from the
+     ! average. Similarly, using a value of 2 is NOT the correct way to give a landunit
+     ! double relative weight in general, because the normalization won't be done
+     ! correctly in this case, either.
+     !
+     ! In the longer-term, I believe that the correct solution to this problem is to
+     ! include scale_l2g (and the other scale factors) in the sumwt accumulations
+     ! (e.g., sumwt = sumwt + wtgcell * scale_p2c * scale_c2l * scale_l2g), but that
+     ! requires some more thought to (1) make sure that is correct, and (2) make sure it
+     ! doesn't break the urban scaling.
+     !
+     ! -----------------------------------------------------------------
+
+
+     ! Initialize scale_lookup to spval for all landunits. Thus, any landunit that keeps
+     ! the default value will be excluded from grid cell averages.
+     scale_lookup(:) = spval
+
+     if (l2g_scale_type == 'unity') then
+        scale_lookup(:) = 1.0_r8
+     else if (l2g_scale_type == 'veg') then
+        scale_lookup(istsoil) = 1.0_r8
+        scale_lookup(istcrop) = 1.0_r8
+     else if (l2g_scale_type == 'ice') then
+        scale_lookup(istice) = 1.0_r8
+        scale_lookup(istice_mec) = 1.0_r8
+     else if (l2g_scale_type == 'nonurb') then
+        scale_lookup(:) = 1.0_r8
+        scale_lookup(isturb) = spval
+     else
+        write(iulog,*)'scale_l2g_lookup_array error: scale type ',l2g_scale_type,' not supported'
+        call endrun()
+     end if
+
+  end subroutine create_scale_l2g_lookup
 
 end module subgridAveMod

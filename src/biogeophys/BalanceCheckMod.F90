@@ -171,7 +171,8 @@ contains
     use subgridAveMod
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
-                              spval, icol_road_perv, icol_road_imperv, istice_mec
+                              spval, icol_road_perv, icol_road_imperv, istice_mec, &
+                              istdlak, istslak
     use clm_varctl   , only : glc_dyntopo
 !
 ! !ARGUMENTS:
@@ -198,6 +199,7 @@ contains
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
     integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: cgridcell(:)       ! column's gridcell index
+    integer , pointer :: clandunit(:)       ! column's landunit index
     integer , pointer :: ltype(:)           ! landunit type 
     integer , pointer :: ctype(:)           ! column type 
     real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding gridcell
@@ -228,6 +230,7 @@ contains
     real(r8), pointer :: qflx_liq_dynbal(:) ! liq runoff due to dynamic land cover change (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s) [+ if ice grows]
+    real(r8), pointer :: qflx_glcice_frz(:) ! ice growth (mm H2O/s) [+]
     real(r8), pointer :: qflx_snwcp_iceg(:) ! excess snowfall due to snow cap inc land cover change flux (mm H20/s)
     real(r8), pointer :: qflx_ice_dynbal(:) ! ice runoff due to dynamic land cover change (mm H2O /s)
     real(r8), pointer :: forc_solad(:,:)    ! direct beam radiation (vis=forc_sols , nir=forc_soll )
@@ -236,6 +239,17 @@ contains
     real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
     real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width
     real(r8), pointer :: eflx_heat_from_ac_pft(:) !sensible heat flux put back into canyon due to removal by AC (W/m**2)
+    real(r8), pointer :: h2osno(:)             ! snow water (mm H2O)
+    real(r8), pointer :: h2osno_old(:)         ! snow water (mm H2O) at previous time step
+    real(r8), pointer :: qflx_dew_snow(:)      ! surface dew added to snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_sub_snow(:)      ! sublimation rate from snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_top_soil(:)      ! net water input into soil from top (mm/s)
+    real(r8), pointer :: qflx_dew_grnd(:)      ! ground surface dew formation (mm H2O /s) [+]
+    real(r8), pointer :: qflx_evap_grnd(:)     ! ground surface evaporation rate (mm H2O/s) [+]
+    real(r8), pointer :: qflx_prec_grnd(:)     ! water onto ground including canopy runoff [kg/(m2 s)]
+    real(r8), pointer :: qflx_snwcp_liq(:)     ! excess liquid water due to snow capping (mm H2O /s) [+]`
+    real(r8), pointer :: qflx_sl_top_soil(:)   ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
+    integer , pointer :: snl(:)                ! number of snow layers
 !
 ! local pointers to original implicit out arguments
 !
@@ -245,6 +259,9 @@ contains
     real(r8), pointer :: errseb(:)          ! surface energy conservation error (W/m**2)
     real(r8), pointer :: netrad(:)          ! net radiation (positive downward) (W/m**2)
     real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
+    real(r8), pointer :: snow_sources(:)    ! snow sources (mm H2O /s)
+    real(r8), pointer :: snow_sinks(:)      ! snow sinks (mm H2O /s)
+    real(r8), pointer :: errh2osno(:)       ! error in h2osno (kg m-2)
 !
 !EOP
 !
@@ -276,6 +293,7 @@ contains
 
     ctype             => clm3%g%l%c%itype
     cgridcell         => clm3%g%l%c%gridcell
+    clandunit         => clm3%g%l%c%landunit
     cwtgcell          => clm3%g%l%c%wtgcell
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
@@ -287,8 +305,23 @@ contains
     qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
     qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
+    qflx_glcice_frz   => clm3%g%l%c%cwf%qflx_glcice_frz
     errh2o            => clm3%g%l%c%cwbal%errh2o
     errsoi_col        => clm3%g%l%c%cebal%errsoi
+    h2osno             => clm3%g%l%c%cws%h2osno
+    h2osno_old         => clm3%g%l%c%cws%h2osno_old
+    qflx_dew_snow      => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
+    qflx_sub_snow      => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
+    qflx_top_soil      => clm3%g%l%c%cwf%qflx_top_soil
+    qflx_evap_grnd     => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    qflx_dew_grnd      => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
+    qflx_prec_grnd     => clm3%g%l%c%cwf%pwf_a%qflx_prec_grnd
+    qflx_snwcp_liq     => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
+    qflx_sl_top_soil   => clm3%g%l%c%cwf%qflx_sl_top_soil
+    snow_sources       => clm3%g%l%c%cws%snow_sources
+    snow_sinks         => clm3%g%l%c%cws%snow_sinks
+    errh2osno          => clm3%g%l%c%cws%errh2osno
+    snl                => clm3%g%l%c%cps%snl
 
     ! Assign local pointers to derived type scalar members (pft-level)
 
@@ -343,6 +376,7 @@ contains
     ! Water balance check
 
     do c = lbc, ubc
+       l = clandunit(c)
        g = cgridcell(c)
 
        if (cwtgcell(c) > 0._r8)then
@@ -358,8 +392,12 @@ contains
           !     but the water content of the ice column has not changed (at least for now) because
           !     an equivalent ice mass has been "borrowed" from the base of the column.  That
           !     meltwater is included in qflx_glcice.
+          !
+          ! Note that qflx_glcice is only valid over ice_mec landunits; elsewhere it is spval
 
-          if (glc_dyntopo) errh2o(c) = errh2o(c) - qflx_glcice(c)*dtime
+          if (glc_dyntopo .and. ltype(l)==istice_mec) then
+             errh2o(c) = errh2o(c) + qflx_glcice(c)*dtime
+          end if
 
        else
 
@@ -410,6 +448,84 @@ contains
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
           write(iulog,*)'qflx_snwcp_ice   = ',qflx_snwcp_ice(indexc)
+          write(iulog,*)'clm model is stopping'
+          call endrun()
+       end if
+    end if
+
+    ! Snow balance check
+
+    do c = lbc, ubc
+       g = cgridcell(c)
+       l = clandunit(c)
+       if (ltype(l) == istdlak .or. ltype(l) == istslak )then
+          ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
+          ! any given time step.
+          if (h2osno(c) .eq. 0._r8) then
+             snow_sources(c) = 0._r8
+             snow_sinks(c) = 0._r8
+             errh2osno(c) = 0._r8
+          else
+             snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
+             snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_top_soil(c) &
+                               + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)
+             errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
+          end if
+       else  ! non-lake
+          ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
+          ! any given time step but only if there is at least one snow layer.  h2osno 
+          ! also includes snow that is part of the soil column (an initial snow layer is 
+          ! only created if h2osno > 10mm).
+          if (snl(c) .lt. 0) then
+             snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
+             snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_top_soil(c) &
+                               + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
+
+             ! For ice_mec landunits, if glc_dyntopo is true, then qflx_snwcp_ice = 0,
+             ! and qflx_glcice_frz instead stores this flux
+             if (ltype(l) == istice_mec .and. glc_dyntopo) then
+                snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)
+             end if
+
+             errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
+          else
+             snow_sources(c) = 0._r8
+             snow_sinks(c) = 0._r8
+             errh2osno(c) = 0._r8
+          end if
+       end if
+    end do
+
+    found = .false.
+    do c = lbc, ubc
+       if (cwtgcell(c) > 0._r8 .and. abs(errh2osno(c)) > 1.0e-7_r8) then
+          found = .true.
+          indexc = c
+       end if
+    end do
+    if ( found ) then
+       write(iulog,*)'WARNING:  snow balance error ',&
+            ' nstep = ',nstep,' indexc= ',indexc,' errh2osno= ',errh2osno(indexc)
+       if (abs(errh2osno(indexc)) > 0.1_r8 .and. (nstep > 2) ) then
+          write(iulog,*)'clm model is stopping - error is greater than .10'
+          write(iulog,*)'nstep = ',nstep,' indexc= ',indexc,' errh2osno= ',errh2osno(indexc)
+          write(iulog,*)'ltype: ', ltype(clandunit(indexc))
+          write(iulog,*)'ctype(indexc): ',ctype(indexc)
+          write(iulog,*)'snl: ',snl(indexc)
+          write(iulog,*)'h2osno: ',h2osno(indexc)
+          write(iulog,*)'h2osno_old: ',h2osno_old(indexc)
+          write(iulog,*)'snow_sources: ', snow_sources(indexc)
+          write(iulog,*)'snow_sinks: ', snow_sinks(indexc)
+          write(iulog,*)'qflx_prec_grnd: ',qflx_prec_grnd(indexc)*dtime
+          write(iulog,*)'qflx_sub_snow: ',qflx_sub_snow(indexc)*dtime
+          write(iulog,*)'qflx_evap_grnd: ',qflx_evap_grnd(indexc)*dtime
+          write(iulog,*)'qflx_top_soil: ',qflx_top_soil(indexc)*dtime
+          write(iulog,*)'qflx_dew_snow: ',qflx_dew_snow(indexc)*dtime
+          write(iulog,*)'qflx_dew_grnd: ',qflx_dew_grnd(indexc)*dtime
+          write(iulog,*)'qflx_snwcp_ice: ',qflx_snwcp_ice(indexc)*dtime
+          write(iulog,*)'qflx_snwcp_liq: ',qflx_snwcp_liq(indexc)*dtime
+          write(iulog,*)'qflx_sl_top_soil: ',qflx_sl_top_soil(indexc)*dtime
+          write(iulog,*)'qflx_glcice_frz: ',qflx_glcice_frz(indexc)*dtime
           write(iulog,*)'clm model is stopping'
           call endrun()
        end if

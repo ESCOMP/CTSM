@@ -653,6 +653,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <!-- <frivinp_rtm rtm="on" rtm_res="R05" >lnd/clm2/rtmdata/rdirc_0.5x0.5_simyr2000_c101028.nc</frivinp_rtm> -->
 
 <!-- =========================================  -->
+<!-- Performance issues                         -->
+<!-- =========================================  -->
+
+<nsegspc                 >20</nsegspc>
+<nsegspc hgrid="ne30np4" >5</nsegspc>
+
+<!-- =========================================  -->
 <!-- Mapping Data                               -->
 <!-- =========================================  -->
 
@@ -1047,7 +1054,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <!-- CLM->RTM Mapping Files -->
 
-<map frm_hgrid="0.23x0.31" frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.23x0.31/map_5x5min_nomask_to_0.23x0.31_nomask_aave_da_c110920.nc</map>
+<map frm_hgrid="0.23x0.31" frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.23x0.31/map_0.23x0.31_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="0.47x0.63" frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.47x0.63/map_0.47x0.63_nomask_to_0.5x0.5_nomask_aave_da_c120306.nc</map>
 <map frm_hgrid="0.9x1.25"  frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.9x1.25/map_0.9x1.25_nomask_to_0.5x0.5_nomask_aave_da_c120222.nc</map>
 <map frm_hgrid="1.9x2.5"   frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/1.9x2.5/map_1.9x2.5_nomask_to_0.5x0.5_nomask_aave_da_c120221.nc</map>

@@ -746,7 +746,7 @@ bluefire that is available on the inputdata repository.
 > set dir = "lnd/clm2/pergrodata"
 > set file = bluefirePergro0.ICN.0001-01-01_1.9x2.5_gx1v6_simyr2000_clm4-cesm1_0_3.c110617.nc
 > echo "trustedfile = DIN_LOC_ROOT/$dir/$file" &gt; clm.input_data_list
-> ../ccsm_utils/Tools/check_input_data -datalistdir . -export
+> ../ccsm_utils/Tools/check_input_data -datalistdir . -export -inputdata $DIN_LOC_ROOT
 # And now run cprnc on the bluefire file and the new machine both without perturbation
 > ../../models/lnd/clm/tools/cprnc/cprnc $file \
 ../newMachinePergro0/newMachinePergro0.clm2.h0.001-01-01.00000.nc &gt; newPergro.log

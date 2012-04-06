@@ -34,6 +34,7 @@ if [ "$dir" = "$0" ];then
   dir="."
 fi
 outfilelist="clm.input_data_list"
+default_res="10x15"
 
 #----------------------------------------------------------------------
 # SET SOME DEFAULTS -- if not set via env variables outside
@@ -62,14 +63,14 @@ usage() {
   echo "     grid that has entries in the file namelist_defaults_clm.xml"
   echo "     the -r|--res argument MUST be specied if this argument is specified" 
   echo "[-r|--res <res>]"
-  echo "     Model output resolution (default is 10x15)"
+  echo "     Model output resolution (default is $default_res)"
   echo "[-t|--gridtype <type>]"
   echo "     Model output grid type"
   echo "     supported values are [regional,global], (default is global)"
   echo "[-b|--batch]"
   echo "     Toggles batch mode usage. If you want to run in batch mode"
   echo "     you need to have a separate batch script for a supported machine"
-  echo "     that calls this script interactively - you cannot submit submit this"
+  echo "     that calls this script interactively - you cannot submit this"
   echo "     script directory to the batch system"
   echo "[-l|--list]"
   echo "     List mapping files required (use check_input_data to get them)"
@@ -130,12 +131,13 @@ undo
 
 interactive="YES"
 debug="no"
-res="10x15"
+res="default"
 type="global"
 verbose="no"
 ocean="no"
 list="no"
 outgrid=""
+gridfile="default"
 
 while [ $# -gt 0 ]; do
    case $1 in
@@ -182,7 +184,6 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Script to create mapping files required by mksurfdata_map"
-echo "Output grid resolution is $res"
 
 #----------------------------------------------------------------------
 # Determine output scrip grid file
@@ -194,10 +195,17 @@ QUERY="$QUERY -justvalue -options sim_year=2000 -csmdata $CSMDATA"
 echo "query command is $QUERY"
 
 echo ""
-if [ ! -z "$gridfile" ]; then
+if [ "$gridfile" != "default" ]; then
     GRIDFILE=$gridfile
     echo "Using user specified scrip grid file: $GRIDFILE" 
+    if [ "$res" = "default" ]; then
+       echo "When user specified grid file is given you MUST set the resolution (as the name of your grid)\n";
+       exit 1
+    fi
 else
+    if [ "$res" = "default" ]; then
+       res=$default_res
+    fi
     # Find the output grid file for this resolution using the XML database
     QUERYFIL="$QUERY -var scripgriddata -res $res -options lmask=nomask"
     if [ "$verbose" = "YES" ]; then
@@ -206,6 +214,7 @@ else
     GRIDFILE=`$QUERYFIL`
     echo "Using default scrip grid file: $GRIDFILE" 
 fi
+echo "Output grid resolution is $res"
 if [ -z "$GRIDFILE" ]; then
    echo "Output grid file was NOT found for this resolution: $res\n";
    exit 1
@@ -215,7 +224,7 @@ if [ "$list" = "YES" ]; then
    echo "outgrid = $GRIDFILE"
    echo "outgrid = $GRIDFILE" > $outfilelist
 elif [ ! -f "$GRIDFILE" ]; then
-   echo "Output SCRIP grid file does NOT exist: $GRIDFILE\n";
+   echo "Input SCRIP grid file does NOT exist: $GRIDFILE\n";
    echo "Make sure CSMDATA environment variable is set correctly"
    exit 1
 fi

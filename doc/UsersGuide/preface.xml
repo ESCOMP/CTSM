@@ -231,7 +231,8 @@ List of formal examples in the document.
 hat are provided with the release or to spin the model up following the CN spinup 
 procedure before conducting scientific runs (see <xref linkend="CN_SPINUP"></xref>.  
 Simulations without a proper spinup will effectively be starting from an unvegetated 
-world.
+world. See <xref linkend="setting_finidat"></xref> for information on how to 
+provide initial conditions for your simulation.
 </para>
 </listitem>
 <listitem><para>Initial condition files are provided for fully coupled BCN and offline 
@@ -1400,6 +1401,9 @@ url="../../../../../scripts/ccsm_utils/Case.template/config_definition.xml">scri
 <member><ulink
 url="../../../../../scripts/ccsm_utils/Case.template/config_compsets.xml">scripts/ccsm_utils/Case.template/config_compsets.xml</ulink>
 -- definition of all the compsets.</member>
+<member><ulink
+url="../../bld/namelist_files/history_fields.xml">models/lnd/clm/bld/namelist_files/history_fields.xml</ulink>
+-- definition of &clm; history fields.</member>
 </simplelist>
 </para>
 </sect1>

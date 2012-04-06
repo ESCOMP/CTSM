@@ -36,6 +36,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY cprnc_readme        SYSTEM "cprnc_readme.xml">
   <!ENTITY nmldfntbl           SYSTEM "namelist_definition_table.xml">
   <!ENTITY nmldfltbl           SYSTEM "namelist_defaults_clm_table.xml">
+  <!ENTITY hisfldtbl           SYSTEM "history_fields_table.xml">
   <!ENTITY cfgdfntbl           SYSTEM "config_definition_table.xml">
 
   <!-- Aliases to use -->

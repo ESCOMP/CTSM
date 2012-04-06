@@ -155,15 +155,19 @@ contains
 
     call hist_addfld1d (fname='HCSOI',  units='MJ/m2',  &
          avgflag='A', long_name='soil heat content', &
-         ptr_col=clm3%g%l%c%ces%hc_soi, set_lake=spval, set_urb=spval)
+         ptr_col=clm3%g%l%c%ces%hc_soi, set_lake=spval, set_urb=spval, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='HC',  units='MJ/m2',  &
          avgflag='A', long_name='heat content of soil/snow/lake', &
          ptr_col=clm3%g%l%c%ces%hc_soisno, set_urb=spval)
 
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levgrnd', &
-         avgflag='A', long_name='soil temperature', &
-         ptr_col=clm3%g%l%c%ces%t_soisno, c2l_scale_type='urbanh')
+         avgflag='A', long_name='soil temperature (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%ces%t_soisno, l2g_scale_type='veg')
+
+    call hist_addfld2d (fname='TSOI_ICE',  units='K', type2d='levgrnd', &
+         avgflag='A', long_name='soil temperature (ice landunits only)', &
+         ptr_col=clm3%g%l%c%ces%t_soisno, l2g_scale_type='ice')
 
     call hist_addfld1d (fname='TSOI_10CM',  units='K', &
          avgflag='A', long_name='soil temperature in top 10cm of soil', &
@@ -656,66 +660,76 @@ contains
 
     call hist_addfld1d (fname='FCOV',  units='unitless',  &
          avgflag='A', long_name='fractional impermeable area', &
-         ptr_col=clm3%g%l%c%cws%fcov, c2l_scale_type='urbanh')
+         ptr_col=clm3%g%l%c%cws%fcov, l2g_scale_type='veg')
     call hist_addfld1d (fname='FSAT',  units='unitless',  &
          avgflag='A', long_name='fractional area with water table at surface', &
-         ptr_col=clm3%g%l%c%cws%fsat, c2l_scale_type='urbanh')
+         ptr_col=clm3%g%l%c%cws%fsat, l2g_scale_type='veg')
     call hist_addfld1d (fname='ZWT',  units='m',  &
-         avgflag='A', long_name='water table depth', &
-         ptr_col=clm3%g%l%c%cws%zwt, c2l_scale_type='urbanh')
-    !call hist_addfld1d (fname='FROST_TABLE',  units='m',  &
-    !     avgflag='A', long_name='frost table depth', &
-    !     ptr_col=clm3%g%l%c%cws%frost_table, c2l_scale_type='urbanh')
-    !call hist_addfld1d (fname='ZWT_PERCH',  units='m',  &
-    !     avgflag='A', long_name='perched water table depth', &
-    !     ptr_col=clm3%g%l%c%cws%zwt_perched, c2l_scale_type='urbanh')
-    !call hist_addfld1d (fname='QDRAI_PERCH',  units='mm/s',  &
-    !     avgflag='A', long_name='perched wt drainage', &
-    !     ptr_col=clm3%g%l%c%cwf%qflx_drain_perched, c2l_scale_type='urbanf')
+         avgflag='A', long_name='water table depth (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%zwt, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='WA',  units='mm',  &
-         avgflag='A', long_name='water in the unconfined aquifer', &
-         ptr_col=clm3%g%l%c%cws%wa, c2l_scale_type='urbanh')
+         avgflag='A', long_name='water in the unconfined aquifer (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%wa, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='WT',  units='mm',  &
-         avgflag='A', long_name='total water storage (unsaturated soil water + groundwater)', &
-         ptr_col=clm3%g%l%c%cws%wt, c2l_scale_type='urbanh')
+         avgflag='A', long_name='total water storage (unsaturated soil water + groundwater, veg landunits)', &
+         ptr_col=clm3%g%l%c%cws%wt, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
-         avgflag='A', long_name='aquifer recharge rate', &
-         ptr_col=clm3%g%l%c%cws%qcharge, c2l_scale_type='urbanh')
+         avgflag='A', long_name='aquifer recharge rate (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%qcharge, l2g_scale_type='veg')
 
     call hist_addfld2d (fname='SMP',  units='mm', type2d='levgrnd',  &
-         avgflag='A', long_name='soil matric potential', &
-         ptr_col=clm3%g%l%c%cws%smp_l, set_spec=spval, default='inactive')
+         avgflag='A', long_name='soil matric potential (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%smp_l, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
     call hist_addfld2d (fname='HK',  units='mm/s', type2d='levgrnd',  &
-         avgflag='A', long_name='hydraulic conductivity', &
-         ptr_col=clm3%g%l%c%cws%hk_l, set_spec=spval, default='inactive')
+         avgflag='A', long_name='hydraulic conductivity (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%hk_l, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
     call hist_addfld1d (fname='H2OSNO',  units='mm',  &
          avgflag='A', long_name='snow depth (liquid water)', &
          ptr_col=clm3%g%l%c%cws%h2osno, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='ERRH2OSNO',  units='mm',  &
+         avgflag='A', long_name='imbalance in snow depth (liquid water)', &
+         ptr_col=clm3%g%l%c%cws%errh2osno, c2l_scale_type='urbanf')
+
+    ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
+    ! any given time step but only if there is at least one snow layer (for all landunits 
+    ! except lakes).  h2osno also includes snow that is part of the soil column (an 
+    ! initial snow layer is only created if h2osno > 10mm). Also note that monthly average
+    ! files of snow_sources and snow sinks must be weighted by number of days in the month to 
+    ! diagnose, for example, an annual value of the change in h2osno. 
+
+    call hist_addfld1d (fname='SNOW_SOURCES',  units='mm/s',  &
+         avgflag='A', long_name='snow sources (liquid water)', &
+         ptr_col=clm3%g%l%c%cws%snow_sources, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='SNOW_SINKS',  units='mm/s',  &
+         avgflag='A', long_name='snow sinks (liquid water)', &
+         ptr_col=clm3%g%l%c%cws%snow_sinks, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='H2OCAN', units='mm',  &
          avgflag='A', long_name='intercepted water', &
          ptr_pft=clm3%g%l%c%p%pws%h2ocan, set_lake=0._r8)
 
     call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levgrnd', &
-         avgflag='A', long_name='volumetric soil water', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_vol, c2l_scale_type='urbanh')
+         avgflag='A', long_name='volumetric soil water (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_vol, l2g_scale_type='veg')
 
     call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levgrnd', &
-         avgflag='A', long_name='soil liquid water', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_liq, c2l_scale_type='urbanh')
+         avgflag='A', long_name='soil liquid water (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_liq, l2g_scale_type='veg')
 
     call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levgrnd', &
-         avgflag='A', long_name='soil ice', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_ice, c2l_scale_type='urbanh')
+         avgflag='A', long_name='soil ice (vegetated landunits only)', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_ice, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='SOILWATER_10CM',  units='kg/m2', &
-         avgflag='A', long_name='soil liquid water + ice in top 10cm of soil', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_liqice_10cm, set_urb=spval)
+         avgflag='A', long_name='soil liquid water + ice in top 10cm of soil (veg landunits only)', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_liqice_10cm, set_urb=spval, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='SNOWLIQ',  units='kg/m2',  &
          avgflag='A', long_name='snow liquid water', &
@@ -743,12 +757,12 @@ contains
 
     call hist_addfld1d (fname='QSNWCPLIQ', units='mm H2O/s', &
          avgflag='A', long_name='excess rainfall due to snow capping', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_liq, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_liq, c2l_scale_type='urbanf', default='inactive')
 
     call hist_addfld1d (fname='QSNWCPICE_NODYNLNDUSE', units='mm H2O/s', &
          avgflag='A', &
          long_name='excess snowfall due to snow capping not including correction for land use change', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_ice)
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_ice, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QSNWCPICE',  units='mm/s',  &
          avgflag='A', long_name='excess snowfall due to snow capping', &
@@ -807,9 +821,14 @@ contains
          avgflag='A', long_name='throughfall', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_prec_grnd, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QMELT',  units='mm/s',  &
+    call hist_addfld1d (fname='QSNOMELT',  units='mm/s',  &
          avgflag='A', long_name='snow melt', &
          ptr_col=clm3%g%l%c%cwf%qflx_snomelt, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='QSNOFRZ', units='kg/m2/s', &
+         avgflag='A', long_name='column-integrated snow freezing rate', &
+         ptr_col=clm3%g%l%c%cwf%qflx_snofrz_col, default='inactive', &
+         set_lake=spval, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QSOIL', units='mm/s',  &
          avgflag='A', long_name= &
@@ -834,9 +853,13 @@ contains
             avgflag='A', long_name='ice growth/melt', &
             ptr_col=clm3%g%l%c%cwf%qflx_glcice, set_noglcmec=spval)
 
-       call hist_addfld1d (fname='QICEYR',  units='mm/s',  &
-            avgflag='A', long_name='ice growth/melt', &
-            ptr_col=clm3%g%l%c%cwf%qflx_glcice, set_noglcmec=spval)
+       call hist_addfld1d (fname='QICE_FRZ',  units='mm/s',  &
+            avgflag='A', long_name='ice growth', &
+            ptr_col=clm3%g%l%c%cwf%qflx_glcice_frz, set_noglcmec=spval)
+
+       call hist_addfld1d (fname='QICE_MELT',  units='mm/s',  &
+            avgflag='A', long_name='ice melt', &
+            ptr_col=clm3%g%l%c%cwf%qflx_glcice_melt, set_noglcmec=spval)
 
        call hist_addfld1d (fname='gris_mask',  units='unitless',  &
             avgflag='A', long_name='Greenland mask', &
@@ -4424,15 +4447,19 @@ contains
 
     call hist_addfld1d (fname='QFLX_RAIN_GRND', units='mm H2O/s', &
          avgflag='A', long_name='rain on ground after interception', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_rain_grnd, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_rain_grnd, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_SNOW_GRND', units='mm H2O/s', &
          avgflag='A', long_name='snow on ground after interception', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_snow_grnd, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snow_grnd, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='QFLX_EVAP_GRND', units='mm H2O/s', &
+         avgflag='A', long_name='ground surface evaporation', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_grnd, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_EVAP_VEG', units='mm H2O/s', &
          avgflag='A', long_name='vegetation evaporation', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_veg, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_veg, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_EVAP_TOT', units='mm H2O/s', &
          avgflag='A', long_name='qflx_evap_soi + qflx_evap_can + qflx_tran_veg', &
@@ -4440,15 +4467,15 @@ contains
 
     call hist_addfld1d (fname='QFLX_DEW_GRND', units='mm H2O/s', &
          avgflag='A', long_name='ground surface dew formation', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_grnd, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_grnd, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_SUB_SNOW', units='mm H2O/s', &
          avgflag='A', long_name='sublimation rate from snow pack', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_sub_snow, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_sub_snow, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_DEW_SNOW', units='mm H2O/s', &
          avgflag='A', long_name='surface dew added to snow pacK', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_snow, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_snow, default='inactive', c2l_scale_type='urbanf')
 
     
 #endif

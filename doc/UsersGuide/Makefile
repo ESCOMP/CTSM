@@ -5,7 +5,7 @@
 VPATH := ../../tools/cprnc . .. ../../bld ../../tools/ncl_scripts \
 	../../tools/mksurfdata ../../test/system ../../bld/namelist_files \
 	../../bld/config_files ../../tools ../../../../../scripts/ccsm_utils/Tools \
-        ../../../../../scripts/ccsm_utils/Tools/lnd/clm/PTCLM/
+        ../../../../../scripts/ccsm_utils/Tools/lnd/clm/PTCLM/ ../../src/main
 
 PDFUG     := clm_ug.pdf
 HTMLUG    := book1.html
@@ -28,6 +28,7 @@ CO2DIF    := addco2_datm.buildnml
 DATLOG    := build_date
 NMLDFTBL  := namelist_definition_table
 NMLDLTBL  := namelist_defaults_clm_table
+HSFLDTBL  := history_fields_table
 CFGDFTBL  := config_definition_table
 COMPLIST  := compsets_list_ofIcases.xml
 SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(PTCLOG).xml $(BNMLOG).xml \
@@ -36,7 +37,7 @@ SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(PTCLOG).xml $(BNMLOG).xml \
              tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml \
              appendix.xml trouble_shooting.xml ptclm.xml $(BSTLOG).xml \
              $(MKSLOG).xml $(TDRLOG).xml $(DATLOG).xml $(CPRLOG).xml \
-	     $(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml
+	     $(NMLDFTBL).xml $(NMLDLTBL).xml $(CFGDFTBL).xml $(HSFLDTBL).xml
 
 CONVAMP    := sed 's/\&/\&amp;/g'
 CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
@@ -76,6 +77,15 @@ $(NMLDLTBL).xhtml: namelist_defaults_clm.xml namelist_defaults.xsl
 
 $(CFGDFTBL).xhtml: config_definition.xml config_definition.xsl
 	xsltproc ../../bld/config_files/config_definition.xsl $< > tmpFile.txt
+	addxhtmlhead.pl tmpFile.txt > $@
+	$(RM) tmpFile.txt
+
+history_fields.xml: findHistFields.pl
+	cd ../../src/main; ./findHistFields.pl >& tmpFile.txt
+	$(RM) tmpFile.txt
+
+$(HSFLDTBL).xhtml: history_fields.xml history_fields.xsl
+	xsltproc ../../bld/namelist_files/history_fields.xsl $< > tmpFile.txt
 	addxhtmlhead.pl tmpFile.txt > $@
 	$(RM) tmpFile.txt
 

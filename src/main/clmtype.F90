@@ -1151,6 +1151,9 @@ end type column_estate_type
 type, public :: column_wstate_type
    type(pft_wstate_type):: pws_a             !pft-level water state variables averaged to the column
    real(r8), pointer :: h2osno(:)             !snow water (mm H2O)
+   real(r8), pointer :: errh2osno(:)          !imbalance in snow water (mm H2O)
+   real(r8), pointer :: snow_sources(:)       !snow sources (mm H2O/s)
+   real(r8), pointer :: snow_sinks(:)         !snow sinks (mm H2O/s)
    real(r8), pointer :: h2osoi_liq(:,:)       !liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
    real(r8), pointer :: h2osoi_ice(:,:)       !ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
    real(r8), pointer :: h2osoi_liqice_10cm(:) !liquid water + ice lens in top 10cm of soil (kg/m2)
@@ -1291,6 +1294,7 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_surf(:)	! surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_drain(:) 	! sub-surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_top_soil(:)! net water input into soil from top (mm/s)
+   real(r8), pointer :: qflx_sl_top_soil(:) ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
    !real(r8), pointer :: qflx_snow_out(:)   !net water output from snow column
    !real(r8), pointer :: qflx_drain_perched(:) 	! sub-surface runoff from perched wt (mm H2O /s)
    real(r8), pointer :: qflx_snomelt(:) ! snow melt (mm H2O /s)
@@ -1321,8 +1325,11 @@ type, public :: column_wflux_type
    real(r8), pointer :: flx_dst_dep_wet4(:) ! dust species 4 wet deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: flx_dst_dep(:)      ! total (dry+wet) dust deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: qflx_snofrz_lyr(:,:)! snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+   real(r8), pointer :: qflx_snofrz_col(:)  ! column-integrated snow freezing rate (positive definite) (col) [kg m-2 s-1]
    real(r8), pointer :: qflx_irrig(:)     !irrigation flux (mm H2O/s)
-   real(r8), pointer :: qflx_glcice(:)      ! flux of new glacial ice (mm H2O/s), passed to GLC
+   real(r8), pointer :: qflx_glcice(:)      ! net flux of new glacial ice (growth - melt) (mm H2O/s), passed to GLC
+   real(r8), pointer :: qflx_glcice_frz(:)  ! ice growth (positive definite) (mm H2O/s)
+   real(r8), pointer :: qflx_glcice_melt(:) ! ice melt (positive definite) (mm H2O/s)
    real(r8), pointer :: glc_rofi(:)         ! ice runoff passed from GLC to CLM (mm H2O /s)
    real(r8), pointer :: glc_rofl(:)         ! liquid runoff passed from GLC to CLM (mm H2O /s)
 end type column_wflux_type

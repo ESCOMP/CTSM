@@ -1,3 +1,11 @@
 ! Users should add all user specific namelist changes below in the form of 
 ! namelist_var = new_namelist_value 
- 
+!
+! NOTE:
+! Turn do_rtm on and off with CLM_BLDNML_OPTS option -rtm
+! Set rtm_nsteps         with CLM_BLDNML_OPTS option -rtm_tstep
+! Set maxpatch_glcmec    with GLC_NEC         option
+! Set glc_smb            with GLC_SMB         option
+! Set glc_grid           with GLC_GRID        option
+! Set co2_ppmv           with CCSM_CO2_PPMV   option
+!

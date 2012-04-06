@@ -359,6 +359,8 @@ So do the following:
 <screen width="99">
 > ./xmlchange -file env_conf.xml -id &CLMNAMELIST; -val "hist_fincl1=&amp;apos;HK&amp;apos;"
 </screen>
+For a list of the history fields available see
+<ulink url="../../bld/namelist_files/history_fields.xml">&clm; History Fields</ulink>.
 </para>
 <note>
 <para>
@@ -524,7 +526,7 @@ details on each variable.
 </sect2>
 
 <sect2 id="precedence">
-<title>Precidence of Options</title>
+<title>Precedence of Options</title>
 <para>
 Note: The precedence for setting the values of namelist variables with the
 different env_conf options is (highest to lowest):
@@ -545,6 +547,101 @@ Thus a setting in &CLMBLDNML; will override a setting for the same thing given i
 a use case with &CLMUSECASE;. Likewise, a setting in &CLMNAMELIST; will override a
 setting in &usernlclm;.
 </para>
+</sect2>
+
+<sect2 id="setting_finidat">
+<title>Setting Your Initial Conditions File</title>
+<para>
+Especially with &clmcn; starting from initial conditions is very important. Even
+with &clmsp; it takes many simulation years to get the model fully spunup. There
+are a couple different ways to provide an initial condition file.
+<simplelist>
+<member><xref linkend="hybrid_IC"></xref></member>
+<member><xref linkend="branch_IC"></xref></member>
+<member><xref linkend="user_nl_clm_IC"></xref></member>
+<member><xref linkend="adding_finidat_in_XML"></xref></member>
+</simplelist>
+<note>
+<para>
+Your initial condition file MUST agree with the surface dataset you are using
+to run the simulation. If the two files do NOT agree you will get a
+run-time about a mis-match in PFT weights, or in the number of PFT's or
+columns. To get around this you'll need to use <xref linkend="interpinic"></xref>
+to interpolate your initial condition dataset.
+</para>
+</note>
+</para>
+
+<sect3 id="hybrid_IC">
+<title>Doing a hybrid simulation to provide initial conditions</title>
+<para>
+The first option is to setup a hybrid simulation and give a 
+<envar>RUN_REFCASE</envar> and <envar>RUN_REFDATE</envar> to specify the 
+reference case simulation name to use.
+When you setup most cases, at the standard resolutions of "f09" or "f19" it
+will already do this for you. For example, if you run an "I2000CN" compset
+at "f09_g16" resolution the following settings will already be done for you.
+<screen width="99">
+./xmlchange -file env_conf.xml -id RUN_TYPE    -val hybrid
+./xmlchange -file env_conf.xml -id RUN_REFCASE -val I2000CN_f09_g16_c100503
+./xmlchange -file env_conf.xml -id RUN_REFDATE -val 0001-01-01
+./xmlchange -file env_conf.xml -id GET_REFCASE -val TRUE
+</screen>
+Setting the <envar>GET_REFCASE</envar> option to <literal>TRUE</literal> means it
+will copy the files from the:
+<filename>$DIN_LOC_ROOT/ccsm4_init/I2000CN_f09_g16_c100503/0001-01-01</filename>
+directory. Note, that the <literal>RUN_REFCASE</literal> and
+<literal>RUN_REFDATE</literal> variables are expanded to get the directory name
+above. If you do NOT set <envar>GET_REFCASE</envar> to <literal>TRUE</literal> then
+you will need to have placed the file in your run directory yourself. In either
+case, the file is expected to be named: 
+<literal>$RUN_REFCASE.clm2.r.$RUN_REFDATE-00000.nc</literal> with the variables 
+expanded of course.
+</para>
+</sect3>
+
+<sect3 id="branch_IC">
+<title>Doing a branch simulation to provide initial conditions</title>
+<para>
+The setup for running a branch simulation is essentially the same as for a hybrid.
+With the exception of setting <envar>RUN_TYPE</envar> to <literal>branch</literal>
+rather than <literal>hybrid</literal>. A branch simulation runs the case essentially
+as restarting from it's place before to exactly reproduce it. While a hybrid simulation
+allows you to change namelist items, and use a different code base that may have
+fewer fields on it than a full restart file. The <envar>GET_REFCASE</envar> works
+similarily for a branch case as for a hybrid.
+</para>
+</sect3>
+
+<sect3 id="user_nl_clm_IC">
+<title>Providing a finidat file in your &usernlclm; file</title>
+<para>
+Setting up a branch or hybrid simulation requires the initial condition file
+to follow a standard naming convention, and a standard input directory if you
+use the <envar>GET_REFCASE</envar> option. If you want to name your file willy
+nilly and place it anywhere, you can set it in your &usernlclm; file as in this
+example.
+<screen width="99">
+&amp;clm_inparm
+ finidat    = '/glade/home/$USER/myinitdata/clmi_I1850CN_f09_g16_0182-01-01.c120329.nc'
+/
+</screen>
+Note, if you provide an initial condition file -- you can NOT set &CLMFORCECOLD; to 
+<literal>TRUE</literal>.
+</para>
+</sect3>
+
+<sect3 id="adding_finidat_in_XML">
+<title>Adding a finidat file to the XML database</title>
+<para>
+Like other datasets, if you want to use a given initial condition file to
+be used for all (or most of) your cases you'll want to put it in the XML
+database so it will be used by default. The initial condition files, are
+resolution dependent, and dependent on the number of PFT's and other variables
+such as <envar>GLC_NEC</envar> or if irrigation is on or off.
+See <xref linkend="adding_files"></xref> for more information on this.
+</para>
+</sect3>
 </sect2>
 
 <sect2 id="other_config">
@@ -792,7 +889,9 @@ Many of these items are things that you would NOT change, but looking through th
 list gives you the valid options, and a good description of each. Below we repeat 
 the <filename>config_definition.xml</filename> files contents:
 </para>
-<!--
+
+<!-- Currently the following table cause docbook to fail for PDF with a seg-fault
+     EBK Feb/25/2012
 <sect3 id="clm_config_definition">
 &cfgdfntbl;
 </sect3>
@@ -857,6 +956,15 @@ then expand each in turn.
 &clm; Namelist Item</ulink>
 </para></listitem>
 </orderedlist>
+<para>
+One set of the namelist items allows you to add fields to the output history files:
+<varname>hist_fincl1</varname>, <varname>hist_fincl2</varname>, 
+<varname>hist_fincl3</varname>, <varname>hist_fincl4</varname>, 
+<varname>hist_fincl5</varname>, and <varname>hist_fincl6</varname>. The link
+<ulink url="../../bld/namelist_files/history_fields.xml">&clm; History Fields</ulink>
+documents all of the history fields available and gives the long-name and units
+for each.
+</para>
 
 <!-- Currently the following two tables cause docbook to fail for PDF with a seg-fault
      EBK Aug/19/2010
@@ -869,6 +977,10 @@ then expand each in turn.
 &nmldfltbl;
 </sect3>
 -->
+
+<sect3 id="his_fld_table">
+&hisfldtbl;
+</sect3>
 
 </sect2>
 <!-- End of nl definition section -->

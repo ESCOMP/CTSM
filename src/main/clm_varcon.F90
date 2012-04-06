@@ -116,6 +116,7 @@ module clm_varcon
   !   5     wetland (swamp, marsh, etc.)
   !   6     urban
   !   7     land ice (glacier) with multiple elevation classes
+  !   8     crop
 
   integer :: istsoil    = 1  !soil         landunit type
   integer :: istice     = 2  !land ice     landunit type
@@ -125,6 +126,8 @@ module clm_varcon
   integer :: isturb     = 6  !urban        landunit type
   integer :: istice_mec = 7  !land ice (multiple elevation classes) landunit type
   integer :: istcrop    = 8  !crop         landunit type
+  integer :: max_lunit  = 8  !maximum value that clm3%g%l%itype can have
+                             !(i.e., largest value in the above list)
 
   ! urban column types
 

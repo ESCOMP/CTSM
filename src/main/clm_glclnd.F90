@@ -153,7 +153,7 @@ end subroutine init_lnd2glc_type
 ! !IROUTINE: create_clm_s2x
 !
 ! !INTERFACE:
-  subroutine create_clm_s2x(clm_s2x)
+  subroutine create_clm_s2x(clm_s2x, init)
 !
 ! !DESCRIPTION:
 ! Assign values to clm_s2x based on the appropriate derived types
@@ -169,6 +169,7 @@ end subroutine init_lnd2glc_type
   implicit none
 
   type(lnd2glc_type), intent(out) :: clm_s2x
+  logical, optional, intent(in)   :: init    ! if true=>only set a subset of arguments (default: false)
 !
 ! !REVISION HISTORY:
 ! Written by William Lipscomb, Feb. 2009 
@@ -177,6 +178,7 @@ end subroutine init_lnd2glc_type
     integer :: begg, endg              ! per-proc beginning and ending gridcell indices
     integer :: begc, endc              ! per-proc beginning and ending column indices
     integer :: c, l, g, n              ! indices
+    logical :: l_init                  ! local corresponding to optional init argument
     integer , pointer :: ityplun(:)    ! landunit type
     integer , pointer :: clandunit(:)  ! column's landunit index
     integer , pointer :: cgridcell(:)  ! column's gridcell index
@@ -187,13 +189,24 @@ end subroutine init_lnd2glc_type
     cgridcell => clm3%g%l%c%gridcell
     ityplun   => clm3%g%l%itype
 
+    ! Assign local variables to optional arguments
+
+    l_init = .false.
+    if (present(init)) l_init = init
+
     ! Get processor bounds
     call get_proc_bounds(begg, endg, begc=begc, endc=endc)
 
-    ! Initialize to be safe
+    ! Initialize qice because otherwise it will remain unset if init=true and
+    ! glc_smb=true; note that the value here is the value qice will keep if these
+    ! conditions hold
+
+    clm_s2x%qice(:,:) = 0._r8
+
+    ! and initialize the other variables just to be safe
+
     clm_s2x%tsrf(:,:) = 0._r8
     clm_s2x%topo(:,:) = 0._r8
-    clm_s2x%qice(:,:) = 0._r8
 
     ! Fill the clm_s2x vector on the clm grid
 
@@ -205,13 +218,21 @@ end subroutine init_lnd2glc_type
           ! Following assumes all elevation classes are populated
           if (ityplun(l) == istice_mec) then
              n = c - clm3%g%l%coli(l) + 1    ! elevation class index
+
+             ! t_soisno and glc_topo are valid even in initialization, so tsrf and topo
+             ! are set here regardless of the value of init. But qflx_glcice is not valid
+             ! until the run loop; thus, in initialization, we will use the default value
+             ! for qice, as set above.
              clm_s2x%tsrf(g,n) = clm3%g%l%c%ces%t_soisno(c,1)
-             clm_s2x%qice(g,n) = clm3%g%l%c%cwf%qflx_glcice(c)
              clm_s2x%topo(g,n) = clm3%g%l%c%cps%glc_topo(c)
-             ! Check for bad values of qice
-             if ( abs(clm_s2x%qice(g,n)) > 1.0_r8 .and. clm_s2x%qice(g,n) /= spval) then
-                write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
-             endif
+             if (.not. l_init) then
+                clm_s2x%qice(g,n) = clm3%g%l%c%cwf%qflx_glcice(c)
+
+                ! Check for bad values of qice
+                if ( abs(clm_s2x%qice(g,n)) > 1.0_r8 .and. clm_s2x%qice(g,n) /= spval) then
+                   write(iulog,*) 'WARNING: qice out of bounds: g, n, qice =', g, n, clm_s2x%qice(g,n)
+                endif
+             end if
 
            endif    ! istice_mec
        enddo        ! c

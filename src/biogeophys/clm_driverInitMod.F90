@@ -142,6 +142,7 @@ contains
 
     do c = lbc, ubc
 
+      l = clandunit(c)
       g = cgridcell(c)
 
       ! Initialize column forcing
@@ -162,7 +163,11 @@ contains
          do_capsnow(c) = .false.
       end if
       eflx_bot(c)    = 0._r8
-      qflx_glcice(c) = 0._r8
+      
+      ! Initialize qflx_glcice, but only over ice_mec landunits (elsewhere, it is spval)
+      if (ityplun(l) == istice_mec) then
+         qflx_glcice(c) = 0._r8
+      end if
 
     end do
 

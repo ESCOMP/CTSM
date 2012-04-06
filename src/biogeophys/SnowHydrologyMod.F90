@@ -662,6 +662,7 @@ contains
     use clmtype
     use clm_varcon, only : istsoil, isturb
     use clm_varcon, only : istcrop
+    use clm_time_manager, only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -708,6 +709,7 @@ contains
     real(r8), pointer :: mss_dst3(:,:)   ! dust species 3 mass in snow (col,lyr) [kg]
     real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
     real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
+    real(r8), pointer :: qflx_sl_top_soil(:) ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -722,6 +724,7 @@ contains
     real(r8):: zwice(lbc:ubc)        ! total ice mass in snow
     real(r8):: zwliq (lbc:ubc)       ! total liquid water in snow
     real(r8):: dzmin(5)              ! minimum of top snow layer
+    real(r8) :: dtime                !land model time step (sec)
 
     data dzmin /0.010_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8/
 !-----------------------------------------------------------------------
@@ -751,6 +754,11 @@ contains
     mss_dst3   => clm3%g%l%c%cps%mss_dst3
     mss_dst4   => clm3%g%l%c%cps%mss_dst4
     snw_rds    => clm3%g%l%c%cps%snw_rds
+    qflx_sl_top_soil => clm3%g%l%c%cwf%qflx_sl_top_soil
+
+    ! Determine model time step
+
+    dtime = get_step_size()
 
 
     ! Check the mass of ice lens of snow, when the total is less than a small value,
@@ -759,6 +767,7 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        msn_old(c) = snl(c)
+       qflx_sl_top_soil(c) = 0._r8
     end do
 
     ! The following loop is NOT VECTORIZED
@@ -771,6 +780,10 @@ contains
              if (ltype(l) == istsoil .or. ltype(l)==isturb .or. ltype(l) == istcrop) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+
+                if (j == 0) then
+                  qflx_sl_top_soil(c) = (h2osoi_liq(c,j) + h2osoi_ice(c,j))/dtime
+                end if
 
                 if (j /= 0) dz(c,j+1) = dz(c,j+1) + dz(c,j)
                 
@@ -809,6 +822,14 @@ contains
              ! shift all elements above this down one.
              if (j > snl(c)+1 .and. snl(c) < -1) then
                 do i = j, snl(c)+2, -1
+                   ! If the layer closest to the surface is less than 0.1 mm and the ltype is not
+                   ! urban or soil, the h2osoi_liq and h2osoi_ice associated with this layer is sent 
+                   ! to qflx_qrgwl later on in the code.  To keep track of this for the snow balance
+                   ! error check, we add this to qflx_sl_top_soil here
+                   if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. i == 0) then
+                     qflx_sl_top_soil(c) = (h2osoi_liq(c,i) + h2osoi_ice(c,i))/dtime
+                   end if
+
                    t_soisno(c,i)   = t_soisno(c,i-1)
                    h2osoi_liq(c,i) = h2osoi_liq(c,i-1)
                    h2osoi_ice(c,i) = h2osoi_ice(c,i-1)

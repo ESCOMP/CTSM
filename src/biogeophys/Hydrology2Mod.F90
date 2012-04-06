@@ -195,6 +195,7 @@ contains
     real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
     logical , pointer :: do_capsnow(:)      ! true => do snow capping
     real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s)
+    real(r8), pointer :: qflx_glcice_frz(:) ! ice growth (positive definite) (mm H2O/s)
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -316,6 +317,7 @@ contains
     do_capsnow        => clm3%g%l%c%cps%do_capsnow
     qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
+    qflx_glcice_frz   => clm3%g%l%c%cwf%qflx_glcice_frz
 
     ! Determine time step and step size
 
@@ -526,7 +528,8 @@ contains
 
        if (ityplun(l)==istice_mec) then
 
-          qflx_glcice(c) = qflx_glcice(c) + qflx_snwcp_ice(c)
+          qflx_glcice_frz(c) = qflx_snwcp_ice(c)
+          qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
 
           ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
           ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
@@ -545,6 +548,7 @@ contains
        else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          qflx_runoff_r(c) = qflx_runoff(c)
        end if
+
     end do
 
 #if (defined CN) 
