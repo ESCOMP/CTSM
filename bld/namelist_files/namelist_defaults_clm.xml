@@ -48,8 +48,20 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <urban_traffic>.false.</urban_traffic>
 
 <!-- Default rtm namelist -->
-<do_rtm rtm="on"  >.true.</do_rtm>  
-<do_rtm           >.false.</do_rtm>  
+<do_rtm rtm="on"                             >.true.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_brazil"          >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_tropicAtl"       >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="5x5_amazon"          >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_camdenNJ"        >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_vancouverCAN"    >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_mexicocityMEX"   >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_asphaltjungleNJ" >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_urbanc_alpha"    >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_numaIA"          >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="1x1_smallvilleIA"    >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="us20"                >.false.</do_rtm>  
+<do_rtm rtm="on" hgrid="wus12"               >.false.</do_rtm>  
+<do_rtm                                      >.false.</do_rtm>  
 
 <!-- Default ice stream -->
 <ice_runoff rtm="on" hgrid="48x96" >.false.</ice_runoff>
@@ -117,6 +129,16 @@ ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/init
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
 ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
+</finidat>
+
+<!-- Initial files for WRF resolutions -->
+
+<finidat hgrid="wus12"     maxpft="17"  mask="wus12" bgc="none" ic_ymd="20030101"
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.wus12.init20031001_c110208.nc
+</finidat>
+
+<finidat hgrid="us20"      maxpft="17"  mask="us20"  bgc="none" ic_ymd="20050101"
+ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.us20.init20050101_c120125.nc
 </finidat>
 
 <!-- Initial files interpolated from native resolution -->
@@ -234,6 +256,16 @@ lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c110114.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" glc_nec="10" irrig=".false." >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1850_c110114.nc</fsurdat>
 
+<!-- for present day simulations with WRF - year 2000 (same file with/without Glacier model) -->
+<fsurdat hgrid="wus12"     sim_year="2000" glc_nec="0"  irrig=".false." crop="off" >
+lnd/clm2/surfdata/surfdata_0336x0340_20110128.nc</fsurdat>
+<fsurdat hgrid="us20"      sim_year="2000" glc_nec="0"  irrig=".false." crop="off" >
+lnd/clm2/surfdata/surfdata_0230x0350_20110930.nc</fsurdat>
+<fsurdat hgrid="wus12"     sim_year="2000" glc_nec="10" irrig=".false." crop="off" >
+lnd/clm2/surfdata/surfdata_0336x0340_20110128.nc</fsurdat>
+<fsurdat hgrid="us20"      sim_year="2000" glc_nec="10" irrig=".false." crop="off" >
+lnd/clm2/surfdata/surfdata_0230x0350_20110930.nc</fsurdat>
+
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="128x256"   sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_128x256_simyr2000_c100406.nc</fsurdat>
@@ -268,8 +300,14 @@ lnd/clm2/surfdata/surfdata_4x5_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_10x15_simyr2000_c090928.nc</fsurdat>
 
+<fsurdat hgrid="ne4np4"      sim_year="2000" irrig=".false." >
+lnd/clm2/surfdata_map/surfdata_ne4np4_simyr2000_c120126.nc</fsurdat>
+<fsurdat hgrid="ne16np4"     sim_year="2000" irrig=".false." >
+lnd/clm2/surfdata_map/surfdata_ne16np4_simyr2000_c120126.nc</fsurdat>
 <fsurdat hgrid="ne30np4"     sim_year="2000" irrig=".false." >
 lnd/clm2/surfdata_map/surfdata_ne30np4_simyr2000_c110801.nc</fsurdat>
+<fsurdat hgrid="ne60np4"     sim_year="2000" irrig=".false." >
+lnd/clm2/surfdata_map/surfdata_ne60np4_simyr2000_c120416.nc</fsurdat>
 <fsurdat hgrid="ne120np4"    sim_year="2000" irrig=".false." >
 lnd/clm2/surfdata_map/surfdata_ne120np4_simyr2000_c110817.nc</fsurdat>
 <fsurdat hgrid="ne240np4"    sim_year="2000" irrig=".false." >
@@ -355,8 +393,14 @@ lnd/clm2/surfdata/surfdata_4x5_simyr1850_c090928.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_10x15_simyr1850_c100202.nc</fsurdat>
 
+<fsurdat hgrid="ne4np4"      sim_year="1850" irrig=".false." >
+lnd/clm2/surfdata_map/surfdata_ne4np4_simyr1850_c120126.nc</fsurdat>
+<fsurdat hgrid="ne16np4"     sim_year="1850" irrig=".false." >
+lnd/clm2/surfdata_map/surfdata_ne16np4_simyr1850_c120126.nc</fsurdat>
 <fsurdat hgrid="ne30np4"     sim_year="1850" irrig=".false." >
 lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c110727.nc</fsurdat>
+<fsurdat hgrid="ne60np4"     sim_year="1850" irrig=".false." >
+lnd/clm2/surfdata_map/surfdata_ne60np4_simyr1850_c120416.nc</fsurdat>
 <fsurdat hgrid="ne120np4"    sim_year="1850" irrig=".false." >
 lnd/clm2/surfdata_map/surfdata_ne120np4_simyr1850_c110817.nc</fsurdat>
 <fsurdat hgrid="ne240np4"    sim_year="1850" irrig=".false." >
@@ -398,6 +442,15 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
  irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_48x96_hist_simyr1850-2005_c120127.nc</fpftdyn>
 -->
 
+<fpftdyn hgrid="ne16np4"       sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne16np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+<fpftdyn hgrid="ne30np4"       sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne30np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+<fpftdyn hgrid="ne60np4"       sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne60np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+<fpftdyn hgrid="ne120np4"      sim_year_range="1850-2000" 
+ irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne120np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+
 
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid hgrid="512x1024"  >lnd/clm2/griddata/griddata_512x1024_c100513.nc</fatmgrid>
@@ -407,6 +460,9 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmgrid hgrid="32x64"     >lnd/clm2/griddata/griddata_32x64_070212.nc</fatmgrid>
 <fatmgrid hgrid="8x16"      >lnd/clm2/griddata/griddata_8x16_070212.nc</fatmgrid>
 <fatmgrid hgrid="94x192"    >lnd/clm2/griddata/griddata_94x192_c081219.nc</fatmgrid>
+
+<fatmgrid hgrid="wus12"     >lnd/clm2/griddata/fracdata_wus12_wus12_111215.nc</fatmgrid>
+<fatmgrid hgrid="us20"      >lnd/clm2/griddata/fracdata_us20_us20.20120105.nc</fatmgrid>
 
 <fatmgrid hgrid="0.23x0.31" >lnd/clm2/griddata/griddata_0.23x0.31_c070927.nc</fatmgrid>
 <fatmgrid hgrid="0.47x0.63" >lnd/clm2/griddata/griddata_0.47x0.63_c070918.nc</fatmgrid>
@@ -426,7 +482,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmgrid hgrid="1x1_mexicocityMEX"  >lnd/clm2/griddata/griddata_1x1pt_mexicocityMEX_c090715.nc</fatmgrid>
 <fatmgrid hgrid="1x1_urbanc_alpha"   >lnd/clm2/griddata/griddata_1x1pt_urbanc_alpha_c090715.nc</fatmgrid>
 <fatmgrid hgrid="1x1_asphaltjungleNJ">lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
-
 
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 
@@ -544,7 +599,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <flndtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
 <flndtopo hgrid="48x96"     >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</flndtopo>
 
-
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->
 <fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>
@@ -656,8 +710,15 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <!-- Performance issues                         -->
 <!-- =========================================  -->
 
-<nsegspc                 >20</nsegspc>
-<nsegspc hgrid="ne30np4" >5</nsegspc>
+<nsegspc                   >20</nsegspc>
+<nsegspc hgrid="ne4np4"    >1</nsegspc>
+<nsegspc hgrid="ne16np4"   >1</nsegspc>
+<nsegspc hgrid="ne30np4"   >1</nsegspc>
+<nsegspc hgrid="ne60np4"   >1</nsegspc>
+<nsegspc hgrid="ne120np4"  >1</nsegspc>
+<nsegspc hgrid="ne240np4"  >1</nsegspc>
+<nsegspc hgrid="0.47x0.63" >1</nsegspc>
+<nsegspc hgrid="0.23x0.31" >1</nsegspc>
 
 <!-- =========================================  -->
 <!-- Mapping Data                               -->

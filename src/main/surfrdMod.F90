@@ -560,7 +560,9 @@ contains
        lon_var  = 'LONGXY'
        lat_var  = 'LATIXY'
     end if
-    write(iulog,*) trim(subname),' lon_var = ',trim(lon_var),' lat_var =',trim(lat_var)
+    if ( masterproc )then
+       write(iulog,*) trim(subname),' lon_var = ',trim(lon_var),' lat_var =',trim(lat_var)
+    end if
 
     call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
     call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, clmlevel=grlnd)
@@ -576,10 +578,14 @@ contains
     rmaxlon = 0.0_r8
     rmaxlat = 0.0_r8
     do n = begg,endg
-       rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)))
+       if (ldomain%lonc(n)-surfdata_domain%lonc(n) > 300.) then
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)-360._r8))
+       elseif (ldomain%lonc(n)-surfdata_domain%lonc(n) < -300.) then
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)+360._r8))
+       else
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)))
+       endif
        rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-surfdata_domain%latc(n)))
-       write(6,*)'n= ',n,'ldomain%lonc(n)= ',ldomain%lonc(n),' surfdata_domain%lonc(n)= ',surfdata_domain%lonc(n) 
-       write(6,*)'n= ',n,'ldomain%latc(n)= ',ldomain%latc(n),' surfdata_domain%latc(n)= ',surfdata_domain%latc(n) 
     enddo
     if (rmaxlon > 0.001_r8 .or. rmaxlat > 0.001_r8) then
        write(iulog,*) trim(subname)//': surfdata/fatmgrid lon/lat mismatch error',&

@@ -2435,8 +2435,7 @@ end subroutine pftdyn_cnbal
 
     allocate(wtcol_old(begp:endp),stat=ier)
     if (ier /= 0) then
-       write(6,*)'pftwt_init allocation error for wtcol_old'
-       call endrun()
+       call endrun( subname//'::ERROR: pftwt_init allocation error for wtcol_old')
     end if
 
     if (nsrest == nsrStartup) then

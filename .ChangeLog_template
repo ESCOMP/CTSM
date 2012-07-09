@@ -43,6 +43,7 @@ List all existing files that have been modified, and describe the changes:
 
 Summary of testing:
 
+  build-namelist unit testing:
   bluefire:
   bluefire interactive testing:
   bluefire/CESM testing:

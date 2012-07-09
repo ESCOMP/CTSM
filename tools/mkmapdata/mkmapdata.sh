@@ -86,7 +86,7 @@ usage() {
   echo ""
   echo " You can also set the following env variables:"
   echo "  ESMFBIN_PATH - Path to ESMF binaries "
-  echo "                 (default is /contrib/esmf-5.2.0r-64-O/bin)"
+  echo "                 (default is /contrib/esmf-5.3.0-64-O/bin)"
   echo "  CSMDATA ------ Path to CESM input data"
   echo "                 (default is /glade/proj3/cseg/inputdata)"
   echo "  MPIEXEC ------ Name of mpirun executable"
@@ -283,22 +283,24 @@ if [ "$ocean" != "no" ]; then
 fi
 
 # Set name of RTM output mapping file
-grid=0.5x0.5
-lmask=nomask
-INGRID[nfile]=$GRIDFILE
-QUERYFIL="$QUERY -var scripgriddata -res $grid -options lmask=$lmask"
-if [ "$verbose" = "YES" ]; then
-   echo $QUERYFIL
+if [ "$type" == "global" ]; then
+   grid=0.5x0.5
+   lmask=nomask
+   INGRID[nfile]=$GRIDFILE
+   QUERYFIL="$QUERY -var scripgriddata -res $grid -options lmask=$lmask"
+   if [ "$verbose" = "YES" ]; then
+      echo $QUERYFIL
+   fi
+   GRIDFILE[nfile]=`$QUERYFIL`
+   OUTFILE[nfile]=map_${res}_${lmask}_to_${grid}_${lmask}_aave_da_$CDATE.nc
+   if [ "$list" = "YES" ]; then
+      echo "ingrid = ${GRIDFILE[nfile]}"
+      echo "ingrid = ${GRIDFILE[nfile]}" >> $outfilelist
+      echo "Succesffully found and listed all required mapping files"
+      exit 0
+   fi
+   nfile=nfile+1
 fi
-GRIDFILE[nfile]=`$QUERYFIL`
-OUTFILE[nfile]=map_${res}_${lmask}_to_${grid}_${lmask}_aave_da_$CDATE.nc
-if [ "$list" = "YES" ]; then
-   echo "ingrid = ${GRIDFILE[nfile]}"
-   echo "ingrid = ${GRIDFILE[nfile]}" >> $outfilelist
-   echo "Succesffully found and listed all required mapping files"
-   exit 0
-fi
-nfile=nfile+1
 
 #----------------------------------------------------------------------
 # Determine supported machine specific stuff
@@ -312,7 +314,11 @@ case $hostname in
   module load netcdf/4.1.3_seq
 
   if [ -z "$ESMFBIN_PATH" ]; then
-     ESMFBIN_PATH=/contrib/esmf-5.2.0rp1bs09-64/bin
+     if [ "$type" = "global" ]; then
+        ESMFBIN_PATH=/contrib/esmf-5.2.0rp1bs09-64/bin
+     else
+        ESMFBIN_PATH=/contrib/esmf-5.3.0-64-O-mpiuni-netcdf4.1.3/bin
+     fi
   fi
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpirun.lsf"

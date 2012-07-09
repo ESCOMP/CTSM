@@ -71,6 +71,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="48x96"       mask="USGS"   >share/domains/domain.clm/domain.lnd.T31_USGS.110713.nc</domainfile>
 <domainfile hgrid="64x128"                    >share/domains/domain.clm/domain.lnd.T42_USGS.111004.nc</domainfile>
 <domainfile hgrid="128x256"                   >share/domains/domain.clm/domain.lnd.T85_USGS.111004.nc</domainfile>
+<domainfile hgrid="512x1024"                  >share/domains/domain.lnd.T341_gx1v6.111226.nc</domainfile>
 <domainfile hgrid="94x192"      mask="T62"    >share/domains/domain.lnd.T62_T62.090129.nc</domainfile>
 <domainfile hgrid="94x192"      mask="gx1v6"  >share/domains/domain.lnd.T62_gx1v6.090320.nc</domainfile>
 <domainfile hgrid="94x192"      mask="gx3v7"  >share/domains/domain.lnd.T62_gx3v7.090928.nc</domainfile>
@@ -78,9 +79,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="ar9v1"                     >share/domains/domain.lnd.ar9v1_ar9v1.090521.nc</domainfile>
 <domainfile hgrid="ar9v2"                     >share/domains/domain.lnd.ar9v2_ar9v2.090521.nc</domainfile>
 <domainfile hgrid="wr50a"                     >share/domains/domain.lnd.wr50a_ar9v2.090614.nc</domainfile>
+<domainfile hgrid="ne4np4"                    >share/domains/domain.lnd.ne4np4_gx3v7.120628.nc</domainfile>
+<domainfile hgrid="ne16np4"                   >share/domains/domain.lnd.ne16np4_gx3v7.120406.nc</domainfile>
 <domainfile hgrid="ne30np4"                   >share/domains/domain.lnd.ne30np4_gx1v6.110905.nc</domainfile>
+<domainfile hgrid="ne60np4"                   >share/domains/domain.lnd.ne60np4_gx1v6.120406.nc</domainfile>
 <domainfile hgrid="ne120np4"                  >share/domains/domain.lnd.ne120np4_gx1v6.110502.nc</domainfile>
-<domainfile hgrid="ne240np4"                  >share/domains/domain.lnd.ne240np4_gx1v6.120126.nc</domainfile>
+<domainfile hgrid="ne240np4"                  >share/domains/domain.lnd.ne240np4_gx1v6.120125.nc</domainfile>
 <domainfile hgrid="0.23x0.31"   mask="tx0.1v2">share/domains/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
 <domainfile hgrid="0.23x0.31"   mask="gx1v6"  >share/domains/domain.lnd.fv0.23x0.31_gx1v6.100517.nc</domainfile>
 <domainfile hgrid="0.23x0.31"   mask="USGS"   >share/domains/domain.clm/domain.lnd.fv0.23x0.31_USGS.111004.nc</domainfile>
@@ -99,13 +103,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="4x5"         mask="gx3v7"  >share/domains/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
 <domainfile hgrid="10x15"       mask="USGS"   >share/domains/domain.clm/domain.lnd.fv10x15_USGS.110713.nc</domainfile>
 
+<domainfile hgrid="us20"        mask="us20"   >atm/datm7/domain.lnd.us20_us20.20110426.nc</domainfile>
+<domainfile hgrid="wus12"       mask="wus12"  >share/domains/domain.lnd.wus12_wus12.20101108.nc</domainfile>
+
 <factorfn >null</factorfn>
 
 <vectors  >null</vectors>
 
 <atm_in   >datm_atm_in</atm_in>
-
-<iradsw   >1</iradsw>
 
 <fillalgo >nn</fillalgo>
 <fillmask >nomask</fillmask>
@@ -213,6 +218,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- rcp8.5 future scenario transient files -->
 <datm_file_aero       datm_presaero="rcp8.5" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp8.5_monthly_1849-2104_1.9x2.5_c100201.nc
 </datm_file_aero>
+
 <datm_aero_streams    datm_presaero="rcp8.5" >rcp8.5_preseareo_stream.txt</datm_aero_streams>
 <datm_year_first_aero datm_presaero="rcp8.5">1849</datm_year_first_aero>
 <datm_year_last_aero  datm_presaero="rcp8.5">2104</datm_year_last_aero>

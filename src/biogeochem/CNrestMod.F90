@@ -2274,7 +2274,7 @@ contains
     else if (flag == 'read' .or. flag == 'write') then
        allocate (iptemp(begp:endp), stat=ier)
        if (ier /= 0) then
-          write(6,*) 'CNrest: allocation error '; call endrun()
+          call endrun('CNrest: allocation error ')
        end if
        if (flag == 'write') then
           do p = begp,endp

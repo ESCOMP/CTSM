@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_44         erik 07/09/2012 Add wrf resolutions, update externals to cesm1_1_beta15, all components use build-namelist now
    clm4_0_43        sacks 04/06/2012 Add diagnostic fields, modify some existing history fields
    clm4_0_42         erik 03/27/2012 Bring in Francis Vitt's MEGAN changes.
    clm4_0_41         erik 03/13/2012 Bring rmfmesh/rtmmap branches to trunk

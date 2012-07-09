@@ -145,6 +145,8 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/glade/proj3/cseg"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING=""
 
 
 echo_arg=""
@@ -174,7 +176,7 @@ export CLM_RESTART_THREADS=1
 export CLM_TASKS=4
 export CLM_RESTART_TASKS=3
 
-export NETCDF_PATH=/contrib/netcdf-3.6.3/intel-10-64
+export NETCDF_PATH=/fs/local/apps/netcdf-4.1.3_intel
 export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
@@ -190,6 +192,10 @@ export CPRNC_EXE=/glade/home/erik/bin/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/glade/proj3/cseg"
 echo_arg="-e"
+export LD_LIBRARY_PATH="\$LIB_NETCDF:\${LD_LIBRARY_PATH}"
+export SLIBS="-L\$NETCDF_DIR/lib -lnetcdff -lnetcdf"
+export TOOLSLIBS=\$SLIBS
+export TOOLS_CONF_STRING="-scratchroot \$MACH_WORKSPACE/$USER -max_tasks_per_node 2 -din_loc_root \$dataroot/inputdata"
 input_file="tests_posttag_mirage"
 
 EOF
@@ -274,6 +280,8 @@ export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
+export TOOLSSLIBS=""
+export TOOLS_CONF_STRING=""
 echo_arg="-e"
 
 EOF
@@ -399,7 +407,7 @@ else
    module load PGI/netcdf4/4.1.3_seq
    export NETCDF_DIR=\$NETCDF
    export CESM_COMP="pgi"
-   export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+   export TOOLS_MAKE_STRING=" "
    export MAKE_CMD="gmake -j 12"   ##using hyper-threading on lynx
 fi
 
@@ -416,6 +424,8 @@ export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/glade/proj3/cseg/tools/cprnc.lynx/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/glade/proj3/cseg"
+export TOOLSSLIBS=""
+export TOOLS_CONF_STRING="-scratchroot \$MACH_WORKSPACE/$USER -max_tasks_per_node 2 -din_loc_root \$dataroot/inputdata"
 echo_arg="-e"
 
 EOF
@@ -516,12 +526,14 @@ export CPRNC_EXE=/tmp/proj/ccsm/tools/ccsm_cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 export ESMFBIN_PATH=$ESMF_BIN
 dataroot="/tmp/proj/ccsm"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING=""
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
     ##yong
-    yong* )
+    yong* | vpn* )
     submit_script="test_driver_yong_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -568,10 +580,16 @@ export ESMFBIN_PATH=\
 dataroot="/fis/cgd/cseg/csm"
 echo_arg=""
 input_file="tests_posttag_yong"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING="-scratchroot \$MACH_WORKSPACE/$USER -max_tasks_per_node 2 -din_loc_root \$dataroot/inputdata"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
+    * )
+    echo "Only setup to work on: bluefire, mirage, lynx, jaguarpf, edinburgh, and yong"
+    exit
+ 
 
 esac
 

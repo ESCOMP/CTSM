@@ -16,7 +16,7 @@ Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) r
 (SNICAR_FRC .true.is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="sitespf_pt" 
-valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA" 
+valid_values="none,1x1_brazil,1x1_tropicAtl,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,us20,wus12" 
 value="none" category="physics">
 Flag to turn on site specific special configuration flags for supported single 
 point resolutions. See the specific config_defaults_*.xml file for the special 
@@ -81,13 +81,15 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scr
 Directory containing NetCDF include and library directories and files.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
 </entry>
+<entry id="slibs" value="" category="mach_options">
+System libraries to add at link step (only needed for generic machines)
+</entry>
 
 <entry id="maxpft"  value="" 
 valid_values="17,21" category="physics">
 Maximum number of plant function types (PFT)  per gridcell
 (Setting maxpft to anything other than 17 (or 21 for CROP) is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
-
 <entry id="mpi_path" value="" category="standalone_test">
 Directory containing MPI include and library directories.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts

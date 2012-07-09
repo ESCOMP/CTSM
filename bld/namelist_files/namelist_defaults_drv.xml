@@ -23,7 +23,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <case_name>clmrun</case_name>
 
 <!-- Orbit -->
-<orb_mode                  >fixed_year</orb_mode>
 <orb_iyear                 >1990</orb_iyear>
 <orb_iyear sim_year="2000" >2000</orb_iyear>
 <orb_iyear sim_year="1850" >1850</orb_iyear>
@@ -36,19 +35,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 $URL$
 </model_version>
 
-<!-- Timing file output directories -->
-<timing_dir>
-./timing
-</timing_dir>
-<tchkpt_dir>
-./timing/checkpoints
-</tchkpt_dir>
-
 <!-- Epsilon for how close grids need to be between atmosphere and land components -->
 
 <eps_frac>1.0e-12</eps_frac>
-<eps_amask>1.0e-12</eps_amask>
-<eps_aarea>9.0e-07</eps_aarea>
 
 <!-- Output budgets -->
 <do_budgets >.true.</do_budgets>
@@ -122,7 +111,8 @@ $URL$
 <start_tod                                                  >    0</start_tod>
 
 <!-- Length of time for restarts -->
-<restart_option>monthly</restart_option>
+<restart_option>nmonth</restart_option>
+<restart_n     >1</restart_n>
 
 <!-- if should write a restart at the end of the run -->
 <end_restart >.true.</end_restart>
@@ -131,7 +121,6 @@ $URL$
 <!-- Defaults for driver namelist prof_inparm                           -->
 <!-- ================================================================== -->
 
-<profile_barrier     >.false.</profile_barrier>
 <profile_disable     >.false.</profile_disable>
 <profile_single_file >.true.</profile_single_file>
 <profile_depth_limit >4</profile_depth_limit>

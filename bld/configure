@@ -115,6 +115,7 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -[no]smp               Switch on [off] SMP parallelism.
      -[no]use_mpiserial     Switch on [off] use of serial-only MPI.
      -pio_dir <dir>         Directory to PIO to either build or use pre-built PIO
+     -slibs <options>       Library options to include on the link step (only needed for generic machines)
 EOF
 }
 
@@ -157,6 +158,7 @@ my %opts = (
             spinup      => "normal",
             mct_dir     => undef,
             pio_dir     => undef,
+            slibs       => undef,
             ninst_lnd   => 1,
             ninst_atm   => 1,
 	    );
@@ -175,6 +177,7 @@ GetOptions(
     "defaults=s"                => \$opts{'defaults'},
     "mct_dir=s"                 => \$opts{'mct_dir'},
     "pio_dir=s"                 => \$opts{'pio_dir'},
+    "slibs=s"                   => \$opts{'slibs'},
     "mach=s"                    => \$opts{'mach'},
     "h|help"                    => \$opts{'help'},
     "mode=s"                    => \$opts{'mode'},
@@ -805,6 +808,7 @@ if ($clm_build) {
 	$nc_path = $opts{'nc_path'};
     }
     elsif (defined $ENV{NETCDF_PATH}) {
+        print "nc_path set to NETCDF_PATH env variable\n" if $print>0;
 	$nc_path = $ENV{NETCDF_PATH};
     }
     else {
@@ -896,6 +900,7 @@ if ($clm_build and $use_mpiserial eq 'off') {
 	$mpi_path = $opts{'mpi_path'};
     }
     elsif (defined $ENV{MPICH_PATH}) {
+        print "mpi_path set to MPICH_PATH env variable\n" if $print>0;
 	$mpi_path = $ENV{MPICH_PATH};
     }
     $mpi_inc = "$mpi_path/include";
@@ -1030,8 +1035,21 @@ EOF
     if($mach =~ /generic_(.*)/){
       $cfgcas_ref->set('OS',$1);
       $cfgcas_ref->set('MACH','generic');
+      if ( defined($opts{'slibs'}) ) {
+         $cfg_ref->set('slibs',$opts{'slibs'});
+      } elsif ( $ENV{'SLIBS'} ne "" ) {
+         $cfg_ref->set('slibs',$ENV{'SLIBS'} );
+         print "slibs set to SLIBS env variable\n" if $print>0;
+      }
     }else{
       $cfgcas_ref->set_machine("$scriptsdir/$machine_file", $mach, $print);
+      if ( defined($opts{'slibs'}) ) {
+	die <<"EOF";
+** Do NOT define slibs option for a NON generic machine
+** 
+EOF
+      }
+      $cfg_ref->set('slibs',"");
     }
 
     # Write the Macro's file for machine dependent build information
@@ -1087,7 +1105,7 @@ chdir( $cwd ) || die <<"EOF";
 ** Trouble changing directory back to $cwd
 **
 EOF
-if ($print) { print "configure done.\n"; }
+if ($print) { print "CLM configure done.\n"; }
 exit;
 
 #-----------------------------------------------------------------------------------------------
@@ -1242,6 +1260,7 @@ sub write_envset
     my $mpi_path     = $cfg_ref->get('mpi_path');
     my $mct_libdir   = $cfg_ref->get('mct_dir');
     my $pio_libdir   = $cfg_ref->get('pio_dir');
+    my $slibs        = $cfg_ref->get('slibs');
 
     my  $fh_out = new IO::File;
 
@@ -1269,8 +1288,12 @@ OS                      := $os
 USE_ESMF_LIB            := FALSE
 MCT_LIBDIR              := $mct_libdir
 PIO_LIBDIR              := $pio_libdir
-
 EOF
+    if ( $slibs ne "" ) {
+       print $fh_out  <<"EOF";
+SLIBS                   := $slibs
+EOF
+    }
     $fh_out->close;
 }
 

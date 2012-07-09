@@ -763,7 +763,7 @@ function get_gamma_SM(clayfrac_in, sandfrac_in, h2osoi_vol_in, h2osoi_ice_in, dz
        endif
 
        if (get_gamma_SM > 1.0_r8) then 
-          write(6,*) 'healdSM > 1: gamma_SM, nl', get_gamma_SM, nl
+          write(iulog,*) 'healdSM > 1: gamma_SM, nl', get_gamma_SM, nl
           get_gamma_SM=1.0_r8
        endif
 

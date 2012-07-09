@@ -141,7 +141,7 @@ case $hostname in
     fi ;;
 
     ##yong
-    yong* )
+    yong* | vpn* )
     if grep -ic NOUSE_MPISERIAL ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
         if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##mpi only

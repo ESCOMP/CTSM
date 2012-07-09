@@ -38,7 +38,7 @@ blCK4 TBL.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10   cold
 smCK8 TSM.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -10   cold
 erCK8 TER.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
 brCK8 TBR.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
-blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold
+blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -10   cold
 
 smCK6 TSM.sh _sc_m clm_nortm 20030101:1800 1.9x2.5 gx1v6 -10   cold
 
@@ -867,10 +867,10 @@ blHS3 TBL.sh 17p_cnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6
 sm454 TSMtools.sh mkmapgrids   tools__ds namelist
 bl454 TBLtools.sh mkmapgrids   tools__ds namelist
 
-sm514 TSMtools.sh gen_domain   tools__ds T31.runoptions
-bl514 TBLtools.sh gen_domain   tools__ds T31.runoptions
-sm5@4 TSMtools.sh gen_domain   tools__ds ne30.runoptions
-bl5@4 TBLtools.sh gen_domain   tools__ds ne30.runoptions
+sm514 TSMCFGtools.sh gen_domain   CFGtools__ds T31.runoptions
+bl514 TBLCFGtools.sh gen_domain   CFGtools__ds T31.runoptions
+sm5@4 TSMCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
+bl5@4 TBLCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
 
 sm754 TSMtools.sh mksurfdata_map   tools__s  namelist
 bl754 TBLtools.sh mksurfdata_map   tools__s  namelist
@@ -908,6 +908,8 @@ bl8y3 TBLrst_tools.sh _sc_do    interpinic clm_glcmec^nl_urb    18500101:1800 0.
 sm8Z3 TSMrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5  gx1v6      10x15 USGS       -1
 bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5  gx1v6      10x15 USGS       -1
 
+sm924 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
+bl924 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
 sm954 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds

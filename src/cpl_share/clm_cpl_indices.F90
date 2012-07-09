@@ -318,7 +318,6 @@ contains
           glc_nec = num
        end do
        if (glc_nec == glc_nec_max) then
-          write(6,*)subname, 'glc_nec_max value has been reached ' 
           call shr_sys_abort (subname // 'error: glc_nec_cpl cannot equal glc_nec_max')
        end if
 

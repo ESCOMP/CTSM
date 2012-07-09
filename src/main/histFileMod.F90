@@ -70,20 +70,20 @@ module histFileMod
   character(len=max_namlen+2), public :: &
        hist_fincl6(max_flds) = ' '       ! namelist: list of fields to add
 
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        fexcl(max_flds,max_tapes)         ! namelist-equivalence list of fields to remove
 
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        hist_fexcl1(max_flds) = ' ' ! namelist: list of fields to remove
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to remove
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        hist_fexcl3(max_flds) = ' ' ! namelist: list of fields to remove
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        hist_fexcl4(max_flds) = ' ' ! namelist: list of fields to remove
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to remove
-  character(len=max_namlen), public :: &
+  character(len=max_namlen+2), public :: &
        hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to remove
 !
 ! Restart

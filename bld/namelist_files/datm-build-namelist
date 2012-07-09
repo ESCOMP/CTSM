@@ -52,9 +52,6 @@ OPTIONS
      -datm_cycle_init_year "year"  The simulation year that will correspond to the 
                                    data for cycle_beg_year.
      -datm_data_dir "path"    Directory path to the datm data
-     -datm_domain "file"      File name of domain file for datm data matching 
-                              resolution data resolution.
-     -datm_dom_dir "path"     Directory path to the datm_domain file.
      -datm_presaero "type"    Prescribed aerosol type:
                               Can be default or any of the list of valid options
                                   default = use default for this scenario
@@ -151,8 +148,6 @@ GetOptions(
     "datm_cycle_end_year=s"     => \$opts{'datm_cycle_end_year'},
     "datm_cycle_init_year=s"    => \$opts{'datm_cycle_init_year'},
     "datm_data_dir=s"           => \$opts{'datm_data_dir'},
-    "datm_domain=s"             => \$opts{'datm_domain'},
-    "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "datm_presaero=s"           => \$opts{'datm_presaero'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
@@ -204,8 +199,10 @@ $opts{'use_case_dir'} = "$cfgdir/use_cases";
 
 # The root directory for the input data files must be specified.
 
-#The root directory to cesm utils Tools
+#The root directory to cesm utils Tools and datm bld directory
 my $cesm_tools = &absolute_path( "$cfgdir/../../../../../scripts/ccsm_utils/Tools" );
+my $datmblddir = &absolute_path( "$cfgdir/../../../../../models/atm/datm/bld" );
+my $drvblddir  = &absolute_path( "$cfgdir/../../../../../models/drv//bld" );
 
 # The XML::Lite module is required to parse the XML files.
 (-f "$cesm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
@@ -222,11 +219,15 @@ EOF
 
 # The namelist definition file contains entries for all namelist variables that
 # can be output by datm-build-namelist.
-my $nl_definition_file = "$cfgdir/namelist_definition.xml";
-(-f "$nl_definition_file")  or  die <<"EOF";
-** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
+my @nl_definition_files = ( "$datmblddir/namelist_files/namelist_definition_datm.xml",
+                            "$drvblddir/namelist_files/namelist_definition_drv.xml",
+                            "$cfgdir/namelist_definition.xml" );
+foreach my $nl_defin_file  ( @nl_definition_files ) {
+  (-f "$nl_defin_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist definition file \"$nl_defin_file\" **
 EOF
-if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol"; }
+   if ($print>=2) { print "Using namelist definition file $nl_defin_file$eol"; }
+}
 
 # The Build::NamelistDefinition module provides utilities to validate that the output
 # namelists are consistent with the namelist definition file
@@ -237,6 +238,7 @@ EOF
 
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_defaults_overall.xml", 
+                          "$datmblddir/namelist_files/namelist_defaults_datm.xml",
                           "$cfgdir/namelist_defaults_datm.xml" );
 if (defined $opts{'use_case'}) {
    if ( $opts{'use_case'} ne "list" ) {
@@ -285,7 +287,11 @@ validate_options("commandline", $cfg, \%opts);
 # Create a namelist definition object.  This object provides a method for verifying that the
 # output namelist variables are in the definition file, and are output in the correct
 # namelist groups.
-my $definition = Build::NamelistDefinition->new($nl_definition_file);
+my $definition = Build::NamelistDefinition->new( shift(@nl_definition_files) );
+
+foreach my $nl_defin_file ( @nl_definition_files ) {
+   $definition->add( "$nl_defin_file" );
+}
 
 # Create a namelist defaults object.  This object provides default values for variables
 # contained in the input defaults file.  The configuration object provides attribute
@@ -674,16 +680,8 @@ if ( defined($opts{'datm_data_dir'}) ) {
    }
    $inputopts{'filepath'}   = "";
 }
-if ( ! defined($opts{'datm_dom_dir'} ) ) {
-   $inputopts{'domainpath'} = "";
-} else {
-   $inputopts{'domainpath'} = $opts{'datm_dom_dir'};
-}
-if ( ! defined($opts{'datm_domain'}) ) {
-   $inputopts{'domain'} = "";
-} else {
-   $inputopts{'domain'} = $opts{'datm_domain'};
-}
+$inputopts{'domainpath'} = "";
+$inputopts{'domain'} = "";
 $inputopts{'cmdline'}   = $cmdline;
 $inputopts{'csmdata'}   = $inputdata_rootdir;
 $inputopts{'filenames'} = "";
@@ -832,9 +830,8 @@ $streams->Write( $outstreams );
 # namelist group: datm_in    #
 #############################
 
-add_default($nl, 'datamode', 'source'=>$datm_source );
+add_default($nl, 'datamode', 'datm_mode'=>$datm_source );
 add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask); 
-add_default($nl, 'factorfn');
 add_default($nl, 'iradsw');
 add_default($nl, 'vectors');
 add_default($nl, 'atm_in');
@@ -875,13 +872,6 @@ if ($print>=2) { print "Writing datm_dshr namelist to $outfile $eol"; }
 $outfile = "$opts{'dir'}/datm_in";
 $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
 if ($print>=2) { print "Writing datm_in namelist to $outfile $eol"; }
-
-# atm_modelio
-@groups = qw(modelio);
-$outfile = "$opts{'dir'}/atm_modelio.nml";
-$nl->set_variable_value( "modelio", "logfile", "'atm.log'" );
-$nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-if ($print>=2) { print "Writing atm_modelio.nml namelist to $outfile $eol"; }
 
 # END OF MAIN SCRIPT
 #===============================================================================================

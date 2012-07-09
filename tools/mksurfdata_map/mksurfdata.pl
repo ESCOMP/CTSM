@@ -428,7 +428,7 @@ EOF
          if ( ! defined($opts{'allownofile'}) && ! -f $map{$typ} ) {
             die "ERROR: mapping file for this resolution does NOT exist ($map{$typ}).\n";
          }
-         $datfil{$typ} = `$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,glc_nec=$glc_nec -var $filnm`;
+         $datfil{$typ} = `$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,glc_nec=$glc_nec$mkcrop -var $filnm`;
          $datfil{$typ} = trim($datfil{$typ});
          if ( $datfil{$typ} !~ /[^ ]+/ ) {
             die "ERROR: could NOT find a $filnm data file for this resolution: $res and type: $typ at $hgrid and $lmask.\n";

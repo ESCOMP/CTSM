@@ -20,6 +20,7 @@
 # 2010-04-27  Kluzek           Add ndep streams capability
 # 2011-07-25  Kluzek           Add multiple ensemble's of namelists
 # 2012-03-23  Kluzek           Add megan namelist and do checking on it
+# 2012-07-01  Kluzek           Add some common CESM namelist options
 #--------------------------------------------------------------------------------------------
 
 use strict;
@@ -40,9 +41,14 @@ SYNOPSIS
 
      Create the namelist for CLM
 OPTIONS
+     -[no-]chk_res            Also check [do NOT check] to make sure the resolution and 
+                              land-mask is valid.
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
                               "-clm_demand list" to list valid options.
                               (can include a list member "null" which does nothing)
+     -clm_startfile "file"    CLM restart file to start from.
+                              (Note: a %inst_string in the filename will be expanded 
+                               to the instance string, see -inst_string below)
      -clm_start_type "type"   Start type of simulation 
                               (default, cold, arb_ic, startup, continue, or branch)
                               (default=do the default type for this configuration)
@@ -54,6 +60,7 @@ OPTIONS
                               Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
+     -co2_type "value"        Set CO2 the type of CO2 variation to use.
      -co2_ppmv "value"        Set CO2 concentration to use when co2_type is constant (ppmv).
      -config "filepath"       Read the given CLM configuration cache file. 
                               Default: "config_cache.xml".
@@ -71,7 +78,7 @@ OPTIONS
                               (i.e. gland20, gland10 etcetera)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10] 
                               (default is 0) (standard option with land-ice model is 10)
-     -glc_smb                 Only used if glc_nec > 0
+     -glc_smb <value>         Only used if glc_nec > 0
                               If .true., pass surface mass balance info to GLC
                               If .false., pass positive-degree-day info to GLC
                               Default: true
@@ -94,7 +101,11 @@ OPTIONS
                                form \$CASEDIR/user_nl_clm/user_nl_clm_????)
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
+     -inst_string "value"     Value of the multi-instance string to use.
+                              (used in clm_startfile above)
      -irrig                   Seek surface datasets with irrigation turned on.
+     -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
+     -lnd_frac "domainfile"   Land fraction file (the input domain file)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
      -megan                   Also produce a megan_emis_nl namelist that will go into the
@@ -104,6 +115,8 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
+     -[no-]note               Add note to output namelist  [do NOT add note] about the
+                              arguments to build-namelist.
      -rcp "value"             Representative concentration pathway (rcp) to use for 
                               future scenarios.
                               "-rcp list" to list valid rcp settings.
@@ -138,9 +151,6 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
      -datm_cycle_init_year "year"  The simulation year that will correspond to the data 
                                    for cycle_beg_year.
      -datm_data_dir "path"    Directory path to the datm data
-     -datm_domain "file"      File name of domain file for datm data matching 
-                              resolution data resolution.
-     -datm_dom_dir "path"     Directory path to the datm_domain file.
      -datm_presaero "type"    Prescribed aerosol type:
                               Can be default, or any of the list of valid options
                                   default = use default for this scenario
@@ -154,15 +164,15 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=clm_stnd
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
       0. namelist values set by specific command-line options, like, -d, -sim_year
-             (i.e.  CLM_BLDNML_OPTS env_conf variable)
+             (i.e.  CLM_BLDNML_OPTS env_run variable)
       1. values set on the command-line using the -namelist option,
-             (i.e. CLM_NAMELIST_OPTS env_conf variable)
+             (i.e. CLM_NAMELIST_OPTS env_run variable)
       2. values read from the file(s) specified by -infile,
              (i.e.  user_nl_clm files)
       3. datasets from the -clm_usr_name option,
-             (i.e.  CLM_USRDAT_NAME env_conf variable)
+             (i.e.  CLM_USRDAT_NAME env_run variable)
       4. values set from a use-case scenario, e.g., -use_case
-             (i.e.  CLM_NML_USE_CASE env_conf variable)
+             (i.e.  CLM_NML_USE_CASE env_run variable)
       5. values from the namelist defaults file.
 EOF
 }
@@ -196,21 +206,28 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 my %opts = ( config                => $cfg_cache,
 	     csmdata               => undef,
 	     clm_usr_name          => undef,
+             co2_type              => undef,
              co2_ppmv              => undef,
              datm_cpl_case         => undef,
              datm_cycle_beg_year   => "default",
              datm_cycle_end_year   => "default",
              datm_cycle_init_year  => "default",
              clm_demand            => "null",
+             clm_startfile         => undef,
 	     help                  => 0,
              glc_nec               => "default",
              glc_grid              => "default",
 	     glc_smb               => "default",
+             l_ncpl                => undef,
+             lnd_frac              => undef,
+             inst_string           => "",
 	     dir                   => $outdirname,
 	     rcp                   => "default",
 	     drv_final_spinup      => undef,
              rtm                   => "default",
              sim_year              => "default",
+             chk_res               => undef,
+             note                  => undef,
 	     drydep                => 0,
 	     megan                 => 0,
              irrig                 => undef,
@@ -227,7 +244,9 @@ my %opts = ( config                => $cfg_cache,
 GetOptions(
     "drv_case=s"                => \$opts{'drv_case'},
     "clm_demand=s"              => \$opts{'clm_demand'},
+    "clm_startfile=s"           => \$opts{'clm_startfile'},
     "co2_ppmv=f"                => \$opts{'co2_ppmv'},
+    "co2_type=s"                => \$opts{'co2_type'},
     "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "clm_usr_name=s"            => \$opts{'clm_usr_name'},
@@ -236,10 +255,10 @@ GetOptions(
     "datm_cycle_end_year=s"     => \$opts{'datm_cycle_end_year'},
     "datm_cycle_init_year=s"    => \$opts{'datm_cycle_init_year'},
     "datm_data_dir=s"           => \$opts{'datm_data_dir'},
-    "datm_domain=s"             => \$opts{'datm_domain'},
-    "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "datm_presaero=s"           => \$opts{'datm_presaero'},
     "drydep"                    => \$opts{'drydep'},
+    "chk_res!"                  => \$opts{'chk_res'},
+    "note!"                     => \$opts{'note'},
     "megan"                     => \$opts{'megan'},
     "glc_nec=i"                 => \$opts{'glc_nec'},
     "glc_grid=s"                => \$opts{'glc_grid'},
@@ -250,6 +269,9 @@ GetOptions(
     "ignore_ic_date"            => \$opts{'ignore_ic_date'},
     "ignore_ic_year"            => \$opts{'ignore_ic_year'},
     "infile=s"                  => \$opts{'infile'},
+    "inst_string=s"             => \$opts{'inst_string'},
+    "lnd_frac=s"                => \$opts{'lnd_frac'},
+    "l_ncpl=i"                  => \$opts{'l_ncpl'},
     "inputdata=s"               => \$opts{'inputdata'},
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
@@ -306,6 +328,8 @@ $opts{'use_case_dir'} = "$cfgdir/namelist_files/use_cases";
 
 #The root directory to cesm utils Tools
 my $cesm_tools = &absolute_path( "$cfgdir/../../../../scripts/ccsm_utils/Tools" );
+my $datmblddir = &absolute_path( "$cfgdir/../../../../models/atm/datm/bld" );
+my $drvblddir  = &absolute_path( "$cfgdir/../../../../models/drv//bld" );
 
 # The XML::Lite module is required to parse the XML files.
 (-f "$cesm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
@@ -322,11 +346,17 @@ EOF
 
 # The namelist definition file contains entries for all namelist variables that
 # can be output by build-namelist.
-my $nl_definition_file = "$cfgdir/namelist_files/namelist_definition.xml";
-(-f "$nl_definition_file")  or  die <<"EOF";
-** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
+my @nl_definition_files = ( "$datmblddir/namelist_files/namelist_definition_datm.xml",
+                            "$drvblddir/namelist_files/namelist_definition_drv.xml",
+                            "$drvblddir/namelist_files/namelist_definition_modio.xml",
+                            "$cfgdir/namelist_files/namelist_definition.xml" );
+foreach my $nl_defin_file  ( @nl_definition_files ) {
+  (-f "$nl_defin_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist definition file \"$nl_defin_file\" **
 EOF
-if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol"; }
+   if ($print>=2) { print "Using namelist definition file $nl_defin_file$eol"; }
+}
+
 
 # The Build::NamelistDefinition module provides utilities to validate that the output
 # namelists are consistent with the namelist definition file
@@ -339,6 +369,7 @@ EOF
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_drv.xml", 
+                          "$drvblddir/namelist_files/namelist_defaults_drv.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
 if (defined $opts{'use_case'}) {
@@ -391,7 +422,10 @@ my $cfg = Build::Config->new("$configfile");
 # Create a namelist definition object.  This object provides a method for verifying that the
 # output namelist variables are in the definition file, and are output in the correct
 # namelist groups.
-my $definition = Build::NamelistDefinition->new($nl_definition_file);
+my $definition = Build::NamelistDefinition->new( shift(@nl_definition_files) );
+foreach my $nl_defin_file ( @nl_definition_files ) {
+   $definition->add( "$nl_defin_file" );
+}
 
 # Create a namelist defaults object.  This object provides default values for variables
 # contained in the input defaults file.  The configuration object provides attribute
@@ -487,11 +521,16 @@ my $nensemble = $cfg->get('ninst_lnd');
 # : res, mask, rcp, sim_year, and sim_year_range.
 #
 
-
 my $val;
 my $res;
 my $group;
 my $var;
+
+# check resolution/land-mask
+$var = "chk_res";
+if ( ! defined($opts{$var}) ) {
+    $opts{$var} = $defaults->get_value($var);
+}
 
 # resolution
 $var = "res";
@@ -503,12 +542,14 @@ if ( $opts{$var} ne "default" ) {
 $res = $val;
 if ($print>=2) { print "CLM atm resolution is $res $eol"; }
 $opts{$var} = $val;
-$val = &quote_string( $res );
-$group = $definition->get_group_name($var);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
-      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+if ( $opts{'chk_res'} ) {
+   $val = &quote_string( $res );
+   $group = $definition->get_group_name($var);
+   if (  ! $definition->is_valid_value( $var, $val ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
+         die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+      }
    }
 }
 
@@ -523,12 +564,14 @@ if ( $opts{$var} ne "default" ) {
 }
 my $mask = $val;
 $opts{'mask'} = $mask;
-$val = &quote_string( $val );
-$group = $definition->get_group_name($var);
-$nl[0]->set_variable_value($group, $var, $val);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+if ( $opts{'chk_res'} ) {
+  $val = &quote_string( $val );
+  $group = $definition->get_group_name($var);
+  $nl[0]->set_variable_value($group, $var, $val);
+  if (  ! $definition->is_valid_value( $var, $val ) ) {
+     my @valid_values   = $definition->get_valid_values( $var );
+     die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+  }
 }
 if ($print>=2) { print "CLM land mask is $mask $eol"; }
 
@@ -690,18 +733,19 @@ if ( $rtm eq "on" ) {
 }
 
 # Get clm run type
+my $clm_start_type;
 my $var = "clm_start_type";
 if (defined $opts{$var}) { 
-    if ($opts{$var} eq "default" ) {
-       add_default($nl[0], $var );
-    } else {
-       my $group = $definition->get_group_name($var);
-       $nl[0]->set_variable_value($group, $var, quote_string( $opts{$var} ) );
-    }
+   if ($opts{$var} eq "default" ) {
+      add_default($nl[0], $var );
+   } else {
+      my $group = $definition->get_group_name($var);
+      $nl[0]->set_variable_value($group, $var, quote_string( $opts{$var} ) );
+   }
 } else {
-    add_default($nl[0], $var );
+   add_default($nl[0], $var );
 }
-my $clm_start_type = $nl[0]->get_value($var);
+$clm_start_type = $nl[0]->get_value($var);
 
 my $drv_final_spinup = "off";
 # Length of simulation, if clm stand-alone
@@ -866,7 +910,7 @@ if (defined $opts{'use_case'}) {
 	my $val = $uc_defaults->get_value($var, \%settings );
 
 	if ( defined($val) ) {
-            print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
+            print "CLM adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
 
 	    add_default($nl_usecase, $var, 'val'=>$val);
 	}
@@ -885,7 +929,6 @@ if (defined $opts{'use_case'}) {
 #######################################
 # namelist group: seq_infodata_inparm #
 #######################################
-
 
 # Run type for driver namelist - note that arb_ic implies that the run is startup
 my $var = "start_type";
@@ -1038,6 +1081,7 @@ if ($mode eq "clm_stndln") {
 if ($mode eq "clm_stndln") {
    # Restart interval
    add_default($nl[0], 'restart_option');
+   add_default($nl[0], 'restart_n');
 
    # Write restart file at end
    add_default($nl[0], 'end_restart');
@@ -1055,15 +1099,15 @@ if ($mode eq "clm_stndln") {
    add_default($nl[0], 'atm_cpl_dt', 'hgrid'=>$res);
 }
 
-##############################
-# namelist group: pio_inparm #
-##############################
+#########################################################
+# namelist group: pio_default_inparm and pio_inparm     #
+#########################################################
 
 if ($mode eq "clm_stndln" ) {
 
    my $serial = $cfg->get('use_mpiserial');
    if ( $serial ) {
-     foreach my $var ( "pio_stride",       "pio_numtasks", 
+     foreach my $var ( "pio_stride",       
                        "glc_pio_stride",   "glc_pio_numtasks",
                        "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
                        "cpl_pio_numtasks", "lnd_pio_numtasks", "atm_pio_numtasks" ) {
@@ -1076,7 +1120,7 @@ if ($mode eq "clm_stndln" ) {
        add_default($nl[0], $var, 'val'=>"NETCDF"   );
      }
    } else {
-     foreach my $var ( "pio_stride",       "pio_numtasks",     "glc_pio_stride",
+     foreach my $var ( "pio_stride",                           "glc_pio_stride",
                        "glc_pio_numtasks", "pio_root",         "glc_pio_root",
                        "cpl_pio_stride",   "lnd_pio_stride",   "atm_pio_stride",
                        "cpl_pio_root",     "lnd_pio_root",     "atm_pio_root",
@@ -1092,6 +1136,52 @@ if ($mode eq "clm_stndln" ) {
 ##############################
 # namelist group: clm_inparm #
 ##############################
+
+$var = "clm_startfile";
+if ( defined($opts{$var}) ) {
+    $val = $opts{$var};
+    my $file = $val;
+    $file =~ s/\%inst_string/$opts{'inst_string'}/g;
+    if ( $opts{'inst_string'} ne "" && -f $file ) { 
+       $val = $file; 
+    } else {
+       $val =~ s/\%inst_string//g;
+    }
+    if (     $clm_start_type =~ /startup/ || $clm_start_type =~ /arb_ic/ ) {
+       if ( defined($nl[0]->get_value('finidat')) ) {
+          die "$ProgName ERROR:: Can NOT set both -clm_startfile option AND finidat on namelist\n";
+       }
+       add_default($nl[0], 'finidat','val'=>"$val",'no_abspath'=>1);
+    } elsif ($clm_start_type =~ /branch/ ) {
+       if ( defined($nl[0]->get_value('nrevsn')) ) {
+          die "$ProgName ERROR:: Can NOT set both -clm_startfile option AND nrevsn on namelist\n";
+       }
+       add_default($nl[0], 'nrevsn', 'val'=>"$val",'no_abspath'=>1);
+    } elsif ( $clm_start_type =~ /cold/ ) {
+       die "$ProgName ERROR:: Can only set -clm_startfile option for cold clm_start_type\n";
+    }
+} else {
+    #if ( $opts{'inst_string'} ne "" ) {
+    #   die "$ProgName ERROR:: -inst_string option is only used with -clm_startfile\n";
+    #}
+}
+    
+$var = "lnd_frac";
+if ( defined($opts{$var}) ) {
+   if ( defined($nl[0]->get_value('fatmlndfrc')) ) {
+      die "$ProgName ERROR:: Can NOT set both -lnd_frac option AND fatmlndfrac on namelist\n";
+   }
+   add_default($nl[0], 'fatmlndfrc','val'=>$opts{$var} );
+}
+
+$var = "co2_type";
+if ( defined($opts{$var}) ) {
+    if ( ! defined($nl[0]->get_value($var)) ) {
+       add_default($nl[0], 'co2_type','val'=>"$opts{'co2_type'}");
+    } else {
+       die "$ProgName ERROR:: co2_type set on namelist as well as -co2_type option.\n";
+    }
+}
 
 $var = "start_type";
 my $drv_start_type = $nl[0]->get_value($var);
@@ -1109,7 +1199,31 @@ if ( defined($nsrest) ) {
    }
 }
 
-add_default($nl[0], 'dtime', 'hgrid'=>$res);
+if ( defined($opts{'l_ncpl'}) ) {
+    my $l_ncpl = $opts{'l_ncpl'};
+    if ( $l_ncpl <= 0 ) {
+       die "$ProgName ERROR:: bad value for -l_ncpl option.\n";
+    }
+    $val = ( 3600 * 24 ) / $l_ncpl;
+    my $dtime = $nl[0]->get_value('dtime');
+    if ( ! defined($dtime)  ) {
+       add_default($nl[0], 'dtime', 'val'=>$val);
+    } elsif ( $dtime ne $val ) {
+       die "$ProgName ERROR:: can NOT set both -l_ncpl option AND dtime namelist variable.\n";
+    }
+} else {
+    add_default($nl[0], 'dtime', 'hgrid'=>$res);
+}
+
+if ( $my_start_type =~ /branch/ ) {
+   if (not defined $nl[0]->get_value('nrevsn')) {
+      die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
+   }
+} else {
+   if (defined $nl[0]->get_value('nrevsn')) {
+      die "$ProgName ERROR:: nrevsn should ONLY be set for a branch type.\n";
+   }
+}
 
 if ( $my_start_type =~ /branch/ ) {
    if (not defined $nl[0]->get_value('nrevsn')) {
@@ -1259,14 +1373,20 @@ if ( $rtm eq "on" ) {
        if ( $opts{'rtm_tstep'} < $dtime ) {
           die "$ProgName ERROR:: rtm_tstep can NOT be less than time-step of: $dtime.\n";
        }
-       my $val = int( $opts{'rtm_tstep'} / $dtime );
-       my $group = $definition->get_group_name('rtm_nsteps');
-       $nl[0]->set_variable_value($group, 'rtm_nsteps', $val );
+       my $val       = int( $opts{'rtm_tstep'} / $dtime );
+       my $rtmnsteps = $nl[0]->get_value('rtm_nsteps');
+       if ( defined($rtmnsteps) ) {
+          print "$ProgName WARNING:: rtm_nsteps should NOT be set when -rtm_tstep used\n";
+          if ( $val != $rtmnsteps ) {
+             die "$ProgName ERROR:: rtm_nsteps is inconsistent with -rtm_tstep option\n";
+          }
+       }
+       add_default($nl[0], 'rtm_nsteps',  'val'=>$val );
    }
 }
 
 my $var = "do_rtm";
-add_default($nl[0], $var, 'rtm'=>$rtm );
+add_default($nl[0], $var, 'rtm'=>$rtm, 'hgrid'=>$res );
 my $do_rtm = $nl[0]->get_value('do_rtm');
 if ( $rtm eq "off" ) {
    if (defined $do_rtm && $do_rtm =~ /$TRUE/i ) {
@@ -1286,7 +1406,7 @@ if ( $rtm eq "off" ) {
    }
 } else {
    if ($do_rtm !~ /$TRUE/i ) {
-      die "$ProgName ERROR:: when RTM is on you can NOT set do_rtm to .false..\n";
+      print "$ProgName WARNING:: RTM is on but you are setting do_rtm to .false..\n";
    }
 }
 
@@ -1581,10 +1701,18 @@ for( my $i = 1; $i <= $nensemble; $i++ ) {
 #-----------------------------------------------------------------------------------------------
 # Write output files
 
-my $note = "Comment:\n" . 
+# check resolution/land-mask
+my $note = "";
+$var = "note";
+if ( ! defined($opts{$var}) ) {
+    $opts{$var} = $defaults->get_value($var);
+}
+if ( $opts{$var} ) {
+   $note = "Comment:\n" . 
            "This namelist was created using the following command-line:\n" .
            "    $cfgdir/$ProgName $cmdline\n" .
            "For help on options use: $cfgdir/$ProgName -help";
+}
 
 # CLM component
 my $outfile;
@@ -1604,17 +1732,25 @@ if ( $nensemble == 1 ) {
 
 if ($mode eq "clm_stndln") {
     # Driver
-    @groups = qw(seq_cplflds_inparm seq_cplflds_userspec seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_inparm);
+    @groups = qw(seq_cplflds_inparm seq_cplflds_userspec seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_default_inparm);
     $outfile = "$opts{'dir'}/drv_in";
     $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
 
-    # lnd_modelio
-    @groups = qw(modelio);
-    $outfile = "$opts{'dir'}/lnd_modelio.nml";
-    $nl[0]->set_variable_value( "modelio", "logfile", "'lnd.log'" );
-    $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing lnd_modelio.nml namelist to $outfile $eol"; }
+    # *_modelio files
+    @groups = qw(modelio pio_inparm);
+    foreach my $model ( "cpl", "lnd", "atm", "ocn", "ice", "glc" ) {
+       foreach my $var ( "pio_stride",  "pio_root",    "pio_typename", "pio_numtasks" ) {
+          my $val = $nl[0]->get_value($nl[0], "${model}_$var" );
+          
+          my $group = $definition->get_group_name($var);
+          $nl[0]->set_variable_value( $group, $var, $val );
+       }
+       $outfile = "$opts{'dir'}/${model}_modelio.nml";
+       $nl[0]->set_variable_value( "modelio", "logfile", "'$model.log'" );
+       $nl[0]->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+       if ($print>=2) { print "Writing ${model}_modelio.nml namelist to $outfile $eol"; }
+    }
 
     # Ensemble member namelists for CLM
     my $outprefix = "$opts{'dir'}/lnd_modelio.nml_";
@@ -1676,14 +1812,8 @@ if ($mode eq "clm_stndln") {
    if ( defined($opts{'namelist'}) ) {
       $datmbldnmlopts .= ' -namelist "'.$opts{'namelist'} . '"';
    }
-   if ( defined($opts{'datm_domain'}) ) {
-      $datmbldnmlopts .= " -datm_domain ".$opts{'datm_domain'};
-   }
    if ( defined($opts{'datm_cpl_case'}) ) {
       $datmbldnmlopts .= " -datm_cpl_case ".$opts{'datm_cpl_case'};
-   }
-   if ( defined($opts{'datm_dom_dir'}) ) {
-      $datmbldnmlopts .= " -datm_dom_dir ".$opts{'datm_dom_dir'};
    }
    if ( defined($opts{'datm_data_dir'}) ) {
       $datmbldnmlopts .= " -datm_data_dir ".$opts{'datm_data_dir'};

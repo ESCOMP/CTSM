@@ -636,1202 +636,8 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- CPL7 Driver Namelist -->
-<!-- ========================================================================================  -->
-
-<!-- Control info -->
-
-<entry id="aqua_planet" type="logical"  category="drv_physics"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, run model in "aqua planet" mode with a prescribed ocean model over 
-the entire earth surface. Only one of
-<varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
-<varname>aqua_planet</varname> can be true
-(Note: Turning on this mode inherently turns CLM off, and requires using CAM).
-</entry>
-
-<entry id="aqua_planet_sst" type="integer"  category="drv_physics"
-       group="seq_infodata_inparm" valid_values="1,2,3,4,5,6,7,8,9,10" >
-Aqua planet analytic Sea Surface Temperature (SST) type (only if aqua_planet is true).
-</entry>
-
-
-<entry id="atm_adiabatic" type="logical"  category="drv_physics"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, do not run atmosphere model physics, only run the dynamical core.
-Only one of
-<varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
-<varname>aqua_planet</varname> can be true.
-</entry>
-
-<entry id="atm_ideal_phys" type="logical"  category="drv_physics"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, run the idealized Held &amp; Suarez physics package for the atmosphere.
-Only one of
-<varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
-<varname>aqua_planet</varname> can be true.
-</entry>
-
-<entry id="esmf_map_flag" type="logical"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, ESMF mapping is being used
-</entry>
-
-<entry id="brnch_retain_casename" type="logical"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, use the pre-existing case name for a branch run.
-</entry>
-
-<entry id="case_desc" type="char*256"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Case description.
-(Set with CASESTR).
-</entry>
-
-<entry id="case_name" type="char*80"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Case identifier.
-(Set with the CASE name in env_case.xml)
-</entry>
-
-<entry id="flux_albav" type="logical" category="drv_physics"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, no diurnal cycle will be done for ocean albedos.
-</entry>
-
-<entry id="flux_epbal" type="char*256" category="drv_physics"
-       group="seq_infodata_inparm" valid_values="off,ocn" >
-Selects E,P,R adjustment technique.
-</entry>
-
-<entry id="info_debug" type="integer" category="driver"
-       group="seq_infodata_inparm" valid_values="0,1,2,3" >
-Level of debug output flag.
-</entry>
-
-<entry id="logfilepostfix" type="char*80" category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Ending suffix "postfix" for output log files.
-</entry>
-
-<entry id="ocean_tight_coupling" type="logical"  category="drv_physics"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, couple ocean on atmosphere timestep.
-</entry>
-
-<entry id="orb_mode" type="char*256" category="radiation"
-       group="seq_infodata_inparm"  value="fixed_year"
-       valid_values="fixed_year,variable_year,fixed_parameters" >
-Mode for orbital calculations
-    fixed_year       = use a fixed year
-    variable_year    = let the orbital year advance with the simulation
-    fixed_parameters = use a fixed set of parameters, not based on the year
-</entry>
-
-<entry id="orb_eccen" type="real"  category="radiation"
-       group="seq_infodata_inparm" valid_values="" >
-Earth's eccentricity of orbit. (unitless: typically 0. to 0.1). 
-Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
-</entry>
-
-<entry id="orb_iyear" type="integer"  category="radiation"
-       group="seq_infodata_inparm" valid_values="" >
-Year (AD) used to compute earth's orbital parameters, when orb_mode='fixed_year'
-Orbital parameters will be computed automatically (based on Berger, 1977).
-</entry>
-
-<entry id="orb_iyear_align" type="integer"  category="radiation"
-       group="seq_infodata_inparm" valid_values="" >
-Align year (AD) used to compute earth's orbital parameters, when orb_mode='variable_year'.
-Orbital parameters will be computed automatically (based on Berger, 1977), and
-updated yearly as the model progresses.
-</entry>
-
-
-<entry id="orb_mvelp" type="real"  category="radiation"
-       group="seq_infodata_inparm" valid_values="" >
-Earth's moving vernal equinox at perihelion (degrees: 0. to 360.0).
-Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
-</entry>
-
-<entry id="orb_obliq" type="real"  category="radiation"
-       group="seq_infodata_inparm" valid_values="" >
-Earth's orbital  angle of obliquity  (degrees: -90. to +90., typically 22. to 26.).
-Setting is required if <varname>orb_mode</varname> = 'fixed_parameters'
-</entry>
-
-<entry id="outpathroot" type="char*256" category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Root directory for driver output files
-</entry>
-
-<entry id="perpetual" type="logical"  category="time_mgr"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, means the run will use a perpetual calendar, i.e., a
-diurnal cycle will be present for the fixed calendar day specified
-by <varname>perpetual_ymd</varname>.
-</entry>
-
-<entry id="perpetual_ymd" type="integer"  category="time_mgr"
-       group="seq_infodata_inparm" valid_values="" >
-Perpetual date encoded in an integer as (year*1000 + month*100 + day).
-If <varname>aqua_planet</varname> = .true. then perpetual_ymd is ignored
-and the perpetual date is set to 321.
-</entry>
-
-<entry id="restart_file" type="char*256" category="drv_restart"
-       group="seq_infodata_inparm" valid_values="" >
-Driver restart filename.
-(Set with RUN_REFCASE and RUN_REFDATE)
-</entry>
-
-<entry id="restart_pfile" type="char*256" category="drv_restart"
-       group="seq_infodata_inparm" valid_values="" >
-Driver restart pointer filename.
-</entry>
-
-<entry id="vect_map" type="char*256" category="drv_physics"
-       group="seq_infodata_inparm" 
-       valid_values="none,npfix,cart3d,cart3d_diag,cart3d_uvw,cart3d_uvw_diag">
-Vector mapping option
-</entry>
-
-<entry id="aoflux_grid" type="char*80" category="drv_physics"
-       group="seq_infodata_inparm" valid_values="atm,ocn">
-Grid for atmosphere to ocean flux calculations
-</entry>
-
-<entry id="samegrid_ao" type="logical" category="driver"
-       group="seq_infodata_inparm" valid_values="">
-If TRUE, atmosphere and ocean grids are the same lat/lon/size
-</entry>
-
-<entry id="samegrid_ro" type="logical" category="driver"
-       group="seq_infodata_inparm" valid_values="">
-if TRUE, runoff and ocean grids are the same lat/lon/size
-</entry>
-
-<entry id="shr_map_dopole" type="logical" category="drv_physics"
-       group="seq_infodata_inparm" valid_values="">
-If TRUE, do the pole corrections in shr_map_mod
-</entry>
-
-<entry id="samegrid_al" type="logical" category="driver"
-       group="seq_infodata_inparm" valid_values="">
-If TRUE, atmosphere and land grids same lat/lon/size
-</entry>
-
-<entry id="scmlat" type="real" category="scam"
-       group="seq_infodata_inparm" valid_values="">
-Latitude value of single column.
-(Set by PTS_LAT)
-</entry>
-
-<entry id="cpl_decomp" type="integer"  category="driver"
-       group="seq_infodata_inparm" valid_values="0,1,2,3" >
-Coupler decomposition
-   0=default
-   1=comp decomp
-   2=rearr comp decomp
-   3=new single 1d seg
-</entry>
-
-<entry id="scmlon" type="real" category="scam"
-       group="seq_infodata_inparm" valid_values="">
-Longitude value of single column.
-(Set by PTS_LON)
-</entry>
-
-<entry id="single_column" type="logical" category="scam"
-       group="seq_infodata_inparm" valid_values="">
-If TRUE, run in single column mode.
-(Set by PTS_MODE)
-</entry>
-
-<entry id="start_type" type="char*8"  category="driver"
-       group="seq_infodata_inparm" valid_values="startup,continue,branch" >
-Run type.  
-    'startup' is an initial run.  
-    'continue' is a restart run.
-    'branch' is a restart run in which properties of the output history files
-may be changed 
-(Set by RUN_TYPE).
-</entry>
-
-<entry id="model_version" type="char*256"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Model version to write to history files.
-</entry>
-
-<entry id="hostname" type="char*80"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Name of the machine you are running the model on to write to history files.
-</entry>
-
-<entry id="username" type="char*80"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Name of user running the model to write to history files.
-</entry>
-
-<entry id="cpl_cdf64" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output files in NetCDF large-file format
-</entry>
-
-<entry id="histaux_a2x" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output auxiliary history files for atmosphere to coupler fields every
-coupling time step.
-</entry>
-
-<entry id="histaux_a2x3hr" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output auxiliary history files for atmosphere to coupler fields every
-three hours. Set this to true in order to create data that can be later used
-by datm to run CLM (normally this would only be done for a fully case only)
-</entry>
-
-<entry id="histaux_a2x3hrp" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output auxiliary history files for atmosphere to coupler precipitation 
-fields every three hours.
-</entry>
-
-<entry id="histaux_a2x24hr" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output auxiliary history files for atmosphere to coupler
-fields every 24 hours hours.
-</entry>
-
-<entry id="histaux_l2x" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output auxiliary history files for land to coupler
-fields every coupling time step.
-</entry>
-
-<entry id="histaux_r2x" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, output auxiliary history files for runoff to coupler
-fields every coupling time step.
-</entry>
-
-<entry id="bfbflag" type="logical"  category="drv_physics"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, change mapping in driver to give bit-for-bit results 
-regardless of number of processors used.
-</entry>
-
-<entry id="do_budgets" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, turn writing of budgets to log file on.
-</entry>
-
-<entry id="budget_inst" type="integer"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Output level for instantaneous budgets.
-</entry>
-
-<entry id="budget_daily" type="integer"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Output level for daily budgets.
-</entry>
-
-<entry id="budget_month" type="integer"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Output level for monthly budgets.
-</entry>
-
-<entry id="budget_ann" type="integer"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Output level for annual budgets.
-</entry>
-
-<entry id="budget_ltann" type="integer"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Output level for long-term annual budgets.
-(Set with BUDGET_LONGTERM_EOY)
-</entry>
-
-<entry id="budget_ltend" type="integer"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-Output level for long-term budgets written at the end of the run.
-(Set with BUDGET_LONGTERM_STOP)
-</entry>
-
-<entry id="timing_dir" type="char*256"  category="profiling"
-       group="seq_infodata_inparm" valid_values="" >
-Directory name to store timing files
-</entry>
-
-<entry id="tchkpt_dir" type="char*256"  category="profiling"
-       group="seq_infodata_inparm" valid_values="" >
-Directory name to store timing checkpoint files
-</entry>
-
-<entry id="do_histinit" type="logical"  category="drv_history"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, write out the initial history file
-</entry>
-
-<entry id="run_barriers" type="logical"  category="profiling"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, turn on barriers around the component run calls.
-</entry>
-
-<entry id="drv_threading" type="logical"  category="performance"
-       group="seq_infodata_inparm" valid_values="" >
-If TRUE, turn threading control on in driver
-</entry>
-
-<entry id="eps_frac" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match fractional areas for each component: land, ice, and ocn.
-</entry>
-
-<entry id="eps_agrid" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match land and atmospheric grid cell latitudes and longitudes.
-</entry>
-
-<entry id="eps_amask" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match land and atmospheric grid masks
-</entry>
-
-<entry id="eps_aarea" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match land and atmospheric grid areas
-</entry>
-
-<entry id="eps_ogrid" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match ocean and ice grid cell latitudes and longitudes.
-</entry>
-
-<entry id="eps_omask" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match ocean and ice grid masks
-</entry>
-
-<entry id="eps_oarea" type="real"  category="driver"
-       group="seq_infodata_inparm" valid_values="" >
-Tolerance to match ocean and ice grid areas
-</entry>
-
-<!-- Coupler fields -->
-
-<entry id="flds_co2a" type="logical"  category="driver"
-       group="seq_cplflds_inparm" valid_values="" value=".false.">
-If TRUE, pass CO2 from atmosphere to land
-</entry>
-
-<entry id="flds_co2b" type="logical"  category="driver"
-       group="seq_cplflds_inparm" valid_values="" value=".false.">
-If TRUE, pass CO2 from atmosphere to land and back
-</entry>
-
-<entry id="flds_co2c" type="logical"  category="driver"
-       group="seq_cplflds_inparm" valid_values="" value=".false.">
-If TRUE, pass CO2 from atmosphere to land and back and also to ocean
-</entry>
-
-<entry id="flds_co2_dmsa" type="logical"  category="driver"
-       group="seq_cplflds_inparm" valid_values="" value=".false.">
-If TRUE, pass CO2 from atmosphere to land and back and also to ocean and DMS to ocean
-</entry>
-
-<entry id="glc_nec" type="integer"  category="driver"
-       group="seq_cplflds_inparm" valid_values="0,1,3,5,10" >
-Number of  multiple elevation classes over glacier points to pass to coupler.
-Normally this is ONLY used when running CESM with the active glacier model.
-</entry>
-
-<entry id="cplflds_custom" type="char*256"  category="driver"
-       group="seq_cplflds_userspec" valid_values="" >
-Custom fields to pass in the driver
-</entry>
-
-<!-- Task/Thread layouts -->
-
-<entry id="atm_pestride" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Stride used in selecting the processes in the atm communicator group.
-</entry>
-
-<entry id="atm_rootpe" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Root process of the atm communicator group.
-</entry>
-
-<entry id="atm_ntasks" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of atm tasks.
-</entry>
-
-<entry id="atm_nthreads" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of threads in each atm task.
-</entry>
-
-<entry id="atm_layout" type="char*32"  category="performance"
-       group="ccsm_pes" valid_values="concurrent,sequential" >
-atm layout type.
-</entry>
-
-<entry id="lnd_pestride" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Stride used in selecting the processes in the lnd communicator group.
-</entry>
-
-<entry id="lnd_rootpe" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Root process of the lnd communicator group.
-</entry>
-
-<entry id="lnd_ntasks" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of lnd tasks.
-</entry>
-
-<entry id="lnd_nthreads" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of threads in each lnd task.
-</entry>
-
-<entry id="lnd_layout" type="char*32"  category="performance"
-       group="ccsm_pes" valid_values="concurrent,sequential" >
-lnd layout type.
-</entry>
-
-<entry id="ice_pestride" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Stride used in selecting the processes in the ice communicator group.
-</entry>
-
-<entry id="ice_rootpe" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Root process of the ice communicator group.
-</entry>
-
-<entry id="ice_ntasks" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of ice tasks.
-</entry>
-
-<entry id="ice_nthreads" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of threads in each ice task.
-</entry>
-
-<entry id="ice_layout" type="char*32"  category="performance"
-       group="ccsm_pes" valid_values="concurrent,sequential" >
-ice layout type.
-</entry>
-
-<entry id="ocn_pestride" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Stride used in selecting the processes in the ocn communicator group.
-</entry>
-
-<entry id="ocn_rootpe" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Root process of the ocn communicator group.
-</entry>
-
-<entry id="ocn_ntasks" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of ocn tasks.
-</entry>
-
-<entry id="ocn_nthreads" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of threads in each ocn task.
-</entry>
-
-<entry id="ocn_layout" type="char*32"  category="performance"
-       group="ccsm_pes" valid_values="concurrent,sequential" >
-ocn layout type.
-</entry>
-
-<entry id="glc_pestride" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Stride used in selecting the processes in the glc communicator group.
-</entry>
-
-<entry id="glc_rootpe" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Root process of the glc communicator group.
-</entry>
-
-<entry id="glc_ntasks" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of glc tasks.
-</entry>
-
-<entry id="glc_nthreads" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of threads in each glc task.
-</entry>
-
-<entry id="glc_layout" type="char*32"  category="performance"
-       group="ccsm_pes" valid_values="concurrent,sequential" >
-glc layout type.
-</entry>
-
-<entry id="cpl_pestride" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Stride used in selecting the processes in the cpl communicator group.
-</entry>
-
-<entry id="cpl_rootpe" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Root process of the cpl communicator group.
-</entry>
-
-<entry id="cpl_ntasks" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of cpl tasks.
-</entry>
-
-<entry id="cpl_nthreads" type="integer"  category="performance"
-       group="ccsm_pes" valid_values="" >
-Number of threads in each cpl task.
-</entry>
-
-<!-- Time Manager -->
-
-<entry id="atm_cpl_dt" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Coupling interval between the atmosphere and other system components.  This
-is how frequently information can be communicated between the atmosphere
-and the surface models.
-(Set by ATM_NCPL)
-</entry>
-
-<entry id="atm_cpl_offset" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the atmosphere model (seconds).
-</entry>
-
-<entry id="calendar" type="char*80"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="NO_LEAP,GREGORIAN" >
-Calendar type 
-    "NO_LEAP" for consistent 365-days per year
-    "GREGORIAN" to include leap-years. 
-Note that if "GREGORIAN" is selected
-leap-years will be used in the time manager, but the calculation of the
-earth's orbit still assumes 365 day years. Also use of GREGORIAN requires
-compiling with the full ESMF library.
-</entry>
-
-<entry id="end_restart" type="logical"  category="drv_restart"
-       group="seq_timemgr_inparm" valid_values="" >
-If TRUE, write restart at end of run.
-</entry>
-
-<entry id="ice_cpl_dt" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Coupling interval between the sea-ice  and other system components (seconds).
-(Set by ICE_NCPL)
-</entry>
-
-<entry id="ice_cpl_offset" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the sea-ice model (seconds).
-</entry>
-
-<entry id="lnd_cpl_dt" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Coupling interval between the land model  and other system components.
-(Set by LND_NCPL)
-</entry>
-
-<entry id="lnd_cpl_offset" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the land model (seconds).
-</entry>
-
-<entry id="ocn_cpl_dt" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Coupling interval between the ocean model  and other system components (seconds).
-(Set by OCN_NCPL)
-</entry>
-
-<entry id="ocn_cpl_offset" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the ocean model (seconds).
-</entry>
-
-<entry id="glc_cpl_dt" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Coupling interval between the glacier model and other system components (seconds).
-(Set by GLC_NCPL)
-</entry>
-
-<entry id="glc_cpl_offset" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Controls phasing of the coupling with the glacier model (seconds).
-</entry>
-
-<entry id="ref_tod" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Reference time-of-day expressed as seconds past midnight.  Used in
-conjunction with <varname>ref_ymd</varname> to set the reference time.
-</entry>
-
-<entry id="ref_ymd" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Reference date encoded in an integer as (year*1000 + month*100 + day).
-Used in
-conjunction with <varname>ref_tod</varname> to set the reference time which
-is used to define a time coordinate for the output history files.  The
-convention for the unit string of a time coordinate is of the form
-"time-unit since reference-time", for example, "days since 1990-01-01
-00:00:00".  The reference-time part of this string is specified by the
-<varname>ref_ymd</varname> and <varname>ref_tod</varname> variables.
-</entry>
-
-<entry id="restart_n" type="integer"  category="drv_restart"
-       group="seq_timemgr_inparm" valid_values="" >
-Set the restart interval as a number of elapsed time units which are specified
-by <varname>restart_option</varname>.
-</entry>
-
-<entry id="restart_option" type="char*8"  category="drv_restart"
-       group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
-Set the interval between writing restart files
-using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjunction
-with <varname>restart_n</varname> to set the number of time units.
-A convenience option allows specifying that restart files be written at the
-end of each month or at the end of each year by using the options
-'monthly' or 'yearly' respectively.  It is also possible to request that no
-restart files be written via the option 'never', or that restart files be
-written only at the end of the run via the option 'end'. "ifdays0" means to 
-write restart files at the beginning of the next year and every year after.
-</entry>
-
-<entry id="restart_ymd" type="integer"  category="drv_restart"
-       group="seq_timemgr_inparm" valid_values="" >
-Restart date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjunction with <varname>restart_option</varname> to set the date to
-write restart files for the simulation.
-</entry>
-
-<entry id="history_n" type="integer"  category="drv_history"
-       group="seq_timemgr_inparm" valid_values="" >
-Set the history file write interval as a number of elapsed time units which are specified
-by <varname>history_option</varname>.
-</entry>
-
-<entry id="history_option" type="char*8"  category="drv_history"
-       group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
-Set the interval between writing history files
-using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjunction
-with <varname>historyt_n</varname> to set the number of time units.
-A convenience option allows specifying that history files be written at the
-end of each month or at the end of each year by using the options
-'monthly' or 'yearly' respectively.  It is also possible to request that no
-history files be written via the option 'never', or that history files be
-written only at the end of the run via the option 'end'. "ifdays0" means to 
-write history files at the beginning of the next year and each year after.
-</entry>
-
-<entry id="history_ymd" type="integer"  category="drv_history"
-       group="seq_timemgr_inparm" valid_values="" >
-History file write date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjunction with <varname>history_option</varname> to set the date to
-write history files for the simulation.
-</entry>
-
-<entry id="histavg_n" type="integer"  category="drv_history"
-       group="seq_timemgr_inparm" valid_values="" >
-Set the interval to write averaged history files as a number of elapsed time units which are specified
-by <varname>histavg_option</varname>.
-</entry>
-
-<entry id="histavg_option" type="char*8"  category="drv_history"
-       group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
-Set the interval between writing averaged history files
-using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjunction
-with <varname>histavg_n</varname> to set the number of time units.
-A convenience option allows specifying that averaged history files be written at the
-end of each month or at the end of each year by using the options
-'monthly' or 'yearly' respectively.  It is also possible to request that no
-averaged history files be written via the option 'never', or that averaged history 
-files be written only at the end of the run via the option 'end'. "ifdays0" means to 
-write averaged history files at the beginning of the next year and each year after.
-</entry>
-
-<entry id="histavg_ymd" type="integer"  category="drv_history"
-       group="seq_timemgr_inparm" valid_values="" >
-Averaged history file write date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjunction with <varname>histavg_option</varname> to set the date to
-write averaged history files for the simulation.
-</entry>
-
-<entry id="start_tod" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Start time-of-day expressed as seconds past midnight.  Used in
-conjunction with <varname>start_ymd</varname> to set the start time.
-</entry>
-
-<entry id="run_startdate" type="char*10"  category="time_mgr"
-       group="default_settings" valid_values="" >
-Run start date encoded as YYYY-MM-DD
-</entry>
-
-<entry id="run_stopdate" type="char*10"  category="time_mgr"
-       group="default_settings" valid_values="" >
-Run stop date encoded as YYYY-MM-DD
-</entry>
-
-<entry id="start_ymd" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Start date encoded in an integer as (year*1000 + month*100 + day).
-Used in
-conjunction with <varname>start_tod</varname> to set the start date of
-the simulation.
-</entry>
-
-<entry id="curr_tod" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Current time-of-day expressed as seconds past midnight.  Used in
-conjunction with <varname>curr_ymd</varname> to set the current time
-(normally set to start_tod).
-</entry>
-
-<entry id="curr_ymd" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Current date encoded in an integer as (year*1000 + month*100 + day).
-Used in
-conjunction with <varname>curr_tod</varname> to set the current date of
-the simulation (normally set to start_tod).
-</entry>
-
-<entry id="stop_n" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Set the length of run as a number of elapsed time units which are specified
-by <varname>stop_option</varname>.
-</entry>
-
-<entry id="stop_option" type="char*8"  category="time_mgr"
-       group="seq_timemgr_inparm" 
-       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
-Set the length of run as an elapsed time using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjunction
-with <varname>stop_n</varname> to set the number of elapsed time units.
-Alternatively, set the final simulation time in absolute terms by using the
-option 'date' in conjunction with <varname>stop_ymd</varname>,
-and <varname>stop_tod</varname> to specify a date and time of day at which
-the simulation should stop. "ifdays0" means to stop at the beginning of the next year.
-</entry>
-
-<entry id="stop_tod" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Stop time-of-day expressed as seconds past midnight.  Used in
-conjunction with <varname>stop_ymd</varname> to set the stop time.
-</entry>
-
-<entry id="stop_ymd" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Stop date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjunction with <varname>stop_option</varname> to set the stop date of
-the simulation.
-</entry>
-
-<entry id="tprof_n" type="integer"  category="profiling"
-       group="seq_timemgr_inparm" valid_values="" >
-Set the interval for time-profiling as a number of elapsed time units which are specified
-by <varname>tprof_option</varname>.
-</entry>
-
-<entry id="tprof_option" type="char*80"  category="profiling"
-       group="seq_timemgr_inparm"
-       valid_values="none,never,nsteps,nstep,nseconds,nsecond,nminutes,nminute,nhours,nhour,ndays,nday,nmonths,nmonth,monthly,yearly,nyears,nyear,date,ifdays0,end" >
-Set the time-profiling write time as an elapsed time using one of the options 'nsteps',
-'ndays', 'nmonths', or 'nyears', in conjunction
-with <varname>tprof_n</varname> to set the number of elapsed time units.
-</entry>
-
-<entry id="tprof_ymd" type="integer"  category="time_mgr"
-       group="seq_timemgr_inparm" valid_values="" >
-Time-profiling write date encoded in an integer as (year*1000 + month*100 + day).
-Used in conjunction with <varname>tprof_option</varname> to set the time-profiling
-write time.
-</entry>
-
-<!-- Time profiler -->
-
-<entry id="profile_barrier" type="logical"  category="profiling"
-       group="prof_inparm" valid_values="" >
-If TRUE, turn on barriers before running a performance section.
-</entry>
-
-<entry id="profile_disable" type="logical"  category="profiling"
-       group="prof_inparm" valid_values="" >
-If TRUE, disable all performance profilers
-</entry>
-
-<entry id="profile_single_file" type="logical"  category="profiling"
-       group="prof_inparm" valid_values="" >
-If TRUE, send output to a single file (rather than separate files per MPI task).
-</entry>
-
-<entry id="profile_global_stats" type="logical"  category="profiling"
-       group="prof_inparm" valid_values="" >
-If TRUE, do global statistics
-</entry>
-
-<entry id="profile_papi_enable" type="logical"  category="profiling"
-       group="prof_inparm" valid_values="" >
-If TRUE, enable the PAPI namelist
-</entry>
-
-<entry id="profile_depth_limit" type="integer"  category="profiling"
-       group="prof_inparm" valid_values="" >
-integer indicating maximum number of levels of timer nesting.
-</entry>
-
-<entry id="profile_outpe_num" type="integer"  category="profiling"
-       group="prof_inparm" valid_values="" >
-Number of output processors for profiling
-</entry>
-
-<entry id="profile_outpe_stride" type="integer"  category="profiling"
-       group="prof_inparm" valid_values="" >
-Stride of output processors for profiling
-</entry>
-
-<entry id="profile_detail_limit" type="integer"  category="profiling"
-       group="prof_inparm" valid_values="" >
-integer indicating maximum detail level to profile.
-</entry>
-
-<entry id="profile_timer" type="integer"  category="profiling"
-       group="prof_inparm" valid_values="1,2,3,4,5,6" >
-integer indicating which timer to use. As defined in gptl.inc.
-<ul>
-<li>GPTLgettimeofday   = 1</li>
-<li>GPTLnanotime       = 2</li>
-<li>GPTLrtc            = 3</li>
-<li>GPTLmpiwtime       = 4</li>
-<li>GPTLclockgettime   = 5</li>
-<li>GPTLpapitime       = 6</li>
-</ul>
-</entry>
-
-<entry id="papi_ctr1_str" type="char*16"  category="profiling"
-       group="papi_inparm" >
-Performance Application Programming Interface (PAPI) counter option number 1
-(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
-PAPI_FP_INS).
-</entry>
-
-<entry id="papi_ctr2_str" type="char*16"  category="profiling"
-       group="papi_inparm" >
-PAPI counter option number 2
-(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
-PAPI_FP_INS).
-</entry>
-
-<entry id="papi_ctr3_str" type="char*16"  category="profiling"
-       group="papi_inparm" >
-PAPI counter option number 3
-(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
-PAPI_FP_INS).
-</entry>
-
-<entry id="papi_ctr4_str" type="char*16"  category="profiling"
-       group="papi_inparm" >
-PAPI counter option number 4
-(Set to valid PAPI counter strings such as: PAPI_TOT_CYC, PAPI_TOT_INS, PAPI_FP_OPS, or
-PAPI_FP_INS).
-</entry>
-
-<!-- PIO namelist -->
-
-<entry id="pio_async_interface" type="logical"  category="performance"
-       group="pio_inparm" valid_values="" >
-If TRUE, use PIO asynchronously
-(Experimental and NOT supported)
-</entry>
-
-<entry id="pio_debug_level" type="integer"  category="performance"
-       group="pio_inparm" valid_values="0,1,2,3" >
-Debug printing level for PIO
-</entry>
-
-<entry id="pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for PIO tasks
-</entry>
-
-<entry id="pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for PIO output processing
-</entry>
-
-<entry id="pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for PIO
-</entry>
-
-<entry id="pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for PIO
-</entry>
-
-<entry id="cpl_pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for coupler PIO tasks
-</entry>
-
-<entry id="cpl_pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for coupler PIO output processing
-</entry>
-
-<entry id="cpl_pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for coupler PIO
-</entry>
-
-<entry id="cpl_pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for coupler PIO
-</entry>
-
-<entry id="lnd_pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for lnd PIO tasks
-</entry>
-
-<entry id="lnd_pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for lnd PIO output processing
-</entry>
-
-<entry id="lnd_pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for lnd PIO
-</entry>
-
-<entry id="lnd_pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for lnd PIO
-</entry>
-
-<entry id="atm_pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for atm PIO tasks
-</entry>
-
-<entry id="atm_pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for atm PIO output processing
-</entry>
-
-<entry id="atm_pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for atm PIO
-</entry>
-
-<entry id="atm_pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for atm PIO
-</entry>
-
-<entry id="glc_pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for glc PIO tasks
-</entry>
-
-<entry id="glc_pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for glc PIO output processing
-</entry>
-
-<entry id="glc_pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for glc PIO
-</entry>
-
-<entry id="glc_pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for glc PIO
-</entry>
-
-<entry id="ocn_pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for ocn PIO tasks
-</entry>
-
-<entry id="ocn_pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for ocn PIO output processing
-</entry>
-
-<entry id="ocn_pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for ocn PIO
-</entry>
-
-<entry id="ocn_pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for ocn PIO
-</entry>
-
-<entry id="ice_pio_stride" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Stride to use for ice PIO tasks
-</entry>
-
-<entry id="ice_pio_root" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Root PE for ice PIO output processing
-</entry>
-
-<entry id="ice_pio_numtasks" type="integer"  category="performance"
-       group="pio_inparm" valid_values="" >
-Number of tasks to use for ice PIO
-</entry>
-
-<entry id="ice_pio_typename" type="char*80"  category="performance"
-       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
-Type of output files for ice PIO
-</entry>
-
-<!-- ========================================================================================  -->
 <!-- DATM Namelists                                                                            -->
 <!-- ========================================================================================  -->
-
-<entry id="datamode" type="char*256"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="CLMNCEP,COPYALL,CPLHIST,CORE2,TN460,NULL" >
-Flags for physics options with respect to how to handle input data.
-(Set with DATM_MODE)
-</entry>
-
-<entry id="domainfile" type="char*256" category="datm"
-       input_pathname="abs" group="shr_strdata_nml" valid_values="" >
-File containing domain info.
-</entry>
-
-<entry id="fillalgo" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
-Fill algorithm
-</entry>
-
-<entry id="fillmask" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
-Fill mask
-</entry>
-
-<entry id="fillread" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="">
-Fill mapping file to write
-</entry>
-
-<entry id="fillwrite" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="">
-Fill mapping file to write
-</entry>
-
-<entry id="mapmask" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
-Scalar mapping mask
-</entry>
-
-<entry id="mapalgo" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
-Scalar mapping algorithm
-</entry>
-
-<entry id="mapread" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="">
-Regrid mapping file to read
-</entry>
-
-<entry id="mapwrite" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="">
-Regrid mapping file to write
-</entry>
-
-<entry id="tintalgo" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="coszen,nearest,linear,lower,upper">
-Time interpolation algorithm method
-    coszen  = Scale according to the cosine of the solar zenith angle (for solar)
-    nearest = Use the nearest time-value
-    linear  = Linearly interpolate between the two time-values
-    lower   = Use lower time-value
-    upper   = Use upper time-value
-</entry>
-
-<entry id="taxmode" type="char*256(30)"  category="datm_physics"
-       group="shr_strdata_nml" valid_values="extend,cycle,limit">
-Time axis mode
-    extend = extrapolate before and after the period by using the first or last value.
-    cycle  = cycle between the range of data
-    limit  = restrict to the period for which the data is valid
-</entry>
-
-<entry id="dtlimit" type="real(30)"  category="datm"
-       group="shr_strdata_nml" >
-Limit of delta-time ratio allowed. Highest time difference over minimum time-difference.
-</entry>
-
-<entry id="streams" type="char*256(30)" category="datm"
-       group="shr_strdata_nml" valid_values="">
-Character array of stream description file names
-</entry>
-
-<entry id="vectors" type="char*256(30)" category="datm"
-       group="shr_strdata_nml" valid_values="">
-Character array of vector description file names
-</entry>
-
-<entry id="factorfn" type="char*256" category="datm_physics"
-       group="datm_nml" valid_values="null">
-File containing tn460 correction factors (not valid for any CLM DATM7 modes)
-</entry>
-
-<entry id="decomp" type="char*4" category="datm"
-       group="datm_nml" valid_values="1d,root" >
-DATM Decomposition strategy
-    1d   = Vector decomposition
-    root = run only on the master task
-</entry>
-
-<entry id="presaero" type="logical" category="datm_physics"
-       group="datm_nml">
-If TRUE, prescribed aerosols are coming from the data atmosphere model (datm)
-(Must be true for running with CLM).
-</entry>
-
-<entry id="atm_in" type="char*256" category="datm"
-       group="datm_nml" valid_values="">
-Namelist filename for data model share stream data namelist
-</entry>
-
-<entry id="iradsw" type="integer" category="datm_physics"
-       group="datm_nml" valid_values="">
-Frequency to update radiation in number of steps (or hours if negative)
-</entry>
-
-<entry id="restfilm" type="char*256" category="datm"
-       group="datm_nml" valid_values="">
-Master restart file name for datm model
-</entry>
-
-<entry id="restfils" type="char*256" category="datm"
-       group="datm_nml" valid_values="">
-Stream restart file name for datm model, needed for branch simulations
-</entry>
 
 <entry id="datm_source" type="char*80" category="datm_internal"
        group="datm_internal" 
@@ -1917,10 +723,192 @@ Land mask description for mksurfdata input files
 Horizontal grid resolutions for mksurfdata input files
 </entry> 
 
+<!-- ======================================================================================== -->
+<!-- CPL7 Driver Namelist -->
+<!-- ======================================================================================== -->
+
+<entry id="start_ymd" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Start date encoded in an integer as (year*1000 + month*100 + day).
+Used in
+conjunction with <varname>start_tod</varname> to set the start date of
+the simulation.
+</entry>
+
+<entry id="restart_file" type="char*256" category="drv_restart"
+       group="seq_infodata_inparm" valid_values="" >
+Driver restart filename.
+(Set with RUN_REFCASE and RUN_REFDATE)
+</entry>
+
+<entry id="eps_aarea" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match land and atmospheric grid areas
+</entry>
+
+<entry id="logfilepostfix" type="char*80" category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Ending suffix "postfix" for output log files.
+</entry>
+
+<entry id="outpathroot" type="char*256" category="drv_history"
+       group="seq_infodata_inparm" valid_values="" >
+Root directory for driver output files
+</entry>
+
+<entry id="cpl_pio_stride" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Stride to use for coupler PIO tasks
+</entry>
+
+<entry id="cpl_pio_root" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Root PE for coupler PIO output processing
+</entry>
+
+<entry id="cpl_pio_numtasks" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Number of tasks to use for coupler PIO
+</entry>
+
+<entry id="cpl_pio_typename" type="char*80"  category="default_settings"
+       group="default_settings" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for coupler PIO
+</entry>
+
+<entry id="pio_stride" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Stride to use for lnd PIO tasks
+</entry>
+
+<entry id="pio_root" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Root PE for lnd PIO output processing
+</entry>
+
+<entry id="pio_numtasks" type="integer"  category="performance"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for lnd PIO
+</entry>
+
+<entry id="pio_typename" type="char*80"  category="performance"
+       group="pio_inparm" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for lnd PIO
+</entry>
+
+<entry id="lnd_pio_stride" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Stride to use for lnd PIO tasks
+</entry>
+
+<entry id="lnd_pio_root" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Root PE for lnd PIO output processing
+</entry>
+
+<entry id="lnd_pio_numtasks" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Number of tasks to use for lnd PIO
+</entry>
+
+<entry id="lnd_pio_typename" type="char*80"  category="default_settings"
+       group="default_settings" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for lnd PIO
+</entry>
+
+<entry id="atm_pio_stride" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Stride to use for atm PIO tasks
+</entry>
+
+<entry id="atm_pio_root" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Root PE for atm PIO output processing
+</entry>
+
+<entry id="atm_pio_numtasks" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Number of tasks to use for atm PIO
+</entry>
+
+<entry id="atm_pio_typename" type="char*80"  category="default_settings"
+       group="default_settings" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for atm PIO
+</entry>
+
+<entry id="glc_pio_stride" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Stride to use for glc PIO tasks
+</entry>
+
+<entry id="glc_pio_root" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Root PE for glc PIO output processing
+</entry>
+
+<entry id="glc_pio_numtasks" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Number of tasks to use for glc PIO
+</entry>
+
+<entry id="glc_pio_typename" type="char*80"  category="default_settings"
+       group="default_settings" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for glc PIO
+</entry>
+
+<entry id="ocn_pio_stride" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Stride to use for ocn PIO tasks
+</entry>
+
+<entry id="ocn_pio_root" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Root PE for ocn PIO output processing
+</entry>
+
+<entry id="ocn_pio_numtasks" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Number of tasks to use for ocn PIO
+</entry>
+
+<entry id="ocn_pio_typename" type="char*80"  category="default_settings"
+       group="default_settings" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for ocn PIO
+</entry>
+
+<entry id="ice_pio_stride" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Stride to use for ice PIO tasks
+</entry>
+
+<entry id="ice_pio_root" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Root PE for ice PIO output processing
+</entry>
+
+<entry id="ice_pio_numtasks" type="integer"  category="default_settings"
+       group="default_settings" valid_values="" >
+Number of tasks to use for ice PIO
+</entry>
+
+<entry id="ice_pio_typename" type="char*80"  category="default_settings"
+       group="default_settings" valid_values="NETCDF,PNETCDF,NETCDF4P,NETCDF4C" >
+Type of output files for ice PIO
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- Generic issues (resolution, mask etc.)                                                    -->
 <!-- ========================================================================================  -->
+
+<entry id="chk_res" type="integer"  category="default_settings"
+       group="default_settings" valid_values="0,1" >
+Check that the resolution and land-mask is valid before continuing.
+</entry>
+
+<entry id="note" type="integer"  category="default_settings"
+       group="default_settings" valid_values="0,1" >
+Add a note to the output namelist about the options given to build-namelist
+</entry>
 
 <entry id="clm_start_type" type="char*8"  category="default_settings"
        group="default_settings" valid_values="default,cold,arb_ic,startup,continue,branch" >
@@ -1936,7 +924,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,us20,wus12">
 Horizontal resolutions
 Note: 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
@@ -1950,7 +938,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
+       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62,us20,wus12">
 Land mask description
 </entry> 
 

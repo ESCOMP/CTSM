@@ -179,7 +179,11 @@ EOF
   # List of input options
   my %inputopts;
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition.xml";
-  $inputopts{nldef_file}     = "$cfgdir/namelist_files/namelist_definition.xml";
+  my $datmblddir             = "$cfgdir/../../../../models/atm/datm/bld";
+  my @nl_definition_files    = ( "$datmblddir/namelist_files/namelist_definition_datm.xml",
+                                 "$cfgdir/namelist_files/namelist_definition.xml" 
+                               );
+  $inputopts{nldef_files}    = \@nl_definition_files;
   $inputopts{namelist}       = $opts{namelist};
   $inputopts{printing}       = $printing;
   $inputopts{cfgdir}         = $cfgdir;
@@ -187,7 +191,10 @@ EOF
   $inputopts{cmdline}        = $cmdline;
 
   my $exitearly = 0;
-  my $definition = Build::NamelistDefinition->new( $inputopts{nldef_file} );
+  my $definition = Build::NamelistDefinition->new( $nl_definition_files[0] );
+  foreach my $nl_defin_file ( @nl_definition_files ) {
+     $definition->add( "$nl_defin_file" );
+  }
 
   if ( ! defined($opts{csmdata}) ) {
      $inputopts{csmdata} = "default";
@@ -240,7 +247,9 @@ EOF
                    "$cfgdir/namelist_files/namelist_defaults_clm_tools.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_datm.xml",
-                   "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
+                   "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
+                   "$datmblddir/namelist_files/namelist_defaults_datm.xml",
+                 );
      push( @nl_defaults_files, @files );
   }
   if ( ! $exitearly ) {

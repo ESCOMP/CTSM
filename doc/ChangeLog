@@ -1,4 +1,276 @@
 ===============================================================
+Tag name:  clm4_0_44
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Jul  9 11:14:11 MDT 2012
+One-line Summary: Add wrf resolutions, update externals to cesm1_1_beta15, all components use build-namelist now
+
+Purpose of changes:
+
+set nsegspc=1 for all ne grids. Update to latest externals and new datm. Latest externals
+have ALL components using a build-namelist, and user_nl.$COMP files are created for you.
+Env files changed most fields in env_conf moved to env_run and secondly env_build.
+env_mach_pes moved to env_configure. env_conf removed. Add ne4, ne16, ne60 datasets. Add
+in ne16, ne30, ne120 20th Century datasets.   Change of templates to have
+clm.buildnml.csh and clm.buildexe.csh copied to Buildconf. Have -chk_res option to
+build-namelist to check for resolution/mask, -note option to include (or not) note on the
+bottom of the namelist. Expand build-namelist unit test.
+
+Requirements for tag:
+    Requirements: test on bluefire (CESM, int, bat)
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID):
+                                 1513 (mksurfdata.pl doesn't work with -crop flag)
+                                 1514 (inconsistancy in char variable fexcl)
+
+Known bugs (include bugzilla ID):
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  935 (RTM warning NOT an error)
+                                 1025 (PTS_MODE can NOT use a global finidat file)
+                                 1017 (PTS_MODE can NOT restart)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1158 (I_1850-2000_CN (I4804CN) inconsistent with I_1850-2000 (I4804) compset)
+                                 1163 (finidat file has a bunch of NaN's in it)
+                                 1164 (Restart trouble for CN13 on mirage...)
+                                 1251 (PTCLM testcases aborts in I_QIAN case)
+                                 1282 (Trouble running to last CLM1PT atm time-step)
+                                 1283 (CLM with glacier-MEC fails running on intel)
+                                 1309 (Problem with building T31 rcp pftdyn files)
+                                 1325 (GDDHARV on hist causes model to die in debug)
+                                 1339 (Increase streams file limit from 1000 to 2000)
+                                 1360 (Can't do a ncdump on US-UMB data)
+                                 1393 (error when running Gregorian calendar)
+                                 1397 (c2l_scale_type not specified for many history fields)
+                                 1401 (Restart files do NOT have _FillValue/missing_value attributes on fields)
+                                 1405 (Problem with irrigation on clm4_0_34 with intel compiler)
+                                 1407 (Build problem on jaguar for test_driver.sh with -c option)
+                                 1409 (ne120 is having restart trouble on jaguar with NetCDF3)
+                                 1410 (Problem running PST.f09_g16.I.jaguarpf)
+                                 1411 (ERI_D.ne30_g16.I1850CN.jaguarpf.G.235924 fails on jaguarpf)
+                                 1454 (lack of 1D history files in CLM testing)
+                                 1455 (bad time-stamp in CLM testing)
+                                 1457 (bug in soil color in mksurfdata_map)
+                                 1474 (Missing eulerian domain files)
+                                 1479 (fails on jaguarpf)
+                                 1485 (Performance issue with esmf_wrf_timemgr)
+                                 1488 (Problem reading restarts@ne30_g16 for some layouts)
+                                 1517 (Performance of datm in clm4_0_44 is even worse)
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: Yes!
+   env*.xml files changed as follows:
+
+      env_conf.xml ------> removed!
+         Most variables moved to env_run.xml. Some variables moved to env_build.xml
+      env_mach_pes.xml --> Renamed to env_configure.xml
+
+     Buildconf directory ---> think of it as readonly!
+Describe any changes made to the namelist: Yes!
+
+    user_nl_* files for ALL components created for you. Put, your changes to namelists
+    files here.
+
+   New options to clm build-namelist: 
+      (all but -chk_res and -note are already exercised when running CESM)
+      -chk_res ------- Check resolution and land mask first.
+      -clm_startfile - Input file to use to startup for branch or startup cases.
+      -co2_type ------ CO2 type
+      -inst_string --- Instance string to use for clm_startfile for multi-instance cases.
+      -l_ncpl -------- Number of coupling time-steps to take per day.
+      -lnd_frac ------ Land fraction file to use (domain file)
+      -note ---------- Write out note about build-namelist usage to end of file.
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes: Yes!
+   Most of the throughput tests fail, and single-point performance looks horrible.
+   Although this may be a sporatic problem due to file systems. See bug  1517.
+
+Code reviewed by: self, mvertens, tcraig
+
+List any svn externals directories updated (csm_share, mct, etc.):
+    Update to cesm1_1_beta15 external versions (other than timing)
+    scripts          to scripts4_120604
+    Machines         to Machines_120529
+    drv              to drvseq4_1_15
+    datm             to datm8_120528
+    csm_share        to share3_120509
+    mct              to MCT2_8_0_120503
+    pio              to pio_1_4_5
+    stubs            to cism1_120529
+    esmf_wrf_timemgr to esmf_wrf_timemgr_120427
+    mapping          to mapping_120525
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>>>> Add tools testers for directories that use CESM configure
+   A  models/lnd/clm/test/system/TCBCFGtools.sh
+   A  models/lnd/clm/test/system/TSMCFGtools.sh
+   A  models/lnd/clm/test/system/TBLCFGtools.sh
+
+   A  models/lnd/clm/bld/unit_testers/NMLTest/CompFiles.pm - New test module
+
+   A  models/lnd/clm/test/system/nl_files/mksrfdt_T31_crpglc_2000 - mksurfdata crop test
+
+>>>>>>>>>>>> Split out buildexe/buildnml from template so that editing templates
+>>>>>>>>>>>> isn't a nightmare
+   A  models/lnd/clm/bld/clm.buildexe.csh
+   A  models/lnd/clm/bld/clm.buildnml.csh
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>> Change tests a bit add a global crop test, get working on mirage
+   M  models/lnd/clm/test/system/tests_posttag_lynx_nompi
+   M  models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M  models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M  models/lnd/clm/test/system/CLM_runcmnd.sh --- Allow hostname==vpn* for yong
+   M  models/lnd/clm/test/system/test_driver.sh ---- Add TOOLSLIBS TOOLS_CONF_STRING
+          if hostname=vpn* use setup for yong
+   M  models/lnd/clm/test/system/input_tests_master  Fix test blCK8, add global 
+          crop test case for mksurfdata, add cfg-tool tests
+   M  models/lnd/clm/test/system/TSM.sh ------------ Add cpl.log file
+   M  models/lnd/clm/test/system/TCBtools.sh ------- Set SLIBS needed on generic machines
+
+   M  models/lnd/clm/tools/mkmapdata/mkmapdata.sh ------- Use different version of ESMF
+          for regional, don't do RTM maps for regional
+   M  models/lnd/clm/tools/interpinic/src/Makefile ------ Use NETCDF4 link
+   M  models/lnd/clm/tools/mkmapgrids/src/Makefile ------ Use NETCDF4 link
+   M  models/lnd/clm/tools/mksurfdata_map/src/Makefile -- Use NETCDF4 link
+   M  models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl - Send crop setting for
+          determining LAI file
+
+>>>>>>>>>>>> Add CESM options to build-namelist, add handling of SLIBS for generic
+>>>>>>>>>>>> machines. Add new grids: wrf, ne4, ne16, ne60. Set nsegspv=1 for hi-res/ne
+>>>>>>>>>>>> grids. Use drv/datm namelist definition/defaults files. Extend
+>>>>>>>>>>>> build-namelist unit tester test ALL resolutions/use-cases.
+   M  models/lnd/clm/bld/configure ---- Add ability to handle slibs
+   M  models/lnd/clm/bld/user_nl_clm -- Format change
+   M  models/lnd/clm/bld/config_files/config_definition.xml - slibs, wrf grids
+   M  models/lnd/clm/bld/build-namelist ---------- Add a bunch of options needed for CESM
+      (all but -chk_res and -note are already exercised when running CESM)
+      -chk_res ------- Check resolution and land mask first.
+      -clm_startfile - Input file to use to startup for branch or startup cases.
+      -co2_type ------ CO2 type
+      -inst_string --- Instance string to use for clm_startfile for multi-instance cases.
+      -l_ncpl -------- Number of coupling time-steps to take per day.
+      -lnd_frac ------ Land fraction file to use (domain file)
+      -note ---------- Write out note about build-namelist usage to end of file.
+      namelist definition/defaults files also come from drv/bld and datm/bld, get working
+      with latest externals
+   M  models/lnd/clm/bld/clm.cpl7.template ------- Use new
+         clm.buildnml.csh/clm.buildexe.csh scripts which save us from the "\" nightmare
+   M  models/lnd/clm/bld/queryDefaultNamelist.pl - namelist_defaults/definition files
+           are now split out in datm/drv directories
+   M  models/lnd/clm/bld/queryDefaultXML.pm ------ definition files are an array now
+   M  models/lnd/clm/bld/unit_testers/build-namelist_test.pl - Test a ton more
+         things. Add -compare, -test, -generate options. Test all use_cases and all
+         resolutions
+   M  models/lnd/clm/bld/namelist_files/checkdatmfiles.ncl ------ Add some more resolutions
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml - Get rid of drv/datm
+         namelist items
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xsl - Get rid of drv/datm
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Add chk_res, note
+         and default masks for WRF grids
+   M  models/lnd/clm/bld/namelist_files/datm-build-namelist ----- Use datm namelist 
+         defaults/definition files.
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Set do_rtm for
+         regional grids to .false. Add wrf grids: us20, wus12. Add ne4, ne16, ne60 
+         files. Add 20th transient PFT for: ne16, ne30, ne60, ne120. Set nsegspc to 1
+         for hi-res and ne grids.
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - Domain files
+         for 512x1024, ne4, ne16, ne60, ne240, and us20, wus12.
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - Set crop
+         for LAI and vegtyp files
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml - Remove settings
+         already in drv/bld file
+
+>>>>>>>>>>>> Remove write(6 for write to iulog, remove unneeded writes
+>>>>>>>>>>>> use shr_pio over seq_pio. Allow -180-180 form.
+   M  models/lnd/clm/src/cpl_share/clm_cpl_indices.F90 - remove write
+   M  models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 - write to iulog
+   M  models/lnd/clm/src/biogeochem/CNrestMod.F90 ------ use endrun not write(6
+   M  models/lnd/clm/src/main/ndepStreamMod.F90 -------- use shr_pio_getiotype
+   M  models/lnd/clm/src/main/pftdynMod.F90 ------------ use endrun not write(6
+   M  models/lnd/clm/src/main/histFileMod.F90 ---------- use shr_pio_getiotype
+          dimension hist_excl* as max_namlen+2
+   M  models/lnd/clm/src/main/ncdio_pio.F90 ------------ use
+          shr_pio_getiotype/shr_pio_getiosys
+   M  models/lnd/clm/src/main/surfrdMod.F90 ------------ remove write(6 statements
+          put write in "if ( masterproc )", if longitudes off by more than 300
+          see if -180-180 form works
+
+Summary of testing:
+
+  build-namelist unit testing: All PASS except...
+    us20
+  bluefire: All PASS except...
+018 brW51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+036 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 10
+037 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 5
+038 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 5
+039 blU61 TBL.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 48 cold ......FAIL! rc= 4
+049 smCI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+050 erCI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+051 brCI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+052 blCI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+058 bl514 TBLCFGtools.sh gen_domain CFGtools__ds T31.runoptions .................................FAIL! rc= 4
+060 bl754 TBLtools.sh mksurfdata_map tools__s namelist ..........................................FAIL! rc= 5
+061 sm774 TSMtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 5
+062 bl774 TBLtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 4
+071 bl924 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds .....FAIL! rc= 5
+073 bl953 TBLscript_tools.sh mkmapdata mkmapdata.sh mkmapdata_if10 ..............................FAIL! rc= 7
+075 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......FAIL! rc= 5
+078 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 6
+079 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 4
+080 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+081 bl9T4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 4
+082 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+083 bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 4
+  bluefire/CESM testing: All PASS except..
+FAIL  ERI.T31_g37.IG1850.bluefire_ibm.tputcomp.clm4_0_43
+FAIL  SMS_RLA.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  SMS_RLB.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  SMS_ROA.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  ERS_D.f45_g37.I.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  SMS.1x1_numaIA.ICN.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  SMS.f10_f10.IRCP45CN.bluefire_ibm.tputcomp.clm4_0_43 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.tputcomp.clm4_0_43
+BFAIL PST.f45_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_43 
+BFAIL PET_PT.f45_g37.I1850.bluefire_ibm.compare_hist.clm4_0_43 
+BFAIL ERI.T31_g37.IG1850.bluefire_ibm.generate.clm4_0_44 
+BFAIL PST.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_43 
+BFAIL PET_PT.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_43 
+  lynx/pgi testing: All PASS
+  lynx/pgi interactive testing: All PASS except...
+024 sm978 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds .....FAIL! rc= 6
+025 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+026 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+  mirage,storm/ifort interactive testing: All PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_43
+
+Changes answers relative to baseline: No, bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_43
 Originator(s):  sacks (Bill Sacks); erik (Erik Kluzek)
 Date: Fri Apr  6 11:36:21 MDT 2012

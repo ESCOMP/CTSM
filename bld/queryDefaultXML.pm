@@ -62,7 +62,7 @@ sub ReadDefaultXMLFile {
   # Error check that input and opts hash has the expected variables
   my $ProgName     = $$opts_ref{'ProgName'};
   my $nm = "${ProgName}::ReadDefaultXMLFile";
-  my @required_list = ( "files", "nldef_file", "empty_cfg_file", "config", "namelist", 
+  my @required_list = ( "files", "nldef_files", "empty_cfg_file", "config", "namelist", 
                         "csmdata", "hgrid", "printing", "ProgName", "cmdline",      
                         "cfgdir"  );
   foreach my $var ( @required_list ) {
@@ -75,7 +75,8 @@ sub ReadDefaultXMLFile {
   # Initialize some local variables
   my $files_ref          = $$opts_ref{'files'};
   my @files              = @$files_ref;
-  my $nl_definition_file = $$opts_ref{'nldef_file'};
+  my $nldef_ref          = $$opts_ref{'nldef_files'};
+  my @nl_definition_files= @$nldef_ref;
   my $empty_config_file  = $$opts_ref{'empty_cfg_file'};
   my $namelist           = $$opts_ref{'namelist'};
 
@@ -104,7 +105,11 @@ sub ReadDefaultXMLFile {
       print "($nm) Read: $files[$i]\n" if $printing;
       $nldefaults->add( $files[$i] );
   }
-  my $definition = Build::NamelistDefinition->new($nl_definition_file);
+  my $definition = Build::NamelistDefinition->new( $nl_definition_files[0] );
+  for ( my $i = 1; $i <= $#nl_definition_files; $i++ ) {
+     print "($nm) Read: $nl_definition_files[$i]\n" if $printing;
+     $definition->add(  $nl_definition_files[$i] );
+  }
   if ( $$opts_ref{'csmdata'} eq "default" ) {
     $$opts_ref{'csmdata'} = $nldefaults->get_value( "csmdata", \%nlopts );
   } 
