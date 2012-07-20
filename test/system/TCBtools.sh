@@ -50,7 +50,7 @@ echo "TCBtools.sh: building $1 executable; output in ${blddir}/test.log"
 cp $cfgdir/src/Makefile      .
 cp $cfgdir/src/Srcfiles      .
 cp $cfgdir/src/Mkdepends     .
-cp $cfgdir/src/Macros.custom .
+cp $cfgdir/src/Makefile.common .
 #
 # Add cfgdir path to beginning of each path in Filepath
 #

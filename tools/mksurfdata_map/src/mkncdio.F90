@@ -35,9 +35,11 @@ module mkncdio
   public :: nf_write
   public :: nf_sync
   public :: nf_inq_dimlen
+  public :: nf_inq_dimname
   public :: nf_inq_varid
   public :: nf_inq_varndims 
   public :: nf_inq_vardimid
+  public :: nf_get_att_double
   public :: nf_get_att_text
   public :: nf_get_var_double
   public :: nf_get_vara_double
@@ -48,6 +50,7 @@ module mkncdio
   public :: nf_put_var_int
   public :: nf_put_vara_int
   public :: nf_inq_dimid
+  public :: nf_max_name
   public :: nf_noerr
 !EOP
 !-----------------------------------------------------------------------

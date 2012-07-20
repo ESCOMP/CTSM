@@ -713,7 +713,7 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 
 <entry id="lmask" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE">
+       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004">
 Land mask description for mksurfdata input files
 </entry> 
 

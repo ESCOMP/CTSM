@@ -20,7 +20,7 @@ module DUSTMod
   use clmtype
   use clm_varpar  , only : dst_src_nbr, ndst, sz_nbr
   use clm_varcon  , only : grav, istsoil
-  use clm_varcon  , only : istcrop
+  use clm_varcon  , only : istcrop, istice_mec
   use clm_varctl  , only : iulog
   use abortutils  , only : endrun
   use subgridAveMod, only: p2l_1d
@@ -416,7 +416,9 @@ contains
 !
 ! local pointers to implicit in arguments
 !
+    integer , pointer :: plandunit(:)   ! pft's landunit index
     integer , pointer :: pgridcell(:)   ! pft's gridcell index
+    integer , pointer :: ityplun(:)     ! landunit type
     real(r8), pointer :: pwtgcell(:)    ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: forc_t(:)      ! atm temperature (K)
     real(r8), pointer :: forc_pbot(:)   ! atm pressure (Pa)
@@ -436,7 +438,7 @@ contains
 ! !LOCAL VARIABLES
 !EOP
 !
-    integer  :: p,g,m,n               ! indices
+    integer  :: p,l,g,m,n             ! indices
     real(r8) :: vsc_dyn_atm(lbp:ubp)  ! [kg m-1 s-1] Dynamic viscosity of air
     real(r8) :: vsc_knm_atm(lbp:ubp)  ! [m2 s-1] Kinematic viscosity of atmosphere
     real(r8) :: shm_nbr_xpn           ! [frc] Sfc-dep exponent for aerosol-diffusion dependence on Schmidt number
@@ -461,8 +463,13 @@ contains
     forc_rho  => clm_a2l%forc_rho
     forc_t    => clm_a2l%forc_t
 
+    ! Assign local pointers to derived type members (landunit-level)
+
+    ityplun   => clm3%g%l%itype
+
     ! Assign local pointers to derived type members (pft-level)
 
+    plandunit => clm3%g%l%c%p%landunit
     pgridcell => clm3%g%l%c%p%gridcell
     pwtgcell  => clm3%g%l%c%p%wtgcell  
     fv        => clm3%g%l%c%p%pps%fv
@@ -474,7 +481,9 @@ contains
     vlc_trb_4 => clm3%g%l%c%p%pdf%vlc_trb_4
 
     do p = lbp,ubp
-       if (pwtgcell(p)>0._r8) then
+       l = plandunit(p)
+       ! Note: some glacier_mec pfts may have zero weight
+       if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
           g = pgridcell(p)
 
           ! from subroutine dst_dps_dry (consider adding sanity checks from line 212)
@@ -503,7 +512,8 @@ contains
 
     do m = 1, ndst
        do p = lbp,ubp
-          if (pwtgcell(p)>0._r8) then
+          l = plandunit(p)
+          if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
              g = pgridcell(p)
              
              stk_nbr = vlc_grv(p,m) * fv(p) * fv(p) / (grav * vsc_knm_atm(p))  ![frc] SeP97 p.965
@@ -529,7 +539,8 @@ contains
 
     do m = 1, ndst
        do p = lbp,ubp
-          if (pwtgcell(p)>0._r8) then
+          l = plandunit(p)
+          if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
              rss_trb = ram1(p) + rss_lmn(p,m) + ram1(p) * rss_lmn(p,m) * vlc_grv(p,m) ![s m-1]
              vlc_trb(p,m) = 1.0_r8 / rss_trb                                          ![m s-1]
           end if
@@ -537,7 +548,8 @@ contains
     end do
 
     do p = lbp,ubp
-       if (pwtgcell(p)>0._r8) then
+       l = plandunit(p)
+       if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
           vlc_trb_1(p) = vlc_trb(p,1)
           vlc_trb_2(p) = vlc_trb(p,2)
           vlc_trb_3(p) = vlc_trb(p,3)

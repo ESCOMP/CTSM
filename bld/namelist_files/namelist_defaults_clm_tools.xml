@@ -137,8 +137,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Finite-Volume grids -->
 <scripgriddata hgrid="0.23x0.31" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.23x0.31_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.47x0.63" lmask="nomask" >share/scripgrids/fv0.47x0.63_090407.nc</scripgriddata>
-<scripgriddata hgrid="0.9x1.25"  lmask="nomask" >share/scripgrids/fv0.9x1.25_070727.nc</scripgriddata>
-<scripgriddata hgrid="1.9x2.5"   lmask="nomask" >share/scripgrids/fv1.9x2.5_060511.nc</scripgriddata>
+<scripgriddata hgrid="0.9x1.25"  lmask="nomask" >lnd/clm2/mappingdata/grids/0.9x1.25_c110307.nc</scripgriddata>
+<scripgriddata hgrid="1.9x2.5"   lmask="nomask" >lnd/clm2/mappingdata/grids/1.9x2.5_c110308.nc</scripgriddata>
 <scripgriddata hgrid="2.5x3.33"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_2.5x3.33_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="4x5"       lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_4x5_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="10x15"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc</scripgriddata>
@@ -181,18 +181,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="MODIS"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODIS_c110915.nc</scripgriddata>
+<scripgriddata hgrid="3x3min"    lmask="LandScan2004"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_LandScan2004_c120517.nc</scripgriddata>
 <scripgriddata hgrid="10x10min"  lmask="IGBPmergeICESatGIS" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_IGBPmergeICESatGIS_c110818.nc</scripgriddata>
 
 <!-- Single-point / Regional grids -->
+<scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_brazil"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_brazil_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_camdenNJ"        lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="5x5_amazon"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5pt_amazon_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_mexicocityMEX"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_mexicocityMEX_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="1x1_smallvilleIA"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_smallvilleIA_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_numaIA"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_numaIA_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_smallvilleIA"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_smallvilleIA_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_tropicAtl"       lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_tropicAtl_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_urbanc_alpha"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_urbanc_alpha_nomask_c110308.nc.nc</scripgriddata>
+<scripgriddata hgrid="1x1_vancouverCAN"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_vancouverCAN_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="5x5_amazon"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5pt_amazon_nomask_c110308.nc</scripgriddata>
 
 <!-- Ocean grids -->
 <scripgriddata hgrid="0.33x0.33"  lmask="0.33x0.33" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
@@ -211,6 +215,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="veg"              >MODIS</lmask>
 <lmask type="veg" hires="on"   >MODIS</lmask>
 <lmask type="urb"              >MODIS</lmask>
+<lmask type="urb" hires="on"   >LandScan2004</lmask>
 <lmask type="col"              >MODIS</lmask>
 <lmask type="org"              >MODIS</lmask>
 <lmask type="org" hires="on"   >ISRIC-WISE</lmask>
@@ -234,6 +239,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="veg"              >0.5x0.5</hgrid>
 <hgrid type="veg" hires="on"   >3x3min</hgrid>
 <hgrid type="urb"              >0.5x0.5</hgrid>
+<hgrid type="urb" hires="on"   >3x3min</hgrid>
 <hgrid type="col"              >0.5x0.5</hgrid>
 <hgrid type="org"              >0.5x0.5</hgrid>
 <hgrid type="org" hires="on"   >5x5min</hgrid>
@@ -317,6 +323,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- urban -->
 <mksrf_furban   hgrid="0.5x0.5"  lmask="MODIS"
 >lnd/clm2/rawdata/mksrf_urban_3den_0.5x0.5_simyr2000.c090223_v1.nc</mksrf_furban>
+<mksrf_furban   hgrid="3x3min"   lmask="LandScan2004"
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120418.nc</mksrf_furban>
 
 <!-- mksrf_fglacier % glacier land-unit -->
 <mksrf_fglacier hgrid="0.5x0.5"  lmask="MODIS"              glc_nec="0"  

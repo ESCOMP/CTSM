@@ -343,7 +343,7 @@ subroutine mkpft(ldomain, mapfname, fpft, firrig, ndiag, &
   ! Compare global areas on input and output grids
   ! -----------------------------------------------------------------
 
-  if ( .not. use_input_pft ) then
+  if ( .not. (zero_out .or. use_input_pft) ) then
 
      ! input grid
 

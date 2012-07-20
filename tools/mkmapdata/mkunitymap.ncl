@@ -67,8 +67,9 @@ begin
      print( "ERROR: dimensions of input SCRIP grid files is NOT the same!" );
      exit
   end if
-  if ( any(nca->grid_imask .ne. 1.0d00) )then
-     print( "ERROR: the mask of the first file isn't identically 1!" );
+  if ( any(ncb->grid_imask .ne. 1.0d00) )then
+     print( "ERROR: the mask of the second file isn't identically 1!" );
+     print( "(second file should be land grid file)");
      exit
   end if
   chkvars = (/ "grid_center_lat", "grid_center_lon", "grid_corner_lat", "grid_corner_lon" /);
@@ -83,6 +84,14 @@ begin
   dsizes   = (/ n_a,     n_b,   n_a,      4,      4,          1,               2,        2/);
   is_unlim = (/ False, False, False,  False,  False,      False,           False,   False /);
   filedimdef( nc, dimnames, dsizes, is_unlim );
+
+  ;
+  ; Define grid dimensions
+  ;
+  filevardef( nc, "src_grid_dims", "integer", (/ "src_grid_rank" /))
+  nc->src_grid_dims = (/nca->grid_dims/)
+  filevardef( nc, "dst_grid_dims", "integer", (/ "dst_grid_rank" /))
+  nc->dst_grid_dims = (/ncb->grid_dims/)
 
   ;
   ; Define variables

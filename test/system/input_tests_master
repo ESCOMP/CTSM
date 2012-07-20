@@ -875,17 +875,6 @@ bl5@4 TBLCFGtools.sh gen_domain   CFGtools__ds ne30.runoptions
 sm754 TSMtools.sh mksurfdata_map   tools__s  namelist
 bl754 TBLtools.sh mksurfdata_map   tools__s  namelist
 
-sm773 TSMtools.sh mksurfdata_map   tools__do singlept
-bl773 TBLtools.sh mksurfdata_map   tools__do singlept
-op773 TOPtools.sh mksurfdata_map   tools__do singlept
-
-sm774 TSMtools.sh mksurfdata_map   tools__ds singlept
-bl774 TBLtools.sh mksurfdata_map   tools__ds singlept
-
-sm777 TSMtools.sh mksurfdata_map   tools__o singlept
-bl777 TBLtools.sh mksurfdata_map   tools__o singlept
-op777 TOPtools.sh mksurfdata_map   tools__o singlept
-
 sm854 TSMtools.sh interpinic   tools__ds runoptions
 bl854 TBLtools.sh interpinic   tools__ds runoptions
 
@@ -910,8 +899,14 @@ bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:18
 
 sm924 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
 bl924 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
+
+sm953 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__o
+bl953 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__o
 sm954 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds
+sm957 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__do
+bl957 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__do
+
 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds
 sm978 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds
@@ -923,8 +918,8 @@ bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2
 
 sm9#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bl9#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
-sm953 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
-bl953 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
+sm959 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
+bl959 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 
 sm9S4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional
 bl9S4 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional

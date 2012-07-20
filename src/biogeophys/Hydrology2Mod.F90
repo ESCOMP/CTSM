@@ -67,7 +67,6 @@ contains
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall
     use clm_varcon      , only : istcrop
-    use clm_varcon      , only : istice_mec
     use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &

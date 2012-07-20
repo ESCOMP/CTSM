@@ -259,6 +259,7 @@ contains
 !
 ! !USES:
     use clm_varpar, only : max_pft_per_col
+    use clm_varcon, only : istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -273,25 +274,31 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: fc,c,pi,p           ! indices
+    integer :: fc,c,pi,p,l         ! indices
     integer , pointer :: npfts(:)
     integer , pointer :: pfti(:)
     integer , pointer :: pftf(:)
+    integer , pointer :: clandunit(:)
+    integer , pointer :: ltype(:)
     real(r8), pointer :: wtcol(:)
     real(r8), pointer :: wtgcell(:)
 !-----------------------------------------------------------------------
 
-    npfts   => clm3%g%l%c%npfts
-    pfti    => clm3%g%l%c%pfti
-    pftf    => clm3%g%l%c%pftf
-    wtcol   => clm3%g%l%c%p%wtcol
-    wtgcell => clm3%g%l%c%p%wtgcell
+    npfts     => clm3%g%l%c%npfts
+    pfti      => clm3%g%l%c%pfti
+    pftf      => clm3%g%l%c%pftf
+    clandunit => clm3%g%l%c%landunit
+    ltype     => clm3%g%l%itype
+    wtcol     => clm3%g%l%c%p%wtcol
+    wtgcell   => clm3%g%l%c%p%wtgcell
 
     do fc = 1,numfc
        c = filterc(fc)
+       l = clandunit(c)
        colarr(c) = 0._r8
        do p = pfti(c), pftf(c)
-          if (wtgcell(p) > 0._r8) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
+          ! Note: some glacier_mec pfts may have zero weight
+          if (wtgcell(p) > 0._r8 .or. ltype(l)==istice_mec) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
        end do
     end do
 

@@ -154,8 +154,8 @@ begin
   nc->grid_corner_lat(:,1) = (/ latSxy /);
   nc->grid_corner_lat(:,2) = (/ latNxy /);
   nc->grid_corner_lat(:,3) = (/ latNxy /);
-  nc->grid_corner_lon(:,0) = (/ lonExy /);
-  nc->grid_corner_lon(:,1) = (/ lonWxy /);
+  nc->grid_corner_lon(:,0) = (/ lonWxy /);
+  nc->grid_corner_lon(:,1) = (/ lonExy /);
   nc->grid_corner_lon(:,2) = (/ lonExy /);
   nc->grid_corner_lon(:,3) = (/ lonWxy /);
 

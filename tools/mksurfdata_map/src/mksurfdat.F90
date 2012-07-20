@@ -25,7 +25,10 @@ program mksurfdat
     use mkglcmecMod  , only : nglcec, mkglcmec, mkglcmecInit, mkglacier
     use mkharvestMod , only : mkharvest, mkharvest_init, mkharvest_fieldname, &
                               mkharvest_numtypes, mkharvest_parse_oride
-    use mkurbanparMod, only : mkurban, mkurbanpar, mkelev
+    use mkurbanparCommonMod, only : get_urban_format, mkelev, &
+                                    URBAN_FORMAT_AVG, URBAN_FORMAT_DOM
+    use mkurbanparAvgMod   , only : mkurbanA => mkurban, mkurbanparA => mkurbanpar
+    use mkurbanparDomMod   , only : mkurbanD => mkurban, mkurbanparD => mkurbanpar
     use mkfileMod    , only : mkfile
     use mkvarpar     , only : nlevsoi, elev_thresh
     use mkvarctl
@@ -61,6 +64,7 @@ program mksurfdat
     integer  :: ret                         ! netCDF return status
     integer  :: ntim                        ! time sample for dynamic land use
     integer  :: year                        ! year for dynamic land use
+    integer  :: urban_format                ! code for format of urban file
     logical  :: all_veg                     ! if gridcell will be 100% vegetated land-cover
     real(r8) :: suma                        ! sum for error check
     character(len=256) :: fgrddat           ! grid data file
@@ -106,6 +110,8 @@ program mksurfdat
     real(r8), allocatable  :: ef1_grs(:)         ! Isoprene emission factor for grasses
     real(r8), allocatable  :: ef1_crp(:)         ! Isoprene emission factor for crops
     real(r8), allocatable  :: organic(:,:)       ! organic matter density (kg/m3)            
+    integer , allocatable  :: urban_dens(:)      ! urban density class
+    integer , allocatable  :: urban_region(:)    ! urban region ID
 
     type(domain_type) :: ldomain
 
@@ -460,8 +466,23 @@ program mksurfdat
 
     ! Make urban fraction [pcturb] from [furban] dataset
 
-    call mkurban (ldomain, mapfname=map_furban, datfname=mksrf_furban, &
-         ndiag=ndiag, zero_out=all_veg, urbn_o=pcturb)
+    call get_urban_format (mksrf_furban, urban_format)
+
+    if (urban_format == URBAN_FORMAT_AVG) then
+       call mkurbanA (ldomain, mapfname=map_furban, datfname=mksrf_furban, &
+            ndiag=ndiag, zero_out=all_veg, urbn_o=pcturb)
+    else if (urban_format == URBAN_FORMAT_DOM) then
+       allocate(urban_dens(ns_o)  , &
+                urban_region(ns_o))
+       urban_dens(:) = -999
+       urban_region(:) = -999
+       call mkurbanD (ldomain, mapfname=map_furban, datfname=mksrf_furban, &
+            ndiag=ndiag, zero_out=all_veg, urbn_o=pcturb, &
+            dens_o=urban_dens, region_o=urban_region)
+    else
+       write(6,*) 'ERROR: unexpected urban format code: ', urban_format
+       call abort()
+    end if
 
     ! Make elevation [elev] from [ftopo, ffrac] dataset
     ! Used only to screen pcturb  
@@ -624,7 +645,7 @@ program mksurfdat
        stop
     end if
 
-    call mkfile(ldomain, trim(fsurdat), dynlanduse = .false.)
+    call mkfile(ldomain, trim(fsurdat), dynlanduse = .false., urban_format=urban_format)
 
     call domain_write(ldomain, fsurdat)
 
@@ -724,6 +745,14 @@ program mksurfdat
        call check_ret(nf_put_var_double(ncid, varid, pctirr), subname)
     endif
 
+    if (urban_format == URBAN_FORMAT_DOM) then
+       call check_ret(nf_inq_varid(ncid, 'URBAN_DENSITY_CLASS', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, urban_dens), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'URBAN_REGION_ID', varid), subname)
+       call check_ret(nf_put_var_int(ncid, varid, urban_region), subname)
+    end if
+
     ! Deallocate arrays NOT needed for dynamic-pft section of code
 
     deallocate ( organic )
@@ -740,17 +769,25 @@ program mksurfdat
     call check_ret(nf_sync(ncid), subname)
 
     ! ----------------------------------------------------------------------
-    ! Make Urban Parameters from 1/2 degree data and write to surface dataset 
+    ! Make Urban Parameters from raw input data and write to surface dataset 
     ! Write to netcdf file is done inside mkurbanpar routine
     ! Only call this routine if pcturb is greater than zero somewhere.  Raw urban
     ! datasets will have no associated parameter fields if there is no urban 
     ! (e.g., mksrf_urban.060929.nc).
     ! ----------------------------------------------------------------------
 
-    write(6,*)'calling mkurbanpar'
+    write(6,*)'calling mkurbanparA'
     if (any(pcturb > 0._r8)) then
-       call mkurbanpar(ldomain, mapfname=map_furban, datfname=mksrf_furban, &
-            ndiag=ndiag, ncido=ncid)
+       if (urban_format == URBAN_FORMAT_AVG) then
+          call mkurbanparA(ldomain, mapfname=map_furban, datfname=mksrf_furban, &
+               ndiag=ndiag, ncido=ncid)
+       else if (urban_format == URBAN_FORMAT_DOM) then
+          call mkurbanparD(datfname=mksrf_furban, ncido=ncid, &
+                           dens_o=urban_dens, region_o=urban_region)
+       else
+          write(6,*) 'ERROR: unexpected urban format code: ', urban_format
+          call abort()   
+       end if
     else
        write(6,*) 'PCT_URBAN is zero everywhere, no urban parameter fields will be created'
     end if
@@ -790,7 +827,7 @@ program mksurfdat
 
        ! Define dimensions and global attributes
 
-       call mkfile(ldomain, fdyndat, dynlanduse=.true.)
+       call mkfile(ldomain, fdyndat, dynlanduse=.true., urban_format=urban_format)
 
        ! Write fields other pft to dynamic land use dataset
 
@@ -1142,7 +1179,7 @@ subroutine normalizencheck_landuse(ldomain)
        
        ! Roundoff error fix
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma < 100._r8 .and. suma > (100._r8 - 100._r8*epsilon(suma))) then
+       if (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) then
           write (6,*) 'Special land units near 100%, but not quite for n,suma =',n,suma
           write (6,*) 'Adjusting special land units to 100%'
           if (pctlak(n) >= 25._r8) then

@@ -137,6 +137,7 @@ subroutine mkglcmec(ldomain, mapfname, &
   use mkdomainMod, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
+  use mkutilsMod, only : slightly_below, slightly_above
   use mkncdio
 !
 ! !ARGUMENTS:
@@ -340,6 +341,20 @@ subroutine mkglcmec(ldomain, mapfname, &
         if (pctglcmec_o(no,m) > 0) then
            topoglcmec_o(no,m) = topoglcmec_unnorm_o(no,m) / pctglcmec_o(no,m)
         end if
+
+        ! Correct for rounding errors that put topoglcmec_o(no,m) slightly outside the
+        ! allowed bounds for this elevation class
+        if (slightly_below(topoglcmec_o(no,m), elevclass(m))) then
+           write(6,*) 'Warning: topoglcmec_o was slightly lower than lower bound; setting equal&
+                & to lower bound; for: ', no, m, topoglcmec_o(no,m), elevclass(m)
+           write(6,*) '(this is informational only, and probably just indicates rounding error)'
+           topoglcmec_o(no,m) = elevclass(m)
+        else if (slightly_above(topoglcmec_o(no,m), elevclass(m+1))) then
+           write(6,*) 'Warning: topoglcmec_o was slightly higher than upper bound; setting equal&
+                & to upper bound; for: ', no, m, topoglcmec_o(no,m), elevclass(m+1)
+           write(6,*) '(this is informational only, and probably just indicates rounding error)'
+           topoglcmec_o(no,m) = elevclass(m+1)
+        end if
      end do
   end do
 
@@ -446,8 +461,9 @@ subroutine mkglcmec(ldomain, mapfname, &
            ! get rid of error checks.
            if ( (topoglcmec_o(no,m) .lt. elevclass(m) .or. topoglcmec_o(no,m) .gt. elevclass(m+1)) &
                 .and. (pctglcmec_o(no,m) .gt. 0 .or. topoglcmec_o(no,m) .ne. 0)) then
-              write(6,*) 'Warning: mean elevation does not fall within elevation class '
+              write(6,*) 'Error: mean elevation does not fall within elevation class '
               write(6,*) elevclass(m),elevclass(m+1),topoglcmec_o(no,m),pctglcmec_o(no,m),m,no
+              errors = .true.
            endif
         end do
      end if

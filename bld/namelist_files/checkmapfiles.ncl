@@ -82,7 +82,7 @@ begin
   print( "query string="+querynml )
 
 
-  mapgrids = (/"0.5x0.5_MODIS", "0.5x0.5_USGS", "0.5x0.5_AVHRR", "0.5x0.5_MODIS", "5x5min_nomask", "5x5min_IGBP-GSDP", "5x5min_ISRIC-WISE", "10x10min_nomask", "3x3min_MODIS", "10x10min_IGBPmergeICESatGIS"/);
+  mapgrids = (/"0.5x0.5_MODIS", "0.5x0.5_USGS", "0.5x0.5_AVHRR", "0.5x0.5_MODIS", "5x5min_nomask", "5x5min_IGBP-GSDP", "5x5min_ISRIC-WISE", "10x10min_nomask", "3x3min_MODIS", "10x10min_IGBPmergeICESatGIS", "3x3min_LandScan2004"/);
   do i = 0, dimsizes(resolutions)-1
      res = resolutions(i);
      print( "Go through maps for Resolution: "+res );

@@ -3,7 +3,7 @@ module mkfileMod
 contains
 
 !-----------------------------------------------------------------------
-  subroutine mkfile(domain, fname, dynlanduse)
+  subroutine mkfile(domain, fname, dynlanduse, urban_format)
 
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
@@ -14,6 +14,7 @@ contains
     use mkpftMod    , only : mkpftAtt
     use mksoilMod   , only : mksoilAtt
     use mkharvestMod, only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
+    use mkurbanparCommonMod, only : URBAN_FORMAT_DOM
     use mkncdio     , only : check_ret, ncd_defvar
     use mkdomainMod  
 
@@ -22,6 +23,7 @@ contains
     type(domain_type) , intent(in) :: domain
     character(len=*)  , intent(in) :: fname
     logical           , intent(in) :: dynlanduse
+    integer           , intent(in) :: urban_format  ! code for format of urban file
 
     integer :: ncid
     integer :: j                    ! index
@@ -709,6 +711,27 @@ contains
        call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', &
             long_name='percent urban', units='unitless')
+    end if
+
+    if (urban_format == URBAN_FORMAT_DOM) then
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='URBAN_DENSITY_CLASS', xtype=nf_int, &
+               dim1name='gridcell',&
+               long_name='urban density class', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='URBAN_DENSITY_CLASS', xtype=nf_int, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='urban density class', units='unitless')
+       end if
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
+               dim1name='gridcell',&
+               long_name='urban region ID', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='urban region ID', units='unitless')
+       end if
     end if
 
     if (dynlanduse) then

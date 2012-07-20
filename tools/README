@@ -144,7 +144,7 @@ III. Process sequence to create input datasets needed to run CLM
                int grid_imask(grid_size) ;			   
                        grid_imask:units = "unitless" ;            
 
-    2.) Create atmosphere to ocean mapping file (if needed)
+    2.) Create ocean to atmosphere mapping file (if needed)
 
         a.) Standard resolutions (done)
 
@@ -191,13 +191,13 @@ III. Process sequence to create input datasets needed to run CLM
     5.) Add mapping file(s) created in step (4) into XML database in CLM (optional)
 
        See notes on doing this in step (3) above. 
-       Edit ../bld/namelist_files/namelist_defaults_map.xml to incorporate new 
+       Edit ../bld/namelist_files/namelist_defaults_clm.xml to incorporate new 
        mapping files.
 
        If you don't do this step, you'll need to specify the grid resolution name
        and file creation dates to mksurfdata_map in step (5) below.
 
-    6.) Convert map of atm to ocean for use by DATM and CLM with gen_domain
+    6.) Convert map of ocean to atm for use by DATM and CLM with gen_domain
         (See mapping/README for more help on doing this)
 
        - gen_domain uses the map from step (2) (or previously created CESM maps)
@@ -210,7 +210,7 @@ III. Process sequence to create input datasets needed to run CLM
         setenv CDATE       090206
         setenv OCNGRIDNAME gx1v6
         setenv ATMGRIDNAME fv1.9x2.5
-        setenv MAPFILE $CSMDATA/cpl/cpl6/map_${ATMGRIDNAME}_to_${OCNGRIDNAME}_aave_da_${CDATE}.nc
+        setenv MAPFILE $CSMDATA/cpl/cpl6/map_${OCNGRIDNAME}_to_${ATMGRIDNAME}_aave_da_${CDATE}.nc
         ./gen_domain -m $MAPFILE -o $OCNGRIDNAME -l $ATMGRIDNAME
 
         Normally for I compsets running CLM only you will discard the ocean domain 
@@ -260,7 +260,7 @@ IV. Example of creating single-point datasets without entering into XML database
        cd mkmapdata
        ./mknoocnmap.pl -p 40,255 -n $GRIDNAME
        # Set pointer to MAPFILE that will be used in step (6)
-       setenv MAPFILE `pwd`/map_${GRIDNAME}_nomask_to_${GRIDNAME}_noocean_aave_da_${CDATE}.nc
+       setenv MAPFILE `pwd`/map_${GRIDNAME}_noocean_to_${GRIDNAME}_nomask_aave_da_${CDATE}.nc
        cd ..
     2.) skip
     3.) skip
@@ -281,7 +281,7 @@ IV. Example of creating single-point datasets without entering into XML database
        cd mksurfdata_map/src
        gmake
        cd ..
-       ./mksurfdata.pl -r usrspec -usrgname $GRIDNAME -usr_gdate $CDATE
+       ./mksurfdata.pl -r usrspec -usr_gname $GRIDNAME -usr_gdate $CDATE
     8.) skip
     9.) skip
 

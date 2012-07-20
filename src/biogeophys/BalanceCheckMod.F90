@@ -376,10 +376,11 @@ contains
     ! Water balance check
 
     do c = lbc, ubc
-       l = clandunit(c)
        g = cgridcell(c)
+       l = clandunit(c)
 
-       if (cwtgcell(c) > 0._r8)then
+       ! Note: Some glacier_mec cols may have zero weight
+       if (cwtgcell(c) > 0._r8 .or. ltype(l)==istice_mec)then
           errh2o(c) = endwb(c) - begwb(c) &
                - (forc_rain_col(c) + forc_snow_col(c) + qflx_irrig(c) &
                  - qflx_evap_tot(c) - qflx_surf(c) &
@@ -498,7 +499,8 @@ contains
 
     found = .false.
     do c = lbc, ubc
-       if (cwtgcell(c) > 0._r8 .and. abs(errh2osno(c)) > 1.0e-7_r8) then
+       l = clandunit(c)
+       if ((cwtgcell(c) > 0._r8  .or. ltype(l)==istice_mec) .and. abs(errh2osno(c)) > 1.0e-7_r8) then
           found = .true.
           indexc = c
        end if

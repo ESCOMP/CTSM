@@ -823,10 +823,10 @@ contains
              if (j > snl(c)+1 .and. snl(c) < -1) then
                 do i = j, snl(c)+2, -1
                    ! If the layer closest to the surface is less than 0.1 mm and the ltype is not
-                   ! urban or soil, the h2osoi_liq and h2osoi_ice associated with this layer is sent 
+                   ! urban, soil or crop, the h2osoi_liq and h2osoi_ice associated with this layer is sent 
                    ! to qflx_qrgwl later on in the code.  To keep track of this for the snow balance
                    ! error check, we add this to qflx_sl_top_soil here
-                   if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. i == 0) then
+                   if (ltype(l) /= istsoil .and. ltype(l) /= istcrop .and. ltype(l) /= isturb .and. i == 0) then
                      qflx_sl_top_soil(c) = (h2osoi_liq(c,i) + h2osoi_ice(c,i))/dtime
                    end if
 

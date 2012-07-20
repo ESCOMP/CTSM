@@ -258,7 +258,6 @@ if ( $printlev > 0 ) {
 # land grid...
 my $grddir  = absolute_path( "$scrdir/../mkmapgrids" );
 my $grid1   = "$grddir/SCRIPgrid_${name}_nomask_c${cdate}.nc";
-my $mapfile = "map_${name}_nomask_to_${name}_noocean_aave_da_${cdate}.nc";
 my $cmdenv  = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
              "NX=$nx NY=$ny PTNAME=$name $print ";
 
@@ -286,8 +285,11 @@ if ( $printlev < 2 ) {
 system( $cmd );
 
 # Now create a unity mapping between the two...
+# Note reversal of grid1 & grid2, because we want an ocean -> land
+# mapping file
 chdir( "$scrdir" );
-my $cmd = "env GRIDFILE1=$grid1 GRIDFILE2=$grid2 MAPFILE=$mapfile " .
+my $mapfile = "map_${name}_noocean_to_${name}_nomask_aave_da_${cdate}.nc";
+my $cmd = "env GRIDFILE1=$grid2 GRIDFILE2=$grid1 MAPFILE=$mapfile " .
           "$print ncl $scrdir/mkunitymap.ncl";
 
 if ( $printlev > 0 ) {

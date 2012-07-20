@@ -1,4 +1,418 @@
 ===============================================================
+Tag name:  clm4_0_45
+Originator(s):  sacks (Sacks Bill 303-497-1762 CGD)
+Date: Fri Jul 20 11:41:14 MDT 2012
+One-line Summary: fix virtual columns; new urban mksurfdata_map
+
+Purpose of changes:
+
+GLC-related: Fix places where glc virtual columns were not being treated
+correctly (major bug!). Change albice default to 0.6,0.4 for glc_mec
+cases, based on suggestion from Bill Lipscomb. Fix dust calculation for
+glc_mec.
+
+Other CLM changes: Add an instance of istcrop. Fix landunit-level output
+for dov2xy=false.
+
+Tools changes: Update mksurfdata_map to handle new urban raw data format
+(use dominant density class, together with lookup tables; currently used
+for mksurfdata_map with hires). Minor fixes to mksurfdata_map. Add unit
+tests to mksurfdata_map. Change tools build to support addition of unit
+tests. Minor fixes to mkscripgrid.ncl, mkunitymap.ncl and mknoocnmap.pl.
+
+Namelist-related: Refer to correct scrip grid files for f09, f19; and
+a few fixed mapping files for those resolutions, including clm->rtm mapping
+files for those resolutions (changes answers for RTM). (The old scrip grid
+files had a displaced pole, which is not what we want for CLM. Note that I
+did NOT replace the f05 scrip grid file, because the only alternative I can
+find has bad values in the corner arrays -- see bug 1518.)
+
+SPM--Mostly changes to get more tests to pass.  Added 1x1_* mapping files to
+inputdata.  Created script that auto-generates XML for new mapping files for
+easier inclusion into existing XML files.  Modify build-namelist_test.pl to
+pass CSMDATA to build-namelist.  Tests were failing if a user didn't have
+CSMDATA env set.  Touched CFGtools__ds to get a CLM interactive test to pass.
+Added openMP and debug openMP tests for bluefire interactive tests for 10x15.
+--SPM
+
+Requirements for tag: test on bluefire (CESM, int, bat), lynx/pgi (int,bat), mirage.
+Fix bug 1492
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID):
+                                 1492 (missing istcrop)
+											1515 (nedd mapping files for
+											single-point)-SPM
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+    Makefiles reorganized for tools (mksurfdata_map, interpinic, mkmapgrids)
+
+Describe any changes made to the namelist:
+
+    albice changed to 0.6,0.4 for glc_mec cases
+
+List any changes to the defaults for the boundary datasets:
+
+    Use corrected mapping files for CLM->RTM for f09,f19, and for some
+    mapping files used to create surface datasets. Use correct scrip grids
+    for f09,f19. Add new urban raw data file for hires mksurfdata_map, and
+    associated scrip grid file & mapping files.
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+List all files eliminated:
+
+>>>>>>> Split into mkurbanparCommonMod, mkurbanparAvgMod and mkurbanparDomMod
+D       models/lnd/clm/tools/mksurfdata_map/src/mkurbanparMod.F90
+
+>>>>>>> Modify build system to make it easier to add unit testers
+D       models/lnd/clm/tools/mksurfdata_map/src/Macros.custom
+D       models/lnd/clm/tools/interpinic/src/Macros.custom
+D       models/lnd/clm/tools/mkmapgrids/src/Macros.custom
+
+
+List all files added and what they do:
+
+>>>>>>> SPM-- Dump XML of mappings for a specified resolution
+A       namelist_files/createMapEntry.pl
+>>>>>>> --SPM
+
+
+>>>>>>> Pull out routines from mkurbanparMod that are common to different
+>>>>>>> ways of creating urban parameter data
+A       models/lnd/clm/tools/mksurfdata_map/src/mkurbanparCommonMod.F90
+
+>>>>>>> Modules to handle old (area-average) and new (dominant-type) urban
+>>>>>>> input files
+A       models/lnd/clm/tools/mksurfdata_map/src/mkurbanparAvgMod.F90 - mostly from mkurbanparMod
+A       models/lnd/clm/tools/mksurfdata_map/src/mkurbanparDomMod.F90 - new code, to handle new format
+
+>>>>>>> New modules with general-purpose utilities for mksurfdata_map
+A       models/lnd/clm/tools/mksurfdata_map/src/mkutilsMod.F90
+A       models/lnd/clm/tools/mksurfdata_map/src/mkindexmapMod.F90
+
+>>>>>>> New unit testers for mksurfdata_map
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_lookup_2d_netcdf.nc
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mkutilsMod.F90
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mkindexmapMod.F90
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/Srcfiles
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mod.F90
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/Filepath
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/Makefile
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/README
+A       models/lnd/clm/tools/mksurfdata_map/unit_testers/test_mkurbanparDomMod.F90
+
+>>>>>>> Modify build system to make it easier to add unit testers
+A       models/lnd/clm/tools/mksurfdata_map/src/Makefile.common
+A       models/lnd/clm/tools/mkmapgrids/src/Makefile.common
+A       models/lnd/clm/tools/interpinic/src/Makefile.common
+
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>> SPM--
+>>>>>>> Pass csmdata down to build-namelist and add logic so CSMDATA is set
+>>>>>>> even if user does not
+M       unit_testers/build-namelist_test.pl
+>>>>>>> Add support for 1x1_* single point mapping files
+M       namelist_files/namelist_defaults_clm.xml
+M       namelist_files/namelist_defaults_clm_tools.xml
+>>>>>>> Add support for a few openMP 10x15 tests, modify test list 
+>>>>>>> and remove some old single point tests
+M       test/system/tests_pretag_bluefire_nompi
+M       test/system/input_tests_master
+M       test/system/tests_posttag_nompi_regression
+
+>>>>>>> --SPM
+
+>>>>>>> Fix glc virtual column bugs: change checks of (wt > 0)
+>>>>>>> to (wt > 0 .or. ityplun(l)==istice_mec)
+M       models/lnd/clm/src/main/histFileMod.F90 ---------- also fix landunit-level fields
+              with dov2xy=.false.
+M       models/lnd/clm/src/main/subgridAveMod.F90
+M       models/lnd/clm/src/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/biogeochem/DryDepVelocity.F90 - also change
+              'if (itypelun==istice)' to 'if (itypelun==istice .or. itypelun==istice_mec)'
+              in setting parameters
+M       models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90
+
+>>>>>>> Add istcrop (fix bug 1492)
+M       models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90
+
+>>>>>>> Remove unnecessary 'use'
+M       models/lnd/clm/src/biogeophys/Hydrology2Mod.F90
+
+>>>>>>> Change albice to 0.6,0.4 for glc_mec cases; add mapping files for
+>>>>>>> 3x3min_LandScan2004; use corrected mapping files for 5x5min_ISRIC-WISE_to_0.9x1.25,
+>>>>>>> 3x3min_MODIS_to_0.9x1.25 and 5x5min_nomask_to_1.9x2.5, as well as for CLM->RTM
+>>>>>>> for f09 and f19
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+
+>>>>>>> Point to correct files for f09,f19 scrip grids; add new urban raw data file
+>>>>>>> for hires mksurfdata_map
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml
+
+>>>>>>> Add support for new 3x3min_LandScan2004 grid
+M       models/lnd/clm/tools/mkmapdata/mkmapdata.sh
+M       models/lnd/clm/bld/namelist_files/checkmapfiles.ncl
+M       models/lnd/clm/bld/namelist_files/namelist_definition.xml
+
+>>>>>>> Changes to mksurfdata_map to support new input urban format
+M       models/lnd/clm/tools/mksurfdata_map/src/Srcfiles ------ add new source files
+M       models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90 - use new urban interfaces;
+              also, substantially increase tolerance for roundoff error fix in
+              normalizencheck_landuse (the latter change is unrelated to the new urban
+              format; this change makes it so more points have 100% special rather than
+              nearly-100% special, which was required to avoid CLM termination due to
+              rounding errors in some cases)
+M       models/lnd/clm/tools/mksurfdata_map/src/mkfileMod.F90 - add URBAN_DENSITY_CLASS
+              and URBAN_REGION_ID fields
+M       models/lnd/clm/tools/mksurfdata_map/src/mkncdio.F90 --- public declarations of
+              routines that are now needed
+
+>>>>>>> Other, incidental changes to mksurfdata_map
+M       models/lnd/clm/tools/mksurfdata_map/src/mkpftMod.F90 ---- fix zero_out
+M       models/lnd/clm/tools/mksurfdata_map/src/mkglcmecMod.F90 - correct rounding errors
+              in topoglcmec_o; change a warning to a fatal error
+M       models/lnd/clm/tools/mksurfdata_map/src/mkdomainMod.F90 - add tolerance in
+              checking for lat/lon equality
+
+>>>>>>> Add src_grid_dims & dst_grid_dims
+M       models/lnd/clm/tools/mkmapdata/mkunitymap.ncl
+
+>>>>>>> Fix direction of ocn->atm mapping file
+M       models/lnd/clm/tools/mkmapdata/mknoocnmap.pl
+M       models/lnd/clm/tools/README ------------------ also fix typos
+
+>>>>>>> Fix ordering of corners
+M       models/lnd/clm/tools/mkmapgrids/mkscripgrid.ncl
+
+>>>>>>> Modify build system to make it easier to add unit testers
+M       models/lnd/clm/tools/mksurfdata_map/src/Makefile
+M       models/lnd/clm/tools/interpinic/src/Makefile
+M       models/lnd/clm/tools/mkmapgrids/src/Makefile
+M       models/lnd/clm/test/system/TCBtools.sh ----------- copy correct file
+
+>>>>>>> Document copy of test_mod
+M       models/lnd/clm/tools/README.filecopies
+
+
+Summary of testing:
+
+--SPM.  New tests run after update to clm4_0_44 and after tests modifications. 
+
+==== bluefire build-namelist tests: ====
+
+ * expected fail due to new mapping file
+ <  fmapinp_rtm = '/glade/proj3/CESM/cseg/inputdata//lnd/clm2/mappingdata/maps/1.9x2.5/map_1.9x2.5_nomask_to_0.5x0.5_nomask_aave_da_c120522.nc'
+ ---
+ >  fmapinp_rtm = '/glade/proj3/CESM/cseg/inputdata//lnd/clm2/mappingdata/maps/1.9x2.5/map_1.9x2.5_nomask_to_0.5x0.5_nomask_aave_da_c120221.nc'
+
+ * not ok 6 - lnd_in file the same as expected for standard
+ not ok 23 - lnd_in file the same as expected for standard 
+
+This is expected.  Bill states this mod in ChangeLog
+
+ <  albice = 0.60,0.40
+     ---
+ >  albice = 0.50,0.50
+
+ * not ok 29 - lnd_in file the same as expected for standard
+ * not ok 36 - lnd_in file the same as expected for standard
+ * not ok 43 - lnd_in file the same as expected for standard
+ * not ok 49 - lnd_in file the same as expected for standard
+ * not ok 54 - lnd_in file the same as expected for standard
+ * not ok 59 - lnd_in file the same as expected for standard
+ * not ok 64 - lnd_in file the same as expected for standard
+ * not ok 69 - lnd_in file the same as expected for standard
+ * not ok 74 - lnd_in file the same as expected for standard
+ * not ok 80 - lnd_in file the same as expected for standard
+ * not ok 85 - lnd_in file the same as expected for standard
+ * not ok 91 - lnd_in file the same as expected for standard
+ * not ok 156 - lnd_in file the same as expected for CN
+ * not ok 161 - lnd_in file the same as expected for CN
+
+ 221 and 222 are for new WRF tests, ignoring for now since tests not complete
+ not ok 221 - compare file lnd_in DNE for CN and -res+wus12
+     #   in NMLTest/CompFiles.pm at line 103.
+     WARNING(NMLTest::CompFiles::comparefiles):: File /glade/scratch/muszala/svn/clm4_0_44/models/lnd/clm/bld/unit_testers/temp_file.txt.CN.-res+wus12
+      does NOT exist!
+
+ not ok 222 - compare file temp_file.txt DNE for CN and -res+wus12
+
+WARNING(NMLTest::CompFiles::comparefiles):: File /glade/scratch/muszala/svn/clm4_0_44/models/lnd/clm/bld/unit_testers/temp_file.txt.CN.-res+wus12
+   2349  does NOT exist!
+
+     #   Failed test 'compare file temp_file.txt DNE for CN and -res+wus12
+     # '
+     #   in NMLTest/CompFiles.pm at line 103.
+
+ * not ok 276 - lnd_in file the same as expected for crop 
+
+==== bluefire interactive ====
+	now pass due to new mapping files (ignore numbering, use test descriptor)
+001 sm514 TSMCFGtools.sh gen_domain CFGtools__ds T31.runoptions .................................PASS
+002 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds PASS
+003 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dPASS
+004 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds PASS
+
+	new tests and test descriptors for 10x15 openMP tests
+001 sm953 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__o .......PASS
+002 bl953 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__o .......SKIPPED*
+003 sm954 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......PASS
+004 bl954 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__ds ......SKIPPED*
+005 sm957 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__do ......PASS
+006 bl957 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_irr_1850^tools__do ......SKIPPED*
+007 sm959 TSMscript_tools.sh mkmapdata mkmapdata.sh mkmapdata_if10 ..............................PASS
+008 bl959 TBLscript_tools.sh mkmapdata mkmapdata.sh mkmapdata_if10 ..............................SKIPPED*
+
+--SPM
+
+NOTE: UNLESS OTHERWISE NOTED, THE BELOW TESTS WERE RUN FROM TAG
+virtual_column_fix_03_clm4_0_43. This means that they were run before
+reverting the scrip grid file & rtm mapping file for f05. However, that
+shouldn't change any test results, since as far as I can tell, nothing in
+the CLM test suite tests f05 resolution. THESE TESTS SHOULD BE RERUN ON THE
+FINAL VERSION OF THE TAG BEFORE MERGING IT TO THE TRUNK.
+
+  bluefire build-namelist unit testing (run with -test): ALL PASS EXCEPT:
+not ok 42 - rtm tstep inconsistent
+  bluefire mksurfdata_map unit testing: ALL PASS
+  bluefire: All PASS except:
+015 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:1800 1.9x2.5 gx1v6@1850-2100 -10 cold FAIL! rc= 7
+018 brW51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 11
+036 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 10
+037 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 5
+038 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 5
+039 blU61 TBL.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 48 cold ......FAIL! rc= 4
+043 blCn1 TBL.sh _sc_dh clm_transient_glcMEC_rcp8.5 20331231:1800 1.9x2.5 gx1v6@1850-2100 48 arb_ic FAIL! rc= 7
+049 smCI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+050 erCI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+051 brCI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+052 blCI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+  bluefire interactive testing: All PASS except:
+028 blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 4
+046 blC63 TBL.sh _sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ........................FAIL! rc= 7
+054 blH43 TBL.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000 -10 startup FAIL! rc= 7
+061 sm774 TSMtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 5
+062 bl774 TBLtools.sh mksurfdata_map tools__ds singlept .........................................FAIL! rc= 4
+069 bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6FAIL! rc= 5
+076 sm974 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 6
+077 bl974 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools__ds FAIL! rc= 4
+078 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+079 bl9T4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 4
+080 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+081 bl9C4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 4
+  bluefire/CESM testing: All PASS except:
+BFAIL PST.f45_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_43 
+BFAIL PET_PT.f45_g37.I1850.bluefire_ibm.compare_hist.clm4_0_43 
+FAIL  ERI.T31_g37.IG1850.bluefire_ibm.compare_hist.clm4_0_43 
+FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.compare_hist.clm4_0_43 
+FAIL  ERP.f19_g16.IGRCP60CN.bluefire_ibm.compare_hist.clm4_0_43 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.compare_hist.clm4_0_43 
+BFAIL PST.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_43 
+BFAIL PET_PT.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_43 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.compare_hist.clm4_0_43 
+  bluefire/PTCLM testing: NOT DONE!
+  lynx/pgi testing: All PASS
+  lynx/pgi interactive testing: All PASS except:
+023 sm978 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850^tools__ds .....FAIL! rc= 6
+024 sm9T4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp20irrcr_2000^tools__dFAIL! rc= 6
+025 sm9C4 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_vancouverCAN_2000^tools__ds FAIL! rc= 6
+  lynx/CESM testing: All PASS except:
+CFAIL ERI.f10_f10.IRCP60CN.lynx_pathscale.C.123047 
+BFAIL PST.f19_g16.I.lynx_pgi.compare_hist.clm4_0_43 
+FAIL  ERS.f19_g16.IRCP26CN.lynx_gnu.compare_hist.clm4_0_43 
+FAIL  ERS.f19_g16.IG1850.lynx_pgi.compare_hist.clm4_0_43 
+  mirage,storm/ifort interactive testing: All PASS
+
+  Additional testing: Additional CESM B compset tests to test new RTM
+  mapping files.  Ran these from cesm1_1_alpha13e; for most tests, switched
+  clm to virtual_column_fix_03_clm4_0_43; for the lynx f05 test, switched
+  clm to virtual_column_fix_04_clm4_0_43. Note that the baseline
+  comparisons are expected to fail, except for the f05 test.
+PASS  ERI.f19_g16.BRCP45WCN.bluefire_ibm 
+FAIL  ERI.f19_g16.BRCP45WCN.bluefire_ibm.compare_hist.cesm1_1_alpha13e 
+PASS  ERS.f19_g16.B2000CNCHM.bluefire_ibm 
+FAIL  ERS.f19_g16.B2000CNCHM.bluefire_ibm.compare_hist.cesm1_1_alpha13e 
+PASS  SMS_D.f19_g16.B20TRC5.bluefire_ibm 
+FAIL  SMS_D.f19_g16.B20TRC5.bluefire_ibm.compare_hist.cesm1_1_alpha13e 
+PASS  ERS.f09_g16.B1850BPRP.bluefire_ibm 
+FAIL  ERS.f09_g16.B1850BPRP.bluefire_ibm.compare_hist.cesm1_1_alpha13e
+PASS  SMS_D.f19_g16.B20TRC5.lynx_pgi 
+FAIL  SMS_D.f19_g16.B20TRC5.lynx_pgi.compare_hist.cesm1_1_alpha13e 
+PASS  SMS.f05_g16.B.lynx_pgi 
+PASS  SMS.f05_g16.B.lynx_pgi.compare_hist.cesm1_1_alpha13e 
+
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_43;
+for my additional CESM tests, compared against cesm1_1_alpha13e
+
+Changes answers relative to baseline: YES, for GLC configurations and all
+f09 & f19 configurations with RTM
+
+  Baseline failures that are not because of GLC or RTM mapping file changes
+  are:
+
+>>> also failed in clm4_0_43; fails with "build-namelist ERROR:: bad input to drv_runlength option"
+028 blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -5+-5 cold .........FAIL! rc= 4
+>>> I think the problem here is that the baseline test is trying to build interpinic from the current directory,
+>>> rather than from BL_ROOT. This is a problem because of changes in the tools' build.
+069 bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6FAIL! rc= 5
+
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: - all GLC configurations (albice change & virtual column bug fix)
+                                - all f09 & f19 configurations with RTM (due to change in RTM mapping file)
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      
+      For GLC: climate-changing
+
+      For f09/f19 due to RTM mapping file change: Larger than roundoff, but
+      expected to have same climate. The new scrip grid files have
+      roundoff-level differences globally, plus differ substantially at the
+      poles because the old (incorrect) files had poles displaced from
+      -90/90.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - compset (and additional configure options):
+   - build-namelist options (or complete namelist):
+   - MSS location of output:
+
+   EVALUATION OF NEW CLIMATE NOT PERFORMED
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_44
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Jul  9 11:14:11 MDT 2012

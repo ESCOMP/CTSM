@@ -27,6 +27,7 @@ OPTIONS
                                    created by another version.
      -generate                     Leave the namelists in place to do a later compare.
      -test                         Use the -test option to make sure datasets exist.
+     -csmdata "dir"                Root directory of CESM input data.
 
 EOF
 }
@@ -39,6 +40,7 @@ my %opts = ( help     => 0,
              generate => 0,
              test     => 0,
              compare  => undef,
+             csmdata  => undef,
             );
 
 GetOptions(
@@ -46,10 +48,25 @@ GetOptions(
     "compare=s"  => \$opts{'compare'},
     "generate"   => \$opts{'generate'},
     "test"       => \$opts{'test'},
+    "csmdata=s"  => \$opts{'csmdata'},
 )  or usage();
 
 # Give usage message.
 usage() if $opts{'help'};
+
+# Check that the CESM inputdata root directory has been specified.  This must be
+# a local or nfs mounted directory.
+my $inputdata_rootdir = undef;
+if (defined($opts{'csmdata'})) {
+    $inputdata_rootdir = $opts{'csmdata'};
+} elsif (defined $ENV{'CSMDATA'} and $ENV{'CSMDATA'} != '' ) { 
+    $inputdata_rootdir = $ENV{'CSMDATA'};
+} else {
+   # use bluefire location as default
+   print("WARNING:  -csmdata nor CSMDATA are set, using default bluefire location: \n");
+   print("          /glade/proj3/cseg/inputdata \n"); 
+   $inputdata_rootdir="/glade/proj3/cseg/inputdata";
+}
 
 #
 # Figure out number of tests that will run
@@ -68,7 +85,7 @@ if (@ARGV) {
 my $mode = "standard";
 system( "../configure -s" );
 
-my $bldnml = "../build-namelist -verbose";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }

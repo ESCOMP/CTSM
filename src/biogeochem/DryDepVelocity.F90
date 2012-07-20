@@ -78,7 +78,7 @@ CONTAINS
     use seq_drydep_mod    , only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
                                     rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
                                     rgss, rgso
-    use clm_varcon        , only : istsoil, istice, istslak, istdlak, istwet, isturb
+    use clm_varcon        , only : istsoil, istice, istice_mec, istslak, istdlak, istwet, isturb
     use clm_varctl        , only : iulog
     use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
                                    ndllf_dcd_brl_tree,        nbrdlf_evr_trp_tree,  &
@@ -237,12 +237,13 @@ CONTAINS
     ! 
     ! Begin loop through pfts 
     pft_loop: do pi = lbp,ubp
+       l = plandunit(pi)
 
-       gcell_wght: if (pwtgcell(pi)>0._r8) then
+       ! Note: some glacier_mec pfts may have zero weight
+       gcell_wght: if (pwtgcell(pi)>0._r8 .or. itypelun(l)==istice_mec) then
 
           c = pcolumn(pi)
           g = pgridcell(pi)
-          l = plandunit(pi)
           !solar_flux = forc_lwrad  !rename CLM variables to fit with Dry Dep variables 
 
           pg         = forc_psrf(g)  
@@ -306,7 +307,7 @@ CONTAINS
           index_season = -1
 
           if ( itypelun(l) /= istsoil )then
-             if ( itypelun(l) == istice ) then
+             if ( itypelun(l) == istice .or. itypelun(l) == istice_mec ) then
                 wesveg       = 8
                 index_season = 4
              elseif ( itypelun(l) == istdlak .or. itypelun(l) == istslak ) then

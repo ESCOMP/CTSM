@@ -1112,6 +1112,7 @@ contains
 ! !USES:
     use clmtype
     use subgridAveMod, only : p2g, c2g, l2g
+    use clm_varcon   , only : istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -1130,6 +1131,7 @@ contains
 !EOP
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or pft index
+    integer  :: l                       ! landunit index
     integer  :: beg1d,end1d             ! beginning and ending indices
     logical  :: checkwt                 ! true => check weight of pft relative to gridcell
     logical  :: valid                   ! true => history operation is valid
@@ -1142,6 +1144,8 @@ contains
     character(len=8)  :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
     real(r8), pointer :: hbuf(:,:)      ! history buffer
     integer , pointer :: nacs(:,:)      ! accumulation counter
+    integer , pointer :: ltype(:)       ! landunit type
+    integer , pointer :: plandunit(:)   ! pft's landunit index
     real(r8), pointer :: pwtgcell(:)    ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: field(:)       ! clm 1d pointer field
     real(r8) :: field_gcell(begg:endg)  ! gricell level field (used if mapping to gridcell is done)
@@ -1231,7 +1235,10 @@ contains
 
     else  ! Do not map to gridcell
 
-       pwtgcell => clm3%g%l%c%p%wtgcell
+       pwtgcell  => clm3%g%l%c%p%wtgcell
+       plandunit => clm3%g%l%c%p%landunit
+       ltype     => clm3%g%l%itype
+
        checkwt = .false.
        if (type1d == namep) checkwt = .true.
 
@@ -1240,7 +1247,9 @@ contains
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
-                if (pwtgcell(k) == 0._r8) valid = .false.
+                l = plandunit(k)
+                ! Note: some glacier_mec pfts may have zero weight and still be considered valid
+                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1257,7 +1266,8 @@ contains
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
-                if (pwtgcell(k) == 0._r8) valid = .false.
+                l = plandunit(k)
+                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1275,7 +1285,8 @@ contains
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
-                if (pwtgcell(k) == 0._r8) valid = .false.
+                l = plandunit(k)
+                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1293,7 +1304,8 @@ contains
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
-                if (pwtgcell(k) == 0._r8) valid = .false.
+                l = plandunit(k)
+                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1330,6 +1342,7 @@ contains
 ! !USES:
     use clmtype
     use subgridAveMod, only : p2g, c2g, l2g
+    use clm_varcon   , only : istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -1349,6 +1362,7 @@ contains
 !EOP
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or pft index
+    integer  :: l                       ! landunit index
     integer  :: j                       ! level index
     integer  :: beg1d,end1d             ! beginning and ending indices
     logical  :: checkwt                 ! true => check weight of pft relative to gridcell
@@ -1362,6 +1376,8 @@ contains
     character(len=8)  :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
     real(r8), pointer :: hbuf(:,:)      ! history buffer
     integer , pointer :: nacs(:,:)      ! accumulation counter
+    integer , pointer :: ltype(:)       ! landunit type
+    integer , pointer :: plandunit(:)   ! pft's landunit index
     real(r8), pointer :: pwtgcell(:)    ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: field(:,:)     ! clm 2d pointer field
     real(r8) :: field_gcell(begg:endg,num2d) ! gricell level field (used if mapping to gridcell is done)
@@ -1462,7 +1478,10 @@ contains
        ! bounds are field(1:end1d-beg1d+1, num2d) - therefore
        ! need to do the shifting below
 
-       pwtgcell => clm3%g%l%c%p%wtgcell
+       pwtgcell  => clm3%g%l%c%p%wtgcell
+       plandunit => clm3%g%l%c%p%landunit
+       ltype     => clm3%g%l%itype
+
        checkwt = .false.
        if (type1d == namep) checkwt = .true.
 
@@ -1472,7 +1491,8 @@ contains
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
-                   if (pwtgcell(k) == 0._r8) valid = .false.
+                   l = plandunit(k)
+                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -1491,7 +1511,8 @@ contains
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
-                   if (pwtgcell(k) == 0._r8) valid = .false.
+                   l = plandunit(k)
+                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -1511,7 +1532,8 @@ contains
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
-                   if (pwtgcell(k) == 0._r8) valid = .false.
+                   l = plandunit(k)
+                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -1531,7 +1553,8 @@ contains
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
-                   if (pwtgcell(k) == 0._r8) valid = .false.
+                   l = plandunit(k)
+                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -4043,7 +4066,7 @@ end function max_nFields
 
     else if (present(ptr_lunit)) then
        l_type1d = namel
-       l_type1d_out = grlnd
+       l_type1d_out = namel
        clmptr_rs(hpindex)%ptr => ptr_lunit
        if (present(set_lake)) then
           do l = begl,endl

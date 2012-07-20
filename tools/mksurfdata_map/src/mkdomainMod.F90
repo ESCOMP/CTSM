@@ -661,6 +661,12 @@ end subroutine domain_check
      integer,  pointer :: dst_indx(:)  ! Destination index
      character(len= 32) :: subname = 'domain_checksame'
 
+     ! tolerance for checking equality of lat & lon
+     ! For a value of order 100 (e.g., lat / lon), machine epsilon is approximately 1e-13
+     ! or 1e-14. We'll use 1e-12 to allow for slightly greater rounding errors.
+     real(r8), parameter :: eps = 1.e-12_r8
+
+
      if (srcdomain%set == unset) then
         write(6,*) trim(subname)//'ERROR: source domain is unset!'
         call abort()
@@ -702,14 +708,14 @@ end subroutine domain_check
               call abort()
            end if
         end if
-        if (srcdomain%lonc(ni) /= xc_src(ni)) then
+        if (abs(srcdomain%lonc(ni) - xc_src(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: input domain lon and gridmap lon not the same at ni = ',ni
            write(6,*)' domain  lon= ',srcdomain%lonc(ni)
            write(6,*)' gridmap lon= ',xc_src(ni)
            call abort()
         end if
-        if (srcdomain%latc(ni) /= yc_src(ni)) then
+        if (abs(srcdomain%latc(ni) - yc_src(ni)) > eps) then
            write(6,*) trim(subname)// &               
                ' ERROR: input domain lat and gridmap lat not the same at ni = ',ni
            write(6,*)' domain  lat= ',srcdomain%latc(ni)
@@ -728,14 +734,14 @@ end subroutine domain_check
               call abort()
            end if
         end if
-        if (dstdomain%lonc(ni) /= xc_dst(ni)) then
+        if (abs(dstdomain%lonc(ni) - xc_dst(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: output domain lon and gridmap lon not the same at ni = ',ni
            write(6,*)' domain  lon= ',dstdomain%lonc(ni)
            write(6,*)' gridmap lon= ',xc_dst(ni)
            call abort()
         end if
-        if (dstdomain%latc(ni) /= yc_dst(ni)) then
+        if (abs(dstdomain%latc(ni) - yc_dst(ni)) > eps) then
            write(6,*) trim(subname)// &
                 ' ERROR: output domain lat and gridmap lat not the same at ni = ',ni
            write(6,*)' domain  lat= ',dstdomain%latc(ni)
