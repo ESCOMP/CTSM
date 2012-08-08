@@ -233,17 +233,21 @@ fi
 # Determine all input grid files and output file names 
 #----------------------------------------------------------------------
 
-grids=("0.5x0.5_nomask"    \ 
-       "0.5x0.5_USGS"      \
-       "0.5x0.5_AVHRR"     \
-       "0.5x0.5_MODIS"     \
-       "3x3min_MODIS"      \
-       "5x5min_nomask"     \
-       "5x5min_IGBP-GSDP"  \
-       "5x5min_ISRIC-WISE" \
-       "10x10min_nomask"   \
-       "10x10min_IGBPmergeICESatGIS" \
-       "3x3min_LandScan2004")
+grids=("ne240np4_nomask" \
+       "ne120np4_nomask")
+
+#grids=("0.1x0.1_nomask"    \
+       #"0.5x0.5_nomask"    \ 
+       #"1.9x2.5_nomask"    \ 
+       #"0.5x0.5_USGS"      \
+       #"0.5x0.5_AVHRR"     \
+       #"0.5x0.5_MODIS"     \
+       #"3x3min_MODIS"      \
+       #"5x5min_nomask"     \
+       #"5x5min_IGBP-GSDP"  \
+       #"5x5min_ISRIC-WISE" \
+       #"10x10min_nomask"   \
+       #"10x10min_IGBPmergeICESatGIS")
 
 # Set timestamp for names below 
 CDATE="c"`date +%y%m%d`

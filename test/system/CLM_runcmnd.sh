@@ -11,54 +11,55 @@ if [ ! -f ${CLM_SCRIPTDIR}/config_files/$1 ]; then
     exit 2
 fi
 
+
 hostname=`hostname`
 case $hostname in
 
-    ##bluefire
-    be* )
-    ##search config options file for parallelization info; default on aix is hybrid
-    if grep -ic NOUSE_MPISERIAL ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	num_nodes=`echo $LSB_MCPU_HOSTS | wc -w`
-	num_nodes=`expr $num_nodes / 2`
-	tpn=`expr $CLM_TASKS / $num_nodes `
-	proc=0
-	geo_string="\{"
-	count1=$num_nodes
-	while [ "$count1" != "0" ]; do
-	    geo_string="${geo_string}\("
-	    count2=$tpn
-	    while [ "$count2" != "0" ]; do
-		if [ "$count2" != "$tpn" ]; then
-		    geo_string="${geo_string}\,"
-		fi
-		geo_string="${geo_string}$proc"
-		proc=`expr $proc + 1`
-		count2=`expr $count2 - 1`
-	    done
-	    geo_string="${geo_string}\)"
-	    count1=`expr $count1 - 1`
-	done
-	geo_string="${geo_string}\}"
-
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} TARGET_CPU_LIST="-1" mpirun.lsf /usr/local/bin/launch"
-	else
-            ##hybrid
-	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} TARGET_CPU_RANGE="-1" OMP_NUM_THREADS=${CLM_THREADS} mpirun.lsf /usr/local/bin/hybrid_launch"
-	fi
-    else
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""                                   
-	else
-            ##open-mp only
-#	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	    cmnd="env LSB_PJL_TASK_GEOMETRY="\{\(0\)\}" OMP_NUM_THREADS=${CLM_THREADS} "
-	fi
-    fi ;;
-
-
+   ##bluefire
+   be* )
+   ##search config options file for parallelization info; default on aix is hybrid
+   if grep -ic NOUSE_MPISERIAL ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+      num_nodes=`echo $LSB_MCPU_HOSTS | wc -w`
+      num_nodes=`expr $num_nodes / 2`
+      proc=0
+      count1=$num_nodes
+      tpn=`expr $CLM_TASKS / $num_nodes `
+      geo_string="\{"
+      while [ "$count1" != "0" ]; do
+         geo_string="${geo_string}\("
+         count2=$tpn
+         while [ "$count2" != "0" ]; do
+            if [ "$count2" != "$tpn" ]; then
+               geo_string="${geo_string}\,"
+            fi
+            geo_string="${geo_string}$proc"
+            proc=`expr $proc + 1`
+            count2=`expr $count2 - 1`
+         done
+         geo_string="${geo_string}\)"
+         count1=`expr $count1 - 1`
+      done
+      geo_string="${geo_string}\}"
+   
+      if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+         ##mpi only
+         cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} TARGET_CPU_LIST="-1" mpirun.lsf /usr/local/bin/launch"
+      else
+         ##hybrid
+         cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} TARGET_CPU_RANGE="-1" OMP_NUM_THREADS=${CLM_THREADS} mpirun.lsf /usr/local/bin/hybrid_launch"
+      fi
+   else
+      if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+         ##serial
+         cmnd=""                                   
+	   else
+         ##open-mp only
+         #	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
+         cmnd="env LSB_PJL_TASK_GEOMETRY="\{\(0\)\}" OMP_NUM_THREADS=${CLM_THREADS} "
+	   fi
+   fi ;;
+   
+   
     ## edinburgh
     edinburgh* | e0* )
     ##search config options file for parallelization info; default on linux is mpi

@@ -984,8 +984,8 @@ EOF
     foreach my $dir ( @dirs ) {
        mkdirp( "$dir" );
     }
-    # Create and build MCT and PIO
 
+    # Create and build MCT and PIO
     if(-d $mct_dir){
        print "Using existing mct_dir: $mct_dir\n";
     }else{
@@ -999,7 +999,6 @@ EOF
        copy("$mct_root/mct/Makefile","$mct_dir/mct");
        copy("$mct_root/mpeu/Makefile","$mct_dir/mpeu");
        copy("$mct_root/mpi-serial/Makefile","$mct_dir/mpi-serial");
-       
     } 
 
     # PIO library
@@ -1009,8 +1008,12 @@ EOF
        my $pio_root= "$clm_root/../../utils/pio";
        print "creating $pio_dir\n" if($print);
        mkdirp($pio_dir);
-       copy("$pio_root/Makefile",$pio_dir);
+       copy("$pio_root/Makefile","$pio_dir/Makefile");
+       my $fh = IO::File->new("$pio_dir/Makefile", '>>') or die "** can't open pio Makefile\n";
+       $fh->print("piovdc.o: pio_kinds.o \n");
+       close($fh);
     }
+
     # Write the file for clm's cppdefs needed in cesm.
     write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
     if ($print>=2) { print "creating $clm_bld/$cpp_filename\n"; }
@@ -1400,8 +1403,16 @@ EOF
     $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
     while (<$fh_in>) {
         if ( $model eq "driver" ) {
+           # Remove -lgptl from Makefile.  the GPTL objects are in libcesm_lib.a but newer CESM code builds gptl in 
+           # it's own directory.  Since we don't have access to gnu sed copy to a tmp file.
+           my $word="-lgptl";
+           if ($_ =~ /$word/ ){
+              chomp( $_ );
+              my $ri = rindex($_,$word);
+              substr($_,$ri,length($word)) = '' if $ri > -1;
+           }
            # Add ULIBDEP to end of Depends dependency
-           if ( /\$\(CURDIR\)\/Depends\:/ ) {
+           if ($_ =~ /\$\(CURDIR\)\/Depends\:/ ) {
               chomp( $_ );
               $_ = "$_ \$(ULIBDEP)\n";
            }

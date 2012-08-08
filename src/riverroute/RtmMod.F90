@@ -378,9 +378,10 @@ contains
              iocn(nr) = n                   ! set ocean outlet or nr to n
              nocn(n) = nocn(n) + 1          ! one more land cell for n
           elseif (abs(gmask(n)) == 1) then  ! no ocean outlet, warn user, ignore cell
-             write(iulog,*) 'rtmini WARNING no downstream ocean cell - IGNORED', &
+             write(iulog,*) 'rtmini ERROR no downstream ocean cell ', &
                g,nr,gmask(nr),dwnstrm_index(nr), &
                n,gmask(n),dwnstrm_index(n)
+             call shr_sys_abort()
           else 
              write(iulog,*) 'rtmini ERROR downstream cell is non-ocean,non-land', &
                g,nr,gmask(nr),dwnstrm_index(nr), &
@@ -434,7 +435,6 @@ contains
        minbas = maxval(nocn)/(2**nl)
        if (nl == nloops) minbas = min(minbas,1)
        do nr=1,rtmlon*rtmlat
-         !if (nocn(nr) /= 0) then
           if (nocn(nr) > 0 .and. nocn(nr) >= minbas .and. nocn(nr) <= maxbas) then
              ! Decomp options
              !   find min pe (implemented but scales poorly)

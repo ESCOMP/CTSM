@@ -81,15 +81,23 @@ if [ "$TOOLSLIBS" != "" ]; then
 fi
 while [ $still_compiling = "TRUE" ]; do
 
+   if [ "$1" = "gen_domain" ]; then
+      HOSTNAME=`uname -n | cut -c 1-2`
+      if [ "$HOSTNAME" = "be" ]; then
+         echo "TCBtools.sh: run configure for gen_domain on bluefire"
+         env CCSMROOT=${CLM_ROOT} ${CLM_ROOT}/scripts/ccsm_utils/Machines/configure -mach bluefire >> test.log 2>&1
+         rc=$?
+      fi
+   fi
+
     echo "TCBtools.sh: call to make:" 
     echo "        ${MAKE_CMD} ${config_string} "
     if [ "$debug" != "YES" ]; then
        ${MAKE_CMD} ${config_string} >> test.log 2>&1
        status="PASS"
-       rc=$?
+       rc=$(( $rc + $? ))
     else
        status="GEN"
-       rc=0
     fi
     if [ $rc -eq 0 ]; then
 	echo "TCBtools.sh: make was successful" 

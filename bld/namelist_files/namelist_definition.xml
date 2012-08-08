@@ -719,7 +719,7 @@ Land mask description for mksurfdata input files
 
 <entry id="hgrid" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="0.5x0.5,10x10min,5x5min,360x720,19basin">
+       valid_values="0.1x0.1,0.5x0.5,10x10min,5x5min,360x720,19basin">
 Horizontal grid resolutions for mksurfdata input files
 </entry> 
 
@@ -924,9 +924,9 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,us20,wus12">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,us20,wus12">
 Horizontal resolutions
-Note: 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
+Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
 
 <entry id="rcp" type="real" category="default_settings"
@@ -948,9 +948,10 @@ If TRUE, irrigation will be active (find surface datasets with active irrigation
 </entry> 
 
 <entry id="rtm_res" type="char*20" category="default_settings"
-       group="default_settings" valid_values="R05" value="R05">
+       group="default_settings" valid_values="r01,r05" value="r05">
 Resolution for River Transport Model (RTM)
-   R05 = half degree (default and only option working)
+   r05 = half degree (default)
+   r01 = 0.1 degree
 </entry> 
 
 <entry id="sim_year" type="integer" category="default_settings"

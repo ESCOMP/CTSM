@@ -14,7 +14,7 @@ if ($LND_GRID == "reg" && $GRID != "CLM_USRDAT" ) then
    set config_opts=" -sitespf_pt $GRID"
 endif
 if ("$CCSM_COMPSET" =~ P* || "$CCSM_COMPSET" =~ R* ) then
-   set config_opts=" -sitespf_pt $GRID"
+   set config_opts=" -sitespf_pt $LND_GRID"
 endif
 
 if ($COMP_INTERFACE == 'MCT' ) setenv COMP MCT

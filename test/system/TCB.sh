@@ -11,22 +11,22 @@ test_name=TCB.$1
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
         echo "TCB.sh: configure and build test has already passed; results are in "
-	echo "        ${CLM_TESTDIR}/${test_name}" 
+	     echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
     elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
         echo "TCB.sh: test already generated"
     else
-	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
-        prev_jobid=${fail_msg#*job}
+	      read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
+         prev_jobid=${fail_msg#*job}
 
-	if [ $JOBID = $prev_jobid ]; then
+	      if [ $JOBID = $prev_jobid ]; then
             echo "TCB.sh: configure and build test has already failed for this job - will not reattempt; "
-	    echo "        results are in: ${CLM_TESTDIR}/${test_name}" 
-	    exit 2
-	else
-	    echo "TCB.sh: this configure and build test failed under job ${prev_jobid} - moving those results to "
-	    echo "        ${CLM_TESTDIR}/${test_name}_FAIL.job$prev_jobid and trying again"
-            cp -rp ${CLM_TESTDIR}/${test_name} ${CLM_TESTDIR}/${test_name}_FAIL.job$prev_jobid
+	         echo "        results are in: ${CLM_TESTDIR}/${test_name}" 
+	         exit 2
+	      else
+	         echo "TCB.sh: this configure and build test failed under job ${prev_jobid} - moving those results to "
+	         echo "        ${CLM_TESTDIR}/${test_name}_FAIL.job$prev_jobid and trying again"
+                  cp -rp ${CLM_TESTDIR}/${test_name} ${CLM_TESTDIR}/${test_name}_FAIL.job$prev_jobid
         fi
     fi
 fi

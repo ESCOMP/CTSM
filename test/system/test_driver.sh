@@ -138,7 +138,7 @@ export LIB_NETCDF=\$NETCDF/lib
 export MAKE_CMD="gmake -j "
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
-export MACH_WORKSPACE="/ptmp"
+export MACH_WORKSPACE="/glade/scratch"
 CPRNC_EXE="/glade/proj3/cseg/tools/cprnc/cprnc"
 newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
@@ -187,7 +187,7 @@ export CESM_MACH="generic_LINUX"
 export CESM_COMP="intel"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
-export MACH_WORKSPACE="/ptmp"
+export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE=/glade/home/erik/bin/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/glade/proj3/cseg"
@@ -420,7 +420,7 @@ export INC_NETCDF=\${NETCDF_DIR}/include
 export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_MPI=""
 export LIB_MPI=""
-export MACH_WORKSPACE="/ptmp"
+export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE=/glade/proj3/cseg/tools/cprnc.lynx/cprnc
 export DATM_QIAN_DATA_DIR="/glade/proj2/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/glade/proj3/cseg"
@@ -572,7 +572,7 @@ export NETCDF_DIR=\$NETCDF_PATH
 export INC_NETCDF=\$NETCDF_PATH/include
 export LIB_NETCDF=\$NETCDF_PATH/lib
 export MAKE_CMD="make -j 4"
-export MACH_WORKSPACE="/ptmp"
+export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/fis/cgd/cseg/csm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 export ESMFBIN_PATH=\
@@ -642,7 +642,7 @@ fi
 
 ##setup test work directory
 if [ -z "\$CLM_TESTDIR" ]; then
-    export CLM_TESTDIR=\${MACH_WORKSPACE}/\$LOGNAME/test-driver.\${JOBID}
+    export CLM_TESTDIR=\${MACH_WORKSPACE}/\$LOGNAME/clmTests/test-driver.\${JOBID}
     if [ -d \$CLM_TESTDIR ] && [ \$CLM_RETAIN_FILES != "TRUE" ]; then
         rm -r \$CLM_TESTDIR
     fi
@@ -702,6 +702,7 @@ test_list=""
 while read input_line; do
     test_list="\${test_list}\${input_line} "
 done < \${input_file}
+
 
 ##initialize flags, counter
 skipped_tests="NO"

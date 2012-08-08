@@ -59,7 +59,7 @@ usage() if $opts{'help'};
 my $inputdata_rootdir = undef;
 if (defined($opts{'csmdata'})) {
     $inputdata_rootdir = $opts{'csmdata'};
-} elsif (defined $ENV{'CSMDATA'} and $ENV{'CSMDATA'} != '' ) { 
+} elsif (defined $ENV{'CSMDATA'} ) { 
     $inputdata_rootdir = $ENV{'CSMDATA'};
 } else {
    # use bluefire location as default
@@ -100,6 +100,10 @@ my $cwd = `pwd`;
 chomp( $cwd );
 my $cfiles = NMLTest::CompFiles->new( $cwd, @files );
 
+print "\n==================================================\n";
+print "Run simple tests \n";
+print "==================================================\n";
+
 # Simple test -- just run build-namelist with -help option
 eval{ system( "$bldnml -help > $tempfile 2>&1 " ); };
 is( $@, '', "help" );
@@ -118,6 +122,11 @@ if ( defined($opts{'compare'}) ) {
    $cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
    $cfiles->comparefiles( "default", $mode, $opts{'compare'} );
 }
+
+print "\n==================================================\n";
+print "Run simple tests with all list options \n";
+print "==================================================\n";
+
 $cfiles->copyfiles( "default", $mode );
 &cleanup();
 # Simple test -- run all the list options
@@ -136,6 +145,11 @@ foreach my $options ( "clm_demand", "rcp",      "res",
    is( (-f "lnd_in"), undef, "Check that lnd_in file does NOT exist" );
    &cleanup();
 }
+
+print "\n==================================================\n";
+print "Run simple tests with additional options \n";
+print "==================================================\n";
+
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 -glc_nec 10 -glc_grid gland5 -glc_smb .false.";
    $options .= " -res 0.9x1.25 -rtm off -rtm_tstep 10800 -rcp 2.6";
@@ -154,6 +168,11 @@ if ( defined($opts{'compare'}) ) {
    $cfiles->comparefiles( "most_options", $mode, $opts{'compare'} );
 }
 &cleanup();
+
+print "\n==================================================\n";
+print "Test drydep and megan namelists  \n";
+print "==================================================\n";
+
 # drydep and megan namelists
 my @mfiles = ( "lnd_in", "drv_flds_in", $tempfile );
 my $mfiles = NMLTest::CompFiles->new( $cwd, @mfiles );
@@ -173,6 +192,11 @@ foreach my $options ( "-drydep", "-megan", "-drydep -megan" ) {
    }
    &cleanup();
 }
+
+print "\n==================================================\n";
+print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n";
+print "==================================================\n";
+
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2\%inst_string.r.1964-05-27-00000.nc";
 my $startnoin = "clmrun.clm2.r.1964-05-27-00000.nc";
@@ -212,6 +236,11 @@ foreach my $options ( "-irrig", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850
    }
    &cleanup();
 }
+
+print "\n==================================================\n";
+print "Start Failure testing.  These should fail \n";
+print "==================================================\n";
+
 # Failure testing, do things that SHOULD fail
 my $finidat  = "thing.nc";
 system( "touch $finidat" );
@@ -270,6 +299,11 @@ foreach my $key ( keys(%failtest) ) {
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
 }
+
+print "\n==================================================\n";
+print "Test ALL resolutions with CN \n";
+print "==================================================\n";
+
 # Check for ALL resolutions with CN
 my $mode = "CN";
 system( "../configure -s -bgc cn" );
@@ -277,33 +311,45 @@ my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
 my @regional;
 foreach my $res ( @resolutions ) {
+   print "=== Test $res === \n";
    $options  = "-res $res";
+
    if ( $res eq "512x1024" ) { 
       $options .= " -sim_year 1850"; 
    } elsif ( $res =~ /^([0-9]+x[0-9]+_[a-zA-Z]+)$/ ) {
       push( @regional, $res );
       next;
    } elsif ( $res eq "0.5x0.5"     ||
+             $res eq "0.1x0.1"     ||
              $res eq "3x3min"      ||
              $res eq "5x5min"      ||
              $res eq "10x10min"    ||
              $res eq "0.33x0.33"  ) {
       next;
    }
+
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
+
    $cfiles->checkfilesexist( "$options", $mode );
    system( "diff lnd_in lnd_in.default.standard" );
+
    $cfiles->shownmldiff( "default", "standard" );
    if ( defined($opts{'compare'}) ) {
       $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
       $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
    }
+
    if ( defined($opts{'generate'}) ) {
       $cfiles->copyfiles( "$options", $mode );
    }
-   &cleanup();
+   &cleanup(); print "\n";
 }
+
+print "\n==================================================\n";
+print " Test all use-cases \n";
+print "==================================================\n";
+
 # Run over all use-cases...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
 my @usecases;
@@ -329,6 +375,10 @@ foreach my $usecase ( @usecases ) {
    &cleanup();
 }
 
+print "\n==================================================\n";
+print "Test single-point regional cases \n";
+print "==================================================\n";
+
 # Run over single-point regional cases
 foreach my $res ( @regional ) {
    $mode = "$res";
@@ -347,6 +397,10 @@ foreach my $res ( @regional ) {
    }
    &cleanup();
 }
+
+print "\n==================================================\n";
+print "Test crop resolutions \n";
+print "==================================================\n";
 
 # Check for crop resolutions
 my $mode = "crop";
@@ -368,6 +422,10 @@ foreach my $res ( @crop_res ) {
    }
    &cleanup();
 }
+
+print "\n==================================================\n";
+print " Test glc_mec resolutions \n";
+print "==================================================\n";
 
 # Check for glc_mec resolutions
 my $mode = "standard";

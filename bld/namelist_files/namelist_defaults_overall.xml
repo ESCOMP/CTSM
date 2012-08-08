@@ -75,9 +75,11 @@ determine default values for namelists.
 <rtm sitespf_pt="1x1_urbanc_alpha"                 >off</rtm>
 <rtm sitespf_pt="1x1_numaIA"                       >off</rtm>
 <rtm sitespf_pt="1x1_smallvilleIA"                 >off</rtm>
+<rtm sitespf_pt="us20"                             >off</rtm>
+<rtm sitespf_pt="wus12"                            >off</rtm>
 
 <!-- Default RTM resolution -->
-<rtm_res rtm="on">R05</rtm_res>
+<rtm_res rtm="on">r05</rtm_res>
 
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>
@@ -97,6 +99,7 @@ determine default values for namelists.
 <mask hgrid="94x192"              >T62</mask>
 
 <mask hgrid="ne120"               >gx1v6</mask>
+<mask hgrid="ne240"               >gx1v6</mask>
 <mask hgrid="ne30"                >gx1v6</mask>
 
 <mask hgrid="us20"                >us20</mask>

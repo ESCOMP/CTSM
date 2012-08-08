@@ -42,12 +42,9 @@ contains
     character(len=32)  :: subname = 'mkfile'  ! subroutine name
 !-----------------------------------------------------------------------
 
-    if ( .not. outnc_large_files )then
-       call check_ret(nf_create(trim(fname), nf_clobber, ncid), subname)
-    else
-       call check_ret(nf_create(trim(fname), ior(nf_clobber,nf_64bit_offset), &
+    call check_ret(nf_create(trim(fname), ior(nf_clobber,nf_64bit_offset), &
                                 ncid), subname)
-    end if
+
     call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
     ! Define dimensions.

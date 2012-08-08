@@ -1360,8 +1360,7 @@ if ( $rtm eq "on" ) {
                           'frm_lmask'=>"nomask", 'to_lmask'=>$lmask );
       my $map  = $defaults->get_value("map", \%mapsettings );
       if ( ! defined($map) ) {
-         print "$ProgName WARNING:: Can NOT find a mapping file from $rtm_res to $res for RTM.\n";
-         print "CLM  will calculate RTM mapping while running.\n";
+         die "$ProgName ERROR:: Can NOT find a mapping file from $rtm to $rtm_res for RTM.\n";
       } else {
          add_default($nl[0], 'fmapinp_rtm', 'val'=>$map );
       }

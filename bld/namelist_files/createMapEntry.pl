@@ -2,7 +2,7 @@
 #
 # July 18 2012                                         Muszala
 #
-# createMapEntry.pl - script to dump a list of mappings for a specified resolution to then
+# createMapEntry.pl - A simple script to dump a list of mappings for a specified resolution to then
 # cut and paste into namelist_defaults_clm.xml.  A better way is to write the output of this script
 # to a file and then directly insert that file into namelist_defaults_clm.xml (using :r foo in vim for
 # example).
@@ -20,9 +20,8 @@ use IO::File;
 use Getopt::Long;
 
    my $date = scalar localtime() ;
-   my $ProgName;
-   ($ProgName = $PROGRAM_NAME) =~ s!(.*)/!!; # name of program
-   my $ProgDir = $1;                         # name of directory where program lives
+   my $scriptName;
+   ($scriptName = $0) =~ s!(.*)/!!; # get name of script
    my $cwd = getcwd();
    my $CSMDATA = "/glade/proj3/cseg/inputdata";
 
@@ -36,7 +35,7 @@ use Getopt::Long;
       die <<EOF;
          SYNOPSIS 
    
-         $ProgName <res>  
+         $scriptName <res>  
             <res> is the resolution to use to dump text to paste into namelist_defaults_clm.xml
 EOF
    }
@@ -51,7 +50,8 @@ EOF
    my @list = readdir DIR;
 
    #~# print a unique start string in the XML comments 
-   print "\n<!-- mapping files for $grid START added on $date--> \n\n";
+   print "\n<!-- mapping files for $grid START added on $date-->";
+   print "\n<!-- Created by lnd/clm/bld/namelist_files/$scriptName--> \n\n";
 
    foreach my $foo ( @list ) {
       next if ($foo =~ m/^\./);  #~# skip anything in the directory with a leading or stand alone 'dot'
