@@ -1002,16 +1002,40 @@ EOF
     } 
 
     # PIO library
+    #
+    # add include to build pio
+    my $bfFixInclude="-I${mct_dir}/mpi-serial";
     if(-d $pio_dir){
        print "Using existing pio_dir: $pio_dir\n";
     }else{
-       my $pio_root= "$clm_root/../../utils/pio";
-       print "creating $pio_dir\n" if($print);
-       mkdirp($pio_dir);
-       copy("$pio_root/Makefile","$pio_dir/Makefile");
-       my $fh = IO::File->new("$pio_dir/Makefile", '>>') or die "** can't open pio Makefile\n";
-       $fh->print("piovdc.o: pio_kinds.o \n");
-       close($fh);
+      my $pio_root= "$clm_root/../../utils/pio";
+      print "creating $pio_dir\n" if($print);
+      mkdirp($pio_dir);
+      copy("$pio_root/Makefile","$pio_dir/Makefile");
+
+      rename ("$pio_dir/Makefile","$pio_dir/Makefile.orig" ) || die ( "Error in renaming" );
+
+      my $fh_in = IO::File->new("$pio_dir/Makefile.orig", '<') or die "** can't open pio Makefile\n";
+      my $fh_out = IO::File->new("$pio_dir/Makefile", '>') or die "** can't open pio Makefile\n";
+
+      # fix missing include
+      while (<$fh_in>) {
+        if ($_ =~ /export PIOARCH/ ){
+           print $fh_out $_;
+           my $nextline = <$fh_in> ;
+           $fh_out->print("\n FFLAGS+= $bfFixInclude\n\n");
+         } else { 
+           print $fh_out $_;
+         }
+      }
+      # fix dep on pio_kinds.o
+      $fh_out->print("piovdc.o: pio_kinds.o \n");
+
+      $fh_in->close;
+      $fh_out->close;
+      # clean up
+      unlink("$pio_dir/Makefile.orig");
+
     }
 
     # Write the file for clm's cppdefs needed in cesm.
@@ -1063,7 +1087,7 @@ EOF
 
     # Write the cesm top level Makefile.
     write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/Makefile",
-                        "$clm_bld/$envset", "driver", "$macro", $cfg_ref );
+                        "$clm_bld/$envset", "driver", "$macro", $cfg_ref,$bfFixInclude );
     if ($print>=2) { print "creating $clm_bld/cesm_lib/Makefile\n"; }
 
     # Write the top level filepath file for cesm build
@@ -1072,7 +1096,7 @@ EOF
 
     # Write the cesm_lib level Makefile.
     write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/cesm_lib/Makefile", 
-                        "$clm_bld/$envset", "cesm_lib", "../$macro", $cfg_ref );
+                        "$clm_bld/$envset", "cesm_lib", "../$macro", $cfg_ref,$bfFixInclude );
     if ($print>=2) { print "creating $clm_bld/cesm_lib/Makefile\n"; }
 
     # Write the cesm_lib level filepath file for cesm build
@@ -1081,7 +1105,7 @@ EOF
 
     # Write the lnd level Makefile.
     write_cesm_makefile("$scriptsdir/Makefile", "$clm_bld/lnd/Makefile", 
-                        "$clm_bld/$envset", "clm", "../$macro", $cfg_ref );
+                        "$clm_bld/$envset", "clm", "../$macro", $cfg_ref,$bfFixInclude );
     if ($print>=2) { print "creating $clm_bld/lnd/Makefile\n"; }
 
     # Write the filepath file for cesm build of clm library
@@ -1326,7 +1350,7 @@ sub write_cesm_makefile
 {
     # Add macro definitions to the beginning of the cesm Makefile that will be written
 
-    my ($file_in, $file_out, $envset, $model, $macfile, $cfg_ref) = @_;
+    my ($file_in, $file_out, $envset, $model, $macfile, $cfg_ref, $bfFixInclude) = @_;
     my  $fh_in = new IO::File;
     my  $fh_out = new IO::File;
 
@@ -1399,18 +1423,31 @@ copymod: complib
 EOF
     }
 
+    my $bfFixComp;
+    my $bfFixCPP;
+    if ($target_os eq "aix"){
+      $bfFixComp="-WF,-DFORTRAN_SAME -WF,-DAIX -WF,-DCPRIBM -WF,-DF2003";
+      $bfFixCPP="-WF,-DNO_MPI2 -WF,-DNO_MPIMOD -WF,-D_USEBOX -WF,-D_NETCDF -WF,-D_MPISERIAL -WF,-DNUM_COMP_INST_ATM=1 -WF,-DNUM_COMP_INST_LND=1 -WF,-DNUM_COMP_INST_OCN=1 -WF,-DNUM_COMP_INST_ICE=1 -WF,-DNUM_COMP_INST_GLC=1";
+    } elsif ($target_os eq "linux"){
+      $bfFixComp="-DFORTRANUNDERSCORE -DF2003";
+      $bfFixCPP="-DNO_MPI2 -DNO_MPIMOD -D_USEBOX -D_NETCDF -D_MPISERIAL -DNUM_COMP_INST_ATM=1 -DNUM_COMP_INST_LND=1 -DNUM_COMP_INST_OCN=1 -DNUM_COMP_INST_ICE=1 -DNUM_COMP_INST_GLC=1";
+    }
     # Copy the "template" makefile to the new makefile.
     $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
     while (<$fh_in>) {
+        # Remove -lgptl from Makefile.  the GPTL objects are in libcesm_lib.a but newer CESM code builds gptl in 
+        # it's own directory.  Since we don't have access to gnu sed copy to a tmp file.
+        my $word="-lgptl";
+        if ($_ =~ /$word/ ){
+           chomp( $_ );
+           my $ri = rindex($_,$word);
+           substr($_,$ri,length($word)) = '' if $ri > -1;
+        } elsif ($_ =~ /FFLAGS\+=\$\(FPPDEFS\)/  ){
+           # add includes and some definitions that aren't being picked up
+           chomp( $_ );
+           $_ = "$_ $bfFixComp $bfFixInclude $bfFixCPP \n";
+        }
         if ( $model eq "driver" ) {
-           # Remove -lgptl from Makefile.  the GPTL objects are in libcesm_lib.a but newer CESM code builds gptl in 
-           # it's own directory.  Since we don't have access to gnu sed copy to a tmp file.
-           my $word="-lgptl";
-           if ($_ =~ /$word/ ){
-              chomp( $_ );
-              my $ri = rindex($_,$word);
-              substr($_,$ri,length($word)) = '' if $ri > -1;
-           }
            # Add ULIBDEP to end of Depends dependency
            if ($_ =~ /\$\(CURDIR\)\/Depends\:/ ) {
               chomp( $_ );

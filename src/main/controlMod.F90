@@ -25,7 +25,7 @@ module controlMod
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
                             username, fsnowaging, fsnowoptics, fglcmask, &
                             create_glacier_mec_landunit, glc_dyntopo, glc_smb, &
-                            glc_topomax, glc_grid, &
+                            glc_grid, &
                             do_rtm, frivinp_rtm, ice_runoff, rtm_nsteps, fmapinp_rtm
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
@@ -422,9 +422,6 @@ contains
     call mpi_bcast (maxpatch_glcmec             ,1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (glc_smb,                     1, MPI_LOGICAL  , 0, mpicom, ier)
     call mpi_bcast (glc_dyntopo,                 1, MPI_LOGICAL  , 0, mpicom, ier)
-    if (create_glacier_mec_landunit) then
-       call mpi_bcast (glc_topomax, size(glc_topomax), MPI_REAL8    , 0, mpicom, ier) 
-    end if
     call mpi_bcast (glc_grid,        len(glc_grid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fglcmask,        len(fglcmask), MPI_CHARACTER, 0, mpicom, ier)
 

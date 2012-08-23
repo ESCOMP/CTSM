@@ -34,17 +34,14 @@ else
 fi
 echo "Create mapping files for this list of resolutions: $resols"
 
-
-
-
 #----------------------------------------------------------------------
 
 for res in $resols; do
-  echo "Create mapping files for: $res"
-  #----------------------------------------------------------------------
-  cmdargs="-r $res"
-  if [ -z $LSF_PJL_TYPE ]; then
-    cmdargs="$cmdargs -b"
-  fi
-  time env REGRID_PROC=8 mkmapdata.sh $cmdargs
+   echo "Create mapping files for: $res"
+#----------------------------------------------------------------------
+   cmdargs="-r $res"
+   if [ ! -z $LSF_PJL_TYPE ]; then
+      cmdargs="$cmdargs -b"
+   fi
+   time env REGRID_PROC=8 mkmapdata.sh $cmdargs
 done

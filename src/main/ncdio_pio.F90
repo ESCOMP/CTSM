@@ -1549,7 +1549,7 @@ contains
        call ncd_inqvid  (ncid, varname, varid, vardesc)
 
        if (present(nt))      then
-          count(1) = len_trim(data)
+          count(1) = len(data)
           count(2) = 1
           do m = 1,count(1)
              tmpString(m:m) = data(m:m)
@@ -1777,8 +1777,8 @@ contains
           start(1) = 1
           start(2) = 1
           start(3) = nt
-          count(1) = size(data)
-          count(2) = len(data)
+          count(1) = len(data)
+          count(2) = size(data)
           count(3) = 1
           status = pio_put_var(ncid, varid, start, count, data)
        else
@@ -1838,9 +1838,9 @@ contains
        if (present(nt))      then
           start(:) = 1
           start(4) = nt
-          count(1) = size(data,dim=1)
-          count(2) = size(data,dim=2)
-          count(3) = len(data)
+          count(1) = len(data)
+          count(2) = size(data,dim=1)
+          count(3) = size(data,dim=2)
           count(4) = 1
           status = pio_put_var(ncid, varid, start, count, data)
        else

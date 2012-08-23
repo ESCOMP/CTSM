@@ -145,8 +145,8 @@ while [ $# -gt 0 ]; do
 	   verbose="YES"
 	   ;;
        -b|--batch) 
-	   interactive="NO"
-	   ;;
+	      interactive="NO"
+	      ;;
        -d|--debug)
 	   debug="YES"
 	   ;;
@@ -233,21 +233,20 @@ fi
 # Determine all input grid files and output file names 
 #----------------------------------------------------------------------
 
-grids=("ne240np4_nomask" \
-       "ne120np4_nomask")
-
-#grids=("0.1x0.1_nomask"    \
-       #"0.5x0.5_nomask"    \ 
-       #"1.9x2.5_nomask"    \ 
-       #"0.5x0.5_USGS"      \
-       #"0.5x0.5_AVHRR"     \
-       #"0.5x0.5_MODIS"     \
-       #"3x3min_MODIS"      \
-       #"5x5min_nomask"     \
-       #"5x5min_IGBP-GSDP"  \
-       #"5x5min_ISRIC-WISE" \
-       #"10x10min_nomask"   \
-       #"10x10min_IGBPmergeICESatGIS")
+grids=("ne240np4_nomask"   \
+       "ne120np4_nomask"   \
+       "0.1x0.1_nomask"    \
+       "0.5x0.5_nomask"    \ 
+       "1.9x2.5_nomask"    \ 
+       "0.5x0.5_USGS"      \
+       "0.5x0.5_AVHRR"     \
+       "0.5x0.5_MODIS"     \
+       "3x3min_MODIS"      \
+       "5x5min_nomask"     \
+       "5x5min_IGBP-GSDP"  \
+       "5x5min_ISRIC-WISE" \
+       "10x10min_nomask"   \
+       "10x10min_IGBPmergeICESatGIS")
 
 # Set timestamp for names below 
 CDATE="c"`date +%y%m%d`
@@ -328,7 +327,7 @@ case $hostname in
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpirun.lsf"
   fi
-  if [ "$interactive" != "no" ]; then
+  if [ "$interactive" != "NO" ]; then
     # Bluefire specific commands to prepare to run interactively
     export MP_PROCS=$REGRID_PROC
     export MP_EUILIB=ip
@@ -378,22 +377,22 @@ fi
 # batch file that calls this script interactively - you cannot submit
 # this script to the batch system
 
-if [ "$interactive" = "no" ]; then
-  echo "Running in batch mode using MPI"
-  if [ -z "$MPIEXEC" ]; then
-     echo "Name of MPI exec to use was NOT set"
-     echo "Set the environment variable: MPIEXEC"
-     exit 1
-  fi
-  if [ -x "$MPIEXEC" ]; then
-     echo "The MPIEXEC pathname given is NOT an executable: $MPIEXEC"
-     echo "Set the environment variable: MPIEXEC or run in interactive mode without MPI"
-     exit 1
-  fi
-  mpirun=$MPIEXEC
-  echo "Running in batch mode"
+if [ "$interactive" = "NO" ]; then
+   echo "Running in batch mode using MPI"
+   if [ -z "$MPIEXEC" ]; then
+      echo "Name of MPI exec to use was NOT set"
+      echo "Set the environment variable: MPIEXEC"
+      exit 1
+   fi
+   if [ ! -x `which $MPIEXEC` ]; then
+      echo "The MPIEXEC pathname given is NOT an executable: $MPIEXEC"
+      echo "Set the environment variable: MPIEXEC or run in interactive mode without MPI"
+      exit 1
+   fi
+   mpirun=$MPIEXEC
+   echo "Running in batch mode"
 else
-  mpirun=""
+   mpirun=""
 fi
   
 ESMF_REGRID="$ESMFBIN_PATH/ESMF_RegridWeightGen"

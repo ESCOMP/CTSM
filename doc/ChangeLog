@@ -1,4 +1,178 @@
 ===============================================================
+Tag name:  clm4_0_47
+Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
+Date: Thu Aug 23 11:09:27 MDT 2012
+One-line Summary: bug fixes
+
+Purpose of changes:
+
+  Fix some bugs and tag early since CAM needs fix of bug 1538 asap.
+
+Requirements for tag:
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID):
+
+	1534,1533,1507,1444,1538
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/bld/configure
+-- Passes FLAGS down to cesm_lib build and for pio (only for CLM testing)
+
+M       models/lnd/clm/tools/mkmapdata/regridbatch.sh
+M       models/lnd/clm/tools/mkmapdata/mkmapdata.sh
+-- Fixes as per bug 1507.  Logic clean up for interactive and using mpi 
+
+M       models/lnd/clm/bld/build-namelist
+-- Fix as per bug 1538 
+
+M       models/lnd/clm/src/main/controlMod.F90
+-- Fix as per bug 1444.  remove call to  "mpi_bcast (glc_topomax," and logic
+		controlling it.
+
+M       models/lnd/clm/src/main/ncdio_pio.F90
+-- Fix as per bug 1533 and 1534
+
+M       SVN_EXTERNAL_DIRECTORIES
+-- Mistake from last tag.  Replaced two repos with correct trunk-tag urls.
+
+
+Summary of testing:
+
+  build-namelist unit testing:
+    All PASS except:
+		fails involve us20 and wus12 
+		not ok 141 - lnd_in file the same as expected for CN - 94x192 - fixed.  Should pass in next tag.
+		not ok 214 - lnd_in file exists - us20 - no tests in place
+      not ok 219 - lnd_in file exists - wus12 - no tests in place
+      not ok 221 - compare file lnd_in DNE for CN and -res+wus12 - wus12 - no tests in place
+      not ok 222 - compare file temp_file.txt DNE for CN and -res+wus12 - wus12 - no tests in place
+  bluefire:
+
+		016-019 will be removed and put in CESM/CLM tests
+		016 smW51 TSM.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -5 cold .................FAIL! rc= 10
+		017 erW51 TER.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -3+-2 cold ..............FAIL! rc= 5
+		018 brW51 TBR.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -2+-3 cold ..............FAIL! rc= 5
+		019 blW51 TBL.sh _nil3sc_dh clm_std^multi_inst 20020401:3600 10x15 USGS -5 cold .................FAIL! rc= 4
+		
+		036-039 Failed in the past, see prior versions		 
+		036 smU61 TSM.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -6 cold ......FAIL! rc= 10
+		037 erU61 TER.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 10+38 cold ...FAIL! rc= 5
+		038 brU61 TBR.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 -3+-3 cold ...FAIL! rc= 5
+		039 blU61 TBL.sh 21p_cndvcrpsc_dh clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6 48 cold ......FAIL! rc= 4
+
+		049-052 Failed in the past, see prior versions		 
+		049 smCI1 TSM.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 10
+		050 erCI1 TER.sh _sc_dh clm_std 20020101:1800 94x192 T62 -5+-5 arb_ic ...........................FAIL! rc= 5
+		051 brCI1 TBR.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10+-10 arb_ic .........................FAIL! rc= 5
+		052 blCI1 TBL.sh _sc_dh clm_std 20020101:1800 94x192 T62 -10 arb_ic .............................FAIL! rc= 4
+
+  bluefire interactive testing:
+	All PASS execpt:
+		004 blC74 TBL.sh _sc_s clm_std^nl_urb 20020101:1800 1x1_brazil navy -10 arb_ic ..................FAIL! rc= 5
+		008 blC97 TBL.sh _sc_do clm_spin^nl_urb 20030101:1800 4x5 gx3v7@1850 -6 arb_ic ..................FAIL! rc= 5
+		012 blHS3 TBL.sh 17p_cnsc_do clm_usrdat 20030101:1800 13x12pt_f19_alaskaUSA gx1v6 -6 arb_ic .....FAIL! rc= 5
+		016 blCA4 TBL.sh _sc_ds clm_drydep^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic ............FAIL! rc= 5
+		020 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:3600 1x1_mexicocityMEX navy 158 arb_ic ....FAIL! rc= 5
+		024 blCA8 TBL.sh _sc_ds clm_drydep^nl_urb 20021230:3600 1x1_asphaltjungleNJ navy -90 arb_ic .....FAIL! rc= 5
+		026 blCK4 TBL.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 1.9x2.5 gx1v6 -10 cold ...............FAIL! rc= 5
+		028 blCK8 TBL.sh _sc_ds clm_nortm^nl_ptsmode_ocn 20030101:1800 1.9x2.5 gx1v6 -10 cold ...........FAIL! rc= 5
+		030 blC78 TBL.sh _sc_s clm_std^nl_urb 20021231:1800 1x1_brazil navy -10 arb_ic ..................FAIL! rc= 5
+		034 blF93 TBL.sh 17p_sc_do clm_drydep^nl_voc 20021230:1800 4x5 gx3v7 48 cold ....................FAIL! rc= 5
+		038 blC83 TBL.sh _sc_do clm_std^nl_urb 20020115:3600 5x5_amazon navy -10 arb_ic .................FAIL! rc= 5
+		042 blK74 TBL.sh 17p_cndvsc_s clm_std 19971231:1800 1x1_brazil navy -670 arb_ic .................FAIL! rc= 5
+		046 blC63 TBL.sh _sc_do clm_glcmec 19980115:1800 1.9x2.5 gx1v6 48 arb_ic ........................FAIL! rc= 5
+		050 blHQ4 TBL.sh 17p_cnsc_ds clm_drydep 20000214:1800 1x1_brazil navy@2000 -150 cold ............FAIL! rc= 5
+		054 blH43 TBL.sh 17p_cnsc_do clm_transient_20thC 19790101:1800 1.9x2.5 gx1v6@1850-2000 -10 startup FAIL! rc= 5
+		067 bl8Z3 TBLrst_tools.sh 21p_cncrpsc_do interpinic clm_stdIgnYr^nl_crop 20000101:1800 1.9x2.5 gx1v6FAIL! rc= 5
+		Reason:  changed configure, but configure in previous tag not updated.
+		These will pass when a new tag is compared to clm4_0_47
+  bluefire/CESM testing:
+	All PASS except:
+		FAIL  SMS_RLB.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_46 
+		FAIL  SMS_ROA.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_46 
+		FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.tputcomp.clm4_0_46 
+		Reason:  the throughput tolerance is likely still not large enough.
+  bluefire/PTCLM testing: N/A
+  lynx/pgi testing:
+  lynx/pgi interactive testing:
+		004 blC74 TBL.sh _sc_s clm_std^nl_urb 20020101:1800 1x1_brazil navy -10 arb_ic ..................FAIL! rc= 5
+		008 blTZ3 TBL.sh 21p_cncrpsc_do clm_stdIgnYr^nl_crop 20020401:3600 10x15 USGS -10 cold ..........FAIL! rc= 5
+		010 blCL4 TBL.sh _sc_ds clm_nortm^nl_ptsmode 20030101:1800 10x15 USGS -10 cold ..................FAIL! rc= 5
+		014 blCA4 TBL.sh _sc_ds clm_drydep^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic ............FAIL! rc= 5
+		Reason:  changed configure, but configure in previous tag not updated.
+		These will pass when a new tag is compared to clm4_0_47
+  lynx/CESM testing:
+	N/A
+  mirage,storm/ifort interactive testing:
+   All PASS except:
+		70 004 blC74 TBL.sh _sc_s clm_std^nl_urb 20020101:1800 1x1_brazil navy -10 arb_ic ..................FAIL! rc= 5
+		71 007 blD94 TBL.sh _persc_ds clm_per^nl_per 20021231:1200 4x5 gx3v7 144 cold ......................FAIL! rc= 5
+		72 011 blCA4 TBL.sh _sc_ds clm_drydep^nl_urb 20021001:3600 1x1_camdenNJ navy -90 arb_ic ............FAIL! rc= 5
+		73 015 blCA8 TBL.sh _sc_ds clm_drydep^nl_urb 20021230:3600 1x1_asphaltjungleNJ navy -90 arb_ic .....FAIL! rc= 5
+		74 019 blL54 TBL.sh _sc_ds clm_std^nl_urb 20020115:1800 10x15 USGS 48 arb_ic .......................FAIL! rc= 5
+		75 023 blR53 TBL.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:1800 10x15 USGS@1850 48 cold ............FAIL! rc= 5
+		Reason:  changed configure, but configure in previous tag not updated.
+		These will pass when a new tag is compared to clm4_0_47
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_46
+
+Changes answers relative to baseline:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - compset (and additional configure options):
+   - build-namelist options (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_46
 Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
 Date: Wed Aug  8 11:53:44 MDT 2012
@@ -40,7 +214,7 @@ Code reviewed by: self, Erik
 List any svn externals directories updated (csm_share, mct, etc.):
   Created the following tags:
 	https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_120808
-	https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/branches/drvseq4_1_23
+	https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_1_23
 	https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_120807 
 
 List all files eliminated:N/A

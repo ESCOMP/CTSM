@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_47      muszala 08/23/2012 bug fixes
    clm4_0_46      muszala 08/08/2012 R01 support and update externals
    clm4_0_45        sacks 07/20/2012 fix virtual columns; new urban mksurfdata_map
    clm4_0_44         erik 07/09/2012 Add wrf resolutions, update externals to cesm1_1_beta15, all components use build-namelist now
