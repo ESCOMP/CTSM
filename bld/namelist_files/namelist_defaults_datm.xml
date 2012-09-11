@@ -74,8 +74,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="512x1024"                  >share/domains/domain.lnd.T341_gx1v6.111226.nc</domainfile>
 <domainfile hgrid="94x192"      mask="T62"    >share/domains/domain.lnd.T62_T62.090129.nc</domainfile>
 <domainfile hgrid="94x192"      mask="gx1v6"  >share/domains/domain.lnd.T62_gx1v6.090320.nc</domainfile>
-<domainfile hgrid="94x192"      mask="gx3v7"  >share/domains/domain.lnd.T62_gx3v7.090928.nc</domainfile>
-<domainfile hgrid="wr50a"                     >share/domains/domain.lnd.wr50a_wr50a.090310.nc</domainfile>
+<domainfile hgrid="94x192"      mask="gx3v7"  >share/domains/domain.lnd.T62_gx3v7.090911.nc</domainfile>
 <domainfile hgrid="ar9v1"                     >share/domains/domain.lnd.ar9v1_ar9v1.090521.nc</domainfile>
 <domainfile hgrid="ar9v2"                     >share/domains/domain.lnd.ar9v2_ar9v2.090521.nc</domainfile>
 <domainfile hgrid="wr50a"                     >share/domains/domain.lnd.wr50a_ar9v2.090614.nc</domainfile>
@@ -103,7 +102,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <domainfile hgrid="4x5"         mask="gx3v7"  >share/domains/domain.lnd.fv4x5_gx3v7.091218.nc</domainfile>
 <domainfile hgrid="10x15"       mask="USGS"   >share/domains/domain.clm/domain.lnd.fv10x15_USGS.110713.nc</domainfile>
 
-<domainfile hgrid="us20"        mask="us20"   >atm/datm7/domain.lnd.us20_us20.20110426.nc</domainfile>
 <domainfile hgrid="wus12"       mask="wus12"  >share/domains/domain.lnd.wus12_wus12.20101108.nc</domainfile>
 
 <factorfn >null</factorfn>

@@ -770,7 +770,7 @@ for test_id in \${test_list}; do
         echo "PENDING**" >> \${clm_status}
         pending_tests="YES"
     else
-        echo "FAIL! rc= \$rc" >> \${clm_status}
+        echo " rc=\$rc FAIL" >> \${clm_status}
 	if [ \$interactive = "YES" ]; then
 	    if [ "\$CLM_SOFF" != "FALSE" ]; then
 		echo "stopping on first failure"
@@ -804,6 +804,15 @@ if [ \$pending_tests = "YES" ]; then
 	echo "   for the location of test results" >> \${clm_status}
     fi
 fi
+
+if [ "\$interactive" = "YES" ]; then
+   passInt="test_driver.sh-i"
+else
+   passInt="test_driver.sh"
+fi
+
+../../bld/unit_testers/xFail/wrapClmTests.pl -statusFile "\${clm_status}" -numberOfTests "\${num_tests}" -callingScript "\${passInt}"
+
 exit 0
 
 EOF

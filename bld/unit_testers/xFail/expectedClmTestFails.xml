@@ -1,0 +1,96 @@
+<?xml version= "1.0"?>
+
+<expectedFails>
+   <namelistTest> 
+      <bluefire>
+         <IBM>
+            <compare>
+               <entry testId="214" failType="xFail"> us20 not fully implmented </entry>
+               <entry testId="216" failType="xFail"> us20 not fully implmented </entry>
+               <entry testId="219" failType="xFail"> wus12 not fully implmented </entry>
+               <entry testId="221" failType="xFail"> wus12 not fully implmented </entry>
+               <entry testId="222" failType="xFail"> wus12 not fully implmented </entry>
+            </compare>
+            <generate>
+               <entry testId="141" failType="xFail"> us20  not fully implemented </entry>
+               <entry testId="144" failType="xFail"> wus12 not fully implemented </entry>
+            </generate>
+         </IBM>
+      </bluefire>
+      <mirage>
+      </mirage>
+      <lynx>
+      </lynx>
+      <janus>
+         <IBM>
+            <compare>
+            </compare>
+         </IBM>
+      </janus>
+   </namelistTest>
+
+   <clmInteractive> 
+      <bluefire>
+         <IBM>
+            <compare>
+               <entry testId="bl9C4" failType="xFail"> cprnc showing diffs are not b4b </entry>
+            </compare>
+         </IBM>
+      </bluefire>
+      <mirage>
+      </mirage>
+      <lynx>
+         <PGI>
+            <compare>
+            </compare>
+         </PGI>
+      </lynx>
+      <janus>
+      </janus>
+   </clmInteractive>
+
+   <clmBatch> 
+      <bluefire>
+         <IBM>
+            <compare>
+               <entry testId="smW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+               <entry testId="erW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+               <entry testId="brW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+               <entry testId="blW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+               <entry testId="smU61" failType="xFail"> Failing for long time.  endrun initiated from  CNBalanceCheckMod.F90. </entry>
+               <entry testId="erU61" failType="xFail"> Failing for long time.  __cnbalancecheckmod_NMOD_cbalancecheck. </entry>
+               <entry testId="brU61" failType="xFail"> Failing for long time.  Fail because erU61 fails. </entry>
+               <entry testId="blU61" failType="xFail"> Failing for long time.  Fail because erU61 fails. </entry>
+               <entry testId="smCI1" failType="xFail"> Have been failing for a long time . </entry>
+               <entry testId="erCI1" failType="xFail"> Have been failing for a long time. </entry>
+               <entry testId="brCI1" failType="xFail"> Have been failing for a long time. </entry>
+               <entry testId="blCI1" failType="xFail"> Have been failing for a long time. </entry>
+            </compare>
+         </IBM>
+      </bluefire>
+      <mirage>
+      </mirage>
+      <lynx>
+      </lynx>
+      <janus>
+      </janus>
+   </clmBatch>
+
+   <cesm> 
+      <bluefire>
+         <IBM>
+            <compare>
+            </compare>
+            <generate>
+            </generate>
+         </IBM>
+      </bluefire>
+      <mirage>
+      </mirage>
+      <lynx>
+      </lynx>
+      <janus>
+      </janus>
+   </cesm>
+
+</expectedFails> 

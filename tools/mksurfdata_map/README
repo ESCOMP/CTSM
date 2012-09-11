@@ -5,7 +5,7 @@ The output grid is read in from the input namelist and
 can correspond to either a global or regional grid. 
 
 Supported model resolutions are those found in the repository input data directory
-   $DIN_LOC_ROOT/lnd/clm/mappingdata/maps
+   $DIN_LOC_ROOT/lnd/clm2/mappingdata/maps
 
 Surface datasets can either be created for two separate cases
   a) for supported model resolutions

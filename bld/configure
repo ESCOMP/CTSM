@@ -1004,7 +1004,7 @@ EOF
     # PIO library
     #
     # add include to build pio
-    my $bfFixInclude="-I${mct_dir}/mpi-serial";
+    my $bfFixInclude="-I${clm_bld}/../mct/opt-mpiserial-nosmp/mpi-serial -I${clm_bld}/cesm_lib";
     if(-d $pio_dir){
        print "Using existing pio_dir: $pio_dir\n";
     }else{

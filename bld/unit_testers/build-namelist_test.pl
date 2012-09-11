@@ -8,12 +8,14 @@
 #########################
 
 use Test::More;
+use xFail::expectedFail;
 
 #########################
 
 use strict;
 use Getopt::Long;
 use NMLTest::CompFiles;
+use English;
 
 sub usage {
     die <<EOF;
@@ -68,6 +70,23 @@ if (defined($opts{'csmdata'})) {
    $inputdata_rootdir="/glade/proj3/cseg/inputdata";
 }
 
+###################################
+#_# read in expected fail test list
+###################################
+my $compGen;
+if ( $opts{'generate'} eq 1 && !(defined($opts{'compare'}) )) {
+   $compGen='generate';
+} elsif ( defined($opts{'compare'}) ) {
+   $compGen='compare';
+} elsif ( defined($opts{'compare'} && ($opts{'generate'} eq 1 ))) {
+   #_# if compare and generate are both given, use compare
+   $compGen='compare'; 
+}
+
+my $ProgName;
+($ProgName = $PROGRAM_NAME) =~ s!(.*)/!!;
+my $testType="namelistTest";
+
 #
 # Figure out number of tests that will run
 #
@@ -76,6 +95,16 @@ if ( defined($opts{'compare'}) ) {
    $ntests += 99;
 }
 plan( tests=>$ntests );
+
+#_# ============================================================
+#_# setup for xFail module
+#_# ============================================================
+my $xFail = xFail::expectedFail->new($ProgName,$compGen,$ntests);
+my $captOut="";  #_# variable to capture Test::More output
+Test::More->builder->output(\$captOut);
+#_# ============================================================
+#_# 
+#_# ============================================================
 
 # Check for unparsed arguments
 if (@ARGV) {
@@ -106,22 +135,22 @@ print "==================================================\n";
 
 # Simple test -- just run build-namelist with -help option
 eval{ system( "$bldnml -help > $tempfile 2>&1 " ); };
-is( $@, '', "help" );
-&cleanup();
+   is( $@, '', "help" );
+   &cleanup();
 # Simple test -- just run build-namelist with -version option
 eval{ system( "$bldnml -version > $tempfile 2>&1 " ); };
-is( $@, '', "version" );
-system( "/bin/cat $tempfile" );
-&cleanup();
+   is( $@, '', "version" );
+   system( "/bin/cat $tempfile" );
+   &cleanup();
 # Simple test -- just run build-namelist
 eval{ system( "$bldnml > $tempfile 2>&1 " ); };
-is( $@, '', "plain build-namelist" );
-$cfiles->checkfilesexist( "default", $mode );
-# Compare to baseline
-if ( defined($opts{'compare'}) ) {
-   $cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
-   $cfiles->comparefiles( "default", $mode, $opts{'compare'} );
-}
+   is( $@, '', "plain build-namelist" );
+   $cfiles->checkfilesexist( "default", $mode ); 
+   # Compare to baseline
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
+      $cfiles->comparefiles( "default", $mode, $opts{'compare'} );
+   }
 
 print "\n==================================================\n";
 print "Run simple tests with all list options \n";
@@ -153,21 +182,22 @@ print "==================================================\n";
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 -glc_nec 10 -glc_grid gland5 -glc_smb .false.";
    $options .= " -res 0.9x1.25 -rtm off -rtm_tstep 10800 -rcp 2.6";
-eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
-is( $@, '', "options: $options" );
-$cfiles->checkfilesexist( "default", $mode );
-$cfiles->copyfiles( "most_options", $mode );
-# Compare to default
-$cfiles->doNOTdodiffonfile( "lnd_in",    "default", $mode );
-$cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
-$cfiles->comparefiles( "default", $mode );
-# Compare to baseline
-if ( defined($opts{'compare'}) ) {
-   $cfiles->dodiffonfile(      "lnd_in",    "most_options", $mode );
-   $cfiles->doNOTdodiffonfile( "$tempfile", "most_options", $mode );
-   $cfiles->comparefiles( "most_options", $mode, $opts{'compare'} );
-}
-&cleanup();
+
+   eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+   is( $@, '', "options: $options" );
+      $cfiles->checkfilesexist( "default", $mode );
+      $cfiles->copyfiles( "most_options", $mode );
+   # Compare to default
+      $cfiles->doNOTdodiffonfile( "lnd_in",    "default", $mode );
+      $cfiles->doNOTdodiffonfile( "$tempfile", "default", $mode );
+      $cfiles->comparefiles( "default", $mode );
+   # Compare to baseline
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->dodiffonfile(      "lnd_in",    "most_options", $mode );
+      $cfiles->doNOTdodiffonfile( "$tempfile", "most_options", $mode );
+      $cfiles->comparefiles( "most_options", $mode, $opts{'compare'} );
+   }
+   &cleanup();
 
 print "\n==================================================\n";
 print "Test drydep and megan namelists  \n";
@@ -237,6 +267,7 @@ foreach my $options ( "-irrig", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850
    &cleanup();
 }
 
+
 print "\n==================================================\n";
 print "Start Failure testing.  These should fail \n";
 print "==================================================\n";
@@ -262,7 +293,7 @@ my %failtest = (
                                      namelst=>"dtime=1800",
                                    },
      "both co2_type and on nml"  =>{ options=>"-co2_type constant",
-                                     namelst=>"co2_type='prognostic'",
+                                    namelst=>"co2_type='prognostic'",
                                    },
      "both lnd_frac and on nml"  =>{ options=>"-lnd_frac domain.nc",
                                      namelst=>"fatmlndfrc='frac.nc'",
@@ -312,7 +343,7 @@ my @resolutions = split( / /, $reslist );
 my @regional;
 foreach my $res ( @resolutions ) {
    print "=== Test $res === \n";
-   $options  = "-res $res";
+   my $options  = "-res $res";
 
    if ( $res eq "512x1024" ) { 
       $options .= " -sim_year 1850"; 
@@ -460,9 +491,15 @@ foreach my $res ( @glc_res ) {
    }
 }
 
-print "Successully ran all testing for build-namelist\n\n";
-
 system( "/bin/rm $finidat" );
+
+print "\n==================================================\n";
+print " Dumping output  \n";
+print "==================================================\n";
+
+$xFail->parseOutput($captOut);
+
+print "Successully ran all testing for build-namelist\n\n";
 
 &cleanup( "config" );
 system( "/bin/rm lnd_in.default" );
@@ -483,3 +520,4 @@ sub cleanup {
      system( "/bin/rm $tempfile *_in" );
   }
 }
+

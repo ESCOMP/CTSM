@@ -443,14 +443,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 -->
 
 <fpftdyn hgrid="ne16np4"       sim_year_range="1850-2000" 
- irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne16np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne16np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
 <fpftdyn hgrid="ne30np4"       sim_year_range="1850-2000" 
- irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne30np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_hist_simyr1850-2005_c120907.nc</fpftdyn>
 <fpftdyn hgrid="ne60np4"       sim_year_range="1850-2000" 
- irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne60np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne60np4_hist_simyr1850-2005_c120907.nc</fpftdyn>
 <fpftdyn hgrid="ne120np4"      sim_year_range="1850-2000" 
- irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_ne120np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
-
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
 
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid hgrid="512x1024"  >lnd/clm2/griddata/griddata_512x1024_c100513.nc</fatmgrid>
@@ -462,7 +461,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmgrid hgrid="94x192"    >lnd/clm2/griddata/griddata_94x192_c081219.nc</fatmgrid>
 
 <fatmgrid hgrid="wus12"     >lnd/clm2/griddata/fracdata_wus12_wus12_111215.nc</fatmgrid>
-<fatmgrid hgrid="us20"      >lnd/clm2/griddata/fracdata_us20_us20.20120105.nc</fatmgrid>
 
 <fatmgrid hgrid="0.23x0.31" >lnd/clm2/griddata/griddata_0.23x0.31_c070927.nc</fatmgrid>
 <fatmgrid hgrid="0.47x0.63" >lnd/clm2/griddata/griddata_0.47x0.63_c070918.nc</fatmgrid>
@@ -1072,7 +1070,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="512x1024"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/512x1024/map_5x5min_nomask_to_512x1024_nomask_aave_da_c110920.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="512x1024" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/512x1024/map_5x5min_ISRIC-WISE_to_512x1024_nomask_aave_da_c111115.nc</map>
+>lnd/clm2/mappingdata/maps/512x1024/map_5x5min_ISRIC-WISE_to_512x1024_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="512x1024"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/512x1024/map_3x3min_MODIS_to_512x1024_nomask_aave_da_c111111.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="512x1024" to_lmask="nomask"
@@ -1190,7 +1188,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="4x5"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/4x5/map_5x5min_nomask_to_4x5_nomask_aave_da_c110822.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="4x5" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/4x5/map_5x5min_ISRIC-WISE_to_4x5_nomask_aave_da_c111115.nc</map>
+>lnd/clm2/mappingdata/maps/4x5/map_5x5min_ISRIC-WISE_to_4x5_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="4x5"    to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/4x5/map_3x3min_MODIS_to_4x5_nomask_aave_da_c111111.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="4x5" to_lmask="nomask"
@@ -1293,9 +1291,9 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne4np4"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_nomask_to_ne4np4_nomask_aave_da_c110923.nc</map>
 <map frm_hgrid="5x5min"   frm_lmask="ISRIC-WISE" to_hgrid="ne4np4" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_ISRIC-WISE_to_ne4np4_nomask_aave_da_c111115.nc</map>
+>lnd/clm2/mappingdata/maps/ne4np4/map_5x5min_ISRIC-WISE_to_ne4np4_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="MODIS"  to_hgrid="ne4np4"    to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_MODIS_to_ne4np4_nomask_aave_da_c111111.nc</map>
+>lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_MODIS_to_ne4np4_nomask_aave_da_c120906.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="ne4np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne4np4/map_3x3min_LandScan2004_to_ne4np4_nomask_aave_da_c120518.nc</map>
 <map frm_hgrid="ne4np4"    frm_lmask="nomask" to_hgrid="0.5x0.5" to_lmask="nomask"

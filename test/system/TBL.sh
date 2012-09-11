@@ -58,22 +58,24 @@ if [ $rc -ne 0 ]; then
 fi
 
 if [ -n "${BL_ROOT}" ]; then
-    if [ -z "$BL_TESTDIR" ]; then
-	BL_TESTDIR=${CLM_TESTDIR}.bl
-    fi
-    echo "TBL.sh: generating baseline data from root $BL_ROOT - results in $BL_TESTDIR"
+   if [ -z "$BL_TESTDIR" ]; then
+	   BL_TESTDIR=${CLM_TESTDIR}.bl
+      export MCT_LIBDIR=${CLM_TESTDIR}.bl/mct
+      export PIO_LIBDIR=${CLM_TESTDIR}.bl/pio
+   fi
+   echo "TBL.sh: generating baseline data from root $BL_ROOT - results in $BL_TESTDIR"
 
-    echo "TBL.sh: calling ****baseline**** TSM.sh for smoke test"
-    bl_dir=`/bin/ls -1d ${BL_ROOT}/models/lnd/clm/test/system`
-    env CLM_TESTDIR=${BL_TESTDIR} \
+   echo "TBL.sh: calling ****baseline**** TSM.sh for smoke test"
+   bl_dir=`/bin/ls -1d ${BL_ROOT}/models/lnd/clm/test/system`
+   env CLM_TESTDIR=${BL_TESTDIR} \
 	CLM_SCRIPTDIR=$bl_dir \
 	$bl_dir/TSM.sh $1 $2 $3 $4 $5 $6 $7
-    rc=$?
-    if [ $rc -ne 0 ]; then
-	echo "TBL.sh: error from *baseline* TSM.sh= $rc" 
-	echo "FAIL.job${JOBID}" > TestStatus
-	exit 5
-    fi
+   rc=$?
+   if [ $rc -ne 0 ]; then
+	   echo "TBL.sh: error from *baseline* TSM.sh= $rc" 
+	   echo "FAIL.job${JOBID}" > TestStatus
+	   exit 5
+   fi
 fi
 
 echo "TBL.sh: starting b4b comparisons " 
