@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_49         erik 09/16/2012 Move clm testing to use CESM test framework
    clm4_0_48      muszala 09/11/2012 bug fixes, xFail to tests and normalize test output for CLM
    clm4_0_47      muszala 08/23/2012 bug fixes
    clm4_0_46      muszala 08/08/2012 R01 support and update externals

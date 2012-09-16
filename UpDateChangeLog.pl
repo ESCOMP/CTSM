@@ -12,6 +12,7 @@
 
 use strict;
 use Getopt::Long;
+use IO::File;
 #use warnings;
 #use diagnostics;
 
@@ -27,7 +28,12 @@ SYNOPSIS
      $ProgName [options] <tag-name> <one-line-summary>
 
 OPTIONS
-     -update                Just update the date/time for the latest tag
+     -compbrnch version     Enter clm branch  version to compare to (under branch_tags in repo).
+      [or -cb]
+     -comptrunk version     Enter clm trunk version to compare to (under trunk_tags in repo).
+      [or -ct]
+     -help   [or -h]        Help on this script.
+     -update [or -u]        Just update the date/time for the latest tag
                             In this case no other arguments should be given.
 ARGUMENTS
      <tag-name>             Tag name of tag to document
@@ -40,13 +46,28 @@ EXAMPLES:
      To document a new tag
 
      $ProgName clm3_7_1 "Description of this tag"
+
+     To document a new tag and compare expected fails to previous tag.
+
+     $ProgName clm4_0_27 "Description of this tag" -ct clm4_0_26
 EOF
 }
 
-my %opts = { update => undef };
+my %opts = { 
+               help      => 0,
+               update    => 0,
+               comptrunk => undef,
+               compbrnch => undef,
+           };
 GetOptions( 
-    "update" => \$opts{'update'}
+    "h|help"         => \$opts{'help'},
+    "u|update"       => \$opts{'update'},
+    "ct|comptrunk=s" => \$opts{'comptrunk'},
+    "cb|compbrnch=s" => \$opts{'compbrnch'},
    );
+if ( $opts{'help'} ) {
+  usage();
+}
 my $tag; my $sum;
 
 if ( ! $opts{'update'} ) {
@@ -97,7 +118,7 @@ if ( $date !~ /.+/ )  {
 #
 # Deal with ChangeLog file
 #
-open( FH, ">$changelog_tmp" ) || die "ERROR:: trouble opening file: $changelog_tmp";
+my $fh = IO::File->new($changelog_tmp, '>') or die "** $ProgName - can't open file: $changelog_tmp\n";
 
 #
 # If adding a new tag -- read in template and add information in
@@ -107,18 +128,29 @@ if ( ! $opts{'update'} ) {
    while( $_ = <TL> ) {
      if (      $_ =~ /Tag name:/ ) {
         chomp( $_ );
-        print FH "$_ $tag\n";
+        print $fh "$_ $tag\n";
      } elsif ( $_ =~ /Originator/ ) {
         chomp( $_ );
-        print FH "$_ $user ($fullname)\n";
+        print $fh "$_ $user ($fullname)\n";
      } elsif ( $_ =~ /Date:/ ) {
         chomp( $_ );
-        print FH "$_ $date\n";
+        print $fh "$_ $date\n";
      } elsif ( $_ =~ /One-line Summary:/ ) {
         chomp( $_ );
-        print FH "$_ $sum\n";
+        print $fh "$_ $sum\n";
+     } elsif ( $_ =~ /CLM tag used for the baseline comparison tests if applicable:/ ) {
+        chomp( $_ );
+        if (      defined($opts{'comptrunk'}) ) {
+           print $fh "$_ $opts{'comptrunk'}\n";
+           &AddExpectedFailDiff( $fh, "trunk_tags/$opts{'comptrunk'}" );
+        } elsif ( defined($opts{'compbrnch'}) ) {
+           print $fh "$_ $opts{'compbrnch'}\n";
+           &AddExpectedFailDiff( $fh, "branch_tags/$opts{'compbrnch'}" );
+        } else {
+           print $fh "$_\n";
+        }
      } else {
-        print FH $_;
+        print $fh $_;
      }
    }
    close( TL );
@@ -132,7 +164,7 @@ while( $_ = <CL> ) {
      $oldTag = $1;
      if ( (! $opts{'update'}) && ($tag eq $oldTag) ) {
         close( CL );
-        close( FH );
+        close( $fh );
         system( "/bin/rm -f $changelog_tmp" );
         print "ERROR:: New tag $tag matches a old tag name\n";
         usage();
@@ -140,16 +172,16 @@ while( $_ = <CL> ) {
   # If updating the date -- find first occurance of data and change it 
   # Then turn the update option to off
   } elsif ( ($update) && ($_ =~ /(Date:)/) ) {
-     print FH "Date: $date\n";
+     print $fh "Date: $date\n";
      print "Update $oldTag with new date: $date\n";
      $update = undef;
      $_ = <CL>;
   }
-  print FH $_;
+  print $fh $_;
 }
 # Close files and move to final name
 close( CL );
-close( FH );
+$fh->close( );
 system( "/bin/mv    $changelog_tmp $changelog" );
 #
 # Deal with ChangeSum file
@@ -200,3 +232,27 @@ system( "/bin/cp -fp $changelog models/lnd/clm/doc/." );
 system( "/bin/cp -fp $changesum models/lnd/clm/doc/." );
 system( "/bin/chmod 0444 models/lnd/clm/doc/$changelog" );
 system( "/bin/chmod 0444 models/lnd/clm/doc/$changesum" );
+
+sub AddExpectedFailDiff {
+#
+# Add information about the expected fail difference
+#
+  my $fh      = shift;
+  my $version = shift;
+
+  my $SVN_MOD_URL  = "https://svn-ccsm-models.cgd.ucar.edu/clm2/";
+  my $expectedFail = `find . -name 'expected*Fail*.xml' -print`;
+  if ( $expectedFail eq "" ) {
+     die "ERROR:: expectedFails file NOT found here\n";
+  }
+
+  `svn ls $SVN_MOD_URL/$version`               || die "ERROR:: Bad version to compare to: $version\n";
+  `svn ls $SVN_MOD_URL/$version/$expectedFail` || die "ERROR:: expectedFails file NOT found in: $version\n";
+  print $fh "\nDifference in expected fails from testing:\n\n";
+  my $diff = `svn diff --old $SVN_MOD_URL/$version/$expectedFail \ \n --new $expectedFail`;
+  if ( $diff eq "" ) {
+     print $fh "    No change in expected failures in testing\n";
+  } else {
+     print $fh $diff;
+  }
+}

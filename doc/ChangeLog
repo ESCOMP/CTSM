@@ -1,4 +1,226 @@
 ===============================================================
+Tag name:  clm4_0_49
+Originator(s):  erik (Kluzek Erik 303-497-1326 CGD)
+Date: Sun Sep 16 01:05:04 MDT 2012
+One-line Summary: Move clm testing to use CESM test framework
+
+Purpose of changes:
+
+Move testing for CLM from CLM stand-alone test_driver.sh to one based on
+the CESM testing framework. Create CLM specific tests-lists, user_nl_dir, 
+and compset files to handle most CLM testing.
+
+Requirements for tag:
+
+ Move major testing from test_driver.sh to one based on CESM framework. Try
+ to get most of it to work.
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   Update to cesm1_1_beta18b
+
+    scripts updated to: scripts4_120915
+    scripts updated to: Machines_120915
+    mapping updated to: mapping_120816
+    stubs   updated to: stubs1_3_05
+    drv     updated to: drvseq1_4_26
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+A  +    models/lnd/clm/test/system/test_system ---- New main testing script for CLM.
+            wrapper script to CESM scripts/create_test_suite with behavior
+            similar to test_driver.sh
+
+  -b directory [or --baseline]  baseline directory
+  -c version   [or --compare]   version to compare to 
+                                (generate must already have been run to create these)
+  -d                            debug usage -- display tests that will run -- but 
+                                do NOT actually execute them
+  -g version   [or --generate]  name of this version to generate version as
+  -h           [or --help]      displays help
+  -i                            interactive usage
+  -l list      [or --list]      input test list to use instead of default 
+                                (path relative to this directory)
+  -o options   [or --options]   options to pass to create_test_suite
+  -p compiler  [or --compiler]  compiler to use instead of default
+  -s           [or --shortlist] use the short test list
+
+ Typical use:
+
+        cd models/lnd/clm/test/system
+	test_system -i -c clm4_0_48 -g clm4_0_49
+	test_system    -c clm4_0_48 -g clm4_0_49
+
+
+>>>>>>>>>>>>> Test lists
+A  +    models/lnd/clm/test/system/mirage.interactive
+A  +    models/lnd/clm/test/system/lynx.interactive
+A  +    models/lnd/clm/test/system/shortlist.interactive
+A  +    models/lnd/clm/test/system/bluefire.batch
+A  +    models/lnd/clm/test/system/bluefire.interactive
+A  +    models/lnd/clm/test/system/lynx.batch
+A  +    models/lnd/clm/test/system/shortlist.batch
+
+>>>>>>>>>>>>> compset file and user_nl_* files for testing
+A  +    models/lnd/clm/test/system/config_files/config_CLMtestCompsets.xml
+A  +    models/lnd/clm/test/system/user_nl_dirs
+A  +    models/lnd/clm/test/system/user_nl_dirs/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/crop
+A  +    models/lnd/clm/test/system/user_nl_dirs/crop/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/cn_conly
+A  +    models/lnd/clm/test/system/user_nl_dirs/cn_conly/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/voc
+A  +    models/lnd/clm/test/system/user_nl_dirs/voc/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/voc/user_nl_cpl
+A  +    models/lnd/clm/test/system/user_nl_dirs/glcMEC
+A  +    models/lnd/clm/test/system/user_nl_dirs/glcMEC/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/glcMEC/user_nl_cpl
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/test/system/tests_posttag_lynx_nompi
+M       models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+M       models/lnd/clm/bld/listDefaultNamelist.pl
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml - New failed
+           tests from new test framework
+M       models/lnd/clm/bld/clm.buildnml.csh - Copy drv_flds_in if clm creates it
+           and if it doesn't already exist.
+M       UpDateChangeLog.pl -- Add some support for xFail. Not fully working.
+
+Machines testing ran on:
+
+  build-namelist unit tester: yes
+
+  test_system testing:
+
+     bluefire batch:             yes
+     bluefire interactive:       yes
+     bluefire/CESM:              yes
+     lynx/pgi batch:             yes
+     lynx/pgi interactive:       yes
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_48
+
+Difference in expected fails from testing:
+
+Index: expectedClmTestFails.xml
+===================================================================
+--- expectedClmTestFails.xml	(.../trunk_tags/clm4_0_48/models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml)	(revision 40288)
++++ expectedClmTestFails.xml	(.../trunk/models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml)	(revision 40288)
+@@ -34,6 +34,10 @@
+          <IBM>
+             <compare>
+                <entry testId="bl9C4" failType="xFail"> cprnc showing diffs are not b4b </entry>
++               <entry testId="sm514" failType="xFail"> problem configuring </entry>
++               <entry testId="bl514" failType="xFail"> problem configuring </entry>
++               <entry testId="sm8Z3" failType="xFail"> clm stand-alone can no longer work </entry>
++               <entry testId="bl8Z3" failType="xFail"> clm stand-alone can no longer work </entry>
+             </compare>
+          </IBM>
+       </bluefire>
+@@ -71,14 +75,70 @@
+       <mirage>
+       </mirage>
+       <lynx>
++         <intel>
++              <entry testId="ERS.1x1_brazil.I_2000.lynx_intel"                failType="FAIL">CESM script issue</entry>
++              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel" failType="FAIL">CESM script issue</entry>
++         </intel>
+       </lynx>
+       <janus>
+       </janus>
+    </clmBatch>
+ 
++   <test_system_interactive> 
++      <bluefire>
++         <IBM>
++              <entry testId="ERS_D.CLM_USRDAT.IalaskaCN.bluefire_ibm"        failType="RUN">CESM script issue</entry>
++              <entry testId="ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="FAIL">Restart length different</entry>
++              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC"           failType="FAIL">Restart length different</entry>
++              <entry testId="ERS48s_D_P1x64.f45_g37.I_2000_VOC"              failType="RUN">Initial simulation fails</entry>
++              <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
++         </IBM>
++      </bluefire>
++      <lynx>
++         <pgi>
++              <entry testId="SMS_D.1x1_vancouverCAN.I1PT.lynx_pgi"           failType="SFAIL">datm namelist problem for single-point forcing</entry>
++              <entry testId="ERS.1x1_mexicocityMEX.I1PT.lynx_pg"             failType="SFAIL">datm namelist problem for single-point forcing</entry>
++         </pgi>
++      </lynx>
++   </test_system_interactive> 
++
++   <test_system_batch> 
++      <bluefire>
++         <IBM>
++              <entry testId="ERS_D_P96x32.T62_g37.I_2000"             failType="SFAIL">T62 not working</entry>
++              <entry testId="ERS211d_P192x2.f19_g16.I_2000_CNDV_CROP" failType="SFAIL">ignore_ic_date is incompatable with crop!</entry>
++              <entry testId="ERS48s_D_P64x16.ne30_g16.ICN"            failType="SFAIL">CESM script problem didn't see both files</entry>
++              <entry testId="ERS211d.f10_f10.I_2000_VOC_CN"           failType="SFAIL">CESM script problem didn't see both files</entry>
++         </IBM>
++      </bluefire>
++      <lynx>
++      </lynx>
++   <test_system_batch> 
++  
+    <cesm> 
+       <bluefire>
+          <IBM>
++              <entry testId="SBN.1x1_mexicocityMEX.I1PT"     failType="SFAIL">datm namelist issue</entry>
++              <entry testId="SBN.1x1_vancouverCAN.I1PT"      failType="SFAIL">datm namelist issue</entry>
++              <entry testId="SBN.1x1_urbanc_alpha.I1PT"      failType="SFAIL">datm namelist issue</entry>
++              <entry testId="SBN.1x1_asphalt_jungle.ICNTEST" failType="TFAIL">datm namelist issue</entry>
++              <entry testId="SBN.wus12_wus12.I"              failType="SFAIL">missing wus12 datasets</entry>
++              <entry testId="SBN.T42_g16.I1850"              failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.T31_g16.I1850"              failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.f05_g16.I20TR"              failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.1x1_tropicAtl.I20TR"        failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.ne30_g16.I20TR"             failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.ne120_g16.I20TRCN"          failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.f05_g16.IRCP26CN"           failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.f05_g16.IRCP45CN"           failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.f05_g16.IRCP60CN"           failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.f05_g16.IRCP85CN"           failType="SFAIL">missing datasets</entry>
++         </IBM>
++      </bluefire>
++   </cesm>
++   <cesm> 
++      <bluefire>
++         <IBM>
+             <compare>
+             </compare>
+             <generate>
+
+Changes answers relative to baseline: No bit-for-bit 
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_48
 Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
 Date: Tue Sep 11 09:14:40 MDT 2012

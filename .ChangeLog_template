@@ -41,17 +41,24 @@ List all files added and what they do:
 
 List all existing files that have been modified, and describe the changes:
 
-Summary of testing:
+Machines testing ran on:
 
-  build-namelist unit testing:
-  bluefire:
-  bluefire interactive testing:
-  bluefire/CESM testing:
-  bluefire/PTCLM testing:
-  lynx/pgi testing:
-  lynx/pgi interactive testing:
-  lynx/CESM testing:
-  mirage,storm/ifort interactive testing:
+  build-namelist unit tester:
+
+  CESM test lists:
+
+    bluefire/CESM
+    lynx/CESM
+
+  bluefire/PTCLM
+
+  test_system testing:
+
+    bluefire batch:
+    bluefire interactive:
+    lynx/pgi batch:
+    lynx/pgi interactive:
+    mirage,storm/ifort interactive:
 
 CLM tag used for the baseline comparison tests if applicable:
 

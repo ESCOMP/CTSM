@@ -120,6 +120,8 @@ $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \
     
 if (-d ${RUNDIR}) then
   cp $CASEBUILD/clmconf/lnd_in ${RUNDIR}/$lnd_in_filename || exit -2
+  # Only copy drv_flds_in namelist file if one doesn't already exist
+  if ( ! -f "${RUNDIR}/drv_flds_in" ) cp $CASEBUILD/clmconf/drv_flds_in ${RUNDIR}/. >& /dev/null
 endif
 
 @ inst_counter = $inst_counter + 1

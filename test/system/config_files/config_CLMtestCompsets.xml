@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet type="text/xsl" href="config_compsets.xsl" ?>
+
+<config_compset>
+
+<!--  
+
+    config_CLMtestCompsets.xml
+
+    Configurations and compsets ONLY for testing 
+    specific configurations of CLM "I" cases.
+
+    For documentation on how this file is setup
+    and works see the main config_compsets.xml file.
+
+-->
+
+<!-- ===================================== -->
+<!-- GEN_COMPSET_MATCH settings            -->
+<!-- ===================================== -->
+
+<compset GEN_COMPSET_MATCH="_CN"
+         CLM_CONFIG_OPTS="-bgc cn"
+/>
+
+<compset GEN_COMPSET_MATCH="_CNDV"
+         RUN_STARTDATE=" 1997-12-31"
+         CLM_CONFIG_OPTS="-bgc cndv"
+/>
+
+<compset GEN_COMPSET_MATCH="_CROP"
+         CLM_BLDNML_OPTS="-ignore_ic_year -note"
+         CLM_CONFIG_OPTS="-crop on"
+/>
+
+<compset GEN_COMPSET_MATCH="_ADSPIN"
+         RUN_STARTDATE="1850-01-15"
+         CLM_CONFIG_OPTS="-spinup AD"
+/>
+
+<compset GEN_COMPSET_MATCH="_EXSPIN"
+         RUN_TYPE="hybrid" GET_REFCASE="TRUE" 
+         CLM_CONFIG_OPTS="-spinup exit"
+/>
+
+<compset GEN_COMPSET_MATCH="_SNCRFRC"
+         CLM_CONFIG_OPTS="-snicar_frc on"
+/>
+
+<compset GEN_COMPSET_MATCH="_VOC"
+         RUN_STARTDATE=" 2002-12-30" ATM_NCPL="24"
+         CLM_BLDNML_OPTS="-drydep -megan -note"
+/>
+
+<compset GEN_COMPSET_MATCH="_GLCMECPD"
+         RUN_STARTDATE="1980-01-15"
+         CLM_NML_USE_CASE="glacierMEC_pd"
+         GLC_NEC="10"
+/>
+
+<compset GEN_COMPSET_MATCH="_f19_alaskaUSA"
+         VALID_GRID_MATCH="CLM_USRDAT"   
+         RUN_STARTDATE="2003-01-01"
+         CLM_USRDAT_NAME="13x12pt_f19_alaskaUSA" 
+         ATM_DOMAIN_FILE="domain.lnd.${CLM_USRDAT_NAME}_gx1v6.nc"
+         LND_DOMAIN_FILE="domain.lnd.${CLM_USRDAT_NAME}_gx1v6.nc"
+/> 
+
+<!-- ===================================== -->
+<!-- I_                                    -->
+<!-- ===================================== -->
+
+<compset BEG_COMPSET_MATCH="I_"
+         COMP_ATM="datm" COMP_LND="clm" COMP_ICE="sice" COMP_OCN="socn" COMP_GLC="sglc"
+         DATM_MODE="CLM_QIAN" 
+         CLM_BLDNML_OPTS="-note" BUDGETS="TRUE" BFBFLAG="TRUE" DOUT_S="FALSE"
+         CCSM_CCOST="-2" 
+/>
+
+<compset BEG_COMPSET_MATCH="I_1850-2000" 
+         CCSM_CO2_PPMV="367.0" 
+         CLM_NML_USE_CASE="20thC_transient" 
+         DATM_PRESAERO="trans_1850-2000"
+         DATM_CLMNCEP_YR_ALIGN="1895" 
+         DATM_CLMNCEP_YR_START="1948" 
+         DATM_CLMNCEP_YR_END="1972" 
+         RUN_STARTDATE="1979-01-01" 
+/>
+
+<compset BEG_COMPSET_MATCH="I_1850"
+         CCSM_CO2_PPMV="284.7"
+         CLM_NML_USE_CASE="1850_control" 
+	 DATM_PRESAERO="clim_1850"
+         DATM_CLMNCEP_YR_ALIGN="1" 
+         DATM_CLMNCEP_YR_START="1948" 
+         DATM_CLMNCEP_YR_END="1972" 
+/>
+
+<compset BEG_COMPSET_MATCH="I_2000"
+         CCSM_CO2_PPMV="367.0"
+         CLM_NML_USE_CASE="2000_control" 
+	 DATM_PRESAERO="clim_2000"
+         DATM_CLMNCEP_YR_ALIGN="1" 
+         DATM_CLMNCEP_YR_START="1972" 
+         DATM_CLMNCEP_YR_END="2004" 
+/>
+
+<compset BEG_COMPSET_MATCH="I_2000_1PTFRC"
+         DATM_MODE="CLM1PT"
+         VALID_GRID_MATCH="1x1_mexicocityMEX|1x1_vancouverCAN|1x1_urbanc_alpha|CLM_USRDAT"
+/>
+
+<compset NAME="I_2000" SHORTNAME="I"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000" 
+/>
+
+<compset NAME="I_2000_CN_f19_alaskaUSA" SHORTNAME="IalaskaCN"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000 for CLM_USRDAT_NAME at f19 resolution over Alaska" 
+/>
+
+<compset NAME="I_2000_VOC" SHORTNAME="IVOC"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000, VOC"
+/>
+
+<compset RES_COMPSET_MATCH="I_2000" GRID_MATCH="1x1_asphaltjungleNJ"
+         RUN_STARTDATE="2002-12-30" ATM_NCPL="24"
+/>
+
+<compset RES_COMPSET_MATCH="I_2000" GRID_MATCH="1x1_brazil"
+         RUN_STARTDATE="2002-12-31"
+/>
+
+<compset NAME="I_2000_VOC_CN" SHORTNAME="IVCN"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC on"
+/>
+
+<compset NAME="I_2000_VOC_SNCRFRC_CN" SHORTNAME="IVSCN"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC and SNICAR-FRC on"
+/>
+
+<compset NAME="I_2000_VOC_SNCRFRC_CN_GLCMECPD" SHORTNAME="IVSCNGLC"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC Glc-MEC and SNICAR-FRC on"
+/>
+
+<compset NAME="I_1850-2000_VOC_SNCRFRC_CN" SHORTNAME="I20TR_VSCN"
+         DESC="CLM with QIAN atm input data for 1850-2000 transient aerosol deposition and land-use change and Carbon Nitrogen (CN), VOC and SNICAR-FRC on"
+/>
+
+<compset NAME="I_2000_GLCMECPD" SHORTNAME="IGLCMEC"
+         DESC="CLM with QIAN atm input data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000, Glacier Multi-Elev.  classes on"
+/>
+
+<compset NAME="I_2000_CN_CROP" SHORTNAME="ICNCROP"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) with prognostic Crop model, CO2 level and Aerosol deposition for 2000"
+/>
+
+<compset NAME="I_2000_CNDV_CROP" SHORTNAME="ICNDVCROP"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CNDV (Carbon Nitrogen Dynamic Vegetation) with prognostic Crop model, CO2 level and Aerosol deposition for 2000"
+/>
+
+<compset NAME="I_2000_CNDV" SHORTNAME="ICNDV"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CNDV (Carbon Nitrogen Dynamic Vegetation), CO2 level and Aerosol deposition for 2000"
+/>
+
+<compset NAME="I_1850_CN_ADSPIN" SHORTNAME="ICNADSPIN"
+         DESC="CLM with QIAN atm input data for 1948-1972 and CN (Carbon Nitrogen) in AD spinup mode, CO2 level and Aerosol deposition for 1850"
+/>
+
+<compset NAME="I_1850_CN_EXSPIN" SHORTNAME="ICNEXSPIN"
+         DESC="CLM with QIAN atm input data for 1948-1972 and CN (Carbon Nitrogen) in exit spinup mode, CO2 level and Aerosol deposition for 1850"
+/>
+
+<compset RES_COMSET_MATCH="I_1850_CN_EXSPIN" GRID_MATCH="f09_g16"
+         RUN_REFCASE="I1850CN_f09_g16_c100503"  RUN_REFDATE="0001-01-01" 
+/>
+
+<compset RES_COMPSET_MATCH="I_2000_CN_EXSPIN" GRID_MATCH="f09_g16"
+         RUN_TYPE="branch" GET_REFCASE="TRUE" 
+         RUN_REFCASE="I2000CN_f09_g16_c100503" RUN_REFDATE="0001-01-01" 
+/>
+
+<compset NAME="I_2000_1PTFRC" SHORTNAME="I1PT"
+         DESC="CLM with single point tower site atm input data and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000" 
+/>
+
+<compset NAME="I_2000_CN" SHORTNAME="ICN"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) biogeochemistry, CO2 level and Aerosol deposition for 2000"
+         CCSM_CCOST="-2" 
+/>
+
+<compset NAME="I_1850_SPINUP_3HrWx_CN" SHORTNAME="I1850SPINUPCN"
+         DESC="CLM with BCN CPLHIST 3-hourly weather forcing data and half-hourly solar 
+               for 1850 spinup of CN (Carbon Nitrogen) biogeochemistry, CO2 level and Aerosol deposition for 1850"
+         DATM_MODE="CPLHIST3HrWx" 
+         RUN_STARTDATE="2003-01-01"
+         CLM_NML_USE_CASE="1850_control" 
+         DATM_CPLHIST_CASE="b40.1850.track1.1deg.006a"
+         DATM_CPLHIST_YR_ALIGN="1" 
+         DATM_CPLHIST_YR_START="960" 
+         DATM_CPLHIST_YR_END="1030" 
+	 DATM_PRESAERO="clim_1850" 
+/>
+
+</config_compset>
+

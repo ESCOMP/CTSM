@@ -194,10 +194,18 @@ sub GetListofNeededFiles {
      }
   }
   my %inputopts;
-  $inputopts{'nldef_file'}     = "$cfgdir/namelist_files/namelist_definition.xml";
+  my $datmblddir             = "$cfgdir/../../../../models/atm/datm/bld";
+  my @nl_definition_files    = (
+                                 "$datmblddir/namelist_files/namelist_definition_datm.xml",
+                                 "$cfgdir/namelist_files/namelist_definition.xml"
+                               );
+  $inputopts{'nldef_files'}    = \@nl_definition_files;
   $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition.xml";
 
-  my $definition = Build::NamelistDefinition->new( $inputopts{'nldef_file'} );
+  my $definition = Build::NamelistDefinition->new( $nl_definition_files[0] );
+  foreach my $nl_defin_file ( @nl_definition_files ) {
+     $definition->add( "$nl_defin_file" );
+  }
   my $cfg = Build::Config->new( $inputopts{'empty_cfg_file'} );
 
   # Resolutions...
