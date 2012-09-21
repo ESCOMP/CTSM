@@ -11,7 +11,7 @@ module decompInitMod
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
-  use clm_mct_mod
+  use mct_mod
   use decompMod
 !
 ! !PUBLIC TYPES:

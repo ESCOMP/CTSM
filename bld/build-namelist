@@ -124,11 +124,6 @@ OPTIONS
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
-     -rtm <name>              Turn on River Transport Model (RTM)  
-                              [on | off] (default is on)
-     -rtm_tstep "seconds"     Specify river transport model time step size (seconds) 
-                              (used to set rtm_nsteps if RTM on)
-     -rtm_res "resolution"    Specify river transport model resolution. (used if RTM on)
      -s                       Turns on silent mode - only fatal messages issued.
      -sim_year "year"         Year to simulate for input datasets 
                               (i.e. 1850, 2000, 1850-2000, 1850-2100)
@@ -224,7 +219,6 @@ my %opts = ( config                => $cfg_cache,
 	     dir                   => $outdirname,
 	     rcp                   => "default",
 	     drv_final_spinup      => undef,
-             rtm                   => "default",
              sim_year              => "default",
              chk_res               => undef,
              note                  => undef,
@@ -232,8 +226,6 @@ my %opts = ( config                => $cfg_cache,
 	     megan                 => 0,
              irrig                 => undef,
 	     res                   => "default",
-	     rtm_res               => "default",
-	     rtm_tstep             => undef,
 	     silent                => 0,
              datm_source           => "default",
              datm_presaero         => "default",
@@ -276,9 +268,6 @@ GetOptions(
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
-    "rtm=s"                     => \$opts{'rtm'},
-    "rtm_res=s"                 => \$opts{'rtm_res'},
-    "rtm_tstep=i"               => \$opts{'rtm_tstep'},
     "rcp=s"                     => \$opts{'rcp'},
     "drv_runlength=s"           => \$opts{'drv_runlength'},
     "drv_final_spinup=s"        => \$opts{'drv_final_spinup'},
@@ -689,51 +678,6 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var has a value ($val) that is NOT valid. Valid values are:
 @valid_values\n";
-}
-
-# rtm
-$var = "rtm";
-if ( $opts{$var} ne "default" ) {
-    $val = $opts{$var};
-} else {
-    my %settings;
-    $settings{'hgrid'} = $res;
-    if (defined $opts{'clm_usr_name'}) {
-       $settings{'clm_usr_name_set'} = ".true.";
-    }
-    $val = $defaults->get_value( $var, \%settings );
-}
-my $rtm = $val;
-$opts{'rtm'} = $rtm;
-$val = &quote_string( $val );
-$group = $definition->get_group_name($var);
-$nl[0]->set_variable_value($group, $var, $val);
-if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-}
-if ($print>=2) { print "River Transport Model (RTM) will be $rtm $eol"; }
-
-
-# RTM resolution
-my $rtm_res;
-if ( $rtm eq "on" ) {
-   $var = "rtm_res";
-   if ( $opts{$var} ne "default" ) {
-       $val = $opts{$var};
-   } else {
-       my %opts = ( 'rtm'=>$rtm );
-       $val= $defaults->get_value($var, \%opts);
-   }
-   $rtm_res = $val;
-   if ($print>=2) { print "CLM river transport model resolution is $rtm_res $eol"; }
-   $opts{$var} = $val;
-   $val = &quote_string( $rtm_res );
-   $group = $definition->get_group_name($var);
-   if (  ! $definition->is_valid_value( $var, $val ) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-   }
 }
 
 # Get clm run type
@@ -1352,69 +1296,6 @@ add_default($nl[0], 'urban_hac');
 add_default($nl[0], 'urban_traffic');
 
 #
-# Optional variables or variables only turned on for specific settings
-#
-
-# If River Transport Model turned on
-if ( $rtm eq "on" ) {
-   if ( ! defined $nl[0]->get_value('fmapinp_rtm')) {
-      my %rtmsettings = ( 'type'=>$rtm_res, 'rtm'=>$rtm );
-      my $rres = $defaults->get_value("hgrid", \%rtmsettings );
-      my $lmask= $defaults->get_value("lmask", \%rtmsettings );
-      my %mapsettings = ( 'frm_hgrid'=>$res, 'to_hgrid'=>$rres,
-                          'frm_lmask'=>"nomask", 'to_lmask'=>$lmask );
-      my $map  = $defaults->get_value("map", \%mapsettings );
-      if ( ! defined($map) ) {
-         die "$ProgName ERROR:: Can NOT find a mapping file from $rtm to $rtm_res for RTM.\n";
-      } else {
-         add_default($nl[0], 'fmapinp_rtm', 'val'=>$map );
-      }
-   }
-   add_default($nl[0], 'frivinp_rtm', 'rtm'=>$rtm, 'rtm_res'=>$rtm_res );
-   add_default($nl[0], 'ice_runoff',  'rtm'=>$rtm, 'hgrid'=>$res );
-   if ( defined($opts{'rtm_tstep'}) ) {
-       my $dtime = $nl[0]->get_value('dtime');
-       if ( $opts{'rtm_tstep'} < $dtime ) {
-          die "$ProgName ERROR:: rtm_tstep can NOT be less than time-step of: $dtime.\n";
-       }
-       my $val       = int( $opts{'rtm_tstep'} / $dtime );
-       my $rtmnsteps = $nl[0]->get_value('rtm_nsteps');
-       if ( defined($rtmnsteps) ) {
-          print "$ProgName WARNING:: rtm_nsteps should NOT be set when -rtm_tstep used\n";
-          if ( $val != $rtmnsteps ) {
-             die "$ProgName ERROR:: rtm_nsteps is inconsistent with -rtm_tstep option\n";
-          }
-       }
-       add_default($nl[0], 'rtm_nsteps',  'val'=>$val );
-   }
-}
-
-my $var = "do_rtm";
-add_default($nl[0], $var, 'rtm'=>$rtm, 'hgrid'=>$res );
-my $do_rtm = $nl[0]->get_value('do_rtm');
-if ( $rtm eq "off" ) {
-   if (defined $do_rtm && $do_rtm =~ /$TRUE/i ) {
-      die "$ProgName ERROR:: when RTM is off you can NOT set do_rtm to .true..\n";
-   }
-   if (defined $nl[0]->get_value('frivinp_rtm')) {
-      die "$ProgName ERROR:: when RTM is off you can NOT set frivinp_rtm.\n";
-   }
-   if (defined $nl[0]->get_value('fmapinp_rtm')) {
-      die "$ProgName ERROR:: when RTM is off you can NOT set fmapinp_rtm.\n";
-   }
-   if (defined $nl[0]->get_value('ice_runoff')) {
-      die "$ProgName ERROR:: when RTM is off you can NOT set ice_runoff.\n";
-   }
-   if (defined $nl[0]->get_value('rtm_nsteps')) {
-      die "$ProgName ERROR:: when RTM is off you can NOT set rtm_nsteps.\n";
-   }
-} else {
-   if ($do_rtm !~ /$TRUE/i ) {
-      print "$ProgName WARNING:: RTM is on but you are setting do_rtm to .false..\n";
-   }
-}
-
-#
 # Deal with options that the user has said are required...
 #
 my %settings                = {};
@@ -1442,8 +1323,8 @@ foreach my $item ( @demandlist ) {
 #
 my $fpftdyn = $nl[0]->get_value('fpftdyn');
 $fpftdyn =~ s!(.*)/!!;
-$fpftdyn =~ s/'//;
-$fpftdyn =~ s/"//;
+$fpftdyn =~ s/\'//;
+$fpftdyn =~ s/\"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
 add_default($nl[0], 'fsurdat', 'hgrid'=>$res, 'sim_year'=>$sim_year, 
             'irrig'=>$irrig,   'crop'=>$crop, 'glc_nec'=>$glc_nec );
@@ -1558,7 +1439,6 @@ if ( defined($suplnitro) ) {
    }
 }
 
- 
 ###############################
 # namelist group: prof_inparm #
 ###############################
@@ -1574,6 +1454,7 @@ if ($mode eq "clm_stndln") {
 #################################
 # namelist group: drydep_inparm #
 #################################
+
 if ($opts{'drydep'} ) {
     add_default($nl[0], 'drydep_list');
     add_default($nl[0], 'drydep_method');
@@ -1587,6 +1468,7 @@ if ($opts{'drydep'} ) {
 #################################
 # namelist group: megan_emis_nl #
 #################################
+
 if ($opts{'megan'} ) {
     add_default($nl[0], 'megan_specifier');
     check_megan_spec( $nl[0], $definition );
@@ -1601,6 +1483,7 @@ if ($opts{'megan'} ) {
 ##############################
 # namelist group: modelio    #
 ##############################
+
 if ($mode eq "clm_stndln") {
     add_default($nl[0], 'diri'    );
     add_default($nl[0], 'diro'    );
@@ -1617,14 +1500,12 @@ for( my $i = 2; $i <= $nensemble; $i++ ) {
    push( @nl, $definition->validate($nl[0]) );
 }
 
-
 # Groups to go through for clm namelists
-my @groups = qw(clm_inparm ndepdyn_nml);
+my @groups = qw(clm_inparm clm_rtm_inparm ndepdyn_nml);
 
 #-----------------------------------------------------------------------------------------------
 # Read in user_nl_clm namelists specific for each ensemble member
 # Bringing in changes from user_nl_clm/user_nl_clm_* files for each
-my $nfilelistnfile = 0;
 my $infilewildcard = "${ensembledir}/${ensemblefil}_*";
 my @infilelist = glob( $infilewildcard );
 if ( ($#infilelist+1) > $nensemble ) {
@@ -1734,6 +1615,7 @@ if ( $nensemble == 1 ) {
    if ($print>=2) { print "Wrote $nensemble clm ensemble member namelists to $outprefix* $eol"; }
 }
 
+# Stand-alone CLM testing
 if ($mode eq "clm_stndln") {
     # Driver
     @groups = qw(seq_cplflds_inparm seq_cplflds_userspec seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm papi_inparm pio_default_inparm);

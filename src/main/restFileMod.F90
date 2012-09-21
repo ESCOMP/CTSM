@@ -12,7 +12,7 @@ module restFileMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
-  use clm_varctl  , only : iulog, do_rtm
+  use clm_varctl  , only : iulog
   use surfrdMod   , only : crop_prog
   use ncdio_pio       
 !
@@ -66,7 +66,6 @@ contains
     use CNRestMod        , only : CNRest
     use CropRestMod      , only : CropRest
 #endif
-    use RtmMod           , only : RTMRest
     use accumulMod       , only : accumulRest
     use histFileMod      , only : hist_restart_ncd
 !
@@ -121,9 +120,6 @@ contains
     if ( crop_prog ) call CropRest( ncid, flag='define' )
 #endif
 
-    if (do_rtm) then
-       call RtmRest( ncid, flag='define' )
-    end if
     call accumulRest( ncid, flag='define' )
 
     call hist_restart_ncd ( ncid, flag='define', rdate=rdate )
@@ -144,10 +140,6 @@ contains
     call CNRest( ncid, flag='write' )
     if ( crop_prog ) call CropRest( ncid, flag='write' )
 #endif
-
-    if (do_rtm) then
-       call RtmRest( ncid, flag='write' )
-    end if
 
     call accumulRest( ncid, flag='write' )
     
@@ -190,7 +182,6 @@ contains
     use CNRestMod        , only : CNRest
     use CropRestMod      , only : CropRest
 #endif
-    use RtmMod           , only : RTMRest
     use accumulMod       , only : accumulRest
     use histFileMod      , only : hist_restart_ncd
 !
@@ -225,10 +216,6 @@ contains
     call CNRest( ncid, flag='read' )
     if ( crop_prog ) call CropRest( ncid, flag='read' )
 #endif
-
-    if (do_rtm) then
-       call RtmRest( ncid, flag='read' )
-    end if
 
     call accumulRest( ncid, flag='read' )
     
@@ -563,7 +550,7 @@ contains
     use spmdMod     , only : mpicom, MPI_LOGICAL
     use clm_varctl  , only : caseid, ctitle, version, username, hostname, fsurdat, &
                              conventions, source
-    use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevgrnd
+    use clm_varpar  , only : numrad, nlevlak, nlevsno, nlevgrnd
     use decompMod   , only : get_proc_bounds, get_proc_global
 !
 ! !ARGUMENTS:
@@ -608,10 +595,6 @@ contains
     call ncd_defdim(ncid, 'levsno1'  , nlevsno+1     , dimid)
     call ncd_defdim(ncid, 'levtot'  , nlevsno+nlevgrnd, dimid)
     call ncd_defdim(ncid, 'numrad'  , numrad         , dimid)
-    if (do_rtm) then
-       call ncd_defdim(ncid, 'rtmlon'  , rtmlon         , dimid)
-       call ncd_defdim(ncid, 'rtmlat'  , rtmlat         , dimid)
-    end if
     call ncd_defdim(ncid, 'string_length', 64        , dimid)
        
     ! Define global attributes

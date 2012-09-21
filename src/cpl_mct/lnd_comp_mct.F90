@@ -13,8 +13,8 @@ module lnd_comp_mct
 !
 ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use mct_mod          , only : mct_aVect
-
+  use shr_sys_mod      , only : shr_sys_flush
+  use mct_mod          , only : mct_aVect, mct_gsmap
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -38,9 +38,6 @@ module lnd_comp_mct
   private :: lnd_domain_mct           ! Set the land model domain information
   private :: lnd_export_mct           ! export land data to CESM coupler
   private :: lnd_import_mct           ! import data from the CESM coupler to the land model
-  private :: rof_SetgsMap_mct         ! Set the river runoff model MCT GS map
-  private :: rof_domain_mct           ! Set the river runoff model domain information
-  private :: rof_export_mct           ! Export the river runoff model data to the CESM coupler
   private :: sno_export_mct
   private :: sno_import_mct
 !
@@ -50,9 +47,6 @@ module lnd_comp_mct
 !  
   type(mct_aVect)   :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
   type(mct_aVect)   :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
-
-  type(mct_aVect)   :: l2x_l_clm      ! Internal clm grid
-  type(mct_aVect)   :: x2l_l_clm      ! Internal clm grid
 
   type(mct_aVect)   :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
   type(mct_aVect)   :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid 
@@ -78,7 +72,6 @@ contains
 !
 ! !INTERFACE:
   subroutine lnd_init_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                   cdata_r, r2x_r,        &
                                    cdata_s, x2s_s, s2x_s, &
                                    NLFilename )
 !
@@ -91,11 +84,11 @@ contains
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
+    use clm_glclnd       , only : clm_s2x, create_clm_s2x
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
-                                  inst_index, inst_suffix, inst_name, do_rtm
-    use clm_varctl       , only : create_glacier_mec_landunit 
-    use clm_varpar       , only : rtmlon, rtmlat
+                                  inst_index, inst_suffix, inst_name, &
+                                  create_glacier_mec_landunit 
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
     use decompMod        , only : get_proc_bounds
@@ -111,7 +104,6 @@ contains
                                   seq_infodata_start_type_brnch
     use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use spmdMod          , only : masterproc, spmd_init
-    use clm_glclnd       , only : clm_s2x, create_clm_s2x
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x
     use seq_flds_mod
@@ -123,8 +115,6 @@ contains
     type(ESMF_Clock),           intent(in)    :: EClock           ! Input synchronization clock
     type(seq_cdata),            intent(inout) :: cdata_l          ! Input land-model driver data
     type(mct_aVect),            intent(inout) :: x2l_l, l2x_l     ! land model import and export states
-    type(seq_cdata),            intent(inout) :: cdata_r          ! Input runoff-model driver data
-    type(mct_aVect),            intent(inout) :: r2x_r            ! River export state
     type(seq_cdata),            intent(inout) :: cdata_s          ! Input snow-model (land-ice) driver data
     type(mct_aVect),            intent(inout) :: x2s_s, s2x_s     ! Snow-model import and export states
     character(len=*), optional, intent(in)    :: NLFilename       ! Namelist filename to read
@@ -134,8 +124,6 @@ contains
     integer                          :: mpicom_lnd   ! MPI communicator
     type(mct_gsMap),         pointer :: GSMap_lnd    ! Land model MCT GS map
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
-    type(mct_gsMap),         pointer :: GSMap_rof    ! Runoff model MCT GS map
-    type(mct_gGrid),         pointer :: dom_r        ! Runoff model domain
     type(mct_gsMap),         pointer :: GSMap_sno
     type(mct_gGrid),         pointer :: dom_s
     type(seq_infodata_type), pointer :: infodata     ! CESM driver level info data
@@ -183,9 +171,6 @@ contains
     call seq_cdata_setptrs(cdata_l, ID=LNDID, mpicom=mpicom_lnd, &
          gsMap=GSMap_lnd, dom=dom_l, infodata=infodata)
 
-    call seq_cdata_setptrs(cdata_r, &
-         gsMap=gsMap_rof, dom=dom_r) 
-
     ! Determine attriute vector indices
 
     call clm_cpl_indices_set()
@@ -232,7 +217,7 @@ contains
     call control_setNL("lnd_in"//trim(inst_suffix))
 
     ! Initialize clm
-    ! initialize1 reads namelist, grid and surface data
+    ! initialize1 reads namelist, grid and surface data (need this to initialize gsmap) 
     ! initialize2 performs rest of initialization	
 
     call seq_timemgr_EClockGetData(EClock,                               &
@@ -279,7 +264,6 @@ contains
     if ( noland) then
        call seq_infodata_PutData( infodata, lnd_present   =.false.)
        call seq_infodata_PutData( infodata, lnd_prognostic=.false.)
-       call seq_infodata_PutData( infodata, rof_present   =.false.)
        return
     end if
 
@@ -331,35 +315,10 @@ contains
        call endrun( sub//' ERROR: time out of sync' )
     end if
 
-    ! Create new attribute vectors for the clm internal grid (dst)
-
-    call get_proc_bounds(begg, endg) 
-
-    call mct_aVect_init(x2l_l_clm, rList=seq_flds_x2l_fields, lsize=endg-begg+1)
-    call mct_aVect_zero(x2l_l_clm)
-
-    call mct_aVect_init(l2x_l_clm, rList=seq_flds_l2x_fields, lsize=endg-begg+1)
-    call mct_aVect_zero(l2x_l_clm)
-    
     ! Create land export state 
 
+    call get_proc_bounds(begg, endg) 
     call lnd_export_mct( clm_l2a, l2x_l, begg, endg )
-
-    if (do_rtm) then
-       ! Initialize rof gsMap
-       call rof_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_rof ) 
-       lsize = mct_gsMap_lsize(gsMap_rof, mpicom_lnd)
-       
-       ! Initialize rof domain
-       call rof_domain_mct( lsize, gsMap_rof, dom_r )
-       
-       ! Initialize rtm attribute vectors		
-       call mct_aVect_init(r2x_r, rList=seq_flds_r2x_fields, lsize=lsize)
-       call mct_aVect_zero(r2x_r)
-       
-       ! Create mct river runoff export state
-       call rof_export_mct( r2x_r )
-    end if
 
     if (create_glacier_mec_landunit) then
        call seq_cdata_setptrs(cdata_s, gsMap=gsMap_sno, dom=dom_s)
@@ -393,18 +352,17 @@ contains
 
     avg_count = 0
 
-    ! Set land modes
+    ! Fill in infodata
 
     call seq_infodata_PutData( infodata, lnd_prognostic=.true.)
     call seq_infodata_PutData( infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
-    call seq_infodata_PutData( infodata, rof_present=do_rtm)
-    call seq_infodata_PutData( infodata, rof_nx = rtmlon, rof_ny = rtmlat)
-
     if (create_glacier_mec_landunit) then
        call seq_infodata_PutData( infodata, sno_present=.true.)
+       call seq_infodata_PutData( infodata, sno_prognostic=.false.)
        call seq_infodata_PutData( infodata, sno_nx=ldomain%ni, sno_ny=ldomain%nj)
     else
        call seq_infodata_PutData( infodata, sno_present=.false.)
+       call seq_infodata_PutData( infodata, sno_prognostic=.false.)
     endif
 
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
@@ -445,23 +403,21 @@ contains
 !
 ! !INTERFACE:
   subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                  cdata_r,        r2x_r, &
-                                  cdata_s, x2s_s, s2x_s )
+                                  cdata_s, x2s_s, s2x_s)
 !
 ! !DESCRIPTION:
 ! Run clm model
 !
 ! !USES:
     use shr_kind_mod    ,only : r8 => shr_kind_r8
+    use clmtype
     use clm_atmlnd      ,only : clm_l2a, clm_a2l
     use clm_driver      ,only : clm_drv
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use domainMod       ,only : ldomain
     use decompMod       ,only : get_proc_bounds
     use abortutils      ,only : endrun
-    use clm_varctl      ,only : iulog, do_rtm
-    use clm_varctl      ,only : create_glacier_mec_landunit 
+    use clm_varctl      ,only : iulog, create_glacier_mec_landunit 
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
@@ -482,15 +438,13 @@ contains
 !
 ! !ARGUMENTS:
     type(ESMF_Clock) , intent(in)    :: EClock    ! Input synchronization clock from driver
-    type(seq_cdata)  , intent(in)    :: cdata_l   ! Input driver data for land model
+    type(seq_cdata)  , intent(inout) :: cdata_l   ! Input driver data for land model
     type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
     type(mct_aVect)  , intent(inout) :: l2x_l     ! Export state from land model
-    type(seq_cdata)  , intent(in)    :: cdata_r   ! Input driver data for runoff model
-    type(mct_aVect)  , intent(inout) :: r2x_r     ! Export state from runoff model
     type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
     type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
     type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
-
+!
 ! !LOCAL VARIABLES:
     integer :: ymd_sync                   ! Sync date (YYYYMMDD)
     integer :: yr_sync                    ! Sync current year
@@ -518,16 +472,17 @@ contains
     type(seq_infodata_type),pointer :: infodata ! CESM information from the driver
     type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
     real(r8),               pointer :: data(:)  ! temporary
-    integer :: g,i,lsize                        ! counters
+    integer  :: g,i,lsize                       ! counters
     logical,save :: first_call = .true.         ! first call work
-    character(len=32)            :: rdate       ! date char string for restart file names
-    character(len=32), parameter :: sub = "lnd_run_mct"
     logical  :: glcrun_alarm          ! if true, sno data is averaged and sent to glc this step
     logical  :: update_glc2sno_fields ! if true, update glacier_mec fields
     real(r8) :: calday                ! calendar day for nstep
     real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
+    real(r8) :: recip                 ! reciprical
+    character(len=32)            :: rdate       ! date char string for restart file names
+    character(len=32), parameter :: sub = "lnd_run_mct"
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -543,13 +498,11 @@ contains
 #endif
 
     ! Reset shr logging to my log file
-
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
     ! Determine time of next atmospheric shortwave calculation
-
     call seq_cdata_setptrs(cdata_l, infodata=infodata, dom=dom_l)
     call seq_timemgr_EClockGetData(EClock, &
          curr_ymd=ymd, curr_tod=tod_sync,  &
@@ -565,17 +518,6 @@ contains
 
     call get_proc_bounds(begg, endg)
 
-    if (first_call) then
-       lsize = mct_gGrid_lsize(dom_l)
-       allocate(data(lsize))
-       call mct_gGrid_exportRattr(dom_l,"ascale",data,lsize) 
-       do g = begg,endg
-          i = 1 + (g - begg)
-          ldomain%ascale(g) = data(i)
-       end do
-       deallocate(data)
-    endif
-    
     ! Map MCT to land data type
     ! Perform downscaling if appropriate
 
@@ -643,16 +585,14 @@ contains
        call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
        call t_stopf ('clm_run')
 
-       ! Map land data type to MCT
+       ! Create l2x_l export state - add river runoff input to l2x_l if appropriate
        
        call t_startf ('lc_lnd_export')
        call lnd_export_mct( clm_l2a, l2x_l, begg, endg )
        call t_stopf ('lc_lnd_export')
 
-       ! Compute snapshot attribute vector for accumulation
-       
-       ! don't accumulate on first coupling freq ts0 and ts1
-       ! for consistency with ccsm3 when flxave is off
+       ! Do not accumulate on first coupling freq - consistency with ccsm3
+
        nstep = get_nstep()
        if (nstep <= 1) then
           call mct_aVect_copy( l2x_l, l2x_l_SUM )
@@ -688,7 +628,10 @@ contains
 
     ! Finish accumulation of attribute vector and average and zero out partial sum and counter
     
-    call mct_aVect_avg ( l2x_l_SUM, avg_count)
+    if (avg_count /= 0) then
+       recip = 1.0_r8/(real(avg_count,r8))
+       l2x_l_SUM%rAttr(:,:) = l2x_l_SUM%rAttr(:,:) * recip
+    endif
     call mct_aVect_copy( l2x_l_SUM, l2x_l )
     call mct_aVect_zero( l2x_l_SUM) 
     avg_count = 0                   
@@ -696,22 +639,18 @@ contains
     if (create_glacier_mec_landunit) then
        call seq_infodata_GetData(infodata, glcrun_alarm = glcrun_alarm )
        if (glcrun_alarm) then
-          call mct_aVect_avg ( s2x_s_SUM, avg_count_sno)
+          if (avg_count_sno /= 0) then
+             recip = 1.0_r8/(real(avg_count_sno,r8))
+             s2x_s_SUM%rAttr(:,:) = s2x_s_SUM%rAttr(:,:) * recip
+          endif
           call mct_aVect_copy( s2x_s_SUM, s2x_s )
           call mct_aVect_zero( s2x_s_SUM)
           avg_count_sno = 0
        endif
     endif
 
-    ! Create river runoff output state
-
-    if (do_rtm) then
-       call t_startf ('lc_rof_export')
-       call rof_export_mct( r2x_r )
-       call t_stopf ('lc_rof_export')
-    end if
-       
     ! Check that internal clock is in sync with master clock
+
     call get_curr_date( yr, mon, day, tod, offset=-dtime )
     ymd = yr*10000 + mon*100 + day
     tod = tod
@@ -746,8 +685,7 @@ contains
 !
 ! !INTERFACE:
   subroutine lnd_final_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                  cdata_r,        r2x_r, &
-                                  cdata_s, x2s_s, s2x_s )
+                                    cdata_s, x2s_s, s2x_s )
 !
 ! !DESCRIPTION:
 ! Finalize land surface model
@@ -765,8 +703,6 @@ contains
     type(seq_cdata)  , intent(in)    :: cdata_l   ! Input driver data for land model
     type(mct_aVect)  , intent(inout) :: x2l_l     ! Import state to land model
     type(mct_aVect)  , intent(inout) :: l2x_l     ! Export state from land model
-    type(seq_cdata)  , intent(in)    :: cdata_r   ! Input driver data for runoff model
-    type(mct_aVect)  , intent(inout) :: r2x_r     ! Export state from runoff model
     type(seq_cdata)  , intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
     type(mct_aVect)  , intent(inout) :: x2s_s     ! Import state for snow model
     type(mct_aVect)  , intent(inout) :: s2x_s     ! Export state for snow model
@@ -850,7 +786,7 @@ contains
 ! !IROUTINE: lnd_export_mct
 !
 ! !INTERFACE:
-  subroutine lnd_export_mct( l2a, l2x_l, begg, endg )   
+  subroutine lnd_export_mct( clm_l2a, l2x_l, begg, endg )   
 !
 ! !DESCRIPTION:
 !
@@ -860,21 +796,25 @@ contains
 !---------------------------------------------------------------------------
 ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
-    use clm_time_manager   , only : get_nstep  
+    use clm_varctl         , only : iulog
+    use clm_time_manager   , only : get_nstep, get_step_size  
     use clm_atmlnd         , only : lnd2atm_type
     use seq_drydep_mod     , only : n_drydep
-    use shr_megan_mod,       only : shr_megan_mechcomps_n
+    use shr_megan_mod      , only : shr_megan_mechcomps_n
     use clm_cpl_indices
-
+    use clmtype
     implicit none
 ! !ARGUMENTS:
-    type(lnd2atm_type), intent(inout) :: l2a     ! clm land to atmosphere exchange data type
-    type(mct_aVect)   , intent(inout) :: l2x_l   ! Land to coupler export state on land grid
-    integer           , intent(in)    :: begg    ! beginning grid cell index
-    integer           , intent(in)    :: endg    ! ending grid cell index
+    type(lnd2atm_type), intent(inout) :: clm_l2a    ! clm land to atmosphere exchange data type
+    type(mct_aVect)   , intent(inout) :: l2x_l      ! Land to coupler export state on land grid
+    integer           , intent(in)    :: begg       ! beginning grid cell index
+    integer           , intent(in)    :: endg       ! ending grid cell index
 !
 ! !LOCAL VARIABLES:
-    integer :: g,i           ! Indices
+    integer  :: g,i                           ! indices
+    integer  :: ier                           ! error status
+    integer  :: nstep                         ! time step index
+    integer  :: dtime                         ! time step   
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -882,47 +822,59 @@ contains
 !EOP
 !---------------------------------------------------------------------------
     
-    l2x_l%rAttr(:,:) = 0.0_r8
-
     ! cesm sign convention is that fluxes are positive downward
+
+    l2x_l%rAttr(:,:) = 0.0_r8
 
     do g = begg,endg
        i = 1 + (g-begg)
-       l2x_l%rAttr(index_l2x_Sl_t,i)        =  l2a%t_rad(g)
-       l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
-       l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
-       l2x_l%rAttr(index_l2x_Sl_anidr,i)    =  l2a%albd(g,2)
-       l2x_l%rAttr(index_l2x_Sl_avsdf,i)    =  l2a%albi(g,1)
-       l2x_l%rAttr(index_l2x_Sl_anidf,i)    =  l2a%albi(g,2)
-       l2x_l%rAttr(index_l2x_Sl_tref,i)     =  l2a%t_ref2m(g)
-       l2x_l%rAttr(index_l2x_Sl_qref,i)     =  l2a%q_ref2m(g)
-       l2x_l%rAttr(index_l2x_Sl_u10,i)      =  l2a%u_ref10m(g)
-       l2x_l%rAttr(index_l2x_Fall_taux,i)   = -l2a%taux(g)
-       l2x_l%rAttr(index_l2x_Fall_tauy,i)   = -l2a%tauy(g)
-       l2x_l%rAttr(index_l2x_Fall_lat,i)    = -l2a%eflx_lh_tot(g)
-       l2x_l%rAttr(index_l2x_Fall_sen,i)    = -l2a%eflx_sh_tot(g)
-       l2x_l%rAttr(index_l2x_Fall_lwup,i)   = -l2a%eflx_lwrad_out(g)
-       l2x_l%rAttr(index_l2x_Fall_evap,i)   = -l2a%qflx_evap_tot(g)
-       l2x_l%rAttr(index_l2x_Fall_swnet,i)  =  l2a%fsa(g)
+       l2x_l%rAttr(index_l2x_Sl_t,i)        =  clm_l2a%t_rad(g)
+       l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  clm_l2a%h2osno(g)
+       l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  clm_l2a%albd(g,1)
+       l2x_l%rAttr(index_l2x_Sl_anidr,i)    =  clm_l2a%albd(g,2)
+       l2x_l%rAttr(index_l2x_Sl_avsdf,i)    =  clm_l2a%albi(g,1)
+       l2x_l%rAttr(index_l2x_Sl_anidf,i)    =  clm_l2a%albi(g,2)
+       l2x_l%rAttr(index_l2x_Sl_tref,i)     =  clm_l2a%t_ref2m(g)
+       l2x_l%rAttr(index_l2x_Sl_qref,i)     =  clm_l2a%q_ref2m(g)
+       l2x_l%rAttr(index_l2x_Sl_u10,i)      =  clm_l2a%u_ref10m(g)
+       l2x_l%rAttr(index_l2x_Fall_taux,i)   = -clm_l2a%taux(g)
+       l2x_l%rAttr(index_l2x_Fall_tauy,i)   = -clm_l2a%tauy(g)
+       l2x_l%rAttr(index_l2x_Fall_lat,i)    = -clm_l2a%eflx_lh_tot(g)
+       l2x_l%rAttr(index_l2x_Fall_sen,i)    = -clm_l2a%eflx_sh_tot(g)
+       l2x_l%rAttr(index_l2x_Fall_lwup,i)   = -clm_l2a%eflx_lwrad_out(g)
+       l2x_l%rAttr(index_l2x_Fall_evap,i)   = -clm_l2a%qflx_evap_tot(g)
+       l2x_l%rAttr(index_l2x_Fall_swnet,i)  =  clm_l2a%fsa(g)
        if (index_l2x_Fall_fco2_lnd /= 0) then
-          l2x_l%rAttr(index_l2x_Fall_fco2_lnd,i) = -l2a%nee(g)  
+          l2x_l%rAttr(index_l2x_Fall_fco2_lnd,i) = -clm_l2a%nee(g)  
        end if
 
        ! Additional fields for DUST, PROGSSLT, dry-deposition and VOC
        ! These are now standard fields, but the check on the index makes sure the driver handles them
-       if (index_l2x_Sl_ram1      /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i) = l2a%ram1(g)
-       if (index_l2x_Sl_fv        /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)   = l2a%fv(g)
-       if (index_l2x_Fall_flxdst1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst1,i)= -l2a%flxdst(g,1)
-       if (index_l2x_Fall_flxdst2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst2,i)= -l2a%flxdst(g,2)
-       if (index_l2x_Fall_flxdst3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst3,i)= -l2a%flxdst(g,3)
-       if (index_l2x_Fall_flxdst4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst4,i)= -l2a%flxdst(g,4)
+       if (index_l2x_Sl_ram1      /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i) = clm_l2a%ram1(g)
+       if (index_l2x_Sl_fv        /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)   = clm_l2a%fv(g)
+       if (index_l2x_Fall_flxdst1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst1,i)= -clm_l2a%flxdst(g,1)
+       if (index_l2x_Fall_flxdst2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst2,i)= -clm_l2a%flxdst(g,2)
+       if (index_l2x_Fall_flxdst3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst3,i)= -clm_l2a%flxdst(g,3)
+       if (index_l2x_Fall_flxdst4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst4,i)= -clm_l2a%flxdst(g,4)
+
 
        ! for dry dep velocities
-       if (index_l2x_Sl_ddvel     /= 0 )  l2x_l%rAttr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) &
-                                                                               = l2a%ddvel(g,:n_drydep)
+       if (index_l2x_Sl_ddvel     /= 0 )  then
+          l2x_l%rAttr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = &
+               clm_l2a%ddvel(g,:n_drydep)
+       end if
+
        ! for MEGAN VOC emis fluxes
-       if (index_l2x_Fall_flxvoc  /= 0 ) &
-          l2x_l%rAttr(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = -l2a%flxvoc(g,:shr_megan_mechcomps_n)
+       if (index_l2x_Fall_flxvoc  /= 0 ) then
+          l2x_l%rAttr(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = &
+               -clm_l2a%flxvoc(g,:shr_megan_mechcomps_n)
+       end if
+
+       ! sign convention is positive downward with 
+       ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
+
+       l2x_l%rattr(index_l2x_Flrl_rofliq,i) = clm_l2a%rofliq(g)
+       l2x_l%rattr(index_l2x_Flrl_rofice,i) = clm_l2a%rofice(g)
 
     end do
 
@@ -947,16 +899,16 @@ contains
 ! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
-    use clm_varctl      , only: co2_type, co2_ppmv
+    use clm_varctl      , only: co2_type, co2_ppmv, iulog
     use clm_varcon      , only: rair, o2_molar_const
 #if (defined C13)
     use clm_varcon      , only: c13ratio
 #endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use abortutils      , only: endrun
-    use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
     use clm_cpl_indices
+    use clmtype
     implicit none
 ! !ARGUMENTS:
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
@@ -1029,6 +981,13 @@ contains
     do g = begg,endg
         i = 1 + (g - begg)
        
+        ! Determine flooding input, sign convention is positive downward and
+        ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
+        ! change the sign to indicate addition of water to system.
+!tcraig, aug 2012, use following in source code to get flood data
+!       clm3%g%gwf%qflx_floodg => clm_a2l%forc_flood
+        a2l%forc_flood(g)   = -x2l_l%rattr(index_x2l_Flrr_flood,i)  
+
         ! Determine required receive fields
 
         a2l%forc_hgt(g)     = x2l_l%rAttr(index_x2l_Sa_z,i)         ! zgcmxy  Atm state m
@@ -1240,310 +1199,12 @@ contains
     
 !===============================================================================
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: rof_SetgsMap_mct
-!
-! !INTERFACE:
-  subroutine rof_SetgsMap_mct( mpicom_l, LNDID, gsMap_r )
-!
-! !DESCRIPTION:
-!
-! Set the MCT GS map for the runoff model
-!
-!---------------------------------------------------------------------------
-
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use clm_varpar  , only : rtmlon, rtmlat
-    use RunoffMod   , only : runoff
-    use abortutils  , only : endrun
-    use clm_varctl  , only : iulog
-    use mct_mod     , only : mct_gsMap, mct_gsMap_init
-    implicit none
-! !ARGUMENTS:
-    integer        , intent(in)  :: mpicom_l    ! MPI communicator for land model
-    integer        , intent(in)  :: LNDID       ! Land model identifier
-    type(mct_gsMap), intent(out) :: gsMap_r     ! MCT GS map for runoff model data
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-    !
-    ! Local Variables
-    !
-    integer,allocatable :: gindex(:)         ! indexing for runoff grid cells
-    integer :: n, ni                         ! indices
-    integer :: lsize,gsize                   ! size of runoff data and number of grid cells
-    integer :: ier                           ! error code
-    character(len=32), parameter :: sub = 'rof_SetgsMap_mct'
-    !-------------------------------------------------------------------
-
-    ! Build the rof grid numbering for MCT
-    ! NOTE:  Numbering scheme is: West to East and South to North
-    ! starting at south pole.  Should be the same as what's used in SCRIP
-    
-    gsize = rtmlon*rtmlat
-    lsize = runoff%lnumro
-    allocate(gindex(lsize),stat=ier)
-
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          if (ni > runoff%lnumro) then
-             write(iulog,*) sub, ' : ERROR runoff count',n,ni,runoff%lnumro
-             call endrun( sub//' ERROR: runoff > expected' )
-          endif
-          gindex(ni) = runoff%gindex(n)
-       endif
-    end do
-    if (ni /= runoff%lnumro) then
-       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
-       call endrun( sub//' ERROR: runoff not equal to expected' )
-    endif
-
-    call mct_gsMap_init( gsMap_r, gindex, mpicom_l, LNDID, lsize, gsize )
-
-    deallocate(gindex)
-
-  end subroutine rof_SetgsMap_mct
-
-!===============================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: rof_domain_mct
-!
-! !INTERFACE:
-  subroutine rof_domain_mct( lsize, gsMap_r, dom_r )
-!
-! !DESCRIPTION:
-!
-! Send the runoff model domain information to the coupler
-!
-!---------------------------------------------------------------------------
-
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use clm_varcon  , only : re
-    use RunoffMod   , only : runoff
-    use abortutils  , only : endrun
-    use clm_varctl  , only : iulog
-    use spmdMod     , only : iam
-    use mct_mod     , only : mct_gsMap, mct_gGrid, mct_gGrid_importIAttr, &
-                             mct_gGrid_importRAttr, mct_gGrid_init,       &
-                             mct_gsMap_orderedPoints
-    use seq_flds_mod
-    implicit none
-! !ARGUMENTS:
-    integer        , intent(in)    :: lsize       ! Size of runoff domain information
-    type(mct_gsMap), intent(inout) :: gsMap_r     ! Output MCT GS map for runoff model
-    type(mct_ggrid), intent(out)   :: dom_r       ! Domain information from the runoff model
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-    !
-    ! Local Variables
-    !
-    integer :: n, ni              ! index
-    real(r8), pointer :: data(:)  ! temporary
-    integer , pointer :: idata(:) ! temporary
-    character(len=32), parameter :: sub = 'rof_domain_mct'
-    !-------------------------------------------------------------------
-    !
-    ! Initialize mct domain type
-    ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
-    ! Note that in addition land carries around landfrac for the purposes of domain checking
-    ! 
-    call mct_gGrid_init( GGrid=dom_r, CoordChars=trim(seq_flds_dom_coord), &
-      OtherChars=trim(seq_flds_dom_other), lsize=lsize )
-    !
-    ! Allocate memory
-    !
-    allocate(data(lsize))
-    !
-    ! Determine global gridpoint number attribute, GlobGridNum, which is set automatically by MCT
-    !
-    call mct_gsMap_orderedPoints(gsMap_r, iam, idata)
-    call mct_gGrid_importIAttr(dom_r,'GlobGridNum',idata,lsize)
-    !
-    ! Determine domain (numbering scheme is: West to East and South to North to South pole)
-    ! Initialize attribute vector with special value
-    !
-    data(:) = -9999.0_R8 
-    call mct_gGrid_importRAttr(dom_r,"lat"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_r,"lon"  ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_r,"area" ,data,lsize) 
-    call mct_gGrid_importRAttr(dom_r,"aream",data,lsize) 
-    data(:) = 0.0_R8     
-    call mct_gGrid_importRAttr(dom_r,"mask" ,data,lsize) 
-    !
-    ! Determine bounds numbering consistency
-    !
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          if (ni > runoff%lnumro) then
-             write(iulog,*) sub, ' : ERROR runoff count',n,ni,runoff%lnumro
-             call endrun( sub//' ERROR: runoff > expected' )
-          endif
-       end if
-    end do
-    if (ni /= runoff%lnumro) then
-       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
-       call endrun( sub//' ERROR: runoff not equal to expected' )
-    endif
-    !
-    ! Fill in correct values for domain components
-    ! Note aream will be filled in in the atm-lnd mapper
-    !
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          data(ni) = runoff%lonc(n)
-       end if
-    end do
-    call mct_gGrid_importRattr(dom_r,"lon",data,lsize) 
-
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          data(ni) = runoff%latc(n)
-       end if
-    end do
-    call mct_gGrid_importRattr(dom_r,"lat",data,lsize) 
-
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          data(ni) = runoff%area(n)*1.0e-6_r8/(re*re)
-       end if
-    end do
-    call mct_gGrid_importRattr(dom_r,"area",data,lsize) 
-
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          data(ni) = 1.0_r8
-       end if
-    end do
-    call mct_gGrid_importRattr(dom_r,"mask",data,lsize) 
-    call mct_gGrid_importRattr(dom_r,"frac",data,lsize) 
-
-    deallocate(data)
-    deallocate(idata)
-
-  end subroutine rof_domain_mct
-
-!====================================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: rof_export_mct
-!
-! !INTERFACE:
-  subroutine rof_export_mct( r2x_r)
-!
-! !DESCRIPTION:
-!
-! Send the runoff model export state to the CESM coupler
-!
-!---------------------------------------------------------------------------
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
-    use abortutils  , only : endrun
-    use clm_varctl  , only : iulog, ice_runoff
-    use mct_mod     , only : mct_aVect
-    use clm_cpl_indices
-    implicit none
-! !ARGUMENTS:
-    type(mct_aVect), intent(inout) :: r2x_r  ! Runoff to coupler export state
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-    !
-    ! Local variables
-    !
-    integer :: ni, n, nt, nliq, nfrz
-    character(len=32), parameter :: sub = 'rof_export_mct'
-    !-----------------------------------------------------
-    
-    nliq = 0
-    nfrz = 0
-    do nt = 1,nt_rtm
-       if (trim(rtm_tracers(nt)) == 'LIQ') then
-          nliq = nt
-       endif
-       if (trim(rtm_tracers(nt)) == 'ICE') then
-          nfrz = nt
-       endif
-    enddo
-    if (nliq == 0 .or. nfrz == 0) then
-       write(iulog,*)'RtmUpdateInput: ERROR in rtm_tracers LIQ ICE ',nliq,nfrz,rtm_tracers
-       call endrun()
-    endif
-
-    ni = 0
-    if ( ice_runoff )then
-       do n = runoff%begr,runoff%endr
-          if (runoff%mask(n) == 2) then
-             ni = ni + 1
-             ! liquid and ice runoff are treated separately
-             r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-             r2x_r%rAttr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-             if (ni > runoff%lnumro) then
-                write(iulog,*) sub, ' : ERROR runoff count',n,ni
-                call endrun( sub//' : ERROR runoff > expected' )
-             endif
-          endif
-       end do
-    else
-       do n = runoff%begr,runoff%endr
-          if (runoff%mask(n) == 2) then
-             ni = ni + 1
-             ! liquid and ice runoff are bundled together to liquid runoff, and then ice runoff set to zero
-             r2x_r%rAttr(index_r2x_Forr_roff,ni) =   &
-               (runoff%runoff(n,nfrz)+runoff%runoff(n,nliq))/(runoff%area(n)*1.0e-6_r8*1000._r8)
-             r2x_r%rAttr(index_r2x_Forr_ioff,ni) = 0._r8
-             if (ni > runoff%lnumro) then
-                write(iulog,*) sub, ' : ERROR runoff count',n,ni
-                call endrun( sub//' : ERROR runoff > expected' )
-             endif
-          endif
-       end do
-    end if
-    if (ni /= runoff%lnumro) then
-       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
-       call endrun( sub//' : ERROR runoff not equal to expected' )
-    endif
-
-  end subroutine rof_export_mct
-
-!====================================================================================
-
   subroutine sno_export_mct( s2x, s2x_s )   
 
     use clm_glclnd      , only : lnd2glc_type
     use decompMod       , only : get_proc_bounds
     use clm_cpl_indices 
+    use clm_varctl       , only : iulog
 
     type(lnd2glc_type), intent(inout) :: s2x
     type(mct_aVect)   , intent(inout) :: s2x_s

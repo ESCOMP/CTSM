@@ -12,7 +12,7 @@ module ncdio_pio
   use shr_kind_mod   , only : r8 => shr_kind_r8, i8=>shr_kind_i8, shr_kind_cl
   use spmdMod        , only : masterproc, mpicom, iam, npes,  &
                               MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
-  use clmtype        , only : grlnd, nameg, namel, namec, namep, allrof
+  use clmtype        , only : grlnd, nameg, namel, namec, namep
   use clm_varcon     , only : spval,ispval
   use clm_varctl     , only : single_column, iulog
   use shr_sys_mod    , only : shr_sys_flush
@@ -23,7 +23,7 @@ module ncdio_pio
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
   use nanMod         , only : nan
-  use clm_mct_mod
+  use mct_mod
   use pio
 !
 ! !PUBLIC TYPES:

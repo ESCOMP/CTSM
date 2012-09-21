@@ -33,7 +33,6 @@ module domainMod
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
-     real(r8),pointer :: ascale(:)  ! area scaling from CESM driver
      integer ,pointer :: pftm(:)    ! pft mask: 1=real, 0=fake, -1=notset
      integer ,pointer :: glcmask(:) ! glc mask: 1=sfc mass balance required by GLC component
                                     ! 0=SMB not required (default)
@@ -107,7 +106,7 @@ contains
     endif
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
-             domain%topo(nb:ne),domain%ascale(nb:ne),domain%glcmask(nb:ne),stat=ier)
+             domain%topo(nb:ne),domain%glcmask(nb:ne),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
@@ -139,7 +138,6 @@ contains
 
     domain%pftm     = -9999
     domain%glcmask  = 0  
-    domain%ascale   = 1._r8
 
 end subroutine domain_init
 !------------------------------------------------------------------------------
@@ -174,7 +172,7 @@ end subroutine domain_init
        endif
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
-                  domain%topo,domain%ascale,domain%glcmask,stat=ier)
+                  domain%topo,domain%glcmask,stat=ier)
        if (ier /= 0) then
           write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           call endrun()
@@ -235,7 +233,6 @@ end subroutine domain_clean
     write(iulog,*) '  domain_check topo      = ',minval(domain%topo),maxval(domain%topo)
     write(iulog,*) '  domain_check area      = ',minval(domain%area),maxval(domain%area)
     write(iulog,*) '  domain_check pftm      = ',minval(domain%pftm),maxval(domain%pftm)
-    write(iulog,*) '  domain_check ascale    = ',minval(domain%ascale) ,maxval(domain%ascale)
     write(iulog,*) '  domain_check glcmask   = ',minval(domain%glcmask),maxval(domain%glcmask)
     write(iulog,*) ' '
   endif

@@ -8,8 +8,8 @@ module decompMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
-  use clm_varctl  , only : iulog, do_rtm
-  use clm_mct_mod
+  use clm_varctl  , only : iulog
+  use mct_mod
   use abortutils  , only : endrun
 !
 ! !PUBLIC TYPES:
@@ -329,9 +329,8 @@ contains
 ! Determine 1d size from clmlevel
 !
 ! !USES:
-  use clmtype  , only : grlnd, nameg, namel, namec, namep, allrof
+  use clmtype  , only : grlnd, nameg, namel, namec, namep
   use domainMod, only : ldomain
-  use clm_varpar,only : rtmlon,rtmlat
 !
 ! !ARGUMENTS:
     implicit none
@@ -356,8 +355,6 @@ contains
        get_clmlevel_gsize = numc
     case(namep)
        get_clmlevel_gsize = nump
-    case(allrof)
-       if (do_rtm) get_clmlevel_gsize = rtmlon*rtmlat
     case default
        write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
        call endrun()
@@ -377,13 +374,12 @@ contains
 ! Compute arguments for gatherv, scatterv for vectors
 !
 ! !USES:
-    use clmtype  , only : grlnd, nameg, namel, namec, namep, allrof
-    use RunoffMod, only : gsMap_rtm_gdc2glo
+    use clmtype  , only : grlnd, nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
     implicit none
     character(len=*), intent(in) :: clmlevel     ! type of input data
-    type(mct_gsmap), pointer :: gsmap
+    type(mct_gsmap) , pointer    :: gsmap
 
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -405,8 +401,6 @@ contains
        gsmap => gsmap_col_gdc2glo
     case(namep)
        gsmap => gsmap_pft_gdc2glo
-    case(allrof)
-       if (do_rtm) gsmap => gsmap_rtm_gdc2glo
     case default
        write(iulog,*) 'get_clmlevel_gsmap: Invalid expansion character: ',trim(clmlevel)
        call endrun

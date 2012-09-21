@@ -21,6 +21,7 @@ module clm_driver
 !  -> dynland_hwcontent   Get initial heat, water content
 !     + pftdyn_interp                                                    [pftdyn]
 !     + dynland_hwcontent   Get new heat, water content                  [pftdyn]
+! ==== End Loop over clumps  ====
 !
 ! ==== Begin Loop over clumps ====
 !  -> clm_driverInit      save of variables from previous time step
@@ -69,7 +70,6 @@ module clm_driver
 ! Second phase of the clm main driver, for handling history and restart file output.
 !
 !  -> write_diagnostic    output diagnostic if appropriate
-!   + Rtmriverflux        calls RTM river routing model                [RTM]
 !   + inicPerp            initial snow and soil moisture               [is_perpetual]
 !  -> updateAccFlds       update accumulated fields
 !  -> hist_update_hbuf    accumulate history fields for time interval
@@ -83,8 +83,7 @@ module clm_driver
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
-  use clm_varctl          , only : wrtdia, fpftdyn, do_rtm
-  use clm_varctl          , only : iulog
+  use clm_varctl          , only : wrtdia, fpftdyn, iulog
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds
   use filterMod           , only : filter, setFilters
@@ -98,8 +97,7 @@ module clm_driver
 #endif
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb
-  use clm_time_manager    , only : get_step_size, get_curr_calday, &
-                                   get_curr_date, get_ref_date, get_nstep, is_perpetual
+  use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep,is_perpetual
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
   use inicPerpMod         , only : inicPerp  
@@ -132,7 +130,6 @@ module clm_driver
   use seq_drydep_mod      , only : n_drydep, drydep_method, DD_XLND
   use STATICEcosysDynMod  , only : interpMonthlyVeg
   use DryDepVelocity      , only : depvel_compute
-  use RtmMod              , only : RtmInput, RtmMapl2r, Rtm
   use abortutils          , only : endrun
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use SNICARMod           , only : SnowAge_grain
@@ -229,7 +226,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 #endif
   character(len=256) :: filer          ! restart file name
   integer :: ier                       ! error code
-  logical, save :: run_rtm             ! true => perform rtm calculation
 !-----------------------------------------------------------------------
 
   ! Assign local pointers to derived subtypes components (landunit-level)
@@ -707,25 +703,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   call t_startf('wrtdiag')
   call write_diagnostic(wrtdia, nstep)
   call t_stopf('wrtdiag')
-
-  ! ============================================================================
-  ! Route surface and subsurface runoff into rivers
-  ! ============================================================================
-
-  if (do_rtm) then
-     call mpi_barrier(mpicom,ier)
-     call t_startf('clmrtm')
-     call get_proc_bounds(begg_proc, endg_proc, begl_proc, endl_proc, &
-          begc_proc, endc_proc, begp_proc, endp_proc)
-     call RtmInput(run_rtm, begg_proc, endg_proc, &
-          clm3%g%gwf%qflx_runoffg(begg_proc:endg_proc),&
-          clm3%g%gwf%qflx_snwcp_iceg(begg_proc:endg_proc))
-     if (run_rtm) then
-        call RtmMapl2r()
-        call Rtm()
-     end if
-     call t_stopf('clmrtm')
-  end if
 
   ! ============================================================================
   ! Read initial snow and soil moisture data at each time step

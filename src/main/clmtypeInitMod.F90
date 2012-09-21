@@ -3202,6 +3202,7 @@ contains
     allocate(cwf%qflx_glcice_melt(beg:end))
     allocate(cwf%glc_rofi(beg:end))
     allocate(cwf%glc_rofl(beg:end))
+    allocate(cwf%qflx_floodc(beg:end))
 
     cwf%qflx_infl(beg:end) = nan
     cwf%qflx_surf(beg:end) = nan
@@ -3243,6 +3244,7 @@ contains
     cwf%qflx_glcice_melt(beg:end) = nan
     cwf%glc_rofi(beg:end)    = nan
     cwf%glc_rofl(beg:end)    = nan
+    cwf%qflx_floodc(beg:end) = spval
 
   end subroutine init_column_wflux_type
 
@@ -4040,11 +4042,13 @@ contains
     allocate(gwf%qflx_snwcp_iceg(beg:end))
     allocate(gwf%qflx_liq_dynbal(beg:end))
     allocate(gwf%qflx_ice_dynbal(beg:end))
+    allocate(gwf%qflx_floodg(beg:end))
 
-    gwf%qflx_runoffg(beg:end) = nan
-    gwf%qflx_snwcp_iceg(beg:end) = nan
+    gwf%qflx_runoffg(beg:end) = 0._r8
+    gwf%qflx_snwcp_iceg(beg:end) = 0._r8
     gwf%qflx_liq_dynbal(beg:end) = nan
     gwf%qflx_ice_dynbal(beg:end) = nan
+    gwf%qflx_floodg(beg:end) = 0._r8 !rtm_flood: initialize to zero for 1st time step instead of nan
 
   end subroutine init_gridcell_wflux_type
 

@@ -30,6 +30,9 @@ module clm_cpl_indices
 
   ! lnd -> drv (required)
 
+  integer, public ::index_l2x_Flrl_rofliq     ! lnd->rtm input fluxes
+  integer, public ::index_l2x_Flrl_rofice     ! lnd->rtm input fluxes
+
   integer, public ::index_l2x_Sl_t            ! temperature
   integer, public ::index_l2x_Sl_tref         ! 2m reference temperature
   integer, public ::index_l2x_Sl_qref         ! 2m reference specific humidity
@@ -57,13 +60,6 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
 
   integer, public :: nflds_l2x = 0
-
-  ! roff to driver (part of land for now) (optional if RTM is off)
-
-  integer, public ::index_r2x_Forr_roff = 0   ! liquid runoff to ocean
-  integer, public ::index_r2x_Forr_ioff = 0   ! ice runoff to ocean
-
-  integer, public :: nflds_r2x = 0
 
   ! drv -> lnd (required)
 
@@ -99,6 +95,8 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_dstdry2    ! flux: Size 2 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry3    ! flux: Size 3 dust -- dry deposition
   integer, public ::index_x2l_Faxa_dstdry4    ! flux: Size 4 dust -- dry deposition
+ 
+  integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof (flood) flux
 
   integer, public :: nflds_x2l = 0
 
@@ -153,8 +151,7 @@ contains
 !
 ! !USES:
   use seq_flds_mod  , only: seq_flds_x2l_fields, seq_flds_l2x_fields,     &
-                            seq_flds_x2s_fields, seq_flds_s2x_fields,     &
-                                                 seq_flds_r2x_fields
+                            seq_flds_x2s_fields, seq_flds_s2x_fields
   use mct_mod       , only: mct_aVect, mct_aVect_init, mct_avect_indexra, &
                             mct_aVect_clean, mct_avect_nRattr
   use seq_drydep_mod, only: drydep_fields_token, lnd_drydep
@@ -170,7 +167,6 @@ contains
 ! !LOCAL VARIABLES:
     type(mct_aVect)   :: l2x      ! temporary, land to coupler
     type(mct_aVect)   :: x2l      ! temporary, coupler to land
-    type(mct_aVect)   :: r2x      ! temporary, runoff to coupler
     type(mct_aVect)   :: s2x      ! temporary, glacier to coupler
     type(mct_aVect)   :: x2s      ! temporary, coupler to glacier
     integer           :: num 
@@ -190,6 +186,9 @@ contains
     !-------------------------------------------------------------
     ! clm -> drv 
     !-------------------------------------------------------------
+
+    index_l2x_Flrl_rofliq   = mct_avect_indexra(l2x,'Flrl_rofliq')
+    index_l2x_Flrl_rofice   = mct_avect_indexra(l2x,'Flrl_rofice')
 
     index_l2x_Sl_t          = mct_avect_indexra(l2x,'Sl_t')
     index_l2x_Sl_snowh      = mct_avect_indexra(l2x,'Sl_snowh')
@@ -269,23 +268,12 @@ contains
     index_x2l_Faxa_dstwet3  = mct_avect_indexra(x2l,'Faxa_dstwet3')
     index_x2l_Faxa_dstwet4  = mct_avect_indexra(x2l,'Faxa_dstwet4')
 
+    index_x2l_Flrr_flood    = mct_avect_indexra(x2l,'Flrr_flood')
+
     nflds_x2l = mct_avect_nRattr(x2l)
 
     call mct_aVect_clean(x2l)
     call mct_aVect_clean(l2x)
-
-    !-------------------------------------------------------------
-    ! runoff
-    !-------------------------------------------------------------
-
-    call mct_aVect_init(r2x, rList=seq_flds_r2x_fields, lsize=1)
-
-    index_r2x_Forr_roff  = mct_avect_indexra(r2x,'Forr_roff')
-    index_r2x_Forr_ioff  = mct_avect_indexra(r2x,'Forr_ioff')
-
-    nflds_r2x = mct_avect_nRattr(r2x)
-
-    call mct_aVect_clean(r2x)
 
     !-------------------------------------------------------------
     ! drv->sno (for cism coupling)

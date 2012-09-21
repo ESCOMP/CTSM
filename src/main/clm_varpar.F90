@@ -49,11 +49,6 @@ module clm_varpar
 ! Module Varaibles (initialized in clm_varpar_init)
 ! -------------------------------------------------------
 
-! RTM river routing model
-
-  integer :: rtmlon  ! number of rtm longitudes
-  integer :: rtmlat  ! number of rtm latitudes
-
 ! Indices used in surface file read and set in clm_varpar_init
 
   integer :: maxpatch           ! max number of patches
@@ -97,15 +92,12 @@ contains
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!
 ! !LOCAL VARIABLES:
 !
 !EOP
 !------------------------------------------------------------------------------
 
   maxpatch_urb   = 5
-  rtmlon         = 1
-  rtmlat         = 1
   npatch_urban   = maxpatch_pft + 1
   npatch_lake    = npatch_urban + maxpatch_urb
   npatch_wet     = npatch_lake  + 1

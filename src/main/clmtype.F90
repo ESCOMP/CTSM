@@ -1294,9 +1294,16 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_surf(:)	! surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_drain(:) 	! sub-surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_top_soil(:)! net water input into soil from top (mm/s)
-   real(r8), pointer :: qflx_sl_top_soil(:) ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
-   !real(r8), pointer :: qflx_snow_out(:)   !net water output from snow column
+   real(r8), pointer :: qflx_sl_top_soil(:)     ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
+   !real(r8), pointer :: qflx_snow_out(:)       ! net water output from snow column
    !real(r8), pointer :: qflx_drain_perched(:) 	! sub-surface runoff from perched wt (mm H2O /s)
+   !
+   real(r8), pointer :: qflx_h2osfc_surf(:)     ! surface water runoff
+   real(r8), pointer :: qflx_snow_h2osfc(:)     ! snow falling on surface water
+   real(r8), pointer :: qflx_drain_perched(:) 	! sub-surface runoff from perched wt (mm H2O /s)
+   real(r8), pointer :: qflx_floodc(:) 	        ! flood water flux at column level
+   real(r8), pointer :: qflx_snow_melt(:)       ! snow melt (net)
+   !
    real(r8), pointer :: qflx_snomelt(:) ! snow melt (mm H2O /s)
    real(r8), pointer :: qflx_qrgwl(:) 	! qflx_surf at glaciers, wetlands, lakes
    real(r8), pointer :: qflx_runoff(:) 	! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
@@ -1778,11 +1785,12 @@ end type gridcell_mflux_type
 ! gridcell water flux variables structure
 !----------------------------------------------------
 type, public :: gridcell_wflux_type
-   type(column_wflux_type):: cwf_a             !column-level water flux variables averaged to gridcell
+   type(column_wflux_type):: cwf_a           ! column-level water flux variables averaged to gridcell
    real(r8), pointer :: qflx_runoffg(:)      ! total grid-level liq runoff
    real(r8), pointer :: qflx_snwcp_iceg(:)   ! total grid-level ice runoff
    real(r8), pointer :: qflx_liq_dynbal(:)   ! liq dynamic land cover change conversion runoff flux
    real(r8), pointer :: qflx_ice_dynbal(:)   ! ice dynamic land cover change conversion runoff flux
+   real(r8), pointer :: qflx_floodg(:)       ! total grid-level flood water flux
 end type gridcell_wflux_type
 
 !----------------------------------------------------
@@ -2064,7 +2072,6 @@ character(len=16), parameter, public :: nameg  = 'gridcell'     ! name of gridce
 character(len=16), parameter, public :: namel  = 'landunit'     ! name of landunits
 character(len=16), parameter, public :: namec  = 'column'       ! name of columns
 character(len=16), parameter, public :: namep  = 'pft'          ! name of pfts
-character(len=16), parameter, public :: allrof = 'allrof'       ! name of rtm, runoff
 
 !
 !EOP

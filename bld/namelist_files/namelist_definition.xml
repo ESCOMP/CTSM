@@ -5,9 +5,42 @@
 <namelist_definition>
 
 <!-- ========================================================================================  -->
-<!-- CLM Namelist -->
+<!-- CLM/RTM namelist variables -->
 <!-- ========================================================================================  -->
 
+<entry id="finidat" 
+       type="char*256" 
+       category="datasets"
+       input_pathname="abs" 
+       group="clm_rtm_inparm" 
+       valid_values="" >
+Full pathname of initial conditions file. If blank CLM will startup from
+arbitrary initial conditions.
+</entry>
+
+<entry id="nrevsn" 
+       type="char*256" 
+       category="clm_restart"
+       input_pathname="abs" 
+       group="clm_rtm_inparm" 
+       valid_values="" >
+Full pathname of master restart file for a branch run. (only used if RUN_TYPE=branch)
+(Set with RUN_REFCASE and RUN_REFDATE)
+</entry>
+
+<entry id="fatmlndfrc" 
+       type="char*256" 
+       category="datasets"
+       input_pathname="abs" 
+       group="clm_rtm_inparm" 
+       valid_values="" >
+Full pathname of land fraction data file.
+</entry>
+
+
+<!-- ========================================================================================  -->
+<!-- CLM Namelist -->
+<!-- ========================================================================================  -->
 
 <entry id="clump_pproc" type="integer" category="clm_performance"
        group="clm_inparm" valid_values="" >
@@ -28,15 +61,6 @@ Type of CO2 feedback.
     diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
-<entry id="do_rtm" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If TRUE, turn on rtm river routing
-</entry>
-
-<entry id="ice_runoff" type="logical" category="clm_physics"
-       group="clm_inparm">
-If TRUE, river runoff will be split up into liquid and ice streams, otherwise ice runoff will be zero and all runoff directed to liquid stream
-</entry>
 
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,PROG_CROP_ONLY,ALL" >
@@ -87,14 +111,14 @@ Only works when glc_nec is greater than zero.
 Visible and Near-infrared albedo's for glacier ice
 </entry>
 
-<entry id="outnc_large_files" type="logical" category="history"
-       group="clm_inparm" valid_values="" >
-If TRUE, output NetCDF files in 64-bit large-file format
-</entry>
-
 <entry id="dtime" type="real"  category="clm_physics" 
        group="clm_inparm" valid_values="">
 Time step (seconds)
+</entry>
+
+<entry id="outnc_large_files" type="logical" category="history"
+       group="clm_inparm" valid_values="" >
+If TRUE, output NetCDF files in 64-bit large-file format
 </entry>
 
 <entry id="override_nsrest" type="integer"  category="clm_restart" 
@@ -108,20 +132,9 @@ set to 3 meaning branch.
 Full pathname of grid data file on the atm grid.
 </entry>
 
-<entry id="fatmlndfrc" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of land fraction data file (on atm grid).
-</entry>
-
 <entry id="fglcmask" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of land-ice mask data file (on lnd grid).
-</entry>
-
-<entry id="finidat" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of initial conditions file. If blank CLM will startup from
-arbitrary initial conditions.
 </entry>
 
 <entry id="flndtopo" type="char*256" category="datasets"
@@ -139,16 +152,6 @@ Full pathname datafile with plant function type (PFT) constants
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of time varying PFT data file. This causes the land-use types of
 the initial surface dataset to vary over time.
-</entry>
-
-<entry id="frivinp_rtm" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of input datafile for RTM.
-</entry>
-
-<entry id="fmapinp_rtm" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of input mapping file for model grid to rtm grid.
 </entry>
 
 <entry id="fsurdat" type="char*256"     category="datasets"
@@ -279,12 +282,6 @@ Per tape series history write frequency.
 <default>Default: 0,-24,-24,-24,-24,-24</default>
 </entry>
 
-<entry id="nrevsn" type="char*256" category="clm_restart"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of master restart file for a branch run. (only used if RUN_TYPE=branch)
-(Set with RUN_REFCASE and RUN_REFDATE)
-</entry>
-
 <entry id="nsegspc" type="integer" category="clm_performance"
        group="clm_inparm" valid_values="" >
 number of segments per clump for decomposition
@@ -299,11 +296,6 @@ Perturbation limit when doing error growth test
 <entry id="rest_flag" type="logical" category="clm_restart"
        group="clm_inparm" valid_values="" >
 If FALSE, don't write any restart files.
-</entry>
-
-<entry id="rtm_nsteps" type="integer" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-If greater than one, average River Transport Model (RTM) over given number of time steps
 </entry>
 
 <entry id="urban_hac" type="char*16" category="clm_physics"
@@ -947,13 +939,6 @@ Land mask description
 If TRUE, irrigation will be active (find surface datasets with active irrigation).
 </entry> 
 
-<entry id="rtm_res" type="char*20" category="default_settings"
-       group="default_settings" valid_values="r01,r05" value="r05">
-Resolution for River Transport Model (RTM)
-   r05 = half degree (default)
-   r01 = 0.1 degree
-</entry> 
-
 <entry id="sim_year" type="integer" category="default_settings"
        group="default_settings" valid_values=
 "1000,850,1100,1350,1600,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,2015,2025,2035,2045,2055,2065,2075,2085,2095,2105">
@@ -996,14 +981,6 @@ Prescribed aerosol mode for the atmosphere model
     rcp4.5 = For datm use rcp=4.5 future scenario 
     rcp6   = For datm use rcp=6.0 future scenario 
     rcp8.5 = For datm use rcp=8.5 future scenario
-</entry>
-
-<entry id="rtm" type="char*3" category="default_settings"
-       group="default_settings"
-       valid_values="on,off" value="off"
->
-Toggle to turn on river transport module (RTM), to run global river routing model to
-ocean
 </entry>
 
 <!-- ========================================================================================  -->

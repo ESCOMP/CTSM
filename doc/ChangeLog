@@ -1,4 +1,393 @@
 ===============================================================
+Tag name:  clm4_0_50
+Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
+Date:  Fri Sep 21 15:13:52 MDT 2012
+One-line Summary: testing of clm and new rof component
+
+Purpose of changes:
+
+Run tests on clm for new ROF component.  CLM mods by tcraig to support ROF.
+
+Requirements for tag:
+
+Test level of tag: doc, critical, standard, std-test, reg-test
+
+std-test
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+List all files eliminated:
+
+	Not needed since ROF is now a CLM external
+		D       models/lnd/clm/src/main/clm_mct_mod.F90
+		D       models/lnd/clm/src/riverroute
+		D       models/lnd/clm/src/riverroute/RtmMod.F90
+		D       models/lnd/clm/src/riverroute/RunoffMod.F90
+
+List all files added and what they do:
+
+	Fix for some of Erik's new tests
+		A       models/lnd/clm/test/system/user_nl_dirs/monthly
+		A       models/lnd/clm/test/system/user_nl_dirs/monthly/user_nl_clm
+		A       models/lnd/clm/test/system/user_nl_dirs/monthly/user_nl_cpl
+
+List all existing files that have been modified, and describe the changes:
+
+	M      models/lnd/clm/test/system/tests_pretag_jaguarpf
+	M      models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi
+	M      models/lnd/clm/tools/ncl_scripts
+	M      models/lnd/clm/tools/interpinic
+	M      models/lnd/clm/tools/mksurfdata_map/src
+	M      models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl
+	M      models/lnd/clm/bld
+	M       models/lnd/clm/bld/configure
+	M       models/lnd/clm/bld/user_nl_clm
+	M       models/lnd/clm/bld/listDefaultNamelist.pl
+	M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+	M       models/lnd/clm/bld/build-namelist
+	M       models/lnd/clm/bld/clm.buildnml.csh
+	M       models/lnd/clm/bld/namelist_files/namelist_definition.xml
+	M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+	M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+	M       models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+	M       models/lnd/clm/src/cpl_share/clm_cpl_indices.F90
+	M       models/lnd/clm/src/biogeochem/CNDVMod.F90
+	M      models/lnd/clm/src/biogeochem/DryDepVelocity.F90
+	M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+	M       models/lnd/clm/src/main/spmdGathScatMod.F90
+	M       models/lnd/clm/src/main/clm_varpar.F90
+	M       models/lnd/clm/src/main/decompInitMod.F90
+	M       models/lnd/clm/src/main/clm_initializeMod.F90
+	M       models/lnd/clm/src/main/clmtypeInitMod.F90
+	M       models/lnd/clm/src/main/histFileMod.F90
+	M       models/lnd/clm/src/main/clm_atmlnd.F90
+	M       models/lnd/clm/src/main/findHistFields.pl
+	M       models/lnd/clm/src/main/restFileMod.F90
+	M       models/lnd/clm/src/main/controlMod.F90
+	M       models/lnd/clm/src/main/clm_varctl.F90
+	M       models/lnd/clm/src/main/clm_driver.F90
+	M       models/lnd/clm/src/main/ncdio_pio.F90
+	M       models/lnd/clm/src/main/domainMod.F90
+	M       models/lnd/clm/src/main/decompMod.F90
+	M       models/lnd/clm/src/main/clmtype.F90
+	M       models/lnd/clm/src/main/histFldsMod.F90
+	M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+	M       models/lnd/clm/src/cpl_esmf/lnd_comp_mct.F90
+	M       SVN_EXTERNAL_DIRECTORIES
+	M       ChangeLog
+	M       ChangeSum
+	M       scripts/ccsm_utils/Case.template/config_definition.xml
+
+
+Machines testing ran on:
+
+%%%%%%%% Test reporting START %%%%%%%%
+
+	Test system is currently in flux so I will simply list all tests that have
+	failed and the 8 tests that we need to keep an eye on.  I've included bluefire
+	and lynx and pointers to where tests live.
+
+* tests that will pass in next tag due to new features
+** denotes an expected fail.
+*** any tputcomp tests that fail I'm inclined to ignore also.  These change from test to test.
+? or cd a test that will need fixing
+
+BLUEFIRE:
+
+OK ############ run build-namelist tests
+>>cd models/lnd/clm/bld/unit_testers
+>>./build-namelist_test.pl -compare /glade/scratch/muszala/svn/clm4_0_49/models/lnd/clm/bld/unit_testers -generate -test -csmdata /glade/proj3/cseg/inputdata >&!  out_unit_`date +"%m%d%y"`.lg
+
+ OK...failed tests will pass in next tag
+
+OK ############# run new I case tests
+[be1105en /glade/scratch/muszala/svn/clm_trunk/scripts  ]$
+create_test_suite -mach bluefire_ibm -input_list allIcompsetsRes.clm.auxtest -nobatch on -nobuild on -compare clm4_0_49 -baselineroot /glade/proj2/cgd/tss/clm_cesm_baselines -generate clm4_0_50 -testroot /glade/scratch/muszala/tests > & ! bf_out_allI_`date +"%m%d%y"`.lg
+
+    165507 - /glade/scratch/muszala/tests
+        >>./cs.status.165507.bluefire | grep FAIL
+...
+** SFAIL SBN.1x1_mexicocityMEX.I1PT.bluefire_ibm.GC.165507
+** SFAIL SBN.1x1_vancouverCAN.I1PT.bluefire_ibm.GC.165507
+** SFAIL SBN.1x1_urbanc_alpha.I1PT.bluefire_ibm.GC.165507
+** TFAIL SBN.1x1_asphalt_jungle.ICNTEST.bluefire_ibm.GC.165507
+** TFAIL SBN.T42_g16.I1850.bluefire_ibm.GC.165507
+** TFAIL SBN.T31_g16.I1850.bluefire_ibm.GC.165507
+** SFAIL SBN.f05_g16.I20TR.bluefire_ibm.GC.165507
+** SFAIL SBN.1x1_tropicAtl.I20TR.bluefire_ibm.GC.165507
+** SFAIL SBN.ne30_g16.I20TR.bluefire_ibm.GC.165507
+** SFAIL SBN.ne120_g16.I20TRCN.bluefire_ibm.GC.165507
+** SFAIL SBN.f05_g16.IRCP26CN.bluefire_ibm.GC.165507
+** SFAIL SBN.f05_g16.IRCP45CN.bluefire_ibm.GC.165507
+** SFAIL SBN.f05_g16.IRCP60CN.bluefire_ibm.GC.165507
+** SFAIL SBN.f05_g16.IRCP85CN.bluefire_ibm.GC.165507
+
+
+OK ############ run clm interactive tools tests
+[be1105en /glade/scratch/muszala/svn/clm_trunk/models/lnd/clm/test/system  ]$                                                                   
+>>nohup env CLM_SOFF=FALSE ./test_driver.sh -i >&!  bluefire_i_`date +"%m%d%y"`.lg &
+
+    OK:  looking at /glade/scratch/muszala/svn/clm_trunk/models/lnd/clm/test/system/td.951030.status.xFail  - rerun
+    clmTests/test-driver.533240 - /glade/scratch/muszala/svn/clm_trunk/models/lnd/clm/test/system/td.533240.status.xFail
+
+############# run old cesm/clm tests out of scripts
+
+
+[be1105en /glade/scratch/muszala/svn/clm_trunk/scripts  ]$                                                                                                                                                          
+>>create_test_suite -input_list bluefire.clm.auxtest -compare clm4_0_49 \
+-baselineroot /glade/proj2/cgd/tss/clm_cesm_baselines \
+-generate clm4_0_50 \
+-testroot /glade/scratch/muszala/tests >&! bf_out_`date +"%m%d%y"`.lg &
+
+    143258
+>>cs.status.143258.bluefire | grep -v PASS
+...
+
+*** FAIL  SMS.T31_g37.IG4804.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  SMS.1x1_numaIA.ICN.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  SMS.f10_f10.IRCP45CN.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  ERI.T31_g37.IG1850.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  ERS_D.f45_g37.I.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  SMS_RLA.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  SMS_RLB.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_49
+*** FAIL  ERS_D.f45_g37.I.bluefire_ibm.compare_hist.clm4_0_49
+
+* FAIL  NCK.T31_g37.I.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  PST.f45_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  PET_PT.f45_g37.I1850.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  ERI.T31_g37.IG1850.bluefire_ibm.compare_hist.clm4_0_49
+? FAIL  ERB.ne30_g16.I_1948-2004.bluefire_ibm
+   
+    Failing in Generate:
+    "/glade/scratch/muszala/svn/clm4_0_49/models/drv/shr/seq_infodata_mod.F90", line 620: 1525-006 The STATUS= specifier in the OPEN          
+    statement for
+     unit 98 cannot be set to OLD because the file rpointer.drv does not exist.  The program will stop.
+
+    BFAIL ERB.ne30_g16.I_1948-2004.bluefire_ibm.generate.clm4_0_50
+    BFAIL ERB.ne30_g16.I_1948-2004.bluefire_ibm.compare_hist.clm4_0_49
+? FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm
+
+    Failing in Generate:
+     0:"/glade/scratch/muszala/svn/clm4_0_49/models/drv/shr/seq_infodata_mod.F90", line 620: 1525-006 The STATUS= specifier in the OPEN
+    statemen     t for unit 98 cannot be set to OLD because the file rpointer.drv does not exist.  The program will stop.
+
+    BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.generate.clm4_0_50
+    BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.compare_hist.clm4_0_49
+? FAIL  ERH_D.T31_g37.I1850CN.bluefire_ibm
+
+       Failing in Generate:
+    "/glade/scratch/muszala/svn/clm4_0_49/models/drv/shr/seq_infodata_mod.F90", line 620: 1525-006 The STATUS= specifier in the OPEN          
+    statement for
+     unit 98 cannot be set to OLD because the file rpointer.drv does not exist.  The program will stop.
+
+    BFAIL ERH_D.T31_g37.I1850CN.bluefire_ibm.generate.clm4_0_50
+    BFAIL ERH_D.T31_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_49
+
+* FAIL  SMS.T31_g37.IG4804.bluefire_ibm.compare_hist.clm4_0_49
+** SFAIL SMS.1x1_mexicocityMEX.I1PT.bluefire_ibm.GC.143258
+    should be xFAIL : ERROR(build-namelist::new): Required input variable yearfirst was not found
+** SFAIL ERP.1x1_vancouverCAN.I1PT.bluefire_ibm.GC.143258
+    should be xFAIL : ERROR(build-namelist::new): Required input variable yearfirst was not found
+* FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  ERP.f19_g16.IGRCP60CN.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  PST.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  PET_PT.f10_f10.I20TRCN.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  SMS.f10_f10.IRCP45CN.bluefire_ibm.compare_hist.clm4_0_49
+* FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.compare_hist.clm4_0_49
+   
+
+
+
+############# run new test_system tests
+
+## interactive
+>> test_system -i -c clm4_0_49 -g clm4_0_50 >&! bluefire_tsi_`date +"%m%d%y"`.lg &
+
+    161038
+>>cs.status.161038.bluefire | grep -v PASS
+...
+SFAIL ERS_D.CLM_USRDAT.IalaskaCN.bluefire_ibm.GC.161038
+* FAIL  ERS_P1x64.f45_g37.I_1850_SPINUP_3HrWx_CN.bluefire_ibm.compare_hist.clm4_0_49
+    new fields in cpl history files
+* FAIL  ERS_P1x64.f45_g37.I_1850_SPINUP_3HrWx_CN.bluefire_ibm.memcomp.clm4_0_49
+    max memory values differ
+*** FAIL  ERS_P1x64.f45_g37.I_1850_SPINUP_3HrWx_CN.bluefire_ibm.tputcomp.clm4_0_49
+** FAIL  ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN.bluefire_ibm
+** BFAIL ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN.bluefire_ibm.generate.clm4_0_50
+** BFAIL ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN.bluefire_ibm.compare_hist.clm4_0_49
+cd RUN   ERS_D_P1x25.5x5_amazon.I_2000.bluefire_ibm.GC.161038
+** RUN   ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.bluefire_ibm.GC.161038
+** RUN   ERS48s_D_P1x64.f45_g37.I_2000_VOC.bluefire_ibm.GC.161038
+* FAIL  ERS48s_D_P1x64.f19_g16.I_2000_GLCMECPD.bluefire_ibm.compare_hist.clm4_0_49
+    new fields in cpl history files
+*** FAIL  ERS48s_D_P1x64.f19_g16.I_2000_GLCMECPD.bluefire_ibm.tputcomp.clm4_0_49
+** FAIL  PET_D_P1x64.f45_g37.I_2000_VOC.bluefire_ibm
+
+
+  
+## batch
+>>test_system -c clm4_0_49 -g clm4_0_50 > & ! bluefire_ts_`date +"%m%d%y"`.lg &
+
+    143420 -- cs.status.143420.bluefire
+cs.status.143420.bluefire | grep -v PASS
+...
+* FAIL  ERS211d.f10_f10.ICNADSPIN.bluefire_ibm.compare_hist.clm4_0_49
+    new fields in cpl history files
+*** FAIL  ERS211d.f10_f10.ICNADSPIN.bluefire_ibm.tputcomp.clm4_0_49
+** CFAIL ERS48s_D.f09_g16.ICNEXSPIN.bluefire_ibm.GC.143420
+    this is xFAIL for interactive, should also be listed here
+* FAIL  ERS48s_D_P64x16.ne30_g16.ICN.bluefire_ibm.compare_hist.clm4_0_49
+    new fields in cpl history files
+*** FAIL  ERS48s_D_P64x16.ne30_g16.ICN.bluefire_ibm.tputcomp.clm4_0_49
+* FAIL  PET_D_P1x64.ne30_g16.ICN.bluefire_ibm.compare_hist.clm4_0_49
+    new fields in cpl history files
+? RUN   ERS211d_D_P112x2.f10_f10.ICNCROP.bluefire_ibm.GC.143420
+    run failed
+** FAIL  ERS211d.f10_f10.I_2000_VOC_CN.bluefire_ibm.compare_hist.clm4_0_49
+*** FAIL  ERS211d.f10_f10.I_2000_VOC_CN.bluefire_ibm.tputcomp.clm4_0_49
+** RUN   ERS211d_P192x2.f19_g16.I_2000_CNDV_CROP.bluefire_ibm.GC.143420
+** SFAIL ERS_D_P96x32.T62_g37.I_2000.bluefire_ibm.GC.143420
+
+
+
+#############
+
+LYNX:
+
+############# run new test_system tests
+
+## interactive
+>> test_system -i -c clm4_0_49_lynx_pgi -g clm4_0_50_lynx_pgi >&! lynx_i_`date +"%m%d%y"`.lg &
+
+    144558
+
+cs.status.144558.lynx | grep -v PASS
+...
+*** FAIL  ERS211d.1x1_brazil.I_2000.lynx_pgi.tputcomp.clm4_0_49_lynx_pgi
+* FAIL  ERS48s_D_P1x12.f10_f10.ICNCROP.lynx_pgi.compare_hist.clm4_0_49_lynx_pgi
+    new fields in cpl history files
+** SFAIL SMS_D.1x1_vancouverCAN.I1PT.lynx_pgi.GC.144558
+** SFAIL ERS.1x1_mexicocityMEX.I1PT.lynx_pgi.GC.144558
+
+
+## batch
+>> test_system -c clm4_0_49_lynx_pgi -g clm4_0_50_lynx_pgi >&! lynx_`date +"%m%d%y"`.lg &
+
+  160925
+./cs.status.160925.lynx | grep -v PASS
+...
+? BFAIL PMT_D.f45_g37.I_2000.lynx_pgi.compare_hist.clm4_0_49_lynx_pgi
+  
+    problem in generate case not copying over file
+     PASS
+    Initial Test log is /glade/scratch/muszala/PMT_D.f45_g37.I_2000.lynx_pgi.G.114232/run/cpl.log.120920-152048
+    /var/spool/torque/mom_priv/jobs/102008.nid00003.SC:  Storing new baseline in /glade/proj2/cgd/tss/clm_cesm_baselines/clm4_0_49_ly
+    nx_pgi/PMT_D.f45_g37.I_2000.lynx_pgi
+    ERROR in /var/spool/torque/mom_priv/jobs/102008.nid00003.SC:  could not copy /glade/scratch/muszala/archive/PMT_D.f45_g37.I_2000.
+    lynx_pgi.G.114232/cpl/hist/ to /glade/proj2/cgd/tss/clm_cesm_baselines/clm4_0_49_lynx_pgi/PMT_D.f45_g37.I_2000.lynx_pgi/cpl.hi.nc
+
+? RUN   ERS48s_D.f45_g37.I_2000_VOC.lynx_pgi.GC.160925
+    run didn't finish?
+? RUN   ERS48s_D.f10_f10.I_2000_CN.lynx_pgi.GC.160925
+    PBS: job killed: walltime 9021 exceeded limit 9000
+? RUN   ERS48s_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD.lynx_pgi.GC.160925
+     PBS: job killed: walltime 9041 exceeded limit 9000
+
+## interactive, with mirage test list and intel compiler
+>>test_system -i -p intel -l mirage.interactive -o "-mach lynx" -c clm4_0_49_lynx_intel -g clm4_0_50_lynx_intel > & ! lynx_mi_intel_`date +"%m%d%y"`.lg &
+
+  143620  cs.status.143620.lynx
+>>cs.status.143620.lynx  | grep -v PASS
+...
+** FAIL  ERS.1x1_brazil.I_2000.lynx_intel
+** BFAIL ERS.1x1_brazil.I_2000.lynx_intel.generate.clm4_0_50_lynx_intel
+** BFAIL ERS.1x1_brazil.I_2000.lynx_intel.compare_hist.clm4_0_49_lynx_intel
+? FAIL  ERI_D.1x1_camdenNJ.I_2000_VOC.lynx_intel
+    forrtl: error (73): floating divide by zero - rtmmod_mp_rtmini_         303  RtmMod.F90
+** RUN   ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel.GC.143620
+    forrtl: error (73): floating divide by zero - rtmmod_mp_rtmini_         303  RtmMod.F90
+* FAIL  ERS48s_D_P1x12.f10_f10.I_2000_CN.lynx_intel.compare_hist.clm4_0_49_lynx_intel
+    new fields in cpl history files
+*** FAIL  ERS48s_D_P1x12.f10_f10.I_2000_CN.lynx_intel.tputcomp.clm4_0_49_lynx_intel
+   
+%%%%%%%% Test reporting END %%%%%%%%
+
+
+  build-namelist unit tester:
+
+  CESM test lists:
+
+    bluefire/CESM
+    lynx/CESM
+
+  bluefire/PTCLM
+
+  test_system testing:
+
+    bluefire batch:
+    bluefire interactive:
+    lynx/pgi batch:
+    lynx/pgi interactive:
+    mirage,storm/ifort interactive:
+
+CLM tag used for the baseline comparison tests if applicable:
+
+	clm4_0_49
+
+Changes answers relative to baseline:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - compset (and additional configure options):
+   - build-namelist options (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_49
 Originator(s):  erik (Kluzek Erik 303-497-1326 CGD)
 Date: Sun Sep 16 01:05:04 MDT 2012
@@ -162,7 +551,7 @@ Index: expectedClmTestFails.xml
 +      <bluefire>
 +         <IBM>
 +              <entry testId="ERS_D.CLM_USRDAT.IalaskaCN.bluefire_ibm"        failType="RUN">CESM script issue</entry>
-+              <entry testId="ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="FAIL">Restart length different</entry>
++              <entry testId="" failType="FAIL">Restart length different</entry>
 +              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC"           failType="FAIL">Restart length different</entry>
 +              <entry testId="ERS48s_D_P1x64.f45_g37.I_2000_VOC"              failType="RUN">Initial simulation fails</entry>
 +              <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>

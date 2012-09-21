@@ -102,16 +102,6 @@ module clm_varctl
   character(len=16), public :: inst_name
   character(len=16), public :: inst_suffix
 !
-! Rtm control variables
-!
-  logical           , public :: do_rtm = .true.         ! turn on river routining
-  character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
-  integer,            public :: rtm_nsteps = iundef     ! if > 1, average rtm over rtm_nsteps time steps
-  logical,            public :: ice_runoff = .true.     ! true => runoff is split into liquid and ice 
-                                                        ! otherwise just liquid
-  character(len=256), public :: fmapinp_rtm = ' '       ! mapping file from clm to rtm grid
-                                                        ! if blank - then rtm calculates the mapping matrix at runtime
-!
 ! Decomp control variables
 !
   integer, public :: nsegspc = 20                       ! number of segments per clump for decomp
@@ -254,13 +244,7 @@ contains
 #endif
        end if
 
-       ! If rtm_nsteps was not entered in the namelist, give it the following default value
-       if (do_rtm) then
-          if (rtm_nsteps == iundef) rtm_nsteps = (3600*3)/dtime ! 3 hours
-       end if
-
        ! Check on run type
-
        if (nsrest == iundef) call shr_sys_abort( subname//' ERROR:: must set nsrest' )
        if (nsrest == nsrBranch .and. nrevsn == ' ') &
           call shr_sys_abort( subname//' ERROR: need to set restart data file name' )

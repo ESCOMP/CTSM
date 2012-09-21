@@ -14,7 +14,7 @@ module clm_initializeMod
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, &
-                               create_glacier_mec_landunit, iulog, do_rtm 
+                               create_glacier_mec_landunit, iulog
   use clm_varsur      , only : wtxy, vegxy, topoxy
   use perf_mod        , only : t_startf, t_stopf
   use ncdio_pio
@@ -280,7 +280,6 @@ contains
     use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
     use STATICEcosysDynMod , only : interpMonthlyVeg
     use DustMod         , only : Dustini
-    use RtmMod          , only : Rtmini
     use clm_time_manager, only : get_curr_date, get_nstep, advance_timestep, &
                                  timemgr_init, timemgr_restart_io, timemgr_restart
     use clm_time_manager, only : get_step_size, get_curr_calday
@@ -404,19 +403,6 @@ contains
 #if (defined CN) || (defined CNDV)
     call CNEcosystemDynInit( begc, endc, begp, endp )
 #endif
-
-    ! --------------------------------------------------------------
-    ! Initialize river routing model
-    ! --------------------------------------------------------------
-
-    if (do_rtm) then 
-       if (masterproc) write(iulog,*)'Attempting to initialize RTM'
-       call shr_sys_flush(iulog)
-       call t_startf('init_rtm')
-       call Rtmini()
-       call t_stopf('init_rtm')
-       if (masterproc) write(iulog,*)'Successfully initialized RTM'
-    end if
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

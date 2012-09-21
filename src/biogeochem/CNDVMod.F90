@@ -155,11 +155,9 @@ contains
     use decompMod       , only : get_proc_bounds, get_proc_global
     use clm_varpar      , only : maxpatch_pft
     use domainMod       , only : ldomain
-    use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
-                                 frivinp_rtm, iulog
+    use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, iulog
     use clm_varcon      , only : spval
-    use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, &
-                                 get_curr_time
+    use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, get_curr_time
     use fileutils       , only : get_filename
     use shr_sys_mod     , only : shr_sys_getenv
     use spmdMod         , only : masterproc
@@ -290,11 +288,6 @@ contains
 
     str = get_filename(fpftcon)
     call ncd_putatt(ncid, ncd_global, 'PFT_physiological_constants_dataset', trim(str))
-
-    if (frivinp_rtm /= ' ') then
-       str = get_filename(frivinp_rtm)
-       call ncd_putatt(ncid, ncd_global, 'RTM_input_datset', trim(str)) 
-    end if
 
     ! -----------------------------------------------------------------------
     ! Define dimensions.

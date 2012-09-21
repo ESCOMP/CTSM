@@ -41,9 +41,6 @@ module lnd_comp_esmf
   private :: lnd_domain_esmf          ! Set the land model domain information
   private :: lnd_export_esmf          ! export land data to CESM coupler
   private :: lnd_import_esmf          ! import data from the CESM coupler to the land model
-  private :: rof_DistGrid_esmf        ! Distribute river runoff grid
-  private :: rof_domain_esmf          ! Set the river runoff model domain information
-  private :: rof_export_esmf          ! Export the river runoff model data to the CESM coupler
   private :: sno_export_esmf
   private :: sno_import_esmf
 !
@@ -51,8 +48,8 @@ module lnd_comp_esmf
 !
 ! Time averaged flux fields
 !  
-  type(ESMF_Array)  :: l2x_SNAP       ! Snapshot of land to coupler data on the land grid
-  type(ESMF_Array)  :: l2x_SUM        ! Summation of land to coupler data on the land grid
+  type(ESMF_Array)  :: l2x_l_SNAP       ! Snapshot of land to coupler data on the land grid
+  type(ESMF_Array)  :: l2x_l_SUM        ! Summation of land to coupler data on the land grid
 
   type(ESMF_Array)  :: s2x_s_SNAP     ! Snapshot of sno to coupler data on the land grid
   type(ESMF_Array)  :: s2x_s_SUM      ! Summation of sno to coupler data on the land grid
@@ -65,11 +62,6 @@ module lnd_comp_esmf
 ! Atmospheric mode  
 !
   logical :: atm_prognostic           ! Flag if active atmosphere component or not
-!
-! Internal clm grid
-!
-  real(R8), pointer :: fptr_l2x_clm(:,:) ! land to cpl export state
-  real(R8), pointer :: fptr_x2l_clm(:,:) ! cpl to land import state
 
 !EOP
 !===============================================================
@@ -102,13 +94,15 @@ subroutine lnd_register_esmf(comp, rc)
     ! Register the callback routines.
 
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
-      lnd_init_esmf, phase=1, rc=rc)
+         lnd_init_esmf, phase=1, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
-      lnd_run_esmf, phase=1, rc=rc)
+         lnd_run_esmf, phase=1, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
-      lnd_final_esmf, phase=1, rc=rc)
+         lnd_final_esmf, phase=1, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
 end subroutine
@@ -132,14 +126,12 @@ end subroutine
     use clm_atmlnd       , only : clm_l2a
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
-                                  inst_index, inst_suffix, inst_name, do_rtm
+                                  inst_index, inst_suffix, inst_name 
     use clm_varctl       , only : create_glacier_mec_landunit 
     use controlMod       , only : control_setNL
     use decompMod        , only : get_proc_bounds
     use domainMod        , only : ldomain
-    use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
-    use abortutils       , only : endrun
     use esmf
     use clm_varctl       , only : iulog, noland
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
@@ -168,8 +160,8 @@ end subroutine
 ! !LOCAL VARIABLES:
     integer              :: mpicom_lnd, mpicom_vm, gsize
 
-    type(ESMF_DistGrid)  :: distgrid_l, distgrid_r, distgrid_s
-    type(ESMF_Array)     :: dom_l, dom_r, dom_s, l2x, x2l, r2x, s2x, x2s
+    type(ESMF_DistGrid)  :: distgrid_l, distgrid_s
+    type(ESMF_Array)     :: dom_l, dom_s, l2x, x2l, s2x, x2s
     type(ESMF_VM)        :: vm
     integer, allocatable :: gindex(:)
     integer  :: lsize                                ! size of attribute vector
@@ -348,8 +340,6 @@ end subroutine
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="lnd_prognostic", value=.false., rc=rc)
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="rof_present", value=.false., rc=rc)
-       if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     end if
 
     ! Determine if aerosol and dust deposition come from atmosphere component
@@ -377,29 +367,11 @@ end subroutine
     call lnd_domain_esmf( dom_l, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    ! Finish initializing clm
-
-    call initialize2()
-
-    ! Initialize rof distgrid and domain
-
-    if (do_rtm) then
-       distgrid_r = rof_DistGrid_esmf(gsize, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="gsize_rof", value=gsize, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       
-       dom_r = mct2esmf_init(distgrid_r, attname=seq_flds_dom_fields, name="domain_r", rc=rc)
-       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       
-       call rof_domain_esmf( dom_r, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    end if
-       
     ! Initialize sno distgrid and domain (currently same as lnd - ask Jon)
 
     distgrid_s = lnd_DistGrid_esmf(gsize, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_AttributeSet(export_state, name="gsize_sno", value=gsize, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -413,8 +385,6 @@ end subroutine
 
     l2x = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fields, name="l2x", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    r2x = mct2esmf_init(distgrid_r, attname=seq_flds_r2x_fields, name="r2x", rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     s2x = mct2esmf_init(distgrid_s, attname=seq_flds_s2x_fields, name="s2x", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -425,14 +395,10 @@ end subroutine
 
     call ESMF_StateAdd(export_state, (/dom_l/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_StateAdd(export_state, (/dom_r/), rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_StateAdd(export_state, (/dom_s/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call ESMF_StateAdd(export_state, (/l2x/), rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_StateAdd(export_state, (/r2x/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call ESMF_StateAdd(export_state, (/s2x/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -442,17 +408,21 @@ end subroutine
     call ESMF_StateAdd(import_state, (/x2s/), rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    l2x_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fluxes, &
-        name="l2x_SNAP", rc=rc)
+    l2x_l_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fluxes, &
+        name="l2x_l_SNAP", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    l2x_SUM = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fluxes, &
-        name="l2x_SUM", rc=rc)
+    l2x_l_SUM = mct2esmf_init(distgrid_l, attname=seq_flds_l2x_fluxes, &
+        name="l2x_l_SUM", rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     if (masterproc) then
        write(iulog,format)'time averaging the following flux fields over the coupling interval'
        write(iulog,format) trim(seq_flds_l2x_fluxes)
     end if
+
+    ! Finish initializing clm
+
+    call initialize2()
 
     ! Check that clm internal dtime aligns with clm coupling interval
 
@@ -467,26 +437,28 @@ end subroutine
     ! Create land export state then map this from the 
     ! clm internal grid to the clm driver (atm) grid 
 
-    call get_proc_bounds(begg, endg) ! clm grid - internal (atm)
-
-    allocate(fptr_x2l_clm(nflds_x2l, endg-begg+1))
-    allocate(fptr_l2x_clm(nflds_l2x, endg-begg+1))
-
     call ESMF_ArrayGet(l2x, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    ! Initialize rof export state
+    ! Create land export state 
 
-    if (do_rtm) then
-       call rof_export_esmf( r2x , rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    end if
-
+    call get_proc_bounds(begg, endg) 
+    call lnd_export_esmf(clm_l2a, fptr, begg, endg)
+    
     ! Export sno for cism
 
     if (create_glacier_mec_landunit) then
+       s2x_s_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fluxes, &
+           name="s2x_s_SNAP", rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+       s2x_s_SUM = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fluxes, &
+           name="s2x_s_SUM", rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
+       call create_clm_s2x(clm_s2x,init=.true.)
        call sno_export_esmf( clm_s2x, s2x, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     endif   
 
     ! Initialize averaging counter
@@ -502,22 +474,10 @@ end subroutine
     call ESMF_AttributeSet(export_state, name="lnd_ny", value=ldomain%nj, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-    if (do_rtm) then
-       call ESMF_AttributeSet(export_state, name="rof_present", value=.true., rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="rof_nx", value=rtmlon, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="rof_ny", value=rtmlat, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    else
-       call ESMF_AttributeSet(export_state, name="rof_present", value=.false., rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    end if
-
     if (create_glacier_mec_landunit) then
        call ESMF_AttributeSet(export_state, name="sno_present", value=.true., rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.true., rc=rc)
+       call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.false., rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="sno_nx", value=ldomain%ni, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -526,23 +486,13 @@ end subroutine
     else
        call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+       call ESMF_AttributeSet(export_state, name="sno_prognostic", value=.false., rc=rc)
+       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     endif
 
     call ESMF_AttributeGet(export_state, name="nextsw_cday", value=nextsw_cday, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     call set_nextsw_cday( nextsw_cday )
-
-    ! Create land export state 
-
-    call lnd_export_esmf(clm_l2a, fptr, begg, endg)
-    
-    if (do_rtm) then
-       call rof_export_esmf( r2x , rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    end if
-
-    !call sno_export_esmf( s2x, rc=rc)
-    !if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     ! Determine atmosphere modes
 
@@ -622,11 +572,10 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     use clm_varorb      ,only : eccen, obliqr, lambm0, mvelpp
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep, set_nextsw_cday,update_rad_dtime
-    use domainMod       ,only : ldomain
     use decompMod       ,only : get_proc_bounds
     use abortutils      ,only : endrun
     use esmf
-    use clm_varctl      ,only : iulog, do_rtm
+    use clm_varctl      ,only : iulog
     use clm_varctl      ,only : create_glacier_mec_landunit 
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
@@ -649,7 +598,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
    integer, intent(out)         :: rc              ! Return code
 !
 ! !LOCAL VARIABLES:
-    type(ESMF_Array)  :: l2x, r2x, s2x, x2l, x2s, dom_l
+    type(ESMF_Array)  :: l2x, s2x, x2l, x2s, dom_l
     real(R8), pointer :: fptr(:, :)
     integer :: ymd_sync                   ! Sync date (YYYYMMDD)
     integer :: yr_sync                    ! Sync current year
@@ -679,11 +628,12 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     integer :: begg, endg                 ! Beginning and ending gridcell index numbers
     integer :: lbnum                      ! input to memory diagnostic
     integer :: g,i,ka                     ! counters
+    real(r8):: recip                      ! recip
+    logical :: glcrun_alarm               ! if true, sno data is averaged and sent to glc this step
+    logical :: update_glc2sno_fields      ! if true, update glacier_mec fields
     logical,save :: first_call = .true.   ! first call work
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_esmf"
-    logical :: glcrun_alarm    ! if true, sno data is averaged and sent to glc this step
-    logical :: update_glc2sno_fields  ! if true, update glacier_mec fields
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein, Fei Liu
@@ -707,17 +657,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
 
-    ! Use infodata to set orbital values if it was updated at run time
-
-    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
     ! Determine time of next atmospheric shortwave calculation
 
     call seq_timemgr_EClockGetData(EClock, &
@@ -735,28 +674,19 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
 
     call get_proc_bounds(begg, endg)
 
-    if (first_call) then
-       call ESMF_StateGet(export_state, itemName="domain_l", array=dom_l, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call ESMF_ArrayGet(dom_l, localDe=0, farrayPtr=fptr, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       ka = esmfshr_util_ArrayGetIndex(dom_l,'ascale',rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       do g = begg,endg
-          i = 1 + (g - begg)
-          ldomain%ascale(g) = fptr(ka,i)
-       end do
-    endif
     call t_stopf ('lc_lnd_run1')
     
     ! Map ESMF to CLM data type
     ! Perform downscaling if appropriate
 
     call t_startf ('lc_lnd_import')
+
     call ESMF_StateGet(import_state, itemName="x2l", array=x2l, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call ESMF_ArrayGet(x2l, localDe=0, farrayPtr=fptr, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call lnd_import_esmf( fptr, clm_a2l, begg, endg )
     
     ! Map to clm (only when state and/or fluxes need to be updated)
@@ -767,12 +697,26 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
        if (update_glc2sno_fields) then
+          call ESMF_StateGet(import_state, itemName="x2s", array=x2s, rc=rc)
+          if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           call sno_import_esmf( x2s, clm_x2s, rc=rc )
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           call unpack_clm_x2s(clm_x2s)
        endif   ! update_glc2sno
     endif   ! create_glacier_mec_landunit
+
     call t_stopf ('lc_lnd_import')
+
+    ! Use infodata to set orbital values if it was updated at run time
+
+    call ESMF_AttributeGet(export_state, name="orb_eccen", value=eccen, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_AttributeGet(export_state, name="orb_mvelpp", value=mvelpp, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_AttributeGet(export_state, name="orb_lambm0", value=lambm0, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+    call ESMF_AttributeGet(export_state, name="orb_obliqr", value=obliqr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     ! Loop over time steps in coupling interval
 
@@ -839,13 +783,13 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
  
        nstep = get_nstep()
        if (nstep <= 1) then
-          call esmfshr_util_ArrayCopy(l2x, l2x_SUM, rc=rc)
+          call esmfshr_util_ArrayCopy(l2x, l2x_l_SUM, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           avg_count = 1
        else
-          call esmfshr_util_ArrayCopy(l2x, l2x_SNAP, rc=rc)
+          call esmfshr_util_ArrayCopy(l2x, l2x_l_SNAP, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          call esmfshr_util_ArraySum(l2x_SNAP, l2x_SUM, rc=rc)
+          call esmfshr_util_ArraySum(l2x_l_SNAP, l2x_l_SUM, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           avg_count = avg_count + 1
        endif
@@ -853,9 +797,9 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        ! Map sno data type to MCT
 
        if (create_glacier_mec_landunit) then
-          call create_clm_s2x(clm_s2x)
           call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+          call create_clm_s2x(clm_s2x)
           call sno_export_esmf( clm_s2x, s2x, rc=rc )
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           if (nstep <= 1) then
@@ -867,7 +811,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
              if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
              call esmfshr_util_ArraySum(s2x_s_SNAP, s2x_s_SUM, rc=rc)
              if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-             avg_count_sno = avg_count + 1
+             avg_count_sno = avg_count_sno + 1
           endif
        endif    ! create_glacier_mec_landunit
 
@@ -883,11 +827,15 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
     call t_startf('lc_lnd_run3')
 
     ! Finish accumulation of attribute vector and average and zero out partial sum and counter
-    call esmfshr_util_ArrayAvg(l2x_SUM, avg_count, rc=rc)
+    if (avg_count /= 0) then
+       recip = 1.0_r8/(real(avg_count,r8))
+       call ESMF_ArrayGet(l2x_l_SUM, localDe=0, farrayPtr=fptr, rc=rc)
+       if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+       fptr(:, :) = fptr(:, :) * recip
+    endif
+    call esmfshr_util_ArrayCopy(l2x_l_SUM, l2x, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call esmfshr_util_ArrayCopy(l2x_SUM, l2x, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call esmfshr_util_ArrayZero(l2x_SUM, rc=rc)
+    call esmfshr_util_ArrayZero(l2x_l_SUM, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
     avg_count = 0                   
 
@@ -895,7 +843,12 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        call ESMF_AttributeGet(export_state, name="glcrun_alarm", value=glcrun_alarm, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        if (glcrun_alarm) then
-          call esmfshr_util_ArrayAvg(s2x_s_SUM, avg_count, rc=rc)
+          if (avg_count_sno /= 0) then
+             recip = 1.0_r8/(real(avg_count_sno,r8))
+             call ESMF_ArrayGet(s2x_s_SUM, localDe=0, farrayPtr=fptr, rc=rc)
+             if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+             fptr(:, :) = fptr(:, :) * recip
+          endif
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           call esmfshr_util_ArrayCopy(s2x_s_SUM, s2x, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -906,17 +859,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        endif
     endif
 
-    ! Create river runoff output state
-
-    if (do_rtm) then
-       call t_startf ('lc_rof_export')
-       call ESMF_StateGet(export_state, itemName="r2x", array=r2x, rc=rc)
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call rof_export_esmf(r2x, rc=rc )
-       if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       call t_stopf ('lc_rof_export')
-    end if
-       
     ! Check that internal clock is in sync with master clock
 
     call get_curr_date( yr, mon, day, tod, offset=-dtime )
@@ -983,19 +925,19 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     ! Destroy ESMF objects
     call esmfshr_util_StateArrayDestroy(export_state,'domain_l',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call esmfshr_util_StateArrayDestroy(export_state,'domain_r',rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call esmfshr_util_StateArrayDestroy(export_state,'domain_s',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call esmfshr_util_StateArrayDestroy(export_state,'l2x',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    call esmfshr_util_StateArrayDestroy(export_state,'r2x',rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call esmfshr_util_StateArrayDestroy(export_state,'s2x',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
     call esmfshr_util_StateArrayDestroy(import_state,'x2l',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
+
     call esmfshr_util_StateArrayDestroy(import_state,'x2s',rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -1123,6 +1065,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        fptr(index_l2x_Fall_lwup,i)   = -l2a%eflx_lwrad_out(g)
        fptr(index_l2x_Fall_evap,i)   = -l2a%qflx_evap_tot(g)
        fptr(index_l2x_Fall_swnet,i)  =  l2a%fsa(g)
+
        if (index_l2x_Fall_fco2_lnd /= 0) then
           fptr(index_l2x_Fall_fco2_lnd,i) = -l2a%nee(g)  
        end if
@@ -1141,6 +1084,11 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        if (index_l2x_Fall_flxvoc  /= 0 ) &
             fptr(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = &
                         -l2a%flxvoc(g,:shr_megan_mechcomps_n)
+
+       ! sign convention is positive downwared with 
+       ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
+       fptr(index_l2x_Flrl_rofliq,i) = l2a%rofliq(g)
+       fptr(index_l2x_Flrl_rofice,i) = l2a%rofice(g)
     end do
 
   end subroutine lnd_export_esmf
@@ -1219,6 +1167,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 !
 !EOP
 !---------------------------------------------------------------------------
+
     co2_type_idx = 0
     if (co2_type == 'prognostic') then
        co2_type_idx = 1
@@ -1240,6 +1189,14 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     do g = begg,endg
         i = 1 + (g - begg)
        
+        ! Determine flooding input, sign convention is positive downward and
+        ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
+        ! change the sign to indicate addition of water to system.
+
+!tcraig aug 2012, use following in source code to get flood data
+!       clm3%g%gwf%qflx_floodg => clm_a2l%forc_flood
+        a2l%forc_flood(g)   = -fptr(index_x2l_Flrr_flood,i)  
+
         ! Determine required receive fields
 
         a2l%forc_hgt(g)     = fptr(index_x2l_Sa_z,i)         ! zgcmxy  Atm state m
@@ -1416,279 +1373,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     
 !===============================================================================
     
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: rof_SetgsMap_esmf
-!
-! !INTERFACE:
-  function rof_DistGrid_esmf(gsize, rc)
-!
-! !DESCRIPTION:
-!
-! Set the ESMF distributed grid for the runoff model
-!
-!---------------------------------------------------------------------------
-
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use clm_varpar  , only : rtmlon, rtmlat
-    use RunoffMod   , only : runoff
-    use abortutils  , only : endrun
-    use clm_varctl  , only : iulog
-    implicit none
-! !RETURN:
-    type(ESMF_DistGrid)                 :: rof_DistGrid_esmf   
-! !ARGUMENTS:
-    integer, intent(out)                :: gsize   ! Grid size
-    integer, intent(out)                :: rc      ! Return code
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-    !
-    ! Local Variables
-    !
-    integer,allocatable :: gindex(:)         ! indexing for runoff grid cells
-    integer :: n, ni                         ! indices
-    integer :: lsize                         ! size of runoff data and number of grid cells
-    integer :: ier                           ! error code
-    character(len=32), parameter :: sub = 'rof_DistGrid_esmf'
-    !-------------------------------------------------------------------
-
-    ! Build the rof grid numbering
-    ! NOTE:  Numbering scheme is: West to East and South to North
-    ! starting at south pole.  Should be the same as what's used in SCRIP
-    
-    rc = ESMF_SUCCESS
-    
-    gsize = rtmlon*rtmlat
-    lsize = runoff%lnumro
-    allocate(gindex(lsize),stat=ier)
-
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          if (ni > runoff%lnumro) then
-             write(iulog,*) sub, ' : ERROR runoff count',n,ni,runoff%lnumro
-             call endrun( sub//' ERROR: runoff > expected' )
-          endif
-          gindex(ni) = runoff%gindex(n)
-       endif
-    end do
-    if (ni /= runoff%lnumro) then
-       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
-       call endrun( sub//' ERROR: runoff not equal to expected' )
-    endif
-
-    rof_DistGrid_esmf = mct2esmf_init(gindex, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    deallocate(gindex)
-
-  end function rof_DistGrid_esmf
-
-!===============================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: rof_domain_esmf
-!
-! !INTERFACE:
-  subroutine rof_domain_esmf( dom, rc )
-!
-! !DESCRIPTION:
-!
-! Send the runoff model domain information to the coupler
-!
-!---------------------------------------------------------------------------
-
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use clm_varcon  , only : re
-    use RunoffMod   , only : runoff
-    use abortutils  , only : endrun
-    use clm_varctl  , only : iulog
-    use spmdMod     , only : iam
-    implicit none
-! !ARGUMENTS:
-    type(ESMF_Array), intent(inout)     :: dom   ! Domain information
-    integer, intent(out)                :: rc    ! Return code
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-    !
-    ! Local Variables
-    !
-    integer :: n, ni              ! index
-    integer :: klon,klat,karea,kmask,kfrac ! domain fields
-    real(R8),    pointer    :: fptr(:,:)
-    character(len=32), parameter :: sub = 'rof_domain_esmf'
-    !-------------------------------------------------------------------
-    !
-    ! Initialize domain type
-    ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
-    ! Note that in addition land carries around landfrac for the purposes of domain checking
-    ! 
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_ArrayGet(dom, localDe=0, farrayPtr=fptr, rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    ! Fill in correct values for domain components
-    klon  = esmfshr_util_ArrayGetIndex(dom,'lon ',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    klat  = esmfshr_util_ArrayGetIndex(dom,'lat ',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    karea = esmfshr_util_ArrayGetIndex(dom,'area',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    kmask = esmfshr_util_ArrayGetIndex(dom,'mask',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    kfrac = esmfshr_util_ArrayGetIndex(dom,'frac',rc=rc)
-    if(rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-
-    ! Determine domain (numbering scheme is: West to East and South to North to South pole)
-    ! Initialize attribute vector with special value
-
-    ! Determine bounds numbering consistency
-
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          if (ni > runoff%lnumro) then
-             write(iulog,*) sub, ' : ERROR runoff count',n,ni,runoff%lnumro
-             call endrun( sub//' ERROR: runoff > expected' )
-          endif
-       end if
-    end do
-    if (ni /= runoff%lnumro) then
-       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
-       call endrun( sub//' ERROR: runoff not equal to expected' )
-    endif
-
-    ! Fill in correct values for domain components
-    ! Note aream will be filled in in the atm-lnd mapper
-
-    fptr(:,:) = -9999.0_R8
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          fptr(klon, ni) = runoff%lonc(n)
-          fptr(klat, ni) = runoff%latc(n)
-          fptr(karea, ni) = runoff%area(n)*1.0e-6_r8/(re*re)
-          fptr(kmask, ni) = 1.0_r8
-          fptr(kfrac, ni) = 1.0_r8
-       end if
-    end do
-
-  end subroutine rof_domain_esmf
-
-!====================================================================================
-
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: rof_export_esmf
-!
-! !INTERFACE:
-  subroutine rof_export_esmf( r2x_array, rc)
-!
-! !DESCRIPTION:
-!
-! Send the runoff model export state to the CESM coupler
-!
-!---------------------------------------------------------------------------
-! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
-    use abortutils  , only : endrun
-    use clm_varctl  , only : iulog
-    use clm_varctl  , only : ice_runoff
-    use clm_cpl_indices
-    implicit none
-! !ARGUMENTS:
-    type(ESMF_Array), intent(inout)            :: r2x_array
-    integer, intent(out)                       :: rc
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!---------------------------------------------------------------------------
-    !
-    ! Local variables
-    !
-    integer :: ni, n, nt, nliq, nfrz
-    real(R8), pointer :: fptr(:, :)
-    character(len=*), parameter :: sub = 'rof_export_esmf'
-    !-----------------------------------------------------
-    
-    rc = ESMF_SUCCESS
-
-    call ESMF_ArrayGet(r2x_array, localDe=0, farrayPtr=fptr, rc=rc)
-    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-    
-    nliq = 0
-    nfrz = 0
-    do nt = 1,nt_rtm
-       if (trim(rtm_tracers(nt)) == 'LIQ') then
-          nliq = nt
-       endif
-       if (trim(rtm_tracers(nt)) == 'ICE') then
-          nfrz = nt
-       endif
-    enddo
-    if (nliq == 0 .or. nfrz == 0) then
-       write(iulog,*)'RtmUpdateInput: ERROR in rtm_tracers LIQ ICE ',nliq,nfrz,rtm_tracers
-       call endrun()
-    endif
-
-    ni = 0
-    if ( ice_runoff )then
-       do n = runoff%begr,runoff%endr
-          if (runoff%mask(n) == 2) then
-             ni = ni + 1
-             ! liquid and ice runoff are treated separately
-             fptr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-             fptr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
-             if (ni > runoff%lnumro) then
-                write(iulog,*) sub, ' : ERROR runoff count',n,ni
-                call endrun( sub//' : ERROR runoff > expected' )
-             endif
-          endif
-       end do
-    else
-       do n = runoff%begr,runoff%endr
-          if (runoff%mask(n) == 2) then
-             ni = ni + 1
-             ! liquid and ice runoff are bundled together to liquid runoff, and then ice runoff set to zero
-             fptr(index_r2x_Forr_roff,ni) =   &
-               (runoff%runoff(n,nfrz)+runoff%runoff(n,nliq))/(runoff%area(n)*1.0e-6_r8*1000._r8)
-             fptr(index_r2x_Forr_ioff,ni) = 0.0_r8
-             if (ni > runoff%lnumro) then
-                write(iulog,*) sub, ' : ERROR runoff count',n,ni
-                call endrun( sub//' : ERROR runoff > expected' )
-             endif
-          endif
-       end do
-    end if
-    if (ni /= runoff%lnumro) then
-       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
-       call endrun( sub//' : ERROR runoff not equal to expected' )
-    endif
-
-  end subroutine rof_export_esmf
-
 !====================================================================================
 
   subroutine sno_export_esmf( s2x, s2x_array, rc )
@@ -1698,6 +1382,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use clm_glclnd      , only : lnd2glc_type
     use decompMod       , only : get_proc_bounds
     use clm_cpl_indices
+    use clm_varctl      , only : iulog
     !
     ! Arguments
     !

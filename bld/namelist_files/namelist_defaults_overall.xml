@@ -52,35 +52,6 @@ determine default values for namelists.
 <!-- Default irrigation -->
 <irrig>.false.</irrig>
 
-<!-- Default River Transport Model (RTM) mode -->
-<rtm sitespf_pt="none"                             >on</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_brazil"          >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_tropicAtl"       >off</rtm>
-<rtm sitespf_pt="none" hgrid="5x5_amazon"          >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_camdenNJ"        >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_vancouverCAN"    >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_mexicocityMEX"   >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_asphaltjungleNJ" >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_urbanc_alpha"    >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_numaIA"          >off</rtm>
-<rtm sitespf_pt="none" hgrid="1x1_smallvilleIA"    >off</rtm>
-<rtm sitespf_pt="none" clm_usr_name_set=".true."   >off</rtm>
-<rtm sitespf_pt="1x1_brazil"                       >off</rtm>
-<rtm sitespf_pt="1x1_tropicAtl"                    >off</rtm>
-<rtm sitespf_pt="5x5_amazon"                       >off</rtm>
-<rtm sitespf_pt="1x1_camdenNJ"                     >off</rtm>
-<rtm sitespf_pt="1x1_vancouverCAN"                 >off</rtm>
-<rtm sitespf_pt="1x1_mexicocityMEX"                >off</rtm>
-<rtm sitespf_pt="1x1_asphaltjungleNJ"              >off</rtm>
-<rtm sitespf_pt="1x1_urbanc_alpha"                 >off</rtm>
-<rtm sitespf_pt="1x1_numaIA"                       >off</rtm>
-<rtm sitespf_pt="1x1_smallvilleIA"                 >off</rtm>
-<rtm sitespf_pt="us20"                             >off</rtm>
-<rtm sitespf_pt="wus12"                            >off</rtm>
-
-<!-- Default RTM resolution -->
-<rtm_res rtm="on">r05</rtm_res>
-
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>
 <mask hgrid="0.47x0.63"           >gx1v6</mask>

@@ -368,16 +368,6 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            &GetListofNeededFiles( \%inputopts, \%settings, \%files );
         }
      }
-     #
-     # Now get the RTM mapping file
-     #
-     $inputopts{'namelist'}  = "clmexp";
-     $settings{'frm_hgrid'} = $res;
-     $settings{'to_hgrid'}  = "0.5x0.5";
-     $settings{'frm_lmask'} = "nomask";
-     $settings{'to_lmask'}  = "nomask";
-     print "RTM mapping file\n";
-     &GetListofNeededFiles( \%inputopts, \%settings, \%files );
   }
   #
   # Loop over directories that need to have files copied into

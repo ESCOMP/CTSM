@@ -46,13 +46,11 @@ contains
     use clmtype
     use clm_varcon , only : spval
     use clm_atmlnd , only : clm_a2l
-    use clm_varctl , only : do_rtm, create_glacier_mec_landunit 
-    use RunoffMod  , only : runoff, nt_rtm, rtm_tracers
+    use clm_varctl , only : create_glacier_mec_landunit 
     use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
                             hist_printflds
     use surfrdMod  , only : crop_prog
-
-    use shr_megan_mod,only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
+    use shr_megan_mod  , only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
 
 !
 ! !ARGUMENTS:
@@ -878,49 +876,6 @@ contains
             ptr_gcell=clm3%g%aais_area)
 
    endif
-
-   ! RTM River Routing
-   if (do_rtm) then
-      call hist_addfld1d (fname='QCHANR', units='m3/s',  &
-           avgflag='A', long_name='RTM river flow: '//trim(rtm_tracers(1)), &
-           ptr_rof=runoff%runofflnd_nt1)
-
-      call hist_addfld1d (fname='QCHANR'//'_'//trim(rtm_tracers(2)), units='m3/s',  &
-           avgflag='A', long_name='RTM river flow: '//trim(rtm_tracers(2)), &
-           ptr_rof=runoff%runofflnd_nt2)
-
-      call hist_addfld1d (fname='QCHOCNR', units='m3/s', &
-           avgflag='A', long_name='RTM river discharge into ocean: '//trim(rtm_tracers(1)), &
-           ptr_rof=runoff%runoffocn_nt1)
-
-      call hist_addfld1d (fname='QCHOCNR'//'_'//trim(rtm_tracers(2)), units='m3/s', &
-           avgflag='A', long_name='RTM river discharge into ocean: '//trim(rtm_tracers(2)), &
-           ptr_rof=runoff%runoffocn_nt2)
-
-      call hist_addfld1d (fname='VOLR', units='m3',  &
-           avgflag='A', long_name='RTM storage: '//trim(rtm_tracers(1)), &
-           ptr_rof=runoff%volr_nt1)
-
-      call hist_addfld1d (fname='VOLR'//'_'//trim(rtm_tracers(2)), units='m3',  &
-           avgflag='A', long_name='RTM storage: '//trim(rtm_tracers(2)), &
-           ptr_rof=runoff%volr_nt2, default='inactive')
-
-      call hist_addfld1d (fname='DVOLRDT_LND', units='mm/s',  &
-           avgflag='A', long_name='RTM land change in storage: '//trim(rtm_tracers(1)), &
-           ptr_rof=runoff%dvolrdtlnd_nt1, default='inactive')
-
-      call hist_addfld1d (fname='DVOLRDT_LND'//'_'//trim(rtm_tracers(2)), units='mm/s',  &
-           avgflag='A', long_name='RTM land change in storage: '//trim(rtm_tracers(2)), &
-           ptr_rof=runoff%dvolrdtlnd_nt2, default='inactive')
-
-      call hist_addfld1d (fname='DVOLRDT_OCN', units='mm/s',  &
-           avgflag='A', long_name='RTM ocean change of storage: '//trim(rtm_tracers(1)), &
-           ptr_rof=runoff%dvolrdtocn_nt1, default='inactive')
-
-      call hist_addfld1d (fname='DVOLRDT_OCN'//'_'//trim(rtm_tracers(2)), units='mm/s',  &
-           avgflag='A', long_name='RTM ocean change of storage: '//trim(rtm_tracers(2)), &
-           ptr_rof=runoff%dvolrdtocn_nt2, default='inactive')
-   end if
 
     ! Water and energy balance checks
 

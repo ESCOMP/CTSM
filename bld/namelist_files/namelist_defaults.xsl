@@ -23,7 +23,6 @@
        <li>Biogeochemistry (BGC) type (none, CN, etc.)</li>
        <li>Initial condition date (ymd - year month day)</li>
        <li>Initial condition time of day (tod) (sec)</li>
-       <li>River Transport Model (RTM) on or off</li>
        <li>Maximum number of Plant Function Types (maxpft)</li>
        <li>Number of glacier multiple elevation classes (glc_nec)</li>
        <li>Site specific point name (sitespf_pt)</li>
@@ -120,9 +119,6 @@
         </xsl:if>
         <xsl:if test="string-length(@ic_tod)>0">
         tod=<xsl:value-of select="@ic_tod"/>
-        </xsl:if>
-        <xsl:if test="string-length(@rtm)>0">
-        rtm=<xsl:value-of select="@rtm"/>
         </xsl:if>
         <xsl:if test="string-length(@maxpft)>0">
         maxpft=<xsl:value-of select="@maxpft"/>

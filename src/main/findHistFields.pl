@@ -119,14 +119,6 @@ sub getFieldInfo {
   my $longn = undef;
   my $endin = undef;
   do {
-    if ( $line =~ /rtm_tracers/ ) {
-       $line =~ s|'//'_'|_'|g;
-       $line =~ s|'//trim\(rtm_tracers\(1\)\)|LIQ'|gi;
-       $line =~ s|'//trim\(rtm_tracers\(2\)\)|ICE'|gi;
-       if ( $line =~ /rtm_tracers/ ) {
-          die "ERROR: Still have rtm_tracers in a line\n";
-       }
-    }
     if ( $line =~ /MEG_/ ) {
        $line =~ s|'//'_'|_'|g;
        $line =~ s|'//trim\(meg_cmp\%name\)|megancmpd'|gi;

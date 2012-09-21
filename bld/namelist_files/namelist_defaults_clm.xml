@@ -47,26 +47,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
 
-<!-- Default rtm namelist -->
-<do_rtm rtm="on"                             >.true.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_brazil"          >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_tropicAtl"       >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="5x5_amazon"          >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_camdenNJ"        >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_vancouverCAN"    >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_mexicocityMEX"   >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_asphaltjungleNJ" >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_urbanc_alpha"    >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_numaIA"          >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="1x1_smallvilleIA"    >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="us20"                >.false.</do_rtm>  
-<do_rtm rtm="on" hgrid="wus12"               >.false.</do_rtm>  
-<do_rtm                                      >.false.</do_rtm>  
-
-<!-- Default ice stream -->
-<ice_runoff rtm="on" hgrid="48x96" >.false.</ice_runoff>
-<ice_runoff rtm="on"               >.true.</ice_runoff>
-
 <!-- ================================================================== -->
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
@@ -699,14 +679,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <ndepmapalgo bgc="cndv" hgrid="1x1_tropicAtl"       >nn</ndepmapalgo>
 <ndepmapalgo bgc="cndv" hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
-<!-- River Transport Model river routing file (relative to {csmdata}) -->
-<frivinp_rtm rtm="on" rtm_res="r05" >lnd/clm2/rtmdata/rdirc_0.5x0.5_simyr2000_c101124.nc</frivinp_rtm>
-<!-- New direction file with negative directions over ocean - -->
-<!-- <frivinp_rtm rtm="on" rtm_res="r05" >lnd/clm2/rtmdata/rdirc_0.5x0.5_simyr2000_c101028.nc</frivinp_rtm> -->
-
-<!-- River Transport Model river routing file (relative to {csmdata}) -->
-<frivinp_rtm rtm="on" rtm_res="r01" >lnd/clm2/rtmdata/rdirc_0.1x0.1_simyr2000_c110712.nc</frivinp_rtm>
-
 <!-- =========================================  -->
 <!-- Performance issues                         -->
 <!-- =========================================  -->
@@ -724,16 +696,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <!-- =========================================  -->
 <!-- Mapping Data                               -->
 <!-- =========================================  -->
-
-<!-- Get RTM mask and grid resolution from RTM_RES -->
-<lmask type="r01" >nomask</lmask>
-<lmask type="r05" >nomask</lmask>
-<lmask type="RX1" >nomask</lmask>
-<lmask type="R19" >nomask</lmask>
-<hgrid type="r01" >0.1x0.1</hgrid>
-<hgrid type="r05" >0.5x0.5</hgrid>
-<hgrid type="RX1" >360x720</hgrid>
-<hgrid type="R19" >19basin</hgrid>
 
 <!-- mapping files for 0.1x0.1 START added on Wed Jul 25 17:01:27 2012--> 
 
@@ -1036,7 +998,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_3x3min_MODIS_to_1.9x2.5_nomask_aave_da_c111111.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="LandScan2004" to_hgrid="1.9x2.5" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/1.9x2.5/map_3x3min_LandScan2004_to_1.9x2.5_nomask_aave_da_c120522.nc</map>
-
 
 <map frm_hgrid="0.5x0.5"  frm_lmask="MODIS"  to_hgrid="10x15"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/10x15/map_0.5x0.5_landuse_to_10x15_aave_da_110307.nc</map>
@@ -1417,26 +1378,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 >lnd/clm2/mappingdata/maps/ne240np4/map_3x3min_LandScan2004_to_ne240np4_nomask_aave_da_c120521.nc</map>
 <map frm_hgrid="ne240np4"    frm_lmask="nomask" to_hgrid="0.5x0.5"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne240np4/map_ne240np4_nomask_to_0.5x0.5_nomask_aave_da_c110922.nc</map>
-
-<!-- CLM->RTM Mapping Files -->
-
-<map frm_hgrid="0.23x0.31" frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.23x0.31/map_0.23x0.31_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
-<map frm_hgrid="0.47x0.63" frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.47x0.63/map_0.47x0.63_nomask_to_0.5x0.5_nomask_aave_da_c120306.nc</map>
-<map frm_hgrid="0.9x1.25"  frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.9x1.25/map_0.9x1.25_nomask_to_0.5x0.5_nomask_aave_da_c120522.nc</map>
-<map frm_hgrid="1.9x2.5"   frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/1.9x2.5/map_1.9x2.5_nomask_to_0.5x0.5_nomask_aave_da_c120522.nc</map>
-<map frm_hgrid="2.5x3.33"  frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/2.5x3.33/map_2.5x3.33_nomask_to_0.5x0.5_nomask_aave_da_c110823.nc</map>
-<map frm_hgrid="512x1024"  frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/512x1024/map_512x1024_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
-<map frm_hgrid="128x256"   frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/128x256/map_128x256_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
-<map frm_hgrid="94x192"    frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/94x192/map_94x192_nomask_to_0.5x0.5_nomask_aave_da_c110823.nc</map>
-<map frm_hgrid="64x128"    frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/64x128/map_64x128_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
-<map frm_hgrid="48x96"     frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/48x96/map_48x96_nomask_to_0.5x0.5_nomask_aave_da_c110822.nc</map>
-<map frm_hgrid="32x64"     frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/32x64/map_32x64_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
-<map frm_hgrid="10x15"     frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/10x15/map_10x15_to_0.5x0.5rtm_aave_da_110307.nc</map>
-<map frm_hgrid="8x16"      frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/8x16/map_8x16_nomask_to_0.5x0.5_nomask_aave_da_c110920.nc</map>
-<map frm_hgrid="4x5"       frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/4x5/map_4x5_nomask_to_0.5x0.5_nomask_aave_da_c110822.nc</map>
-<map frm_hgrid="ne120np4"  frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/ne120np4/map_ne120np4_to_0.5x0.5rtm_aave_da_110320.nc</map>
-<map frm_hgrid="ne240np4"  frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/ne240np4/map_ne240np4_nomask_to_0.5x0.5_nomask_aave_da_c120711.nc</map>
-<map frm_hgrid="ne30np4"   frm_lmask="nomask" to_hgrid="0.5x0.5"  to_lmask="nomask">lnd/clm2/mappingdata/maps/ne30np4/map_ne30np4_to_0.5x0.5rtm_aave_da_110320.nc</map>
 
 <map frm_hgrid="1.9x2.5"   frm_lmask="nomask" to_hgrid="0.1x0.1"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.1x0.1/map_1.9x2.5_nomask_to_0.1x0.1_nomask_aave_da_c120709.nc</map>
 <map frm_hgrid="ne120np4"  frm_lmask="nomask" to_hgrid="0.1x0.1"  to_lmask="nomask">lnd/clm2/mappingdata/maps/0.1x0.1/map_ne120np4_nomask_to_0.1x0.1_nomask_aave_da_c120711.nc</map>

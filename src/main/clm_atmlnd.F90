@@ -54,6 +54,7 @@ module clm_atmlnd
      real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
 #endif
      real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
+     real(r8), pointer :: forc_flood(:)   ! rof flood (mm/s)
      real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
   end type atm2lnd_type
 
@@ -78,6 +79,8 @@ module clm_atmlnd
      real(r8), pointer :: nee(:)          !net CO2 flux (kg CO2/m**2/s) [+ to atm]
      real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)
      real(r8), pointer :: fv(:)           !friction velocity (m/s) (for dust model)
+     real(r8), pointer :: rofliq(:)       ! rof liq forcing
+     real(r8), pointer :: rofice(:)       ! rof ice forcing
      real(r8), pointer :: flxdst(:,:)       !dust flux (size bins)
      real(r8), pointer :: ddvel(:,:)        !dry deposition velocities
      real(r8), pointer :: flxvoc(:,:)       ! VOC flux (size bins)
@@ -155,6 +158,7 @@ contains
   allocate(a2l%forc_pc13o2(beg:end))
 #endif
   allocate(a2l%forc_po2(beg:end))
+  allocate(a2l%forc_flood(beg:end))
   allocate(a2l%forc_aer(beg:end,14))
 
   ! ival = nan      ! causes core dump in map_maparray, tcx fix
@@ -188,6 +192,7 @@ contains
   a2l%forc_pc13o2(beg:end) = ival
 #endif
   a2l%forc_po2(beg:end) = ival
+  a2l%forc_flood(beg:end) = ival
   a2l%forc_aer(beg:end,:) = ival
 
 end subroutine init_atm2lnd_type
@@ -235,6 +240,8 @@ end subroutine init_atm2lnd_type
   allocate(l2a%nee(beg:end))
   allocate(l2a%ram1(beg:end))
   allocate(l2a%fv(beg:end))
+  allocate(l2a%rofliq(beg:end))
+  allocate(l2a%rofice(beg:end))
   allocate(l2a%flxdst(beg:end,1:ndst))
   if (shr_megan_mechcomps_n>0) then
      allocate(l2a%flxvoc(beg:end,1:shr_megan_mechcomps_n))
@@ -263,6 +270,8 @@ end subroutine init_atm2lnd_type
   l2a%nee(beg:end) = ival
   l2a%ram1(beg:end) = ival
   l2a%fv(beg:end) = ival
+  l2a%rofliq(beg:end) = ival
+  l2a%rofice(beg:end) = ival
   l2a%flxdst(beg:end,1:ndst) = ival
   if (shr_megan_mechcomps_n>0) then
      l2a%flxvoc(beg:end,1:shr_megan_mechcomps_n) = ival
@@ -412,7 +421,7 @@ subroutine clm_map2gcell(init)
 !          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      do g = begg,endg
-        clm_l2a%eflx_sh_tot(g) = clm3%g%gef%eflx_sh_totg(g)
+        clm_l2a%eflx_sh_tot(g) = gptr%gef%eflx_sh_totg(g)
      end do
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
@@ -448,6 +457,11 @@ subroutine clm_map2gcell(init)
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pps%ram1, clm_l2a%ram1, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+     do g = begg,endg
+        clm_l2a%rofliq(g) = gptr%gwf%qflx_runoffg(g)
+        clm_l2a%rofice(g) = gptr%gwf%qflx_snwcp_iceg(g)
+     end do
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
           pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &

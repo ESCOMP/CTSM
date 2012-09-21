@@ -25,8 +25,7 @@ module controlMod
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &
                             username, fsnowaging, fsnowoptics, fglcmask, &
                             create_glacier_mec_landunit, glc_dyntopo, glc_smb, &
-                            glc_grid, &
-                            do_rtm, frivinp_rtm, ice_runoff, rtm_nsteps, fmapinp_rtm
+                            glc_grid
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
@@ -44,6 +43,7 @@ module controlMod
 #ifdef CN
   use CNAllocationMod , only : suplnitro
 #endif
+ 
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -158,12 +158,16 @@ contains
     namelist / clm_inparm/ &
 	 dtime	
 
+    ! CLM/RTM joint namelist settings
+
+    namelist /clm_rtm_inparm / &
+         fatmlndfrc, finidat, nrevsn
+
     ! Input datasets
 
     namelist /clm_inparm/  &
-         finidat, fsurdat, fatmlndfrc, fatmtopo, flndtopo, &
-         fpftcon, fpftdyn, nrevsn, &
-         fsnowoptics, fsnowaging
+         fsurdat, fatmtopo, flndtopo, &
+         fpftcon, fpftdyn,  fsnowoptics, fsnowaging
 
     ! History, restart options
 
@@ -186,10 +190,6 @@ contains
 
     namelist /clm_inparm / &
          co2_type
-
-    ! River runoff
-    namelist /clm_inparm / &
-         do_rtm, ice_runoff, frivinp_rtm, rtm_nsteps, fmapinp_rtm
 
     ! Glacier_mec info
     namelist /clm_inparm / &    
@@ -245,7 +245,15 @@ contains
        do while ( ierr /= 0 )
           read(unitn, clm_inparm, iostat=ierr)
           if (ierr < 0) then
-             call endrun( subname//' encountered end-of-file on namelist read' )
+             call endrun( subname//' encountered end-of-file on clm_inparm read' )
+          endif
+       end do
+       rewind(unitn)
+       ierr = 1
+       do while ( ierr /= 0 )
+          read(unitn, clm_rtm_inparm, iostat=ierr)
+          if (ierr < 0) then
+             call endrun( subname//' encountered end-of-file on clm_rtm_inparm read' )
           endif
        end do
        call relavu( unitn )
@@ -256,12 +264,6 @@ contains
 
        call set_timemgr_init( dtime_in=dtime )
 
-       if (do_rtm) then
-          if (is_perpetual()) then
-             write(iulog,*)'RTM cannot be defined in perpetual mode'
-             call endrun()
-          end if
-       end if
 #if (defined CNDV)
        if (is_perpetual()) then
           write(iulog,*)'RTM or CNDV cannot be defined in perpetual mode'
@@ -385,13 +387,6 @@ contains
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 
-    ! River runoff dataset and control flag
-    call mpi_bcast (do_rtm     , 1,                MPI_LOGICAL,   0, mpicom, ier)
-    call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fmapinp_rtm, len(fmapinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (ice_runoff,  1,                MPI_LOGICAL,   0, mpicom, ier)
-    call mpi_bcast (rtm_nsteps,  1,                MPI_INTEGER,   0, mpicom, ier)
-
     ! Landunit generation
 
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -479,7 +474,6 @@ contains
 #ifdef CN
     use CNAllocationMod, only : suplnitro, suplnNon
 #endif
-    use clm_varctl,      only : ice_runoff
 !
 ! !ARGUMENTS:
     implicit none
@@ -560,14 +554,6 @@ contains
     if (nsrest == nsrStartup .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
     if (nsrest /= nsrStartup) write(iulog,*) '   restart data   = ',trim(nrevsn)
     write(iulog,*) '   atmospheric forcing data is from cesm atm model'
-    if (do_rtm) then
-       if (frivinp_rtm == ' ') &
-          call endrun( subname//' error: do_rtm TRUE, but frivinp_rtm NOT set' )
-       write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
-       if (fmapinp_rtm /= ' ') write(iulog,*) '   RTM mapping data     = ',trim(fmapinp_rtm)
-    else
-       write(iulog,*) '   Do not run the River Transport Model (RTM)'
-    end if
     write(iulog,*) 'Restart parameters:'
     write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
     write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
@@ -584,18 +570,6 @@ contains
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
     write(iulog,*) '   urban traffic flux   = ', urban_traffic
-    if (do_rtm) then
-       if (rtm_nsteps > 1) then
-          write(iulog,*)'river runoff calculation performed only every ',rtm_nsteps,' nsteps'
-       else
-          write(iulog,*)'river runoff calculation performed every time step'
-       endif
-       if ( ice_runoff ) then
-          write(iulog,*)'Snow capping will flow out in frozen river runoff'
-       else
-          write(iulog,*)'Snow capping will flow out in liquid river runoff'
-       endif
-    end if
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
@@ -607,7 +581,7 @@ contains
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
     if ( pertlim /= 0.0_r8 ) &
-    write(iulog,*) '   perturbation limit = ',pertlim
+    write(iulog,*) '   perturbation limit   = ',pertlim
     write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
     write(iulog,*) '   nsegspc              = ',nsegspc
