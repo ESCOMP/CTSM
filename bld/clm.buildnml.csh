@@ -75,6 +75,11 @@ if (-e $CASEROOT/user_nl_clm${inst_string}) then
     -namelist_name clm_inparm >! $CASEBUILD/clmconf/cesm_namelist  || exit -2
 endif
 
+set glc_opts = ""
+if ("$COMP_GLC" != "sglc" )then
+   set glc_opts = "-glc_grid $GLC_GRID -glc_smb .$GLC_SMB. "
+endif
+
 set usecase = " "
 if ($CLM_NML_USE_CASE != "UNSET") set usecase = "-use_case $CLM_NML_USE_CASE"
 
@@ -86,7 +91,7 @@ endif
 $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \
     -csmdata $DIN_LOC_ROOT  \
     -inputdata $CASEBUILD/clm.input_data_list \
-    -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" $usecase \
+    -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" $usecase $glc_opts \
     -res $RESOLUTION -clm_start_type $START_TYPE $clm_startfile \
     -l_ncpl $LND_NCPL -lnd_frac "${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}" \
     -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV \

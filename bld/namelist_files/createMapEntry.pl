@@ -57,7 +57,7 @@ EOF
       next if ($foo =~ m/^\./);  #~# skip anything in the directory with a leading or stand alone 'dot'
       my @tokens = split(/_/, $foo); #~# split foo name by the underscore
       #~# write out lines for namelist_defaults_clm.xml
-      print "<map frm_hgrid=\"$tokens[1]\"    frm_lmask=\"$tokens[2]\"  to_hgrid=\"$tokens[4]_$tokens[5]\"   to_lmask=\"$tokens[6]\" \n";
+      print "<map frm_hgrid=\"$tokens[1]\"    frm_lmask=\"$tokens[2]\"  to_hgrid=\"$tokens[4]\"   to_lmask=\"$tokens[5]\" \n";
       print ">$partialPath/$foo</map>\n";
    }
 

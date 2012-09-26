@@ -3009,6 +3009,13 @@ contains
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
     character(len=max_chars)  :: locrest(max_tapes) ! local history restart file names
+
+    character(len=max_namlen),allocatable :: tname(:)
+    character(len=max_chars), allocatable :: tunits(:),tlongname(:)
+    character(len=8), allocatable :: tmpstr(:,:)
+    character(len=1), allocatable :: tavgflag(:)
+    integer :: start(2)
+
     character(len=1)   :: hnum                   ! history file index
     character(len=8)   :: type1d                 ! clm pointer 1d type
     character(len=8)   :: type1d_out             ! history buffer 1d type
@@ -3027,7 +3034,6 @@ contains
     type(var_desc_t)   :: l2g_scale_type_desc    ! variable descriptor for l2g_scale_type
     integer :: status                            ! error status
     integer :: dimid                             ! dimension ID
-    integer :: start(2)                          ! Start array index
     integer :: k                                 ! 1d index
     integer :: t                                 ! tape index
     integer :: f                                 ! field index
@@ -3301,17 +3307,6 @@ contains
        ! Add history namelist data to each history restart tape
        !
        do t = 1,ntapes
-          call ncd_inqvid(ncid_hist(t), 'name',           varid, name_desc)
-          call ncd_inqvid(ncid_hist(t), 'long_name',      varid, longname_desc)
-          call ncd_inqvid(ncid_hist(t), 'units',          varid, units_desc)
-          call ncd_inqvid(ncid_hist(t), 'type1d',         varid, type1d_desc)
-          call ncd_inqvid(ncid_hist(t), 'type1d_out',     varid, type1d_out_desc)
-          call ncd_inqvid(ncid_hist(t), 'type2d',         varid, type2d_desc)
-          call ncd_inqvid(ncid_hist(t), 'avgflag',        varid, avgflag_desc)
-          call ncd_inqvid(ncid_hist(t), 'p2c_scale_type', varid, p2c_scale_type_desc)
-          call ncd_inqvid(ncid_hist(t), 'c2l_scale_type', varid, c2l_scale_type_desc)
-          call ncd_inqvid(ncid_hist(t), 'l2g_scale_type', varid, l2g_scale_type_desc)
-
           call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='write')
 
           call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='write')
@@ -3338,31 +3333,32 @@ contains
           call ncd_io('mfilt',   tape(t)%mfilt,   'write', ncid_hist(t) )
           call ncd_io('ncprec',  tape(t)%ncprec,  'write', ncid_hist(t) )
           call ncd_io('begtime',      tape(t)%begtime, 'write', ncid_hist(t) )
+          allocate(tmpstr(tape(t)%nflds,6 ),tname(tape(t)%nflds), &
+                   tavgflag(tape(t)%nflds),tunits(tape(t)%nflds),tlongname(tape(t)%nflds))
           do f=1,tape(t)%nflds
-             start(2) = f
-             call ncd_io( name_desc,           tape(t)%hlist(f)%field%name,       &
-                          'write', ncid_hist(t), start )
-             call ncd_io( longname_desc,       tape(t)%hlist(f)%field%long_name,  &
-                          'write', ncid_hist(t), start )
-             call ncd_io( units_desc,          tape(t)%hlist(f)%field%units,      &
-                          'write', ncid_hist(t), start )
-             call ncd_io( type1d_desc,         tape(t)%hlist(f)%field%type1d,     &
-                          'write', ncid_hist(t), start )
-             call ncd_io( type1d_out_desc,     tape(t)%hlist(f)%field%type1d_out, &
-                          'write', ncid_hist(t), start )
-             call ncd_io( type2d_desc,         tape(t)%hlist(f)%field%type2d,     &
-                          'write', ncid_hist(t), start )
-             call ncd_io( avgflag_desc,        tape(t)%hlist(f)%avgflag,          &
-                          'write', ncid_hist(t), start )
-             call ncd_io( p2c_scale_type_desc, tape(t)%hlist(f)%field%p2c_scale_type, &
-                          'write', ncid_hist(t), start )
-             call ncd_io( c2l_scale_type_desc, tape(t)%hlist(f)%field%c2l_scale_type, &
-                          'write', ncid_hist(t), start )
-             call ncd_io( l2g_scale_type_desc, tape(t)%hlist(f)%field%l2g_scale_type, &
-                          'write', ncid_hist(t), start )
+             tname(f)  = tape(t)%hlist(f)%field%name
+             tunits(f) = tape(t)%hlist(f)%field%units
+             tlongname(f) = tape(t)%hlist(f)%field%long_name
+             tmpstr(f,1) = tape(t)%hlist(f)%field%type1d
+             tmpstr(f,2) = tape(t)%hlist(f)%field%type1d_out
+             tmpstr(f,3) = tape(t)%hlist(f)%field%type2d
+             tavgflag(f) = tape(t)%hlist(f)%avgflag
+             tmpstr(f,4) = tape(t)%hlist(f)%field%p2c_scale_type
+             tmpstr(f,5) = tape(t)%hlist(f)%field%c2l_scale_type
+             tmpstr(f,6) = tape(t)%hlist(f)%field%l2g_scale_type
           end do
-       end do
-              
+          call ncd_io( 'name', tname, 'write',ncid_hist(t))
+          call ncd_io('long_name', tlongname, 'write', ncid_hist(t))
+          call ncd_io('units', tunits, 'write',ncid_hist(t))
+          call ncd_io('type1d', tmpstr(:,1), 'write', ncid_hist(t))
+          call ncd_io('type1d_out', tmpstr(:,2), 'write', ncid_hist(t))
+          call ncd_io('type2d', tmpstr(:,3), 'write', ncid_hist(t))
+          call ncd_io('avgflag',tavgflag , 'write', ncid_hist(t))
+          call ncd_io('p2c_scale_type', tmpstr(:,4), 'write', ncid_hist(t))
+          call ncd_io('c2l_scale_type', tmpstr(:,5), 'write', ncid_hist(t))
+          call ncd_io('l2g_scale_type', tmpstr(:,6), 'write', ncid_hist(t))
+          deallocate(tname,tlongname,tunits,tmpstr,tavgflag)
+       enddo       
        deallocate(itemp2d)
 
     !

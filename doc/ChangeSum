@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_51      muszala 09/26/2012 bug fixes, pio performance and SCRIP files
    clm4_0_50      muszala 09/21/2012 testing of clm and new rof component
    clm4_0_49         erik 09/16/2012 Move clm testing to use CESM test framework
    clm4_0_48      muszala 09/11/2012 bug fixes, xFail to tests and normalize test output for CLM

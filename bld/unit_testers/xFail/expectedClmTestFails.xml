@@ -7,7 +7,6 @@
             <compare>
                <entry testId="214" failType="xFail"> us20 not fully implmented </entry>
                <entry testId="216" failType="xFail"> us20 not fully implmented </entry>
-               <entry testId="219" failType="xFail"> wus12 not fully implmented </entry>
                <entry testId="221" failType="xFail"> wus12 not fully implmented </entry>
                <entry testId="222" failType="xFail"> wus12 not fully implmented </entry>
             </compare>

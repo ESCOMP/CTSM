@@ -161,7 +161,7 @@ contains
     integer               :: did     ! netCDF dimension ID
     integer               :: ns      ! size of array
 
-    real(r8), parameter   :: tol = 1.0e-6_r8  ! tolerance for checking that mapping data
+    real(r8), parameter   :: tol = 1.0e-5_r8  ! tolerance for checking that mapping data
                                               ! are within expected bounds
 
     !--- formats ---

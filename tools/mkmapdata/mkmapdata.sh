@@ -241,6 +241,7 @@ grids=("ne240np4_nomask"   \
        "0.5x0.5_USGS"      \
        "0.5x0.5_AVHRR"     \
        "0.5x0.5_MODIS"     \
+       "3x3min_LandScan2004" \
        "3x3min_MODIS"      \
        "5x5min_nomask"     \
        "5x5min_IGBP-GSDP"  \

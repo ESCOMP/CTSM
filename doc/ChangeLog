@@ -1,4 +1,249 @@
 ===============================================================
+Tag name:  clm4_0_51
+Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
+Date: Wed Sep 26 15:37:41 MDT 2012
+One-line Summary: bug fixes, pio performance and SCRIP files
+
+Purpose of changes:
+
+Add 3x3min_USGS and 3x3min_LandScan2004 back in for mkmapdata.sh.  Namelist
+mods for F05 SCRIP file bug. Changes from Jim for PIO performance issue.
+Bills clm.buildnml.csh fix.
+
+Requirements for tag:
+
+Test level of tag: doc, critical, standard, std-test, reg-test
+
+critical: build namelist unit tests and cesm/clm tests out of scripts
+
+Bugs fixed (include bugzilla ID):
+
+1506,1518
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describ changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+myself and Erik
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+List all files eliminated:
+
+List all files added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+M SVN_EXTERNAL_DIRECTORIES
+	update externals to
+	https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_120924a
+	https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_120921
+M models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+  report cesm/clm expected failures even though not hooked up
+M models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
+  put LandScan back in
+M models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
+  change tolerance for checking map bounds
+M models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+  take out -rtm and -rtm_tstep options 
+M models/lnd/clm/bld/clm.buildnml.csh
+  puts back gls options
+M models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+  new f05 mapping files and some cleanup of maps files in general
+M models/lnd/clm/bld/namelist_files/createMapEntry.pl
+  output for this script is not consistent so modified to get
+  valid output
+M models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml
+  new scrip grid entries
+M models/lnd/clm/src/main/histFileMod.F90
+  modification from J. Edwards for io performance
+
+Machines testing ran on:
+
+%%%%%% testing reporting start
+
+%%build namelist tests
+
+	OK
+
+  >>tail out_unit_092212.lg
+  274/277 < PASS> <Test Id: 274> <Desc: lnd_in file exists>  
+  275/277 < PASS> <Test Id: 275> <Desc: temp_file.txt file exists>  
+  276/277 < PASS> <Test Id: 276> <Desc: lnd_in file the same as expected for crop>  
+  277/277 < PASS> <Test Id: 277> <Desc: temp_file.txt different as expected for crop>  
+  Successully ran all testing for build-namelist
+
+  Cleanup files created
+  rm: lnd_in.default: A file or directory in the path name does not exist.
+  rm: temp_file.txt: A file or directory in the path name does not exist.
+  # Looks like you failed 4 tests of 277.
+
+%%cesm/clm tests
+
+	mostly OK
+
+  generate : ./cs.status.164019.bluefire
+
+  nohup create_test_suite -input_list bluefire.clm.auxtest -compare clm4_0_50 -baselineroot /glade/proj2/cgd/tss/clm_cesm_baselines -generate clm4_0_51 -testroot /glade/scratch/muszala/tests > & ! bf_out_`date +"%m%d%y"`.lg &
+  ID: 203212
+
+  ## Reason: throughput measure off
+    FAIL  SMS_RLA.f45_f45.I.bluefire_ibm.tputcomp.clm4_0_50 
+    FAIL  ERS_D.f45_g37.I.bluefire_ibm.tputcomp.clm4_0_50 
+    FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.tputcomp.clm4_0_50 
+    FAIL  SMS.T31_g37.IG4804.bluefire_ibm.tputcomp.clm4_0_50 
+  ## baseline diretory already existed, error copying over nc files
+    FAIL  SMS_RLA.f45_f45.I.bluefire_ibm.generate.clm4_0_51 
+    FAIL  SMS_RLB.f45_f45.I.bluefire_ibm.generate.clm4_0_51 
+    FAIL  SMS_ROA.f45_f45.I.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERS_D.f45_g37.I.bluefire_ibm.generate.clm4_0_51 
+    FAIL  NCK.T31_g37.I.bluefire_ibm.generate.clm4_0_51 
+    FAIL  PST.f45_g37.I1850CN.bluefire_ibm.generate.clm4_0_51 
+    FAIL  PET_PT.f45_g37.I1850.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERI.T31_g37.IG1850.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERB.ne30_g16.I_1948-2004.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERH_D.T31_g37.I1850CN.bluefire_ibm.generate.clm4_0_51 
+    FAIL  SMS.T31_g37.IG4804.bluefire_ibm.generate.clm4_0_51 
+    FAIL  SMS.1x1_numaIA.ICN.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.generate.clm4_0_51 
+  ## fails due to cprnc time check.  new runs are 11 ts.  in 50 these were 10, I expect these to pass next time around
+    FAIL  ERS_D.f45_g37.I.bluefire_ibm.compare_hist.clm4_0_50 
+    FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.compare_hist.clm4_0_50 
+    FAIL  ERI.T31_g37.IG1850.bluefire_ibm.compare_hist.clm4_0_50 
+    FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.compare_hist.clm4_0_50 
+    FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.compare_hist.clm4_0_50 
+  ## No Lm3 directories created during clm4_0_50 generate...new case, should pass next time around
+    SFAIL ERS_Lm3.1x1_vancouverCAN.I1PT.bluefire_ibm.GC.203212 
+      ERROR: datm.buildnml.csh failed
+    BFAIL ERS_Lm3.f19_g16.IGRCP60CN.bluefire_ibm.compare_hist.clm4_0_50 
+      No dir to compare to in tag 50
+  ## problems in generate due to scripts for single point 
+    SFAIL SMS.1x1_mexicocityMEX.I1PT.bluefire_ibm.GC.203212 
+      ERROR: datm.buildnml.csh failed also failed during generate
+    BFAIL SMS.1x1_numaIA.ICN.bluefire_ibm.compare_hist.clm4_0_50 
+      No dir to compare to in tag 50 - failed during generate
+
+  ## these were failing but passed when rerun - keep an eye on these
+    BFAIL ERB.ne30_g16.I_1948-2004.bluefire_ibm.compare_hist.clm4_0_50 
+    BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.compare_hist.clm4_0_50 
+    BFAIL ERH_D.T31_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_50 
+
+    went to generated ref case
+      ./setup -clean
+      ./setup
+      then build and rerun
+
+    went to generate case
+      ./setup -clean
+      ./setup 
+      clean-build, then build then reurn
+
+   did the same in the CG case for ref and normal case
+
+    After hand running
+    ./cs.status.203212.bluefire | grep ERB.f09_g16.I1850SPINUPCN
+    PASS  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm 
+    PASS  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.memleak
+    PASS  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.compare_hist.clm4_0_50 
+      see cprnc ts  error above
+    PASS  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.memcomp.clm4_0_50 
+    PASS  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.tputcomp.clm4_0_50
+
+    This test was rerun with a new testlist
+    ./cs.status.203212.bluefire | grep ERB.ne30_g16.I_1948-2004
+    PASS  ERB.ne30_g16.I_1948-2004.bluefire_ibm 
+    PASS  ERB.ne30_g16.I_1948-2004.bluefire_ibm.memleak
+    PASS  ERB.ne30_g16.I_1948-2004.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERB.ne30_g16.I_1948-2004.bluefire_ibm.compare_hist.clm4_0_50 
+      see cprnc ts  error above
+    PASS  ERB.ne30_g16.I_1948-2004.bluefire_ibm.memcomp.clm4_0_50 
+    FAIL  ERB.ne30_g16.I_1948-2004.bluefire_ibm.tputcomp.clm4_0_50 
+      throughput tol. error
+
+    ./cs.status.141307.bluefire
+    PASS  ERH_D.T31_g37.I1850CN.bluefire_ibm 
+    PASS  ERH_D.T31_g37.I1850CN.bluefire_ibm.memleak
+    PASS  ERH_D.T31_g37.I1850CN.bluefire_ibm.generate.clm4_0_51 
+    FAIL  ERH_D.T31_g37.I1850CN.bluefire_ibm.compare_hist.clm4_0_50 
+      see cprnc ts  error above
+    PASS  ERH_D.T31_g37.I1850CN.bluefire_ibm.memcomp.clm4_0_50 
+    PASS  ERH_D.T31_g37.I1850CN.bluefire_ibm.tputcomp.clm4_0_50 
+
+%%cesm/clm rof tests
+  nohup create_test_suite -input_list bluefire.clmRof.auxtest -compare clm4_0_50 -baselineroot /glade/proj2/cgd/tss/clm_cesm_baselines -generate clm4_0_51 -testroot /glade/scratch/muszala/tests > & ! bf_out_`date +"%m%d%y"`.lg &
+
+	These don't exist anymore, but will be replaced once Tony works out default grid resolutions for r01 and r05
+
+  ID:  091144
+
+  BFAIL SMR.f19_g16.I_2000_CN.bluefire_ibm.compare_hist.clm4_0_50 
+    nothing to compare to in clm4_0_50
+  BFAIL SMR.f09_g16.I_2000_CN.bluefire_ibm.compare_hist.clm4_0_50 
+    nothing to compare to in clm4_0_50
+  FAIL  SMR.f05_g16.I_2000_CN.bluefire_ibm 
+    larger scipt errors in rof - kills the following two tests outright
+      BFAIL SMR.f05_g16.I_2000_CN.bluefire_ibm.generate.clm4_0_51 
+      BFAIL SMR.f05_g16.I_2000_CN.bluefire_ibm.compare_hist.clm4_0_50 
+  FAIL  SMR.ne120_g16.I_2000_CN.bluefire_ibm.generate.clm4_0_51 
+    can't copy in, clm4_0_51 baseline already exists
+  BFAIL SMR.ne120_g16.I_2000_CN.bluefire_ibm.compare_hist.clm4_0_50 
+    nothing to compare to in clm4_0_50
+  RUN   SMR.ne240_g16.I_2000_CN.bluefire_ibm.GC.091144 
+
+
+%%%%%% testing reporting end
+
+CLM tag used for the baseline comparison tests if applicable:
+
+	clm4_0_50
+
+Changes answers relative to baseline:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - compset (and additional configure options):
+   - build-namelist options (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_50
 Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
 Date:  Fri Sep 21 15:13:52 MDT 2012

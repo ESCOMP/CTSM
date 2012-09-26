@@ -181,7 +181,7 @@ print "==================================================\n";
 
 # Exercise a bunch of options
 my $options = "-co2_ppmv 250 -glc_nec 10 -glc_grid gland5 -glc_smb .false.";
-   $options .= " -res 0.9x1.25 -rtm off -rtm_tstep 10800 -rcp 2.6";
+   $options .= " -res 0.9x1.25 -rcp 2.6";
 
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
