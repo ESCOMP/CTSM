@@ -247,7 +247,8 @@ grids=("ne240np4_nomask"   \
        "5x5min_IGBP-GSDP"  \
        "5x5min_ISRIC-WISE" \
        "10x10min_nomask"   \
-       "10x10min_IGBPmergeICESatGIS")
+       "3x3min_GLOBE-Gardner" \
+       "3x3min_GLOBE-Gardner-mergeGIS" )
 
 # Set timestamp for names below 
 CDATE="c"`date +%y%m%d`
@@ -269,7 +270,7 @@ do
       echo "ingrid = ${INGRID[nfile]}"
       echo "ingrid = ${INGRID[nfile]}" >> $outfilelist
    fi
-   if [[ "$gridmask" = "3x3min_MODIS" || "$gridmask" = "3x3min_LandScan2004" ]]; then
+   if [[ "$gridmask" = "3x3min_MODIS" || "$gridmask" = "3x3min_LandScan2004" || "$gridmask" = "3x3min_GLOBE-Gardner" || "$gridmask" = "3x3min_GLOBE-Gardner-mergeGIS" ]]; then
       LRGFIL[nfile]="yes"
    else
       LRGFIL[nfile]="no"

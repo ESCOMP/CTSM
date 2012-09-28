@@ -329,7 +329,7 @@ SCRIP format grid data file
 <!--                                                   -->
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_fglctopo,mksrf_flndtopo,mksrf_firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_furbtopo,mksrf_flndtopo,mksrf_firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -343,9 +343,9 @@ Plant Function Type dataset for mksurfdata
 Dataset for percent glacier land-unit for mksurfdata
 </entry>
 
-<entry id="mksrf_fglctopo" type="char*256" category="mksurfdata"
+<entry id="mksrf_furbtopo" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
-Dataset for glacier topography
+Dataset for topography used to define urban threshold
 </entry>
 
 <entry id="mksrf_flndtopo" type="char*256" category="mksurfdata"
@@ -705,7 +705,7 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 
 <entry id="lmask" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004">
+       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS">
 Land mask description for mksurfdata input files
 </entry> 
 

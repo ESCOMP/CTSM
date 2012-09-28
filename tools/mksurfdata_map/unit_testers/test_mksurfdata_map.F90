@@ -3,6 +3,7 @@ program mksurfdata_map_unit_tester
    use test_mkutilsMod
    use test_mkindexmapMod
    use test_mkurbanparDomMod
+   use test_mkncdio
    use test_mod, only : test_init, test_final
 
    call test_init
@@ -17,6 +18,8 @@ program mksurfdata_map_unit_tester
    call test_which_max
 
    call test_mkurban_dominant_density
+
+   call test_get_dim_lengths
 
    call test_final
 

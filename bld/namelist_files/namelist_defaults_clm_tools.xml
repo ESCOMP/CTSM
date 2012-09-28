@@ -187,8 +187,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3_USGS_c120912.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="LandScan2004"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_LandScan2004_c120517.nc</scripgriddata>
-<scripgriddata hgrid="10x10min"  lmask="IGBPmergeICESatGIS" 
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_IGBPmergeICESatGIS_c110818.nc</scripgriddata>
+<scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner_c120922.nc</scripgriddata>
+<scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner-mergeGIS"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner-mergeGIS_c120922.nc</scripgriddata>
 
 <!-- Single-point / Regional grids -->
 <scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
@@ -198,7 +200,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="1x1_numaIA"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_numaIA_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_smallvilleIA"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_smallvilleIA_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_tropicAtl"       lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_tropicAtl_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="1x1_urbanc_alpha"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_urbanc_alpha_nomask_c110308.nc.nc</scripgriddata>
+<scripgriddata hgrid="1x1_urbanc_alpha"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_urbanc_alpha_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_vancouverCAN"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_vancouverCAN_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="5x5_amazon"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5pt_amazon_nomask_c110308.nc</scripgriddata>
 
@@ -223,14 +225,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="col"              >MODIS</lmask>
 <lmask type="org"              >MODIS</lmask>
 <lmask type="org" hires="on"   >ISRIC-WISE</lmask>
-<lmask type="glc" glc_nec="0"  >MODIS</lmask>
-<lmask type="glc" glc_nec="1"  >IGBPmergeICESatGIS</lmask>
-<lmask type="glc" glc_nec="3"  >IGBPmergeICESatGIS</lmask>
-<lmask type="glc" glc_nec="5"  >IGBPmergeICESatGIS</lmask>
-<lmask type="glc" glc_nec="10" >IGBPmergeICESatGIS</lmask>
+<lmask type="glc" glc_nec="0"  >GLOBE-Gardner</lmask>
+<lmask type="glc" glc_nec="1"  >GLOBE-Gardner-mergeGIS</lmask>
+<lmask type="glc" glc_nec="3"  >GLOBE-Gardner-mergeGIS</lmask>
+<lmask type="glc" glc_nec="5"  >GLOBE-Gardner-mergeGIS</lmask>
+<lmask type="glc" glc_nec="10" >GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="fmx"              >USGS</lmask>
 <lmask type="irr"              >nomask</lmask>
-<lmask type="gtp"              >nomask</lmask>
+<lmask type="utp"              >nomask</lmask>
 <lmask type="top"              >nomask</lmask>
 <lmask type="tex"              >IGBP-GSDP</lmask>
 
@@ -247,14 +249,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="col"              >0.5x0.5</hgrid>
 <hgrid type="org"              >0.5x0.5</hgrid>
 <hgrid type="org" hires="on"   >5x5min</hgrid>
-<hgrid type="glc" glc_nec="0"  >0.5x0.5</hgrid>
-<hgrid type="glc" glc_nec="1"  >10x10min</hgrid>
-<hgrid type="glc" glc_nec="3"  >10x10min</hgrid>
-<hgrid type="glc" glc_nec="5"  >10x10min</hgrid>
-<hgrid type="glc" glc_nec="10" >10x10min</hgrid>
+<hgrid type="glc"              >3x3min</hgrid>
 <hgrid type="fmx"              >0.5x0.5</hgrid>
 <hgrid type="irr"              >5x5min</hgrid>
-<hgrid type="gtp"              >10x10min</hgrid>
+<hgrid type="utp"              >10x10min</hgrid>
 <hgrid type="top"              >10x10min</hgrid>
 <hgrid type="tex"              >5x5min</hgrid>
 
@@ -270,7 +268,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_filename type="glc" >mksrf_fglacier</mksrf_filename>
 <mksrf_filename type="fmx" >mksrf_fmax</mksrf_filename>
 <mksrf_filename type="irr" >mksrf_firrig</mksrf_filename>
-<mksrf_filename type="gtp" >mksrf_fglctopo</mksrf_filename>
+<mksrf_filename type="utp" >mksrf_furbtopo</mksrf_filename>
 <mksrf_filename type="top" >mksrf_flndtopo</mksrf_filename>
 <mksrf_filename type="tex" >mksrf_fsoitex</mksrf_filename>
 
@@ -331,28 +329,41 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120418.nc</mksrf_furban>
 
 <!-- mksrf_fglacier % glacier land-unit -->
-<mksrf_fglacier hgrid="0.5x0.5"  lmask="MODIS"              glc_nec="0"  
->lnd/clm2/rawdata/mksrf_glacier.060929.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="10x10min" lmask="IGBPmergeICESatGIS" glc_nec="1" 
->lnd/clm2/rawdata/mksrf_glacier.10min.c110719.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="10x10min" lmask="IGBPmergeICESatGIS" glc_nec="3"  
->lnd/clm2/rawdata/mksrf_glacier.10min.c110719.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="10x10min" lmask="IGBPmergeICESatGIS" glc_nec="5"  
->lnd/clm2/rawdata/mksrf_glacier.10min.c110719.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="10x10min" lmask="IGBPmergeICESatGIS" glc_nec="10" 
->lnd/clm2/rawdata/mksrf_glacier.10min.c110719.nc</mksrf_fglacier>
+<!-- WJS (9-26-12): 
+     There are two versions of this dataset: the "standard" version uses
+     data from Gardner globally. The "mergeGreenland" version uses data from Gardner
+     outside of Greenland, merged with data from a CISM input file over Greenland. The
+     rationale is that, if you're not running with CISM, then it's probably best to use
+     the Gardner data globally. But if you are running with CISM, then it's probably best
+     to use the merged data, since CLM will then be more consistent with CISM. 
 
-<!-- mksrf_fglctopo - Glacier topography -->
-<mksrf_fglctopo hgrid="10x10min" lmask="nomask" glc_nec="0"   
->lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc</mksrf_fglctopo>
-<mksrf_fglctopo hgrid="10x10min" lmask="nomask" glc_nec="1"  
->lnd/clm2/rawdata/mksrf_topo.10min.c110719.nc</mksrf_fglctopo>
-<mksrf_fglctopo hgrid="10x10min" lmask="nomask" glc_nec="3"  
->lnd/clm2/rawdata/mksrf_topo.10min.c110719.nc</mksrf_fglctopo>
-<mksrf_fglctopo hgrid="10x10min" lmask="nomask" glc_nec="5"  
->lnd/clm2/rawdata/mksrf_topo.10min.c110719.nc</mksrf_fglctopo>
-<mksrf_fglctopo hgrid="10x10min" lmask="nomask" glc_nec="10" 
->lnd/clm2/rawdata/mksrf_topo.10min.c110719.nc</mksrf_fglctopo>
+     In the logic here, we equate "running with CISM" with "running with multiple
+     elevation classes." Soon, though, we want to separate those conditions, so that (1)
+     you can run with multiple elevation classes without CISM, and perhaps more
+     importantly (2) you can use the same surface dataset for runs with multiple elevation
+     classes or a single elevation class. At that point, we will need to rethink the rule
+     deciding between the two raw datasets, or perhaps just always use one of these raw
+     datasets by default, leaving the other as an option that would require manual editing
+     of the namelist.
+
+     In the longer-term, once we have dynamic landunits, I plan to make CLM adjust its
+     initial conditions to match CISM. At that point, the need for the "mergeGreenland"
+     version of the raw dataset will probably go away.
+-->
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner"          glc_nec="0"  
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc</mksrf_fglacier>
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="1" 
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="3"  
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="5"  
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="10" 
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+
+<!-- mksrf_furbtopo - topography for urban threshold -->
+<mksrf_furbtopo hgrid="10x10min" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc</mksrf_furbtopo>
 
 <!-- RCP 6.0 - the AIM scenario -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn"   sim_year="2005" rcp="6">lnd/clm2/ndepdata/ndep_clm_rcp6.0_simyr2000-2009_1.9x2.5_c100806.nc</fndepdat>

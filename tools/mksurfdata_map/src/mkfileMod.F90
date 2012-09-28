@@ -142,9 +142,9 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Glacier_raw_data_file_name', len_trim(str), trim(str)), subname)
 
-    str = get_filename(mksrf_fglctopo)
+    str = get_filename(mksrf_furbtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'GLC_Topography_raw_data_file_name', len_trim(str), trim(str)), subname)
+         'Urban_Topography_raw_data_file_name', len_trim(str), trim(str)), subname)
 
     str = get_filename(mksrf_flndtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -226,9 +226,9 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_lai_sai_file', len_trim(str), trim(str)), subname)
 
-    str = get_filename(map_fglctopo)
+    str = get_filename(map_furbtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_glc_topography_file', len_trim(str), trim(str)), subname)
+         'map_urban_topography_file', len_trim(str), trim(str)), subname)
 
     str = get_filename(map_flndtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -619,11 +619,31 @@ contains
           if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
                   dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent for each glacier elevation class', units='unitless')
+                  long_name='percent glacier for each glacier elevation class', units='unitless')
           else
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
                   dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent for each glacier elevation class', units='unitless')
+                  long_name='percent glacier for each glacier elevation class', units='unitless')
+          end if
+          
+          if (outnc_1d) then
+             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
+                  dim1name='gridcell', dim2name='nglcec', &
+                  long_name='percent smaller glaciers and ice caps for each glacier elevation class', units='unitless')
+          else
+             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
+                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+                  long_name='percent smaller glaciers and ice caps for each glacier elevation class', units='unitless')
+          end if
+          
+          if (outnc_1d) then
+             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
+                  dim1name='gridcell', dim2name='nglcec', &
+                  long_name='percent ice sheet for each glacier elevation class', units='unitless')
+          else
+             call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
+                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+                  long_name='percent ice sheet for each glacier elevation class', units='unitless')
           end if
           
           if (outnc_1d) then
@@ -637,7 +657,7 @@ contains
           end if
           
           if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_ICESHEETT', xtype=xtype, &
+             call ncd_defvar(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
                   dim1name='gridcell', &
                   long_name='percent ice sheet', units='unitless')
           else
@@ -647,26 +667,6 @@ contains
           end if
           
           if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_FLOAT', xtype=xtype, &
-                  dim1name='gridcell', &
-                  long_name='percent floating ice', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_FLOAT', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', &
-                  long_name='percent floating ice', units='unitless')
-          end if
-          
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_GROUND', xtype=xtype, &
-                  dim1name='gridcell', &
-                  long_name='percent grounded ice', units='unitless')
-          else
-             call ncd_defvar(ncid=ncid, varname='PCT_GLC_GROUND', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', &
-                  long_name='percent grounded ice', units='unitless')
-          end if
-          
-          if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
                   dim1name='gridcell', dim2name='nglcec', &
                   long_name='mean elevation on glacier elevation classes', units='m')
@@ -676,15 +676,6 @@ contains
                   long_name='mean elevation on glacier elevation classes', units='m')
           end if
           
-          if (outnc_1d) then
-             call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
-                  dim1name='gridcell', dim2name='nglcec', &
-                  long_name='mean ice sheet thickness on glacier elevation classes', units='m')
-          else
-             call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
-                  dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='mean ice sheet thickness on glacier elevation classes', units='m')
-          end if
        end if
     end if
 

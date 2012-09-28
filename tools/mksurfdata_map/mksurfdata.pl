@@ -407,7 +407,7 @@ EOF
       my $mopts  = "$queryopts -namelist default_settings $usrnam";
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       foreach my $typ ( "lak", "veg", "voc", "top", "irr", "tex", "col", 
-                        "fmx", "lai", "urb", "org", "glc", "gtp", "wet" ) {
+                        "fmx", "lai", "urb", "org", "glc", "utp", "wet" ) {
          my $lmask = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec,hires=$hires -var lmask`;
          $lmask = trim($lmask);
          my $hgrid = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec,hires=$hires -var hgrid`;
@@ -523,7 +523,7 @@ EOF
  map_fvocef     = '$map{'voc'}'
  map_fsoitex    = '$map{'tex'}'
  map_firrig     = '$map{'irr'}'
- map_fglctopo   = '$map{'gtp'}'
+ map_furbtopo   = '$map{'utp'}'
  map_flndtopo   = '$map{'top'}'
  mksrf_fsoitex  = '$datfil{'tex'}'
  mksrf_forganic = '$datfil{'org'}'
@@ -532,7 +532,7 @@ EOF
  mksrf_fmax     = '$datfil{'fmx'}'
  mksrf_fglacier = '$datfil{'glc'}'
  mksrf_fvocef   = '$datfil{'voc'}'
- mksrf_fglctopo = '$datfil{'gtp'}'
+ mksrf_furbtopo = '$datfil{'utp'}'
  mksrf_flndtopo = '$datfil{'top'}'
  mksrf_firrig   = '$datfil{'irr'}'
  outnc_double   = $double

@@ -2,6 +2,7 @@ test_mksurfdata_map.F90
 test_mkindexmapMod.F90
 test_mkurbanparDomMod.F90
 test_mkutilsMod.F90
+test_mkncdio.F90
 test_mod.F90
 mkindexmapMod.F90
 mkurbanparDomMod.F90

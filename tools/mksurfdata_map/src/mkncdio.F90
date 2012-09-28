@@ -6,7 +6,7 @@ module mkncdio
 ! !MODULE: mkncdio
 !
 ! !DESCRIPTION:
-! Generic interfaces to write fields to netcdf files
+! Generic interfaces to write fields to netcdf files, and other useful netcdf operations
 !
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
@@ -19,8 +19,9 @@ module mkncdio
 
   private
 
-  public :: check_ret    ! checks return status of netcdf calls
-  public :: ncd_defvar   ! define netCDF input variable
+  public :: check_ret       ! checks return status of netcdf calls
+  public :: ncd_defvar      ! define netCDF input variable
+  public :: get_dim_lengths ! get dimension lengths of a netcdf variable
 !
 ! !REVISION HISTORY:
 !
@@ -51,6 +52,7 @@ module mkncdio
   public :: nf_put_vara_int
   public :: nf_inq_dimid
   public :: nf_max_name
+  public :: nf_max_var_dims
   public :: nf_noerr
 !EOP
 !-----------------------------------------------------------------------
@@ -189,5 +191,58 @@ contains
     end if
 
   end subroutine ncd_defvar
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: get_dim_lengths
+!
+! !INTERFACE:
+subroutine get_dim_lengths(ncid, varname, ndims, dim_lengths)
+!
+! !DESCRIPTION:
+! Returns the number of dimensions and an array containing the dimension lengths of a
+! variable in an open netcdf file.
+!
+! Entries 1:ndims in the returned dim_lengths array contain the dimension lengths; the
+! remaining entries in that vector are meaningless. The dim_lengths array must be large
+! enough to hold all ndims values; if not, the code aborts (this can be ensured by passing
+! in an array of length nf_max_var_dims).
+!
+! !USES:
+!
+! !ARGUMENTS:
+   implicit none
+   integer         , intent(in) :: ncid           ! netcdf id of an open netcdf file
+   character(len=*), intent(in) :: varname        ! name of variable of interest
+   integer         , intent(out):: ndims          ! number of dimensions of variable
+   integer         , intent(out):: dim_lengths(:) ! lengths of dimensions of variable
+!
+! !REVISION HISTORY:
+! Author: Bill Sacks
+!
+!
+! !LOCAL VARIABLES:
+   integer :: varid
+   integer :: dimids(size(dim_lengths))
+   integer :: i
+   character(len=*), parameter :: subname = 'get_dim_lengths'
+!EOP
+!------------------------------------------------------------------------------
+   call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+   call check_ret(nf_inq_varndims(ncid, varid, ndims), subname)
+
+   if (ndims > size(dim_lengths)) then
+      write(6,*) trim(subname), ' ERROR: dim_lengths too small'
+      call abort()
+   end if
+
+   call check_ret(nf_inq_vardimid(ncid, varid, dimids), subname)
+
+   dim_lengths(:) = 0  ! pre-fill with 0 so we won't have garbage in elements past ndims
+   do i = 1, ndims
+      call check_ret(nf_inq_dimlen(ncid, dimids(i), dim_lengths(i)), subname)
+   end do
+ end subroutine get_dim_lengths
 
 end module mkncdio

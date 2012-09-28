@@ -82,7 +82,7 @@ begin
   print( "query string="+querynml )
 
 
-  mapgrids = (/"0.5x0.5_MODIS", "0.5x0.5_USGS", "0.5x0.5_AVHRR", "0.5x0.5_MODIS", "5x5min_nomask", "5x5min_IGBP-GSDP", "5x5min_ISRIC-WISE", "10x10min_nomask", "3x3min_MODIS", "10x10min_IGBPmergeICESatGIS", "3x3min_LandScan2004"/);
+  mapgrids = (/"0.5x0.5_MODIS", "0.5x0.5_USGS", "0.5x0.5_AVHRR", "0.5x0.5_MODIS", "5x5min_nomask", "5x5min_IGBP-GSDP", "5x5min_ISRIC-WISE", "10x10min_nomask", "3x3min_MODIS", "3x3min_LandScan2004", "3x3min_GLOBE-Gardner", "3x3min_GLOBE-Gardner-mergeGIS"/);
   do i = 0, dimsizes(resolutions)-1
      res = resolutions(i);
      print( "Go through maps for Resolution: "+res );
@@ -136,7 +136,7 @@ begin
   ;
   ; go the other direction now check the _a variables
   ;
-  mksrf_files = (/"mksrf_fvegtyp", "mksrf_fglacier", "mksrf_fglctopo", "mksrf_flndtopo", "mksrf_flai", "mksrf_fsoitex", "mksrf_fsoicol", "mksrf_ffrac", "mksrf_fmax", "mksrf_ftopo", "mksrf_firrig", "mksrf_forganic", "mksrf_flakwat", "mksrf_fwetlnd", "mksrf_furban", "mksrf_fvocef"/)
+  mksrf_files = (/"mksrf_fvegtyp", "mksrf_fglacier", "mksrf_furbtopo", "mksrf_flndtopo", "mksrf_flai", "mksrf_fsoitex", "mksrf_fsoicol", "mksrf_ffrac", "mksrf_fmax", "mksrf_ftopo", "mksrf_firrig", "mksrf_forganic", "mksrf_flakwat", "mksrf_fwetlnd", "mksrf_furban", "mksrf_fvocef"/)
   do i = 0, dimsizes(mapgrids)-1
      grid = str_get_field( mapgrids(i), 1, "_" );
      lmask = str_get_field( mapgrids(i), 2, "_" );

@@ -35,7 +35,7 @@ module mkvarctl
   character(len=256), public :: mksrf_furban   = ' '  ! urban data file name
   character(len=256), public :: mksrf_firrig   = ' '  ! irrigated area data file name
   character(len=256), public :: mksrf_fglacier = ' '  ! glacier data file name
-  character(len=256), public :: mksrf_fglctopo = ' '  ! glc topography data file name
+  character(len=256), public :: mksrf_furbtopo = ' '  ! urban topography data file name
   character(len=256), public :: mksrf_flndtopo = ' '  ! land topography data file name
   character(len=256), public :: mksrf_fmax     = ' '  ! fmax data file name
   character(len=256), public :: mksrf_flai     = ' '  ! lai data filename
@@ -51,7 +51,7 @@ module mkvarctl
   character(len=256), public :: map_fsoitex     = ' ' ! Mapping file for soil texture
   character(len=256), public :: map_fsoicol     = ' ' ! Mapping file for soil color
   character(len=256), public :: map_furban      = ' ' ! Mapping file for urban
-  character(len=256), public :: map_fglctopo    = ' ' ! Mapping file for glacier topography
+  character(len=256), public :: map_furbtopo    = ' ' ! Mapping file for urban topography
   character(len=256), public :: map_flndtopo    = ' ' ! Mapping file for land topography
   character(len=256), public :: map_fmax        = ' ' ! Mapping file for soil frac max
   character(len=256), public :: map_forganic    = ' ' ! Mapping file for organic soil

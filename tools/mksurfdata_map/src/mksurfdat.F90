@@ -87,11 +87,10 @@ program mksurfdat
     real(r8), allocatable  :: pctgla_uncorrected(:)  ! percent of grid cell that is glacier, before any corrections
     real(r8), allocatable  :: pctglc_gic(:)      ! percent of grid cell that is gic (glc)
     real(r8), allocatable  :: pctglc_icesheet(:) ! percent of grid cell that is ice sheet (glc)
-    real(r8), allocatable  :: pctglc_float(:)    ! percent of grid cell that is grounded ice (glc)
-    real(r8), allocatable  :: pctglc_ground(:)   ! percent of grid cell that is floating ice (glc)
     real(r8), allocatable  :: pctglcmec(:,:)     ! glacier_mec pct coverage in each gridcell and class
     real(r8), allocatable  :: topoglcmec(:,:)    ! glacier_mec sfc elevation in each gridcell and class
-    real(r8), allocatable  :: thckglcmec(:,:)    ! glacier_mec ice sheet thcknss in each gridcell and class
+    real(r8), allocatable  :: pctglcmec_gic(:,:) ! GIC pct coverage in each gridcell and class
+    real(r8), allocatable  :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each gridcell and class
     real(r8), allocatable  :: elevclass(:)       ! glacier_mec elevation classes
     real(r8), allocatable  :: pctlak(:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:)          ! percent of grid cell that is wetland  
@@ -128,7 +127,7 @@ program mksurfdat
          mksrf_flakwat,            &
          mksrf_fwetlnd,            &
          mksrf_fglacier,           &
-         mksrf_fglctopo,           &
+         mksrf_furbtopo,           &
          mksrf_flndtopo,           &
          mksrf_fmax,               &
          mksrf_furban,             &
@@ -151,7 +150,7 @@ program mksurfdat
          map_fsoitex,              &
          map_fsoicol,              &
          map_furban,               &
-         map_fglctopo,             &
+         map_furbtopo,             &
          map_flndtopo,             &
          map_fmax,                 &
          map_forganic,             &
@@ -185,8 +184,7 @@ program mksurfdat
     !    mksrf_fmax ----- Max fractional saturated area dataset
     !    mksrf_fsoicol -- Soil color dataset
     !    mksrf_fsoitex -- Soil texture dataset
-    !    mksrf_fglctopo-- Topography dataset (for glacier multiple elevation classes)
-    !                     (and for limiting urban areas)
+    !    mksrf_furbtopo-- Topography dataset (for limiting urban areas)
     !    mksrf_furban --- Urban dataset
     !    mksrf_fvegtyp -- PFT vegetation type dataset
     !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
@@ -200,13 +198,11 @@ program mksurfdat
     !    map_fsoitex ----- Mapping for mksrf_fsoitex
     !    map_fsoicol ----- Mapping for mksrf_fsoicol
     !    map_furban ------ Mapping for mksrf_furban
-    !    map_fglctopo ---- Mapping for mksrf_fglctopo
+    !    map_furbtopo ---- Mapping for mksrf_furbtopo
     !    map_flndtopo ---- Mapping for mksrf_flndtopo
     !    map_fmax -------- Mapping for mksrf_fmax
     !    map_forganic ---- Mapping for mksrf_forganic
     !    map_fvocef ------ Mapping for mksrf_fvocef
-    !    map_fglcmec_t2g - Mapping for mksrf_fglctopo????
-    !    map_fglcmec_g2g - Mapping for ???????
     !    map_flai -------- Mapping for mksrf_flai
     !    map_fharvest ---- Mapping for mksrf_flai harvesting
     !    map_firrig ------ Mapping for mksrf_firrig (optional)
@@ -378,8 +374,8 @@ program mksurfdat
     write(ndiag,*) 'PFTs from:                  ',trim(mksrf_fvegtyp)
     write(ndiag,*) 'fmax from:                  ',trim(mksrf_fmax)
     write(ndiag,*) 'glaciers from:              ',trim(mksrf_fglacier)
-    write(ndiag,*) 'glc topography from:        ',trim(mksrf_fglctopo)
     write(ndiag,*) '           with:            ', nglcec, ' glacier elevation classes'
+    write(ndiag,*) 'urban topography from:      ',trim(mksrf_furbtopo)
     write(ndiag,*) 'land topography from:       ',trim(mksrf_flndtopo)
     write(ndiag,*) 'urban from:                 ',trim(mksrf_furban)
     write(ndiag,*) 'inland lake from:           ',trim(mksrf_flakwat)
@@ -408,7 +404,7 @@ program mksurfdat
                   ' mapping for irrigation      ',trim(map_firrig)
     end if
     write(ndiag,*)' mapping for lai/sai         ',trim(map_flai)
-    write(ndiag,*)' mapping for glc topography  ',trim(map_fglctopo)
+    write(ndiag,*)' mapping for urb topography  ',trim(map_furbtopo)
     write(ndiag,*)' mapping for land topography ',trim(map_flndtopo)
 
     if (mksrf_fdynuse /= ' ') then
@@ -484,6 +480,36 @@ program mksurfdat
        call abort()
     end if
 
+    ! WJS (9-25-12): Note about topo datasets: Until now, there have been two topography
+    ! datasets: flndtopo & fglctopo. flndtopo is used to create the TOPO variable, which I
+    ! believe is used to downscale grid cell-level climate to glc_mec columns. Until now,
+    ! fglctopo was used for dividing pct_glacier data into multiple elevation classes in
+    ! mkglcmecMod. However, it is no longer needed for this purpose, since elevation data
+    ! is now folded into fglacier. fglctopo has also been used to screen urban points (I'm
+    ! not sure why fglctopo rather than flndtopo was chosen for that purpose).
+    !
+    ! For now, I am keeping fglctopo around simply for the urban screening purpose. To
+    ! make its purpose clear, I am renaming it to furbtopo. I had planned to switch to a
+    ! new topo file that is consistent with the topo data that are implicitly included in
+    ! fglacier (i.e., a file that gives the topo that's used for glc purposes, even though
+    ! fglctopo itself isn't used for glc purposes any more). However, this caused problems
+    ! in coming up with a new elev_thresh. Thus, for now I am continuing to use the old
+    ! fglctopo file, which no longer has any meaning with respect to glc (and again, I am
+    ! renaming it to furbtopo to make it clear that it is not connected with glc).
+    !
+    ! In the longer term, a better solution for this urban screening would probably be to
+    ! modify the raw urban data. In that case, I believe we could remove furbtopo.
+    ! 
+    ! Why was TOPO created from flndtopo rather than fglctopo? It seems like, for the
+    ! purpose of downscaling, this TOPO variable should ideally represent CAM's
+    ! topographic height. For that purpose, flndtopo is more appropriate, because it seems
+    ! to have come from CAM's topo dataset. However, I believe that many (all??) CAM
+    ! resolutions use some sort of smoothed topography. So the ideal thing to do would be
+    ! for CLM to get its grid cell-level topography from CAM at initialization. If that
+    ! were done, then I think flndtopo and the TOPO variable on the surface dataset could
+    ! go away.
+
+
     ! Make elevation [elev] from [ftopo, ffrac] dataset
     ! Used only to screen pcturb  
     ! Screen pcturb by elevation threshold from elev dataset
@@ -491,7 +517,7 @@ program mksurfdat
     if ( .not. all_urban .and. .not. all_veg )then
        allocate(elev(ns_o))
        elev(:) = spval
-       call mkelev (ldomain, mapfname=map_fglctopo, datfname=mksrf_fglctopo, &
+       call mkelev (ldomain, mapfname=map_furbtopo, datfname=mksrf_furbtopo, &
          varname='TOPO_ICE', ndiag=ndiag, elev_o=elev)
 
        where (elev .gt. elev_thresh)
@@ -533,7 +559,7 @@ program mksurfdat
          ef_shr_o=ef1_shr, ef_grs_o=ef1_grs, ef_crp_o=ef1_crp)
 
 
-    ! Do landuse changes such as for the poles, Ross ice-shelf and etc.
+    ! Do landuse changes such as for the poles, etc.
 
     call change_landuse( ldomain, dynpft=.false. )
 
@@ -603,29 +629,31 @@ program mksurfdat
     enddo
     write(6,*)
 
-    ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier,ftopo] dataset
+    ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier] dataset
     ! This call needs to occur after pctgla has been adjusted for the final time
 
     if ( nglcec > 0 )then
 
        allocate (pctglcmec(ns_o,nglcec), &
-                 topoglcmec(ns_o,nglcec),&
-                 thckglcmec(ns_o,nglcec))
+                 topoglcmec(ns_o,nglcec), &
+                 pctglcmec_gic(ns_o,nglcec), &
+                 pctglcmec_icesheet(ns_o,nglcec))
        allocate (pctglc_gic(ns_o))
        allocate (pctglc_icesheet(ns_o))
-       allocate (pctglc_float(ns_o))
-       allocate (pctglc_ground(ns_o))
 
-       pctglcmec(:,:)  = spval
-       topoglcmec(:,:) = spval
-       thckglcmec(:,:) = spval
+       pctglcmec(:,:)          = spval
+       topoglcmec(:,:)         = spval
+       pctglcmec_gic(:,:)      = spval
+       pctglcmec_icesheet(:,:) = spval
+       pctglc_gic(:)           = spval
+       pctglc_icesheet(:)      = spval
 
        call mkglcmec (ldomain, mapfname=map_fglacier, &
-                      datfname_fglctopo=mksrf_fglctopo, datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-                      pctglac_o=pctgla, pctglac_o_uncorrected=pctgla_uncorrected, pctglcmec_o=pctglcmec, &
-	              topoglcmec_o=topoglcmec, thckglcmec_o=thckglcmec, &
-                      pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet, &
-                      pctglc_float_o=pctglc_float, pctglc_ground_o=pctglc_ground)
+                      datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+                      pctglac_o=pctgla, pctglac_o_uncorrected=pctgla_uncorrected, &
+                      pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+                      pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+                      pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
     end if
 
     ! Determine fractional land from pft dataset
@@ -691,8 +719,11 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'THCK_GLC_MEC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, thckglcmec), subname)
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
 
        call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
@@ -700,11 +731,6 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_FLOAT', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglc_float), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GROUND', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglc_ground), subname)
     end if
 
     call check_ret(nf_inq_varid(ncid, 'TOPO', varid), subname)
@@ -757,8 +783,8 @@ program mksurfdat
 
     deallocate ( organic )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
-    if ( nglcec > 0 ) deallocate ( pctglcmec, topoglcmec, thckglcmec )
-    if ( nglcec > 0 ) deallocate ( pctglc_gic, pctglc_icesheet, pctglc_float, pctglc_ground )
+    if ( nglcec > 0 ) deallocate ( pctglcmec, topoglcmec)
+    if ( nglcec > 0 ) deallocate ( pctglc_gic, pctglc_icesheet)
     deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( pctsand, pctclay )
@@ -989,7 +1015,7 @@ subroutine change_landuse( ldomain, dynpft )
 !
 ! !DESCRIPTION:
 !
-! Do landuse changes such as for the poles, Ross ice-shelf and etc.
+! Do landuse changes such as for the poles, etc.
 !
 ! !USES:
     implicit none
@@ -1010,7 +1036,6 @@ subroutine change_landuse( ldomain, dynpft )
     integer ,parameter :: bdtemptree = 7    ! Index for broadleaf decidious temperate tree
     integer ,parameter :: bdtempshrub = 10  ! Index for broadleaf decidious temperate shrub
     real(r8),parameter :: troplat = 23.5_r8 ! Latitude to define as tropical
-    real(r8),parameter :: rosslat = -79._r8 ! Latitude to define as Ross ice-shelf
     integer  :: n,ns_o                       ! indices
     character(len=32) :: subname = 'change_landuse'  ! subroutine name
 !-----------------------------------------------------------------------
@@ -1035,30 +1060,6 @@ subroutine change_landuse( ldomain, dynpft )
        end if
        first_time = .false.
        
-       ! Set land values on Ross ice shelf to glacier
-       ! non-dynamic-PFT part of the code
-       
-       if (ldomain%latc(n) < rosslat) then
-          pctpft(n,:) = 0._r8
-          pctlak(n)   = 0._r8
-          pctwet(n)   = 0._r8
-          pcturb(n)   = 0._r8
-          pctgla(n)   = 100._r8
-          if ( .not. dynpft )then
-             ef1_btr(n)     = 0._r8
-             ef1_fet(n)     = 0._r8
-             ef1_fdt(n)     = 0._r8
-             ef1_shr(n)     = 0._r8
-             ef1_grs(n)     = 0._r8
-             ef1_crp(n)     = 0._r8
-             organic(n,:)   = 0._r8
-             soicol(n)      = 0
-             if (mksrf_firrig /= ' ') pctirr(n) = 0._r8
-             pctsand(n,:)   = 0._r8
-             pctclay(n,:)   = 0._r8
-          end if
-       end if
-
        ! If have pole points on grid - set south pole to glacier
        ! north pole is assumed as non-land
        
