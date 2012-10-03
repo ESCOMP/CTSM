@@ -90,9 +90,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 178;
+my $ntests = 257;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 99;
+   $ntests += 153;
 }
 plan( tests=>$ntests );
 
@@ -316,12 +316,6 @@ my %failtest = (
      "glc_grid inconsistent"     =>{ options=>"-glc_nec 10 -glc_grid gland10",
                                      namelst=>"glc_grid='gland5'",
                                    },
-     "rtm inconsistent"          =>{ options=>"-rtm off",
-                                     namelst=>"do_rtm=.true.",
-                                   },
-     "rtm tstep inconsistent"    =>{ options=>"-rtm_tstep 10800",
-                                     namelst=>"rtm_nsteps=1",
-                                   },
                );
 foreach my $key ( keys(%failtest) ) {
    my $options  = $failtest{$key}{"options"};
@@ -461,8 +455,7 @@ print "==================================================\n";
 # Check for glc_mec resolutions
 my $mode = "standard";
 system( "../configure -s" );
-#my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" ); # T31 NOT fully functional yet
-my @glc_res = ( "0.9x1.25", "1.9x2.5" );
+my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_rcp2.6_glacierMEC_transient",
                   "1850-2100_rcp4.5_glacierMEC_transient",
                   "1850-2100_rcp6_glacierMEC_transient",
@@ -475,6 +468,50 @@ my $GLC_NEC         = 10;
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @usecases ) {
       $options = "-glc_nec $GLC_NEC -res $res -use_case $usecase ";
+      eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+      is( $@, '', "$options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      system( "diff lnd_in lnd_in.default.standard" );
+      $cfiles->shownmldiff( "default", "standard" );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
+   }
+}
+# Transient 20th Century simulations
+my $mode = "standard";
+system( "../configure -s" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "ne16np4", "ne60np4", "ne120np4", "10x15", "1x1_tropicAtl" );
+my $usecase  = "20thC_transient";
+my $GLC_NEC         = 0;
+foreach my $res ( @tran_res ) {
+   $options = "-res $res -use_case $usecase ";
+   eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
+   is( $@, '', "$options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   system( "diff lnd_in lnd_in.default.standard" );
+   $cfiles->shownmldiff( "default", "standard" );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup();
+}
+# Transient rcp scenarios
+my $mode = "standard";
+system( "../configure -s" );
+my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
+foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient", "1850-2100_rcp6_transient", "1850-2100_rcp8.5_transient" ) {
+   foreach my $res ( @tran_res ) {
+      $options = "-res $res -use_case $usecase ";
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );

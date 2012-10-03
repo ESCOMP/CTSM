@@ -852,6 +852,7 @@ contains
        ! These are now standard fields, but the check on the index makes sure the driver handles them
        if (index_l2x_Sl_ram1      /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i) = clm_l2a%ram1(g)
        if (index_l2x_Sl_fv        /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)   = clm_l2a%fv(g)
+       if (index_l2x_Sl_soilw     /= 0 )  l2x_l%rAttr(index_l2x_Sl_soilw,i)   = clm_l2a%h2osoi_vol(g,1)
        if (index_l2x_Fall_flxdst1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst1,i)= -clm_l2a%flxdst(g,1)
        if (index_l2x_Fall_flxdst2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst2,i)= -clm_l2a%flxdst(g,2)
        if (index_l2x_Fall_flxdst3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst3,i)= -clm_l2a%flxdst(g,3)

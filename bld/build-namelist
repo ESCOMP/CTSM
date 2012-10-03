@@ -74,7 +74,7 @@ OPTIONS
                               (Note: buildnml.csh copies the file for use by the driver)
      -glc_grid "grid"         Glacier model grid and resolution when glacier model, 
                               Only used if glc_nec > 0 for determining fglcmask 
-                              Default:  gland20
+                              Default:  gland5UM
                               (i.e. gland20, gland10 etcetera)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10] 
                               (default is 0) (standard option with land-ice model is 10)
@@ -1501,7 +1501,7 @@ for( my $i = 2; $i <= $nensemble; $i++ ) {
 }
 
 # Groups to go through for clm namelists
-my @groups = qw(clm_inparm clm_rtm_inparm ndepdyn_nml);
+my @groups = qw(clm_inparm ndepdyn_nml);
 
 #-----------------------------------------------------------------------------------------------
 # Read in user_nl_clm namelists specific for each ensemble member

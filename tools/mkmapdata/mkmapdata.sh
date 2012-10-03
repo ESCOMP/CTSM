@@ -214,6 +214,10 @@ else
     GRIDFILE=`$QUERYFIL`
     echo "Using default scrip grid file: $GRIDFILE" 
 fi
+if [ "$type" = "global" ] && [ `echo "$res" | grep -c "1x1_"` ]; then
+   echo "This is a regional resolution and yet it is being run as global, set type with '-t' option\n";
+   exit 1
+fi
 echo "Output grid resolution is $res"
 if [ -z "$GRIDFILE" ]; then
    echo "Output grid file was NOT found for this resolution: $res\n";
@@ -233,16 +237,14 @@ fi
 # Determine all input grid files and output file names 
 #----------------------------------------------------------------------
 
-grids=("ne240np4_nomask"   \
-       "ne120np4_nomask"   \
-       "0.1x0.1_nomask"    \
-       "0.5x0.5_nomask"    \ 
+grids=(                    \
        "1.9x2.5_nomask"    \ 
        "0.5x0.5_USGS"      \
        "0.5x0.5_AVHRR"     \
        "0.5x0.5_MODIS"     \
        "3x3min_LandScan2004" \
        "3x3min_MODIS"      \
+       "3x3min_USGS"       \
        "5x5min_nomask"     \
        "5x5min_IGBP-GSDP"  \
        "5x5min_ISRIC-WISE" \
@@ -289,7 +291,7 @@ if [ "$ocean" != "no" ]; then
 fi
 
 # Set name of RTM output mapping file
-if [ "$type" == "global" ]; then
+if [ "$type" = "global" ]; then
    grid=0.5x0.5
    lmask=nomask
    INGRID[nfile]=$GRIDFILE
@@ -432,7 +434,7 @@ until ((nfile>${#INGRID[*]})); do
    fi
    cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
    cmd="$cmd -d ${GRIDFILE[nfile]} -m conserve -w ${OUTFILE[nfile]}"
-   if [ $type == "regional" ]; then
+   if [ $type = "regional" ]; then
      cmd="$cmd --dst_regional"
    fi
 

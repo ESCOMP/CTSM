@@ -5,14 +5,11 @@
       <bluefire>
          <IBM>
             <compare>
-               <entry testId="214" failType="xFail"> us20 not fully implmented </entry>
-               <entry testId="216" failType="xFail"> us20 not fully implmented </entry>
-               <entry testId="221" failType="xFail"> wus12 not fully implmented </entry>
-               <entry testId="222" failType="xFail"> wus12 not fully implmented </entry>
             </compare>
             <generate>
-               <entry testId="141" failType="xFail"> us20  not fully implemented </entry>
-               <entry testId="144" failType="xFail"> wus12 not fully implemented </entry>
+               <entry testId="184" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="187" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="196" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </IBM>
       </bluefire>
@@ -89,19 +86,17 @@
               <entry testId="ERS_D.CLM_USRDAT.IalaskaCN.bluefire_ibm"        failType="RUN">CESM script issue</entry>
               <entry testId="ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="FAIL">Restart length different</entry>
               <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC"           failType="FAIL">Restart length different</entry>
-              <entry testId="ERS48s_D_P1x64.f45_g37.I_2000_VOC"              failType="RUN">Initial simulation fails</entry>
+              <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
+              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart</entry>
               <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
               <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
          </IBM>
       </bluefire>
       <lynx>
          <pgi>
-              <entry testId="SMS_D.1x1_vancouverCAN.I1PT.lynx_pgi"           failType="SFAIL">datm namelist problem for single-point forcing</entry>
-              <entry testId="ERS.1x1_mexicocityMEX.I1PT.lynx_pg"             failType="SFAIL">datm namelist problem for single-point forcing</entry>
+              <entry testId="ERS_Ld211.1x1_camdenNJ.I_2000_VOC"              failType="CFAIL">????</entry>
          </pgi>
          <intel>
-              <entry testId="ERS.1x1_brazil.I_2000.lynx_intel"                failType="FAIL">CESM script issue</entry>
-              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel" failType="FAIL">CESM script issue</entry>
          </intel>
       </lynx>
    </test_system_interactive> 
@@ -110,10 +105,8 @@
       <bluefire>
          <IBM>
               <entry testId="ERS_D_P96x32.T62_g37.I_2000"             failType="SFAIL">T62 not working</entry>
-              <entry testId="ERS211d_P192x2.f19_g16.I_2000_CNDV_CROP" failType="SFAIL">ignore_ic_date is incompatable with crop!</entry>
-              <entry testId="ERS48s_D_P64x16.ne30_g16.ICN"            failType="SFAIL">CESM script problem didn't see both files</entry>
-              <entry testId="ERS211d.f10_f10.I_2000_VOC_CN"           failType="SFAIL">CESM script problem didn't see both files</entry>
-              <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
+              <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"      failType="RUN">Dies early with a floating point trap</entry>
+              <entry testId="ERS_Ln48_D.f09_g16.ICNEXSPIN"            failType="CFAIL">build error?</entry>
          </IBM>
       </bluefire>
       <lynx>
@@ -123,22 +116,9 @@
    <cesm> 
       <bluefire>
          <IBM>
-              <entry testId="SBN.1x1_mexicocityMEX.I1PT"     failType="SFAIL">datm namelist issue</entry>
-              <entry testId="SBN.1x1_vancouverCAN.I1PT"      failType="SFAIL">datm namelist issue</entry>
-              <entry testId="SBN.1x1_urbanc_alpha.I1PT"      failType="SFAIL">datm namelist issue</entry>
-              <entry testId="SBN.1x1_asphalt_jungle.ICNTEST" failType="TFAIL">datm namelist issue</entry>
-              <entry testId="SBN.T42_g16.I1850"              failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.T31_g16.I1850"              failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.f05_g16.I20TR"              failType="SFAIL">missing datasets</entry>
               <entry testId="SBN.1x1_tropicAtl.I20TR"        failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.ne30_g16.I20TR"             failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.ne120_g16.I20TRCN"          failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.f05_g16.IRCP26CN"           failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.f05_g16.IRCP45CN"           failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.f05_g16.IRCP60CN"           failType="SFAIL">missing datasets</entry>
-              <entry testId="SBN.f05_g16.IRCP85CN"           failType="SFAIL">missing datasets</entry>
-              <entry testId="SMS.1x1_mexicocityMEX.I1PT"     failType="SFAIL">missing datasets</entry>
-              <entry testId="ERP.1x1_vancouverCAN.I1PT"      failType="SFAIL">missing datasets</entry>
+              <entry testId="SBN.ne16_g16.I20TR"             failType="TFAIL">missing datasets</entry>
+              <entry testId="SBN.ne60_g16.I20TR"             failType="TFAIL">missing datasets</entry>
          </IBM>
       </bluefire>
    </cesm>

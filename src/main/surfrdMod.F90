@@ -729,24 +729,68 @@ contains
           enddo
        enddo
 
-       ! Make sure sum of pctglc_mec = pctgla, then zero out pctgla
-       ! (assumes glc_mec values are double precision)
+       ! Make sure sum of pctglc_mec = pctgla (approximately), then correct pctglc_mec so
+       ! that its sum more exactly equals pctgla, then zero out pctgla
+       !
+       ! WJS (9-28-12): The reason for the correction piece of this is: in the surface
+       ! dataset, pctgla underwent various minor corrections that make it the trusted
+       ! value (as opposed to sum(pctglc_mec). sum(pctglc_mec) can differ from pctgla by
+       ! single precision roundoff. This difference can cause problems later (e.g., in the
+       ! consistency check in pftdynMod), so we do this correction here. It might be
+       ! better to do this correction in mksurfdata_map, but because of time constraints,
+       ! which make me unable to recreate surface datasets, I have to do it here instead
+       ! (and there are arguments for putting it here anyway).
 
        do nl = begg,endg
-          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-11) then
+          ! We need to use a fairly high threshold for equality (1.0e-5) because pctgla
+          ! and pctglc_mec are computed using single precision inputs. Note that this
+          ! threshold agrees with the threshold in the error checks in mkglcmecMod:
+          ! mkglcmec in mksurfdata_map. 
+          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-5) then
              write(iulog,*) ' '
              write(iulog,*) 'surfrd error: pctgla not equal to sum of pctglc_mec for nl=', nl
              write(iulog,*) 'pctgla =', pctgla(nl)
              write(iulog,*) 'pctglc_mec_tot =', pctglc_mec_tot(nl)
              call endrun()
           endif
+
+          ! Correct the remaining minor differences in pctglc_mec so sum more exactly
+          ! equals pctglc (see notes above for justification)
+          if (pctglc_mec_tot(nl) > 0.0_r8) then
+             pctglc_mec(nl,:) = pctglc_mec(nl,:) * pctgla(nl)/pctglc_mec_tot(nl)
+          end if
+
+          ! Now recompute pctglc_mec_tot, and confirm that we are now much closer to pctgla
+          pctglc_mec_tot(nl) = 0._r8
+          do n = 1, maxpatch_glcmec
+             pctglc_mec_tot(nl) = pctglc_mec_tot(nl) + pctglc_mec(nl,n)
+          end do
+
+          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-13) then
+             write(iulog,*) ' '
+             write(iulog,*) 'surfrd error: after correction, pctgla not equal to sum of pctglc_mec for nl=', nl
+             write(iulog,*) 'pctgla =', pctgla(nl)
+             write(iulog,*) 'pctglc_mec_tot =', pctglc_mec_tot(nl)
+             call endrun()
+          endif
+
+          ! Finally, zero out pctgla
           pctgla(nl) = 0._r8
        enddo
 
        ! If pctglc_mec_tot is very close to 100%, round to 100%
 
        do nl = begg,endg
-          if (abs(pctglc_mec_tot(nl) - 100._r8) < 1.0e-8) then
+          ! The inequality here ( <= 1.0e-5 ) is designed to be the complement of the
+          ! above check that makes sure pctglc_mec_tot is close to pctgla: so if pctglc=
+          ! 100 (exactly), then exactly one of these conditionals will be triggered.
+          ! Update 9-28-12: Now that there is a rescaling of pctglc_mec to bring it more
+          ! in line with pctgla, we could probably decrease this tolerance again (the
+          ! point about exactly one of these conditionals being triggered no longer holds)
+          ! - or perhaps even get rid of this whole block of code. But I'm keeping this as
+          ! is for now because that's how I tested it, and I don't think it will hurt
+          ! anything to use this larger tolerance.
+          if (abs(pctglc_mec_tot(nl) - 100._r8) <= 1.0e-5) then
              pctglc_mec(nl,:) = pctglc_mec(nl,:) * 100._r8 / pctglc_mec_tot(nl)
              pctglc_mec_tot(nl) = 100._r8
           endif

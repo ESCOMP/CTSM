@@ -32,16 +32,8 @@ if [ $# -gt 0 ]; then
       resols="$resols $arg"
    done
 else
-   echo "Run for all valid resolutions (dropping out single-point resolutions)"
+   echo "Run for all valid resolutions"
    resols=`../../bld/queryDefaultNamelist.pl -res list -silent`
-   # remove single-point resolutions
-   newresols=""
-   for res in $resols; do
-      if [ `echo "$res" | grep -c "1x1_"` ]; then
-         newresols="$newresols $res"
-      fi
-   done
-   resols=$newresols
 fi
 echo "Move and import mapping files for this list of resolutions: $resols"
 

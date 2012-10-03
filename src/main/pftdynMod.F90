@@ -2442,6 +2442,11 @@ end subroutine pftdyn_cnbal
        do p = begp,endp
           pptr%pdgvs%fpcgrid(p) = pptr%wtcol(p)
           pptr%pdgvs%fpcgridold(p) = pptr%wtcol(p)
+          wtcol_old(p) = pptr%wtcol(p)
+       end do
+     else
+       do p = begp,endp
+          wtcol_old(p) = pptr%wtcol(p)
        end do
     end if
 

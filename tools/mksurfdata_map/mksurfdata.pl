@@ -577,7 +577,7 @@ EOF
                $desc     = sprintf( "%s%2.1f_simyr%4.4d-%4.4d", "rcp", $rcp, $sim_yr0, $sim_yrn );
                $desc_yr0 = sprintf( "%s%2.1f_simyr%4.4d",       "rcp", $rcp, $sim_yr0  );
             }
-            my $strlen = 135;
+            my $strlen = 195;
             my $dynpft_format = "%-${strlen}.${strlen}s %4.4d\n";
             my $options = "";
             my $crpdes  = "";

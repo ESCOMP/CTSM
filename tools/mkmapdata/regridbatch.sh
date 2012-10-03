@@ -2,7 +2,9 @@
 #
 #
 # Batch script to submit to create mapping files
-# for several resolutions.
+# for several global resolutions. If you use 
+# this for regional resolutions be sure to add
+# "-t regional" to the cmdargs (see below).
 #
 # Currently only setup to run on bluefire.
 # 
@@ -19,12 +21,12 @@
 #----------------------------------------------------------------------
 
 if [ -z "$RES" ]; then
-   echo "Run for all valid resolutions (dropping out single-point resolutions)"
+   echo "Run for all valid resolutions (dropping out regional resolutions)"
    resols=`../../bld/queryDefaultNamelist.pl -res list -silent`
    # remove single-point resolutions
    newresols=""
    for res in $resols; do
-      if [ `echo "$res" | grep -c "1x1_"` ]; then
+      if [ `echo "$res" | grep -c "1x1_"` ] || [ `echo "$res" | grep -c "5x5_"` ]; then
          newresols="$newresols $res"
       fi
    done
@@ -40,6 +42,8 @@ for res in $resols; do
    echo "Create mapping files for: $res"
 #----------------------------------------------------------------------
    cmdargs="-r $res"
+   # Uncomment the following for regional resolutions
+   # cmdargs="$cmdargs -t regional"
    if [ ! -z $LSF_PJL_TYPE ]; then
       cmdargs="$cmdargs -b"
    fi

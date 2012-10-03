@@ -9,7 +9,7 @@ module clm_atmlnd
 ! Handle atm2lnd, lnd2atm mapping
 !
 ! !USES:
-  use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins.
+  use clm_varpar  , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon  , only : rair, grav, cpair, hfus, tfrz
   use clm_varctl  , only : iulog
   use decompMod   , only : get_proc_bounds
@@ -79,11 +79,12 @@ module clm_atmlnd
      real(r8), pointer :: nee(:)          !net CO2 flux (kg CO2/m**2/s) [+ to atm]
      real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)
      real(r8), pointer :: fv(:)           !friction velocity (m/s) (for dust model)
+     real(r8), pointer :: h2osoi_vol(:,:) !volumetric soil water (0~watsat, m3/m3, nlevgrnd) (for dust model)
      real(r8), pointer :: rofliq(:)       ! rof liq forcing
      real(r8), pointer :: rofice(:)       ! rof ice forcing
-     real(r8), pointer :: flxdst(:,:)       !dust flux (size bins)
-     real(r8), pointer :: ddvel(:,:)        !dry deposition velocities
-     real(r8), pointer :: flxvoc(:,:)       ! VOC flux (size bins)
+     real(r8), pointer :: flxdst(:,:)     !dust flux (size bins)
+     real(r8), pointer :: ddvel(:,:)      !dry deposition velocities
+     real(r8), pointer :: flxvoc(:,:)     ! VOC flux (size bins)
   end type lnd2atm_type
   
   type(atm2lnd_type),public,target :: clm_a2l      ! a2l fields on clm grid
@@ -240,6 +241,7 @@ end subroutine init_atm2lnd_type
   allocate(l2a%nee(beg:end))
   allocate(l2a%ram1(beg:end))
   allocate(l2a%fv(beg:end))
+  allocate(l2a%h2osoi_vol(beg:end,1:nlevgrnd))
   allocate(l2a%rofliq(beg:end))
   allocate(l2a%rofice(beg:end))
   allocate(l2a%flxdst(beg:end,1:ndst))
@@ -270,6 +272,7 @@ end subroutine init_atm2lnd_type
   l2a%nee(beg:end) = ival
   l2a%ram1(beg:end) = ival
   l2a%fv(beg:end) = ival
+  l2a%h2osoi_vol(beg:end,1:nlevgrnd) = ival
   l2a%rofliq(beg:end) = ival
   l2a%rofice(beg:end) = ival
   l2a%flxdst(beg:end,1:ndst) = ival
@@ -359,7 +362,11 @@ subroutine clm_map2gcell(init)
      do g = begg,endg
         clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
      end do
-      
+     
+      call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, &
+          cptr%cws%h2osoi_vol, clm_l2a%h2osoi_vol, &
+          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
           pptr%pps%albd, clm_l2a%albd,&
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')

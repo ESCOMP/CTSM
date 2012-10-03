@@ -1,4 +1,232 @@
 ===============================================================
+Tag name:  clm4_0_53
+Originator(s):  erik (Erik Kluzek) / sacks (Bill Sacks)`
+Date: Wed Oct  3 14:01:15 MDT 2012
+One-line Summary: Update to fsurdat, fpftdyn, finidat datasets, new high resolution organic/fmax/glacier raw datasets
+
+Purpose of changes:
+
+Add in new datasets for half-degree (finidat,fpftdyn). Add in new datasets for T31 (finidat, fsurdat). 
+finidat for ne30. New datasets for ne120 (finidat, fsurdat). New 20th C transient datasets for ne30, ne120.
+Add in new high resolution organic soil and 1/8th degree fmax datasets for mksurfdata.  Fix test_system 
+testlists for Tony's changes. (sacks) New surface datasets for all glc_mec runs. New default glc grid 
+option (gland5UM) (changes answers for glc_mec runs; BG1850CN compset will be broken due to incompatibility 
+with initial conditions file) 
+
+Requirements for tag:
+   test on bluefire (CESM, int, bat), lynx/pgi (int,bat), mirage-test for lynx_intel
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID): 
+                                 1555 (SourceMods/src.clm does NOT work for clm4_0_50-clm4_0_52)
+                                 1550 (Problem running I1PT compset in datm)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: 
+    variables in clm_rtm_inparm namelist moved back into clm_inparm: finidat, nrevsn, fatmlndfrc
+
+List any changes to the defaults for the boundary datasets: Yes!
+   Add f05 finidat, new T31/ne30/ne120 finidat, comment out wus12 files that don't exist, 
+   T31/f19/f09 GLC fsurdat/fpftdyn files, 
+   new T31 fsurdat, T31/ne30/ne120 fpftdyn rcp2.6/4.5/6/8.5
+   maps for 3x3min_USGS
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, sacks
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, Machines, drv, datm, cism, rtm, pio, mapping
+
+   (these are cesm1_1_alpha18g externals)
+   scripts  updated to scripts4_121002
+   Machines updated to Machines_121001
+   drv      updated to drvseq4_2_06
+   cism     updated to cism1_121002
+   rtm      updated to rtm1_0_08
+   pio      updated to pio1_5_4
+   mappping updated to mapping_120929
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>> Update ERS tests to new version with _L (some new fails with this)
+   M       models/lnd/clm/test/system/mirage.interactive
+   M       models/lnd/clm/test/system/lynx.interactive
+   M       models/lnd/clm/test/system/bluefire.batch
+   M       models/lnd/clm/test/system/bluefire.interactive
+   M       models/lnd/clm/test/system/lynx.batch
+
+>>>>>>>>> Handle regional better, add 3x3min_USGS, remove grids that shouldn't be in.
+   M       models/lnd/clm/tools/mkmapdata/mvNimport.sh ---- Don't drop out single-point resolutions
+   M       models/lnd/clm/tools/mkmapdata/regridbatch.sh -- Drop out regional resolutions add comment for them
+   M       models/lnd/clm/tools/mkmapdata/mkmapdata.sh ---- Add 3x3min_USGS, remove ne240/ne120_nomask, 0.1/0.3_nomask grids
+                 add error check if 1x1_ resolution being run as global
+>>>>>>>>> Allow longer file names for dynpft
+   M       models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90
+   MM      models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl
+
+   M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl -------- Remove testing of rtm options removed, add transient tests
+
+   M       models/lnd/clm/bld/build-namelist ---- Just change documentation of default value, remove clm_rtm_inparm namelist
+   M       models/lnd/clm/bld/clm.buildnml.csh -- Fix so SoureMods will work
+
+>>>>>>>>> New datasets, remove clm_rtm_inparm, add gland5UM as default glc_grid
+   M       models/lnd/clm/bld/namelist_files/namelist_definition.xml ------- Move finidat/nrevsn/fatmlndfrc out of clm_rtm_inparm., add gland5UM
+               option to glc_grid, remove us20,wus12 resolutions (don't have files available for them)
+   M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Default is gland5UM
+   M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- add f05 finidat, new T31/ne30/ne120 finidat, comment out 
+                   wus12 files that don't exist, T31/f19/f09 GLC fsurdat/fpftdyn files, new T31 fsurdat, T31/ne30/ne120 fpftdyn rcp2.6/4.5/6/8.5
+                   maps for 3x3min_USGS
+   M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml - fmax at 3x3min_USGS, new ISRIC-WISE-NCSCD organic dataset for -hires
+
+>>>>>>>>> Add soilw for CARMA, bugfix from Sam for CNDV/CROP, remove clm_rtm_inparm, increase tolerance for checking pftglc_mec
+   M       models/lnd/clm/src/cpl_share/clm_cpl_indices.F90 - soilw for CARMA
+   M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90 ------ soilw for CARMA
+   M       models/lnd/clm/src/main/pftdynMod.F90 ------------ bugfix from Sam for CNDV/CROP
+   M       models/lnd/clm/src/main/clm_atmlnd.F90 ----------- h2osoi_vol for CARMA
+   M       models/lnd/clm/src/main/controlMod.F90 ----------- Remove clm_rtm_inparm namelist, put variables in clm_inparm
+   M       models/lnd/clm/src/main/surfrdMod.F90 --------- Increase tolerance for checking equality of pctglc_mec and pctgla;
+                                                           then rescale pctglc_mec so it is more in line with pctgla
+   M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90 - Soilw for CARMA
+
+Machines testing ran on:
+
+  build-namelist unit tester: yes (all namelists are different than previous ones)
+
+  CESM test lists:
+
+    bluefire/CESM:              yes
+    bluefire/CESM-allIcompsets: yes
+
+  test_system testing:
+
+    bluefire batch:         yes
+    bluefire interactive:   yes
+    lynx/pgi batch:         yes
+    lynx/pgi interactive:   yes
+    lynx/intel interactive: yes
+
+  test_driver.sh tools testing:
+    bluefire interactive:   yes
+    lynx interactive:       yes
+
+Difference in expected fails from testing:
+
+    us20/wus12 tests were removed so removed from expected fail
+    ne16/ne60/1x1_tropicAtl 20thC transient tests fails -- need finidat files 
+    New bug: ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD (bugzilla 1557)
+    New testname: ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC (was ERS48s_...)
+    New fail: ERS_Ld211.1x1_camdenNJ.I_2000_VOC, ERS_Ld211_D_P112x2.f10_f10.ICNCROP
+    Some ERS_L tests now pass that failed previously
+    I1PT tests pass now
+    Most SBN tests pass now
+    Intel single point tests pass now
+@@ -5,14 +5,11 @@
+       <bluefire>
+          <IBM>
+             <compare>
+-               <entry testId="214" failType="xFail"> us20 not fully implmented </entry>
+-               <entry testId="216" failType="xFail"> us20 not fully implmented </entry>
+-               <entry testId="221" failType="xFail"> wus12 not fully implmented </entry>
+-               <entry testId="222" failType="xFail"> wus12 not fully implmented </entry>
+             </compare>
+             <generate>
+-               <entry testId="141" failType="xFail"> us20  not fully implemented </entry>
+-               <entry testId="144" failType="xFail"> wus12 not fully implemented </entry>
++               <entry testId="184" failType="xFail"> ne16 missing finidat file for 1850</entry>
++               <entry testId="187" failType="xFail"> ne60 missing finidat file for 1850</entry>
++               <entry testId="196" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+             </generate>
+          </IBM>
+       </bluefire>
+@@ -89,19 +86,17 @@
+               <entry testId="ERS_D.CLM_USRDAT.IalaskaCN.bluefire_ibm"        failType="RUN">CESM script issue</entry>
+               <entry testId="ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="FAIL">Restart length different</entry>
+               <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC"           failType="FAIL">Restart length different</entry>
+-              <entry testId="ERS48s_D_P1x64.f45_g37.I_2000_VOC"              failType="RUN">Initial simulation fails</entry>
++              <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
++              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart</entry>
+               <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
+               <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
+          </IBM>
+       </bluefire>
+       <lynx>
+          <pgi>
+-              <entry testId="SMS_D.1x1_vancouverCAN.I1PT.lynx_pgi"           failType="SFAIL">datm namelist problem for single-point forcing</entry>
+-              <entry testId="ERS.1x1_mexicocityMEX.I1PT.lynx_pg"             failType="SFAIL">datm namelist problem for single-point forcing</entry>
++              <entry testId="ERS_Ld211.1x1_camdenNJ.I_2000_VOC"              failType="CFAIL">????</entry>
+          </pgi>
+          <intel>
+-              <entry testId="ERS.1x1_brazil.I_2000.lynx_intel"                failType="FAIL">CESM script issue</entry>
+-              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel" failType="FAIL">CESM script issue</entry>
+          </intel>
+       </lynx>
+    </test_system_interactive> 
+@@ -110,10 +105,8 @@
+       <bluefire>
+          <IBM>
+               <entry testId="ERS_D_P96x32.T62_g37.I_2000"             failType="SFAIL">T62 not working</entry>
+-              <entry testId="ERS211d_P192x2.f19_g16.I_2000_CNDV_CROP" failType="SFAIL">ignore_ic_date is incompatable with crop!</entry>
+-              <entry testId="ERS48s_D_P64x16.ne30_g16.ICN"            failType="SFAIL">CESM script problem didn't see both files</entry>
+-              <entry testId="ERS211d.f10_f10.I_2000_VOC_CN"           failType="SFAIL">CESM script problem didn't see both files</entry>
+-              <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
++              <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"      failType="RUN">Dies early with a floating point trap</entry>
++              <entry testId="ERS_Ln48_D.f09_g16.ICNEXSPIN"            failType="CFAIL">build error?</entry>
+          </IBM>
+       </bluefire>
+       <lynx>
+@@ -123,22 +116,9 @@
+    <cesm> 
+       <bluefire>
+          <IBM>
+-              <entry testId="SBN.1x1_mexicocityMEX.I1PT"     failType="SFAIL">datm namelist issue</entry>
+-              <entry testId="SBN.1x1_vancouverCAN.I1PT"      failType="SFAIL">datm namelist issue</entry>
+-              <entry testId="SBN.1x1_urbanc_alpha.I1PT"      failType="SFAIL">datm namelist issue</entry>
+-              <entry testId="SBN.1x1_asphalt_jungle.ICNTEST" failType="TFAIL">datm namelist issue</entry>
+-              <entry testId="SBN.T42_g16.I1850"              failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.T31_g16.I1850"              failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.f05_g16.I20TR"              failType="SFAIL">missing datasets</entry>
+               <entry testId="SBN.1x1_tropicAtl.I20TR"        failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.ne30_g16.I20TR"             failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.ne120_g16.I20TRCN"          failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.f05_g16.IRCP26CN"           failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.f05_g16.IRCP45CN"           failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.f05_g16.IRCP60CN"           failType="SFAIL">missing datasets</entry>
+-              <entry testId="SBN.f05_g16.IRCP85CN"           failType="SFAIL">missing datasets</entry>
+-              <entry testId="SMS.1x1_mexicocityMEX.I1PT"     failType="SFAIL">missing datasets</entry>
+-              <entry testId="ERP.1x1_vancouverCAN.I1PT"      failType="SFAIL">missing datasets</entry>
++              <entry testId="SBN.ne16_g16.I20TR"             failType="TFAIL">missing datasets</entry>
++              <entry testId="SBN.ne60_g16.I20TR"             failType="TFAIL">missing datasets</entry>
+          </IBM>
+       </bluefire>
+    </cesm>
+
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_51
+
+Changes answers relative to baseline:  Yes, for resolutions with new datasets
+   All T31 cases are different
+   T31/f19/f09 cases with GLC are different
+   f05/T31/ne30/ne120 now have initial condition files (or different from before)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_52
 Originator(s):  sacks (sacks)
 Date: Thu Sep 27 21:30:15 MDT 2012
@@ -148,29 +376,6 @@ Difference in expected fails from testing:
 
 Changes answers relative to baseline: No, bfb
 
-IF tag changes answers relative to baseline comparison the
-following should be filled in:
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
-
-   MSS location of control simulations used to validate new climate:
-   
-   URL for LMWG diagnostics output used to validate new climate:
-	
 ===============================================================
 ===============================================================
 Tag name:  clm4_0_51
@@ -391,31 +596,8 @@ CLM tag used for the baseline comparison tests if applicable:
 
 	clm4_0_50
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: No bit-for-bit
 
-IF tag changes answers relative to baseline comparison the
-following should be filled in:
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
-
-   MSS location of control simulations used to validate new climate:
-   
-   URL for LMWG diagnostics output used to validate new climate:
-	
 ===============================================================
 ===============================================================
 Tag name:  clm4_0_50
@@ -780,28 +962,21 @@ CLM tag used for the baseline comparison tests if applicable:
 
 	clm4_0_49
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: Yes, runoff is different (similar climate)
 
 IF tag changes answers relative to baseline comparison the
 following should be filled in:
 
   Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
+    - what code configurations: all with RTM
+    - what platforms/compilers: all
+    - nature of change (similar climate) I compsets only have runoff change
 
    MSS location of control simulations used to validate new climate:
+
+    https://wiki.ucar.edu/display/ccsm/CCSM4+-+Track5+experiments
+
+     /CCSM/csm/b.e11.B1850CN.f19_g16.004
    
    URL for LMWG diagnostics output used to validate new climate:
 	
@@ -1135,33 +1310,10 @@ There are no tests that used to FAIL that now PASS.
   lynx/CESM testing: 
   mirage,storm/ifort interactive testing: all pass
 
-CLM tag used for the baseline comparison tests if applicable:
+CLM tag used for the baseline comparison tests if applicable: clm4_0_47
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: no bit-for-bit
 
-IF tag changes answers relative to baseline comparison the
-following should be filled in:
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
-
-   MSS location of control simulations used to validate new climate:
-   
-   URL for LMWG diagnostics output used to validate new climate:
-	
 ===============================================================
 ===============================================================
 Tag name:  clm4_0_47
@@ -1311,31 +1463,8 @@ Summary of testing:
 
 CLM tag used for the baseline comparison tests if applicable: clm4_0_46
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: no bit-for-bit
 
-IF tag changes answers relative to baseline comparison the
-following should be filled in:
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
-
-   MSS location of control simulations used to validate new climate:
-   
-   URL for LMWG diagnostics output used to validate new climate:
-	
 ===============================================================
 ===============================================================
 Tag name:  clm4_0_46
@@ -1505,29 +1634,6 @@ CLM tag used for the baseline comparison tests if applicable: CLM4_0_45
 
 Changes answers relative to baseline:No
 
-IF tag changes answers relative to baseline comparison the
-following should be filled in:
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
-
-   MSS location of control simulations used to validate new climate:
-   
-   URL for LMWG diagnostics output used to validate new climate:
-	
 ===============================================================
 ===============================================================
 Tag name:  clm4_0_45

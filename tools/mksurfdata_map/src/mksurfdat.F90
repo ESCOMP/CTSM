@@ -892,7 +892,7 @@ program mksurfdat
        do 
           ! Read input pft data
 
-          read(nfdyn, '(A135,1x,I4)', iostat=ier) string, year
+          read(nfdyn, '(A195,1x,I4)', iostat=ier) string, year
           if (ier /= 0) exit
           !
           ! If pft fraction override is set, than intrepret string as PFT and harvesting override values

@@ -19,7 +19,7 @@ if ($COMP_INTERFACE == 'ESMF') setenv COMP ESMF
 
 cd $CASEBUILD/clmconf  
 $CODEROOT/lnd/clm/bld/configure  $config_opts -comp_intf $COMP \
-    $CLM_CONFIG_OPTS -usr_src \$CASEROOT/SourceMods/src.clm || exit -1 
+    $CLM_CONFIG_OPTS -usr_src $CASEROOT/SourceMods/src.clm || exit -1 
 
 #--------------------------------------------------------------------
 # Create clm.buildnml.csh

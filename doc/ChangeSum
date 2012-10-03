@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_53         erik 10/03/2012 Update to fsurdat, fpftdyn, finidat datasets, new high resolution organic/fmax/glacier raw datasets
    clm4_0_52        sacks 09/27/2012 new pct_glacier raw data file
    clm4_0_51      muszala 09/26/2012 bug fixes, pio performance and SCRIP files
    clm4_0_50      muszala 09/21/2012 testing of clm and new rof component

@@ -43,22 +43,28 @@ List all existing files that have been modified, and describe the changes:
 
 Machines testing ran on:
 
-  build-namelist unit tester:
+  build-namelist unit tester:   yes/no
 
   CESM test lists:
 
-    bluefire/CESM
-    lynx/CESM
+    bluefire/CESM:              yes/no
+    bluefire/CESM/allIcompsets: yes/no
+    lynx/CESM:                  yes/no
 
-  bluefire/PTCLM
+  bluefire/PTCLM:               yes/no
 
   test_system testing:
 
-    bluefire batch:
-    bluefire interactive:
-    lynx/pgi batch:
-    lynx/pgi interactive:
-    mirage,storm/ifort interactive:
+    bluefire batch:             yes/no
+    bluefire interactive:       yes/no
+    lynx/pgi batch:             yes/no
+    lynx/pgi interactive:       yes/no
+    lyn/intel mirage testlist:  yes/no
+
+  test_driver.sh tools testing:
+
+    bluefire interactive:       yes/no
+    lynx interactive:           yes/no
 
 CLM tag used for the baseline comparison tests if applicable:
 
@@ -76,15 +82,9 @@ following should be filled in:
    than roundoff?
 
    If this tag changes climate describe the run(s) done to evaluate the new
-   climate in enough detail that it(they) could be reproduced, i.e.,
-   - source tag (all code used must be in the repository):
-   - platform/compilers:
-   - compset (and additional configure options):
-   - build-namelist options (or complete namelist):
-   - MSS location of output:
+   climate (put details of the simulations in the experiment database)
+       - casename: 
 
-   MSS location of control simulations used to validate new climate:
-   
    URL for LMWG diagnostics output used to validate new climate:
 	
 ===============================================================

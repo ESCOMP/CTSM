@@ -158,9 +158,9 @@ contains
     namelist / clm_inparm/ &
 	 dtime	
 
-    ! CLM/RTM joint namelist settings
+    ! CLM namelist settings
 
-    namelist /clm_rtm_inparm / &
+    namelist /clm_inparm / &
          fatmlndfrc, finidat, nrevsn
 
     ! Input datasets
@@ -246,14 +246,6 @@ contains
           read(unitn, clm_inparm, iostat=ierr)
           if (ierr < 0) then
              call endrun( subname//' encountered end-of-file on clm_inparm read' )
-          endif
-       end do
-       rewind(unitn)
-       ierr = 1
-       do while ( ierr /= 0 )
-          read(unitn, clm_rtm_inparm, iostat=ierr)
-          if (ierr < 0) then
-             call endrun( subname//' encountered end-of-file on clm_rtm_inparm read' )
           endif
        end do
        call relavu( unitn )

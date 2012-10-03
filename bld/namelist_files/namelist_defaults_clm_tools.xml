@@ -183,7 +183,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="MODIS"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODIS_c110915.nc</scripgriddata>
-<scripgriddata hgrid="3x3min"    lmask="USGS"    
+<scripgriddata hgrid="3x3min"    lmask="USGS"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3_USGS_c120912.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="LandScan2004"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_LandScan2004_c120517.nc</scripgriddata>
@@ -231,6 +231,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="glc" glc_nec="5"  >GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="glc" glc_nec="10" >GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="fmx"              >USGS</lmask>
+<lmask type="fmx" hires="on"   >USGS</lmask>
 <lmask type="irr"              >nomask</lmask>
 <lmask type="utp"              >nomask</lmask>
 <lmask type="top"              >nomask</lmask>
@@ -251,6 +252,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="org" hires="on"   >5x5min</hgrid>
 <hgrid type="glc"              >3x3min</hgrid>
 <hgrid type="fmx"              >0.5x0.5</hgrid>
+<hgrid type="fmx" hires="on"   >3x3min</hgrid>
 <hgrid type="irr"              >5x5min</hgrid>
 <hgrid type="utp"              >10x10min</hgrid>
 <hgrid type="top"              >10x10min</hgrid>
@@ -299,10 +301,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc</mksrf_forganic>
 
 <mksrf_forganic hgrid="5x5min"  lmask="ISRIC-WISE"
->lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE_nlev6_c111114.nc</mksrf_forganic>
+>lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
 
 <mksrf_fmax     hgrid="0.5x0.5"  lmask="USGS"
 >lnd/clm2/rawdata/mksrf_fmax.070406.nc</mksrf_fmax>
+
+<mksrf_fmax     hgrid="3x3min"   lmask="USGS"
+>lnd/clm2/rawdata/mksrf_fmax_3x3min_USGS_c120911.nc</mksrf_fmax>
 
 <!-- Lake and wetlands -->
 <mksrf_flakwat  hgrid="0.5x0.5"  lmask="AVHRR"

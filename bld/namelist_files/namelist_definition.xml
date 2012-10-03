@@ -5,14 +5,14 @@
 <namelist_definition>
 
 <!-- ========================================================================================  -->
-<!-- CLM/RTM namelist variables -->
+<!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
 <entry id="finidat" 
        type="char*256" 
        category="datasets"
        input_pathname="abs" 
-       group="clm_rtm_inparm" 
+       group="clm_inparm" 
        valid_values="" >
 Full pathname of initial conditions file. If blank CLM will startup from
 arbitrary initial conditions.
@@ -22,7 +22,7 @@ arbitrary initial conditions.
        type="char*256" 
        category="clm_restart"
        input_pathname="abs" 
-       group="clm_rtm_inparm" 
+       group="clm_inparm" 
        valid_values="" >
 Full pathname of master restart file for a branch run. (only used if RUN_TYPE=branch)
 (Set with RUN_REFCASE and RUN_REFDATE)
@@ -32,15 +32,10 @@ Full pathname of master restart file for a branch run. (only used if RUN_TYPE=br
        type="char*256" 
        category="datasets"
        input_pathname="abs" 
-       group="clm_rtm_inparm" 
+       group="clm_inparm" 
        valid_values="" >
 Full pathname of land fraction data file.
 </entry>
-
-
-<!-- ========================================================================================  -->
-<!-- CLM Namelist -->
-<!-- ========================================================================================  -->
 
 <entry id="clump_pproc" type="integer" category="clm_performance"
        group="clm_inparm" valid_values="" >
@@ -84,11 +79,12 @@ Normally this is ONLY used when running CESM with the active glacier model.
 </entry>
 
 <entry id="glc_grid" type="char*10" category="clm_physics"
-        group="clm_inparm" valid_values="gland20,gland10,gland5" >
+        group="clm_inparm" valid_values="gland20,gland10,gland5,gland5UM" >
 Glacier model grid
-    gland20 = Greenland at 20km resolution
-    gland10 = Greenland at 10km resolution
-    gland5  = Greenland at  5km resolution
+    gland20  = Greenland at 20km resolution
+    gland10  = Greenland at 10km resolution
+    gland5   = Greenland at  5km resolution
+    gland5UM = Greenland at  5km resolution, using new UMontana ice sheet data for present day Greenland
 </entry>
 
 <entry id="glc_smb" type="logical" category="clm_physics"
@@ -916,7 +912,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,us20,wus12">
+"512x1024,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4">
 Horizontal resolutions
 Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 
