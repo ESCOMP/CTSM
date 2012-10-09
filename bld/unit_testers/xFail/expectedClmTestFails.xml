@@ -83,9 +83,6 @@
    <test_system_interactive> 
       <bluefire>
          <IBM>
-              <entry testId="ERS_D.CLM_USRDAT.IalaskaCN.bluefire_ibm"        failType="RUN">CESM script issue</entry>
-              <entry testId="ERS_D_P1x64.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="FAIL">Restart length different</entry>
-              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC"           failType="FAIL">Restart length different</entry>
               <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
               <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart</entry>
               <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>

@@ -396,7 +396,7 @@ require Build::Config;
 require Build::NamelistDefinition;
 require Build::NamelistDefaults;
 require Build::Namelist;
-require Streams::Template;
+require Streams::TemplateGeneric;
 #-----------------------------------------------------------------------------------------------
 # Create a configuration object from the default config_definition file
 my $configfile;
@@ -1119,7 +1119,8 @@ if ( defined($opts{$var}) ) {
    if ( defined($nl[0]->get_value('fatmlndfrc')) ) {
       die "$ProgName ERROR:: Can NOT set both -lnd_frac option AND fatmlndfrac on namelist\n";
    }
-   add_default($nl[0], 'fatmlndfrc','val'=>$opts{$var} );
+   my $lnd_frac = &Streams::TemplateGeneric::expandXMLVar( $opts{$var}, \%ENV );
+   add_default($nl[0], 'fatmlndfrc','val'=>$lnd_frac );
 }
 
 $var = "co2_type";

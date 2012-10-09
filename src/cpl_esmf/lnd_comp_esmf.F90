@@ -1074,7 +1074,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        ! These are now standard fields, but the check on the index makes sure the driver handles them
        if (index_l2x_Sl_ram1      /= 0 )  fptr(index_l2x_Sl_ram1,i) = l2a%ram1(g)
        if (index_l2x_Sl_fv        /= 0 )  fptr(index_l2x_Sl_fv,i)   = l2a%fv(g)
-       if (index_l2x_Sl_soilw     /= 0 )  fptr(index_l2x_Sl_soilw,i) = l2a%soilw(g,1)
+       if (index_l2x_Sl_soilw     /= 0 )  fptr(index_l2x_Sl_soilw,i) = l2a%h2osoi_vol(g,1)
        if (index_l2x_Fall_flxdst1 /= 0 )  fptr(index_l2x_Fall_flxdst1,i)= -l2a%flxdst(g,1)
        if (index_l2x_Fall_flxdst2 /= 0 )  fptr(index_l2x_Fall_flxdst2,i)= -l2a%flxdst(g,2)
        if (index_l2x_Fall_flxdst3 /= 0 )  fptr(index_l2x_Fall_flxdst3,i)= -l2a%flxdst(g,3)

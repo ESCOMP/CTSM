@@ -40,9 +40,11 @@ else
 endif
 
 set RESOLUTION = $LND_GRID
+set clmusr     = ""
 if ($LND_GRID == reg ) then
    if ( $GRID == CLM_USRDAT ) then
       set RESOLUTION = $CLM_USRDAT_NAME
+      set clmusr     = " -clm_usr_name $CLM_USRDAT_NAME"
    else
       set RESOLUTION = $GRID
    endif
@@ -92,7 +94,7 @@ $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \
     -csmdata $DIN_LOC_ROOT  \
     -inputdata $CASEBUILD/clm.input_data_list \
     -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" $usecase $glc_opts \
-    -res $RESOLUTION -clm_start_type $START_TYPE $clm_startfile \
+    -res $RESOLUTION $clmusr -clm_start_type $START_TYPE $clm_startfile \
     -l_ncpl $LND_NCPL -lnd_frac "${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}" \
     -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV \
     -config $CASEBUILD/clmconf/config_cache.xml $CLM_BLDNML_OPTS || exit -3
