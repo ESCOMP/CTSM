@@ -76,6 +76,9 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
+!rtm_flood
+    real(r8), pointer :: qflx_floodc(:)   ! column flux of flood water from RTM
+!rtm_flood
     integer , pointer :: cgridcell(:)      ! gridcell index for each column
     integer , pointer :: ctype(:)          ! column type index
     real(r8), pointer :: qflx_top_soil(:)  !net water input into soil from top (mm/s)
@@ -119,6 +122,9 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
+!rtm_flood
+    qflx_floodc      => clm3%g%l%c%cwf%qflx_floodc
+!rtm_flood
     ctype         => clm3%g%l%c%itype
     qflx_top_soil => clm3%g%l%c%cwf%qflx_top_soil
     qflx_surf     => clm3%g%l%c%cwf%qflx_surf
@@ -210,8 +216,18 @@ contains
        else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
          qflx_surf(c) = 0._r8
        end if
+!rtm_flood:  send flood water flux to runoff for all urban columns
+       qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c)
+!rtm_flood
     end do
 
+!rtm_flood: add qflx_flood to qflx_top_soil 
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       qflx_top_soil(c) = qflx_top_soil(c) + qflx_floodc(c)
+    end do
   end subroutine SurfaceRunoff
 
 !-----------------------------------------------------------------------

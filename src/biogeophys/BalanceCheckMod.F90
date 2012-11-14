@@ -172,7 +172,7 @@ contains
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
                               spval, icol_road_perv, icol_road_imperv, istice_mec, &
-                              istdlak, istslak
+                              istdlak, istslak, istwet, istcrop, istsoil
     use clm_varctl   , only : glc_dyntopo
 !
 ! !ARGUMENTS:
@@ -196,6 +196,11 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
+    logical , pointer :: do_capsnow(:)         ! true => do snow capping
+    real(r8), pointer :: qflx_floodc(:)     ! total runoff due to flooding
+    real(r8), pointer :: qflx_snow_melt(:)  ! snow melt (net)
+    real(r8), pointer :: qflx_rain_grnd_col(:) ! rain on ground after interception (mm H2O/s) [+]
+    real(r8), pointer :: qflx_snow_grnd_col(:) ! snow on ground after interception (mm H2O/s) [+]
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
     integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: cgridcell(:)       ! column's gridcell index
@@ -278,11 +283,17 @@ contains
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    forc_rain         => clm_a2l%forc_rain
-    forc_snow         => clm_a2l%forc_snow
-    forc_lwrad        => clm_a2l%forc_lwrad
-    forc_solad        => clm_a2l%forc_solad
-    forc_solai        => clm_a2l%forc_solai
+    do_capsnow          => clm3%g%l%c%cps%do_capsnow
+    qflx_floodc         => clm3%g%l%c%cwf%qflx_floodc
+    qflx_snow_melt      => clm3%g%l%c%cwf%qflx_snow_melt
+    qflx_rain_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
+    qflx_snow_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
+    clandunit           => clm3%g%l%c%landunit
+    forc_rain           => clm_a2l%forc_rain
+    forc_snow           => clm_a2l%forc_snow
+    forc_lwrad          => clm_a2l%forc_lwrad
+    forc_solad          => clm_a2l%forc_solad
+    forc_solai          => clm_a2l%forc_solai
 
     ! Assign local pointers to derived type scalar members (landunit-level)
 
@@ -293,7 +304,6 @@ contains
 
     ctype             => clm3%g%l%c%itype
     cgridcell         => clm3%g%l%c%gridcell
-    clandunit         => clm3%g%l%c%landunit
     cwtgcell          => clm3%g%l%c%wtgcell
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
@@ -382,9 +392,9 @@ contains
        ! Note: Some glacier_mec cols may have zero weight
        if (cwtgcell(c) > 0._r8 .or. ltype(l)==istice_mec)then
           errh2o(c) = endwb(c) - begwb(c) &
-               - (forc_rain_col(c) + forc_snow_col(c) + qflx_irrig(c) &
-                 - qflx_evap_tot(c) - qflx_surf(c) &
-                 - qflx_qrgwl(c) - qflx_drain(c) - qflx_snwcp_ice(c)) * dtime
+               - (forc_rain_col(c) + forc_snow_col(c) + qflx_irrig(c) + qflx_floodc(c) &
+               - qflx_evap_tot(c) - qflx_surf(c) &
+               - qflx_qrgwl(c) - qflx_drain(c) - qflx_snwcp_ice(c)) * dtime
 
           ! Suppose glc_dyntopo = T:   
           ! (1) We have qflx_snwcp_ice = 0, and excess snow has been incorporated in qflx_glcice.  
@@ -417,7 +427,7 @@ contains
     end do
     if ( found ) then
        write(iulog,*)'WARNING:  water balance error ',&
-            ' nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
+            ' nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc),' landunit type= ',ltype(clandunit(indexc))
        if ((ctype(indexc) .eq. icol_roof .or. ctype(indexc) .eq. icol_road_imperv .or. &
             ctype(indexc) .eq. icol_road_perv) .and. abs(errh2o(indexc)) > 1.e-1 .and. (nstep > 2) ) then
           write(iulog,*)'clm urban model is stopping - error is greater than 1.e-1'
@@ -432,6 +442,7 @@ contains
           write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
+          write(iulog,*)'qflx_flood   = ',qflx_floodc(indexc)
           write(iulog,*)'qflx_snwcp_ice   = ',qflx_snwcp_ice(indexc)
           write(iulog,*)'clm model is stopping'
           call endrun()
@@ -448,6 +459,7 @@ contains
           write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
+          write(iulog,*)'qflx_flood   = ',qflx_floodc(indexc)
           write(iulog,*)'qflx_snwcp_ice   = ',qflx_snwcp_ice(indexc)
           write(iulog,*)'clm model is stopping'
           call endrun()
@@ -455,56 +467,81 @@ contains
     end if
 
     ! Snow balance check
-
     do c = lbc, ubc
        g = cgridcell(c)
        l = clandunit(c)
-       if (ltype(l) == istdlak .or. ltype(l) == istslak )then
-          ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
-          ! any given time step.
-          if (h2osno(c) .eq. 0._r8) then
-             snow_sources(c) = 0._r8
-             snow_sinks(c) = 0._r8
-             errh2osno(c) = 0._r8
-          else
-             snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
-             snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_top_soil(c) &
-                               + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)
-             errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
-          end if
-       else  ! non-lake
-          ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
-          ! any given time step but only if there is at least one snow layer.  h2osno 
-          ! also includes snow that is part of the soil column (an initial snow layer is 
-          ! only created if h2osno > 10mm).
-          if (snl(c) .lt. 0) then
-             snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
-             snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_top_soil(c) &
-                               + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
+       ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
+       ! any given time step but only if there is at least one snow layer.  h2osno 
+       ! also includes snow that is part of the soil column (an initial snow layer is 
+       ! only created if h2osno > 10mm).
 
-             ! For ice_mec landunits, if glc_dyntopo is true, then qflx_snwcp_ice = 0,
-             ! and qflx_glcice_frz instead stores this flux
-             if (ltype(l) == istice_mec .and. glc_dyntopo) then
-                snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)
-             end if
+       ! --------------------------------------------------------------------- !
+       ! SPM - brought in qflx_snow_melt to get snow 
+       ! balance working after the flooding modifications were in place.
+       ! This new check is based on a perfrostsims branch of S. Swenson.
+       ! --------------------------------------------------------------------- !
 
-             errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
-          else
-             snow_sources(c) = 0._r8
-             snow_sinks(c) = 0._r8
-             errh2osno(c) = 0._r8
+       if (snl(c) .lt. 0) then
+          snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
+          snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_melt(c) &
+                          + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) + qflx_sl_top_soil(c)
+
+          if (ltype(l) == istdlak) then 
+             if ( do_capsnow(c) ) then
+                snow_sources(c) = qflx_snow_grnd_col(c) &
+                     + qflx_dew_snow(c) + qflx_dew_grnd(c)  
+                
+                snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c)  &
+                     + (qflx_snwcp_ice(c) + qflx_snwcp_liq(c) - qflx_prec_grnd(c))  &
+                     + qflx_snow_melt(c)  + qflx_sl_top_soil(c)
+             else
+                snow_sources(c) = qflx_snow_grnd_col(c) &
+                     + qflx_rain_grnd_col(c) &
+                     + qflx_dew_snow(c) + qflx_dew_grnd(c) 
+                   
+                snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c)  &
+                     + qflx_snow_melt(c)  + qflx_sl_top_soil(c)
+             endif
+          endif
+
+          if (ltype(l) == istsoil .or. ltype(l) == istcrop .or. ltype(l) == istwet ) then
+              if ( do_capsnow(c) ) then
+                 snow_sources(c) = qflx_dew_snow(c) + qflx_dew_grnd(c)  &
+                     + qflx_prec_grnd(c)
+
+                 snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) &
+                     + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                     + qflx_snow_melt(c) + qflx_sl_top_soil(c)
+              else
+                 snow_sources(c) = qflx_snow_grnd_col(c)  &
+                     + qflx_rain_grnd_col(c) &
+                     +  qflx_dew_snow(c) + qflx_dew_grnd(c)
+
+                 snow_sinks(c)   = qflx_sub_snow(c) + qflx_evap_grnd(c) &
+                     + qflx_snow_melt(c) + qflx_sl_top_soil(c)
+             endif
+          endif
+
+          if (ltype(l) == istice_mec .and. glc_dyntopo) then
+             snow_sinks(c) = snow_sinks(c) + qflx_glcice_frz(c)
           end if
+
+          errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
+       else
+          snow_sources(c) = 0._r8
+          snow_sinks(c) = 0._r8
+          errh2osno(c) = 0._r8
        end if
     end do
 
     found = .false.
     do c = lbc, ubc
-       l = clandunit(c)
-       if ((cwtgcell(c) > 0._r8  .or. ltype(l)==istice_mec) .and. abs(errh2osno(c)) > 1.0e-7_r8) then
+       if (cwtgcell(c) > 0._r8 .and. abs(errh2osno(c)) > 1.0e-7_r8) then
           found = .true.
           indexc = c
        end if
     end do
+
     if ( found ) then
        write(iulog,*)'WARNING:  snow balance error ',&
             ' nstep = ',nstep,' indexc= ',indexc,' errh2osno= ',errh2osno(indexc)
@@ -525,6 +562,7 @@ contains
           write(iulog,*)'qflx_dew_snow: ',qflx_dew_snow(indexc)*dtime
           write(iulog,*)'qflx_dew_grnd: ',qflx_dew_grnd(indexc)*dtime
           write(iulog,*)'qflx_snwcp_ice: ',qflx_snwcp_ice(indexc)*dtime
+          write(iulog,*)'qflx_snow_melt: ',qflx_snow_melt(indexc)*dtime
           write(iulog,*)'qflx_snwcp_liq: ',qflx_snwcp_liq(indexc)*dtime
           write(iulog,*)'qflx_sl_top_soil: ',qflx_sl_top_soil(indexc)*dtime
           write(iulog,*)'qflx_glcice_frz: ',qflx_glcice_frz(indexc)*dtime

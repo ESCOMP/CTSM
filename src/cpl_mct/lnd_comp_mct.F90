@@ -985,8 +985,6 @@ contains
         ! Determine flooding input, sign convention is positive downward and
         ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
         ! change the sign to indicate addition of water to system.
-!tcraig, aug 2012, use following in source code to get flood data
-!       clm3%g%gwf%qflx_floodg => clm_a2l%forc_flood
         a2l%forc_flood(g)   = -x2l_l%rattr(index_x2l_Flrr_flood,i)  
 
         ! Determine required receive fields

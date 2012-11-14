@@ -888,6 +888,7 @@ contains
 !
 ! local pointers to original implicit in scalars
 !
+    real(r8), pointer :: qflx_snow_melt(:)    ! net snow melt
     integer , pointer :: snl(:)           !number of snow layers
     real(r8), pointer :: h2osno(:)        !snow water (mm H2O)
     integer , pointer :: ltype(:)         !landunit type
@@ -952,6 +953,7 @@ contains
     snl          => clm3%g%l%c%cps%snl
     h2osno       => clm3%g%l%c%cws%h2osno
     snowdp       => clm3%g%l%c%cps%snowdp
+    qflx_snow_melt => clm3%g%l%c%cwf%qflx_snow_melt
     qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
     eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
     eflx_snomelt_u => clm3%g%l%c%cef%eflx_snomelt_u
@@ -984,6 +986,7 @@ contains
        l = clandunit(c)
 
        qflx_snomelt(c) = 0._r8
+       qflx_snow_melt(c) = 0._r8
        xmf(c) = 0._r8
        qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
        qflx_snofrz_col(c) = 0._r8
@@ -1126,6 +1129,7 @@ contains
                       endif
                       qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
                       xmf(c) = hfus*qflx_snomelt(c)
+                      qflx_snow_melt(c) = qflx_snomelt(c)
                    endif
                 endif
 

@@ -79,6 +79,10 @@ contains
 !
 ! local pointers to implicit out arrays
 !
+!rtm_flood
+    real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
+    real(r8), pointer :: qflx_floodc(:)   ! column flux of flood water from RTM
+!rtm_flood
     real(r8), pointer :: endwb(:)         !water mass end of the time step
     real(r8), pointer :: snowdp(:)        !snow height (m)
     real(r8), pointer :: snowice(:)       !average snow ice lens
@@ -138,6 +142,10 @@ contains
 
     ! Assign local pointers to derived type column members
 
+!rtm_flood: add flooding terms
+    qflx_floodg      => clm_a2l%forc_flood
+    qflx_floodc      => clm3%g%l%c%cwf%qflx_floodc
+!rtm_flood
     begwb          => clm3%g%l%c%cwbal%begwb
     endwb          => clm3%g%l%c%cwbal%endwb
     do_capsnow     => clm3%g%l%c%cps%do_capsnow
@@ -292,8 +300,9 @@ contains
        h2osoi_ice(c,:)   = spval
        h2osoi_liq(c,:)   = spval
        qflx_snofrz_col(c) = spval
-       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - qflx_snwcp_ice(p) - &
+       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(p) - qflx_snwcp_ice(p) - &
                            (endwb(c)-begwb(c))/dtime
+       qflx_floodc(c) = qflx_floodg(g)
        qflx_runoff(c)    = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
        qflx_top_soil(c)      = forc_rain(g) + qflx_snomelt(c)
        qflx_prec_grnd(p)     = forc_rain(g) + forc_snow(g)

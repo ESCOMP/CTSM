@@ -88,6 +88,7 @@ contains
 !
     integer , pointer :: snl(:)              !number of snow layers
     logical , pointer :: do_capsnow(:)       !true => do snow capping
+    real(r8), pointer :: qflx_snow_melt(:)   !net snow melt
     real(r8), pointer :: qflx_snomelt(:)     !snow melt (mm H2O /s)
     real(r8), pointer :: qflx_rain_grnd(:)   !rain on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: qflx_sub_snow(:)    !sublimation rate from snow pack (mm H2O /s) [+]
@@ -171,6 +172,7 @@ contains
 
     snl              => clm3%g%l%c%cps%snl
     do_capsnow       => clm3%g%l%c%cps%do_capsnow
+    qflx_snow_melt   => clm3%g%l%c%cwf%qflx_snow_melt
     qflx_snomelt     => clm3%g%l%c%cwf%qflx_snomelt
     qflx_rain_grnd   => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
     qflx_sub_snow    => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
@@ -415,13 +417,14 @@ contains
        c = filter_snowc(fc)
        ! Qout from snow bottom
        qflx_top_soil(c) = qout(c) / dtime
+       qflx_snow_melt(c) = qflx_snow_melt(c) + (qout(c) / dtime)
     end do
 
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
        qflx_top_soil(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
+       qflx_snow_melt(c) = qflx_snomelt(c)
     end do
-
     
     !  set aerosol deposition fluxes from forcing array
     !  The forcing array is either set from an external file 

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_55      muszala 11/14/2012 bring in flooding capability
    clm4_0_54         erik 10/09/2012 Fix esmf for carma field, fix some CLM_USRDAT issues
    clm4_0_53         erik 10/03/2012 Update to fsurdat, fpftdyn, finidat datasets, new high resolution organic/fmax/glacier raw datasets
    clm4_0_52        sacks 09/27/2012 new pct_glacier raw data file

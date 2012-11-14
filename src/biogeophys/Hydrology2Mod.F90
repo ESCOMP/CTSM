@@ -100,6 +100,9 @@ contains
 !
 ! local pointers to implicit in arguments
 !
+!rtm_flood
+    real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
+!rtm_flood
     integer , pointer :: cgridcell(:)     ! column's gridcell
     integer , pointer :: clandunit(:)     ! column's landunit
     integer , pointer :: ityplun(:)       ! landunit type
@@ -234,6 +237,9 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
+!rtm_flood
+    qflx_floodg      => clm_a2l%forc_flood
+!rtm_flood
     cgridcell         => clm3%g%l%c%gridcell
     clandunit         => clm3%g%l%c%landunit
     ctype             => clm3%g%l%c%itype
@@ -497,7 +503,10 @@ contains
           qflx_irrig(c) = 0._r8
           qflx_surf(c)  = 0._r8
           qflx_infl(c)  = 0._r8
-          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
+
+!rtm_flood: add flood water flux to runoff for wetlands/glaciers
+          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
+!rtm_flood
                           (endwb(c)-begwb(c))/dtime
           ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
           ! (Negative qflx_glcice => positive contribution to runoff)

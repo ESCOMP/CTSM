@@ -1,23 +1,23 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_121008b
-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_121004
-models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_2_07
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_121105
+scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_121106
+models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_2_11
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
 models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_121008
 models/ocn/socn                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_01/socn
 models/ice/sice                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_01/sice
 models/glc/sglc                 https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_01/sglc
-models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_121002
-models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_08
+models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trunk_tags/rtm1_0_10
+models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_121012
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_121003
+models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_121025
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_120427
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_120731
 models/utils/mct                https://github.com/MCSclimate/MCT/tags/MCT_2.8.2
-models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_5_4/pio
+models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_5_7/pio
 
 # Mapping tools:
-mapping                         https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_120929
-models/lnd/clm/tools/gen_domain https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_120929/gen_domain
+mapping                         https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_121106
+models/lnd/clm/tools/gen_domain https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_121106/gen_domain_files

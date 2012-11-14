@@ -84,6 +84,8 @@ contains
 !
 ! local pointers to original implicit in arrays
 !
+    real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
+    real(r8), pointer :: qflx_floodc(:)   ! column flux of flood water from RTM
     integer , pointer :: cgridcell(:)      ! columns's gridcell
     integer , pointer :: clandunit(:)      ! columns's landunit
     integer , pointer :: pgridcell(:)      ! pft's gridcell
@@ -189,6 +191,8 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
+    qflx_floodg        => clm_a2l%forc_flood
+    qflx_floodc        => clm3%g%l%c%cwf%qflx_floodc
     cgridcell          => clm3%g%l%c%gridcell
     clandunit          => clm3%g%l%c%landunit
     ctype              => clm3%g%l%c%itype
@@ -391,6 +395,21 @@ contains
 
     call p2c(num_nolakec, filter_nolakec, qflx_snow_grnd_pft, qflx_snow_grnd_col)
 
+!rtm_flood: apply gridcell flood water flux to non-lake columns
+!                    no inputs to urban wall columns, as above with atm inputs
+!dir$ concurrent
+!cdir nodep
+    do f = 1, num_nolakec
+       c = filter_nolakec(f)
+       g = cgridcell(c)
+       if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall) then      
+          qflx_floodc(c) = qflx_floodg(g)
+       else
+          qflx_floodc(c) = 0._r8
+       endif    
+    enddo
+!rtm_flood
+
     ! Determine snow height and snow water
 
     do f = 1, num_nolakec
@@ -415,6 +434,7 @@ contains
           dz_snowf = qflx_snow_grnd_col(c)/bifall
           snowdp(c) = snowdp(c) + dz_snowf*dtime
           h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
+
        end if
 
        if (ltype(l)==istwet .and. t_grnd(c)>tfrz) then

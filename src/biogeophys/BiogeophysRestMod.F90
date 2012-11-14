@@ -1968,6 +1968,23 @@ contains
        end if
     end if
 
+    ! column type water flux variable - qflx_snow_melt
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='qflx_snow_melt', xtype=ncd_double,  &
+            dim1name='column', long_name='net snow melt', units='mm/s')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_io(varname='qflx_snow_melt', data=cptr%cwf%qflx_snow_melt, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize qflx_snow_melt to zero
+             cptr%cwf%qflx_snow_melt = 0._r8
+          endif
+       end if
+    end if
+
     ! initialize other variables that are derived from those
     ! stored in the restart buffer. (there may be a more appropriate
     ! place to do this, but functionally this works)

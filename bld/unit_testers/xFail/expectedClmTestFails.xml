@@ -5,6 +5,12 @@
       <bluefire>
          <IBM>
             <compare>
+               <entry testId="287" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="289" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="292" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="294" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="307" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="309" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </compare>
             <generate>
                <entry testId="184" failType="xFail"> ne16 missing finidat file for 1850</entry>

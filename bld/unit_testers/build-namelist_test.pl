@@ -336,6 +336,7 @@ my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
 my @regional;
 foreach my $res ( @resolutions ) {
+   chomp($res);
    print "=== Test $res === \n";
    my $options  = "-res $res";
 

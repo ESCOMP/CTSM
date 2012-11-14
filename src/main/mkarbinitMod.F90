@@ -95,6 +95,7 @@ contains
     real(r8), pointer :: wa(:)             ! water in the unconfined aquifer (mm)
     real(r8), pointer :: wt(:)             ! total water storage (unsaturated soil water + groundwater) (mm)
     real(r8), pointer :: zwt(:)            ! water table depth (m)
+    real(r8), pointer :: qflx_snow_melt(:)  ! snow melt (net)
 !
 ! local pointers to implicit out arguments
 !
@@ -185,6 +186,7 @@ contains
     h2osoi_vol       => clm3%g%l%c%cws%h2osoi_vol
     h2ocan_col       => clm3%g%l%c%cws%pws_a%h2ocan
     qflx_irrig       => clm3%g%l%c%cwf%qflx_irrig
+    qflx_snow_melt   => clm3%g%l%c%cwf%qflx_snow_melt
     snowdp           => clm3%g%l%c%cps%snowdp
     h2osno           => clm3%g%l%c%cws%h2osno
     t_soisno         => clm3%g%l%c%ces%t_soisno
@@ -261,6 +263,7 @@ contains
        ! canopy water (column level)
 
        h2ocan_col(c) = 0._r8
+       qflx_snow_melt(c) = 0._r8
 
        ! snow water
 

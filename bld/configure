@@ -278,7 +278,7 @@ if ($print>=2) { print "Using configuration defaults file $config_defaults_file$
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
 my $casecfgdir = "$cfgdir/../../../../scripts/ccsm_utils/Case.template";
-my @dirs = (  $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib", $casecfgdir);
+my @dirs = (  $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib","$cfgdir/../../../../scripts/ccsm_utils/Tools", $casecfgdir);
 unshift @INC, @dirs;
 require XML::Lite;
 require Build::Config;
@@ -969,7 +969,13 @@ if ($clm_mode eq "ext_cesm" ) {
 ** Cannot find perl module \"ConfigCase.pm\" in directory 
   \"$casecfgdir\" **
 EOF
+    # The SetupTools module provides utilities to store and manipulate the configuration.
+    (-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/SetupTools.pm")  or  die <<"EOF";
+** Cannot find perl module \"SetupTools.pm\" in directory 
+  \"$casecfgdir\" **
+EOF
     require ConfigCase;
+    require SetupTools;
 
     my $macro      = "Macros";
     my $envset     = "Macros.env_conf-build";
@@ -1080,7 +1086,7 @@ EOF
     }
 
     # Write the Macro's file for machine dependent build information
-    $cfgcas_ref->set_compiler("$scriptsdir/$compiler_file",$comp, $mach, $print, "$scriptsdir/$macro");
+    SetupTools->set_compiler("$scriptsdir/$compiler_file",$comp, $mach, $print, "$scriptsdir/$macro");
     write_envset("$clm_bld/$envset", $cfg_ref, $cfgcas_ref );
     write_macros("$scriptsdir/$macro", "$clm_bld/$macro" );
     if ($print>=2) { print "creating $clm_bld/$macro\n"; }

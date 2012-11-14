@@ -820,8 +820,8 @@ contains
          ptr_pft=clm3%g%l%c%p%pwf%qflx_prec_grnd, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QSNOMELT',  units='mm/s',  &
-         avgflag='A', long_name='snow melt', &
-         ptr_col=clm3%g%l%c%cwf%qflx_snomelt, c2l_scale_type='urbanf')
+         avgflag='A', long_name='net snow melt', &
+         ptr_col=clm3%g%l%c%cwf%qflx_snow_melt, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QSNOFRZ', units='kg/m2/s', &
          avgflag='A', long_name='column-integrated snow freezing rate', &
