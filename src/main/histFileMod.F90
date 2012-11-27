@@ -148,7 +148,7 @@ module histFileMod
      character(len=8) :: type1d_out            ! hbuf first dimension type
                                                ! from clmtype (nameg, etc)
      character(len=8) :: type2d                ! hbuf second dimension type 
-                                               ! ["levgrnd","levlak","numrad","subname(n)"]
+                                               ! ["levgrnd","levlak","numrad","glc_nec","subname(n)"]
      integer :: beg1d                          ! on-node 1d clm pointer start index
      integer :: end1d                          ! on-node 1d clm pointer end index
      integer :: num1d                          ! size of clm pointer first dimension (all nodes)
@@ -1660,7 +1660,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varpar  , only : nlevgrnd, nlevlak, numrad
+    use clm_varpar  , only : nlevgrnd, nlevlak, numrad, maxpatch_glcmec
     use clm_varctl  , only : caseid, ctitle, fsurdat, finidat, fpftcon, &
                              version, hostname, username, conventions, source
     use domainMod   , only : ldomain
@@ -1793,6 +1793,9 @@ contains
     call ncd_defdim(lnfid, 'levgrnd', nlevgrnd, dimid)
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
+    if (maxpatch_glcmec > 0) then
+       call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
+    end if
 
     do n = 1,num_subs
        call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
@@ -4117,7 +4120,7 @@ end function max_nFields
 !
 ! !USES:
     use clmtype
-    use clm_varpar, only : nlevgrnd, nlevlak, numrad
+    use clm_varpar, only : nlevgrnd, nlevlak, numrad, maxpatch_glcmec
 !
 ! !ARGUMENTS:
     implicit none
@@ -4172,9 +4175,17 @@ end function max_nFields
        num2d = nlevlak
     case ('numrad')
        num2d = numrad
+    case ('glc_nec')
+       if (maxpatch_glcmec > 0) then
+          num2d = maxpatch_glcmec
+       else
+          write(iulog,*) trim(subname),' ERROR: 2d type =', trim(type2d), &
+               ' only valid for maxpatch_glcmec > 0'
+          call endrun()
+       end if
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
-          ' currently supported types for multi level fields are [levgrnd,levlak,numrad]'
+          ' currently supported types for multi level fields are [levgrnd,levlak,numrad,glc_nec]'
        call endrun()
     end select
 

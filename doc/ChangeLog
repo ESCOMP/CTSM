@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm4_0_56
+Originator(s):  sacks (Sacks Bill 303-497-1762 CGD)
+Date: Tue Nov 27 14:12:42 MST 2012
+One-line Summary: fix s2x tsrf, add s2x diagnostics
+
+Purpose of changes:
+
+The s2x tsrf field was not being time-averaged; this is fixed now.
+
+Also, add history fields giving per-column diagnostics of the fields sent
+from CLM to GLC.
+
+Requirements for tag: 
+  fix bug 1590
+  test on bluefire (CESM, int, bat), lynx/pgi (int,bat), mirage-test for lynx_intel
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID): 1590 (surface temperature sent from CLM to GLC not averaged properly)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: erik
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>> Do time-averaging of tsrf field; remove calls to create_clm_s2x
+M       models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+
+>>>>>>> Call to create_clm_s2x now done here instead of lnd_comp_mct /
+>>>>>>> lnd_comp_esmf, so that clm_s2x can be used for hist file writes
+>>>>>>> (this is needed so that the fields are updated before the history
+>>>>>>> updates happen in the driver)
+M       models/lnd/clm/src/main/clm_initializeMod.F90
+M       models/lnd/clm/src/main/clm_driver.F90
+
+>>>>>>> Clean up interface to create_clm_s2x
+M       models/lnd/clm/src/main/clm_glclnd.F90
+
+>>>>>>> Add capability to output fields sent from CLM to GLC
+M       models/lnd/clm/src/main/histFileMod.F90
+M       models/lnd/clm/src/main/histFldsMod.F90
+
+>>>>>>> Remove non-existent PMT test
+M       models/lnd/clm/test/system/lynx.batch
+
+>>>>>>> Add ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD to xFail
+>>>>>>> list; add comment
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+Machines testing ran on:
+
+  build-namelist unit tester:   no
+
+  CESM test lists:
+
+    bluefire/CESM:              yes
+        All PASS except:
+        FAIL  ERI.T31_g37.IG1850.bluefire_ibm.GC.101712.compare_hist.clm4_0_55 
+        FAIL  SMS.T31_g37.IG4804.bluefire_ibm.GC.101712.compare_hist.clm4_0_55 
+        FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.GC.101712.compare_hist.clm4_0_55 
+        FAIL  ERS_Lm3.f19_g16.IGRCP60CN.bluefire_ibm.GC.101712.compare_hist.clm4_0_55 
+
+        These are expected failures: diffs in topo and tsrf fields
+        sent to coupler, and topo diffs are small (RMS ~ 1e-13)
+
+    bluefire/CESM/allIcompsets: no
+    lynx/CESM:                  no
+
+  bluefire/PTCLM:               no
+
+  test_system testing:
+
+    bluefire batch:             yes
+        All PASS or xFAIL except:
+        FAIL  ERS_Ld211_P192x2.f19_g16.I_2000_CNDV_CROP.bluefire_ibm.GC.101753.compare_hist.clm4_0_55
+
+        I believe this is an old problem, not due to the changes here: see bug 1598
+
+    bluefire interactive:       yes
+        All PASS or xFAIL
+
+    lynx/pgi batch:             yes
+        All PASS or xFAIL
+
+    lynx/pgi interactive:       yes
+        All PASS
+
+    lyn/intel mirage testlist:  yes
+        All PASS
+
+  test_driver.sh tools testing:
+
+    bluefire interactive:       no
+    lynx interactive:           no
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_55
+
+Difference in expected fails from testing:
+
+    Note: the additional expected fail is NOT a new failure, it is just newly
+    documented
+
+  --- models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml      (.../trunk_tags/clm4_0_55)      (revision 42229)
+  +++ models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml      (.../branches/fix_glc_tsrf)     (revision 42229)
+  @@ -90,7 +90,7 @@
+         <bluefire>
+            <IBM>
+                 <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
+  -              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart</entry>
+  +              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
+                 <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
+                 <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
+            </IBM>
+  @@ -113,6 +113,9 @@
+            </IBM>
+         </bluefire>
+         <lynx>
+  +         <pgi>
+  +              <entry testId="ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD" failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
+  +         </pgi>
+         </lynx>
+      <test_system_batch> 
+   
+
+Changes answers relative to baseline: YES: changes tsrf and topo fields
+sent to GLC (everything else bfb)
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: glc_mec
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+  new climate for tsrf; roundoff-level for topo field sent to GLC. Note that these
+  fields are limited to GLC, and don't feed back to the atmosphere at all.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? For topo: examined differences in cprnc output
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: None done
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_55
 Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
 Date: Wed Nov 14 11:54:18 MST 2012

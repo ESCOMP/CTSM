@@ -84,7 +84,7 @@ contains
     use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
                                   set_nextsw_cday
     use clm_atmlnd       , only : clm_l2a
-    use clm_glclnd       , only : clm_s2x, create_clm_s2x
+    use clm_glclnd       , only : clm_s2x
     use clm_initializeMod, only : initialize1, initialize2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl, iulog, noland, &
                                   inst_index, inst_suffix, inst_name, &
@@ -337,14 +337,17 @@ contains
        call mct_aVect_init(s2x_s, rList=seq_flds_s2x_fields, lsize=lsize)
        call mct_aVect_zero(s2x_s)
 
-       call mct_aVect_init(s2x_s_SUM , rList=seq_flds_s2x_fluxes, lsize=lsize)
+       ! In contrast to l2x_l_SNAP / l2x_l_SUM, for s2x we accumulate/average all fields,
+       ! not just fluxes. This is because glc wants the time-averaged tsrf field (and the
+       ! other state field, topo, is not time-varying, so it doesn't matter what we do
+       ! with that field)
+       call mct_aVect_init(s2x_s_SUM , rList=seq_flds_s2x_fields, lsize=lsize)
        call mct_aVect_zero(s2x_s_SUM )
 
-       call mct_aVect_init(s2x_s_SNAP , rList=seq_flds_s2x_fluxes, lsize=lsize)
+       call mct_aVect_init(s2x_s_SNAP , rList=seq_flds_s2x_fields, lsize=lsize)
        call mct_aVect_zero(s2x_s_SNAP )
 
        ! Create mct sno export state
-       call create_clm_s2x(clm_s2x, init=.true.)
        call sno_export_mct(clm_s2x, s2x_s)
     endif   ! create_glacier_mec_landunit
 
@@ -427,8 +430,7 @@ contains
     use seq_infodata_mod,only : seq_infodata_type, seq_infodata_GetData
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_glclnd      ,only : clm_s2x, clm_x2s
-    use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
+    use clm_glclnd      ,only : clm_s2x, clm_x2s, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
     use clm_cpl_indices ,only : nflds_l2x, nflds_x2l
@@ -606,7 +608,6 @@ contains
        ! Map sno data type to MCT
 
        if (create_glacier_mec_landunit) then
-          call create_clm_s2x(clm_s2x)
           call sno_export_mct(clm_s2x, s2x_s)
           if (nstep <= 1) then
              call mct_aVect_copy( s2x_s, s2x_s_SUM )

@@ -153,7 +153,7 @@ end subroutine init_lnd2glc_type
 ! !IROUTINE: create_clm_s2x
 !
 ! !INTERFACE:
-  subroutine create_clm_s2x(clm_s2x, init)
+  subroutine create_clm_s2x(init)
 !
 ! !DESCRIPTION:
 ! Assign values to clm_s2x based on the appropriate derived types
@@ -168,8 +168,7 @@ end subroutine init_lnd2glc_type
 ! !ARGUMENTS:
   implicit none
 
-  type(lnd2glc_type), intent(out) :: clm_s2x
-  logical, optional, intent(in)   :: init    ! if true=>only set a subset of arguments (default: false)
+  logical, intent(in)   :: init    ! if true=>only set a subset of fields
 !
 ! !REVISION HISTORY:
 ! Written by William Lipscomb, Feb. 2009 
@@ -178,7 +177,6 @@ end subroutine init_lnd2glc_type
     integer :: begg, endg              ! per-proc beginning and ending gridcell indices
     integer :: begc, endc              ! per-proc beginning and ending column indices
     integer :: c, l, g, n              ! indices
-    logical :: l_init                  ! local corresponding to optional init argument
     integer , pointer :: ityplun(:)    ! landunit type
     integer , pointer :: clandunit(:)  ! column's landunit index
     integer , pointer :: cgridcell(:)  ! column's gridcell index
@@ -188,11 +186,6 @@ end subroutine init_lnd2glc_type
     clandunit => clm3%g%l%c%landunit
     cgridcell => clm3%g%l%c%gridcell
     ityplun   => clm3%g%l%itype
-
-    ! Assign local variables to optional arguments
-
-    l_init = .false.
-    if (present(init)) l_init = init
 
     ! Get processor bounds
     call get_proc_bounds(begg, endg, begc=begc, endc=endc)
@@ -225,7 +218,7 @@ end subroutine init_lnd2glc_type
              ! for qice, as set above.
              clm_s2x%tsrf(g,n) = clm3%g%l%c%ces%t_soisno(c,1)
              clm_s2x%topo(g,n) = clm3%g%l%c%cps%glc_topo(c)
-             if (.not. l_init) then
+             if (.not. init) then
                 clm_s2x%qice(g,n) = clm3%g%l%c%cwf%qflx_glcice(c)
 
                 ! Check for bad values of qice

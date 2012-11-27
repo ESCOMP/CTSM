@@ -90,7 +90,7 @@
       <bluefire>
          <IBM>
               <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
-              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart</entry>
+              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
               <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
               <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
          </IBM>
@@ -113,6 +113,9 @@
          </IBM>
       </bluefire>
       <lynx>
+         <pgi>
+              <entry testId="ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD" failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
+         </pgi>
       </lynx>
    <test_system_batch> 
   

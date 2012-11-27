@@ -145,7 +145,7 @@ end subroutine
     use seq_flds_mod
     use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use clm_cpl_indices  , only : clm_cpl_indices_set, nflds_l2x, nflds_x2l
-    use clm_glclnd       , only : clm_s2x, create_clm_s2x
+    use clm_glclnd       , only : clm_s2x
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     implicit none
 !
@@ -448,14 +448,13 @@ end subroutine
     ! Export sno for cism
 
     if (create_glacier_mec_landunit) then
-       s2x_s_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fluxes, &
+       s2x_s_SNAP = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fields, &
            name="s2x_s_SNAP", rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-       s2x_s_SUM = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fluxes, &
+       s2x_s_SUM = mct2esmf_init(distgrid_l, attname=seq_flds_s2x_fields, &
            name="s2x_s_SUM", rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
-       call create_clm_s2x(clm_s2x,init=.true.)
        call sno_export_esmf( clm_s2x, s2x, rc=rc)
        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
 
@@ -583,8 +582,7 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
                                 seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use spmdMod         ,only : masterproc, mpicom
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
-    use clm_glclnd      ,only : clm_s2x, clm_x2s
-    use clm_glclnd      ,only : create_clm_s2x, unpack_clm_x2s
+    use clm_glclnd      ,only : clm_s2x, clm_x2s, unpack_clm_x2s
     use shr_orb_mod     ,only : shr_orb_decl
     use clm_varorb      ,only : eccen, mvelpp, lambm0, obliqr
     use clm_cpl_indices ,only : nflds_l2x, nflds_x2l
@@ -799,7 +797,6 @@ subroutine lnd_run_esmf(comp, import_state, export_state, EClock, rc)
        if (create_glacier_mec_landunit) then
           call ESMF_StateGet(export_state, itemName="s2x", array=s2x, rc=rc)
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
-          call create_clm_s2x(clm_s2x)
           call sno_export_esmf( clm_s2x, s2x, rc=rc )
           if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
           if (nstep <= 1) then

@@ -83,7 +83,7 @@ module clm_driver
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
-  use clm_varctl          , only : wrtdia, fpftdyn, iulog
+  use clm_varctl          , only : wrtdia, fpftdyn, iulog, create_glacier_mec_landunit
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds
   use filterMod           , only : filter, setFilters
@@ -134,6 +134,7 @@ module clm_driver
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use SNICARMod           , only : SnowAge_grain
   use clm_atmlnd          , only : clm_map2gcell
+  use clm_glclnd          , only : create_clm_s2x
   use perf_mod
 !
 ! !PUBLIC TYPES:
@@ -693,6 +694,17 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   call t_startf('clm_map2gcell')
   call clm_map2gcell( )
   call t_stopf('clm_map2gcell')
+
+  ! ============================================================================
+  ! Determine fields to send to glc
+  ! ============================================================================
+  
+  if (create_glacier_mec_landunit) then
+     call t_startf('create_s2x')
+     call create_clm_s2x(init=.false.)
+     call t_stopf('create_s2x')
+  end if
+  
 
   ! ============================================================================
   ! Write global average diagnostics to standard output

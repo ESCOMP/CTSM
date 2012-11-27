@@ -45,7 +45,9 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon , only : spval
+    use clm_varpar , only : maxpatch_glcmec
     use clm_atmlnd , only : clm_a2l
+    use clm_glclnd , only : clm_s2x
     use clm_varctl , only : create_glacier_mec_landunit 
     use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
                             hist_printflds
@@ -4568,6 +4570,26 @@ contains
          avgflag='A', long_name='surface forcing of dust in snow, averaged only when snow is present (land)', &
          ptr_pft=clm3%g%l%c%p%pef%sfc_frc_dst_sno, set_lake=spval, set_urb=spval)
 #endif
+
+    !-------------------------------
+    ! Forcings sent to GLC
+    !-------------------------------
+
+    if (maxpatch_glcmec > 0) then
+
+       call hist_addfld2d (fname='QICE_FORC', units='mm/s', type2d='glc_nec', &
+            avgflag='A', long_name='qice forcing sent to GLC', &
+            ptr_lnd=clm_s2x%qice, default='inactive')
+
+       call hist_addfld2d (fname='TSRF_FORC', units='K', type2d='glc_nec', &
+            avgflag='A', long_name='surface temperature sent to GLC', &
+            ptr_lnd=clm_s2x%tsrf, default='inactive')
+
+       call hist_addfld2d (fname='TOPO_FORC', units='m', type2d='glc_nec', &
+            avgflag='A', long_name='topographic height sent to GLC', &
+            ptr_lnd=clm_s2x%topo, default='inactive')
+
+    end if
 
     ! Print masterlist of history fields
 
