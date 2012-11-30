@@ -1,5 +1,0 @@
--mode clm_stndln
--use_mpiserial -nosmp
--debug
--sitespf_pt 1x1_mexicocityMEX
--s

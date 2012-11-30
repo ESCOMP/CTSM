@@ -30,6 +30,7 @@ Top level docbook User's-Guide for CLM4
   <!ENTITY ptclm_list          SYSTEM "ptclm_list.xml">
   <!ENTITY trouble             SYSTEM "trouble_shooting.xml">
   <!ENTITY appendix            SYSTEM "appendix.xml">
+  <!ENTITY testing             SYSTEM "testing.xml">
   <!ENTITY mksurfdatapl        SYSTEM "mksurfdata.pl.xml">
   <!ENTITY clmtestdriver       SYSTEM "test_driver.sh.xml">
   <!ENTITY build_date          SYSTEM "build_date.xml">
@@ -184,6 +185,7 @@ the science of land surface modeling forward with your diligent and persistent e
 &single_point;
 &ptclmdoc;
 &trouble;
+&testing;
 &appendix;
 
 </book>

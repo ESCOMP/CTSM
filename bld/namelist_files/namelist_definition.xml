@@ -123,11 +123,6 @@ Override the start type from the driver: it can only be
 set to 3 meaning branch.
 </entry>
 
-<entry id="fatmgrid" type="char*256" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
-Full pathname of grid data file on the atm grid.
-</entry>
-
 <entry id="fglcmask" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of land-ice mask data file (on lnd grid).

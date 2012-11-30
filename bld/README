@@ -15,8 +15,8 @@ configure ---------------- Configure script -- sets up the CPP Macro's needed to
                            defined to build CLM
   ----- configure --help - Configure help mode -- sends information on all configure options
 config_files/config_defaults.xml ----- XML file of defaults for CLM
+config_files/config_defaults_*.xml --- XML file of defaults for CLM for a specific site
 config_files/config_definition.xml --- XML file definining all CLM configuration items
-config_files/config_sys_defaults.xml - XML file of system defaults
 
 --------- Scripts to build the namelists
 --------- (These scripts are also used by the cpl7 scripts)
@@ -39,6 +39,7 @@ listDefaultNamelist.pl -- List the files needed, for a list of resolutions,
                           at once.
 queryDefaultNamelist.pl - Query default namelist for settings of variables
 queryDefaultXML.pm ------ Subroutines needed by queryDefaultNamelist.pl script
+config_query ------------ Queries the CESM config_*.xml files (in scripts/ccsm_utils/Case.template)
 
 
 --------- Test scripts directory

@@ -103,10 +103,6 @@ Process:
 
        surfdata:    copy files into: 
              $MYCSMDATA/lnd/clm2/surfdata/surfdata_${MYDATAID}_simyr${SIM_YEAR}.nc
-       fatmgrid:    copy files into:
-             $MYCSMDATA/lnd/clm2/griddata/griddata_${MYDATAID}.nc
-       fatmlndfrc:  copy files into:
-             $MYCSMDATA/lnd/clm2/griddata/fracdata_${MYDATAID}_${MASK}.nc
        domainfile:  copy files into:
              $MYCSMDATA/atm/datm7/domain.clm/domain.lnd.${MYDATAID}_${MASK}.nc
 
@@ -136,20 +132,20 @@ Process:
        The above example implies that: MASK=gx1v6, SIM_YEAR=1850, and SIM_YEAR_RANGE=constant.
        5.) Edit the env_run.xml in the case to point to your new dataset area
 
-       Edit DIN_LOC_ROOT_CSMDATA in env_run.xml to point to $MYCSMDATA
+       Edit DIN_LOC_ROOT in env_run.xml to point to $MYCSMDATA
 
-       		./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+       		./xmlchange DIN_LOC_ROOT=$MYCSMDATA
 
        6.) Edit the env_conf.xml in the case to point to your user dataset identifier 
        name.
 
        Edit CLM_USRDAT_NAME  to point to $MYDATAID
 
-       		./xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val $MYDATAID
-       		./xmlchange -file env_conf.xml -id CLM_PT1_NAME    -val $MYDATAID
+       		./xmlchange CLM_USRDAT_NAME=$MYDATAID
+       		./xmlchange CLM_PT1_NAME=$MYDATAID
 
-       7.) Configure the case as normal
+       7.) Setup the case as normal
 
-       		./configure -case
+       		./setup
 
        8.) Run your case as normal

@@ -20,7 +20,7 @@ begin
   latN       = stringtodouble( getenv("N_LAT") );   ; Get north latitude from env variable
   lonE       = stringtodouble( getenv("E_LON") );   ; Get east longitude from env variable
   lonW       = stringtodouble( getenv("W_LON") );   ; Get west longitude from env variable
-  id         = getenv("ID");                        ; Get mydataid from env variable
+  id         = getenv("CLM_USRDAT_NAME")            ; Get mydataid from env variable
   res        = getenv("RES");                       ; Get resolution from env variable
   rcp        = getenv("RCP");                       ; Get representative concentration pathway from env variable
   lmask      = getenv("MASK");                      ; Get input land/use mask to use from env variable
@@ -112,6 +112,7 @@ begin
   ldate     = systemfunc( "date" );
   clmroot   = getenv("CLM_ROOT");
   querynml  = "bld/queryDefaultNamelist.pl -silent -justvalue ";
+  querycfg  = "bld/config_query -silent -justvalue ";
   queryopts = " -options bgc=cn,mask="+lmask+",rcp="+rcp;
   querynyr  = ",sim_year="+sim_year+",sim_year_range="+sim_yr_rng;      ; Query for standard file years
   if ( sim_yr_rng .eq. "constant" )then
@@ -124,11 +125,26 @@ begin
   end if
   if ( ismissing(clmroot) )then
      querynml = "../../"+querynml;
+     querycfg = "../../"+querycfg;
   else
      querynml = clmroot+"/models/lnd/clm/"+querynml;
+     querycfg = clmroot+"/models/lnd/clm/"+querycfg;
   end if
-  gridqry  = querynml+queryopts+querynyr+" -res "+res+" -var domainfile -namelist shr_strdata_nml"
-  gridfile = systemfunc( gridqry );
+  GRID     = res+"_"+lmask;
+  griddqry  = querycfg+GRID+" -id ATM_DOMAIN_PATH -justvalue";
+  griddir  = systemfunc( griddqry );
+  if ( ismissing(griddir) )then
+     delete( griddqry )
+     delete( griddir )
+     gridqry  = querycfg+" ATM_DOMAIN_PATH -id value -justvalue -c config_definition.xml";
+     griddir  = systemfunc( gridqry );
+     if ( ismissing(griddir) )then
+        print( "Input griddir does not exist or not found: query"+gridqry );
+        exit
+     end if
+  end if
+  gridqry  = querycfg+GRID+" -id ATM_DOMAIN_FILE -justvalue";
+  gridfile = griddir + "/"+ systemfunc( gridqry );
   if ( printn .eq. True )then
      print( "          query = "+gridqry )
   end if
@@ -178,11 +194,11 @@ begin
   ; Setup filenames to process
   ;
 
-  files     = (/ "fsurdat", "fpftdyn", "faerdep", "stream_fldfilename_ndep", "domainfile"      /);
-  qryopt    = (/ querynyr,  querynyr,  queryyrs,  queryyrs,                  querynyr          /);
-  qnamelist = (/ " ",       " ",       "clmexp",  "ndepdyn_nml",             "shr_strdata_nml" /);
-  filelatnm = (/ "lsmlat",  "lsmlat",  "lat",     "lat",                     "nj"              /);
-  filelonnm = (/ "lsmlon",  "lsmlon",  "lon",     "lon",                     "ni"              /);
+  files     = (/ "fsurdat", "fpftdyn", "stream_fldfilename_ndep", "domainfile"      /);
+  qryopt    = (/ querynyr,  querynyr,  queryyrs,                  "gridfile"        /);
+  qnamelist = (/ " ",       " ",       "ndepdyn_nml",             " "               /);
+  filelatnm = (/ "lsmlat",  "lsmlat",  "lat",                     "nj"              /);
+  filelonnm = (/ "lsmlon",  "lsmlon",  "lon",                     "ni"              /);
 
   ;
   ; Loop over each of the files to process...
@@ -196,8 +212,12 @@ begin
      else
         queryopt= " -namelist "+qnamelist(i);
      end if
-     qry = querynml+queryopts+qryopt(i)+queryopt+" -res "+res+" -var "+files(i);
-     globalfile = systemfunc( qry );
+     if ( qryopt(i) .eq. "gridfile" )then
+        globalfile = gridfile;
+     else
+        qry = querynml+queryopts+qryopt(i)+queryopt+" -res "+res+" -var "+files(i);
+        globalfile = systemfunc( qry );
+     end if
      if ( systemfunc("test -f "+globalfile+"; echo $?" ) .ne. 0 )then
         print( "Input global "+files(i)+" file does not exist or not found: "+globalfile );
         if ( printn .eq. True )then
@@ -208,11 +228,18 @@ begin
      if ( debug .eq. True )then
         print( "Process file: "+globalfile );
      end if
-     qry     = querynml+queryopts+qryopt(i)+queryopt+" -usrname "+id+" -var "+files(i);
-     if ( nomv .eq. True )then
-        qry  = qry+" -filenameonly";
+     if ( qryopt(i) .eq. "gridfile" )then
+        gridqry  = querycfg+"CLM_USRDAT -id ATM_DOMAIN_PATH -justvalue";
+        griddir  = systemfunc( gridqry );
+        qry  = querycfg+"CLM_USRDAT -id ATM_DOMAIN_FILE -justvalue";
+        regfile = griddir + "/" + systemfunc( qry );
+     else
+        qry     = querynml+queryopts+qryopt(i)+queryopt+" -usrname "+id+" -var "+files(i);
+        if ( nomv .eq. True )then
+           qry  = qry+" -filenameonly";
+        end if
+        regfile = systemfunc( qry );
      end if
-     regfile = systemfunc( qry );
      if ( ismissing(regfile) )then
         print( "Output regional filename was NOT found: "+regfile );
         if ( printn .eq. True )then

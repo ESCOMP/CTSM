@@ -1,23 +1,8 @@
-per   => pergro                 is on
-sc    => standalone clm         is on
-van   => VANCOUVER              is on
-mex   => MEXICOCITY             is on
-nil3  => Number of land instances = 3
-snf   => snicar_frc             is on
+config_CLMtestCompsets.xml ---- compset file for CLM specific testing
 
-_cn   => bgc is in cn   mode
-_cndv => bgc is in cndv mode
-_cnc13=> bgc is in cn   mode with C13 on as well
-_cnnf => bgc is in cn   mode with NOFIRE turned on as well
-_cncrp=> bgc is in cn   model with crop on
-
-_dh   => debug on, hybrid   on
-_dm   => debug on, mpi only on 
 _do   => debug on, omp only on
-_do   => debug on, serial mode (neither mpi nor omp)
+_ds   => debug on, serial mode (neither mpi nor omp)
 
-_h    => debug off, hybrid   on
-_m    => debug off, mpi only on
 _o    => debug off, omp only on
 _s    => debug off, serial mode (neither mpi nor omp)
 

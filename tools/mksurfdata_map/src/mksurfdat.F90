@@ -482,8 +482,10 @@ program mksurfdat
 
     ! WJS (9-25-12): Note about topo datasets: Until now, there have been two topography
     ! datasets: flndtopo & fglctopo. flndtopo is used to create the TOPO variable, which I
-    ! believe is used to downscale grid cell-level climate to glc_mec columns. Until now,
-    ! fglctopo was used for dividing pct_glacier data into multiple elevation classes in
+    ! believe is used to downscale grid cell-level climate to glc_mec columns (10-26-12:
+    ! Now I'm not surue about this: I think TOPO might actually come from a different file
+    ! in CLM, and TOPO on the surface dataset may be unused). Until now, fglctopo was used
+    ! for dividing pct_glacier data into multiple elevation classes in
     ! mkglcmecMod. However, it is no longer needed for this purpose, since elevation data
     ! is now folded into fglacier. fglctopo has also been used to screen urban points (I'm
     ! not sure why fglctopo rather than flndtopo was chosen for that purpose).
@@ -507,7 +509,9 @@ program mksurfdat
     ! resolutions use some sort of smoothed topography. So the ideal thing to do would be
     ! for CLM to get its grid cell-level topography from CAM at initialization. If that
     ! were done, then I think flndtopo and the TOPO variable on the surface dataset could
-    ! go away.
+    ! go away. (Update 10-26-12: it actually looks to me like CLM's TOPO comes from a
+    ! different source entirely (flndtopo in CLM), so it may be that TOPO on the surface
+    ! dataset isn't currently used for anything!)
 
 
     ! Make elevation [elev] from [ftopo, ffrac] dataset

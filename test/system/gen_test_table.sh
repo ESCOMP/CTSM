@@ -27,10 +27,6 @@ for input_file in `ls tests_*` ; do
     echo "<th>arg1 </th>" >> $outfile
     echo "<th>arg2 </th>" >> $outfile
     echo "<th>arg3 </th>" >> $outfile
-    echo "<th>arg4 </th>" >> $outfile
-    echo "<th>arg5 </th>" >> $outfile
-    echo "<th>arg6 </th>" >> $outfile
-    echo "<th>arg7 </th>" >> $outfile
     echo "</tr>" >> $outfile
 
     test_list=""

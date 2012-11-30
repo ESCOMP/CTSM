@@ -57,6 +57,12 @@ SYNOPSIS
      $ProgName [options]	   Extracts out files for a single box region from the global
                                    grid for the region of interest. Choose a box determined by
                                    the NorthEast and SouthWest corners.
+REQUIRED OPTIONS
+     -mydataid "name" [or -id]     Your name for the region that will be extracted.               (REQUIRED)
+                                   Recommended name: grid-size_global-resolution_location (?x?pt_f??_????)
+                                   (i.e. 12x13pt_f19_alaskaUSA for 12x13 grid cells from the f19 global resolution over Alaska)
+     -NE_corner "lat,lon" [or -ne] North East corner latitude and longitude                       (REQUIRED)
+     -SW_corner "lat,lon" [or -sw] South West corner latitude and longitude                       (REQUIRED)
 OPTIONS
      -debug [or -d]                Just debug by printing out what the script would do.
                                    This can be useful to find the size of the output area.
@@ -64,10 +70,6 @@ OPTIONS
      -mask "landmask"              Type of land-mask (i.e. navy, gx3v7, gx1v6 etc.) (default $mask)
      -mycsmdata "dir"              Root directory of where to put your csmdata. 
                                    (default $mycsmdata or value of CSMDATA env variable)
-     -mydataid "name" [or -id]     Your name for the region that will be extracted.               (REQUIRED)
-                                   Recommended name: grid-size_global-resolution_location (?x?pt_f??_????)
-                                   (i.e. 12x13pt_f19_alaskaUSA for 12x13 grid cells from the f19 global resolution over Alaska)
-     -NE_corner "lat,lon" [or -ne] North East corner latitude and longitude                       (REQUIRED)
      -nomv                         Do NOT move datasets to final location, just leave them in current directory
      -res "resolution"             Global horizontal resolution to extract data from (default $res).
      -rcp "pathway"                Representative concentration pathway for future scenarios 
@@ -75,11 +77,9 @@ OPTIONS
                                    year, such as 2100.
                                    (default $rcp).
      -sim_year   "year"            Year to simulate for input datasets (i.e. 1850, 2000) (default $sim_year)
-(default $sim_year)
      -sim_yr_rng "year-range"      Range of years for transient simulations 
                                    (i.e. 1850-2000, 1850-2100,  or constant) (default $sim_yr_rng)
 
-     -SW_corner "lat,lon" [or -sw] South West corner latitude and longitude                        (REQUIRED)
      -verbose [or -v]              Make output more verbose.
 EOF
 }
@@ -197,6 +197,7 @@ else {
 (-d $inputdata_rootdir)  or  die <<"EOF";
 ** $ProgName - CESM inputdata root is not a directory: \"$inputdata_rootdir\" **
 EOF
+$ENV{'DIN_LOC_ROOT'} = $inputdata_rootdir;
 
 print "CESM inputdata root directory: $inputdata_rootdir\n";
 
@@ -216,7 +217,7 @@ if ( $opts{'verbose'} ) {
 
 my $cmd = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
           "SIM_YR=$opts{'sim_year'} SIM_YR_RNG=$opts{'sim_yr_rng'} MASK=$opts{'mask'} " .
-          "ID=$opts{'mydataid'} RCP=$opts{'rcp'} RES=$opts{'res'} MYCSMDATA=$inputdata_rootdir " .
+          "CLM_USRDAT_NAME=$opts{'mydataid'} RCP=$opts{'rcp'} RES=$opts{'res'} MYCSMDATA=$inputdata_rootdir " .
           "$debug $print $nomv ncl $scrdir/getregional_datasets.ncl";
 
 print "Execute: $cmd\n";

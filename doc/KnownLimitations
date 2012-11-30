@@ -1,4 +1,4 @@
-Known Limitations in CLM4/CESM1.0.3                              Jun/07/2011
+Known Limitations in CLM4/CESM1.1.0                              Nov/08/2012
 
 As opposed to the KnownBugs file where we expect that eventually we will find a 
 fix, these are limitations that we do NOT have plans to fix. They are simply known

@@ -1020,7 +1020,7 @@ appear in your &clm; namelist.
 '$DIN_LOC_ROOT/lnd/clm2/griddata/fracdata_0.9x1.25_gx1v6_c090317.nc'
  finidat    = 'I1850CN_f09_g16_c100503.clm2.r.0001-01-01-00000.nc'
  fpftcon    = '$DIN_LOC_ROOT/lnd/clm2/pftdata/pft-physiology.c110425.nc'
- frivinp_rtm	= '$DIN_LOC_ROOT/lnd/clm2/rtmdata/rdirc_0.5x0.5_simyr2000_c101124.nc'
+ frivinp_rtm	= '$DIN_LOC_ROOT/lnd/clm2/rtmdata/rdirc_0.5x0.5_simyr2000_slpmxvl_c120717.nc'
  fsnowaging   =
 '$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
  fsnowoptics	=

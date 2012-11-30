@@ -1,128 +1,19 @@
-Known Bugs in CLM4.0    		                          Oct/03/2011
+Known Bugs in CLM4.0.54 in CESM1.1.0                            Nov/08/2012
 
 ====================================================================================
-Bug Number: 1404
-Inconsistent domain and fatmlndfrc files
+Bug Number: 1543
+large-file format does NOT work in latest clm 
 
-there are still some domain files that are used in the latest clm/datm in cesm1_0_3
-from the bad mkdatadomain.  This makes for inconsistent domain and fatmlndfrc files:
+CLM has the NetCDF large-file format hardwired to TRUE. You can NOT use the namelist
+variable outnc_large_files to change them to Classic format.
 
-T85_T85
-T42_T42
-T31_T31
-f10_f10
-f45_45
-f19_f19
-f09_f09
-f05_f05
-f02_f02
+====================================================================================
+Bug Number: 1398
+clm and mksurfdata_map needs to check map file
 
-and the pt1_pt1 datasets: 1x1_tropicAtl_test, 1x1_camdenNJ_navy, and
-1x1_asphaltjungleNJ_navy
+If the map files sent to CLM are inconsistent with the datafiles, CLM does NOT
+nicely abort, but aborts with the following types of problem....
 
-these would only affect I cases for the above resolutions. Since, standard
-simulations are done with ocean land/mask. And simulations with datm for other
-components would be with a ocean mask as well (T31_gx3v7, f19_gx1v6,
-f09_gx1v6).
-
-Here are the updated filenames to use in the datm template in models/atm/datm7/bld:
-
-[yong:atm/datm/bld] erik% svn diff datm.cpl7.template 
-Index: datm.cpl7.template
-===================================================================
---- datm.cpl7.template	(revision 36)
-+++ datm.cpl7.template	(working copy)
-@@ -35,11 +35,11 @@
- 
- if ( $ATM_GRID =~ $OCN_GRID ) then
-    if ( $ATM_GRID =~ 10x15     ) then
--                                 set DOMAINFILE = 'domain.lnd.fv10x15_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.fv10x15_USGS.110713.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 4x5       ) then
--                                 set DOMAINFILE = 'domain.lnd.fv4x5_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.fv4x5_USGS.110713.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 2.65x3.33 ) then
-@@ -51,40 +51,40 @@
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7
-    endif
-    if ( $ATM_GRID =~ 1.9x2.5   ) then
--                                 set DOMAINFILE = 'domain.lnd.fv1.9x2.5_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.fv1.9x2.5_USGS.110713.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 0.9x1.25  ) then
--                                 set DOMAINFILE = 'domain.lnd.fv0.9x1.25_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.fv0.9x1.25_USGS.110713.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 0.47x0.63 ) then
--                                 set DOMAINFILE =
-                                  'domain.lnd.fv0.47x0.63_USGS.090106.nc'
-+                                 set DOMAINFILE =
-'domain.lnd.fv0.47x0.63_USGS.111004.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 0.23x0.31 ) then
--                                 set DOMAINFILE =
-                                  'domain.lnd.fv0.23x0.31_USGS.090106.nc'
-+                                 set DOMAINFILE =
-'domain.lnd.fv0.23x0.31_USGS.111004.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
- 
-    if ( $ATM_GRID =~ 8x16      ) then
--                                 set DOMAINFILE = 'domain.lnd.T5_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.T5_USGS.111004.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 32x64     ) then
--                                 set DOMAINFILE = 'domain.lnd.T21_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.T21_USGS.111004.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 48x96     ) then
--                                 set DOMAINFILE = 'domain.lnd.T31_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.T31_USGS.110713.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 64x128    ) then
--                                 set DOMAINFILE = 'domain.lnd.T42_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.T42_USGS.111004.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
-    if ( $ATM_GRID =~ 128x256   ) then
--                                 set DOMAINFILE = 'domain.lnd.T85_USGS.090106.nc'
-+                                 set DOMAINFILE = 'domain.lnd.T85_USGS.111004.nc'
-                                  set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    endif
- endif
-@@ -93,9 +93,9 @@
- 
-    set DOMAINPATH = \$DIN_LOC_ROOT/atm/datm7/domain.clm
-    if ( $CLM_PT1_NAME =~ 1x1_brazil          ) set DOMAINFILE =
-'domain.lnd.1x1pt-brazil_navy.090715.nc'
--   if ( $CLM_PT1_NAME =~ 1x1_camdenNJ        ) set DOMAINFILE =
-    'domain.lnd.1x1pt-camdenNJ_navy.071220.nc'
--   if ( $CLM_PT1_NAME =~ 1x1_tropicAtl       ) set DOMAINFILE =
-    'domain.lnd.1x1pt-tropicAtl_test.071010.nc'
--   if ( $CLM_PT1_NAME =~ 1x1_asphaltjungleNJ ) set DOMAINFILE =
-    'domain.lnd.1x1pt-camdenNJ_navy.071220.nc'
-+   if ( $CLM_PT1_NAME =~ 1x1_camdenNJ        ) set DOMAINFILE =
-'domain.lnd.1x1pt-camdenNJ_navy.111004.nc'
-+   if ( $CLM_PT1_NAME =~ 1x1_tropicAtl       ) set DOMAINFILE =
-'domain.lnd.1x1pt-tropicAtl_test.111004.nc'
-+   if ( $CLM_PT1_NAME =~ 1x1_asphaltjungleNJ ) set DOMAINFILE =
-'domain.lnd.1x1pt-camdenNJ_navy.111004.nc'
-    if ( $CLM_PT1_NAME =~ 1x1_mexicocityMEX   ) set DOMAINFILE =
-'domain.lnd.1x1pt-mexicocityMEX_navy.090715.nc'
-    if ( $CLM_PT1_NAME =~ 1x1_vancouverCAN    ) set DOMAINFILE =
-'domain.lnd.1x1pt-vancouverCAN_navy.090715.nc'
-    if ( $CLM_PT1_NAME =~ 1x1_urbanc_alpha    ) set DOMAINFILE =
-'domain.lnd.1x1pt-urbanc_alpha_test.110201.nc'
 
 ====================================================================================
 Bug Number: 1397
@@ -152,253 +43,6 @@ argument to hist_addfld1d and hist_addfld2d to prevent this problem from
 arising again in the future.
 
 ====================================================================================
-Bug Number: 1393
-Error when running gregorian calendar as input
-
-With an input file that has a Gregorian calendar, for the US-UMB site, Keith
-Oleson found the following error...
-
-
-20110811 154401.626948 INFO     PET0 Running with ESMF Version 5.2.0
-20110811 154403.041866 ERROR    PET0 ESMCI_Calendar.C 1004
-ESMCI::Calendar::convertToTime() Input argument out of range ; Gregorian
-0/0/0 (1-12/>=1/>=-4800).
-20110811 154403.041883 ERROR    PET0 ESMCI_Time.C 292 ESMCI::Time::set() Input
-argument out of range Internal subroutine call return
-ed Error
-20110811 154403.041889 ERROR    PET0 ESMF_Time.F90 1278 ESMF_TimeSet() Input
-argument out of range - Internal subroutine call return
-ed Error
-
-No other error information in any other log file.
-
-Atmospheric forcing file time information looks like:
-
-        double time(time) ;
-                time:long_name = "observation time" ;
-                time:units = "days since 1999-01-01 00:00:00" ;
-                time:calendar = "gregorian" ;
-
-This is with...
-
-USE_ESMF_LIB is set to TRUE
-ESMF_LIBDIR is set to /contrib/esmf_5_2_0-64-0-mpiuni/lib/  (so that I can run
-with USE_MPISERIAL = TRUE)
-
-This error happens both for CALENDAR=NO_LEAP and CALENDAR=GREGORIAN.
-
-The following allows the model to run and it looks like the Feb 29th day of the
-atmospheric forcing files are being read in gregorian calendar mode.  The model
-flux output also seems to line up well with the observed fluxes which have leap
-days.
-
-In shr_cal_mod.F90, Replaced this line:
-
--      call
-ESMF_TimeSet(ltime,d=eday,s=0,calendarType=ESMF_CAL_GREGORIAN,rc=rc)
-
-with this:
-
-+      call
-ESMF_TimeSet(ltime,d=eday,s=0,calendarType=ESMF_CAL_JULIANDAY,rc=rc)
-+      call ESMF_TimeSet(ltime,calendarType=ESMF_CAL_GREGORIAN,rc=rc)
-
-It looked to me like ESMF_TimeSet needs to be called first with the Julianday
-calendar to get a base time and then called again to convert to the gregorian.
-
-====================================================================================
-Bug Number: 1392
-US-UMB site has some incorrect data
-
-Soil data for the US-UMB site is backwards and slightly off.
-
-it is...
-
-US-UMB,-999,1,-999,0.6,92.8
-
-Index: PTCLM_sitedata/EXAMPLE_soildata.txt
-===================================================================
---- PTCLM_sitedata/EXAMPLE_soildata.txt    (revision 29431)
-+++ PTCLM_sitedata/EXAMPLE_soildata.txt    (working copy)
-@@ -1,2 +1,2 @@
- site_code,soil_depth,n_layers,layer_depth,layer_sand%,layer_clay%
--US-UMB,-999,1,-999,0.6,92.8
-+US-UMB,-999,1,-999,92.6,0.6
-
-Also the US-UMB site has a "noleap" calendar, but actually has 366 days for
-leap years. This makes the calendar screwy (but see bug 1393 above).
-
-Keith Oleson noticed this.
-
-====================================================================================
-Bug Number: 1381
-Can't change monthly average files to NOT be one per month
-
-Hanna and Sean found that if you do the following...
-
-hist_mfilt = 12
-hist_nhtfrq = 0
-
-instead of getting 12 monthly time-samples on a yearly file -- you get a file
-per month. It would be nice to get what you ask for in this case. I also have
-examples of doing this sort of thing in the User's Guide so people will be led
-astray by the examples.
-
-Looks like the issue is this piece of code in histFileMod.F90...
-
-[yong:clm/src/main] erik% svn diff histFileMod.F90 
-Index: histFileMod.F90
-===================================================================
---- histFileMod.F90    (revision 29486)
-+++ histFileMod.F90    (working copy)
-@@ -522,7 +522,6 @@
-        tape(t)%begtime = day + sec/secspday
-        tape(t)%dov2xy = hist_dov2xy(t)
-        tape(t)%nhtfrq = hist_nhtfrq(t)
--       if (hist_nhtfrq(t) == 0) hist_mfilt(t) = 1
-        tape(t)%mfilt = hist_mfilt(t)
-        if (hist_ndens(t) == 1) then
-           tape(t)%ncprec = ncd_double
-
-
-Although if you do the above, the filenames for monthly frequencies will still
-have year-month, even if they are a years worth of files or something. I
-suppose there's no way around that though...
-
-
-====================================================================================
-Bug Number: 1379
-All spinup tests fail for PTCLM testcases.csh
-
-All of the spinup tests fail for PTCLM on: jaguar, edinburgh, bluefire, and
-yong.
-
-Creating
-/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup
-
-Locking file
-/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup/env_case.xml
-Successfully created the case for bluefire
-Write
-/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup/README.PTCLM
-with command line
-Number of simulation nyears to run:                             600
-WARNING: nopointdata option was selected.  Model will crash if the site level
-data have not been created
-
-Run command: ./xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1pt_US-UMB
-Run command: ./xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val
-1x1pt_US-UMB
-Run command: ./xmlchange -file env_conf.xml -id DATM_MODE -val CLM1PT
-Run command: ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_START -val 1999
-Run command: ./xmlchange -file env_conf.xml -id DATM_CLMNCEP_YR_END -val 2006
-Run command: ./xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val '-mask
-navy'
-Run command: ./xmlchange -file env_conf.xml -id USE_MPISERIAL -val TRUE
-Run command: ./xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS -val '-bgc cn
--ad_spinup on'
-Run command: ./xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val 'on'
-Run command: ./xmlchange -file env_run.xml -id STOP_DATE -val 06010101
-Run command: ./xmlchange -file env_run.xml -id STOP_N -val 600
-Run command: ./xmlchange -file env_run.xml -id STOP_OPTION -val nyears
-Run command: ./xmlchange -file env_run.xml -id REST_OPTION -val nyears
-Run command: ./xmlchange -file env_run.xml -id REST_N -val 120
-Run command: ./xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val
-/blhome/erik/inputdata
-&clm_inparm
- hist_nhtfrq = -8760
- hist_mfilt  = 100
- fpftcon =
-'/blhome/erik/inputdata/lnd/clm2/pftdata/pft-physiology.c110425.US-UMB.nc'
-/
-Scripts created successfully
-
-cd
-/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_ad_spinup
-and then...
-Configure, build and run your case as normal
-
-unset echo
-14 PTCLM.1491722_US-UMB_ICN_ad_spinup.config\t\t\t
-Generating resolved namelist, prestage, and build scripts
-configure done.
-adding clm user file defaults for var domainfile with val
-/blhome/erik/inputdata/atm/datm7/domain.clm/domain.lnd.1x1pt_US-UMB_navy.nc
-adding clm user file defaults for var fatmgrid with val
-/blhome/erik/inputdata/lnd/clm2/griddata/griddata_1x1pt_US-UMB.nc
-adding clm user file defaults for var fatmlndfrc with val
-/blhome/erik/inputdata/lnd/clm2/griddata/fracdata_1x1pt_US-UMB_navy.nc
-adding clm user file defaults for var fsurdat with val
-/blhome/erik/inputdata/lnd/clm2/surfdata/surfdata_1x1pt_US-UMB_simyr2000.nc
-adding clm user file defaults for var stream_fldfilename_ndep with val
-/blhome/erik/inputdata/lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_1x1pt_US-UMB.nc
-adding use_case 2000_control defaults for var sim_year with val 2000
-adding use_case 2000_control defaults for var sim_year_range with val constant
-adding use_case 2000_control defaults for var stream_year_first_ndep with val
-2000
-adding use_case 2000_control defaults for var stream_year_last_ndep with val
-2000
-adding use_case 2000_control defaults for var use_case_desc with val Conditions
-to simulate 2000 land-use
-Successfully generated resolved namelist, prestage, and build scripts
-Locking file env_conf.xml
-Generating clean_build script
-Generating submit script
-Generating build script
-Generating run script
-Locking file env_mach_pes.xml
-Successfully configured the case for bluefire
-If an old build exists for this case, you might want to
-   run the *.clean_build script before building
-14 PTCLM.1491722_US-UMB_ICN_ad_spinup.build\t\t\t
--------------------------------------------------------------------------
- CCSM BUILDNML SCRIPT STARTING
- - To prestage restarts, untar a restart.tar file into
-/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/run
- - Create modelio namelist input files
- CCSM BUILDNML SCRIPT HAS FINISHED SUCCESSFULLY
--------------------------------------------------------------------------
- CCSM PRESTAGE SCRIPT STARTING
- - CCSM input data directory, DIN_LOC_ROOT_CSMDATA, is /blhome/erik/inputdata
- - Case input data directory, DIN_LOC_ROOT, is /blhome/erik/inputdata
- - Checking the existence of input datasets in DIN_LOC_ROOT
- CCSM PRESTAGE SCRIPT HAS FINISHED SUCCESSFULLY
--------------------------------------------------------------------------
- CCSM BUILDEXE SCRIPT STARTING
- - Build Libraries: mct pio csm_share
-Tue Jul 26 14:14:02 MDT 2011
-/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/mct/mct.bldlog.110726-141401
-Tue Jul 26 14:15:00 MDT 2011
-/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/pio/pio.bldlog.110726-141401
-ERROR: pio.buildlib failed, see
-/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/pio/pio.bldlog.110726-141401
-ERROR: cat
-/ptmp/erik/PTCLM.1491722_US-UMB_ICN_ad_spinup/pio/pio.bldlog.110726-141401
-14 PTCLM.1491722_US-UMB_ICN_ad_spinup.run\t\t\t
-BUILD_COMPLETE is not TRUE
-Please rebuild the model interactively via
-   ./PTCLM.1491722_US-UMB_ICN_ad_spinup.bluefire.build
-No match.
-14 PTCLM.1491722_US-UMB_ICN_ad_spinup.file\t\t\t
-CCSM PTCLM.1491722_US-UMB_ICN_ad_spinup clean_build FINISHED SUCCESSFULLY
-Run PTCLM for PTCLM.1491722_US-UMB_ICN_exit_spinup options =
---caseidprefix=/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722
---exit_spinup --verbose --aerdepgrid --ndepgrid --cesm_root
-/fis/cgd/home/erik/clm_trunk/ --finidat
-14 PTCLM.1491722_US-UMB_ICN_exit_spinup.PTCLM\t\t\t
-./PTCLM.py -d /blhome/erik/inputdata -m bluefire -s US-UMB -c ICN --rmold
---nopointdata
---caseidprefix=/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722
---exit_spinup --verbose --aerdepgrid --ndepgrid --cesm_root
-/fis/cgd/home/erik/clm_trunk/ --finidat
-Usage: PTCLM.py [options] -d inputdatadir -m machine -s sitename
-
-PTCLM.py: error: --finidat option requires an argument
-unset echo
-/glade/proj2/fis/cgd/home/erik/PTCLM_trunk/myPTCLMtests.1491722/PTCLM.1491722_US-UMB_ICN_exit_spinup:
-A file or directory in the path name does not exist.
-
-====================================================================================
 Bug Number: 1377
 CLM1PT mode is in extend mode by default, so fails going beyond one data cycle
 
@@ -416,56 +60,6 @@ See bug 1368 below for a case where this causes a major problem with a
 simulation.
 
 ====================================================================================
-Bug Number: 1372
-Problem running at the same resolution as RTM / also running with 23 processors
-
-There was a PIO issue running with 23 processors, and also the following problem...
-
-Jim Edwards investigated this issue and found that...
-
-"...this one is a bug in clm.   In this case the clm dimensions
-(lon,lat) and the runoff dimensions (lonrof,latrof)
-have the same values - but I think that the data decompositions are different 
-- ncd_inqiodesc matchs them and tries
-to use the same iodesc which then causes an error in pio when you try to write
-the first runoff variable.   
-
-I think a possible solution is to change the iodesc_plus_type structure so that
-instead of storing the ndims and dims(:)
-you store dimids(:)  which will be different."
-
-The changes to fix this are fairly extensive. So we won't give a fix here.
-
-====================================================================================
-Bug Number: 1370
-Build bug with CNDV
-
-Fang Li noticed this problem in the latest release cesm1_0_3.
-
-iulog is used in CNDVMod.F90 -- but doesn't have a use statement for it.
-It needs to have...
-
-use clm_varctl        , only : iulog
-
-The code difference looks like this...
-
-[yong:~/cesm_rel_clm] erik% svn diff models/lnd/clm/src/biogeochem/CNDVMod.F90 
-Index: models/lnd/clm/src/biogeochem/CNDVMod.F90
-===================================================================
---- models/lnd/clm/src/biogeochem/CNDVMod.F90 (revision 28836)
-+++ models/lnd/clm/src/biogeochem/CNDVMod.F90 (working copy)
-@@ -157,7 +157,7 @@
-     use clm_varpar      , only : lsmlon, lsmlat, maxpatch_pft
-     use domainMod       , only : ldomain,llatlon
-     use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
--                                 frivinp_rtm
-+                                 frivinp_rtm, iulog
-     use clm_varcon      , only : spval
-     use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, &
-                                  get_curr_time
-
-
-====================================================================================
 Bug Number: 1368
 PTCLM for US-UMB spins up with zero GPP
 
@@ -475,91 +69,6 @@ phase GPP was identically zero.
 
 This was fixed by setting taxmode='cycle'. See bug 1377 above.
  
-====================================================================================
-Bug Number: 1367
-final_spinup stop time isn't right for PTCLM
-
-In PTCLM or otherwise, when setting the stop time with final_spinup='on' mode
-to build-namelist it doesn't give the right time. It gives the default time.
-
-There's a simple reordering change to fix this...
-
-cd models/lnd/clm/bld
-
-Index: namelist_files/namelist_defaults_drv.xml
-===================================================================
---- namelist_files/namelist_defaults_drv.xml    (revision 28836)
-+++ namelist_files/namelist_defaults_drv.xml    (working copy)
-@@ -87,20 +87,20 @@
- <atm_cpl_dt hgrid="1x1_urbanc_alpha" >1800</atm_cpl_dt>
-
- <!-- Length of run -->
-+<stop_option                   final_spinup="on"   >nyears</stop_option>
- <stop_option   bgc="cn"           ad_spinup="on"   >nyears</stop_option>
- <stop_option   bgc="cn"         exit_spinup="on"   >nyears</stop_option>
- <stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
- <stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
- <stop_option hgrid="1x1_urbanc_alpha"  mask="test" >nsteps</stop_option>
--<stop_option                   final_spinup="on"   >nyears</stop_option>
- <stop_option                                       >ndays</stop_option>
-
-+<stop_n                   final_spinup="on"   > 50</stop_n>
- <stop_n   bgc="cn"           ad_spinup="on"   >600</stop_n>
- <stop_n   bgc="cn"         exit_spinup="on"   >  1</stop_n>
- <stop_n hgrid="1x1_mexicocityMEX" mask="navy" >158</stop_n>
- <stop_n hgrid="1x1_vancouverCAN"  mask="navy" >331</stop_n>
- <stop_n hgrid="1x1_urbanc_alpha"  mask="test" >22772</stop_n>
--<stop_n                   final_spinup="on"   > 50</stop_n>
- <stop_n                                       >  1</stop_n>
-
- <stop_date bgc="cn"          ad_spinup="on"   >0601-01-01</stop_date
-
-====================================================================================
-Bug Number: 1364
-Problem running US-UMB case on Macintosh
-
-I run into a floating point exception running the US-UMB site on Macintosh...
-
-./PTCLM.py -m generic_darwin_intel -s US-UMB -d /fs/cgd/csm/inputdata --pftgrid
---soilgrid --scratchroot /Users/erik --run_n 2 --run_units nmonths --rmold --nopointdata 
-
-After having configured, built, and run for time-step 124...
-
-
-forrtl: severe (174): SIGSEGV, segmentation fault occurred
-
-====================================================================================
-Bug Number: 1361
-Problem with transient compsets for PTCLM
-
-When PTCLM is setup for a transient compset that has a _dynpftdata.txt file
-that goes with it, it gives the wrong syntax for calling the NCL conversion
-program for it.
-
-To get this to work make the following changes...
-
-Index: PTCLM.py
-===================================================================
---- PTCLM.py    (revision 28836)
-+++ PTCLM.py    (working copy)
-@@ -717,9 +717,10 @@
-                if plev>0: print "Transition PFT file exists, so using it for
-changes in PFT"
-                # Convert the file from transition years format to mksurfdata
-pftdyn format
-                cnv = ptclm_dir + \
--                     "/PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl
-"+sim_year_range
-+                     "/PTCLM_sitedata/cnvrt_trnsyrs2_pftdyntxtfile.pl " + \
-+                     pftdyn_site_filename+" "+sim_year_range
-                pftdynoutfile = mycase+"/pftdyn_"+mycasename+".txt"
--               system( cnv+pftdyn_site_filename+" > "+pftdynoutfile )
-+               system( cnv+" > "+pftdynoutfile )
-                dynpftopts = " -dynpft "+pftdynoutfile
-             else:
-                if plev>0: print "Transition PFT file did NOT exist, so
-proceeding with constant PFT"
-
 ====================================================================================
 Bug Number: 1360
 Can't do a ncdump on the US-UMB single point data for PTCLM
@@ -576,35 +85,6 @@ It turns out the problem is that the filename -- doesn't start with an
 alphabetical letter it starts with a number. So there isn't really a way around
 this other than renaming the files and changing the streams. To do a ncdump,
 you can simply rename the file to something else and then do the ncdump on it.
-
-====================================================================================
-Bug Number: 1358
-incorrect units for a few history fields: H2OSNO_TOP, HC, HCSOI
-
-Bill Sacks found the following problem.
-I believe the following history file fields have incorrect units:
-
-- H2OSNO_TOP: documented as kg in the history file and elsewhere in the code
-(Hydrology2Mod.F90 and clmtype.F90), but it is calculated as the sum of
-h2osoi_ice(c,snl(c)+1) + h2osoi_liq(c,snl(c)+1), which are both documented as
-kg / m^2. Thus, I think H2OSNO_TOP should also be documented as kg / m^2
-
-- HC and HCSOI: documented as MJ in the history file, but as MJ/m^2 elsewhere
-in the code.
-
-Note that these are the three fields in the default history file whose units
-imply that their values scale with grid cell area, which I do not think is
-actually the case.
-
-====================================================================================
-Bug Number: 1354
-I1850SPINUPCN compset points to a transient case rather than a fixed 1850 case
-
-When the I1850SPINUPCN compset is run the case that is used is:
-
-DATM_CPL_CASE="b40.20th.track1.1deg.012"
-
-which is a transient case rather than a fixed 1850 case.
 
 ====================================================================================
 Bug Number: 1348
@@ -635,24 +115,6 @@ The filename is:
 This is the same problem as in the VOC dataset in bug number 1044 below.
 
 Even though the file looks incorrect the datasets it creates are fine.
-
-====================================================================================
-Bug Number: 1340
-Hanging problem with simulations on bluefire
-
-Randomly some people have experienced simulations hanging on bluefire and taking
-an extremely long time to finish (even finish initialization).
-
-Mariana said this problem has to do with an MPI library issue on bluefire.
-Other people have run into the same sort of trouble and a fix is coming in. A
-fix is on bluefire, and Jim Edwards has done a bunch of testing with it.
-
-I have confirmed that the upcoming update to the aix poe software will resolve
-this problem, in the meantime the user can add
-
-setenv MP_SHMCC_EXCLUDE_LIST        All
-
-to the environment via file  env_machine_specific file or otherwise
 
 ====================================================================================
 Bug Number: 1339
@@ -774,85 +236,6 @@ CLM_compare.sh: files are NOT b4b
 We got around this by removing these fields from the history files.
 
 ====================================================================================
-Bug Number: 1310
-Problem creating T31 rcp pftdyn files
-
-I'm having problems building the T31 rcp pftdyn files.
-
-Rcp2.6 worked OK, rcp4.5 gives the following (even for OMP_NUM_THREADS=1).
-
- read_domain compute lat[ns],lon[we] from edge[nesw]
- celledge, using celledge_regional
- read_domain compute cellarea with edge[nesw]
- cellarea, using cellarea_global
- AREAINI warning: conservation check not valid for
-    input  grid of  720  x  360
-    output grid of  96  x  48
- AREAINI warning: conservation check not valid for
-    input  grid of  720  x  360
-    output grid of  96  x  48
- domain_clean: cleaning  720 360
- Successfully made harvest and grazing
-
- input pft dynamic dataset is 
-/cgd/tss/pftlandusedyn.0.5x0.5.minicam.simyr2005-2100.c100121/mksrf_landuse_minicam2054_c100121.nc
-year is  2054
- Attempting to make PFTs .....
-
- read_domain read lon and lat dims
- read_domain initialized domain
- read_domain read LONGXY and LATIXY fields
- read_domain read EDGE[NESW]
- read_domain read LANDMASK
- read_domain compute lat[ns],lon[we] from edge[nesw]
- celledge, using celledge_regional
- read_domain compute cellarea with edge[nesw]
- cellarea, using cellarea_global
-ERROR in mksurfdata: 134
-
-rcp 6 dies with...
-
-    output grid of  96  x  48
- domain_clean: cleaning  720 360
- Successfully made harvest and grazing
-
- input pft dynamic dataset is 
-/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc1989_c090630.nc
-year is  1989
- Attempting to make PFTs .....
-
- read_domain read lon and lat dims
- read_domain initialized domain
- read_domain read LONGXY and LATIXY fields
- read_domain read EDGE[NESW]
- read_domain read LANDMASK
- read_domain compute lat[ns],lon[we] from edge[nesw]
- celledge, using celledge_regional
- read_domain compute cellarea with edge[nesw]
- cellarea, using cellarea_global
-ERROR in mksurfdata: 134
-
-using 1 thread rcp8.5 dies with...
-
-
- input pft dynamic dataset is 
-/cgd/tss/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2020_c100121.nc
-year is  2020
- Attempting to make PFTs .....
-
- read_domain read lon and lat dims
- read_domain initialized domain
- read_domain read LONGXY and LATIXY fields
- read_domain read EDGE[NESW]
- read_domain read LANDMASK
- read_domain compute lat[ns],lon[we] from edge[nesw]
- celledge, using celledge_regional
- read_domain compute cellarea with edge[nesw]
- cellarea, using cellarea_global
-ERROR in mksurfdata: 134
-
-
-====================================================================================
 Bug Number: 1289
 Problem reading in single-point CO2 stream file on franklin
 
@@ -972,27 +355,6 @@ Thus it will use the nearest point in time, and won't die with a dtlimit error,
 as we are setting the dtlimit to a very high value.
 
 ====================================================================================
-Bug Number: 1251
-PTCLM testcases aborts in I_QIAN case...
-
-On yong with intel, the testcases.csh aborts on this case...
-
-./PTCLM.py -d /Users/erik/inputdata -m generic_darwin_intel -s US-Ha1 -c I
---rmold --caseidprefix=myPTCLMtests --owritesrfaer --run_units=ndays --run_n=5
---aerdepgrid --ndepgrid --useQIAN --QIAN_tower_yrs
-
-It aborts with a seg-fault...
-
------------------------------------
-
-NODE#  NAME
-(    0)  yong.local
-forrtl: severe (174): SIGSEGV, segmentation fault occurred
-
-
-This is after completing 24 timesteps in the land model (half-hour time-step).
-
-====================================================================================
 Bug Number: 1164
 Restart trouble for CNC13 with INTEL, PGI and LAHEY compilers
 
@@ -1082,20 +444,6 @@ produces reasonable results for VOC emission fields on surfdata files. But, the
 LANDMASK when viewed with ncview is upside down and shifted from what's
 expected. I think this is because the latitude coordinates are reversed from
 the other files (N to S instead of S to N).
-
-====================================================================================
-Bug Number: 717
-Problem with lt_archiving for too-many files
-
-We've been running into a bunch of problems with the lt_archiving when
-using CLM. He can get 30 years in a 6 hour wall-clock cycle -- which means
-over a thousand files -- where lt_archive.sh pukes.
-
-Making it robust -- regardless of the number of files would be one first step.
-The next problem he has is that running over just 10 years -- the job resubmits
-itself before the lt_archive script is done. Then the scripts conflict and he
-ends up having to run the archiving by hand. It would also help if it were
-easier to submit the lt_archive.sh script as well.
 
 ====================================================================================
 Bug number: 669

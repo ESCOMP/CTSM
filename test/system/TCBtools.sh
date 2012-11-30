@@ -98,6 +98,7 @@ while [ $still_compiling = "TRUE" ]; do
        rc=$(( $rc + $? ))
     else
        status="GEN"
+       rc=0
     fi
     if [ $rc -eq 0 ]; then
 	echo "TCBtools.sh: make was successful" 

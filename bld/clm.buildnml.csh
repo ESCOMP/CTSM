@@ -3,7 +3,7 @@
 if !(-d $CASEBUILD/clmconf) mkdir -p $CASEBUILD/clmconf
 
 #--------------------------------------------------------------------
-# Invoke cclm configure - output will go in CASEBUILD/clmconf
+# Invoke clm configure - output will go in CASEBUILD/clmconf
 #--------------------------------------------------------------------
 
 set config_opts=" "
@@ -14,11 +14,8 @@ if ("$CCSM_COMPSET" =~ P* || "$CCSM_COMPSET" =~ R* ) then
    set config_opts=" -sitespf_pt $LND_GRID"
 endif
 
-if ($COMP_INTERFACE == 'MCT' ) setenv COMP MCT
-if ($COMP_INTERFACE == 'ESMF') setenv COMP ESMF
-
 cd $CASEBUILD/clmconf  
-$CODEROOT/lnd/clm/bld/configure  $config_opts -comp_intf $COMP \
+$CODEROOT/lnd/clm/bld/configure  $config_opts -comp_intf $COMP_INTERFACE \
     $CLM_CONFIG_OPTS -usr_src $CASEROOT/SourceMods/src.clm || exit -1 
 
 #--------------------------------------------------------------------
@@ -87,7 +84,7 @@ if ($CLM_NML_USE_CASE != "UNSET") set usecase = "-use_case $CLM_NML_USE_CASE"
 
 set clm_startfile = " "
 if ( $RUN_TYPE == "hybrid" || $RUN_TYPE == "branch" ) then
-   set clm_startfile = "-clm_startfile ${RUN_REFCASE}.clm2%inst_string.r.${RUN_REFDATE}-${RUN_REFTOD}.nc"
+   set clm_startfile = "-clm_startfile ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-${RUN_REFTOD}.nc"
 endif
 
 $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \

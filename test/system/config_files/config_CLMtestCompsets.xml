@@ -67,6 +67,20 @@
          LND_DOMAIN_FILE="domain.lnd.${CLM_USRDAT_NAME}_gx1v6.nc"
 /> 
 
+<compset GEN_COMPSET_MATCH="_US-UMB"
+         VALID_GRID_MATCH="CLM_USRDAT"   
+         RUN_STARTDATE="1999-01-01"
+         CLM_USRDAT_NAME="1x1pt_US-UMB" 
+	 DATM_PRESAERO="clim_2000"
+         DATM_CLMNCEP_YR_ALIGN="1999"
+         DATM_CLMNCEP_YR_START="1999"
+         DATM_CLMNCEP_YR_END="2006"
+         ATM_DOMAIN_PATH="$DIN_LOC_ROOT/atm/datm7/domain.clm"
+         LND_DOMAIN_PATH="$DIN_LOC_ROOT/atm/datm7/domain.clm"
+         ATM_DOMAIN_FILE="domain.lnd.${CLM_USRDAT_NAME}_navy.nc"
+         LND_DOMAIN_FILE="domain.lnd.${CLM_USRDAT_NAME}_navy.nc"
+/> 
+
 <!-- ===================================== -->
 <!-- I_                                    -->
 <!-- ===================================== -->
@@ -119,6 +133,10 @@
          DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000 for CLM_USRDAT_NAME at f19 resolution over Alaska" 
 />
 
+<compset NAME="I_2000_1PTFRC_US-UMB" SHORTNAME="IUSUMB"
+         DESC="CLM with CLM1PT atm input data for 1999-2006, CO2 level and Aerosol deposition for 2000 for CLM_USRDAT_NAME for 1x1_US-UMB" 
+/>
+
 <compset NAME="I_2000_VOC" SHORTNAME="IVOC"
          DESC="CLM with QIAN atm input data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000, VOC"
 />
@@ -161,6 +179,19 @@
 
 <compset NAME="I_2000_CNDV" SHORTNAME="ICNDV"
          DESC="CLM with QIAN atm input data for 1972-2004 and CNDV (Carbon Nitrogen Dynamic Vegetation), CO2 level and Aerosol deposition for 2000"
+/>
+
+<compset NAME="I_2000_CN_rtmR01" SHORTNAME="ICNR01"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 using a R01 RTM grid"
+         ROF_GRID="r01"
+/>
+
+<compset NAME="I_2000_CN_rtmOff" SHORTNAME="ICNROFF"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 with all RTM options off"
+/>
+
+<compset NAME="I_2000_CN_rtmOn" SHORTNAME="ICNRON"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 with some different RTM options"
 />
 
 <compset NAME="I_1850_CN_ADSPIN" SHORTNAME="ICNADSPIN"

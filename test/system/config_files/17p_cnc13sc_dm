@@ -1,6 +1,0 @@
--mode clm_stndln
--nouse_mpiserial -nosmp
--debug
--bgc cn
--c13 on
--s

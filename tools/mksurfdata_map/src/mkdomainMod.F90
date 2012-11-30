@@ -221,6 +221,9 @@ end subroutine domain_check
 ! !DESCRIPTION:
 ! Read a grid file
 !
+! !USES:
+    use mkutilsMod, only : convert_latlon
+!
 ! !ARGUMENTS:
     implicit none
     type(domain_type),intent(inout) :: domain
@@ -279,8 +282,11 @@ end subroutine domain_check
 
       call check_ret(nf_inq_varid (ncid, 'xc_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%lonc), subname)
+      call convert_latlon(ncid, 'xc_b', domain%lonc)
+
       call check_ret(nf_inq_varid (ncid, 'yc_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%latc), subname)
+      call convert_latlon(ncid, 'yc_b', domain%latc)
 
       if (grid_rank == 2 ) then
          allocate(yv(4,ns), xv(4,ns))
@@ -288,10 +294,19 @@ end subroutine domain_check
          call check_ret(nf_get_var_double (ncid, varid, yv), subname)
          call check_ret(nf_inq_varid (ncid, 'xv_b', varid), subname)
          call check_ret(nf_get_var_double (ncid, varid, xv), subname)
+
          domain%lats(:) = yv(1,:)  
+         call convert_latlon(ncid, 'yv_b', domain%lats(:))
+
          domain%latn(:) = yv(3,:)  
+         call convert_latlon(ncid, 'yv_b', domain%latn(:))
+
          domain%lonw(:) = xv(1,:)
+         call convert_latlon(ncid, 'xv_b', domain%lonw(:))
+
          domain%lone(:) = xv(2,:)
+         call convert_latlon(ncid, 'xv_b', domain%lone(:))
+
          domain%edgen = maxval(domain%latn)
          domain%edgee = maxval(domain%lone)
          domain%edges = minval(domain%lats)
@@ -327,6 +342,9 @@ end subroutine domain_check
 ! !DESCRIPTION:
 ! Read a grid file
 !
+! !USES:
+    use mkutilsMod, only : convert_latlon
+!
 ! !ARGUMENTS:
     implicit none
     type(domain_type),intent(inout) :: domain
@@ -359,6 +377,8 @@ end subroutine domain_check
     integer :: ndims                           ! number of dims for variable
     integer :: ier                             ! error status
     logical :: lreadmask                       ! local readmask
+    character(len= 32) :: lonvar               ! name of 2-d longitude variable
+    character(len= 32) :: latvar               ! name of 2-d latitude variable
     character(len= 32) :: subname = 'domain_read'
 !-----------------------------------------------------------------
 
@@ -434,13 +454,14 @@ end subroutine domain_check
 
     ! ----- Set lat/lon variable ------
 
+    lonvar = ' '
+    latvar = ' '
+
     if (.not. lonlatset) then
        ier = nf_inq_varid (ncid, 'LONGXY', varid)
        if (ier == NF_NOERR) then
-          call check_ret(nf_inq_varid (ncid, 'LONGXY', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, domain%lonc), subname)
-          call check_ret(nf_inq_varid (ncid, 'LATIXY', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, domain%latc), subname)
+          lonvar = 'LONGXY'
+          latvar = 'LATIXY'
           lonlatset = .true.
        end if
     end if
@@ -448,20 +469,26 @@ end subroutine domain_check
     if (.not. lonlatset) then
        ier = nf_inq_varid (ncid, 'lon', varid)
        if (ier == NF_NOERR) then
-          call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, domain%lonc), subname)
-          call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, domain%latc), subname)
+          lonvar = 'lon'
+          latvar = 'lat'
           lonlatset = .true.
        end if
     end if
-       
+
     if (.not. lonlatset) then
        write(6,*)'lon/lat values not set' 
        write(6,*)'currently assume either that lon/lat or LONGXY/LATIXY', &
             ' variables are on input dataset'
        call abort()
     end if
+
+    call check_ret(nf_inq_varid (ncid, lonvar, varid), subname)
+    call check_ret(nf_get_var_double (ncid, varid, domain%lonc), subname)
+    call convert_latlon(ncid, lonvar, domain%lonc)
+
+    call check_ret(nf_inq_varid (ncid, latvar, varid), subname)
+    call check_ret(nf_get_var_double (ncid, varid, domain%latc), subname)
+    call convert_latlon(ncid, latvar, domain%latc)
 
     ! ----- Set landmask/landfrac  ------
 

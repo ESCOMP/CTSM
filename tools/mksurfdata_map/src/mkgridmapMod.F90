@@ -134,6 +134,9 @@ contains
 ! !DESCRIPTION:
 ! This subroutine reads in the map file
 !
+! !USES:
+    use mkutilsMod, only : convert_latlon
+!
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
@@ -272,18 +275,22 @@ contains
     rcode = nf_inq_varid(fid,'xc_a',vid)
     rcode = nf_get_var_double(fid, vid, gridmap%xc_src)
     if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
+    call convert_latlon(fid, 'xc_a', gridmap%xc_src)
 
     rcode = nf_inq_varid(fid,'yc_a',vid)
     rcode = nf_get_var_double(fid, vid, gridmap%yc_src)
     if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
+    call convert_latlon(fid, 'yc_a', gridmap%yc_src)
 
     rcode = nf_inq_varid(fid,'xc_b',vid)
     rcode = nf_get_var_double(fid, vid, gridmap%xc_dst)
     if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
+    call convert_latlon(fid, 'xc_b', gridmap%xc_dst)
 
     rcode = nf_inq_varid(fid,'yc_b',vid)
     rcode = nf_get_var_double(fid, vid, gridmap%yc_dst)
     if (rcode /= NF_NOERR) write(6,F00) nf_strerror(rcode)
+    call convert_latlon(fid, 'yc_b', gridmap%yc_dst)
 
     rcode = nf_close(fid)
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
-# Test methods of the build-namelist script.
-# Just tests for configure mode using CESM.
+# Test command line options of the build-namelist script.
 # Try to test that all the different options at least work.
 # Test that inconsistentcies are appropriately caught.
 
@@ -90,9 +89,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 257;
+my $ntests = 253;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 153;
+   $ntests += 151;
 }
 plan( tests=>$ntests );
 
@@ -114,7 +113,8 @@ if (@ARGV) {
 my $mode = "standard";
 system( "../configure -s" );
 
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir";
+my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -no-note";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -228,30 +228,20 @@ print "Test irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl\n"
 print "==================================================\n";
 
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
-my $startfile = "clmrun.clm2\%inst_string.r.1964-05-27-00000.nc";
-my $startnoin = "clmrun.clm2.r.1964-05-27-00000.nc";
-my $inst      = "_0009";
+my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
 foreach my $options ( "-irrig", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_startfile $startfile -clm_start_type startup", 
-                      "-clm_startfile $startfile  -clm_start_type startup -inst_string $inst", 
                      ) {
    my $file = $startfile;
-   if ( $options =~ /-inst_string/ ) {
-      $file =~ s/\%inst_string/$inst/;
-      system( "touch $file" );
-   }
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
    system( "diff lnd_in lnd_in.default" );
    $cfiles->shownmldiff( "default", $mode );
    my $finidat = `grep finidat lnd_in`;
-   if (      $options =~ /-inst_string/    ) {
-      like( $finidat, "/$file/",      "$options" );
-      system( "/bin/rm $file" );
-   } elsif ( $options =~ /-clm_start_file/ ) {
-      like( $finidat, "/$startnoin/", "$options" );
+   if ( $options =~ /-clm_start_file/ ) {
+      like( $finidat, "/$file/", "$options" );
    }
    if ( $options eq "-l_ncpl 1" ) {
       my $dtime = `grep dtime lnd_in`;

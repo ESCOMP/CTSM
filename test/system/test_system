@@ -111,6 +111,16 @@ cur_time=`date '+%H:%M:%S'`
 hostname=`hostname`
 case $hostname in
 
+    ##yellowstone
+    ys* )
+       machine=yellowstone
+       defaultbaselineroot="$CESMDATAROOT/clm_cesm_baselines"
+       options="$options -mach $machine"
+       defaultcompiler="intel"
+       defaultinter_testlist="yellowstone.interactive"
+       defaultbatch_testlist="yellowstone.batch"
+    ;;
+
     ##bluefire
     be* )
        machine=bluefire
@@ -191,9 +201,9 @@ elif [ ! -z "$defaultbaselineroot" ]; then
 fi
 echo "Test list to use:               $testlist"
 echo "Create test suite with options: $options"
-create_test_suite -input_list $testlist -compset_file $testdir/config_files/config_CLMtestCompsets.xml $options
+./create_test_suite -input_list $testlist -compset_file $testdir/config_files/config_CLMtestCompsets.xml $options
 if [ "$interactive" = "YES" ]; then
-  cs.status.$testlid.$machine | tee status.$testlid.log
+  ./cs.status.$testlid.$machine | tee status.$testlid.log
   echo "Expected fail results"
   num_tests=`wc -w < $testlist` 
   ../../bld/unit_testers/xFail/wrapClmTests.pl -statusFile status.$testlid.log -numberOfTests "$num_tests" -callingScript "test_driver.sh-i"

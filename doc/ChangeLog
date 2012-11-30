@@ -1,4 +1,526 @@
 ===============================================================
+===============================================================
+Tag name:  clm4_0_57
+Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
+Date: Fri Nov 30 14:20:13 MST 2012
+One-line Summary: update trunk with release mods, some rtm fixes
+
+Purpose of changes:
+
+CLM:  Merge the changes Erik made in the release branch tags to trunk.    
+RTM:  Add effective velocity as a namelist variable.
+		Change rdirc file.
+		Add RTM tests to test_system batch CLM tests.
+		Clean up logic in RtmFloodInit so R01 works without SLOPE and MAX_VOLR.
+		Change rdirc file to rdirc_0.5x0.5_simyr2000_slpmxvl_c120717.nc which is 
+			correct and contains FLOOD and MAX_VOLR.  This fixes an error in choice
+			of rdirc file from clm4_0_55 / rtm1_0_10
+
+Requirements for tag:
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets:  Changed RTM rdirc file.
+
+Describe any substantial timing or memory changes: None Known
+
+Code reviewed by:  Erik, Tony, Mariana (in progress)
+
+List any svn externals directories updated (csm_share, mct, etc.):
+	- rtm1_0_13
+	- scripts4_121127
+	- Machines_121126
+	- drvseq4_2_13
+	- datm8_121123
+	- cism1_121114
+
+List all files eliminated:
+
+	- Deleted during release tag cleanup
+D       models/lnd/clm/test/system/TCB.sh
+D       models/lnd/clm/test/system/tests_pretag_bluefire
+D       models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dh
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_m
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_m
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_o
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_o
+D       models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dm
+D       models/lnd/clm/test/system/config_files/_persc_dh
+D       models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_do
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_s
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_s
+D       models/lnd/clm/test/system/config_files/_persc_dm
+D       models/lnd/clm/test/system/config_files/_persc_do
+D       models/lnd/clm/test/system/config_files/_scnv_ds
+D       models/lnd/clm/test/system/config_files/_persc_ds
+D       models/lnd/clm/test/system/config_files/17p_sc_dh
+D       models/lnd/clm/test/system/config_files/17p_sc_dm
+D       models/lnd/clm/test/system/config_files/17p_sc_do
+D       models/lnd/clm/test/system/config_files/_sc_dh
+D       models/lnd/clm/test/system/config_files/17p_sc_ds
+D       models/lnd/clm/test/system/config_files/_sc_dm
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_h
+D       models/lnd/clm/test/system/config_files/17p_cnsc_h
+D       models/lnd/clm/test/system/config_files/_sc_do
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_dh
+D       models/lnd/clm/test/system/config_files/17p_cnsc_dh
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_m
+D       models/lnd/clm/test/system/config_files/17p_cnsc_m
+D       models/lnd/clm/test/system/config_files/_sc_ds
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_o
+D       models/lnd/clm/test/system/config_files/17p_cnsc_o
+D       models/lnd/clm/test/system/config_files/17p_cnsc_dm
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_dm
+D       models/lnd/clm/test/system/config_files/17p_cnsc_do
+D       models/lnd/clm/test/system/config_files/17p_cnc13sc_dh
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_do
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_s
+D       models/lnd/clm/test/system/config_files/17p_sc_h
+D       models/lnd/clm/test/system/config_files/17p_cnsc_ds
+D       models/lnd/clm/test/system/config_files/21p_cncrpsc_ds
+D       models/lnd/clm/test/system/config_files/17p_cnc13sc_dm
+D       models/lnd/clm/test/system/config_files/_mexsc_ds
+D       models/lnd/clm/test/system/config_files/17p_cnc13sc_do
+D       models/lnd/clm/test/system/config_files/17p_sc_m
+D       models/lnd/clm/test/system/config_files/17p_sc_o
+D       models/lnd/clm/test/system/config_files/_sc_h
+D       models/lnd/clm/test/system/config_files/17p_cnnfsc_dh
+D       models/lnd/clm/test/system/config_files/_sc_m
+D       models/lnd/clm/test/system/config_files/17p_cnnfsc_dm
+D       models/lnd/clm/test/system/config_files/_sc_o
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_dh
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_dh
+D       models/lnd/clm/test/system/config_files/17p_cnnfsc_do
+D       models/lnd/clm/test/system/config_files/_sc_s
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_dm
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_dm
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_do
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_do
+D       models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dh
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_ds
+D       models/lnd/clm/test/system/config_files/_vansc_ds
+D       models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dm
+D       models/lnd/clm/test/system/config_files/17p_cnadspinupsc_do
+D       models/lnd/clm/test/system/config_files/_nil3sc_dh
+D       models/lnd/clm/test/system/config_files/_nil3sc_dm
+D       models/lnd/clm/test/system/config_files/_scsnf_dh
+D       models/lnd/clm/test/system/config_files/_scsnf_dm
+D       models/lnd/clm/test/system/config_files/_scsnf_do
+D       models/lnd/clm/test/system/config_files/21p_cndvcrpsc_h
+D       models/lnd/clm/test/system/config_files/17p_cndvsc_h
+D       models/lnd/clm/test/system/TBL.sh
+D       models/lnd/clm/test/system/tests_pretag_edinburgh
+D       models/lnd/clm/test/system/tests_pretag_edinburgh_nompi
+D       models/lnd/clm/test/system/TBR.sh
+D       models/lnd/clm/test/system/TER.sh
+D       models/lnd/clm/test/system/mknamelist
+D       models/lnd/clm/test/system/tests_posttag_hybrid_regression
+D       models/lnd/clm/test/system/tests_posttag_purempi_regression
+D       models/lnd/clm/test/system/TRP.sh
+D       models/lnd/clm/test/system/tests_pretag_jaguarpf
+D       models/lnd/clm/test/system/TSMrst_tools.sh
+D       models/lnd/clm/test/system/tests_pretag_jaguarpf_nompi
+D       models/lnd/clm/test/system/nl_files/nl_per
+D       models/lnd/clm/test/system/nl_files/nl_voc
+D       models/lnd/clm/test/system/nl_files/clm_std
+D       models/lnd/clm/test/system/nl_files/multi_inst
+D       models/lnd/clm/test/system/nl_files/multi_inst/multi_inst
+D       models/lnd/clm/test/system/nl_files/multi_inst/multi_inst_1
+D       models/lnd/clm/test/system/nl_files/multi_inst/multi_inst_2
+D       models/lnd/clm/test/system/nl_files/multi_inst/multi_inst_3
+D       models/lnd/clm/test/system/nl_files/clm_nortm
+D       models/lnd/clm/test/system/nl_files/clm_transient_rcp2.6
+D       models/lnd/clm/test/system/nl_files/clm_ndepdyn
+D       models/lnd/clm/test/system/nl_files/clm_transient_rcp4.5
+D       models/lnd/clm/test/system/nl_files/clm_pftdyn
+D       models/lnd/clm/test/system/nl_files/clm_transient_rcp8.5
+D       models/lnd/clm/test/system/nl_files/clm_per0
+D       models/lnd/clm/test/system/nl_files/nl_ptsmode_ocn
+D       models/lnd/clm/test/system/nl_files/nl_urb_br
+D       models/lnd/clm/test/system/nl_files/clm_spin
+D       models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp6
+D       models/lnd/clm/test/system/nl_files/clm_urb1pt
+D       models/lnd/clm/test/system/nl_files/nl_urb
+D       models/lnd/clm/test/system/nl_files/nl_crcrop
+D       models/lnd/clm/test/system/nl_files/clm_per
+D       models/lnd/clm/test/system/nl_files/clm_drydep
+D       models/lnd/clm/test/system/nl_files/nl_std
+D       models/lnd/clm/test/system/nl_files/clm_glcmec
+D       models/lnd/clm/test/system/nl_files/clm_transient_rcp6
+D       models/lnd/clm/test/system/nl_files/nl_crop
+D       models/lnd/clm/test/system/nl_files/clm_usrdat
+D       models/lnd/clm/test/system/nl_files/nl_cn_conly
+D       models/lnd/clm/test/system/nl_files/clm_stdIgnYr
+D       models/lnd/clm/test/system/nl_files/clm_transient_20thC
+D       models/lnd/clm/test/system/nl_files/nl_ptsmode
+D       models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp2.6
+D       models/lnd/clm/test/system/nl_files/clm_irrig
+D       models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp4.5
+D       models/lnd/clm/test/system/nl_files/nl_lfiles
+D       models/lnd/clm/test/system/nl_files/clm_transient_glcMEC_rcp8.5
+D       models/lnd/clm/test/system/TSMpergro.sh
+D       models/lnd/clm/test/system/TSMcnspinup.sh
+D       models/lnd/clm/test/system/TBLrst_tools.sh
+D       models/lnd/clm/test/system/CLM_runcmnd.sh
+D       models/lnd/clm/test/system/TSM.sh
+D       models/lnd/clm/test/system/tests_posttag_lynx
+D       models/lnd/clm/tools/mkprocdata_map/camhomme
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/mkprocdata_map.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/gridmapMod.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/Depends
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/domainMod.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/shr_file_mod.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/nanMod.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/Srcfiles
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/Filepath
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/Makefile
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/fileutils.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/src/shr_kind_mod.F90
+D       models/lnd/clm/tools/mkprocdata_map/camhomme/mkprocdata_map_in
+D       models/lnd/clm/tools/mkprocdata_map/clm/src
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/mkprocdata_map.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/gridmapMod.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/constMod.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/fmain.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/shr_file_mod.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/nanMod.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/Mkdepends
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/Srcfiles
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/Filepath
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/Makefile
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/fileutils.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/src/shr_kind_mod.F90
+D       models/lnd/clm/tools/mkprocdata_map/clm/mkprocdata_map_in
+D       models/lnd/clm/tools/mkprocdata_map/clm/mkprocdata_map_all
+D       models/lnd/clm/tools/mkprocdata_map/clm/mkprocdata_map_wrap
+D       models/lnd/clm/tools/mkprocdata_map/clm/README
+D       models/lnd/clm/tools/ncl_scripts/RMSbluefire.dat
+D       models/lnd/clm/tools/ncl_scripts/RMSlahey.dat
+D       models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl
+D       models/lnd/clm/tools/ncl_scripts/RMSjaguar.dat
+D       models/lnd/clm/tools/ncl_scripts/RMSintel.dat
+D       models/lnd/clm/tools/ncl_scripts/RMSintrepid.dat
+D       models/lnd/clm/tools/ncl_scripts/pergroPlot.ncl
+D       models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl
+D       models/lnd/clm/tools/ncl_scripts/runDepositionRegrid.pl
+D       models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl
+D       models/lnd/clm/tools/ncl_scripts/pftdyntest2raw.ncl
+D       models/lnd/clm/bld/config_files/config_sys_defaults.xml
+D       models/lnd/clm/bld/namelist_files/checkdatmfiles.ncl
+D       models/lnd/clm/bld/namelist_files/datm-build-namelist
+D       models/lnd/clm/bld/namelist_files/checklatsfiles.ncl
+D       models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml
+D       models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml
+
+List all files added and what they do:
+
+	- Added for RTM testing
+A       models/lnd/clm/test/system/user_nl_dirs/rtm/rtmOn/user_nl_rtm
+A       models/lnd/clm/test/system/user_nl_dirs/rtm/rtmOn
+A       models/lnd/clm/test/system/user_nl_dirs/rtm/rtmR01/user_nl_rtm
+A       models/lnd/clm/test/system/user_nl_dirs/rtm/rtmR01
+A       models/lnd/clm/test/system/user_nl_dirs/rtm/rtmOff/user_nl_rtm
+A       models/lnd/clm/test/system/user_nl_dirs/rtm/rtmOff
+A       models/lnd/clm/test/system/user_nl_dirs/rtm
+	- Added from release tags
+A       models/lnd/clm/test/system/yellowstone.interactive
+A       models/lnd/clm/test/system/tests_pretag_yellowstone_nompi
+A       models/lnd/clm/test/system/nl_files/mkprocdata_ne30_to_f19_I2000
+A       models/lnd/clm/test/system/yellowstone.batch
+A       models/lnd/clm/tools/mkprocdata_map/clm4054_ne30g16_I2000.clm2.h0.2000-01_c121107.nc
+A       models/lnd/clm/tools/mkprocdata_map/map_ne30np4_nomask_to_fv1.9x2.5_nomask_aave_da_c121107.nc
+A       models/lnd/clm/tools/mkprocdata_map/mkprocdata_map_functions.bash
+A       models/lnd/clm/tools/mkprocdata_map/src/mkprocdata_map.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/gridmapMod.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/constMod.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/Makefile.common
+A       models/lnd/clm/tools/mkprocdata_map/src/fmain.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/shr_file_mod.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/nanMod.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/Mkdepends
+A       models/lnd/clm/tools/mkprocdata_map/src/Srcfiles
+A       models/lnd/clm/tools/mkprocdata_map/src/Filepath
+A       models/lnd/clm/tools/mkprocdata_map/src/Makefile
+A       models/lnd/clm/tools/mkprocdata_map/src/fileutils.F90
+A       models/lnd/clm/tools/mkprocdata_map/src/shr_kind_mod.F90
+A       models/lnd/clm/tools/mkprocdata_map/src
+A       models/lnd/clm/tools/mkprocdata_map/mkprocdata_map_in
+A       models/lnd/clm/tools/mkprocdata_map/mkprocdata_map_all
+A       models/lnd/clm/tools/mkprocdata_map/mkprocdata_map_wrap
+A       models/lnd/clm/tools/mkprocdata_map/clm4054_f19g16_I2000.clm2.h0.2000-01_c121107.nc
+A       models/lnd/clm/tools/mkprocdata_map/README
+A       models/lnd/clm/bld/config_query
+A       models/lnd/clm/doc/UsersGuide/modelnl/xmldef2html_compsets
+A       models/lnd/clm/doc/UsersGuide/modelnl/showinfo.js
+A       models/lnd/clm/doc/UsersGuide/modelnl/index.cpp
+A       models/lnd/clm/doc/UsersGuide/modelnl/Makefile
+A       models/lnd/clm/doc/UsersGuide/modelnl
+
+List all existing files that have been modified, and describe the changes:
+
+ 	- put back qflx_snomelt for consistency with older models.  clm4_0_55 mods to the snow
+	  balance check otherwise only effect the diagnostic fields errh2osno, snow_source and snow_sinks
+M       models/lnd/clm/src/main/histFldsMod.F90
+ 	- modified for RTM testing
+M       config_files/config_CLMtestCompsets.xml
+M       bluefire.batch
+	- modified during release tag modification
+M       models/lnd/clm/test/system/tests_posttag_lynx_nompi
+M       models/lnd/clm/test/system/mirage.interactive
+M       models/lnd/clm/test/system/test_system
+M       models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+M       models/lnd/clm/test/system/config_files/config_CLMtestCompsets.xml
+M       models/lnd/clm/test/system/config_files/README
+M       models/lnd/clm/test/system/README.testnames
+M       models/lnd/clm/test/system/tests_posttag_yong
+M       models/lnd/clm/test/system/TCBtools.sh
+M       models/lnd/clm/test/system/test_driver.sh
+M       models/lnd/clm/test/system/lynx.interactive
+M       models/lnd/clm/test/system/shortlist.interactive
+M       models/lnd/clm/test/system/TSMscript_tools.sh
+M       models/lnd/clm/test/system/tests_posttag_mirage
+M       models/lnd/clm/test/system/gen_test_table.sh
+M       models/lnd/clm/test/system/input_tests_master
+M       models/lnd/clm/test/system/README
+M       models/lnd/clm/test/system/tests_posttag_nompi_regression
+M       models/lnd/clm/test/system/bluefire.interactive
+M       models/lnd/clm/tools/mkmapdata/mkmapdata.sh
+M       models/lnd/clm/tools/ncl_scripts
+M       models/lnd/clm/tools/ncl_scripts/README
+M       models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl
+M       models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl
+M       models/lnd/clm/tools/interpinic
+M       models/lnd/clm/tools/mksurfdata_map/src
+M       models/lnd/clm/tools/mksurfdata_map/src/mkncdio.F90
+M       models/lnd/clm/tools/mksurfdata_map/src/mkutilsMod.F90
+M       models/lnd/clm/tools/mksurfdata_map/src/mkdomainMod.F90
+M       models/lnd/clm/tools/mksurfdata_map/src/mksurfdat.F90
+M       models/lnd/clm/tools/mksurfdata_map/src/mkgridmapMod.F90
+M       models/lnd/clm/tools/mksurfdata_map/mksurfdata_map.namelist
+M       models/lnd/clm/tools/mksurfdata_map/mksurfdata.pl
+M       models/lnd/clm/tools/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt
+M       models/lnd/clm/bld
+M       models/lnd/clm/bld/configure
+M       models/lnd/clm/bld/queryDefaultNamelist.pl
+M       models/lnd/clm/bld/user_nl_clm
+M       models/lnd/clm/bld/config_files/config_definition.xsl
+M       models/lnd/clm/bld/config_files/config_definition.xml
+M       models/lnd/clm/bld/listDefaultNamelist.pl
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/build-namelist
+M       models/lnd/clm/bld/clm.cpl7.template
+M       models/lnd/clm/bld/clm.buildnml.csh
+M       models/lnd/clm/bld/README
+M       models/lnd/clm/bld/namelist_files/namelist_definition.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+M       models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+M       models/lnd/clm/bld/namelist_files/use_cases/glacierMEC_pd.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml
+M       models/lnd/clm/doc/UsersGuide/clm_ug.xml
+M       models/lnd/clm/doc/UsersGuide/appendix.xml
+M       models/lnd/clm/doc/UsersGuide/ptclm.xml
+M       models/lnd/clm/doc/Quickstart.userdatasets
+M       models/lnd/clm/doc/IMPORTANT_NOTES
+M       models/lnd/clm/doc/Quickstart.GUIDE
+M       models/lnd/clm/doc/ChangeLog
+M       models/lnd/clm/doc/CodeReference/Filepath
+M       models/lnd/clm/doc/KnownLimitations
+M       models/lnd/clm/doc/ChangeSum
+M       models/lnd/clm/doc/KnownBugs
+M       models/lnd/clm/doc/README
+M       models/lnd/clm/src/biogeochem/DryDepVelocity.F90
+M       ChangeLog
+M       ChangeSum
+M       READM
+
+Machines testing ran on: (in progress)
+
+  build-namelist unit tester:   yes
+
+		- OK.  All FAILs (~78 of them) should pass during the next round.
+
+  CESM test lists:
+
+    bluefire/CESM:              yes
+
+    -Fail due to throuput comparison problems:
+
+		FAIL  ERB.ne30_g16.I_1948-2004.bluefire_ibm.GC.164220.tputcomp.clm4_0_56 
+		FAIL  ERS_Lm3.1x1_vancouverCAN.I1PT.bluefire_ibm.GC.164220.tputcomp.clm4_0_56 
+
+	 -Fail due to new and correct rdirc file.  diffs in r2x_Forr_roff & r2x_Forr_ioff
+	   These should pass next time around:
+
+		FAIL  ERS_D.f45_g37.I.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  NCK.T31_g37.I.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  PET_PT.f45_g37.I1850.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERS_E.T31_g37.I1850.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERI.T31_g37.IG1850.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERB.ne30_g16.I_1948-2004.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERH_D.T31_g37.I1850CN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  SMS.T31_g37.IG4804.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  SMS.1x1_mexicocityMEX.I1PT.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERS_Lm3.1x1_vancouverCAN.I1PT.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERS_D.f19_g16.IGRCP26CN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERS_Lm3.f19_g16.IGRCP60CN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  PET_PT.f10_f10.I20TRCN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  SMS.f10_f10.IRCP45CN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56 
+		FAIL  ERS_D.f19_g16.IRCP85CN.bluefire_ibm.GC.164220.compare_hist.clm4_0_56
+
+    bluefire/CESM/allIcompsets: yes
+
+		Error in SBN script handling in generate of namelist files so all compare tests are BFAILs.
+
+    lynx/CESM:                  no
+
+  bluefire/PTCLM:               no
+
+  test_system testing:
+
+    bluefire batch:             yes
+
+      4 xFAIL.  The rest that fail now, but should pass the next time around.
+	 
+	 - Fail due to new and correct rdirc file.  diffs in r2x_Forr_roff & r2x_Forr_ioff
+	   These should pass next time around:
+
+		FAIL  ERS_Ld211.f10_f10.ICNADSPIN.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+		FAIL  ERS_Ln48_D_P64x16.ne30_g16.ICN.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+		FAIL  PET_D_P1x64.ne30_g16.ICN.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+		FAIL  ERS_Ld211.f10_f10.I_2000_VOC_CN.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+
+	 - Fail due to throughput comparison
+
+		FAIL  ERS_Ld211.f10_f10.ICNADSPIN.bluefire_ibm.GC.164759.tputcomp.clm4_0_56 
+		FAIL  ERS_Ld211_P192x2.f19_g16.I_2000_CNDV_CROP.bluefire_ibm.GC.164759.tputcomp.clm4_0_56 
+
+	 - Will pass next time, these tests just introduced
+
+		BFAIL ERS.f19_g16.I_2000_CN_rtmR01.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+		BFAIL ERS.f19_g16.I_2000_CN_rtmOff.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+		BFAIL ERS.f19_g16.I_2000_CN_rtmOn.bluefire_ibm.GC.164759.compare_hist.clm4_0_56 
+
+    bluefire interactive:       yes
+
+		- xFAIL or new tests that will pass next time (missing baselines):
+
+		BFAIL ERS_D_Mmpi-serial.CLM_USRDAT.IalaskaCN.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_D_Mmpi-serial.CLM_USRDAT.I_2000_1PTFRC_US-UMB.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_P1x64_Mmpi-serial.f45_g37.I_1850_SPINUP_3HrWx_CN.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_Ld211_Mmpi-serial.1x1_camdenNJ.I_2000_VOC.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_Ly3_Mmpi-serial.1x1_brazil.I_2000.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_D_P1x25_Mmpi-serial.5x5_amazon.I_2000.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_D_Mmpi-serial.1x1_asphaltjungleNJ.I_2000_VOC.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_CN.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_Ln48_D_P1x64_Mmpi-serial.f19_g16.I_2000_GLCMECPD.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_Ly3_Mmpi-serial.1x1_brazil.I_2000_CNDV.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+		BFAIL ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_VOC_SNCRFRC_CN.bluefire_ibm.GC.164744.compare_hist.clm4_0_56 
+
+    lynx/pgi batch:             yes
+
+   - xFAIL or will pass next time (new rdirc file effecting r2x_Forr_roff & r2x_Forr_ioff)
+
+		FAIL  ERS_Ln48_D.f45_g37.I_2000_VOC.lynx_pgi.GC.170117.compare_hist.clm4_0_56 
+		FAIL  ERS_Ln48_D.f10_f10.I_2000_CN.lynx_pgi.GC.170117.compare_hist.clm4_0_56 
+
+    lynx/pgi interactive:       yes
+
+		- OK except for new test that will pass next time (missing baselines):
+
+		BFAIL SMS_RLA_Mmpi-serial.f45_f45.I.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+		BFAIL SMS_Mmpi-serial.CLM_USRDAT.I_2000_1PTFRC_US-UMB.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+		BFAIL ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+		BFAIL ERS_Ln48_D_P1x12_Mmpi-serial.f10_f10.ICNCROP.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+		BFAIL ERS_Ld211_Mmpi-serial.1x1_camdenNJ.I_2000_VOC.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+		BFAIL SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PT.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+		BFAIL ERS_Mmpi-serial.1x1_mexicocityMEX.I1PT.lynx_pgi.GC.170039.compare_hist.clm4_0_56 
+
+    lyn/intel mirage testlist:  yes
+
+		- OK except for new tests will pass next time (missing baselines):
+
+		BFAIL ERS_Mmpi-serial.1x1_brazil.I_2000.lynx_intel.GC.095009.compare_hist.clm4_0_56 
+		BFAIL ERI_D_Mmpi-serial.1x1_camdenNJ.I_2000_VOC.lynx_intel.GC.095009.compare_hist.clm4_0_56 
+		BFAIL ERS_D_Mmpi-serial.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel.GC.095009.compare_hist.clm4_0_56 
+		BFAIL ERS_Ln48_D_P1x12_Mmpi-serial.f10_f10.I_2000_CN.lynx_intel.GC.095009.compare_hist.clm4_0_56 
+
+  test_driver.sh tools testing:
+
+    bluefire interactive:       yes
+
+		test 001 fails due to a bug in mkprocdata_map_wrap 
+		test 002 fails due to 001
+		test 008 will pass next time
+
+    lynx interactive:           no
+
+CLM tag used for the baseline comparison tests if applicable:
+
+Changes answers relative to baseline:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: modification to default value for effvel in RtmMod.F90
+	   changes the values of r2x_Forr_roff & r2x_Forr_ioff.  This causes cprnc to fail.
+		This should pass in the next round and matches the value found in CLM4.5.
+
+		-    real(r8),parameter :: effvel(nt_rtm) = 0.7_r8   ! downstream velocity (m/s)
+		+    real(r8),parameter :: effvel(nt_rtm) = 1.0_r8   ! downstream velocity (m/s)
+
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+		
+		with flooding on and new rdirc file, climate may be different.
+		with flooding off we have b4b
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_56
 Originator(s):  sacks (Sacks Bill 303-497-1762 CGD)
 Date: Tue Nov 27 14:12:42 MST 2012
@@ -174,7 +696,7 @@ following should be filled in:
 ===============================================================
 Tag name:  clm4_0_55
 Originator(s):  muszala (Muszala Stefan 303-497-1320 CGD)
-Date: Wed Nov 14 11:54:18 MST 2012
+Date: Thu Nov 15 10:17:23 MST 2012
 One-line Summary: bring in flooding capability
 
 Purpose of changes:

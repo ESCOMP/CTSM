@@ -33,8 +33,6 @@ sub read_cfg_file
     #
     # Make sure variables are set to valid values
     #
-    if ( $cfg->get('use_mpiserial') eq "" ) { $config{'use_mpiserial'} = 0; }
-    if ( $cfg->get('smp')           eq "" ) { $config{'smp'}           = 0; }
     foreach my $key ( keys( %config ) ) {
        if ( $cfg->is_valid_name( $key ) ) {
           $cfg->set( $key, $config{$key} );

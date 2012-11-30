@@ -180,7 +180,9 @@ EOF
   my %inputopts;
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition.xml";
   my $datmblddir             = "$cfgdir/../../../../models/atm/datm/bld";
+  my $drvblddir              = "$cfgdir/../../../../models/drv/bld";
   my @nl_definition_files    = ( "$datmblddir/namelist_files/namelist_definition_datm.xml",
+                                 "$drvblddir/namelist_files/namelist_definition_drv.xml",
                                  "$cfgdir/namelist_files/namelist_definition.xml" 
                                );
   $inputopts{nldef_files}    = \@nl_definition_files;
@@ -245,8 +247,7 @@ EOF
   } else {
      my @files = ( "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_clm_tools.xml", 
-                   "$cfgdir/namelist_files/namelist_defaults_drv.xml",
-                   "$cfgdir/namelist_files/namelist_defaults_datm.xml",
+                   "$drvblddir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
                    "$datmblddir/namelist_files/namelist_defaults_datm.xml",
                  );

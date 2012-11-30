@@ -27,10 +27,4 @@
 <stream_year_last_ndep  bgc="cndv" >2100</stream_year_last_ndep>
 <model_year_align_ndep  bgc="cndv" >1850</model_year_align_ndep>
 
-<!-- Settings for datm and driver, for stand-alone testing -->
-<datm_presaero       mode="clm_stndln" >rcp6</datm_presaero>
-<orb_iyear           mode="clm_stndln" >1990</orb_iyear>
-<datm_cycle_beg_year mode="clm_stndln" >1972</datm_cycle_beg_year>
-<datm_cycle_end_year mode="clm_stndln" >2004</datm_cycle_end_year>
-
 </namelist_defaults>

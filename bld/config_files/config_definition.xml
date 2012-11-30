@@ -34,16 +34,10 @@ Toggle to turn on the prognostic crop model
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
 </entry>
-<entry id="mct_dir" value="" category="standalone_test">
-Path to MCT to either build MCT or use pre-built MCT
-</entry>
-<entry id="pio_dir" value="" category="standalone_test">
-Path to PIO to either build PIO or use pre-built PIO
-</entry>
-<entry id="comp_intf" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT"
+<entry id="comp_intf" valid_values="ESMF,MCT" value="MCT"
 category="directories">
 Component framework interface to use 
-(Model Coupling Toolkit, or Earth System Modeling Framework or variable set at build-time)
+(Model Coupling Toolkit, or Earth System Modeling Framework)
 </entry>
 <entry id="usr_src" value="" list="1" category="directories">
 User source directories to prepend to the filepath.  Multiple directories
@@ -55,53 +49,15 @@ User specified CPP defines to append to Makefile defaults.
 Note: It's recommended to use configure options to set standard CPP values rather
 than defining them here.
 </entry>
-<entry id="debug" valid_values="0,1" value="0" category="standalone_test">
-Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
 <entry id="c13" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
 (C13 is EXPERIMENTAL NOT SUPPORTED!)
-</entry>
-<entry id="mach" value="bluefire" category="mach_options">
-CESM build machine name (set by create_newcase)
-</entry>
-<entry id="comp" value="ibm" category="mach_options">
-CESM build compiler (set by create_newcase)
-</entry>
-<entry id="use_mpiserial" valid_values="0,1" value="" category="mach_options">
-Switch to enable or disable building with a serial-only version of MPI: 0=off, 1=on.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="smp" valid_values="0,1" value="" category="mach_options">
-Switch to enable or disable building SMP version (Open-MP) of CLM: 0=off, 1=on.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="nc_path" value="" category="standalone_test">
-Directory containing NetCDF include and library directories and files.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="slibs" value="" category="mach_options">
-System libraries to add at link step (only needed for generic machines)
 </entry>
 
 <entry id="maxpft"  value="" 
 valid_values="17,21" category="physics">
 Maximum number of plant function types (PFT)  per gridcell
-(Setting maxpft to anything other than 17 (or 21 for CROP) is EXPERIMENTAL NOT SUPPORTED!)
-</entry>
-<entry id="mpi_path" value="" category="standalone_test">
-Directory containing MPI include and library directories.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
-</entry>
-<entry id="mode" valid_values="clm_stndln,ext_cesm" value="ext_cesm"
-category="mach_options">
-CLM coupling mode, ext_cesm is for use with cpl7 scripts, 
-clm_stndln is ONLY for CLM stand-alone testing scripts.
-</entry>
-<entry id="cesm_bld" valid_values="on,off" value="off" category="standalone_test">
-Toggle to build using CESM makefiles or not.
-ONLY used for CLM stand-alone testing scripts -- NOT used with standard cesm scripts
+(Either 17 for a standard vegetated case or 21 for prognostic CROP)
 </entry>
 <entry id="pergro" valid_values="on,off" value="off" category="physics">
 Toggle to turn on perturbation error growth test
@@ -111,17 +67,6 @@ Toggle to make wild-fires inactive for biogeochemistry=CN mode
 </entry>
 <entry id="noio" valid_values="on,off" value="off" category="physics">
 Toggle to turn all history output completely OFF (possibly used for testing)
-</entry>
-<entry id="ninst_lnd" value="" category="physics">
-Number of instances of CLM to run at the same time (for data assimilation ensemble work)
-</entry>
-<entry id="target_os" value="" category="mach_options">
-OS for which CLM is being built.  The value is the name returned by the "uname -s"
-command on the target platform.  This parameter is to allow cross-compilation
-(linux,aix,darwin,bgp etc.).
-</entry>
-<entry id="ninst_atm" value="" category="standalone_test">
-Number of instances of datm to run at the same time (for data assimilation ensemble work)
 </entry>
 
 </config_definition>

@@ -5,17 +5,12 @@
       <bluefire>
          <IBM>
             <compare>
-               <entry testId="287" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="289" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="292" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="294" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="307" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
-               <entry testId="309" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <!--N/A.  All current FAILs from relase tags should pass next round   -->
             </compare>
             <generate>
-               <entry testId="184" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="187" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="196" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="180" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="183" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="192" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </IBM>
       </bluefire>
@@ -89,6 +84,10 @@
    <test_system_interactive> 
       <bluefire>
          <IBM>
+              <entry testId="ERS_D_P1x64_Mmpi-serial.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="RUN">Initial simulation fails</entry>
+              <entry testId="ERS_Ln48_D_P1x64_Mmpi-serial.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
+              <entry testId="ERS_Ln48_D_P1x64_Mmpi-serial.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different</entry>
+              <entry testId="PET_D_P1x64_Mmpi-serial.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
               <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
               <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
               <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
@@ -109,6 +108,8 @@
          <IBM>
               <entry testId="ERS_D_P96x32.T62_g37.I_2000"             failType="SFAIL">T62 not working</entry>
               <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"      failType="RUN">Dies early with a floating point trap</entry>
+              <!-- SPM work out a way to get xFail for a specific compare test -->
+              <entry testId="ERS_Ld211_P192x2.f19_g16.I_2000_CNDV_CROP.*.compare_hist"      failType="RUN">Baseline comp. test will always fail</entry>
               <entry testId="ERS_Ln48_D.f09_g16.ICNEXSPIN"            failType="CFAIL">build error?</entry>
          </IBM>
       </bluefire>

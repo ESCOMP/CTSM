@@ -1,4 +1,4 @@
-models/lnd/clm/tools/ncl_scripts					Mar/13/2008
+models/lnd/clm/tools/ncl_scripts					Nov/06/2012
 
 CLM NCL script tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.
@@ -15,24 +15,11 @@ Master perl scripts that call the other ncl scripts:
 
 getregional_datasets.pl ----- Extract out regional datasets from global ones and put files in a location that 
                               can be used by build-namelist.
-runDepositionRegrid.pl ------ Runs the aerosol and nitrogen deposition regrid scripts for all valid resolutions
-                              and simulation years.
 cprnc.pl -------------------- Compare two NetCDF files to see if they are same or different.
 
 NCL Scripts available:
 
 getregional_datasets.ncl ---- NCL script to extract out regional datasets.
 getco2_historical.ncl ------- Get historical CO2 to use for input in datm8 streams
-pftdyntest2raw.ncl ---------- Convert pftdyn test datasets to rawdata format so can be 
-                              used to create future datasets.
-ndeplintInterp.ncl ---------- Create transient ndepdyn dataset from decadal average output
-                              from CAM and convert the units to whats needed by CLM.
-aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different 
-ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a different
-			      resolution.  Uses bi-linear interpolation.
 cprnc.ncl ------------------- Compare two NetCDF files to see if they are same or different.
 
-pergroPlot.ncl -------------- Plots up ASCII files with RMS differences in them (from
-                              one to five different files).
-			      (Note: There are also sample RMS error perturbation growth
-			      files, called RMS*.dat, that can be used with this)

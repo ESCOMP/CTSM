@@ -35,6 +35,7 @@ module mkncdio
   public :: nf_close
   public :: nf_write
   public :: nf_sync
+  public :: nf_inq_attlen
   public :: nf_inq_dimlen
   public :: nf_inq_dimname
   public :: nf_inq_varid

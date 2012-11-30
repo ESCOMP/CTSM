@@ -20,7 +20,7 @@
     </ul>
     <h3>Miscellaneous items include:</h3>
     <ol>
-       <li>Biogeochemistry (BGC) type (none, CN, etc.)</li>
+       <li>Biogeochemistry (BGC) type (none, CN, CNDV)</li>
        <li>Initial condition date (ymd - year month day)</li>
        <li>Initial condition time of day (tod) (sec)</li>
        <li>Maximum number of Plant Function Types (maxpft)</li>
@@ -32,7 +32,7 @@
        <li>Data model forcing source (forcing)</li>
        <li>Representative concentration pathway for future scenarios (rcp)</li>
        <li>New good wood harvest (newwoodharv)</li>
-       <li>Accelerated Decomposition spin-up mode (ad_spin-up)</li>
+       <li>CN Spin-up mode (spinup)</li>
        <li>Type of file (type)</li>
        <li>Grid mapping to (to_hgrid)</li>
        <li>Land-mask mapping to (to_lmask)</li>

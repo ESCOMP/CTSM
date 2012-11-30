@@ -58,11 +58,13 @@ EOF
 require queryDefaultXML;
 
 # Defaults
+my $datmblddir  = "$cfgdir/../../../../models/atm/datm/bld";
+my $drvblddir   = "$cfgdir/../../../../models/drv/bld";
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml",
-                          "$cfgdir/namelist_files/namelist_defaults_drv.xml",
-                          "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+                          "$drvblddir/namelist_files/namelist_defaults_drv.xml",
+                          "$datmblddir/namelist_files/namelist_defaults_datm.xml" );
 my $list = "clm.input_data_list";
 my %list_of_all_files;
 
@@ -347,25 +349,6 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
                  $inputopts{'printing'} = 0;
               }
            }
-        }
-        #
-        # Now also do the datm namelist (only for mask and resolution)
-        #
-        my $nml = "shr_strdata_nml";
-        print "nml = $nml\n" if $printing;
-        $inputopts{'namelist'} = $nml;
-        &GetListofNeededFiles( \%inputopts, \%settings, \%files );
-        #
-        # And the datm internal namelist (mask, resolution and datm_presaero)
-        #
-        my $nml = "datm_internal";
-        print "nml = $nml\n" if $printing;
-        my @pres = $definition->get_valid_values( "datm_presaero", 'noquotes'=>1 );
-        print "datm_presaero=@pres\n" if $printing;
-        $inputopts{'namelist'} = $nml;
-        foreach my $pres ( @pres ) {
-           $settings{'datm_presaero'} = $pres;
-           &GetListofNeededFiles( \%inputopts, \%settings, \%files );
         }
      }
   }

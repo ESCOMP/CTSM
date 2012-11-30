@@ -1,6 +1,0 @@
--mode clm_stndln
--nouse_mpiserial -smp
--spinup exit
--debug
--bgc cn
--s

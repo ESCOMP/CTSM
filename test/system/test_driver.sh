@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on mirage, edinburgh, bluefire (will submit itself to batch): 
+# usage on yellowstone, mirage, edinburgh, bluefire (will submit itself to batch): 
 #
 # ./test_driver.sh
 #
@@ -34,6 +34,61 @@ cur_time=`date '+%H:%M:%S'`
 
 hostname=`hostname`
 case $hostname in
+
+    ##yellowstone
+    ys* )
+    submit_script="test_driver_yellowstone${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+interactive="YES"
+input_file="tests_pretag_yellowstone_nompi"
+c_threads=16
+
+source /glade/apps/opt/lmod/lmod/init/sh
+
+module purge
+module load ncarenv/1.0
+module load ncarbinlibs/1.0
+
+module load intel/12.1.5
+module load ncarcompilers/1.0
+module load netcdf/4.2 
+module load pnetcdf/1.3.0
+
+module load nco
+module load ncl
+
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=\$c_threads
+fi
+
+export CESM_MACH="yellowstone"
+export CESM_COMP="intel"
+
+export NETCDF_DIR=\$NETCDF
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
+export MAKE_CMD="gmake -j "
+export CFG_STRING=""
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+export MACH_WORKSPACE="/glade/scratch"
+CPRNC_EXE="$CESMDATAROOT/tools/cprnc/cprnc"
+dataroot="$CESMDATAROOT"
+export TOOLSLIBS=""
+export TOOLS_CONF_STRING=""
+
+
+echo_arg=""
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
 
     ##bluefire
     be* )
@@ -587,7 +642,7 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
     * )
-    echo "Only setup to work on: bluefire, mirage, lynx, jaguarpf, edinburgh, and yong"
+    echo "Only setup to work on: yellowstone, bluefire, mirage, lynx, jaguarpf, edinburgh, and yong"
     exit
  
 
@@ -892,7 +947,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluefire, edinburgh, lynx, mirage: "
+    echo "usage on yellowstone, bluefire, edinburgh, lynx, mirage: "
     echo "./test_driver.sh"
     echo ""
     echo "usage on jaguarpf: (compile interactively before submitting)"

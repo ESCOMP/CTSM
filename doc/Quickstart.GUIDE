@@ -13,54 +13,60 @@ Process:
 
    cd scripts
 
-   ./create_newcase -case <testcase> -mach bluefire -res f19_g16 -compset I4804 
+   ./create_newcase -case <testcase> -mach bluefire_ibm -res f19_g16 -compset I4804 
    (./create_newcase -help -- to get help on the script)
 TRUE
 
-   # Configure the case
+   # Setup the case
 
    cd <testcase>
-   $EDITOR env_run.xml env_conf.xml   # If you need to make changes (or use the xmlchange script)
-   ./configure -case
-   (./configure -help -- to get help on the script)
+   ./xmlchange id1=val1,id2=val2  # to make changes to any settings in the env_*.xml files
+   ./cesm_setup
+   (./cesm_setup -help -- to get help on the script, this creates the ./<testcase>.run script)
 
-   # Make any changes to the namelist
+   # Add any namelist changes to the user_nl_* files
 
-   $EDITOR Buildconf/clm.buildnml_prestage.csh
+   $EDITOR user_nl_*
 
    # Compile the code
 
-   ./<testcase>.bluefire.build
+   ./<testcase>.build
 
    # Submit the run
 
-   ./<testcase>.bluefire.submit
+   ./<testcase>.submit
 
 Information on Compsets:
 
      "I" compsets are the ones with clm and datm7 without ice and ocean.
-     The latest "I" compsets use the new CLM_QIAN data with solar following
+     Most of the "I" compsets use the CLM_QIAN data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
      the date). Some of the I compsets are:
 
      Name		  (short-name): Description
      --------------------------------------------------------------------------
-     I_2000           (I):         CLM to simulate year=2000
-     I_1850           (I1850):     CLM to simulate year=1850
-     I_1948_2004      (I4804):     CLM running with atm data over 1948-2004
-     I_1850-2000      (I8520):     CLM with transient PFT over 1850-2000
-     I_2000_CN        (ICN):       CLM with CN on to simulate year=2000
-     I_1850_CN        (I1850CN):   CLM with CN on to simulate year=1850
-     I_1948-2004_CN   (I4804CN):   CLM with CN on running with atm data over 1948-2004 
-     I_1850-2000_CN   (I8520CN):   CLM with CN on with transient PFT over 1850-2000
+     I_2000                 (I):             CLM to simulate year=2000
+     I_2000_1PTFRC          (I1PT):          CLM to simulate year=2000 with single-point forcing
+     I_2000_CN              (ICN):           CLM to simulate year=2000 with Carbon-Nitrogen BGC model (CN)
+     I_1850                 (I1850):         CLM to simulate year=1850
+     I_1850_CN              (I1850CN):       CLM to simulate year=1850 with Carbon-Nitrogen BGC model (CN)
+     I_1850_SPINUP_3HrWx_CN (I1850SPINUPCN): CLM to simulate year=1850 with MOAR forcing to spinup Carbon-Nitrogen BGC model (CN)
+     I_1948_2004            (I4804):         CLM running with atm data over 1948-2004
+     I_1850-2000            (I8520):         CLM with transient PFT over 1850-2000
+     I_1948-2004_CN         (I4804CN):       CLM with CN on running with atm data over 1948-2004 
+     I_1850-2000_CN         (I20TRCN):       CLM with CN on with transient PFT over 1850-2000
+     I_RCP2.6_CN            (IRCP26CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=2.6 scenario
+     I_RCP4.5_CN            (IRCP45CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=4.5 scenario
+     I_RCP6.0_CN            (IRCP60CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=6.0 scenario
+     I_RCP8.5_CN            (IRCP85CN):      CLM with CN on with transient PFT over 1850-2100 for RCP=8.5 scenario
 
 Automatically resubmitting jobs:
 
    After doing a short simulation that you believe is correct
 
-   ./xmlchange -file env_run.xml -id CONTINUE_RUN -val TRUE
+   ./xmlchange CONTINUE_RUN=TRUE
 
    # Change RESUBMIT to number greater than 0, and CONTINUE_RUN to TRUE...
 
-   ./<testcase>.bluefire.submit
+   ./<testcase>.submit

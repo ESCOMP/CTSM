@@ -214,7 +214,7 @@ else
     GRIDFILE=`$QUERYFIL`
     echo "Using default scrip grid file: $GRIDFILE" 
 fi
-if [ "$type" = "global" ] && [ `echo "$res" | grep -c "1x1_"` ]; then
+if [ "$type" = "global" ] && [ `echo "$res" | grep -c "1x1_"` = 1 ]; then
    echo "This is a regional resolution and yet it is being run as global, set type with '-t' option\n";
    exit 1
 fi

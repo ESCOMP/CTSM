@@ -10,7 +10,7 @@ namelist appropriately. &ptclm; has a simple ASCII text file for storing basic
 information for your sites. We also have complete lists for AmeriFlux and Fluxnet-Canada
 sites, although we only have the meteorology data for one site. For other sites you
 will need to obtain the meteorology data and translate it to a format that the &cesm;
-&datm; model can use. But, even without meteorology data &ptclm; is useful to setup 
+datm model can use. But, even without meteorology data &ptclm; is useful to setup 
 datasets to run with standard &CLMQIAN; data.
 </para>
 
@@ -419,7 +419,6 @@ This option ensures that a cold-start will be done with arbitrary initial condit
 This option enables the accelerated decomposition mode when a CN compset is used. It
 also sets the run-length as given in the example for running exit spinup in 
 <xref linkend="CLMSP_SPINUP"></xref>.
-<emphasis>SEE WARNING BELOW.</emphasis>
 </para>
 </listitem>
 </varlistentry>
@@ -430,7 +429,6 @@ also sets the run-length as given in the example for running exit spinup in
 This option enables the exit spinup mode when a CN compset is used. It also sets the
 run-length to a year just as given in the example for running exit spinup in 
 <xref linkend="CLMSP_SPINUP"></xref>.
-<emphasis>SEE WARNING BELOW.</emphasis>
 </para>
 </listitem>
 </varlistentry>
@@ -440,7 +438,6 @@ run-length to a year just as given in the example for running exit spinup in
 <para>
 This option sets the run length as given in the example for a final spinup in
 <xref linkend="final_CN_spinup"></xref>. This option can be used for any compset.
-<emphasis>SEE WARNING BELOW.</emphasis>
 <caution>
 <para>
 There is a bug in the final_spinup mode for setting the run length. Because of the
@@ -461,15 +458,6 @@ This option sets the initial condition file to startup the simulation from.
 </varlistentry>
 
 </variablelist>
-<warning>
-<para>
-<emphasis>THERE IS A PROBLEM WITH RUNNING SPINUP SIMULATIONS FOR THE CLM1PT 
-MODE WHERE THE ATM FORCING WILL BE HELD CONSTANT. This will result in useless
-results as all atmosphere forcing fields will be held constant at the last value.
-See bug 1377 in the &KnownBugs; file on how to fix this problem.
-</emphasis>
-</para>
-</warning>
 
 </para>
 
@@ -827,8 +815,7 @@ site called: <filename>US-Ha1_dynpftdata.txt</filename>. The file has a one-line
 header with the information that the file has, and then one-line for each year
 with a transition. The header line is as follows:
 <screen width="99">
-trans_year,pft_f1,pft_c1,pft_f2,pft_c2,pft_f3,pft_c3,pft_f4,pft_c4,pft_f5,pft_c5,har_vh1,har_vh2, \
-har_sh1,har_sh2,har_sh3,graze,hold_harv,hold_graze
+trans_year,pft_f1,pft_c1,pft_f2,pft_c2,pft_f3,pft_c3,pft_f4,pft_c4,pft_f5,pft_c5,har_vh1,har_vh2,har_sh1,har_sh2,har_sh3,graze,hold_harv,hold_graze
 </screen>
 This file only requires a line for each year where a transition or harvest happens. As
 in the "pftdata" file above "pft_f" refers to the fraction and "pft_c" refers to the 
@@ -882,10 +869,7 @@ The units of Temperature need to be converted from "Celsius" to "Kelvin" (use th
 value in SHR_CONST_TKFRZ in the file
 <filename>models/csm_share/shr/shr_const.F90</filename> of <literal>273.15</literal>. 
 The units of Pressure also need to be converted from "kPa" to "Pa". LATIXY, and 
-LONGXY should also be set to the latitude and longitude of the site. With data hourly
-or half-hourly the default settings will be fine. But, if the temporal frequency is
-less than that see <xref linkend="own_force_streams"></xref> for an example of how
-to change it.
+LONGXY should also be set to the latitude and longitude of the site.
 </para>
 </sect2>
 <sect2 id="PTCLMUSHa1">
@@ -932,9 +916,9 @@ global dataset.
 > ./xmlchange -file env_conf.xml -id CLM_NAMELIST_OPTS -val \
 # Similarly for Nitrogen deposition data we cycle over: 1991 to 2006
 "model_year_align_ndep=1991,stream_year_first_ndep=1991,stream_year_last_ndep=2006"
-# Now configure the case, and we'll edit the &datm; namelist for prescribed aerosols
+# Now configure the case, and we'll edit the datm namelist for prescribed aerosols
 > ./configure -case
-# We also need to change the &datm; to run with aerosols over the 1991-2006 period
+# We also need to change the datm to run with aerosols over the 1991-2006 period
 cat &lt;&lt; EOF &gt; patch.diff
 *** datm.buildnml.csh.orig  2011-06-14 09:28:20.000000000 -0600
 --- datm.buildnml.csh 2011-06-14 09:28:57.000000000 -0600
@@ -956,7 +940,7 @@ cat &lt;&lt; EOF &gt; patch.diff
      mapmask        = 'nomask','nomask'
      mapalgo        = 'nn','nn'
 EOF
-# Apply the above patch to the &datm; build namelist file
+# Apply the above patch to the datm build namelist file
 > patch Buildconf/datm.buildnml.csh patch.diff
 </screen>
 </example>

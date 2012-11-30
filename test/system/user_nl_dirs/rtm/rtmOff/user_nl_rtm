@@ -1,0 +1,3 @@
+&rtm_inparm
+  rtm_mode    = 'NULL'
+/

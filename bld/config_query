@@ -1,0 +1,310 @@
+#!/usr/bin/env perl
+#-----------------------------------------------------------------------------------------------
+#
+# config_query
+#
+# This utility querys CESM config_*.xml files for their contents
+#
+#-----------------------------------------------------------------------------------------------
+
+use strict;
+#use warnings;
+#use diagnostics;
+
+use Cwd;
+use English;
+use Getopt::Long;
+use IO::File;
+use IO::Handle;
+
+(my $ProgName = $0) =~ s!(.*)/!!;      # name of this script
+my $ProgDir = $1;                      # name of directory containing this script -- may be a
+                                       # relative or absolute path, or null if the script is in
+                                       # the user's PATH
+my $cwd = getcwd();                    # current working directory
+my $cfgdir;                            # absolute pathname of directory that contains this script
+if ($ProgDir) { 
+    $cfgdir = absolute_path($ProgDir);
+} else {
+    $cfgdir = $cwd;
+}
+# Defaults
+my %opts = (
+               help=>0,
+               id=>"list",
+               config_file=>"config_grid.xml",
+               silent=>0,
+               justvalue=>0,
+               verbose=>0,
+            );
+
+#-----------------------------------------------------------------------------------------------
+
+sub usage {
+    die <<EOF;
+SYNOPSIS
+     $ProgName entry  [options]
+DESCRIPTION
+     allows user to view a entry  in a CESM config_*.xml file
+REQUIRED INPUT
+     entry     The entry to view (grid, compset, or definition entry)
+OPTIONS
+     User supplied values are denoted in angle brackets (<>).  Any value that contains
+     white-space must be quoted.  Long option names may be supplied with either single
+     or double leading dashes.  A consequence of this is that single letter options may
+     NOT be bundled.
+
+     -cfgfile [or -c]     Configure file to query (default is $opts{'config_file'}).
+     -help [or -h]        Print usage to STDOUT.
+     -id <variable>       Variable ID to view (default opts{'id'}).
+                          If "-id list" is given will list all attributes.
+     -justvalue           Just display the values (NOT key = value).
+     -silent [or -s]      Turns on silent mode - only return the value.
+     -verbose [or -v]     Turn on verbose echoing of what $ProgName is doing.
+
+EXAMPLES
+
+     To view all of the entries for f19_g16 resolution in config_grid.xml
+     
+     $ProgName f19_g16
+
+     To view just the value for a specific entry for the I2000 compset in config_compsets.xml
+
+     $ProgName I -c config_compsets.xml -id DESC -justvalue
+EOF
+}
+
+#-----------------------------------------------------------------------------------------------
+
+if ($#ARGV == -1) {
+    print "ERROR: no arguments sent in -- entry is REQUIRED\n";
+    usage();
+}
+
+#-----------------------------------------------------------------------------------------------
+# Setting autoflush (an IO::Handle method) on STDOUT helps in debugging.  It forces the test
+# descriptions to be printed to STDOUT before the error messages start.
+
+*STDOUT->autoflush();                  
+
+#-----------------------------------------------------------------------------------------------
+# Parse command-line options.
+GetOptions(
+    "h|help"       => \$opts{'help'},
+    "i|id=s"       => \$opts{'id'},
+    "c|cfgfile=s"  => \$opts{'config_file'},
+    "justvalue"    => \$opts{'justvalue'},
+    "s|silent"     => \$opts{'silent'},
+    "v|verbose"    => \$opts{'verbose'},
+)  or usage();
+
+# Give usage message.
+usage() if $opts{'help'};
+
+# Get entry  from anything left over
+my $entry  = shift( @ARGV );
+
+# Check for unparsed arguments
+if (@ARGV) {
+    print "ERROR: unrecognized arguments: @ARGV\n";
+    usage();
+}
+
+# Define 3 print levels:
+# 0 - only issue fatal error messages
+# 1 - only informs what files are created (default)
+# 2 - verbose
+my $print = 1;
+if ($opts{'silent'})  { $print = 0; }
+if ($opts{'verbose'}) { $print = 2; }
+if ($opts{'silent'} && $opts{'verbose'} ) {
+    die "ERROR:: silent and verbose modes can NOT both be set\n";
+}
+my $eol = "\n";
+
+my %cfg = ();           # build configuration
+
+my $scrdir  = absolute_path( "$cfgdir/../../../../scripts" );
+my $plibdir = "$scrdir/ccsm_utils/Tools/perl5lib";
+#-----------------------------------------------------------------------------------------------
+# Make sure we can find required perl modules and configuration files.
+# Look for them in the directory that contains the configure script.
+
+# The XML::Lite module is required to parse the XML configuration files.
+(-f "$plibdir/XML/Lite.pm")  or  die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" in directory $plibdir **
+EOF
+
+if ($print>=2) { print "Setting configuration directory to $cfgdir$eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
+my @dirs = (  "$plibdir", "$scrdir/ccsm_utils/Case.template" );
+unshift @INC, @dirs;
+require XML::Lite;
+
+#-----------------------------------------------------------------------------------------------
+# Names for entries in the different files
+my %root  = ( 'config_grid.xml'=>"config_horiz_grid", 'config_compsets.xml'=>"config_compset", 'config_definition.xml'=>"config_definition" );
+my %entry = ( 'config_grid.xml'=>"horiz_grid",        'config_compsets.xml'=>"compset",        'config_definition.xml'=>"entry"             );
+my %lname = ( 'config_grid.xml'=>"GRID",              'config_compsets.xml'=>"NAME",           'config_definition.xml'=>"id"                );
+my %sname = ( 'config_grid.xml'=>"SHORTNAME",         'config_compsets.xml'=>"SHORTNAME",      'config_definition.xml'=>"sdesc"             );
+
+my $found = 0;
+foreach my $file ( keys(%root) ) {
+   if ( $opts{'config_file'} eq $file ) {
+     $found = 1;
+     last;
+   }
+}
+# Die unless search was successful.
+unless ($found) {
+   die "ERROR:: Invalid config file sent in: $opts{'config_file'}\n";
+}
+
+my $config_file = "$scrdir/ccsm_utils/Case.template/".$opts{'config_file'};
+my $xml = XML::Lite->new( $config_file );
+my $root = $xml->root_element();
+
+# Check for valid root node
+my $name  = $root->get_name();
+$name eq $root{$opts{'config_file'}} or die
+    "file $config_file  is not a $root{$opts{'config_file'}} parameters file\n";
+
+# Read the entry parameters from $config_file.
+my @e = $xml->elements_by_name( $entry{$opts{'config_file'}} );
+my %a = ();
+
+# Search for matching entry.
+$found = 0;
+  ELEMENTS:
+while ( my $e = shift @e ) {
+    my $sname = $sname{$opts{'config_file'}};
+    my $lname = $lname{$opts{'config_file'}};
+    %a = $e->get_attributes();
+    if ( ! defined($a{$lname}) ) { next; }
+    if ( ! defined($a{$sname}) ) { next; }
+    if ( ($entry eq $a{$lname}) || ($entry eq $a{$sname})) {
+        $found = 1;
+        last ELEMENTS;
+    }
+}
+
+# Die unless search was successful.
+unless ($found) {
+   die "ERROR:: no match for $entry{$opts{'config_file'}} entry\n";
+}
+
+if ( $opts{'id'} eq "list" ) {
+  if ( $opts{'justvalue'} ) {
+     die "ERROR:: justvalue does NOT work with the list entry\n";
+  }
+  foreach my $id ( keys(%a) ) {
+     my $value = &expand_env_xml( $a{$id}, \%ENV );
+     print "$id = $value\n";
+  } 
+} else {
+  my $id = $opts{'id'};
+  if ( exists( $a{$id} ) ) {
+     if ( ! $opts{'justvalue'} ) {
+        print "$id = ";
+     }
+     my $value = &expand_env_xml( $a{$id}, \%ENV );
+     print "$value\n";
+  } else {
+     die "ERROR:: ID $id is NOT set for this entry: $entry\n";
+  }
+}
+
+if ($print>=2) { print "$ProgName done.\n"; }
+exit;
+
+#-----------------------------------------------------------------------------------------------
+# FINNISHED ####################################################################################
+#-----------------------------------------------------------------------------------------------
+
+sub absolute_path {
+#
+# Convert a pathname into an absolute pathname, expanding any . or .. characters.
+# Assumes pathnames refer to a local filesystem.
+# Assumes the directory separator is "/".
+#
+  my $path = shift;
+  my $cwd = getcwd();  # current working directory
+  my $abspath;         # resulting absolute pathname
+
+# Strip off any leading or trailing whitespace.  (This pattern won't match if
+# there's embedded whitespace.
+  $path =~ s!^\s*(\S*)\s*$!$1!;
+
+# Convert relative to absolute path.
+
+  if ($path =~ m!^\.$!) {          # path is "."
+      return $cwd;
+  } elsif ($path =~ m!^\./!) {     # path starts with "./"
+      $path =~ s!^\.!$cwd!;
+  } elsif ($path =~ m!^\.\.$!) {   # path is ".."
+      $path = "$cwd/..";
+  } elsif ($path =~ m!^\.\./!) {   # path starts with "../"
+      $path = "$cwd/$path";
+  } elsif ($path =~ m!^[^/]!) {    # path starts with non-slash character
+      $path = "$cwd/$path";
+  }
+
+  my ($dir, @dirs2);
+  my @dirs = split "/", $path, -1;   # The -1 prevents split from stripping trailing nulls
+                                     # This enables correct processing of the input "/".
+
+  # Remove any "" that are not leading.
+  for (my $i=0; $i<=$#dirs; ++$i) {
+      if ($i == 0 or $dirs[$i] ne "") {
+          push @dirs2, $dirs[$i];
+      }
+  }
+  @dirs = ();
+
+  # Remove any "."
+  foreach $dir (@dirs2) {
+      unless ($dir eq ".") {
+          push @dirs, $dir;
+      }
+  }
+  @dirs2 = ();
+
+  # Remove the "subdir/.." parts.
+  foreach $dir (@dirs) {
+    if ( $dir !~ /^\.\.$/ ) {
+        push @dirs2, $dir;
+    } else {
+        pop @dirs2;   # remove previous dir when current dir is ..
+    }
+  }
+  if ($#dirs2 == 0 and $dirs2[0] eq "") { return "/"; }
+  $abspath = join '/', @dirs2;
+  return( $abspath );
+}
+
+#-------------------------------------------------------------------------------
+
+sub expand_env_xml {
+#
+# Recursively expand any env variables in the value string
+#
+    my $value   = shift;
+    my $xmlref  = shift;
+
+    if ($value =~ /\$\{*([\w_]+)(.*)\}*$/) {
+        my $var = $1; 
+        if ( ! exists($$xmlref{$var}) ) {
+           die "ERROR:: Value string has an ENV variable that does NOT exist: $1\n";
+        }
+        # expand the variable out
+        my $subst    = $$xmlref{$var};
+        $value       =~ s/\$\{*${var}\}*/$subst/g;
+        # Expand any other variables in the string
+        if ($value =~ /\$/ ) {
+           $value = expand_env_xml( $value, $xmlref );
+        }
+    }
+    return $value;
+}

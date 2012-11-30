@@ -100,29 +100,4 @@ determine default values for namelists.
 <glc_nec glc_nec="5" >5</glc_nec>
 <glc_nec glc_nec="10">10</glc_nec>
 
-<!-- Whether aerosol comes from datm or clm (none) -->
-<datm_presaero hgrid="1x1_brazil"          sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="1x1_camdenNJ"        sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="1x1_topicAtl"        sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="1x1_asphaltjungleNJ" sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="1x1_vancouverCAN"    sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="1x1_mexicocityMEX"   sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="1x1_urbanc_alpha"    sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero hgrid="5x5_amazon"          sim_year="2000" sim_year_range="constant" >pt1_pt1</datm_presaero>
-<datm_presaero                             sim_year_range="1850-2100" rcp="2.6" >rcp2.6</datm_presaero>
-<datm_presaero                             sim_year_range="1850-2100" rcp="4.5" >rcp4.5</datm_presaero>
-<datm_presaero                             sim_year_range="1850-2100" rcp="6"   >rcp6.0</datm_presaero>
-<datm_presaero                             sim_year_range="1850-2100" rcp="8.5" >rcp8.5</datm_presaero>
-<datm_presaero                             sim_year_range="2000-2100" rcp="2.6" >rcp2.6</datm_presaero>
-<datm_presaero                             sim_year_range="2000-2100" rcp="4.5" >rcp4.5</datm_presaero>
-<datm_presaero                             sim_year_range="2000-2100" rcp="6"   >rcp6.0</datm_presaero>
-<datm_presaero                             sim_year_range="2000-2100" rcp="8.5" >rcp8.5</datm_presaero>
-<datm_presaero                             sim_year_range="1850-2000"           >trans_1850-2000</datm_presaero>
-<datm_presaero                             sim_year_range="1000-1002"           >clim_2000</datm_presaero>
-<datm_presaero                             sim_year_range="1000-1004"           >clim_2000</datm_presaero>
-<datm_presaero sim_year="1850"             sim_year_range="constant"            >clim_1850</datm_presaero>
-<datm_presaero sim_year="2000"             sim_year_range="constant"            >clim_2000</datm_presaero>
-<datm_presaero sim_year="1000"             sim_year_range="constant"            >clim_2000</datm_presaero>
-<datm_presaero                                                                  >none</datm_presaero>
-
 </namelist_defaults>

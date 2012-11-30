@@ -1,5 +1,0 @@
--ignore_ic_date 
--silent 
--drv_case clmrun 
--use_case pergro_pd
--datm_source CLM_QIAN

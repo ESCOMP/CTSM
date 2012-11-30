@@ -1,7 +1,0 @@
-&drv_in
- brnch_retain_casename=.true.
-/
-&clm_inparm
- create_crop_landunit=.true.
- hist_ndens=1,1
-/

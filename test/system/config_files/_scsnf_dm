@@ -1,5 +1,0 @@
--mode clm_stndln
--nouse_mpiserial -nosmp
--debug
--snicar_frc on
--s
