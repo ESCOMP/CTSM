@@ -5,12 +5,12 @@
       <bluefire>
          <IBM>
             <compare>
-               <!--N/A.  All current FAILs from relase tags should pass next round   -->
             </compare>
             <generate>
-               <entry testId="180" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="183" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="192" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="189" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="198" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </IBM>
       </bluefire>
@@ -24,6 +24,17 @@
             </compare>
          </IBM>
       </janus>
+      <yellowstone>
+            <compare>
+            </compare>
+            <generate>
+               <entry testId="134" failType="xFail"> missing datasets for wus12 </entry>
+               <entry testId="137" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="189" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="198" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+            </generate>
+      </yellowstone>
    </namelistTest>
 
    <clmInteractive> 
@@ -101,6 +112,19 @@
          <intel>
          </intel>
       </lynx>
+      <frankfurt>
+         <intel>
+              <entry testId="ERS_Ln48_D_P1x16_Mmpi-serial.f10_f10.ICNCROP"   failType="FAIL">????</entry>
+              <entry testId="ERS_Mmpi-serial.1x1_mexicocityMEX.I1PT"         failType="FAIL">????</entry>
+         </intel>
+      </frankfurt>
+      <yellowstone>
+          <intel>
+              <entry testId="ERS_D_P1x16_Mmpi-serial.f19_g16.I_1850-2000_VOC_SNCRFRC_CN"   failType="RUN" >Initial simulation fails</entry>
+              <entry testId="ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_VOC_SNCRFRC_CN"       failType="RUN" >Initial simulation fails case name too long</entry>
+              <entry testId="ERS_Ln48_D_P1x16_Mmpi-serial.f19_g16.I_2000_GLCMECPD"         failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
+          </intel>
+      </yellowstone>
    </test_system_interactive> 
 
    <test_system_batch> 
@@ -118,6 +142,11 @@
               <entry testId="ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD" failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
          </pgi>
       </lynx>
+      <yellowstone>
+          <intel>
+              <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"      failType="RUN" >History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
+          </intel>
+      </yellowstone>
    <test_system_batch> 
   
    <cesm> 
@@ -128,6 +157,18 @@
               <entry testId="SBN.ne60_g16.I20TR"             failType="TFAIL">missing datasets</entry>
          </IBM>
       </bluefire>
+      <yellowstone>
+         <pgi>
+              <entry testId="SMS_RLB.f45_f45.I"                   failType="CFAIL">????</entry>
+              <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CN"    failType="CFAIL">????</entry>
+              <entry testId="PST.f19_g16.ICNCROP"                 failType="TFAIL">????</entry>
+              <entry testId="SMS.1x1_numaIA.ICN_CROP"             failType="TFAIL">????</entry>
+              <entry testId="PST.f10_f10.I20TRCN"                 failType="TFAIL">????</entry>
+         </pgi>
+         <intel>
+              <entry testId="PST.f19_g16.I1850CN"                 failType="TFAIL">????</entry>
+         </intel>
+      </yellowstone>
    </cesm>
    <cesm> 
       <bluefire>

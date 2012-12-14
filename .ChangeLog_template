@@ -41,30 +41,35 @@ List all files added and what they do:
 
 List all existing files that have been modified, and describe the changes:
 
-Machines testing ran on:
+Machines testing ran on:  (Tests in priority order)
+  Standard Tag Pretag ***                    Standard Tag Posttag **
 
-  build-namelist unit tester:   yes/no
+  build-namelist unit tester:   yes/no ***
 
   CESM test lists:
 
-    bluefire/CESM:              yes/no
-    bluefire/CESM/allIcompsets: yes/no
-    lynx/CESM:                  yes/no
-
-  bluefire/PTCLM:               yes/no
+    yellowstone/CESM:              yes/no ***
+    bluefire/CESM:                 yes/no
+    yellowstone/CESM/allIcompsets: yes/no
 
   test_system testing:
 
+    yellowstone batch:          yes/no **
+    frankfurt interactive:      yes/no **
+    yellowstone interactive:    yes/no
     bluefire batch:             yes/no
     bluefire interactive:       yes/no
-    lynx/pgi batch:             yes/no
-    lynx/pgi interactive:       yes/no
-    lyn/intel mirage testlist:  yes/no
+    lynx batch:                 yes/no
+    lynx interactive:           yes/no
+    frankfurt batch:            yes/no
 
   test_driver.sh tools testing:
 
     bluefire interactive:       yes/no
     lynx interactive:           yes/no
+    yellowstone interactive:    yes/no
+
+  bluefire/PTCLM:               yes/no
 
 CLM tag used for the baseline comparison tests if applicable:
 

@@ -83,12 +83,12 @@ INTEGER FUNCTION shr_file_getUnit ( unit )
       if (unit < 0 .or. unit > shr_file_maxUnit) then
          write(6,F00) 'invalid unit number request:', unit
          write(6,*) 'ERROR: bad input unit number' 
-         stop
+         stop 1
       else if (opened .or. UnitTag(unit) .or. unit == 0 .or. unit == 5 &
                .or. unit == 6) then
          write(6,F00) 'unit number ', unit, ' is already in use'
          write(6,*)'ERROR: Input unit number already in use' 
-         stop
+         stop 1
       else
          shr_file_getUnit = unit
          UnitTag (unit)   = .true.
@@ -111,7 +111,7 @@ INTEGER FUNCTION shr_file_getUnit ( unit )
    end if
 
    write(6,*) trim(subName),': Error: no available units found' 
-   stop
+   stop 1
 
 END FUNCTION shr_file_getUnit
 

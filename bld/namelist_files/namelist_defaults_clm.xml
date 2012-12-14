@@ -129,11 +129,9 @@ ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/init
 
 <!-- Initial files for WRF resolutions -->
 
-<!-- This wus12 file does not exist at NCAR
 <finidat hgrid="wus12"     maxpft="17"  mask="wus12" bgc="none" ic_ymd="20030101"
 ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.wus12.init20031001_c110208.nc
 </finidat>
--->
 
 <finidat hgrid="us20"      maxpft="17"  mask="us20"  bgc="none" ic_ymd="20050101"
 ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.us20.init20050101_c120125.nc
@@ -282,12 +280,10 @@ lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr1850_glcmec10_c120927.nc</fsurdat>
 lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr1850_glcmec10_c120927.nc</fsurdat>
 
 <!-- for present day simulations with WRF - year 2000 (same file with/without Glacier model) -->
-<!-- These wus12 files do not exist at NCAR
 <fsurdat hgrid="wus12"     sim_year="2000" glc_nec="0"  irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0336x0340_20110128.nc</fsurdat>
 <fsurdat hgrid="wus12"     sim_year="2000" glc_nec="10" irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0336x0340_20110128.nc</fsurdat>
--->
 <fsurdat hgrid="us20"      sim_year="2000" glc_nec="0"  irrig=".false." crop="off" >
 lnd/clm2/surfdata/surfdata_0230x0350_20110930.nc</fsurdat>
 <fsurdat hgrid="us20"      sim_year="2000" glc_nec="10" irrig=".false." crop="off" >

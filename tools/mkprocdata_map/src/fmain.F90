@@ -74,5 +74,5 @@ subroutine usage_exit (arg)
   write (6,*)
   write (6,*) "The template file must contain the dimensions 'lat' and 'lon';"
   write (6,*) "these are used to determine the number of latitudes and longitudes in the output file"
-  stop 
+  stop 1 
 end subroutine

@@ -27,7 +27,8 @@ copy_vars="lon,lat"
 # things simpler).
 landfrac_copy_vars="landfrac,landmask,pftmask"
 
-# name of the executable; expected to be in the same directory as this script
+# name of the executable;
+# expected to be in the same directory as this script unless -e option is given
 executable="mkprocdata_map"
 
 # minimum value for regridded pftmask variable for the output variable to be 1
@@ -42,7 +43,7 @@ landmask_fill=-9999
 
 function Usage {
     script_name=`basename $0`
-    echo "Usage: $script_name -i input_file -o output_file -m map_file -t template_file [-h] [-l]"
+    echo "Usage: $script_name -i input_file -o output_file -m map_file -t template_file [-e executable-path] [-h] [-l]"
     echo ""
     echo "This script runs mkprocdata_map with the given arguments (-i, -o, -m and -t),"
     echo "then copies some additional variables from the template file"
@@ -50,6 +51,10 @@ function Usage {
     echo "post-processing in order to create some additional variables."
     echo ""
     echo "Additional optional arguments:"
+    echo ""
+    echo "[-e executable-path]: Gives the path of the mkprocdata_map executable."
+    echo "                      If not specified, the executable is assumed to be"
+    echo "                      in the same directory as this script."
     echo ""
     echo "[-h]: Print this help message and exit"
     echo ""
@@ -130,10 +135,12 @@ input_file=""
 output_file=""
 map_file=""
 template_file=""
+executable_path=$script_dir
 do_landfrac_copies=0
 
-while getopts hi:lm:o:t: opt; do
+while getopts e:hi:lm:o:t: opt; do
     case $opt in
+	e) executable_path=$OPTARG;;
 	h) Usage; exit;;
 	i) input_file=$OPTARG;;
 	l) do_landfrac_copies=1;;
@@ -187,9 +194,7 @@ fi
 # Run mkprocdata_map
 # ---------------------------------------------------------------------- 
 
-executable_path="${script_dir}/${executable}"
-
-do_cmd "$executable_path -i $tempfile -o $output_file -m $map_file -t $template_file" 0
+do_cmd "${executable_path}/${executable} -i $tempfile -o $output_file -m $map_file -t $template_file" 0
 
 rm $tempfile
 

@@ -118,7 +118,7 @@ contains
              gridmap%yc_src(na), stat=rcode)
     if (rcode /= 0) then
        write(6,*) SubName//' ERROR: allocate gridmap'
-       stop
+       stop 1
     endif
 
     rcode = nf_inq_varid(fid,'S'  ,vid)
@@ -279,7 +279,7 @@ contains
                gridmap%yc_src, stat=ier)
     if (ier /= 0) then
        write(6,*) SubName//' ERROR: deallocate gridmap'
-       stop
+       stop 1
     endif
 
   end subroutine gridmap_clean

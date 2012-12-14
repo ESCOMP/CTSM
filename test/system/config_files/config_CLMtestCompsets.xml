@@ -202,13 +202,8 @@
          DESC="CLM with QIAN atm input data for 1948-1972 and CN (Carbon Nitrogen) in exit spinup mode, CO2 level and Aerosol deposition for 1850"
 />
 
-<compset RES_COMSET_MATCH="I_1850_CN_EXSPIN" GRID_MATCH="f09_g16"
+<compset RES_COMPSET_MATCH="I_1850_CN_EXSPIN" GRID_MATCH="f09_g16"
          RUN_REFCASE="I1850CN_f09_g16_c100503"  RUN_REFDATE="0001-01-01" 
-/>
-
-<compset RES_COMPSET_MATCH="I_2000_CN_EXSPIN" GRID_MATCH="f09_g16"
-         RUN_TYPE="branch" GET_REFCASE="TRUE" 
-         RUN_REFCASE="I2000CN_f09_g16_c100503" RUN_REFDATE="0001-01-01" 
 />
 
 <compset NAME="I_2000_1PTFRC" SHORTNAME="I1PT"

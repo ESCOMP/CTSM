@@ -144,7 +144,7 @@ contains
 100  locfn = fulpath(i+1:klen)
      if (len_trim(locfn) == 0) then
 	write(6,*)'(GETFIL): local filename has zero length'
-        stop
+        stop 1
      else
         write(6,*)'(GETFIL): attempting to find local file ',trim(locfn)
      endif
@@ -166,7 +166,7 @@ contains
         RETURN
      else
         write(6,*) 'GETFIL: FAILED to get '//trim(fulpath)
-        stop
+        stop 1
      end if
 
    end subroutine getfil
@@ -202,7 +202,7 @@ contains
 
      if (len_trim(locfn) == 0) then
         write(6,*)'OPNFIL: local filename has zero length'
-        stop
+        stop 1
      endif
      if (form=='u' .or. form=='U') then
         ft = 'unformatted'
@@ -213,7 +213,7 @@ contains
      if (ioe /= 0) then
         write(6,*)'(OPNFIL): failed to open file ',trim(locfn),        &
              &     ' on unit ',iun,' ierr=',ioe
-        stop
+        stop 1
      else
         write(6,*)'(OPNFIL): Successfully opened file ',trim(locfn),' on unit= ',iun
      end if

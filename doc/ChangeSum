@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_58         erik 12/14/2012 Uncomment us20 and wus12 datasets, more testing to: bluefire, yellowstone, frankfurt
    clm4_0_57      muszala 11/30/2012 update trunk with release mods, some rtm fixes
    clm4_0_56        sacks 11/27/2012 fix s2x tsrf, add s2x diagnostics
    clm4_0_55      muszala 11/14/2012 bring in flooding capability

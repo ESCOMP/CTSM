@@ -1,6 +1,6 @@
 # CESM scripts, machines and driver
-scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_121127
-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_121126
+scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_121213
+scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_121207
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_2_13
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
@@ -12,7 +12,7 @@ models/rof/rtm                  https://svn-ccsm-models.cgd.ucar.edu/rivrtm/trun
 models/glc/cism                 https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_121114
 
 # Utilities: csm_share, esmf, timing, MCT, PIO
-models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_121025
+models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_121204a
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_120427
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_120731
 models/utils/mct                https://github.com/MCSclimate/MCT/tags/MCT_2.8.2

@@ -34,12 +34,9 @@ function Usage {
     echo "      arguments and print commands that would be run, but"
     echo "      don't actually run commands"
     echo ""
-    echo "[-e executable-path]: Gives the full path of the"
-    echo "                      mkprocdata_map_wrap executable (including"
-    echo "                      the name of the executable itself)."
-    echo "                      If not specified, the executable is"
-    echo "                      assumed to be named mkprocdata_map_wrap,"
-    echo "                      in the same directory as this script"
+    echo "[-e executable-path]: Gives the path of the mkprocdata_map executable."
+    echo "                      If not specified, the path is determined by the"
+    echo "                      default value in mkprocdata_map_wrap."
     echo ""
     echo "[-h]: Print this help message and exit"
     echo ""
@@ -109,7 +106,6 @@ map_file=""
 template_file=""
 # optional arguments:
 directory="."
-executable="${script_dir}/mkprocdata_map_wrap"
 ignore_existing=0
 output_suffix="_2d"
 suffix="*"
@@ -119,7 +115,7 @@ extra_args=""
 while getopts de:hilm:o:p:r:s:t: opt; do
     case $opt in
 	d) dryrun=1;;
-	e) executable=$OPTARG;;
+	e) extra_args="$extra_args -e $OPTARG";;
 	h) Usage; exit;;
 	i) ignore_existing=1;;
 	l) extra_args="$extra_args -l";;
@@ -145,14 +141,6 @@ fi
 
 check_file_arg "$map_file" "map"
 check_file_arg "$template_file" "template"
-
-# Make sure the given executable is really an executable
-if [ ! -x $executable -o -d $executable ]; then
-    echo "ERROR: $executable is not an executable file"
-    echo ""
-    Usage
-    exit 1
-fi
 
 # Make sure directory is really a directory
 if [ ! -d $directory ]; then
@@ -184,7 +172,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # ----------------------------------------------------------------------
-# Loop through files matching the given pattern; run program for each
+# Loop through files matching the given pattern; run mkprocdata_map_wrap for each
 # ----------------------------------------------------------------------
 
 for infile in $files; do
@@ -202,7 +190,7 @@ for infile in $files; do
     
     else  # outfile does not exist
 	echo ""
-	do_cmd "$executable -i $infile -o $outfile -m $map_file -t $template_file $extra_args" $dryrun
+	do_cmd "${script_dir}/mkprocdata_map_wrap -i $infile -o $outfile -m $map_file -t $template_file $extra_args" $dryrun
     fi
 done
 
@@ -211,3 +199,4 @@ done
 # ----------------------------------------------------------------------
 
 cd $olddir
+

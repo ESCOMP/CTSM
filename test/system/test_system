@@ -154,6 +154,16 @@ case $hostname in
        defaultbatch_testlist="lynx.batch"
     ;;
 
+    ## lynx
+    frankfurt* | f0*)
+       machine=frankfurt
+       defaultbaselineroot="/fs/cgd/csm/clm_cesm_baselines"
+       options="$options -mach $machine"
+       defaultcompiler="intel"
+       defaultinter_testlist="frankfurt.interactive"
+       defaultbatch_testlist="frankfurt.batch"
+    ;;
+
     ## Default
     * )
        echo "WARNING:: unknown machine host to run on: $hostname"

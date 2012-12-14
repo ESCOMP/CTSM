@@ -324,6 +324,7 @@ my $mode = "CN";
 system( "../configure -s -bgc cn" );
 my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
+$options = "";
 my @regional;
 foreach my $res ( @resolutions ) {
    chomp($res);

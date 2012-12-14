@@ -91,7 +91,7 @@ subroutine mkmap(filei, fileo, fmap, ftemplate)
      write(6,*) 'nlon = ', nlon
      write(6,*) 'nlat = ', nlat
      write(6,*) 'nlen = ', nlen
-     stop
+     stop 1
   end if
 
   call getfil (filei, locfn, 0)
@@ -289,7 +289,7 @@ contains
     integer :: varid_landfrac
     logical :: first_time = .true.
     real(r8), allocatable, save :: landfraci(:) 
-    real(r8), allocatable       :: src_mask(:)
+    real(r8), allocatable, save :: src_mask(:)
     integer :: vid
     real(r8):: spval = 1.e36 
 
@@ -508,7 +508,7 @@ contains
     integer, intent(in) :: status
     if (status /= nf90_noerr) then
        write(6,*)trim(nf90_strerror(status))
-       stop "Stopped"
+       stop 1
     end if
   end subroutine handle_err
 
@@ -516,7 +516,7 @@ contains
      integer         , intent(in) :: ret  ! return code from netCDF library routine
      if ( ret .ne. NF90_NOERR ) then
         write(6,*) nf90_strerror( ret )
-        stop
+        stop 1
      endif
    end subroutine handle_ncerr
 
