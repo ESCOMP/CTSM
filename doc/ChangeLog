@@ -1,4 +1,137 @@
 ===============================================================
+Tag name:  clm4_0_59
+Originator(s):  mvertens (Mariana Vertenstein) / erik
+Date: Thu Dec 20 09:24:16 MST 2012
+One-line Summary: restructure clmtype and all pointer references, new directory structure
+	   
+Purpose of changes: 
+	Reststucture trunk directory tree to prepare for incorporation of clm4_5
+	Move all cpp-ifdefs to clm_varctl and introduce new logical variables in their place
+	Restructure clmtype to remove nesting - and also redo all the pointer references 
+	All together the code can then move to having no cpp-ifdefs
+
+Test level of tag: 
+	std-test
+
+Bugs fixed (include bugzilla ID): 
+	None
+
+Known bugs (include bugzilla ID):
+	http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+        147 (mkgriddata can't straddle over Greenwich)
+        025 (SCM mode can NOT use a global finidat file)
+        017 (SCM mode can NOT restart)
+        896 (T62 mode does not work)
+        701 (svn keyword)
+        452 (Problem with support of soil-colors != 8 or 20)
+	1598 (non-repeatable results when running with CNDV and/or CROP)   
+
+	Threading seems to work for all cases where CROP and/or CNDV 
+	is not on
+	
+Describe any changes made to build system: 
+	New directory structure
+
+Describe any changes made to the namelist: 
+	variables use_c13 and use_c14 added to namelist_definition.xml file
+
+List any changes to the defaults for the boundary datasets: 
+	No
+
+Describe any substantial timing or memory changes: 
+	Currently more memory for compsets without CN, etc - less memory 
+	when CN, CNDV, etc are activated. This will be fixed in clm4_0_59.
+
+Code reviewed by: 
+	self (proposed changes reviewed by Erik, Bill and Stefan)
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: 
+	src/biogeochem -> src/clm4_0/biogeochem
+	src/biogeophys -> src/clm4_0/biogeophys
+	src/main       -> src/clm4_0/main
+	
+
+List all files added and what they do: 
+	None
+	
+List all existing files that have been modified, and describe the changes:
+
+	All files in src/clm4_0 have been modified relative to their
+	original versions to remove the cpp-ifdefs and to adjust pointer
+	references to new names
+	
+	M       src/cpl_share/clm_cpl_indices.F90
+	M       src/cpl_mct/lnd_comp_mct.F90
+	M       src/cpl_esmf/lnd_comp_esmf.F90
+	
+	M       bld/configure
+	M       bld/namelist_files/namelist_definition.xml
+	M       test/system/yellowstone.interactive
+	M       test/system/yellowstone.batch
+
+        Add in 360x720_cruncep datasets (from Erik).
+
+        M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl --- correct number of tests
+        M       models/lnd/clm/bld/namelist_files/namelist_definition.xml
+        M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+        M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+        M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml
+
+Machines testing ran on:
+
+  build-namelist unit tester:   yes
+
+  CESM test lists:
+
+    yellowstone/CESM:              yes
+    yellowstone/CESM/allIcompsets: no
+
+  PTCLM	
+     yellowstone:               no
+
+  test_system testing:
+
+    yellowstone batch:          yes
+    yellowstone interactive:    no
+    frankfurt batch:            no
+    frankfurt interactive:      yes
+
+  test_driver.sh tools testing:
+
+    yellowstone interactive:    no
+    frankfurt interactive:      no
+
+Difference in expected fails from testing:
+	
++ Numbers change for build-namelist unit tests
+       <frankfurt>
+          <intel>
+-              <entry testId="ERS_Mmpi-serial.1x1_mexicocityMEX.I1PT"         failType="FAIL">????</entry>
+          </intel>
+       </frankfurt>
+       <yellowstone>
+          <pgi>
+-              <entry testId="SMS_RLB.f45_f45.I"                   failType="CFAIL">????</entry>
+-              <entry testId="PST.f19_g16.ICNCROP"                 failType="TFAIL">????</entry>
+-              <entry testId="PST.f10_f10.I20TRCN"                 failType="TFAIL">????</entry>
+          </pgi>
+-         <intel>
+-              <entry testId="PST.f19_g16.I1850CN"                 failType="TFAIL">????</entry>
+-         </intel>
+       </yellowstone>
+	
+CLM tag used for the baseline comparison tests if applicable: 
+	clm4_0_58
+
+Changes answers relative to baseline: 
+	no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_58
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Dec 14 05:13:33 MST 2012

@@ -61,6 +61,7 @@ determine default values for namelists.
 <mask hgrid="4x5"                 >gx3v7</mask>
 <mask hgrid="10x15"               >USGS</mask>
 
+<mask hgrid="360x720"             >cruncep</mask>
 <mask hgrid="128x256"             >USGS</mask>
 <mask hgrid="64x128"              >USGS</mask>
 <mask hgrid="48x96"               >gx3v7</mask>

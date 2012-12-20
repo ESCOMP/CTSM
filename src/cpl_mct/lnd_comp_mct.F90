@@ -581,9 +581,11 @@ contains
 
        call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('clm_run')
+       call t_startf ('shr_orb_decl')
        calday = get_curr_calday()
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+       call t_stopf ('shr_orb_decl')
        call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
        call t_stopf ('clm_run')
 
@@ -872,6 +874,12 @@ contains
                -clm_l2a%flxvoc(g,:shr_megan_mechcomps_n)
        end if
 
+#ifdef LCH4
+       if (index_l2x_Fall_methane /= 0) then
+          l2x_l%rAttr(index_l2x_Fall_methane,i) = -clm_l2a%flux_ch4(g) 
+       endif
+#endif
+
        ! sign convention is positive downward with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
 
@@ -901,11 +909,9 @@ contains
 ! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
-    use clm_varctl      , only: co2_type, co2_ppmv, iulog
+    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
     use clm_varcon      , only: rair, o2_molar_const
-#if (defined C13)
     use clm_varcon      , only: c13ratio
-#endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use abortutils      , only: endrun
     use mct_mod         , only: mct_aVect
@@ -1037,6 +1043,12 @@ contains
            co2_ppmv_diag = co2_ppmv
         end if
 
+#ifdef LCH4
+        if (index_x2l_Sa_methane /= 0) then
+           a2l%forc_pch4(g) = x2l_l%rAttr(index_x2l_Sa_methane,i)
+        endif
+#endif
+
         ! Determine derived quantities for required fields
         a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
         a2l%forc_hgt_t(g) = a2l%forc_hgt(g)    !observational height of temperature [m]
@@ -1076,9 +1088,9 @@ contains
            co2_ppmv_val = co2_ppmv
         end if
         a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
-#if (defined C13)
-        a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
-#endif	 
+        if (use_c13) then
+           a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
+        end if
      end do
 
    end subroutine lnd_import_mct

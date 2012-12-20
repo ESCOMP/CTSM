@@ -8,9 +8,9 @@
             </compare>
             <generate>
                <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="189" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="198" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="189" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="201" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </IBM>
       </bluefire>
@@ -28,11 +28,11 @@
             <compare>
             </compare>
             <generate>
-               <entry testId="134" failType="xFail"> missing datasets for wus12 </entry>
-               <entry testId="137" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="189" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="198" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="138" failType="xFail"> missing datasets for wus12 </entry>
+               <entry testId="141" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="189" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="201" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
       </yellowstone>
    </namelistTest>
@@ -115,7 +115,6 @@
       <frankfurt>
          <intel>
               <entry testId="ERS_Ln48_D_P1x16_Mmpi-serial.f10_f10.ICNCROP"   failType="FAIL">????</entry>
-              <entry testId="ERS_Mmpi-serial.1x1_mexicocityMEX.I1PT"         failType="FAIL">????</entry>
          </intel>
       </frankfurt>
       <yellowstone>
@@ -159,15 +158,9 @@
       </bluefire>
       <yellowstone>
          <pgi>
-              <entry testId="SMS_RLB.f45_f45.I"                   failType="CFAIL">????</entry>
               <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CN"    failType="CFAIL">????</entry>
-              <entry testId="PST.f19_g16.ICNCROP"                 failType="TFAIL">????</entry>
               <entry testId="SMS.1x1_numaIA.ICN_CROP"             failType="TFAIL">????</entry>
-              <entry testId="PST.f10_f10.I20TRCN"                 failType="TFAIL">????</entry>
          </pgi>
-         <intel>
-              <entry testId="PST.f19_g16.I1850CN"                 failType="TFAIL">????</entry>
-         </intel>
       </yellowstone>
    </cesm>
    <cesm> 

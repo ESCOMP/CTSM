@@ -1110,11 +1110,9 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 ! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
-    use clm_varctl      , only: co2_type, co2_ppmv
+    use clm_varctl      , only: co2_type, co2_ppmv, use_c13
     use clm_varcon      , only: rair, o2_molar_const
-#if (defined C13)
     use clm_varcon      , only: c13ratio
-#endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use clm_varctl      , only: iulog
     use clm_cpl_indices
@@ -1191,8 +1189,6 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
         ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
         ! change the sign to indicate addition of water to system.
 
-!tcraig aug 2012, use following in source code to get flood data
-!       clm3%g%gwf%qflx_floodg => clm_a2l%forc_flood
         a2l%forc_flood(g)   = -fptr(index_x2l_Flrr_flood,i)  
 
         ! Determine required receive fields
@@ -1283,9 +1279,9 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
            co2_ppmv_val = co2_ppmv
         end if
         a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
-#if (defined C13)
-        a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
-#endif
+        if (use_c13) then
+           a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
+        end if
 
      end do
 

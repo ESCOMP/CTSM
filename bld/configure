@@ -594,7 +594,7 @@ sub write_filepath_cesmbld
          print $fh "../SourceMods/src.clm\n";
     }
 
-    my @dirs = ( "cpl_share", "main", "biogeophys", "biogeochem");
+    my @dirs = ( "cpl_share", "util_share", "clm4_0/main", "clm4_0/biogeophys", "clm4_0/biogeochem");
     if ( $comp_intf eq "MCT" ) { 
        push( @dirs, "cpl_mct" );
     } elsif ( $comp_intf eq "ESMF" ) { 

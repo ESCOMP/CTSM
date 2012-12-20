@@ -60,6 +60,11 @@ module clm_cpl_indices
   integer, public ::index_l2x_Fall_flxdst4    ! dust flux size bin 4
   integer, public ::index_l2x_Fall_flxvoc     ! MEGAN fluxes
 
+#ifdef LCH4
+  integer, public ::index_x2l_Sa_methane
+  integer, public ::index_l2x_Fall_methane
+#endif
+
   integer, public :: nflds_l2x = 0
 
   ! drv -> lnd (required)
@@ -223,6 +228,10 @@ contains
 
     index_l2x_Fall_fco2_lnd = mct_avect_indexra(l2x,'Fall_fco2_lnd',perrwith='quiet')
 
+#ifdef LCH4
+    index_l2x_Fall_methane  = mct_avect_indexra(l2x,'Fall_methane',perrWith='quiet')
+#endif
+
     ! MEGAN fluxes
     if (shr_megan_mechcomps_n>0) then
        index_l2x_Fall_flxvoc = mct_avect_indexra(l2x,trim(shr_megan_fields_token))
@@ -245,6 +254,10 @@ contains
     index_x2l_Sa_shum       = mct_avect_indexra(x2l,'Sa_shum')
     index_x2l_Sa_co2prog    = mct_avect_indexra(x2l,'Sa_co2prog',perrwith='quiet')
     index_x2l_Sa_co2diag    = mct_avect_indexra(x2l,'Sa_co2diag',perrwith='quiet')
+
+#ifdef LCH4
+    index_x2l_Sa_methane    = mct_avect_indexra(x2l,'Sa_methane',perrWith='quiet')
+#endif
 
     index_x2l_Faxa_lwdn     = mct_avect_indexra(x2l,'Faxa_lwdn')
     index_x2l_Faxa_rainc    = mct_avect_indexra(x2l,'Faxa_rainc')
