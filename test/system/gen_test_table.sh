@@ -45,11 +45,24 @@ for input_file in `ls tests_*` ; do
 	echo "<td> $count </td>" >> $outfile
 
 	master_line=`grep $test_id ./input_tests_master`
+        dir=""
 	for arg in ${master_line}; do
-	    if [ -f ./nl_files/$arg ]; then
+            arg1=${arg%^*}
+            arg2=${arg#*^}
+            if [ -d ../../tools/$arg ]; then
+                dir=$arg
+	    elif [ -f ./nl_files/$arg ]; then
 		echo "<td><a href=\"./nl_files/$arg\">$arg </a></td>" >> $outfile
 	    elif [ -f ./config_files/$arg ]; then
 		echo "<td><a href=\"./config_files/$arg\">$arg </a></td>" >> $outfile
+	    elif [ -f ./nl_files/$arg1 ] && [ -f ./nl_files/$arg2 ]; then
+		echo  "<td><a href=\"./nl_files/$arg1\">$arg1</a>^" \
+                        "<a href=\"./nl_files/$arg2\">$arg2</a></td>" >> $outfile
+	    elif [ -f ./nl_files/$arg1 ] && [ -f ./config_files/$arg2 ]; then
+		echo "<td><a href=\"./nl_files/$arg1\">$arg1</a>^" \
+                        "<a href=\"./config_files/$arg2\">$arg2</a></td>" >> $outfile
+	    elif [ -f ../../tools/$dir/$dir.$arg ]; then
+		echo "<td><a href=\"../../tools/$dir/$dir.$arg\">$arg </a></td>" >> $outfile
 	    else
 		echo "<td>$arg </td>" >> $outfile
 	    fi

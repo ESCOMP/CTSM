@@ -1,0 +1,8 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_inparm
+ use_c13=.true.
+ use_c14=.true.
+ hist_ndens=1,1
+/

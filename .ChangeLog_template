@@ -49,7 +49,6 @@ Machines testing ran on:  (Tests in priority order)
   CESM test lists:
 
     yellowstone/CESM:              yes/no ***
-    bluefire/CESM:                 yes/no
     yellowstone/CESM/allIcompsets: yes/no
 
   test_system testing:
@@ -57,19 +56,16 @@ Machines testing ran on:  (Tests in priority order)
     yellowstone batch:          yes/no **
     frankfurt interactive:      yes/no **
     yellowstone interactive:    yes/no
-    bluefire batch:             yes/no
-    bluefire interactive:       yes/no
     lynx batch:                 yes/no
     lynx interactive:           yes/no
     frankfurt batch:            yes/no
 
   test_driver.sh tools testing:
 
-    bluefire interactive:       yes/no
     lynx interactive:           yes/no
     yellowstone interactive:    yes/no
 
-  bluefire/PTCLM:               yes/no
+  yellowstone/PTCLM:            yes/no
 
 CLM tag used for the baseline comparison tests if applicable:
 

@@ -93,7 +93,7 @@ $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \
     -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" $usecase $glc_opts \
     -res $RESOLUTION $clmusr -clm_start_type $START_TYPE $clm_startfile \
     -l_ncpl $LND_NCPL -lnd_frac "${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}" \
-    -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV \
+    -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV -co2_type $CLM_CO2_TYPE \
     -config $CASEBUILD/clmconf/config_cache.xml $CLM_BLDNML_OPTS || exit -3
     
 if (-d ${RUNDIR}) then

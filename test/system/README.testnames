@@ -23,13 +23,23 @@ n is the configuration type:
 
 1 -- unused
 2 -- unused
-3 -- unused
-4 -- mkmapgrids
-5 -- gen_domain
+3 -- mkprocdata_map clm4.0
+4 -- mkmapgrids     clm4.0
+5 -- gen_domain     clm4.0
 6 -- unused
-7 -- mksurfdata
-8 -- interpinic
-9 -- tools scripts
+7 -- mksurfdata_map clm4.0
+8 -- interpinic     clm4.0
+9 -- tools scripts  clm4.0
+0 -- unused
+a -- unused
+b -- unused
+c -- mkprocdata_map clm4.5
+d -- mkmapgrids     clm4.5
+e -- gen_domain     clm4.5
+f -- unused
+g -- mksurfdata_map clm4.5
+h -- interpinic     clm4.5
+i -- tools scripts  clm4.5
 
 m is the resolution
 

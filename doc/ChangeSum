@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_60         erik 02/11/2013 Bring CLM4.5 code from clm45sci branch to trunk as an option set at configure time
    clm4_0_59     mvertens 12/20/2012 restructure clmtype and all pointer references, new directory structure
    clm4_0_58         erik 12/14/2012 Uncomment us20 and wus12 datasets, more testing to: bluefire, yellowstone, frankfurt
    clm4_0_57      muszala 11/30/2012 update trunk with release mods, some rtm fixes

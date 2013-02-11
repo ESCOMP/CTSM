@@ -34,10 +34,6 @@ use IO::File;
 use IO::Handle;
 use File::Copy;
 
-my $crpmode = "nocrop";
-my %maxpatchpft;
-$maxpatchpft{'crop'}   = 21;
-$maxpatchpft{'nocrop'} = 17;
 #-----------------------------------------------------------------------------------------------
 
 sub usage {
@@ -54,11 +50,12 @@ OPTIONS
 
      -bgc <name>            Build CLM with BGC package [ none | cn | cndv ] 
                             (default is none).
-     -c13 <name>            Turn on C13 mode for BGC setting of CN [on | off] 
-                            (default is off).
      -cache <file>          Name of output cache file (default: config_cache.xml).
      -cachedir <file>       Name of directory where output cache file is written 
                             (default: CLM build directory).
+     -clm4me <name>         Turn Methane model: [on | off]
+                              Requires bgc=cn/cndv (Carbon Nitrogen model)
+                            (ONLY valid for CLM4.5!)
      -clm_root <dir>        Root directory of clm source code 
                             (default: directory above location of this script)
      -cppdefs <string>      A string of user specified CPP defines.  Appended to
@@ -71,27 +68,53 @@ OPTIONS
                             This file is used to specify model configuration parameters only.
                             Parameters relating to the build which are system dependent will
                             be ignored.
+     -exlaklayers <name>    Turn on extra lake layers (25 layers instead of 10) [on | off]
+                            (ONLY valid for CLM4.5!)
      -help [or -h]          Print usage to STDOUT.
      -nofire                Turn off wildfires for BGC setting of CN 
                             (default includes fire for CN)
      -noio                  Turn history output completely off (typically for testing).
-     -pergro <name>         Switch enables building CLM for perturbation growth tests. [on | off] 
-                            (default is off)
+     -phys <name>           Value of clm4_0 or clm4_5 (default is clm4_0)   
      -silent [or -s]        Turns on silent mode - only fatal messages issued.
      -sitespf_pt <name>     Setup for the given site specific single-point resolution.
      -snicar_frc <name>     Turn on SNICAR radiative forcing calculation. [on | off] 
                             (default is off)
      -spinup <name>         Turn on given spinup mode for BGC setting of CN		  (level)
+                              Enter-AD      Turn on Accelerated Decomposition from	      (6)
+                                            existing initial conditions (optional) (deprecated)
+                                            (ONLY valid for CLM4.5!)
                               AD            Turn on Accelerated Decomposition from	      (5)
                                             bare-soil
                               exit          Jump directly from AD spinup to normal mode	      (2)
+                              AD2Lesser     Jump from full AD to lesser AD spinup (optional)  (4)
+                                            (deprecated) (ONLY valid for CLM4.5!)
+                              LesserAD      Lesser Accelerated Decomposition mode	      (3)
+                                            (deprecated) (ONLY valid for CLM4.5!)
+                              LesserAD-exit Jump from lesser AD to normal mode		      (1)
+                                            (deprecated) (ONLY valid for CLM4.5!)
                               normal        Normal decomposition ("final spinup mode")	      (0)
                                             (default)
-                            Valid sequence: 5-2-0
+                            Two sequences are valid: 6-5-4-3-1-0 or 6-5-2-0 (where 6 and 4 are optional)
+                            The recommended sequence is 5-2-0
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
                             Directories containing user source code.
      -verbose [or -v]       Turn on verbose echoing of settings made by configure.
      -version               Echo the SVN tag name used to check out this CLM distribution.
+     -vsoilc_centbgc <name> Turn on vertical soil Carbon profile, CENTURY model decomposition,
+                            split Nitrification/de-Nitrification into two mineral 
+                            pools for NO3 and NH4 (requires clm4me Methane model), and
+                            eliminate inconsistent duplicate soil hydraulic 
+                            parameters used in soil biogeochem.
+                            (requires either CN or CNDV)
+                            (ONLY valid for CLM4.5!)
+                            [on,off or colon delimited list of no options] (default off)
+                              no-vert     Turn vertical soil Carbon profile off
+                              no-cent     Turn CENTURY off
+                              no-nitrif   Turn the Nitrification/denitrification off
+                              no-stnd-bsw Turn the standard BSW for soil psi off
+                            [no-vert,no-cent,no-nitrif,no-stnd-bsw,
+                             no-vert:no-cent,no-nitrif:no-stnd-bsw,
+                             no-vert:no-cent:no-stnd-bsw]
 
 EOF
 }
@@ -127,13 +150,13 @@ my $commandline = "$cfgdir/configure @ARGV";
 # Parse command-line options.
 my %opts = (
 	    cache       => "config_cache.xml",
+            phys        => "clm4_0",
             nofire      => undef,
             noio        => undef,
             clm_root    => undef,
             spinup      => "normal",
 	    );
 GetOptions(
-    "c13=s"                     => \$opts{'c13'},
     "spinup=s"                  => \$opts{'spinup'}, 
     "bgc=s"                     => \$opts{'bgc'}, 
     "cache=s"                   => \$opts{'cache'},
@@ -143,10 +166,13 @@ GetOptions(
     "cppdefs=s"                 => \$opts{'cppdefs'},
     "comp_intf=s"               => \$opts{'comp_intf'},
     "defaults=s"                => \$opts{'defaults'},
+    "vsoilc_centbgc=s"          => \$opts{'vsoilc_centbgc'},
+    "clm4me=s"                  => \$opts{'clm4me'},
+    "exlaklayers=s"             => \$opts{'exlaklayers'},
     "h|help"                    => \$opts{'help'},
     "nofire"                    => \$opts{'nofire'},
     "noio"                      => \$opts{'noio'},
-    "pergro=s"                  => \$opts{'pergro'}, 
+    "phys=s"                    => \$opts{'phys'},
     "snicar_frc=s"              => \$opts{'snicar_frc'}, 
     "s|silent"                  => \$opts{'silent'},
     "sitespf_pt=s"              => \$opts{'sitespf_pt'},
@@ -317,6 +343,19 @@ if ($print>=2) { print "The configuration cache file will be created in $config_
 
 
 #-----------------------------------------------------------------------------------------------
+# physics
+
+if( defined($opts{'phys'}) ) {
+  $cfg_ref->set('phys', $opts{'phys'});
+}
+my $phys = $cfg_ref->get('phys');
+if ($print>=2) { 
+   if( defined($opts{'phys'}) ) { 
+      print "Using version $phys physics.$eol"; 
+   }
+}
+
+#-----------------------------------------------------------------------------------------------
 # supported single point configurations
 if( defined($opts{'sitespf_pt'}) ) {
   $cfg_ref->set('sitespf_pt', $opts{'sitespf_pt'});
@@ -337,7 +376,21 @@ my $noio = $cfg_ref->get('noio');
 if ($print>=2) { 
    if ( $noio eq "on") { print "ALL history output is turned OFF.$eol";       }
 }
+#-----------------------------------------------------------------------------------------------
+# extra lake layers
 
+if( defined($opts{'exlaklayers'}) ) {
+  $cfg_ref->set('exlaklayers', $opts{'exlaklayers'});
+}
+my $exlaklayers = $cfg_ref->get('exlaklayers');
+if ( ($exlaklayers eq "on") && ($phys !~ /clm4_5/) ) {
+   die <<"EOF";
+** Cannot turn exlaklayers mode on -- without clm4_5 physics!** 
+EOF
+}
+if ($print>=2) {
+   if ( $exlaklayers eq "on" ) { print "Use 25 lake layers instead of 10.$eol"; }
+}
 #-----------------------------------------------------------------------------------------------
 # BGC option
 if (defined $opts{'bgc'}) {
@@ -345,6 +398,9 @@ if (defined $opts{'bgc'}) {
 }
 my $bgc_mode = $cfg_ref->get('bgc');
 if ($print>=2) { print "Using $bgc_mode for bgc.$eol"; }
+if ( $bgc_mode eq "casa" ) {
+   print "Warning:: bgc=casa is NOT validated / scientifically supported.$eol";
+}
 
 # NOFIRE option -- currently only in bgc=CN
 if (defined $opts{'nofire'}) {
@@ -376,19 +432,76 @@ if ( ($spinup ne "normal" ) && ($bgc_mode ne "cn") ) {
 ** * by a default configuration file, specified by -defaults 
 EOF
 }
-if ($print>=2) { print "Using $spinup for spinup for cn mode.$eol"; }
-
-# C13 option for BGC/CN mode only
-if (defined $opts{'c13'}) {
-    $cfg_ref->set('c13', $opts{'c13'});
-}
-my $c13 = $cfg_ref->get('c13');
-if ( ($c13 eq "on" ) && ($bgc_mode ne "cn") ) {
+if ( ($spinup =~ /Enter-AD|AD2Lesser|LesserAD|LesserAD-exit/) && ($phys !~ /clm4_5/) ) {
    die <<"EOF";
-** Cannot turn c13 mode on -- without cn for bgc mode** 
+** Cannot turn spinup to this mode ($spinup) -- without clm4_5 physics!** 
 EOF
 }
-if ($print>=2) { print "Using $c13 for c13 for cn mode.$eol"; }
+if ($print>=2) { print "Using $spinup for spinup for cn mode.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# CLM4 Methane model
+
+if( defined($opts{'clm4me'}) ) {
+  $cfg_ref->set('clm4me', $opts{'clm4me'});
+}
+my $clm4me = $cfg_ref->get('clm4me');
+if ( ($clm4me eq "on") && ($bgc_mode !~ /^cn/) ) {
+   die <<"EOF";
+** Cannot turn clm4me mode on -- without cn or cndv for bgc mode** 
+EOF
+}
+if ( ($clm4me eq "on") && ($phys !~ /clm4_5/) ) {
+   die <<"EOF";
+** Cannot turn clm4me mode on -- without clm4_5 physics!** 
+EOF
+}
+if ($print>=2) { 
+   if ( $clm4me eq "on" ) { 
+     print "Activate CLM4 Methane model: .$eol"; 
+   }
+}
+#-----------------------------------------------------------------------------------------------
+# Vertical soil-Carbon, CENTURY-BGC, split prognostic mineral pool option 
+# and elimination of inconsistent duplicate soil hydraulic parameters
+#    -- currently only in bgc=CN
+if (defined $opts{'vsoilc_centbgc'}) {
+    $cfg_ref->set('vsoilc_centbgc', $opts{'vsoilc_centbgc'} );
+}
+my $vsoilc_centbgc = $cfg_ref->get('vsoilc_centbgc');
+if ( ($vsoilc_centbgc ne "off") && ($bgc_mode !~ /^cn/) ) {
+   die <<"EOF";
+** Cannot turn vsoilc_centbgc mode on -- without cn or cndv for bgc mode** 
+EOF
+}
+my $vsoilc_centbgc = $cfg_ref->get('vsoilc_centbgc');
+if ( ($vsoilc_centbgc ne "off") && ($vsoilc_centbgc !~ /no-nitrif/) && ($clm4me ne "on") ) {
+#   die <<"EOF";
+#** Cannot turn vsoilc_centbgc mode on -- without clm4me Methane model active** 
+#EOF
+    print <<"EOF";
+    Warning:: The vsoilc_centbgc package (explicitly Nitrification/de-Nitrification) requires the clm4me Methane model to be active.
+              It is recommended that you re-configure with both vsoilc_centbgc AND clm4me.
+EOF
+}
+if ( ($vsoilc_centbgc eq "on") && ($phys !~ /clm4_5/) ) {
+   die <<"EOF";
+** Cannot turn vsoilc_centbgc mode on -- without clm4_5 physics!** 
+EOF
+}
+if ( $vsoilc_centbgc eq "on") { 
+   if ($print>=2) { 
+      print "vsoilc_centbgc package: $eol";
+      print "  Vertical soil Carbon.$eol";
+      print "  CENTURY BGC$eol";
+      print "  Split of Nitrogen mineral pools that are active.$eol"; 
+      print "  Elimination of inconsistent duplicate soil hydraulic parameters.$eol"; 
+   }
+} elsif ( $vsoilc_centbgc eq "off") { 
+} else {
+  print "Warning:: running with OUT the vsoilc_centbgc package fully on or off is NOT validated / " . 
+  "scientifically supported.$eol";
+}
 
 #-----------------------------------------------------------------------------------------------
 # comp_intf option
@@ -403,6 +516,7 @@ if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
 if (defined $opts{'crop'}) {
     $cfg_ref->set('crop', $opts{'crop'});
 }
+my $crpmode = "nocrop";
 my $crop = $cfg_ref->get('crop');
 if ( $crop eq "on" ) {
   $crpmode = "crop";
@@ -416,19 +530,18 @@ if ( ($crop eq "on" ) && ($bgc_mode ne "cn") && ($bgc_mode ne "cndv") ) {
 ** * by a default configuration file, specified by -defaults 
 EOF
 }
-if ( ($c13 eq "on" ) && ($crop eq "on") ) {
-   die <<"EOF";
-** Cannot turn crop mode on -- AND C13 mode on at the same time**
-** 
-** Set the crop and C13 modes by the following means from highest to lowest precedence:
-** * by the command-line options -crop and -c13
-** * by a default configuration file, specified by -defaults 
-EOF
-}
-if ($print>=2) { print "Using $crop for crop.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # MAXPFT option
+
+my %maxpatchpft;
+if ($phys eq "clm4_0") {
+    $maxpatchpft{'crop'}   = 21;
+    $maxpatchpft{'nocrop'} = 17;
+} else {
+    $maxpatchpft{'crop'}   = 25;
+    $maxpatchpft{'nocrop'} = 17;
+}
 $cfg_ref->set('maxpft', $maxpatchpft{$crpmode} );
 my $maxpft = $cfg_ref->get('maxpft');
 if ( (($bgc_mode eq "cn") || ($bgc_mode eq "cndv")) && ($maxpft != $maxpatchpft{$crpmode}) ) {
@@ -452,14 +565,11 @@ if ( $maxpft > $maxpatchpft{$crpmode} ) {
 **
 EOF
 }
-if ($print>=2) { print "Using $maxpft for maxpft.$eol"; }
-#-----------------------------------------------------------------------------------------------
-# PERGRO option
-if (defined $opts{'pergro'}) {
-    $cfg_ref->set('pergro', $opts{'pergro'});
+if ( $maxpft != $maxpatchpft{$crpmode} ) {
+   print "Warning:: running with maxpft NOT equal to $maxpatchpft{$crpmode} is " .
+         "NOT validated / scientifically supported.$eol";
 }
-my $pergro = $cfg_ref->get('pergro');
-if ($print>=2) { print "Using $pergro for pergro.$eol"; }
+if ($print>=2) { print "Using $maxpft for maxpft.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # SNICAR_FRC option
@@ -486,6 +596,8 @@ if ($print>=2) { print "Name of CLM executable: $clm_exe.$eol"; }
 my $usr_cppdefs = $cfg_ref->get('cppdefs');
 if (defined $opts{'cppdefs'}) {
     $usr_cppdefs .= " $opts{'cppdefs'}";
+    print "Warning:: running with user defined cppdefs is NOT validated / " . 
+          "scientifically supported.$eol";
 }
 $cfg_ref->set('cppdefs', $usr_cppdefs);
 
@@ -513,17 +625,45 @@ if ($nofire eq 'on') {
 if ($noio eq 'on') {
     $cfg_cppdefs .= " -D_NOIO";
 }
-if ($c13 eq 'on') { 
-    $cfg_cppdefs .= " -DC13";
-}
 if ($spinup eq 'AD') { 
     $cfg_cppdefs .= " -DAD_SPINUP";
+}
+if ($spinup eq 'Enter-AD') { 
+    $cfg_cppdefs .= " -DAD_SPINUP -DENTER_SPINUP";
 }
 if ($spinup eq 'exit') { 
     $cfg_cppdefs .= " -DEXIT_SPINUP";
 }
-if ( $pergro eq 'on' ) {
-    $cfg_cppdefs .= " -DPERGRO";
+if ($spinup eq 'AD2Lesser' ) { 
+    $cfg_cppdefs .= " -DAD_SPINUP -DSPINUP_DOWNSHIFT -DEXIT_SPINUP";
+}
+if ($spinup eq 'LesserAD' ) { 
+    $cfg_cppdefs .= " -DAD_SPINUP -DSPINUP_DOWNSHIFT";
+}
+if ($spinup eq 'LesserAD-exit' ) { 
+    $cfg_cppdefs .= " -DSPINUP_DOWNSHIFT -DEXIT_SPINUP";
+}
+if ($exlaklayers eq 'on') { 
+    $cfg_cppdefs .= " -DEXTRALAKELAYERS";
+}
+if ($vsoilc_centbgc eq 'on' || 
+   ($vsoilc_centbgc ne "off" && $vsoilc_centbgc !~ /no-vert/)) { 
+    $cfg_cppdefs .= " -DVERTSOILC"
+}
+if ($vsoilc_centbgc eq 'on' || 
+   ($vsoilc_centbgc ne "off" && $vsoilc_centbgc !~ /no-cent/)) { 
+    $cfg_cppdefs .= " -DCENTURY_DECOMP"
+}
+if ($vsoilc_centbgc eq 'on' || 
+   ($vsoilc_centbgc ne "off" && $vsoilc_centbgc !~ /no-nitrif/)) { 
+    $cfg_cppdefs .= " -DNITRIF_DENITRIF"
+}
+if ($vsoilc_centbgc eq 'on' || 
+   ($vsoilc_centbgc ne "off" && $vsoilc_centbgc !~ /no-stnd-bsw/)) { 
+    $cfg_cppdefs .= " -DSTNDRD_BSW_FOR_SOILPSI_CALC";
+}
+if ($clm4me eq 'on') { 
+    $cfg_cppdefs .= " -DLCH4"
 }
 if ( $snicar_frc eq 'on' ) {
     $cfg_cppdefs .= " -DSNICAR_FRC";
@@ -579,6 +719,7 @@ sub write_filepath_cesmbld
     my $usr_src       = $cfg_ref->get('usr_src');
     my $clm_root      = $cfg_ref->get('clm_root');
     my $comp_intf     = $cfg_ref->get('comp_intf');
+    my $phys          = $cfg_ref->get('phys'); 
 
     # Source root
     my $srcdir = "$clm_root/src";
@@ -594,13 +735,13 @@ sub write_filepath_cesmbld
          print $fh "../SourceMods/src.clm\n";
     }
 
-    my @dirs = ( "cpl_share", "util_share", "clm4_0/main", "clm4_0/biogeophys", "clm4_0/biogeochem");
+    my @dirs = ( "cpl_share", "util_share", "$phys/main", "$phys/biogeophys", "$phys/biogeochem");
     if ( $comp_intf eq "MCT" ) { 
-       push( @dirs, "cpl_mct" );
+	push( @dirs, "cpl_mct" );
     } elsif ( $comp_intf eq "ESMF" ) { 
-       push( @dirs, "cpl_esmf" );
+	push( @dirs, "cpl_esmf" );
     } else {
-       die "** Invalid comp_intf: $comp_intf\n";
+	die "** Invalid comp_intf: $comp_intf\n";
     }
     foreach my $dir ( @dirs ) {
        if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
@@ -626,6 +767,7 @@ sub write_cppdefs
 }
 
 #-------------------------------------------------------------------------------
+
 
 sub absolute_path {
 #

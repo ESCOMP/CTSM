@@ -1,4 +1,834 @@
 ===============================================================
+Tag name:  clm4_0_60
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Feb 11 03:55:56 MST 2013
+One-line Summary: Bring CLM4.5 code from clm45sci branch to trunk as an option set at configure time
+
+Purpose of changes:
+
+Bring in CLM4.5 branch as additional directories. Change directory structure, so there are shared files 
+and utilities for both CLM4.0 and CLM4.5 and files that are different for each. Update compsets in 
+scripts in order to work in this paradigm. Move clm45sci15_clm4_0_58 code to trunk under clm4_5 phys.
+
+clm4.5 includes the following:
+
+* Bring LBNL-merge branch on with: vertical soil, Methane, CENTURY, split nitrification, new-lake model.
+* Modifications to GPP, on gppdev branch, multilayer canopy and then single-layer version that reproduces it.
+* Crop model updates. Irrigation included with crop model as an option. Fix CNDV-CROP.
+* Urban model updates, multi-density, urban depth seperate from soil depth, wasteheat to zero
+* Bring in permafrostsims09 branch with Sean Swensons's flooding changes.
+* Update pft-physiology file, change some CN defaults, change min flow slightly in RTM
+* Set ponding to zero, acclimation mods from Keith Oleson, a hydrology change from Sean Swenson.
+
+Requirements for tag: clm40/clm45 code/tools work/tested, answers same, complete move from bluefire to yellowstone
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID):
+                                 1621 (normalization issue in mksurfdata_map and clm -- partial)
+                                 1604 (The -co2_type flag in the CLM namelist is not set correct.)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+
+  Compsets to run CLM4.5 added.
+
+I_2000_CLM45 (ICLM45)
+I_2000_1PTFRC_CLM45 (I1PTCLM45)
+I_2000_GLC_CLM45_CISM1 (IGCLM45)
+I_2000_GLC_CLM45_CISM2P (IGCLM45IS2)
+I_2000_CLM45_CN (ICLM45CN) 
+I_2000_CLM45_CN_CROP (ICLM45CNCROP)
+I_2000_CLM45_CN_4Me (ICLM45CN4Me)
+I_2000_CRUFRC_CLM45 (ICRUCLM45)
+I_2000_CRUFRC_CLM45_CN (ICRUCLM45CN)
+I_2000_CRUFRC_CLM45_CN_4Me (ICRUCLM45CN4Me)
+I_2000_CLM45_CN_GLC_CISM1 (IGCLM45CN)
+I_1850_CLM45 (I1850CLM45)
+I_1850_CLM45_CN_4Me (I1850CLM45CN4Me)
+I_1850_CRUFRC_CLM45 (I1850CRUCLM45)
+I_1850_CRUFRC_CLM45_CN (I1850CRUCLM45CN)
+I_1850_CRUFRC_CLM45_CN_4Me (I1850CRUCLM45CN4Me)
+I_1850_CLM45_GLC_CISM1 (IG1850CLM45)
+I_1850_CLM45_CN (I1850CLM45CN)
+I_1850-2000_CLM45 (I20TRCLM45)
+I_1850-2000_CLM45_CN (I20TRCLM45CN) 
+I_1850-2000_CRUFRCCLM45 (I20TRCRUCLM45)	
+I_1850-2000_CRUFRC_CLM45_CN (I20TRCRUCLM45CN)
+I_1850-2000_CRUFRC_CLM45_CN_4Me (I20TRCRU4MeCLM45)
+I_1850-2000_CLM45_GLC_CISM1 (IG20TRCLM45) 
+I_1850-2000_CLM45_CN_GLC_CISM1 (IG20TRCLM45CN)	
+I_1948-2004_CLM45 (I4804CLM45)
+I_1948-2004_CLM45_GLC_CISM1 (IG4804CLM45) 
+I_1948-2004_CLM45_CN_GLC_CISM1 (IG4804CLM45CN)	
+I_RCP8.5_CLM45_CN_GLC_CISM1 (IGRCP85CLM45CN) 
+I_RCP6.0_CLM45_CN (IRCP60CLM45CN) 
+I_RCP6.0_CLM45_CN_GLC_CISM1 (IGRCP60CLM45CN) 
+I_RCP4.5_CLM45_CN (IRCP45CLM45CN) 
+I_RCP4.5_CLM45_CN_GLC_CISM1 (IGRCP45CNCLM45) 
+I_RCP2.6_CLM45_CN (IRCP26CLM45CN) 
+I_RCP2.6_CLM45_CN_GLC_CISM1 (IGRCP26CLM45CN) 
+I_RCP8.5_CLM45_CN (IRCP85CLM45CN) 
+I_1850_SPINUP_3HrWx_CLM45_CN_4Me
+
+  CLM configure changes:
+
+     Add physics option to determine if CLM4.0 or CLM4.5 physics is used:
++     -phys <name>           Value of clm4_0 or clm4_5 (default is clm4_0) 
+
+   Options removed
+
+    -pergro
+    -c13
+
+   Options added for CLM4.5 physics:
+
++     -clm4me <name>         Turn Methane model: [on | off]
++                              Requires bgc=cn/cndv (Carbon Nitrogen model)
++                            (ONLY valid for CLM4.5!)
++     -exlaklayers <name>    Turn on extra lake layers (25 layers instead of 10) [on | off]
++                            (ONLY valid for CLM4.5!)
++     -vsoilc_centbgc <name> Turn on vertical soil Carbon profile, CENTURY model decomposition,
++                            split Nitrification/de-Nitrification into two mineral 
++                            pools for NO3 and NH4 (requires clm4me Methane model), and
++                            eliminate inconsistent duplicate soil hydraulic 
++                            parameters used in soil biogeochem.
++                            (requires either CN or CNDV)
++                            (ONLY valid for CLM4.5!)
++                            [on,off or colen delimited list of no options] (default off)
++                              no-vert     Turn vertical soil Carbon profile off
++                              no-cent     Turn CENTURY off
++                              no-nitrif   Turn the Nitrification/denitrification off
++                              no-stnd-bsw Turn the standard BSW for soil psi off
++                            [no-vert,no-cent,no-nitrif,no-stnd-bsw,
++                             no-vert:no-cent,no-nitrif:no-stnd-bsw,
++                             no-vert:no-cent:no-stnd-bsw]
+
+    New spinup options added for CLM4.5 physics (but are now deprecated and NOT recommended for use)
+
++                              Enter-AD      Turn on Accelerated Decomposition from           (6)
++                                            existing initial conditions (optional) (deprecated)
++                                            (ONLY valid for CLM4.5!)
++                              AD2Lesser     Jump from full AD to lesser AD spinup (optional)  (4)
++                                            (deprecated) (ONLY valid for CLM4.5!)
++                              LesserAD      Lesser Accelerated Decomposition mode            (3)
++                                            (deprecated) (ONLY valid for CLM4.5!)
++                              LesserAD-exit Jump from lesser AD to normal mode               (1)
++                                            (deprecated) (ONLY valid for CLM4.5!)
++                            Two sequences are valid: 6-5-4-3-1-0 or 6-5-2-0 (where 6 and 4 are optional)
++                            The recommended sequence is 5-2-0
+
+  
+
+Describe any changes made to the namelist:
+    Extensive list of new namelist options for CLM4.5 physics
+
+List any changes to the defaults for the boundary datasets:
+    Extensive list of new datasets for CLM4.5
+    Add 360x720 grid (hcru_hcru) for CLM4.0 physics
+
+Describe any substantial timing or memory changes: CLM4.0 -- identical to clm4_0_59
+                                                   CLM4.5 -- identical to clm45sci15_clm4_0_58
+
+Code reviewed by: self, mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): to cesm1_2_alpha02a versions
+
+   scripts            to scripts4_130204
+   Machines           to Machines_130204
+   drv                to drvseq4_2_18
+   datm               to datm8_130130
+   rtm                to rtm1_0_18
+   cism               to 45merge_02_cism1_121114
+   csm_share          to share3_130131
+   pio                to pio1_6_1
+   mapping/gen_domain to mapping_121113b
+
+List all files eliminated:
+
+============== Eliminate PERGRO option, remove duplicated tools from clm4_0, change names to include clm4_0
+D       models/lnd/clm/test/system/nl_files/mksrfdt_1x1_numaIA_mp20irrcr_2000
+D       models/lnd/clm/test/system/nl_files/mksrfdt_10x15_irr_1850
+D       models/lnd/clm/tools/mkmapdata/* ---------> remove
+D       models/lnd/clm/tools/mkprocdata_map/* ----> remove
+D       models/lnd/clm/tools/ncl_scripts/* -------> remove
+D       models/lnd/clm/tools/interpinic/* --------> move to under clm4_0
+D       models/lnd/clm/tools/mkmapgrids/* --------> remove
+D       models/lnd/clm/tools/mksurfdata_map/* ----> move to under clm4_0
+D       models/lnd/clm/bld/namelist_files/namelist_definition.xml ---> use clm4_5 version
+D       models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -> move to name with clm4_0
+D       models/lnd/clm/bld/namelist_files/use_cases/pergro_pd.xml ---> Remove PERGRO option
+D       models/lnd/clm/bld/namelist_files/use_cases/pergro0_pd.xml --> Remove PERGRO option
+D       models/lnd/clm/bld/namelist_files/namelist_defaults_clm_tools.xml -> move to name with clm4_0
+
+List all files added and what they do:
+
+============== testing for clm4_5 and change name of some tests to include clm4_0
+A  +    models/lnd/clm/test/system/config_files/gen_domain
+A  +    models/lnd/clm/test/system/tests_posttag_frankfurt_nompi
+A  +    models/lnd/clm/test/system/user_nl_dirs/anoxia_wtsat
+A  +    models/lnd/clm/test/system/user_nl_dirs/anoxia_wtsat/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/vrtlay
+A  +    models/lnd/clm/test/system/user_nl_dirs/vrtlay/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/oldhyd
+A  +    models/lnd/clm/test/system/user_nl_dirs/oldhyd/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/ch4_set2_ciso
+A  +    models/lnd/clm/test/system/user_nl_dirs/ch4_set2_ciso/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/ch4_set3_pftroot
+A  +    models/lnd/clm/test/system/user_nl_dirs/ch4_set3_pftroot/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/rootlit
+A  +    models/lnd/clm/test/system/user_nl_dirs/rootlit/user_nl_clm
+A  +    models/lnd/clm/test/system/user_nl_dirs/ciso
+A  +    models/lnd/clm/test/system/user_nl_dirs/ciso/user_nl_clm
+A  +    models/lnd/clm/test/system/nl_files/nl_ch4_set2_ciso
+A  +    models/lnd/clm/test/system/nl_files/nl_ch4_set3_pftroot
+A  +    models/lnd/clm/test/system/nl_files/mksrfdt_10x15_1850
+A  +    models/lnd/clm/test/system/nl_files/nl_rootlit
+A  +    models/lnd/clm/test/system/nl_files/nl_ciso
+A  +    models/lnd/clm/test/system/nl_files/nl_anoxia_wtsat
+A  +    models/lnd/clm/test/system/nl_files/clm4_0_mksrfdt_1x1_numaIA_mp20irrcr_2000
+A  +    models/lnd/clm/test/system/nl_files/clm4_0_mksrfdt_10x15_irr_1850
+A  +    models/lnd/clm/test/system/nl_files/mksrfdt_1x1_numaIA_mp24_2000
+A  +    models/lnd/clm/test/system/nl_files/nl_vrtlay
+A  +    models/lnd/clm/test/system/nl_files/nl_oldhyd
+============== clm4_5 version of tools (from clm45sci15_clm4_0_58)
+A  +    models/lnd/clm/tools/clm4_5
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/mvNimport.sh
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/rmdups.ncl
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/regridbatch.sh
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/mkmapdata.sh
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/mkunitymap.ncl
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/mknoocnmap.pl
+A  +    models/lnd/clm/tools/clm4_5/mkmapdata/README
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/clm4054_ne30g16_I2000.clm2.h0.2000-01_c121107.nc
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/map_ne30np4_nomask_to_fv1.9x2.5_nomask_aave_da_c121107.nc
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/mkprocdata_map_functions.bash
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/mkprocdata_map.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/gridmapMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/constMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/Makefile.common
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/fmain.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/shr_file_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/nanMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/Mkdepends
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/Srcfiles
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/Filepath
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/Makefile
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/fileutils.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/src/shr_kind_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/mkprocdata_map_in
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/mkprocdata_map_all
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/clm
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/mkprocdata_map_wrap
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/clm4054_f19g16_I2000.clm2.h0.2000-01_c121107.nc
+A  +    models/lnd/clm/tools/clm4_5/mkprocdata_map/README
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts/cprnc.pl
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts/getco2_historical.ncl
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts/cprnc.ncl
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts/getregional_datasets.pl
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts/getregional_datasets.ncl
+A  +    models/lnd/clm/tools/clm4_5/ncl_scripts/README
+A  +    models/lnd/clm/tools/clm4_5/interpinic
+A  +    models/lnd/clm/tools/clm4_5/interpinic/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c121113.nc
+A  +    models/lnd/clm/tools/clm4_5/interpinic/interpinic.runoptions
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/interpinic.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_infnan_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/Makefile.common
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_isnan.c
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_sys_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/fmain.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_log_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/Mkdepends
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/Srcfiles
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_isnan.h
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/Filepath
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/Makefile
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_kind_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/src/shr_const_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/interpinic/README
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/Makefile.common
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/domainMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/shr_sys_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/shr_file_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/nanMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/shr_log_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/Mkdepends
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/Srcfiles
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/mkmapgrids.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/Filepath
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/Makefile
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/src/shr_kind_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/mkmapgrids.namelist
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/mkscripgrid.ncl
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/mkmapgrids.csh
+A  +    models/lnd/clm/tools/clm4_5/mkmapgrids/README
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkvarctl.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkncdio.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/clm_varpar.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkutilsMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_file_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_timer_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_log_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkindexmapMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mklaiMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksoilMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/fileutils.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_const_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkharvestMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkurbanparCommonMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Makefile
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_string_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkglcmecMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkvarpar.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/clm_varctl.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_sys_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkvocefMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkdomainMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Filepath
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/shr_kind_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkurbanparMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Makefile.common
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkgridmapMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/nanMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Srcfiles
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Mkdepends
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mklanwatMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_lookup_2d_netcdf.nc
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkncdio.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkutilsMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkindexmapMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/Srcfiles
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/Filepath
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/Makefile
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/README
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkurbanparMod.F90
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata_map.namelist
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/README
+A  +    models/lnd/clm/tools/clm4_5/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt
+============== clm4_0 version of tools
+A  +    models/lnd/clm/tools/clm4_0
+A  +    models/lnd/clm/tools/clm4_0/interpinic
+A  +    models/lnd/clm/tools/clm4_0/interpinic/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
+A  +    models/lnd/clm/tools/clm4_0/interpinic/interpinic.runoptions
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/interpinic.F90
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/Makefile.common
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/shr_sys_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/fmain.F90
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/shr_log_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/Mkdepends
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/Srcfiles
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/Filepath
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/Makefile
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/shr_kind_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/interpinic/src/shr_const_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/interpinic/README
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkvarctl.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkncdio.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/clm_varpar.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkutilsMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_file_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_timer_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_log_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkindexmapMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mklaiMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mksoilMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/fileutils.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_const_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkurbanparDomMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkharvestMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkfileMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkurbanparCommonMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/Makefile
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_string_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkglcmecMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkvarpar.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/clm_varctl.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_sys_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkvocefMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkdomainMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/Filepath
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mksurfdat.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkurbanparAvgMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/shr_kind_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/Makefile.common
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkgridmapMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/nanMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/Mkdepends
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/Srcfiles
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mklanwatMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkpftMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_lookup_2d_netcdf.nc
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_mkncdio.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_mkutilsMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_mkindexmapMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/Srcfiles
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_mod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/Filepath
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/Makefile
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/README
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/unit_testers/test_mkurbanparDomMod.F90
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata_map.namelist
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata.pl
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/README
+A  +    models/lnd/clm/tools/clm4_0/mksurfdata_map/pftdyn_hist_simyr1850-2005.txt
+A  +    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0_tools.xml
+A  +    models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+A  +    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+A  +    models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+A  +    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+A  +    models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+============== clm4_5 version of source (from clm45sci15_clm4_0_58)
+A  +    models/lnd/clm/src/clm4_5
+A  +    models/lnd/clm/src/clm4_5/biogeochem
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate2Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNGRespMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CropRestMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/initch4Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate3Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNMRespMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeMod_BGC.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/MEGANFactorsMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ch4RestMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNWoodProductsMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDVLightMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/ch4varcon.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/STATICEcosysDynMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDVMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/VOCEmissionMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDVEcosystemDynIniMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNAnnualUpdateMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate2Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeMod_CENTURY.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNVegStructUpdateMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeochem/CNC14DecayMod.F90
+A  +    models/lnd/clm/src/clm4_5/main
+A  +    models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+A  +    models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+A  +    models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90
+A  +    models/lnd/clm/src/clm4_5/main/dynlandMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/clm_glclnd.F90
+A  +    models/lnd/clm/src/clm4_5/main/subgridMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+A  +    models/lnd/clm/src/clm4_5/main/histFileMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/pft2colMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+A  +    models/lnd/clm/src/clm4_5/main/findHistFields.pl
+A  +    models/lnd/clm/src/clm4_5/main/restFileMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/controlMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/initSurfAlbMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/filterMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+A  +    models/lnd/clm/src/clm4_5/main/clm_driver.F90
+A  +    models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/CNiniSpecial.F90
+A  +    models/lnd/clm/src/clm4_5/main/pftvarcon.F90
+A  +    models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/inicPerpMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/clmtype.F90
+A  +    models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+A  +    models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys
+A  +    models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SLakeFluxesMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/FrictionVelocityMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/TridiagonalMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SLakeHydrologyMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/ActiveLayerMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/QSatMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SLakeTemperatureMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SNICARMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/initSLakeMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/H2OSfcMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/FracWetMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SLakeRestMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SLakeCon.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/BandDiagonalMod.F90
+A  +    models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/test/system/tests_posttag_lynx_nompi
+M       models/lnd/clm/test/system/TCBCFGtools.sh
+M       models/lnd/clm/test/system/frankfurt.batch
+M       models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+M       models/lnd/clm/test/system/config_files/config_CLMtestCompsets.xml
+M       models/lnd/clm/test/system/TSMncl_tools.sh
+M       models/lnd/clm/test/system/TBLCFGtools.sh
+M       models/lnd/clm/test/system/README.testnames
+M       models/lnd/clm/test/system/tests_posttag_yong
+M       models/lnd/clm/test/system/yellowstone.interactive
+M       models/lnd/clm/test/system/TCBtools.sh
+M       models/lnd/clm/test/system/test_driver.sh
+M       models/lnd/clm/test/system/shortlist.interactive
+M       models/lnd/clm/test/system/tests_pretag_yellowstone_nompi
+M       models/lnd/clm/test/system/bluefire.batch
+M       models/lnd/clm/test/system/frankfurt.interactive
+M       models/lnd/clm/test/system/TSMscript_tools.sh
+M       models/lnd/clm/test/system/tests_posttag_mirage
+M       models/lnd/clm/test/system/gen_test_table.sh
+M       models/lnd/clm/test/system/nl_files/gen_domain.ne30.runoptions
+M       models/lnd/clm/test/system/nl_files/gen_domain.T31.runoptions
+M       models/lnd/clm/test/system/TOPtools.sh
+M       models/lnd/clm/test/system/input_tests_master
+M       models/lnd/clm/test/system/TSMtools.sh
+M       models/lnd/clm/test/system/TBLscript_tools.sh
+M       models/lnd/clm/test/system/yellowstone.batch
+M       models/lnd/clm/test/system/tests_posttag_nompi_regression
+M       models/lnd/clm/test/system/lynx.batch
+M       models/lnd/clm/test/system/TBLtools.sh
+M       models/lnd/clm/test/system/shortlist.batch
+M       models/lnd/clm/test/system/TSMCFGtools.sh
+
+M       models/lnd/clm/bld/configure
+M       models/lnd/clm/bld/queryDefaultNamelist.pl
+M       models/lnd/clm/bld/config_files/config_definition.xml
+M       models/lnd/clm/bld/listDefaultNamelist.pl
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+M       models/lnd/clm/bld/build-namelist
+M       models/lnd/clm/bld/clm.buildnml.csh
+M       models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+
+MM      models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+MM      models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+
+Difference in expected Fails:
+
+ <expectedFails>
+    <namelistTest> 
+-      <bluefire>
+-         <IBM>
+-            <compare>
+-            </compare>
+-            <generate>
+-               <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
+-               <entry testId="189" failType="xFail"> ne16 missing finidat file for 1850</entry>
+-               <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
+-               <entry testId="201" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+-            </generate>
+-         </IBM>
+-      </bluefire>
+       <mirage>
+       </mirage>
+       <lynx>
+@@ -25,10 +13,17 @@
+          </IBM>
+       </janus>
+       <yellowstone>
++         <intel>
+             <compare>
++               <entry testId="216" failType="xFail"> missing datasets for us20 </entry>
++               <entry testId="296" failType="xFail"> ne16 missing finidat file for 1850</entry>
++               <entry testId="298" failType="xFail"> ne16 missing finidat file for 1850</entry>
++               <entry testId="301" failType="xFail"> ne60 missing finidat file for 1850</entry>
++               <entry testId="303" failType="xFail"> ne60 missing finidat file for 1850</entry>
++               <entry testId="316" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
++               <entry testId="318" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+             </compare>
+             <generate>
+-               <entry testId="138" failType="xFail"> missing datasets for wus12 </entry>
+                <entry testId="141" failType="xFail"> missing datasets for us20 </entry>
+                <entry testId="189" failType="xFail"> ne16 missing finidat file for 1850</entry>
+                <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
+@@ -38,17 +33,6 @@
+    </namelistTest>
+ 
+    <clmInteractive> 
+-      <bluefire>
+-         <IBM>
+-            <compare>
+-               <entry testId="bl9C4" failType="xFail"> cprnc showing diffs are not b4b </entry>
+-               <entry testId="sm514" failType="xFail"> problem configuring </entry>
+-               <entry testId="bl514" failType="xFail"> problem configuring </entry>
+-               <entry testId="sm8Z3" failType="xFail"> clm stand-alone can no longer work </entry>
+-               <entry testId="bl8Z3" failType="xFail"> clm stand-alone can no longer work </entry>
+-            </compare>
+-         </IBM>
+-      </bluefire>
+       <mirage>
+       </mirage>
+       <lynx>
+@@ -62,24 +46,6 @@
+    </clmInteractive>
+ 
+    <clmBatch> 
+-      <bluefire>
+-         <IBM>
+-            <compare>
+-               <entry testId="smW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+-               <entry testId="erW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+-               <entry testId="brW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+-               <entry testId="blW51" failType="xFail"> Ignore.  Will be moved to CESM tests. </entry>
+-               <entry testId="smU61" failType="xFail"> Failing for long time.  endrun initiated from  CNBalanceCheckMod.F90. </entry>
+-               <entry testId="erU61" failType="xFail"> Failing for long time.  __cnbalancecheckmod_NMOD_cbalancecheck. </entry>
+-               <entry testId="brU61" failType="xFail"> Failing for long time.  Fail because erU61 fails. </entry>
+-               <entry testId="blU61" failType="xFail"> Failing for long time.  Fail because erU61 fails. </entry>
+-               <entry testId="smCI1" failType="xFail"> Have been failing for a long time . </entry>
+-               <entry testId="erCI1" failType="xFail"> Have been failing for a long time. </entry>
+-               <entry testId="brCI1" failType="xFail"> Have been failing for a long time. </entry>
+-               <entry testId="blCI1" failType="xFail"> Have been failing for a long time. </entry>
+-            </compare>
+-         </IBM>
+-      </bluefire>
+       <mirage>
+       </mirage>
+       <lynx>
+@@ -93,91 +59,108 @@
+    </clmBatch>
+ 
+    <test_system_interactive> 
+-      <bluefire>
+-         <IBM>
+-              <entry testId="ERS_D_P1x64_Mmpi-serial.f19_g16.I_1850-2000_VOC_SNCRFRC_CN" failType="RUN">Initial simulation fails</entry>
+-              <entry testId="ERS_Ln48_D_P1x64_Mmpi-serial.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
+-              <entry testId="ERS_Ln48_D_P1x64_Mmpi-serial.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different</entry>
+-              <entry testId="PET_D_P1x64_Mmpi-serial.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
+-              <entry testId="ERS_Ln48_D_P1x64.f45_g37.I_2000_VOC"            failType="RUN">Initial simulation fails</entry>
+-              <entry testId="ERS_Ln48_D_P1x64.f19_g16.I_2000_GLCMECPD"       failType="FAIL">History files are different on restart (known problem
+               restarting mid-day with _GLC: bug 1557)</entry>
+-              <entry testId="PET_D_P1x64.f45_g37.I_2000_VOC"                 failType="FAIL">Initial simulation fails</entry>
+-              <entry testId="ERS48s_D.f09_g16.ICNEXSPIN"                     failType="CFAIL">build error?</entry>
+-         </IBM>
+-      </bluefire>
+       <lynx>
+          <pgi>
+-              <entry testId="ERS_Ld211.1x1_camdenNJ.I_2000_VOC"              failType="CFAIL">????</entry>
+          </pgi>
+          <intel>
+          </intel>
+       </lynx>
+       <frankfurt>
+          <intel>
+-              <entry testId="ERS_Ln48_D_P1x16_Mmpi-serial.f10_f10.ICNCROP"   failType="FAIL">????</entry>
+          </intel>
+       </frankfurt>
+       <yellowstone>
+           <intel>
+-              <entry testId="ERS_D_P1x16_Mmpi-serial.f19_g16.I_1850-2000_VOC_SNCRFRC_CN"   failType="RUN" >Initial simulation fails</entry>
+-              <entry testId="ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_VOC_SNCRFRC_CN"       failType="RUN" >Initial simulation fails case name too
+               long</entry>
+-              <entry testId="ERS_Ln48_D_P1x16_Mmpi-serial.f19_g16.I_2000_GLCMECPD"         failType="FAIL">History files are different on restart (known
+               problem restarting mid-day with _GLC: bug 1557)</entry>
++              <entry testId="ERS_Ld211_Mmpi-serial.1x1_camdenNJ.ICLM45VOC"                 failType="RUN" ></entry>
++              <entry testId="ERS_D_P1x1_Mmpi-serial.f19_g16.ICLM45GLCMEC"                  failType="FAIL" ></entry>
++              <entry testId="PET_D_P1x1_Mmpi-serial.f45_g37.ICLM45VOC"                     failType="TFAIL" ></entry>
++              <entry testId="ERS_D_Mmpi-serial.1x1_asphaltjungleNJ.ICLM45VOC"              failType="RUN"   ></entry>
++              <entry testId="ERS_Ld211_Mmpi-serial.1x1_brazilICLM45VSCN"                   failType="TFAIL" ></entry>
++              <entry testId="ERS_Ln48_D_Mmpi-serial.f10_f10.I_2000_CLM45_CN"               failType="RUN"   ></entry>
++              <entry testId="ERI_Mmpi-serial.f10_f10.I_2000_CLM45_CN4Me"                   failType="FAIL"  ></entry>
++              <entry testId="ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_VOC_SNCRFRC_CN"       failType="RUN" ></entry>
++              <entry testId="ERS_D_P1x16_Mmpi-serial.f19_g16.I_2000_GLCMECP"               failType="RUN" ></entry>
+           </intel>
+       </yellowstone>
+    </test_system_interactive> 
+ 
+    <test_system_batch> 
+-      <bluefire>
+-         <IBM>
+-              <entry testId="ERS_D_P96x32.T62_g37.I_2000"             failType="SFAIL">T62 not working</entry>
+-              <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"      failType="RUN">Dies early with a floating point trap</entry>
+-              <!-- SPM work out a way to get xFail for a specific compare test -->
+-              <entry testId="ERS_Ld211_P192x2.f19_g16.I_2000_CNDV_CROP.*.compare_hist"      failType="RUN">Baseline comp. test will always fail</entry>
+-              <entry testId="ERS_Ln48_D.f09_g16.ICNEXSPIN"            failType="CFAIL">build error?</entry>
+-         </IBM>
+-      </bluefire>
+       <lynx>
+          <pgi>
+               <entry testId="ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD" failType="FAIL">History files are different on restart (known problem
+restarting mid-day with _GLC: bug 1557)</entry>
+          </pgi>
+       </lynx>
++      <frankfurt>
++         <intel>
++         </intel>
++      </frankfurt>
+       <yellowstone>
+           <intel>
+               <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"      failType="RUN" >History files are different on restart (known problem restarting
+mid-day with _GLC: bug 1557)</entry>
++              <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
++              <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
++              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.oldhyd"        failType="TFAIL"></entry>
++              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.anoxia_wtsat"  failType="TFAIL"></entry>
++              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_ciso" failType="TFAIL"></entry>
++              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_pftr" failType="TFAIL"></entry>
++              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_pftr" failType="TFAIL"></entry>
++              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.rootlit"     failType="TFAIL"></entry>
++              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4M.vrtlay"              failType="TFAIL"></entry>
++              <entry testId="PET_D_P1x32.ne30_g16.ICN"                           failType="SFAIL"></entry>
++              <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="TFAIL"></entry>
+           </intel>
+       </yellowstone>
+-   <test_system_batch> 
++   </test_system_batch> 
+   
+    <cesm> 
+-      <bluefire>
+-         <IBM>
++      <IcompsetTests>
++         <yellowstone>
++            <intel>
+               <entry testId="SBN.1x1_tropicAtl.I20TR"        failType="SFAIL">missing datasets</entry>
+               <entry testId="SBN.ne16_g16.I20TR"             failType="TFAIL">missing datasets</entry>
+-              <entry testId="SBN.ne60_g16.I20TR"             failType="TFAIL">missing datasets</entry>
+-         </IBM>
+-      </bluefire>
++               <entry testId="SBN.ne60_g16.I20TR"       failType="SFAIL">missing datasets</entry>
++               <entry testId="SBN.ne240_g16.I1850"      failType="FAIL" >missing 0.1 mapping dataset (for RTM at R01)</entry>
++            </intel>
++            <pgi>
++            </pgi>
++         </yellowstone>
++      </IcompsetTests>
++      <auxTests>
+       <yellowstone>
++            <intel>
++               <entry testId="PET_PT.f19_g16.I1850CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
++               <entry testId="ERB.ne30_g16.I_1948-2004"  failType="FAIL" >Restart difference</entry>
++               <entry testId="ERS_Lm3.f19_g16.IGRCP60CN" failType="FAIL" >Soil balance error on restart</entry>
++               <entry testId="PET_PT.f10_f10.I20TRCN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
++
++               <entry testId="PET_PT.f19_g16.I1850CLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
++               <entry testId="ERS_E.f19_g16.ICLM451850"       failType="TFAIL">bad compset name</entry>
++               <entry testId="ERS_D.f19_g16.IGRCP26CLM45CN"   failType="RUN"  >surfdata and pftdyn file mismatched</entry>
++               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN" failType="RUN"  >Soil balance error on restart</entry>
++               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue component not threaded</entry>
++               <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="SFAIL">missing finidat file</entry>
++               <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="SFAIL">missing finidat file</entry>
++            </intel>
+          <pgi>
+-              <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CN"    failType="CFAIL">????</entry>
+-              <entry testId="SMS.1x1_numaIA.ICN_CROP"             failType="TFAIL">????</entry>
++               <entry testId="SMS_RLB.f45_f45.I"                 failType="cFAIL">problem building with mpi-serial with pgi compiler</entry>
++               <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CN"  failType="cFAIL">missing LAPACK symbol dgbsv</entry>
++               <entry testId="PET_PT.f19_g16.I1850"              failType="TFAIL">scripts issue with ocean not threaded</entry>
++               <entry testId="ERI.f19_g16.IG1850"                failType="CFAIL">Need LAPACK for PGI (dgbsv)</entry>
++               <entry testId="SMS.T31_g37.IG4804"                failType="CFAIL">Need LAPACK for PGI (dgbsv)</entry>
++               <entry testId="SMS.1x1_numaIA.ICN_CROP"           failType="TFAIL">Bad compset name: ICNCROP</entry>
++               <entry testId="PET_PT.f10_f10.I20TRCN"            failType="TFAIL">scripts issue with ocean not threaded</entry>
++
++               <entry testId="SMS_RLB.f45_f45.ICLM45"                 failType="cFAIL">problem building with mpi-serial with pgi compiler</entry>
++               <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CLM45_CN" failType="cFAIL">missing LAPACK symbol dgbsv</entry>
++               <entry testId="ERS.f19_g16.ICLM45CNCROP"               failType="cFAIL">missing LAPACK symbol dgbsv</entry>
++               <entry testId="PET_PT.f19_g16.ICLM451850"              failType="TFAIL">scripts issue with ocean not threaded</entry>
++               <entry testId="ERI.f19_g16.IG1850CLM45"                failType="CFAIL">Need LAPACK for PGI (dgbsv)</entry>
++               <entry testId="SMS.T31_g37.IG4804CLM45"                failType="CFAIL">Need LAPACK for PGI (dgbsv)</entry>
++               <entry testId="SMS.1x1_numaIA.ICLM45CN_CROP"           failType="TFAIL">Bad compset name: ICNCROP</entry>
++               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"            failType="TFAIL">scripts issue with ocean not threaded</entry>
+          </pgi>
+       </yellowstone>
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes
+
+  CESM test lists:
+
+    yellowstone/CESM:              yes
+    yellowstone/CESM/allIcompsets: yes
+
+  test_system testing:
+
+    yellowstone batch:          yes
+    frankfurt interactive:      yes
+    yellowstone interactive:    yes
+    frankfurt batch:            yes
+
+  test_driver.sh tools testing:
+
+    yellowstone interactive:    yes
+    frankfurt interactive:      yes
+
+  yellowstone/PTCLM:            no (PTCLM still doesn't quite work)
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0 to clm4_0_59 clm4_5 to clm45sci15_clm4_0_58
+
+Changes answers relative to baseline: Yes, for some resolutions for clm4_0 -- because of new default initial condition files in compsets
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+    For clm4_0...
+    New initial conditions for: f09/f19-I_2000, f09/f19-I_1850, f09/f19-I_1850-2000
+                                f09/f19-I_1948-2004, f09/f19-I_1850_SPINUP_3HrWx
+                                f09/f19-I_RCP
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_59
 Originator(s):  mvertens (Mariana Vertenstein) / erik
 Date: Thu Dec 20 09:24:16 MST 2012

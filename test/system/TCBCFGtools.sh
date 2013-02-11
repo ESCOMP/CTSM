@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     echo "TCBCFGtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TCBCFGtools.$1.$2
+test_name=TCBCFGtools.$1.$2.$3
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1`
+cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1/$2`
 blddir=${CLM_TESTDIR}/${test_name}/src
 if [ -d ${blddir} ]; then
     rm -r ${blddir}

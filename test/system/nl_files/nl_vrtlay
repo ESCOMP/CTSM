@@ -1,0 +1,7 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_inparm
+ more_vertlayers = .true.
+ hist_ndens=1,1
+/

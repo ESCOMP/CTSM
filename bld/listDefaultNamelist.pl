@@ -60,6 +60,7 @@ require queryDefaultXML;
 # Defaults
 my $datmblddir  = "$cfgdir/../../../../models/atm/datm/bld";
 my $drvblddir   = "$cfgdir/../../../../models/drv/bld";
+
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml",
@@ -75,11 +76,12 @@ SYNOPSIS
 OPTIONS
      -help  [or -h]                       Display this help.
      -csmdata [or -d]                     Path to CSMDATA.
+     -phys "name"                         Model physics (either clm4_0 or clm4_5) (default clm4_0)
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
                                           (At least one resolution is required)
                                           (If res is "all" will run over all resolutions)
      -usrdat "name"                       Allow resolution to be the given clm user-data name
-     -silent [or -s]                      Don't do any extra printing.
+     -silent [or -s]                      Do not do any extra printing.
 EXAMPLES
 
   List all the files needed for resolution 10x15 to the file $list.
@@ -162,6 +164,7 @@ sub GetListofNeededFiles {
                list       => $list,
                usrdat     => undef,
                help       => undef,
+               phys       => "clm4_0",
              );
 
   my $cmdline = "@ARGV";
@@ -171,6 +174,7 @@ sub GetListofNeededFiles {
         "s|silent"     => \$opts{'silent'},
         "u|usrdat=s"   => \$opts{'usrdat'},
         "h|elp"        => \$opts{'help'},
+        "phys=s"       => \$opts{'phys'},
   ) or usage();
 
   # Check for unparsed arguments
@@ -273,6 +277,7 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            #
            # Loop over all possible BGC settings
            #
+	   my $phys = $opts{'phys'};
            foreach my $bgc ( @bgcsettings ) {
               $settings{'bgc'} = $bgc;
               my @crop_vals;
@@ -300,8 +305,12 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
                     foreach my $crop ( @crop_vals ) {
                        $settings{'crop'} = $crop;
                        if ( $crop eq "on" ) {
-                          $settings{'maxpft'} = 21;
-                       } else {
+			   if ($phys eq "clm4_0") { 
+			       $settings{'maxpft'} = 21;
+			   } else {
+			       $settings{'maxpft'} = 25;
+			   }
+		       } else {
                           $settings{'maxpft'} = 17;
                        }
                        my @irrigset;

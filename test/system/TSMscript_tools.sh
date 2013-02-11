@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 4 ]; then
     echo "TSMscript_tools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TSMscript_tools.$1.$2.$3
+test_name=TSMscript_tools.$1.$2.$3.$4
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1`
+cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm/tools/$1/$2`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -43,35 +43,35 @@ if [ $? -ne 0 ]; then
 fi
 cd ${rundir}
 
-optfile=${3%^*}
-cfgfile=${3#*^}
+optfile=${4%^*}
+cfgfile=${4#*^}
 
-if [ "$optfile" != "$3" ]; then
-  echo "TSMscript_tools.sh: calling TCBtools.sh to prepare $1 executable"
-  ${CLM_SCRIPTDIR}/TCBtools.sh $1 $cfgfile
+if [ "$optfile" != "$4" ]; then
+  echo "TSMscript_tools.sh: calling TCBtools.sh to prepare $1 $2 executable"
+  ${CLM_SCRIPTDIR}/TCBtools.sh $1 $2 $cfgfile
   rc=$?
   if [ $rc -ne 0 ]; then
       echo "TSMscript_tools.sh: error from TCBtools.sh= $rc"
       echo "FAIL.job${JOBID}" > TestStatus
       exit 4
   fi 
-  tcbtools=${CLM_TESTDIR}/TCBtools.$1.$cfgfile
+  tcbtools=${CLM_TESTDIR}/TCBtools.$1.$2.$cfgfile
 else
   tcbtools="."
 fi
 
 scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|HOME|$HOME|g" | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|EXEDIR|$tcbtools|" | sed -e "s|CFGDIR|$cfgdir|g"`
 
-echo "TSMscript_tools.sh: running ${cfgdir}/$2 with $scopts; output in ${rundir}/test.log" 
+echo "TSMscript_tools.sh: running ${cfgdir}/$3 with $scopts; output in ${rundir}/test.log" 
 
-if [ ! -f "${cfgdir}/$2" ]; then
-    echo "TSMscript_tools.sh: error ${cfgdir}/$2 input script not found"
+if [ ! -f "${cfgdir}/$3" ]; then
+    echo "TSMscript_tools.sh: error ${cfgdir}/$3 input script not found"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 5
 fi
 
 if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
-   ${cfgdir}/$2 $scopts >> test.log 2>&1
+   ${cfgdir}/$3 $scopts >> test.log 2>&1
    status="PASS"
    rc=$?
 else
@@ -84,7 +84,7 @@ if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then
     echo "TSMscript_tools.sh: smoke test passed" 
     echo "$status" > TestStatus
 else
-    echo "TSMscript_tools.sh: error running $2, error= $rc" 
+    echo "TSMscript_tools.sh: error running $3, error= $rc" 
     echo "TSMscript_tools.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 6

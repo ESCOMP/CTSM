@@ -63,10 +63,9 @@ if (defined($opts{'csmdata'})) {
 } elsif (defined $ENV{'CSMDATA'} ) { 
     $inputdata_rootdir = $ENV{'CSMDATA'};
 } else {
-   # use bluefire location as default
-   print("WARNING:  -csmdata nor CSMDATA are set, using default bluefire location: \n");
-   print("          /glade/proj3/cseg/inputdata \n"); 
-   $inputdata_rootdir="/glade/proj3/cseg/inputdata";
+   # use yellowstone location as default
+   $inputdata_rootdir="/glade/p/cesm/cseg/inputdata";
+   print("WARNING:  -csmdata nor CSMDATA are set, using default yellowstone location: $inputdata_rootdir\n");
 }
 
 ###################################
@@ -89,9 +88,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 262;
+my $ntests = 280;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 157;
+   $ntests += 169;
 }
 plan( tests=>$ntests );
 
@@ -229,7 +228,7 @@ print "==================================================\n";
 
 # irrig, verbose, clm_demand, rcp, test, sim_year, use_case, l_ncpl
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-irrig", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
+foreach my $options ( "-irrig .true. ", "-verbose", "-rcp 2.6", "-test", "-sim_year 1850",
                       "-use_case 1850_control", "-l_ncpl 1", 
                       "-clm_startfile $startfile -clm_start_type startup", 
                      ) {
@@ -439,7 +438,6 @@ foreach my $res ( @crop_res ) {
    }
    &cleanup();
 }
-
 print "\n==================================================\n";
 print " Test glc_mec resolutions \n";
 print "==================================================\n";
@@ -519,6 +517,47 @@ foreach my $usecase ( "1850-2100_rcp2.6_transient", "1850-2100_rcp4.5_transient"
       &cleanup();
    }
 }
+
+print "\n==================================================\n";
+print "Test clm4.5 resolutions \n";
+print "==================================================\n";
+
+my $mode = "phys45";
+system( "../configure -s -phys clm4_5 -bgc cn -clm4me on -vsoilc_centbgc on" );
+my @clm45res = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720" );
+foreach my $res ( @clm45res ) {
+   $options = "-res $res";
+   eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+   is( $@, '', "$options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   system( "diff lnd_in lnd_in.default.standard" );
+   $cfiles->shownmldiff( "default", "standard" );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup();
+}
+my $mode = "phys45-crop";
+system( "../configure -s -phys clm4_5 -bgc cn -crop on" );
+my $res = "1.9x2.5";
+$options = "-res $res -irrig .true. ";
+eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };
+is( $@, '', "$options" );
+$cfiles->checkfilesexist( "$options", $mode );
+system( "diff lnd_in lnd_in.default.standard" );
+$cfiles->shownmldiff( "default", "standard" );
+if ( defined($opts{'compare'}) ) {
+   $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+   $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+}
+if ( defined($opts{'generate'}) ) {
+   $cfiles->copyfiles( "$options", $mode );
+}
+&cleanup();
 
 system( "/bin/rm $finidat" );
 

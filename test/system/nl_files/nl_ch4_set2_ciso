@@ -1,0 +1,15 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_nl
+ shape_fluxprof = 2
+ f_ch4 = 0.5d00
+ aereoxid = 0.0d00
+ scale_factor_aere = 0.0d00
+ satpow = 1.33333d00
+ redoxlag = 0.0d00
+ hist_wrtch4diag = .true.
+ use_c13=.true.
+ use_c14=.true.
+ hist_ndens=1,1
+/

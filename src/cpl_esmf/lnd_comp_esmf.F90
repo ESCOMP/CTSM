@@ -1082,6 +1082,9 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
        if (index_l2x_Fall_flxvoc  /= 0 ) &
             fptr(index_l2x_Fall_flxvoc:index_l2x_Fall_flxvoc+shr_megan_mechcomps_n-1,i) = &
                         -l2a%flxvoc(g,:shr_megan_mechcomps_n)
+#ifdef LCH4
+       if (index_l2x_Fall_methane /= 0 )  fptr(index_l2x_Fall_methane,i)= -l2a%flux_ch4(g)
+#endif
 
        ! sign convention is positive downwared with 
        ! hierarchy of atm/glc/lnd/rof/ice/ocn.  so water sent from land to rof is positive
@@ -1240,6 +1243,11 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
            co2_ppmv_diag = co2_ppmv
         end if
 
+#ifdef LCH4
+        if (index_x2l_Sa_methane /= 0) then
+           a2l%forc_pch4(g) = fptr(index_x2l_Sa_methane,i)
+        endif
+#endif
         ! Determine derived quantities for required fields
         a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
         a2l%forc_hgt_t(g) = a2l%forc_hgt(g)    !observational height of temperature [m]
@@ -1279,9 +1287,9 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
            co2_ppmv_val = co2_ppmv
         end if
         a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
-        if (use_c13) then
+        if ( use_c13 ) then
            a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
-        end if
+        endif
 
      end do
 

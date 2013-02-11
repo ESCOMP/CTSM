@@ -1,18 +1,8 @@
 #!/bin/sh 
 #
-
-# test_driver.sh:  driver script for the offline testing of CLM
+# test_driver.sh:  driver script for the offline testing of CLM of tools
 #
-# usage on yellowstone, mirage, edinburgh, bluefire (will submit itself to batch): 
-#
-# ./test_driver.sh
-#
-# usage on jaguarpf and lynx: 
-#
-# env CLM_JOBID=1001 ./test_driver.sh -c
-# env CLM_JOBID=1001 ./test_driver.sh
-#
-# interactive usage on all machines (runs a different list of tests):
+# interactive usage on all machines:
 #
 # env CLM_SOFF=FALSE ./test_driver.sh -i
 #
@@ -257,9 +247,9 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ## edinburgh
-    edinburgh* | e0*) 
-    submit_script="test_driver_edinburgh_${cur_time}.sh"
+    ## frankfurt
+    frankfurt* ) 
+    submit_script="test_driver_frankfurt_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -286,10 +276,10 @@ fi
 
 if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
-    input_file="tests_pretag_edinburgh"
+    input_file="tests_posttag_frankfurt"
 else
     interactive="YES"
-    input_file="tests_pretag_edinburgh_nompi"
+    input_file="tests_posttag_frankfurt_nompi"
 fi
 
 ##omp threads
@@ -303,40 +293,46 @@ export CLM_TASKS=8
 export CLM_RESTART_TASKS=7
 
 export PGI=/usr/local/pgi
-export LAHEY=/usr/local/lf6481
 export INTEL=/usr/local/intel-cluster
 export P4_GLOBMEMSIZE=500000000
 
 
-export CESM_MACH="edinburgh"
+export CESM_MACH="frankfurt"
+
 if [ "\$CLM_FC" = "PGI" ]; then
-    export NETCDF_PATH=/usr/local/netcdf-4.1.3-pgi-hpf-cc-11.5-0
-    export MPICH_PATH=/usr/local/mpich-pgi
-    export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${PGI}/linux86/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_COMP="pgi"
-    export TOOLS_MAKE_STRING=""
+   export NETCDF_PATH=/usr/local/netcdf-pgi
+   export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
+   export LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LIBRARY_PATH}
+   export PATH=\${PGI}/linux86/bin:\${PATH}
+   export CESM_COMP="pgi"
+   export TOOLS_MAKE_STRING=""
+   export TOOLS_CONF_STRING=""
+   export CFG_STRING=""
 else
-    export NETCDF_PATH=/usr/local/netcdf-4.1.3-gcc-4.4.4-13-lf9581
-    export MPICH_PATH=/usr/local/mpich-gcc-lf64
-    export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${LAHEY}/bin:\${MPICH_PATH}/bin:\${PATH}
-    export CESM_COMP="lahey"
-    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
+   export OMPI_INTEL_PATH=/cluster/openmpi-qlc-intel
+    # Runtime environment variables
+   export PATH=\${OMPI_INTEL_PATH}/bin:\${INTEL}/bin:\${PATH}
+
+   export NETCDF_PATH=/usr/local/netcdf-intel-cluster
+   export LD_LIBRARY_PATH=\$INTEL/composer_xe_2011_sp1.6.233/compiler/lib/intel64:\$OMPI_INTEL_PATH/lib64:/usr/mpi/intel/openmpi-1.4.3-qlc/lib64
+   export LIBRARY_PATH=\$INTEL/composer_xe_2011_sp1.6.233/compiler/lib/intel64:\$OMPI_INTEL_PATH/lib64:/usr/mpi/intel/openmpi-1.4.3-qlc/lib64
+   export CESM_COMP="intel"
+   export TOOLS_MAKE_STRING="USER_FC=ifort USER_CC=icc "
+   export TOOLS_CONF_STRING=""
+   export CFG_STRING=""
 fi
+
+export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:\${NETCDF_PATH}/lib
+export LIBRARY_PATH=\${LIBRARY_PATH}:\${NETCDF_PATH}/lib
 export NETCDF_DIR=\$NETCDF_PATH
-export CFG_STRING=""
 export INC_NETCDF=\${NETCDF_PATH}/include
 export LIB_NETCDF=\${NETCDF_PATH}/lib
-export INC_MPI=\${MPICH_PATH}/include
-export LIB_MPI=\${MPICH_PATH}/lib
-export MAKE_CMD="gmake -j 5"   ##using hyper-threading on edinburgh
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on frankfurt
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 export TOOLSSLIBS=""
-export TOOLS_CONF_STRING=""
 echo_arg="-e"
 
 EOF
@@ -642,7 +638,7 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
     * )
-    echo "Only setup to work on: yellowstone, bluefire, mirage, lynx, jaguarpf, edinburgh, and yong"
+    echo "Only setup to work on: yellowstone, bluefire, mirage, lynx, jaguarpf, frankfurt, and yong"
     exit
  
 
@@ -667,6 +663,10 @@ if [ "\$interactive" = "YES" ]; then
     else
 	initdir=\${0%/*}
     fi
+else
+    echo "ERROR: you *always* need to use the interactive option (-i)"
+    echo "       currently doesn't work without it"
+    exit 3
 fi
 
 ##establish script dir and clm_root
@@ -947,12 +947,8 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on yellowstone, bluefire, edinburgh, lynx, mirage: "
-    echo "./test_driver.sh"
-    echo ""
-    echo "usage on jaguarpf: (compile interactively before submitting)"
-    echo "env CLM_JOBID=1001 ./test_driver.sh -c"
-    echo "env CLM_JOBID=1001 ./test_driver.sh"
+    echo "usage on yellowstone, bluefire, frankfurt, lynx, mirage, titan: "
+    echo "./test_driver.sh -i"
     echo ""
     echo "valid arguments: "
     echo "-i    interactive usage"
@@ -971,18 +967,6 @@ esac
 
 echo "submitting..."
 case $hostname in
-    ##bluefire
-    be* )  bsub < ${submit_script};;
-
-    ##edinburgh
-    edinburgh** | e0* )  qsub ${submit_script};;
-
-    ##lynx
-    lynx** | l0* )  qsub ${submit_script};;
-
-    ##jaguarpf
-    jaguarpf* )  qsub ${submit_script};;
-
     #default
     * )
     echo "no submission capability on this machine use the interactive option: -i"

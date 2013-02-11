@@ -1,10 +1,42 @@
+# Different CLMCN options
+ERS.f19_g16.I_1850_CLM45_CN4Me               -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+ERS_D.f19_g16.I_1850_CLM45_CNCENTNoMe        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+ERS.f19_g16.I_2000_CLM45_CN4Me_CROP          -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+
+# Different spinup options
+ERS_Ld211.f10_f10.ICLM45CNADSPIN             -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/monthly
+SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN            -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN     -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+ERS.f19_g16.I_1850_CLM45_CN4Me_LessSPIN      -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+SMS_D.f19_g16.I_1850_CLM45_CN4Me_EXLessSPIN  -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+
+# HOMME grid test
+ERS_Ln48_D_P64x16.ne30_g16.ICLM45CN        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+
+# CROP tests ( NOTE - Comment out CROP threading tests and do as non-threading tests)
+#ERS_Ld211_D_P112x2.f10_f10.ICLM45CNCROP         -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
+#ERS_Ld211_P192x2.f19_g16.I_2000_CLM45_CNDV_CROP -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
+ERS_Ld211_D_P224x1.f10_f10.ICLM45CNCROP          -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
+ERS_Ld211_P384x1.f19_g16.I_2000_CLM45_CNDV_CROP  -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
+
+# VOC and CISO
+ERS_Ld211.f10_f10.I_2000_CLM45_VOC_CN     -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
+ERS_Ln48_D.f10_f10.I_2000_CLM45_CN        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ciso
+
+# Different cases for CLMCN4Me with different namelist options
+SMS_Ln48_D.f10_f10.I_2000_CLM45_CN4Me      -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/oldhyd
+SMS_D.f10_f10.I_2000_CLM45_CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/anoxia_wtsat
+ERS_D.f10_f10.I_2000_CLM45_CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ch4_set2_ciso
+ERS_D.f10_f10.I_2000_CLM45_CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ch4_set3_pftroot
+ERS_D.f10_f10.I_2000_CLM45_CN4MeNoVSoil    -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/rootlit
+ERI_D.f10_f10.I_2000_CLM45_CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vrtlay
+
+# clm4_0
 ERS_Ld211.f10_f10.ICNADSPIN               -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/monthly
 SMS_Ln48_D.f09_g16.ICNEXSPIN              -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
 ERS_Ln48_D_P64x16.ne30_g16.ICN            -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-PET_D_P1x64.ne30_g16.ICN                  -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-ERS_Ld211_D_P112x2.f10_f10.ICNCROP        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
+PET_D_P1x32.ne30_g16.ICN                  -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+ERS_Ld211_D_P112x1.f10_f10.ICNCROP        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
 ERS_Ld211.f10_f10.I_2000_VOC_CN           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
-ERS_Ld211_P192x2.f19_g16.I_2000_CNDV_CROP -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
-ERS.f19_g16.I_2000_CN_rtmR01        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/rtm/rtmR01
-ERS.f19_g16.I_2000_CN_rtmOff        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/rtm/rtmOff
-ERS.f19_g16.I_2000_CN_rtmOn         -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/rtm/rtmOn
+ERS_Ld211_P192x1.f19_g16.I_2000_CNDV_CROP -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
+

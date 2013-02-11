@@ -78,6 +78,7 @@ OPTIONS
      -onlyfiles                           Only output filenames.
      -options "item=value,item2=value2"   Set options to query for when matching.
                                           (comma delimited, with equality to set value).
+     -phys "CLM-version" [or -p]          CLM version to use (clm4_0 or clm4_5)
      -res  "resolution"                   Resolution to use for files. Use "-res list" to
                                           list all valid resolutions. Use "-res any" to
                                           use any valid resolution.
@@ -111,6 +112,7 @@ EOF
 
   my %opts = ( 
                namelist   => $namelist,
+               model      => "clm4_5",
                var        => undef,
                hgrid      => undef,
                config     => undef,
@@ -131,6 +133,7 @@ EOF
         "f|file=s"     => \$opts{'file'},
         "n|namelist=s" => \$opts{'namelist'},
         "v|var=s"      => \$opts{'var'},
+        "p|phys=s"     => \$opts{'model'},
         "r|res=s"      => \$opts{'hgrid'},
         "config=s"     => \$opts{'config'},
         "cesm"         => \$opts{'cesm'},
@@ -181,9 +184,10 @@ EOF
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition.xml";
   my $datmblddir             = "$cfgdir/../../../../models/atm/datm/bld";
   my $drvblddir              = "$cfgdir/../../../../models/drv/bld";
+  my $model                  = $opts{'model'};
   my @nl_definition_files    = ( "$datmblddir/namelist_files/namelist_definition_datm.xml",
                                  "$drvblddir/namelist_files/namelist_definition_drv.xml",
-                                 "$cfgdir/namelist_files/namelist_definition.xml" 
+                                 "$cfgdir/namelist_files/namelist_definition_$model.xml" 
                                );
   $inputopts{nldef_files}    = \@nl_definition_files;
   $inputopts{namelist}       = $opts{namelist};
@@ -195,6 +199,9 @@ EOF
   my $exitearly = 0;
   my $definition = Build::NamelistDefinition->new( $nl_definition_files[0] );
   foreach my $nl_defin_file ( @nl_definition_files ) {
+     if ( ! -f "$nl_defin_file" ) {
+        die "($ProgName $cmdline) ERROR:: bad namelist definition filename: $nl_defin_file.\n";
+     }
      $definition->add( "$nl_defin_file" );
   }
 
@@ -245,8 +252,8 @@ EOF
      $settings{'notest'}       = ! $opts{'test'};
      $settings{'csmdata'}      = $inputopts{csmdata};
   } else {
-     my @files = ( "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
-                   "$cfgdir/namelist_files/namelist_defaults_clm_tools.xml", 
+     my @files = ( "$cfgdir/namelist_files/namelist_defaults_${model}.xml", 
+                   "$cfgdir/namelist_files/namelist_defaults_${model}_tools.xml", 
                    "$drvblddir/namelist_files/namelist_defaults_drv.xml",
                    "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
                    "$datmblddir/namelist_files/namelist_defaults_datm.xml",

@@ -1,0 +1,9 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_nl
+ anoxia = .true.
+ rootlitfrac = 0.0d00
+ hist_wrtch4diag = .true.
+ hist_ndens=1,1
+/

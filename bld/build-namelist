@@ -99,7 +99,10 @@ OPTIONS
                                form \$CASEDIR/user_nl_clm/user_nl_clm_????)
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
-     -irrig                   Seek surface datasets with irrigation turned on.
+     -irrig "value"           If .true. turn irrigation on with namelist logical irrigate (for CLM4.5 physics)
+                              (requires crop to be on in the clm configuration) 
+                              Seek surface datasets with irrigation turned on.  (for CLM4.0 physics)
+                              Default: .false.
      -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
      -lnd_frac "domainfile"   Land fraction file (the input domain file)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
@@ -193,7 +196,7 @@ my %opts = ( config                => $cfg_cache,
              note                  => undef,
 	     drydep                => 0,
 	     megan                 => 0,
-             irrig                 => undef,
+             irrig                 => ".false.",
 	     res                   => "default",
 	     silent                => 0,
              mask                  => "default",
@@ -215,7 +218,7 @@ GetOptions(
     "glc_nec=i"                 => \$opts{'glc_nec'},
     "glc_grid=s"                => \$opts{'glc_grid'},
     "glc_smb=s"                 => \$opts{'glc_smb'},	   
-    "irrig"                     => \$opts{'irrig'},
+    "irrig=s"                   => \$opts{'irrig'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
     "ignore_ic_date"            => \$opts{'ignore_ic_date'},
@@ -289,44 +292,12 @@ EOF
     \"$cesm_tools/perl5lib\" **
 EOF
 
-# The namelist definition file contains entries for all namelist variables that
-# can be output by build-namelist.
-my @nl_definition_files = ( "$drvblddir/namelist_files/namelist_definition_drv.xml", 
-                            "$drvblddir/namelist_files/namelist_definition_modio.xml",
-                            "$cfgdir/namelist_files/namelist_definition.xml" );
-foreach my $nl_defin_file  ( @nl_definition_files ) {
-  (-f "$nl_defin_file")  or  die <<"EOF";
-** $ProgName - Cannot find namelist definition file \"$nl_defin_file\" **
-EOF
-   if ($print>=2) { print "Using namelist definition file $nl_defin_file$eol"; }
-}
-
-
 # The Build::NamelistDefinition module provides utilities to validate that the output
 # namelists are consistent with the namelist definition file
 (-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
     \"$cesm_tools/perl5lib\" **
 EOF
-
-# The namelist defaults file contains default values for all required namelist variables.
-my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
-                          "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
-                          "$drvblddir/namelist_files/namelist_defaults_drv.xml", 
-                          "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
-
-if (defined $opts{'use_case'}) {
-   if ( $opts{'use_case'} ne "list" ) {
-      unshift( @nl_defaults_files, "$opts{'use_case_dir'}/$opts{'use_case'}.xml" );
-   }
-}
-
-foreach my $nl_defaults_file ( @nl_defaults_files ) {
-  (-f "$nl_defaults_file")  or  die <<"EOF";
-** $ProgName - Cannot find namelist defaults file \"$nl_defaults_file\" **
-EOF
-  if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
-}
 
 # The Build::NamelistDefaults module provides a utility to obtain default values of namelist
 # variables based on finding a best fit with the attributes specified in the defaults file.
@@ -352,6 +323,7 @@ require Build::NamelistDefinition;
 require Build::NamelistDefaults;
 require Build::Namelist;
 require Streams::TemplateGeneric;
+
 #-----------------------------------------------------------------------------------------------
 # Create a configuration object from the default config_definition file
 my $configfile;
@@ -361,6 +333,37 @@ if ( -f $opts{'config'} ) {
    $configfile = "$cfgdir/config_files/config_definition.xml";
 }
 my $cfg = Build::Config->new("$configfile");
+my $phys = $cfg->get('phys'); # This defines clm4_5 versus clm4_0 physics
+
+# The namelist definition file contains entries for all namelist variables that
+# can be output by build-namelist.
+my @nl_definition_files = ( "$drvblddir/namelist_files/namelist_definition_drv.xml", 
+                            "$drvblddir/namelist_files/namelist_definition_modio.xml",
+                            "$cfgdir/namelist_files/namelist_definition_$phys.xml" );
+foreach my $nl_defin_file  ( @nl_definition_files ) {
+  (-f "$nl_defin_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist definition file \"$nl_defin_file\" **
+EOF
+   if ($print>=2) { print "Using namelist definition file $nl_defin_file$eol"; }
+}
+# The namelist defaults file contains default values for all required namelist variables.
+my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
+                          "$cfgdir/namelist_files/namelist_defaults_$phys.xml", 
+                          "$drvblddir/namelist_files/namelist_defaults_drv.xml", 
+                          "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
+
+if (defined $opts{'use_case'}) {
+   if ( $opts{'use_case'} ne "list" ) {
+      unshift( @nl_defaults_files, "$opts{'use_case_dir'}/$opts{'use_case'}.xml" );
+   }
+}
+
+foreach my $nl_defaults_file ( @nl_defaults_files ) {
+  (-f "$nl_defaults_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist defaults file \"$nl_defaults_file\" **
+EOF
+  if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
+}
 
 # Create a namelist definition object.  This object provides a method for verifying that the
 # output namelist variables are in the definition file, and are output in the correct
@@ -378,6 +381,7 @@ foreach my $nl_defaults_file ( @nl_defaults_files ) {
    $defaults->add( "$nl_defaults_file" );
 }
 
+#-----------------------------------------------------------------------------------------------
 #
 # List valid values if asked for
 #
@@ -437,11 +441,17 @@ my $bgc = $cfg->get('bgc');
 # Get spinup mode
 my $spinup = $cfg->get('spinup');
 
+# Get methane mode
+my $clm4me = $cfg->get('clm4me');
+
 # Get max number of Plant function types
 my $maxpft = $cfg->get('maxpft');
 
-# crop mode
+# Get crop mode
 my $crop = $cfg->get('crop');
+
+# Get vsoilc  mode
+my $vsoilc = $cfg->get('vsoilc_centbgc');
 
 #-----------------------------------------------------------------------------------------------
 
@@ -487,7 +497,6 @@ if ( $opts{'chk_res'} ) {
    }
 }
 
-
 # mask
 $var = "mask";
 if ( $opts{$var} ne "default" ) {
@@ -528,25 +537,27 @@ if ($print>=2) { print "Glacier number of elevation classes is $glc_nec $eol"; }
 
 
 # irrigation
-$var = "irrig";
-if ( ! defined($opts{$var}) ) {
-    $val = $defaults->get_value($var);
-} else {
-    $val = ".true.";
-}
-my $irrig = $val;
+my $irrig;
+$var   = "irrig";
+$irrig = $opts{$var};
+$val   = $irrig;
 $group = $definition->get_group_name($var);
 $nl->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
-   my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
-}
-if ( $irrig =~ /$TRUE/i && $crop eq "on" ) {
-   print "You've turned on both irrigation and crop. Irrigation is only applied to generic crop currently, which negates it's practical usage.\n" . 
-         "We also have a known problem when both are on (see bug 1326 in the models/lnd/clm/doc/KnownBugs file)\n";
-   die "$nm both irrigation and crop should NOT be on.\n";
+    my @valid_values   = $definition->get_valid_values( $var );
+    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
 }
 if ($print>=2) { print "Irrigation $irrig $eol"; }
+if ($phys eq "clm4_0") {
+    if ( $irrig =~ /$TRUE/i && $crop eq "on" ) {
+	print "You've turned on both irrigation and crop. \n
+               Irrigation is only applied to generic crop currently,\ 
+               which negates it's practical usage.\n. 
+ 	       We also have a known problem when both are on 
+               (see bug 1326 in the models/lnd/clm/doc/KnownBugs file)\n";
+	die "$nm both irrigation and crop should NOT be on.\n";
+    }
+}
 
 # representative concentration pathway
 $var = "rcp";
@@ -800,6 +811,15 @@ if ( defined($opts{$var}) ) {
     }
 }
 
+if ($phys eq "clm4_5") {
+    if ( $crop eq "on" ) {
+	add_default($nl, 'irrigate', 'val'=>$opts{'irrig'});
+    }
+    elsif ( $nl->get_value('irrigate') =~ /$TRUE/i ) {
+	die "$ProgName ERROR:: irrigate TRUE needs crop TRUE but it is not\n";
+    }
+}
+
 $var = "start_type";
 my $drv_start_type = $nl->get_value($var);
 my $my_start_type  = $clm_start_type;
@@ -899,7 +919,6 @@ if ( $glc_nec > 0 ) {
   $glc_grid =~ s/['"]//g;
   add_default($nl, 'flndtopo'  , 'hgrid'=>$res, 'mask'=>$mask );
   add_default($nl, 'fglcmask'  , 'hgrid'=>$res, 'glc_grid'=>$glc_grid );
-  add_default($nl, 'albice'    , 'glc_nec'=>$glc_nec );
 } else {
   my $glc_grid = $nl->get_value('glc_grid');
   $glc_grid =~ s/['"]//g;
@@ -935,11 +954,19 @@ if ( $glc_nec > 0 ) {
 }
 
 add_default($nl, 'fpftcon');
+add_default($nl, 'albice', 'glc_nec'=>$glc_nec);
 
-if ( $crop eq "on" ) {
-    add_default($nl, 'create_crop_landunit' );
+# Create crop land unit
+if ($phys eq "clm4_0") {
+    if ( $crop eq "on" ) {
+	add_default($nl, 'create_crop_landunit' );
+    } 
+    add_default($nl, 'create_crop_landunit', 'irrig'=>$irrig );
+} else {
+    add_default($nl, 'create_crop_landunit');
 }
-
+   
+# co2_type
 add_default($nl, 'co2_type');
 if ( $nl->get_value('co2_type') =~ /constant/ ) {
   my $var = 'co2_ppmv';
@@ -958,6 +985,11 @@ if ( $nl->get_value('co2_type') =~ /constant/ ) {
 add_default($nl, 'urban_hac');
 add_default($nl, 'urban_traffic');
 
+my $more_vert;
+if ($phys eq "clm4_5") {
+    add_default($nl, 'more_vertlayers', 'hgrid'=>$res );
+    $more_vert = $nl->get_value('more_vertlayers');
+}
 #
 # Deal with options that the user has said are required...
 #
@@ -1014,20 +1046,41 @@ if (not defined $nl->get_value('finidat')) {
            if ( $crop eq "on" ) {
               die "$ProgName ERROR:: using ignore_ic_date is incompatable with crop!\n";
            }
-	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-                    'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+	   if ($phys eq "clm4_0") {
+	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
+			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
+			   'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+	   } else {
+	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
+			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
+			   'glc_nec'=>$glc_nec );
+	   }
     } elsif ($opts{'ignore_ic_year'}) {
-	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-                    'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+	if ($phys eq "clm4_0") {
+	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
+			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
+			'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+	} else {
+	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
+			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
+			'glc_nec'=>$glc_nec );
+	}
     } else {
+	if ($phys eq "clm4_0") {
+	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
+			'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
+			'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+	} else {
 	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-                    'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+		       'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
+		       'glc_nec'=>$glc_nec );
+	}
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
@@ -1037,15 +1090,115 @@ if (not defined $nl->get_value('finidat')) {
 }
 
 #
-# Create crop land unit
-#
-add_default($nl, 'create_crop_landunit', 'irrig'=>$irrig );
-
-#
 # Supplemental Nitrogen for prognostic crop cases
 #
 if ( $bgc =~ /^cn/ && $crop eq "on" ) {
    add_default($nl, 'suplnitro' );
+}
+#
+# Check on Switches for hydrology
+#
+my $subgrid    = $nl->get_value('subgridflag' );
+my $origflag   = $nl->get_value('origflag'    );
+my $h2osfcflag = $nl->get_value('h2osfcflag'  );
+if ( $origflag == 1 && $subgrid == 1 ) {
+   die "$ProgName ERROR:: if origflag is ON, subgridflag can NOT also be on!\n";
+}
+if ( $h2osfcflag == 1 && $subgrid == 0 ) {
+   die "$ProgName ERROR:: if h2osfcflag is ON, subgridflag can NOT be off!\n";
+}
+
+#
+# CH4 model if bgc=CN or CNDV
+#
+if ( $clm4me  eq "on" ) {
+   ###############################
+   # namelist group: ch4par_in   #
+   ###############################
+   add_default($nl, 'fin_use_fsat' );
+} else {
+   my @vars = $nl->get_variable_names('ch4par_in');
+   if ( $#vars >= 0 ) {
+      die "$ProgName ERROR:: ch4par_in namelist variables were set, but clm4me Methane model NOT defined in the configuration\n";
+   }
+}
+#
+# Error checking for C-isotope options
+#
+my $use_c13 = $nl->get_value('use_c13');
+my $use_c14 = $nl->get_value('use_c14');
+if ( $bgc =~ /^cn/ ) {
+  if ( $crop eq "on" ) {
+     if ( defined($use_c13) ||
+          defined($use_c14) ||
+          defined($nl->get_value('use_c14_bombspike')) ||
+          defined($nl->get_value('atm_c14_filename')) ) {
+            die "$ProgName ERROR:: CROP is on and C isotope  namelist variables were set, both can't be used at the same time\n";
+     }
+  }
+  if ( $vsoilc ne "on" ) {
+     if ( defined($use_c13) && $use_c13 =~ /$TRUE/i ) {
+        print "$ProgName WARNING!!:: use_c13 is ONLY scientifically valided with the vsoilc_centbgc configuration\n";
+     }
+     if ( defined($use_c14) && $use_c14 =~ /$TRUE/i ) {
+        print "$ProgName WARNING!!:: use_c14 is ONLY scientifically valided with the vsoilc_centbgc configuration\n";
+     }
+  }
+  if ( defined($use_c14) ) {
+    if ( $use_c14 =~ /$TRUE/i ) {
+       my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
+       if ( defined($use_c14_bombspike) && $use_c14_bombspike =~ /$TRUE/i && 
+            ! defined($nl->get_value('atm_c14_filename')) ) {
+          die "$ProgName ERROR:: use_c14_bombspike TRUE but atm_c14_filename NOT set\n";
+       }
+    } else {
+       if ( defined($nl->get_value('use_c14_bombspike')) ||
+            defined($nl->get_value('atm_c14_filename')) ) {
+              die "$ProgName ERROR:: use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set\n";
+       }
+    }
+  } else {
+     if ( defined($nl->get_value('use_c14_bombspike')) ||
+          defined($nl->get_value('atm_c14_filename')) ) {
+         die "$ProgName ERROR:: use_c14 NOT set to .true., but use_c14_bompspike/atm_c14_filename defined.\n";
+     }
+  }
+}
+#
+# Ch4 namelist checking
+#
+if ( $clm4me  eq "on" ) {
+   my $allowlakeprod = $nl->get_value('allowlakeprod');
+   if ( ! defined($allowlakeprod) || 
+         (defined($allowlakeprod) && $allowlakeprod =~ /$FALSE/i) ) {
+      if ( defined($nl->get_value('lake_decomp_fact')) ) {
+         die "$ProgName ERROR:: lake_decomp_fact set without allowlakeprod=.true.\n";
+      }
+   }
+   if ( $vsoilc eq "on" && defined($nl->get_value('rootlitfrac')) ) {
+      die "$ProgName ERROR:: rootlitfrac is only used if vsoilc_centbgc configure option NOT on\n";
+   }
+   my $anoxia = $nl->get_value('anoxia');
+   if ( ! defined($anoxia) || 
+         (defined($anoxia) && $anoxia =~ /$FALSE/i) ) {
+      if ( defined($nl->get_value('anoxia_wtsat')) ) {
+         die "$ProgName ERROR:: anoxia_wtsat set without anoxia=.true.\n";
+      }
+   }
+   my $pftspec_rootprof = $nl->get_value('pftspecific_rootingprofile');
+   if ( ! defined($pftspec_rootprof) || 
+         (defined($pftspec_rootprof) && $pftspec_rootprof =~ /$TRUE/i) ) {
+      if ( defined($nl->get_value('rootprof_exp')) ) {
+         die "$ProgName ERROR:: rootprof_exp set without pftspecific_rootingprofile=.false.\n";
+      }
+   }
+} else {
+   my @vars = ( "allowlakeprod", "anoxia", "anoxia_wtsat", "pftspecific_rootingprofile" );
+   foreach my $var ( @vars ) {
+      if ( defined($nl->get_value($var)) ) {
+         die "$ProgName ERROR:: $var set without clm4me methane model configuration on\n";
+      }
+   }
 }
 #
 # Nitrogen deposition for bgc=CN
@@ -1156,6 +1309,16 @@ if ( $opts{$var} ) {
 }
 
 # CLM component
+my @groups;
+if ($phys eq "clm4_0") {
+    @groups = qw(clm_inparm ndepdyn_nml);
+} else {
+    @groups = qw(clm_inparm ndepdyn_nml clm_hydrology1_inparm clm_soilhydrology_inparm);
+    if ( $clm4me  eq "on" ) {
+	push @groups, "ch4par_in";
+    }
+}
+
 my $outfile;
 $outfile = "$opts{'dir'}/lnd_in";
 $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );

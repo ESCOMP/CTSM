@@ -55,6 +55,71 @@
     </table>
 
     <table border="1" cellpadding="10">
+    <caption>CLM Namelist Lake Model Options</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='clm_lake']"/>
+    </table>
+
+    <table border="1" cellpadding="10">
+    <caption>CLM Namelist Permafrost Model Options</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='clm_permafrost']"/>
+    </table>
+
+    <table border="1" cellpadding="10">
+    <caption>CLM Namelist Methane Model Options</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='clm_methane']"/>
+    </table>
+
+    <table border="1" cellpadding="10">
+    <caption>CLM Namelist Vertical CN Model Options</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='clm_vertcn']"/>
+    </table>
+
+    <table border="1" cellpadding="10">
+    <caption>CLM Namelist Carbon Isotope Model Options</caption>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
+      <th>Description</th>
+      </tr>
+      <tr>
+      <th colspan="1">Valid values</th>
+      </tr>
+      <xsl:apply-templates select="entry[@category='clm_isotope']"/>
+    </table>
+
+    <table border="1" cellpadding="10">
     <caption>CLM Namelist Datasets</caption>
       <tr>
       <th rowspan="2">Name</th>
