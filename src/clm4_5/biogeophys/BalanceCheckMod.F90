@@ -218,6 +218,9 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
+    real(r8), pointer :: tws(:)                !total water storage (mm H2O)
+    real(r8), pointer :: volr(:)               !river water storage (m3)
+    real(r8), pointer :: area(:)               !gridcell area (km2)
     logical , pointer :: do_capsnow(:)         ! true => do snow capping
     real(r8), pointer :: qflx_rain_grnd_col(:) ! rain on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: qflx_snow_grnd_col(:) ! snow on ground after interception (mm H2O/s) [+]
@@ -315,6 +318,9 @@ contains
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
 
+    tws                 => clm3%g%tws
+    area                => clm3%g%area
+    volr                => clm_a2l%volr
     do_capsnow          => clm3%g%l%c%cps%do_capsnow
     qflx_rain_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
     qflx_snow_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
@@ -491,7 +497,6 @@ contains
           write(iulog,*)'clm model is stopping'
           call endrun()
        else if (abs(errh2o(indexc)) > .10_r8 .and. (nstep > 2) ) then
-!       else if (abs(errh2o(indexc)) > 1.e-4_r8 .and. (nstep > 2) ) then
           write(iulog,*)'clm model is stopping - error is greater than .10'
           write(iulog,*)'nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
           write(iulog,*)'ctype(indexc): ',ctype(indexc)
@@ -518,15 +523,6 @@ contains
     do c = lbc, ubc
        g = cgridcell(c)
        l = clandunit(c)
-!!$       if (ltype(l) == istdlak .or. ltype(l) == istslak )then
-!!$          snow_sources(c) = qflx_snow_grnd_col(c) &
-!!$                      + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
-!!$                      +  qflx_dew_snow(c) + qflx_dew_grnd(c) )
-!!$
-!!$          snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
-!!$                      + qflx_snow_melt(c)
-!!$          errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
-!!$       else  ! non-lake
           ! As defined here, snow_sources - snow_sinks will equal the change in h2osno at 
           ! any given time step but only if there is at least one snow layer.  h2osno 
           ! also includes snow that is part of the soil column (an initial snow layer is 
@@ -584,7 +580,6 @@ contains
              snow_sinks(c) = 0._r8
              errh2osno(c) = 0._r8
           end if
-!       end if
     end do
 
     found = .false.
@@ -784,6 +779,16 @@ contains
        eflx_sh_totg(g) =  eflx_sh_totg(g) - eflx_dynbal(g)
     enddo
 
+! calculate total water storage for history files
+! first set tws to gridcell total endwb
+    call c2g( lbc, ubc, lbl, ubl, lbg, ubg,                &
+         endwb(lbc:ubc), tws(lbg:ubg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+! second add river storage as gridcell average depth
+! 1.e-3 converts [m3/km2] to [mm]
+    do g = lbg, ubg
+       tws(g) = tws(g) + volr(g) / area(g) * 1.e-3_r8
+    enddo
 100 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' W/m2')
 200 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' mm')
 

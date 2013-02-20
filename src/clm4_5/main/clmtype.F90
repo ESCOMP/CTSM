@@ -2299,6 +2299,7 @@ type, public :: gridcell_type
    real(r8), pointer :: gris_area(:)    !Greenland ice-covered area per gridcell (km^2)
    real(r8), pointer :: aais_mask(:)    !Antarctic ice sheet mask 
    real(r8), pointer :: aais_area(:)    !Antarctic ice-covered area per gridcell (km^2)
+   real(r8), pointer :: tws(:)          !total water storage (mm H2O)
 
 #if (defined CNDV)
    ! dgvm variables defined at the gridcell level

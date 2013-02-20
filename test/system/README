@@ -13,7 +13,7 @@ To use...
 ./test_system
 ./test_driver.sh -i
 
-Intended for use on NCAR machines: yellowstone, frankfort.cgd, lynx, mirage, bluefire, 
+Intended for use on NCAR machines: yellowstone, frankfurt.cgd, lynx, mirage, bluefire, 
 and ORNL machine titan. And works on the MacBook laptop yongi.cgd. For most machines 
 more than one compiler is supported.
 

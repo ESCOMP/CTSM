@@ -154,7 +154,7 @@ sub parseOutput
       my @outArr=split(/ /,$refSplit);
 
       if ($DEBUG) {
-         print ("xFail::expectedFail::parseOutput @outArr[0] \n");
+         print ("\nxFail::expectedFail::parseOutput @outArr[0] \n");
          print ("xFail::expectedFail::parseOutput @outArr[1] \n");
          print ("xFail::expectedFail::parseOutput @outArr[2] \n");
          print ("xFail::expectedFail::parseOutput @outArr[3] \n");
@@ -475,7 +475,7 @@ EOF
 
    $self->{_foundList}="FALSE";
    
-   ### populate list of tests for a specfic test type, machine and compile
+   ### populate list of tests for a specfic test type, machine and compiler
    ### there's got to be a better way to write this
    while ( my $e = shift @e ) {
       my @mChildren = $e->get_children();
@@ -645,14 +645,14 @@ sub _getMachInfo
    $name = substr($name, 0, 2);
 
    my %machNames = (
-      "be"  => "bluefire",
+      "ys"  => "yellowstone",
       "ja"   => "janus",
       "mi"   => "mirage",
       "ly"   => "lynx"
    );
 
    my %compNames = (
-      "be"  => "IBM",
+      "ys"  => "INTEL",
       "ja"   => "INTEL",
       "mi"   => "PGI",
       "ly"   => "INTEL"

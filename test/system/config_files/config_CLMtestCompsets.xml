@@ -232,17 +232,30 @@
          DESC="CLM with QIAN atm input data for 1972-2004 and CNDV (Carbon Nitrogen Dynamic Vegetation), CO2 level and Aerosol deposition for 2000"
 />
 
-<compset NAME="I_2000_CN_rtmR01" SHORTNAME="ICNR01"
-         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 using a R01 RTM grid"
+<compset NAME="I_2000_CN_R01_effOff" SHORTNAME="ICNR01_eof"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 using a R01 RTM grid effective velocity off"
          ROF_GRID="r01"
 />
 
-<compset NAME="I_2000_CN_rtmOff" SHORTNAME="ICNROFF"
-         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 with all RTM options off"
+<compset NAME="I_2000_CN_R01_effOn" SHORTNAME="ICNR01_eon"
+         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 using a R01 RTM grid effective velocity on"
+         ROF_GRID="r01"
 />
 
-<compset NAME="I_2000_CN_rtmOn" SHORTNAME="ICNRON"
-         DESC="CLM with QIAN atm input data for 1972-2004 and CN (Carbon Nitrogen) for 2000 with some different RTM options"
+<compset NAME="I_2000_CN_iceOff" SHORTNAME="ICN_iof"
+         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 - ice off"
+/>
+
+<compset NAME="I_2000_CN_iceOn" SHORTNAME="ICN_ion"
+         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 - ice on"
+/>
+
+<compset NAME="I_2000_CN_effOff" SHORTNAME="ICN_eof"
+         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 - effective velocity off"
+/>
+
+<compset NAME="I_2000_CN_effOn" SHORTNAME="ICN_eon"
+         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 - effective velocity on"
 />
 
 <compset NAME="I_1850_CN_ADSPIN" SHORTNAME="ICNADSPIN"
@@ -355,17 +368,34 @@
          DESC=" QIAN  atm input data for 1972-2004 and CN (Carbon Nitrogen), extended lake-layers, CO2 level and Aerosol deposition for 2000"
 />
 
-<compset NAME="I_2000_CLM45_CN_rtmR01" SHORTNAME="ICLM45CNR01"
-         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 using a R01 RTM grid"
+<compset NAME="I_1850_CLM45_CN_4Me" SHORTNAME="ICLM454Me"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850"
+/>
+
+<compset NAME="I_1850_CLM45_CN_4Me_R01_effOff" SHORTNAME="ICLM454MeR01_eof"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850 using a R01 RTM grid - effective velocity off"
          ROF_GRID="r01"
 />
 
-<compset NAME="I_2000_CLM45_CN_rtmOff" SHORTNAME="ICLM45CNROFF"
-         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 with all RTM options off"
+<compset NAME="I_1850_CLM45_CN_4Me_R01_effOn" SHORTNAME="ICLM454MeR01_eon"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850 using a R01 RTM grid - effective velocity on"
+         ROF_GRID="r01"
 />
 
-<compset NAME="I_2000_CLM45_CN_rtmOn" SHORTNAME="ICLM45CNRON"
-         DESC="QIAN atm data for 1972-2004 and CN (Carbon Nitrogen) for 2000 with some different RTM options"
+<compset NAME="I_1850_CLM45_CN_4Me_iceOff" SHORTNAME="ICLM454Me_iof"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850 - ice off"
+/>
+
+<compset NAME="I_1850_CLM45_CN_4Me_iceOn" SHORTNAME="ICLM454Me_ion"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850 - ice on"
+/>
+
+<compset NAME="I_1850_CLM45_CN_4Me_effOff" SHORTNAME="ICLM454Me_eof"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850 - effective velocity off"
+/>
+
+<compset NAME="I_1850_CLM45_CN_4Me_effOn" SHORTNAME="ICLM454Me_eon"
+         DESC="QIAN atm data for 1948-1972 and CN4Me (Carbon Nitrogen with Methane), CO2 level and Aerosol deposition for 1850 - effective velocity on"
 />
 
 <compset NAME="I_1850_CLM45_CN_ADSPIN" SHORTNAME="ICLM45CNADSPIN"

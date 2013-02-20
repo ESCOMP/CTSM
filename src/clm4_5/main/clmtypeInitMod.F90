@@ -545,11 +545,12 @@ contains
    allocate(g%gris_area(beg:end))
    allocate(g%aais_mask(beg:end))
    allocate(g%aais_area(beg:end))
-
+   allocate(g%tws(beg:end))
    g%gris_mask(beg:end) = nan
    g%gris_area(beg:end) = nan
    g%aais_mask(beg:end) = nan
    g%aais_area(beg:end) = nan
+   g%tws(beg:end) = nan
 
   end subroutine init_gridcell_type
 

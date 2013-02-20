@@ -104,6 +104,7 @@ module clm_cpl_indices
  
   integer, public ::index_x2l_Flrr_flood      ! rtm->lnd rof (flood) flux
 
+  integer, public ::index_x2l_Slrr_volr      ! rtm->lnd rof volr
   integer, public :: nflds_x2l = 0
 
   ! sno -> drv (only if land-ice model is NOT a stub model)
@@ -258,6 +259,9 @@ contains
 #ifdef LCH4
     index_x2l_Sa_methane    = mct_avect_indexra(x2l,'Sa_methane',perrWith='quiet')
 #endif
+
+
+    index_x2l_Slrr_volr       = mct_avect_indexra(x2l,'Slrr_volr')
 
     index_x2l_Faxa_lwdn     = mct_avect_indexra(x2l,'Faxa_lwdn')
     index_x2l_Faxa_rainc    = mct_avect_indexra(x2l,'Faxa_rainc')

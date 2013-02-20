@@ -53,6 +53,7 @@ module clm_atmlnd
      real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
      real(r8), pointer :: forc_flood(:)   ! rof flood (mm/s)
+     real(r8), pointer :: volr(:)   ! rof volr (m3)
      real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
   end type atm2lnd_type
 
@@ -156,6 +157,7 @@ contains
   allocate(a2l%forc_pc13o2(beg:end))
   allocate(a2l%forc_po2(beg:end))
   allocate(a2l%forc_flood(beg:end))
+  allocate(a2l%volr(beg:end))
   allocate(a2l%forc_aer(beg:end,14))
 
   ! ival = nan      ! causes core dump in map_maparray, tcx fix
@@ -188,6 +190,7 @@ contains
   a2l%forc_pc13o2(beg:end) = ival
   a2l%forc_po2(beg:end) = ival
   a2l%forc_flood(beg:end) = ival
+  a2l%volr(beg:end) = ival
   a2l%forc_aer(beg:end,:) = ival
 
 end subroutine init_atm2lnd_type

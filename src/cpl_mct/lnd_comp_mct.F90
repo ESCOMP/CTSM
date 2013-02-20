@@ -995,6 +995,8 @@ contains
 
         a2l%forc_flood(g)   = -x2l_l%rattr(index_x2l_Flrr_flood,i)  
 
+        a2l%volr(g)   = x2l_l%rattr(index_x2l_Slrr_volr,i)
+
         ! Determine required receive fields
 
         a2l%forc_hgt(g)     = x2l_l%rAttr(index_x2l_Sa_z,i)         ! zgcmxy  Atm state m

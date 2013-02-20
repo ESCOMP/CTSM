@@ -21,6 +21,7 @@ usage() {
   echo "  -h           [or --help]      displays help"
   echo "  -i                            interactive usage"
   echo "  -l list      [or --list]      input test list to use instead of default (path relative to this directory)"
+  echo "  -n                            turn on the cleaN option to create_test_suite (default is -clean off)"
   echo "  -o options   [or --options]   options to pass to create_test_suite"
   echo "  -p compiler  [or --compiler]  compiler to use instead of default"
   echo "  -s           [or --shortlist] use the short test list"
@@ -37,6 +38,7 @@ cesmscriptdir="../../../../../scripts/"
 
 interactive="no"
 debug="no"
+clean="off"
 options=""
 
 while [ $# -gt 0 ]; do
@@ -84,6 +86,10 @@ while [ $# -gt 0 ]; do
            inter_list="shortlist.interactive"
            batch_list="shortlist.batch"
            ;;
+       -n|--clean )
+	   clean="on"
+	   shift
+	   ;;
        -o|--options )
            options="$options $2"
            shift
@@ -204,6 +210,7 @@ options="$options -testid $testlid"
 echo "change directory to: $cesmscriptdir"
 cd $cesmscriptdir
 options="$options -compiler $compiler"
+options="$options -clean $clean"
 if [ ! -z "$baselineroot" ]; then
    options="$options -baselineroot $baselineroot"
 elif [ ! -z "$defaultbaselineroot" ]; then

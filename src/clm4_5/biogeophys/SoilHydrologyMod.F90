@@ -1195,24 +1195,25 @@ contains
           wh_zwt = 0._r8   !since wh_zwt = -sucsat - zq_zwt, where zq_zwt = -sucsat
           
           ! Recharge rate qcharge to groundwater (positive to aquifer)
-          if(jwt(c) == 0) then
-                ka = imped(c,1)*hksat(c,1)
-                wh      = smp(c,1) - zq(c,1)
-                qcharge(c) = -ka * (wh_zwt-wh)  /(2._r8*(zwt(c)+1.e-3)*1000._r8)
+          s_node = max(h2osoi_vol(c,jwt(c)+1)/watsat(c,jwt(c)+1), 0.01_r8)
+          s1 = min(1._r8, s_node)
+          
+          !scs: this is the expression for unsaturated hk
+          ka = imped(c,jwt(c)+1)*hksat(c,jwt(c)+1) &
+               *s1**(2._r8*bsw(c,jwt(c)+1)+3._r8)
+          
+          ! Recharge rate qcharge to groundwater (positive to aquifer)
+          smp1 = -sucsat(c,jwt(c))*s1**(-bsw(c,jwt(c)))
+          smp1 = max(smpmin(c), smp(c,jwt(c)))
+          wh      = smp1 - zq(c,jwt(c))
+          
+          !scs: original formulation
+          if(zwt(c) <= zi(c,jwt(c))) then
+             qcharge(c) = -ka * (wh_zwt-wh)  /((zwt(c)+1e-3)*1000._r8)
           else
-             ! water table in upper half of layer
-             z_mid=0.5*(zi(c,jwt(c)+1) + zi(c,jwt(c))) !midpoint of layer
-             if (zwt(c) < z_mid) then
-                ka = imped(c,jwt(c)+1)*hksat(c,jwt(c)+1)
-                wh      = smp(c,jwt(c)) - zq(c,jwt(c))
-
-                qcharge(c) = -ka * (wh_zwt-wh)  /(2._r8*(zwt(c)-z(c,jwt(c)))*1000._r8)
-             else !water table in lower half of layer
-                ka = imped(c,jwt(c)+1)*hksat(c,jwt(c)+1)
-                wh      = smp(c,jwt(c)+1) - zq(c,jwt(c)+1)
-
-                qcharge(c) = -ka * (wh_zwt-wh)  /(2._r8*(zwt(c)-z(c,jwt(c)+1))*1000._r8)
-             endif
+             !             qcharge(c) = -ka * (wh_zwt-wh)/((zwt(c)-z(c,jwt(c)))*1000._r8)
+             !scs: 1/2, assuming flux is at zwt interface, saturation deeper than zwt
+             qcharge(c) = -ka * (wh_zwt-wh)/((zwt(c)-z(c,jwt(c)))*1000._r8*2.0)
           endif
           
           ! To limit qcharge  (for the first several timesteps)
@@ -1451,6 +1452,12 @@ contains
 ! Water table changes due to qcharge
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
+
+! use analytical expression for aquifer specific yield
+       rous = watsat(c,nlevsoi) &
+            * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevsoi))**(-1./bsw(c,nlevsoi)))
+       rous=max(rous,0.02_r8)
+
 !--  water table is below the soil column  --------------------------------------
        if(jwt(c) == nlevsoi) then             
           wa(c)  = wa(c) + qcharge(c)  * dtime
@@ -1462,22 +1469,14 @@ contains
           qcharge_tot = qcharge(c) * dtime
           if(qcharge_tot > 0.) then !rising water table
              do j = jwt(c)+1, 1,-1
-                h2osoi_vol = h2osoi_liq(c,j)/(dz(c,j)*denh2o) &
-                     + h2osoi_ice(c,j)/(dz(c,j)*denice)
-                if (j == jwt(c)+1) then
-                   
-                   f_unsat=((zwt(c)-zi(c,jwt(c)))/dz(c,j))
-                   theta_unsat = (h2osoi_vol - (1._r8 - f_unsat)*watsat(c,j))/f_unsat
-                   theta_unsat = min(theta_unsat,h2osoi_vol)
-                   theta_unsat = max(theta_unsat,0._r8)
-                   s_y = max((watsat(c,j) - theta_unsat),0._r8)
-                else
-                   s_y=max((watsat(c,j)-h2osoi_vol),0._r8)
-                endif
+! use analytical expression for specific yield
+                s_y = watsat(c,j) &
+                    * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+                s_y=max(s_y,0.02_r8)
 
                 qcharge_layer=min(qcharge_tot,(s_y*(zwt(c) - zi(c,j-1))*1.e3))
                 qcharge_layer=max(qcharge_layer,0._r8)
-                
+
                 if(s_y > 0._r8) zwt(c) = zwt(c) - qcharge_layer/s_y/1000._r8
                 
                 qcharge_tot = qcharge_tot - qcharge_layer
@@ -1485,15 +1484,16 @@ contains
              enddo
           else ! deepening water table (negative qcharge)
              do j = jwt(c)+1, nlevsoi
-                qcharge_layer=max(qcharge_tot,-(h2osoi_liq(c,j)-watmin))
+! use analytical expression for specific yield
+                s_y = watsat(c,j) &
+                     * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+                s_y=max(s_y,0.02_r8)
+                qcharge_layer=max(qcharge_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                 qcharge_layer=min(qcharge_layer,0._r8)
                 qcharge_tot = qcharge_tot - qcharge_layer
 
-!                zwt(c) = zwt(c) - qcharge_layer/eff_porosity(c,j)/1000._r8
-!                if (qcharge_tot >= 0.) exit
-
                 if (qcharge_tot >= 0.) then 
-                   zwt(c) = zwt(c) - qcharge_layer/eff_porosity(c,j)/1000._r8
+                   zwt(c) = zwt(c) - qcharge_layer/s_y/1000._r8
                    exit
                 else
                    zwt(c) = zi(c,j)
@@ -1690,6 +1690,12 @@ contains
 
       ! Water storage in aquifer + soil
        wt(c)  = wt(c) + (qcharge(c) - rsub_top(c)) * dtime
+
+! use analytical expression for aquifer specific yield
+       rous = watsat(c,nlevsoi) &
+            * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevsoi))**(-1./bsw(c,nlevsoi)))
+       rous=max(rous,0.02_r8)
+
 !--  water table is below the soil column  --------------------------------------
        if(jwt(c) == nlevsoi) then             
           wa(c)  = wa(c) - rsub_top(c) * dtime
@@ -1708,37 +1714,27 @@ contains
              write(iulog,*)'clm model is stopping'
              call endrun()
 
-             do j = jwt(c)+1, 1,-1
-                h2osoi_vol = h2osoi_liq(c,j)/(dz(c,j)*denh2o) &
-                     + h2osoi_ice(c,j)/(dz(c,j)*denice)
-                rsub_top_layer=min(rsub_top_tot,(dzmm(c,j)*(watsat(c,j) &
-                     -h2osoi_vol)))
-                rsub_top_layer=max(rsub_top_layer,0._r8)
-                h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
-                zwt(c) = zwt(c) - rsub_top_layer/(watsat(c,j)-h2osoi_vol)/1000._r8
-                rsub_top_tot = rsub_top_tot - rsub_top_layer
-                if (rsub_top_tot <= 0.) exit
-             enddo
-             if (rsub_top_tot < 0.) zwt(c) = zwt(c) - rsub_top_tot/1000._r8/rous
+
           else ! deepening water table
              do j = jwt(c)+1, nlevsoi
-                rsub_top_layer=max(rsub_top_tot,-(h2osoi_liq(c,j)-watmin))
+! use analytical expression for specific yield
+                s_y = watsat(c,j) &
+                     * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
+                s_y=max(s_y,0.02_r8)
+                
+                rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                 rsub_top_layer=min(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
 
                 rsub_top_tot = rsub_top_tot - rsub_top_layer
 
-!                zwt(c) = zwt(c) - rsub_top_layer/eff_porosity(c,j)/1000._r8
-!                if (rsub_top_tot >= 0.) exit
-
-
                 if (rsub_top_tot >= 0.) then 
-                   zwt(c) = zwt(c) - rsub_top_layer/eff_porosity(c,j)/1000._r8
+                   zwt(c) = zwt(c) - rsub_top_layer/s_y/1000._r8
+
                    exit
                 else
                    zwt(c) = zi(c,j)
                 endif
-
             enddo
 
 !--  remove residual rsub_top  ---------------------------------------------

@@ -15,7 +15,6 @@ ERS_Ld211_Mmpi-serial.1x1_camdenNJ.ICLM45VOC      -user_nl_dir ../models/lnd/clm
 ERS_D_P1x1_Mmpi-serial.f19_g16.I20TR_CLM45VSCN   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
 ERS_D_P1x1_Mmpi-serial.f19_g16.I20TR_CLM45VSCN   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
 ERS_D_P1x1_Mmpi-serial.5x5_amazon.I_2000_CLM45   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-ERS_D_P1x1_Mmpi-serial.f19_g16.ICLM45GLCMEC      -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/glcMEC
 PET_D_P1x1_Mmpi-serial.f45_g37.ICLM45VOC         -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
 ERS_Ln48_D_P1x1_Mmpi-serial.f45_g37.ICLM45VOC    -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
 ## Non threaded serial tests

@@ -119,6 +119,14 @@ contains
          avgflag='A', long_name='runoff from river flooding', &
          ptr_lnd=clm_a2l%forc_flood)
 
+    call hist_addfld1d (fname='TWS',  units='mm',  &
+         avgflag='A', long_name='total water storage', &
+         ptr_lnd=clm3%g%tws)
+
+    call hist_addfld1d (fname='VOLR',  units='m3',  &
+         avgflag='A', long_name='river channel water storage', &
+         ptr_lnd=clm_a2l%volr)
+
     ! Snow properties
     ! These will be vertically averaged over the snow profile
 
@@ -821,7 +829,7 @@ contains
          ptr_col=clm3%g%l%c%cws%wa, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='WT',  units='mm',  &
-         avgflag='A', long_name='total water storage (unsaturated soil water + groundwater, veg landunits)', &
+         avgflag='A', long_name='DEPRECATED total water storage (unsaturated soil water + groundwater, veg landunits)', &
          ptr_col=clm3%g%l%c%cws%wt, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &

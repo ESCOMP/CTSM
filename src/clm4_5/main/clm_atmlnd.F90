@@ -53,6 +53,7 @@ module clm_atmlnd
      real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
      real(r8), pointer :: forc_flood(:)   ! rof flood (mm/s)
+     real(r8), pointer :: volr(:)   ! rof volr (m3)
      real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
 #ifdef LCH4
      real(r8), pointer :: forc_pch4(:)    !CH4 partial pressure (Pa)
@@ -164,6 +165,7 @@ contains
   endif
   allocate(a2l%forc_po2(beg:end))
   allocate(a2l%forc_flood(beg:end))
+  allocate(a2l%volr(beg:end))
   allocate(a2l%forc_aer(beg:end,14))
 #if (defined LCH4)
   allocate(a2l%forc_pch4(beg:end))
@@ -201,6 +203,7 @@ contains
   endif
   a2l%forc_po2(beg:end) = ival
   a2l%forc_flood(beg:end) = ival
+  a2l%volr(beg:end) = ival
   a2l%forc_aer(beg:end,:) = ival
 #if (defined LCH4)
   a2l%forc_pch4(beg:end) = ival

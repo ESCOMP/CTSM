@@ -13,13 +13,15 @@
          </IBM>
       </janus>
       <yellowstone>
-         <intel>
+         <INTEL>
             <compare>
                <entry testId="216" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="218" failType="xFail"> compare fails </entry>
                <entry testId="296" failType="xFail"> ne16 missing finidat file for 1850</entry>
                <entry testId="298" failType="xFail"> ne16 missing finidat file for 1850</entry>
                <entry testId="301" failType="xFail"> ne60 missing finidat file for 1850</entry>
                <entry testId="303" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="308" failType="xFail"> ne120 problem?</entry>
                <entry testId="316" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
                <entry testId="318" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </compare>
@@ -29,6 +31,7 @@
                <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
                <entry testId="201" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
+         </INTEL>
       </yellowstone>
    </namelistTest>
 
@@ -49,10 +52,10 @@
       <mirage>
       </mirage>
       <lynx>
-         <intel>
+         <INTEL>
               <entry testId="ERS.1x1_brazil.I_2000.lynx_intel"                failType="FAIL">CESM script issue</entry>
               <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel" failType="FAIL">CESM script issue</entry>
-         </intel>
+         </INTEL>
       </lynx>
       <janus>
       </janus>
@@ -60,17 +63,19 @@
 
    <test_system_interactive> 
       <lynx>
-         <pgi>
-         </pgi>
-         <intel>
-         </intel>
+         <PGI>
+         </PGI>
+         <INTEL>
+         </INTEL>
       </lynx>
       <frankfurt>
-         <intel>
-         </intel>
+         <INTEL>
+              <entry testId="SMS_RLA_Mmpi-serial.f45_f45.ICLM45"                     failType="FAIL" ></entry>
+              <entry testId="ERS_Ln48_D_P1x1_Mmpi-serial.f10_f10.ICLM45CNCROP"       failType="RUN" ></entry>
+         </INTEL>
       </frankfurt>
       <yellowstone>
-          <intel>
+          <INTEL>
               <entry testId="ERS_Ld211_Mmpi-serial.1x1_camdenNJ.ICLM45VOC"                 failType="RUN" ></entry>
               <entry testId="ERS_D_P1x1_Mmpi-serial.f19_g16.ICLM45GLCMEC"                  failType="FAIL" ></entry>
               <entry testId="PET_D_P1x1_Mmpi-serial.f45_g37.ICLM45VOC"                     failType="TFAIL" ></entry>
@@ -80,54 +85,56 @@
               <entry testId="ERI_Mmpi-serial.f10_f10.I_2000_CLM45_CN4Me"                   failType="FAIL"  ></entry>
               <entry testId="ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_VOC_SNCRFRC_CN"       failType="RUN" ></entry>
               <entry testId="ERS_D_P1x16_Mmpi-serial.f19_g16.I_2000_GLCMECP"               failType="RUN" ></entry>
-          </intel>
+          </INTEL>
       </yellowstone>
    </test_system_interactive> 
 
    <test_system_batch> 
       <lynx>
-         <pgi>
+         <PGI>
               <entry testId="ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD" failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
-         </pgi>
+         </PGI>
       </lynx>
       <frankfurt>
-         <intel>
-         </intel>
+         <INTEL>
+              <entry testId="ERS_D_P16x1.f19_g16.I_2000_CLM45_CN4Me_CROP"       failType="RUN" ></entry>
+         </INTEL>
       </frankfurt>
       <yellowstone>
-          <intel>
+          <INTEL>
               <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"                 failType="RUN" >History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
               <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.oldhyd"        failType="TFAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.anoxia_wtsat"  failType="TFAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_ciso" failType="TFAIL"></entry>
+              <entry testId="SMS_D.f10_f10.I_2000_CLM45CN4Me.anoxia_wtsat"       failType="TFAIL"></entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_ciso"      failType="TFAIL"></entry>
               <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_pftr" failType="TFAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_pftr" failType="TFAIL"></entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.ch4_set3_pftroot"   failType="TFAIL"></entry>
               <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.rootlit"     failType="TFAIL"></entry>
-              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4M.vrtlay"              failType="TFAIL"></entry>
+              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4Me.vrtlay"             failType="TFAIL"></entry>
               <entry testId="PET_D_P1x32.ne30_g16.ICN"                           failType="SFAIL"></entry>
               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="TFAIL"></entry>
-          </intel>
+              <entry testId="ERS_D.f19_g16.ICLM45GLCMEC.glcMEC"                  failType="TFAIL"></entry>
+          </INTEL>
       </yellowstone>
    </test_system_batch> 
   
    <cesm> 
       <IcompsetTests>
          <yellowstone>
-            <intel>
+            <INTEL>
                <entry testId="SBN.1x1_tropicAtl.I20TR"  failType="SFAIL">missing datasets</entry>
                <entry testId="SBN.ne16_g16.I20TR"       failType="TFAIL">missing datasets</entry>
                <entry testId="SBN.ne60_g16.I20TR"       failType="SFAIL">missing datasets</entry>
                <entry testId="SBN.ne240_g16.I1850"      failType="FAIL" >missing 0.1 mapping dataset (for RTM at R01)</entry>
-            </intel>
-            <pgi>
-            </pgi>
+            </INTEL>
+            <PGI>
+            </PGI>
          </yellowstone>
       </IcompsetTests>
       <auxTests>
          <yellowstone>
-            <intel>
+            <INTEL>
                <entry testId="PET_PT.f19_g16.I1850CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="ERB.ne30_g16.I_1948-2004"  failType="FAIL" >Restart difference</entry>
                <entry testId="ERS_Lm3.f19_g16.IGRCP60CN" failType="FAIL" >Soil balance error on restart</entry>
@@ -140,8 +147,8 @@
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue component not threaded</entry>
                <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="SFAIL">missing finidat file</entry>
                <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="SFAIL">missing finidat file</entry>
-            </intel>
-            <pgi>
+            </INTEL>
+            <PGI>
                <entry testId="SMS_RLB.f45_f45.I"                 failType="cFAIL">problem building with mpi-serial with pgi compiler</entry>
                <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CN"  failType="cFAIL">missing LAPACK symbol dgbsv</entry>
                <entry testId="PET_PT.f19_g16.I1850"              failType="TFAIL">scripts issue with ocean not threaded</entry>
@@ -158,7 +165,7 @@
                <entry testId="SMS.T31_g37.IG4804CLM45"                failType="CFAIL">Need LAPACK for PGI (dgbsv)</entry>
                <entry testId="SMS.1x1_numaIA.ICLM45CN_CROP"           failType="TFAIL">Bad compset name: ICNCROP</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"            failType="TFAIL">scripts issue with ocean not threaded</entry>
-            </pgi>
+            </PGI>
          </yellowstone>
       </auxTests>
    </cesm>
