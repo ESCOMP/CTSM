@@ -118,15 +118,14 @@ contains
     real(r8), pointer :: qflx_ev_snow(:)    ! evaporation flux from snow (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_ev_soil(:)    ! evaporation flux from soil (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_ev_h2osfc(:)  ! evaporation flux from soil (W/m**2) [+ to atm]
-    integer , pointer :: clandunit(:)       ! column's landunit index
     real(r8), pointer :: sabg_soil(:)       ! solar radiation absorbed by soil (W/m**2)
     real(r8), pointer :: sabg_snow(:)       ! solar radiation absorbed by snow (W/m**2)
     integer , pointer :: ctype(:)           ! column type
     integer , pointer :: ltype(:)           ! landunit type
+    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: pcolumn(:)         ! pft's column index
     integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding column
     integer , pointer :: npfts(:)           ! column's number of pfts 
     integer , pointer :: pfti(:)            ! column's beginning pft index 
     integer , pointer :: snl(:)             ! number of snow layers
@@ -237,11 +236,9 @@ contains
     qflx_ev_snow  => clm3%g%l%c%p%pwf%qflx_ev_snow
     qflx_ev_soil  => clm3%g%l%c%p%pwf%qflx_ev_soil
     qflx_ev_h2osfc=> clm3%g%l%c%p%pwf%qflx_ev_h2osfc
-    clandunit     => clm3%g%l%c%landunit
     sabg_soil     => clm3%g%l%c%p%pef%sabg_soil
     sabg_snow     => clm3%g%l%c%p%pef%sabg_snow
     ctype      => clm3%g%l%c%itype
-    clandunit  => clm3%g%l%c%landunit
     npfts      => clm3%g%l%c%npfts
     pfti       => clm3%g%l%c%pfti
     snl        => clm3%g%l%c%cps%snl
@@ -259,10 +256,10 @@ contains
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
+    pactive        => clm3%g%l%c%p%active
     pcolumn        => clm3%g%l%c%p%column
     plandunit      => clm3%g%l%c%p%landunit
     pgridcell      => clm3%g%l%c%p%gridcell
-    pwtgcell       => clm3%g%l%c%p%wtgcell
     frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
     sabg           => clm3%g%l%c%p%pef%sabg
     dlrad          => clm3%g%l%c%p%pef%dlrad
@@ -385,11 +382,9 @@ contains
     do pi = 1,max_pft_per_col
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
-          l = clandunit(c)
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
-             ! Note: some glacier_mec pfts may have zero weight
-             if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+             if (pactive(p)) then
                 topsoil_evap_tot(c) = topsoil_evap_tot(c) + qflx_evap_soi(p) * wtcol(p)
              end if
           end if

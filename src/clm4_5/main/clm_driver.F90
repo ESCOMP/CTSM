@@ -87,7 +87,8 @@ module clm_driver
   use clm_varctl          , only : wrtdia, fpftdyn, iulog, create_glacier_mec_landunit
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds
-  use filterMod           , only : filter, setFilters
+  use filterMod           , only : filter
+  use reweightMod         , only : reweightWrapup
 #if (defined CNDV)
   use CNDVMod             , only : dv, histCNDV
   use pftdynMod           , only : pftwt_interp
@@ -151,7 +152,7 @@ module clm_driver
   public :: clm_drv                 ! clm physics,history, restart writes
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: write_diagnostic       ! Write diagnostic information to log file
+  private :: write_diagnostic        ! Write diagnostic information to log file
 !EOP
 !-----------------------------------------------------------------------
 
@@ -174,7 +175,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 
 ! !ARGUMENTS:
   implicit none
-  logical,         intent(in) :: doalb       ! true if time for surface albedo calc
+  logical ,        intent(in) :: doalb       ! true if time for surface albedo calc
   real(r8),        intent(in) :: nextsw_cday ! calendar day for nstep+1
   real(r8),        intent(in) :: declinp1    ! declination angle for next time step
   real(r8),        intent(in) :: declin      ! declination angle for current time step
@@ -324,6 +325,10 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
       do nc = 1,nclumps
          call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
+         ! do stuff that needs to be done after changing weights
+         ! This call should be made as soon as possible after pftdyn_interp
+         call reweightWrapup(nc)
+
          !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
          call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &
                                  clm3%g%gws%gc_ice2(begg:endg), clm3%g%ges%gc_heat2(begg:endg) )
@@ -377,15 +382,10 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call CNZeroFluxes_dwt( begc, endc, begp, endp )
      call alt_calc(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
      call pftwt_interp( begp, endp )
+     call reweightWrapup(nc)
      call pftdyn_wbal( begg, endg, begc, endc, begp, endp )
      call pftdyn_cnbal( begc, endc, begp, endp )
-     call setFilters(nc)
 #else
-     ! ============================================================================
-     ! Update weights and reset filters if dynamic land use
-     ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
-     ! The call to CNZeroFluxes_dwt() is needed regardless of fpftdyn
-     ! ============================================================================
 
 #if (defined CN)
      call CNZeroFluxes_dwt( begc, endc, begp, endp )
@@ -397,15 +397,11 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call decomp_vertprofiles(begp, endp, begc, endc, filter(nc)%num_soilc, filter(nc)%soilc, filter(nc)%num_soilp, filter(nc)%soilp)
 #endif
      
-     
+#if (defined CN)     
      if (fpftdyn /= ' ') then
-        
-#if (defined CN)
         call pftdyn_cnbal( begc, endc, begp, endp )
-#endif
-        
-        call setFilters(nc)
      end if
+#endif
 #endif
   end do
 !$OMP END PARALLEL DO

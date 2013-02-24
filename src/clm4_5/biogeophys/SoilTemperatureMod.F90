@@ -67,7 +67,7 @@ contains
     use clm_time_manager  , only : get_step_size
     use clm_varctl    , only : iulog
     use nanMod        , only : nan
-    use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, istice_mec, &
+    use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
                                icol_roof, icol_sunwall, icol_shadewall, &
                                icol_road_perv, icol_road_imperv, istwet, &
                                denh2o, denice, cpice,  cpliq,hfus, tfrz,&
@@ -123,6 +123,7 @@ contains
     real(r8), pointer :: sabg_soil(:)       ! solar radiation absorbed by soil (W/m**2)
     real(r8), pointer :: sabg_snow(:)       ! solar radiation absorbed by snow (W/m**2)
     real(r8), pointer :: sabg_chk(:)        ! sum of soil/snow using current fsno, for balance check
+    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
     integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: clandunit(:)       ! column's landunit
@@ -131,7 +132,6 @@ contains
     integer , pointer :: npfts(:)           ! column's number of pfts 
     integer , pointer :: pfti(:)            ! column's beginning pft index 
     real(r8), pointer :: pwtcol(:)          ! weight of pft relative to column
-    real(r8), pointer :: pwtgcell(:)        ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
     integer , pointer :: snl(:)             ! number of snow layers
     real(r8), pointer :: htvp(:)            ! latent heat of vapor of water (or sublimation) [j/kg]
@@ -296,10 +296,10 @@ contains
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
+    pactive        => clm3%g%l%c%p%active
     pgridcell      => clm3%g%l%c%p%gridcell
     plandunit      => clm3%g%l%c%p%landunit
     pwtcol         => clm3%g%l%c%p%wtcol
-    pwtgcell       => clm3%g%l%c%p%wtgcell  
     frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
     cgrnd          => clm3%g%l%c%p%pef%cgrnd
     dlrad          => clm3%g%l%c%p%pef%dlrad
@@ -361,8 +361,7 @@ contains
              l = plandunit(p)
              g = pgridcell(p)
 
-             ! Note: Some glacier_mec pfts may have zero weight
-             if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+             if (pactive(p)) then
                 if (ltype(l) /= isturb) then
                    eflx_gnet(p) = sabg(p) + dlrad(p) &
                                   + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) - lwrad_emit(c) &
@@ -440,9 +439,9 @@ contains
           lyr_top = snl(c) + 1
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
-             l = plandunit(p)
-             if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+             if (pactive(p)) then
                 g = pgridcell(p)
+                l = plandunit(p)
                 if (ltype(l) /= isturb )then
 
                    eflx_gnet_top = sabg_lyr(p,lyr_top) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &

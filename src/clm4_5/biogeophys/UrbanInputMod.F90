@@ -98,7 +98,7 @@ contains
 !EOP
     character(len=256) :: locfn      ! local file name
     type(file_desc_t)  :: ncid       ! netcdf id
-    integer :: dimid,varid           ! netCDF id's
+    integer :: dimid                 ! netCDF id
     integer :: begg,endg             ! start/stop gridcells
     integer :: nw,n,k,i,j,ni,nj,ns   ! indices
     integer :: nlevurb_i             ! input grid: number of urban vertical levels
@@ -107,9 +107,8 @@ contains
     integer :: ier,ret               ! error status
     logical :: isgrid2d              ! true => file is 2d 
     logical :: readvar               ! true => variable is on dataset
+    logical :: has_numurbl           ! true => numurbl dimension is on dataset
     character(len=32) :: subname = 'UrbanInput' ! subroutine name
-    type(var_desc_t) :: pct_urban_desc    ! variable descriptor for pct_urban
-    integer  :: ndims                     ! number of dimensions of pct_urban
 !-----------------------------------------------------------------------
 
     if ( nlevurb == 0 ) return
@@ -131,16 +130,12 @@ contains
           write(iulog,*) subname,trim(fsurdat)
        end if
 
-       ! Check dimensionality of PCT_URBAN
-       call ncd_inqvid(ncid, 'PCT_URBAN', varid, pct_urban_desc, readvar)
-       call ncd_inqvdims(ncid, ndims, pct_urban_desc)
+       ! Check whether this file has new-format urban data
+       call ncd_inqdid(ncid, 'numurbl', dimid, dimexist=has_numurbl)
 
-       if (masterproc) then
-         write(iulog,*)'ndims of PCT_URBAN: ',ndims
-       end if
-
-       ! If PCT_URBAN is not multi-density then set nlevurb to zero
-       if (ndims == 2) then
+       ! If file doesn't have numurbl, then it is old-format urban;
+       ! in this case, set nlevurb to zero
+       if (.not. has_numurbl) then
          nlevurb = 0
          write(iulog,*)'PCT_URBAN is not multi-density, nlevurb set to 0'
        end if

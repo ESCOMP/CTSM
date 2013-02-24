@@ -109,6 +109,7 @@ contains
     real(r8), pointer :: qflx_drain_perched(:)    ! sub-surface runoff from perched zwt (mm H2O /s)
     real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
     real(r8), pointer :: qflx_h2osfc_surf(:)!surface water runoff (mm/s)
+    logical , pointer :: cactive(:)       ! true=>do computations on this column (see reweightMod for details)
     integer , pointer :: cgridcell(:)     ! column's gridcell
     integer , pointer :: clandunit(:)     ! column's landunit
     integer , pointer :: ityplun(:)       ! landunit type
@@ -255,6 +256,7 @@ contains
     qflx_drain_perched=> clm3%g%l%c%cwf%qflx_drain_perched
     qflx_floodg       => clm_a2l%forc_flood
     qflx_h2osfc_surf  => clm3%g%l%c%cwf%qflx_h2osfc_surf
+    cactive           => clm3%g%l%c%active
     cgridcell         => clm3%g%l%c%gridcell
     clandunit         => clm3%g%l%c%landunit
     ctype             => clm3%g%l%c%itype
@@ -585,7 +587,7 @@ contains
        qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
        if ((ityplun(l)==istsoil .or. ityplun(l)==istcrop) &
-           .and. clm3%g%l%c%wtgcell(c) > 0.0_r8 ) then
+           .and. cactive(c)) then
           qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
        end if
        if (ityplun(l)==isturb) then

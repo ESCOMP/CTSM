@@ -191,7 +191,7 @@ contains
     use clmtype
     use decompMod , only : get_clump_bounds
     use pftvarcon , only : npcropmin
-    use clm_varcon, only : istsoil, isturb, icol_road_perv, istice_mec
+    use clm_varcon, only : istsoil, isturb, icol_road_perv
     use clm_varcon, only : istcrop
 !
 ! !ARGUMENTS:
@@ -242,17 +242,13 @@ contains
     filter(nc)%num_nolakec = fnl
 
     ! Create lake and non-lake filters at pft-level 
-    ! Filter will only be active if weight of pft wrt gcell is nonzero
+    ! Filter will only be active if pft is active
 
     fl = 0
     fnl = 0
     fnlu = 0
     do p = begp,endp
-       l = clm3%g%l%c%p%landunit(p)
-       if (clm3%g%l%c%p%wtgcell(p) > 0._r8    &
-                   .or.                       &
-           clm3%g%l%itype(l)==istice_mec) then  ! some glacier_mec columns have zero weight
-
+       if (clm3%g%l%c%p%active(p)) then
           l = clm3%g%l%c%p%landunit(p)
           if (clm3%g%l%lakpoi(l) ) then
              fl = fl + 1
@@ -284,11 +280,11 @@ contains
     filter(nc)%num_soilc = fs
 
     ! Create soil filter at pft-level
-    ! Filter will only be active if weight of pft wrt gcell is nonzero
+    ! Filter will only be active if pft is active
 
     fs = 0
     do p = begp,endp
-       if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+       if (clm3%g%l%c%p%active(p)) then
           l = clm3%g%l%c%p%landunit(p)
           if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
              fs = fs + 1
@@ -317,7 +313,7 @@ contains
     fl  = 0
     fnl = 0
     do p = begp,endp
-       if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+       if (clm3%g%l%c%p%active(p)) then
           if (clm3%g%l%c%p%itype(p) >= npcropmin) then !skips 2 generic crop types
              fl = fl + 1
              filter(nc)%pcropp(fl) = p
@@ -372,7 +368,7 @@ contains
     fn = 0
     do p = begp,endp
        l = clm3%g%l%c%p%landunit(p)
-       if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+       if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%active(p)) then
           f = f + 1
           filter(nc)%urbanp(f) = p
        else

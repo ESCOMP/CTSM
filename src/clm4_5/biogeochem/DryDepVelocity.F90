@@ -97,11 +97,11 @@ CONTAINS
 
     ! ------------------------ local variables ------------------------ 
     ! local pointers to implicit in arguments 
+    logical , pointer :: pactive(:)       ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: plandunit(:)     !pft's landunit index
     integer , pointer :: ivt(:)           !landunit type
     integer , pointer :: itypveg(:)       !vegetation type for current pft  
     integer , pointer :: pgridcell(:)     !pft's gridcell index
-    real(r8), pointer :: pwtgcell(:)      !weight of pft relative to corresponding gridcell
     real(r8), pointer :: elai(:)          !one-sided leaf area index with burying by snow 
     real(r8), pointer :: forc_t(:)        !atmospheric temperature (Kelvin) 
     real(r8), pointer :: forc_q(:)        !atmospheric specific humidity (kg/kg) 
@@ -205,6 +205,7 @@ CONTAINS
 
     latdeg     => clm3%g%latdeg
     londeg     => clm3%g%londeg
+    pactive    => clm3%g%l%c%p%active
     ivt        => clm3%g%l%c%p%itype
     elai       => clm3%g%l%c%p%pps%elai 
     ram1       => clm3%g%l%c%p%pps%ram1 
@@ -219,7 +220,6 @@ CONTAINS
     forc_solai => clm_a2l%forc_solai 
     forc_solad => clm_a2l%forc_solad
 
-    pwtgcell   => clm3%g%l%c%p%wtgcell  
     pgridcell  => clm3%g%l%c%p%gridcell
     plandunit  => clm3%g%l%c%p%landunit
 
@@ -239,8 +239,7 @@ CONTAINS
     pft_loop: do pi = lbp,ubp
        l = plandunit(pi)
 
-       ! Note: some glacier_mec pfts may have zero weight
-       gcell_wght: if (pwtgcell(pi)>0._r8 .or. itypelun(l)==istice_mec) then
+       active: if (pactive(pi)) then
 
           c = pcolumn(pi)
           g = pgridcell(pi)
@@ -565,7 +564,7 @@ CONTAINS
              end select
           end do species_loop3
 
-       endif gcell_wght
+       endif active
 
     end do pft_loop
 

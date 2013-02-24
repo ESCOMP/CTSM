@@ -3373,9 +3373,9 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
 ! !LOCAL VARIABLES:
 !
 ! local pointers to implicit in scalars
+   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
    integer , pointer :: ivt(:)      ! pft vegetation type
    real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   real(r8), pointer :: pwtgcell(:) ! weight of pft relative to corresponding gridcell
    real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
    real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
    real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
@@ -3551,9 +3551,9 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
    hrv_deadcrootn_xfer_to_litr_met_n    => clm3%g%l%c%cnf%hrv_deadcrootn_xfer_to_litr_met_n
 
    ! assign local pointers to pft-level arrays
+   pactive                        => clm3%g%l%c%p%active
    ivt                            => clm3%g%l%c%p%itype
    wtcol                          => clm3%g%l%c%p%wtcol
-   pwtgcell                       => clm3%g%l%c%p%wtgcell  
    hrv_leafc_to_litter              => clm3%g%l%c%p%pcf%hrv_leafc_to_litter
    hrv_frootc_to_litter             => clm3%g%l%c%p%pcf%hrv_frootc_to_litter
    hrv_livestemc_to_litter          => clm3%g%l%c%p%pcf%hrv_livestemc_to_litter
@@ -3608,7 +3608,7 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
             if (pi <=  npfts(c)) then
                p = pfti(c) + pi - 1
                
-               if (pwtgcell(p)>0._r8) then
+               if (pactive(p)) then
                   
                   
                   ! leaf harvest mortality carbon fluxes
@@ -3738,7 +3738,7 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
          if (pi <=  npfts(c)) then
             p = pfti(c) + pi - 1
             
-            if (pwtgcell(p)>0._r8) then
+            if (pactive(p)) then
                
                
                ! wood harvest mortality carbon fluxes to product pools

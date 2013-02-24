@@ -69,7 +69,6 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    ! column-level
    integer , pointer :: npfts(:)        ! number of pfts on the column
    integer , pointer :: pfti(:)         ! pft index array
-   real(r8), pointer :: pwtgcell(:)     ! weight of pft relative to corresponding gridcell
    real(r8), pointer :: wf(:)           ! soil water as frac. of whc for top 0.5 m
    real(r8), pointer :: t_grnd(:)       ! ground temperature (Kelvin)
    real(r8), pointer :: totlitc(:)      ! (gC/m2) total litter C (not including cwdc)
@@ -113,7 +112,6 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    ! assign local pointers to derived type members (pft-level)
    wtcol            => clm3%g%l%c%p%wtcol
    ivt              => clm3%g%l%c%p%itype
-   pwtgcell         => clm3%g%l%c%p%wtgcell  
    woody            => pftcon%woody
 
    ! assign local pointers to derived type members (column-level)
@@ -145,12 +143,10 @@ subroutine CNFireArea (num_soilc, filter_soilc)
          c = filter_soilc(fc)
          if (pi <=  npfts(c)) then
             p = pfti(c) + pi - 1
-            if (pwtgcell(p)>0._r8) then
-               if (woody(ivt(p)) == 1) then
-                  mep = me_woody
-               else
-                  mep = me_herb
-               end if
+            if (woody(ivt(p)) == 1) then
+               mep = me_woody
+            else
+               mep = me_herb
             end if
             me(c) = me(c) + mep*wtcol(p)
          end if
@@ -283,6 +279,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 #if (defined CNDV)
    real(r8), pointer :: nind(:)         ! number of individuals (#/m2)
 #endif
+   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: woody(:)        ! binary flag for woody lifeform (1=woody, 0=not woody)
    real(r8), pointer :: resist(:)       ! resistance to fire (no units)
@@ -387,7 +384,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    logical, pointer :: is_litter(:)                          ! TRUE => pool is a litter pool
    integer , pointer :: npfts(:)        ! number of pfts on the column
    real(r8), pointer :: wtcol(:)        ! pft weight on the column
-   real(r8), pointer :: pwtgcell(:)     ! weight of pft relative to corresponding gridcell
    integer , pointer :: pfti(:)         ! pft index array
    real(r8), pointer :: croot_prof(:,:)         ! (1/m) profile of coarse roots
    real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
@@ -512,7 +508,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
     is_litter                         => decomp_cascade_con%is_litter
     npfts            => clm3%g%l%c%npfts
     wtcol            => clm3%g%l%c%p%wtcol
-    pwtgcell         => clm3%g%l%c%p%wtgcell  
+    pactive          => clm3%g%l%c%p%active
     pfti             => clm3%g%l%c%pfti
    croot_prof                     => clm3%g%l%c%p%pps%croot_prof
    stem_prof                      => clm3%g%l%c%p%pps%stem_prof
@@ -647,7 +643,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
             c = filter_soilc(fc)
             if (pi <=  npfts(c)) then
                p = pfti(c) + pi - 1
-               if (pwtgcell(p)>0._r8) then
+               if (pactive(p)) then
                   
                   m_deadstemc_to_cwdc_fire(c,j) = m_deadstemc_to_cwdc_fire(c,j) + &
                        m_deadstemc_to_litter_fire(p) * wtcol(p) * stem_prof(p,j)

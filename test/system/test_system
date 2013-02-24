@@ -40,6 +40,7 @@ interactive="no"
 debug="no"
 clean="off"
 options=""
+component_gen_comp_options=""
 
 while [ $# -gt 0 ]; do
    case $1 in
@@ -57,10 +58,12 @@ while [ $# -gt 0 ]; do
            ;;
        -g|--generate )
            options="$options -generate $2"
+	   component_gen_comp_options="$component_gen_comp_options -generate $2"
            shift
            ;;
        -c|--compare )
            options="$options -compare $2"
+	   component_gen_comp_options="$component_gen_comp_options -compare $2"
            shift
            ;;
        -p|--compiler )
@@ -121,6 +124,7 @@ case $hostname in
     ys* )
        machine=yellowstone
        defaultbaselineroot="$CESMDATAROOT/clm_cesm_baselines"
+       defaultrunloc="/glade/scratch/$USER"
        options="$options -mach $machine"
        defaultcompiler="intel"
        defaultinter_testlist="yellowstone.interactive"
@@ -131,6 +135,7 @@ case $hostname in
     be* )
        machine=bluefire
        defaultbaselineroot="/glade/proj2/cgd/tss/clm_cesm_baselines"
+       defaultrunloc="/ptmp/$USER"
        options="$options -mach $machine"
        defaultcompiler="ibm"
        defaultinter_testlist="bluefire.interactive"
@@ -142,6 +147,7 @@ case $hostname in
        machine=userdefined
        options="$options -mach $machine"
        defaultbaselineroot="/glade/proj2/cgd/tss/clm_cesm_baselines"
+       defaultrunloc="/glade/scratch/$USER"
        defaultcompiler="intel"
        defaultinter_testlist="mirage.interactive"
        if [ "$interactive" = "no" ]; then
@@ -154,6 +160,7 @@ case $hostname in
     lynx* | l0*)
        machine=lynx
        defaultbaselineroot="/glade/proj2/cgd/tss/clm_cesm_baselines"
+       defaultrunloc="/glade/scratch/$USER"
        options="$options -mach $machine"
        defaultcompiler="pgi"
        defaultinter_testlist="lynx.interactive"
@@ -164,6 +171,7 @@ case $hostname in
     frankfurt* | f0*)
        machine=frankfurt
        defaultbaselineroot="/fs/cgd/csm/clm_cesm_baselines"
+       defaultrunloc="/scratch/cluster/$USER"
        options="$options -mach $machine"
        defaultcompiler="intel"
        defaultinter_testlist="frankfurt.interactive"
@@ -204,6 +212,7 @@ if [ ! -f "$testlist" ]; then
    exit 1
 fi
 options="$options -testid $testlid"
+component_gen_comp_options="$component_gen_comp_options -testid $testlid"
 #
 # Change to scripts directory and run
 #
@@ -213,19 +222,31 @@ options="$options -compiler $compiler"
 options="$options -clean $clean"
 if [ ! -z "$baselineroot" ]; then
    options="$options -baselineroot $baselineroot"
+   component_gen_comp_options="$component_gen_comp_options -baselineroot $baselineroot"
 elif [ ! -z "$defaultbaselineroot" ]; then
    options="$options -baselineroot $defaultbaselineroot"
+   component_gen_comp_options="$component_gen_comp_options -baselineroot $defaultbaselineroot"
+else
+   component_gen_comp_options="$component_gen_comp_options -baselineroot NOT_PROVIDED"
 fi
 echo "Test list to use:               $testlist"
 echo "Create test suite with options: $options"
 ./create_test_suite -input_list $testlist -compset_file $testdir/config_files/config_CLMtestCompsets.xml $options
+
+# Assume that runs are done in default location
+component_gen_comp_options="$component_gen_comp_options -runloc $defaultrunloc"
+component_gen_comp_cmd="ccsm_utils/Tools/component_gen_comp $component_gen_comp_options -model clm2"
+
 if [ "$interactive" = "YES" ]; then
   ./cs.status.$testlid.$machine | tee status.$testlid.log
   echo "Expected fail results"
   num_tests=`wc -w < $testlist` 
   ../../bld/unit_testers/xFail/wrapClmTests.pl -statusFile status.$testlid.log -numberOfTests "$num_tests" -callingScript "test_driver.sh-i"
+  echo ""
+  echo "RUNNING COMPONENT_GEN_COMP..."
+  eval $component_gen_comp_cmd | tee component_gen_comp.$testlid.log
 fi
 echo "status/submit scripts are in the directory: $cesmscriptdir"
 echo "submit jobs with:   cs.submit.$testlid.$machine"
 echo "check results with: cs.status.$testlid.$machine"
-
+echo "run component_gen_comp with: $component_gen_comp_cmd"

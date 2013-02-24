@@ -91,7 +91,7 @@ contains
     real(r8), pointer :: croot_prof(:,:)         ! (1/m) profile of coarse roots
     real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
     real(r8), pointer :: wtcol(:)                ! pft weight relative to column (0-1)
-    real(r8), pointer :: pwtgcell(:)             ! weight of pft relative to corresponding gridcell
+    logical , pointer :: pactive(:)              ! true=>do computations on this pft (see reweightMod for details)
 
     ! local variables
     real(r8) :: surface_prof(1:nlevdecomp)
@@ -128,7 +128,7 @@ contains
     pcolumn                           => clm3%g%l%c%p%column
     rootfr                            => clm3%g%l%c%p%pps%rootfr
     wtcol                             => clm3%g%l%c%p%wtcol
-    pwtgcell                          => clm3%g%l%c%p%wtgcell  
+    pactive                           => clm3%g%l%c%p%active
 
 
 #ifdef VERTSOILC
@@ -219,7 +219,7 @@ contains
           c = filter_soilc(fc)
           if (pi <=  npfts(c)) then
              p = pfti(c) + pi - 1
-             if (pwtgcell(p)>0._r8) then
+             if (pactive(p)) then
                 do j = 1,nlevdecomp
                    col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * wtcol(p)
                 end do

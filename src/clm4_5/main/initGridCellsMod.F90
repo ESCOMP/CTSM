@@ -31,6 +31,7 @@ module initGridCellsMod
   private set_landunit_veg_compete
   private set_landunit_wet_ice_lake
   private set_landunit_crop_noncompete
+  private set_landunit_urban
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -157,21 +158,21 @@ contains
 
        ! Determine urban tall building district landunit
 
-       call set_landunit_urban_tbd( &
+       call set_landunit_urban( &
 !           ltype=isturb, wtxy=wtxy, vegxy=vegxy,   &
             ltype=isturb, udenstype=udens_tbd, &
             nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        ! Determine urban high density landunit
 
-       call set_landunit_urban_hd( &
+       call set_landunit_urban( &
 !           ltype=isturb, wtxy=wtxy, vegxy=vegxy,   &
             ltype=isturb, udenstype=udens_hd, &
             nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        ! Determine urban medium density landunit
 
-       call set_landunit_urban_md( &
+       call set_landunit_urban( &
 !           ltype=isturb, wtxy=wtxy, vegxy=vegxy,   &
             ltype=isturb, udenstype=udens_md, &
             nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
@@ -672,16 +673,27 @@ end subroutine clm_ptrs_check
                 pptr%gridcell(pi) = gi
                 pptr%landunit(pi) = li
                 pptr%column (pi) = ci
-                pptr%wtgcell(pi) = 0.0_r8
-                pptr%wtlunit(pi) = 0.0_r8
-                pptr%wtcol(pi) = 0.0_r8
-                do m = 1,maxpatch_pft
-                   if (vegxy(nw,m) == pitype .and. wtxy(nw,m) > 0._r8) then
-                      pptr%wtgcell(pi)  = pptr%wtgcell(pi) + wtxy(nw,m)
-                      pptr%wtlunit(pi)  = pptr%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
-                      pptr%wtcol(pi)  = pptr%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
-                   end if
-                end do
+
+                if (wtlunit2gcell > 0._r8) then
+                   pptr%wtgcell(pi) = 0.0_r8
+                   pptr%wtlunit(pi) = 0.0_r8
+                   pptr%wtcol(pi) = 0.0_r8
+                   do m = 1,maxpatch_pft
+                      if (vegxy(nw,m) == pitype) then
+                         pptr%wtgcell(pi)  = pptr%wtgcell(pi) + wtxy(nw,m)
+                         pptr%wtlunit(pi)  = pptr%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
+                         pptr%wtcol(pi)  = pptr%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
+                      end if
+                   end do
+                else  ! wtlunit2gcell == 0._r8
+                   ! TODO WJS: Temporarily setting this to equal weighting for all
+                   ! pfts. In the future, we could potentially get some info about this
+                   ! from the surface dataset, if it is changed to give pct_pft as % of
+                   ! the pft on the landunit
+                   pptr%wtgcell(pi) = 0._r8
+                   pptr%wtlunit(pi) = 1._r8 / (numpft+1-numcft)
+                   pptr%wtcol(pi)   = 1._r8 / (numpft+1-numcft)
+                end if
              endif ! setdata
           end do
        else if (allocate_all_vegpfts) then
@@ -694,34 +706,32 @@ end subroutine clm_ptrs_check
                 pptr%gridcell(pi) = gi
                 pptr%landunit(pi) = li
                 pptr%column (pi) = ci
-                pptr%wtgcell(pi) = 0.0_r8
-                pptr%wtlunit(pi) = 0.0_r8
-                pptr%wtcol(pi) = 0.0_r8
-                do m = 1,maxpatch_pft
-                   if (vegxy(nw,m) == pitype .and. wtxy(nw,m) > 0._r8) then
-                      pptr%wtgcell(pi)  = pptr%wtgcell(pi) + wtxy(nw,m)
-                      pptr%wtlunit(pi)  = pptr%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
-                      pptr%wtcol(pi)  = pptr%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
-                   end if
-                end do
+
+                if (wtlunit2gcell > 0._r8) then
+                   pptr%wtgcell(pi) = 0.0_r8
+                   pptr%wtlunit(pi) = 0.0_r8
+                   pptr%wtcol(pi) = 0.0_r8
+                   do m = 1,maxpatch_pft
+                      if (vegxy(nw,m) == pitype) then
+                         pptr%wtgcell(pi)  = pptr%wtgcell(pi) + wtxy(nw,m)
+                         pptr%wtlunit(pi)  = pptr%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
+                         pptr%wtcol(pi)  = pptr%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
+                      end if
+                   end do
+                else  ! wtlunit2gcell == 0._r8
+                   ! TODO WJS: Temporarily setting this to equal weighting for all
+                   ! pfts. In the future, we could potentially get some info about this
+                   ! from the surface dataset, if it is changed to give pct_pft as % of
+                   ! the pft on the landunit
+                   pptr%wtgcell(pi) = 0._r8
+                   pptr%wtlunit(pi) = 1._r8 / (numpft+1)
+                   pptr%wtcol(pi)   = 1._r8 / (numpft+1)
+                end if
              endif ! setdata
           end do
        else
-          do m = 1,maxpatch_pft
-             if (wtxy(nw,m) > 0._r8) then
-                pi = pi + 1
-                if (setdata) then
-                   pptr%mxy(pi)      = m
-                   pptr%itype(pi)    = vegxy(nw,m)
-                   pptr%gridcell(pi) = gi
-                   pptr%wtgcell(pi) = wtxy(nw,m)
-                   pptr%landunit(pi) = li
-                   pptr%wtlunit(pi) = wtxy(nw,m) / wtlunit2gcell
-                   pptr%column (pi) = ci
-                   pptr%wtcol(pi) = wtxy(nw,m) / wtlunit2gcell
-                endif ! setdata
-             end if
-          end do
+          write(iulog,*) 'allocate_all_vegpfts=false is no longer supported'
+          call endrun()
        end if
 
     end if
@@ -747,7 +757,7 @@ end subroutine clm_ptrs_check
     use subgridMod, only : subgrid_get_gcellinfo
     use clm_varcon, only : istice, istwet, istdlak, istice_mec
     use clm_varpar, only : npatch_lake, npatch_glacier, npatch_wet
-    use clm_varpar, only : npatch_glacier_mec
+    use clm_varpar, only : npatch_glacier_mec, maxpatch_glcmec
 
 !
 ! !ARGUMENTS:
@@ -821,7 +831,7 @@ end subroutine clm_ptrs_check
 
        if (npfts /=1 .and. ltype /= istice_mec) then
           write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
-                    ' have one column and one pft '
+               ' have one column and one pft '
           write(iulog,*)' current values of ncols, pfts=',ncols,npfts
           call endrun()
        end if
@@ -863,7 +873,11 @@ end subroutine clm_ptrs_check
                    if (wtlunit2gcell > 0._r8) then
                       wtcol2lunit = wtxy(nw,m)/wtlunit2gcell
                    else   ! virtual landunit
-                      wtcol2lunit = 0._r8
+                      ! TODO WJS: Temporarily setting this to equal weighting for all
+                      ! columns on the landunit. In the future, we could potentially get
+                      ! some info about this from the surface dataset, if it is changed
+                      ! to give pct_glc_mec as % of the column on the landunit
+                      wtcol2lunit = 1._r8 / maxpatch_glcmec
                    endif
 
                    cptr%itype    (ci) = ctype
@@ -1046,14 +1060,17 @@ end subroutine clm_ptrs_check
                 pptr%wtgcell(pi) = wtxy(nw,m)
                 pptr%landunit (pi) = li
                 pptr%column (pi) = ci
-                if (wtxy(nw,m) > 0._r8) then
+                pptr%wtcol(pi) = 1._r8
+                if (wtlunit2gcell > 0) then
                    cptr%wtlunit(ci) = wtxy(nw,m) / wtlunit2gcell
                    pptr%wtlunit(pi) = wtxy(nw,m) / wtlunit2gcell
-                   pptr%wtcol(pi) = 1._r8
                 else
-                   cptr%wtlunit(ci) = 0._r8
-                   pptr%wtlunit(pi) = 0._r8
-                   pptr%wtcol(pi) = 0._r8
+                   ! TODO WJS: Temporarily setting this to equal weighting for all crop
+                   ! pfts. In the future, we could potentially get some info about this
+                   ! from the surface dataset, if it is changed to give pct_cft as % of
+                   ! the cft on the landunit
+                   cptr%wtlunit(ci) = 1._r8 / numcft
+                   pptr%wtlunit(pi) = 1._r8 / numcft
                 end if
              endif ! setdata
           end do
@@ -1066,15 +1083,13 @@ end subroutine clm_ptrs_check
 !------------------------------------------------------------------------------
 
 !------------------------------------------------------------------------------
-
-!------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: set_landunit_urban_tbd
+! !IROUTINE: set_landunit_urban
 !
 ! !INTERFACE:
-!  subroutine set_landunit_urban_tbd (ltype, wtxy, vegxy, &
-  subroutine set_landunit_urban_tbd (ltype, udenstype, &
+!  subroutine set_landunit_urban (ltype, wtxy, vegxy, &
+  subroutine set_landunit_urban (ltype, udenstype, &
                                  nw, gi, li, ci, pi, setdata)
 !
 ! !DESCRIPTION: 
@@ -1082,8 +1097,9 @@ end subroutine clm_ptrs_check
 !
 ! !USES
     use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
-                              icol_road_perv, icol_road_imperv
-    use clm_varpar   , only : npatch_urban_tbd, maxpatch_urb
+                              icol_road_perv, icol_road_imperv, &
+                              udens_tbd, udens_hd, udens_md, udens_base
+    use clm_varpar   , only : npatch_urban_tbd, npatch_urban_hd, npatch_urban_md, maxpatch_urb
     use clmtype      , only : clm3, model_type, gridcell_type, landunit_type, &
                               column_type, pft_type
     use subgridMod   , only : subgrid_get_gcellinfo
@@ -1115,6 +1131,7 @@ end subroutine clm_ptrs_check
     integer  :: ctype         ! column type
     integer  :: npfts         ! number of pfts in landunit
     integer  :: ncols         ! number of columns in landunit
+    integer  :: npatch        ! npatch for the given urban density class
     real(r8) :: wtlunit2gcell ! weight relative to gridcell of landunit
     real(r8) :: wtcol2lunit   ! weight of column with respect to landunit
     real(r8) :: wtlunit_roof  ! weight of roof with respect to landunit
@@ -1125,10 +1142,27 @@ end subroutine clm_ptrs_check
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
 !------------------------------------------------------------------------
 
-    ! Set decomposition properties
+    ! Set decomposition properties, and set variables specific to urban density type
 
-!   call subgrid_get_gcellinfo(nw, wtxy, nurban_tbd=npfts, wturban_tbd=wtlunit2gcell)
-    call subgrid_get_gcellinfo(nw, nurban_tbd=npfts, wturban_tbd=wtlunit2gcell)
+    select case (udenstype)
+    case (udens_tbd)
+       !   call subgrid_get_gcellinfo(nw, wtxy, nurban_tbd=npfts, wturban_tbd=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nurban_tbd=npfts, wturban_tbd=wtlunit2gcell)
+       npatch = npatch_urban_tbd
+    case (udens_hd)
+       !   call subgrid_get_gcellinfo(nw, wtxy, nurban_hd=npfts, wturban_hd=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nurban_hd=npfts, wturban_hd=wtlunit2gcell)
+       npatch = npatch_urban_hd
+    case (udens_md)
+       !   call subgrid_get_gcellinfo(nw, wtxy, nurban_md=npfts, wturban_md=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nurban_md=npfts, wturban_md=wtlunit2gcell)
+       npatch = npatch_urban_md
+    case default
+       write(iulog,*)' set_landunit_urban: unknown udenstype: ', udenstype
+       call endrun()
+    end select
+
+    n = udenstype - udens_base
 
     if (npfts > 0) then
 
@@ -1157,26 +1191,25 @@ end subroutine clm_ptrs_check
        ! Loop through columns for this landunit and set the column and pft properties
        ! For the urban landunits it is assumed that each column has its own pft
        
-       n = 1
-       do m = npatch_urban_tbd, npatch_urban_tbd + maxpatch_urb - 1
+       do m = npatch, npatch + maxpatch_urb - 1
           if (wtxy(nw,m) > 0._r8) then
                 
              wtlunit_roof = urbinp%wtlunit_roof(nw,n)
              wtroad_perv  = urbinp%wtroad_perv(nw,n)
              
-             if (m == npatch_urban_tbd  ) then
+             if (m == npatch  ) then
                 ctype = icol_roof
                 wtcol2lunit = wtlunit_roof
-             else if (m == npatch_urban_tbd+1) then
+             else if (m == npatch+1) then
                 ctype = icol_sunwall
                 wtcol2lunit = (1. - wtlunit_roof)/3
-             else if (m == npatch_urban_tbd+2) then
+             else if (m == npatch+2) then
                 ctype = icol_shadewall
                 wtcol2lunit = (1. - wtlunit_roof)/3
-             else if (m == npatch_urban_tbd+3) then
+             else if (m == npatch+3) then
                 ctype = icol_road_imperv
                 wtcol2lunit = ((1. - wtlunit_roof)/3) * (1.-wtroad_perv)
-             else if (m == npatch_urban_tbd+4) then
+             else if (m == npatch+4) then
                 ctype = icol_road_perv
                 wtcol2lunit = ((1. - wtlunit_roof)/3) * (wtroad_perv)
              end if
@@ -1207,295 +1240,7 @@ end subroutine clm_ptrs_check
        end do   ! end of loop through urban columns-pfts
     end if
 
-  end subroutine set_landunit_urban_tbd
-
-!------------------------------------------------------------------------------
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: set_landunit_urban_hd
-!
-! !INTERFACE:
-!  subroutine set_landunit_urban_hd (ltype, wtxy, vegxy, &
-  subroutine set_landunit_urban_hd (ltype, udenstype, &
-                                 nw, gi, li, ci, pi, setdata)
-!
-! !DESCRIPTION: 
-! Initialize urban landunits
-!
-! !USES
-    use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
-                              icol_road_perv, icol_road_imperv
-    use clm_varpar   , only : npatch_urban_hd, maxpatch_urb
-    use clmtype      , only : clm3, model_type, gridcell_type, landunit_type, &
-                              column_type, pft_type
-    use subgridMod   , only : subgrid_get_gcellinfo
-    use UrbanInputMod, only : urbinp
-    use decompMod    , only : ldecomp
-!
-! !ARGUMENTS:
-    implicit none
-    integer , intent(in)    :: ltype             ! landunit type
-    integer , intent(in)    :: udenstype         ! urban density type
-!   real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
-!   integer , intent(in)    :: vegxy(:,:)        ! PFT types 
-    integer , intent(in)    :: nw                ! cell index
-    integer , intent(in)    :: gi                ! gridcell index
-    integer , intent(inout) :: li                ! landunit index
-    integer , intent(inout) :: ci                ! column index
-    integer , intent(inout) :: pi                ! pft index
-    logical , intent(in)    :: setdata           ! set info or just compute
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer  :: c             ! column loop index
-    integer  :: m             ! m index in wtxy(nw,m)
-    integer  :: n             ! urban density type index
-    integer  :: ctype         ! column type
-    integer  :: npfts         ! number of pfts in landunit
-    integer  :: ncols         ! number of columns in landunit
-    real(r8) :: wtlunit2gcell ! weight relative to gridcell of landunit
-    real(r8) :: wtcol2lunit   ! weight of column with respect to landunit
-    real(r8) :: wtlunit_roof  ! weight of roof with respect to landunit
-    real(r8) :: wtroad_perv   ! weight of pervious road column with respect to total road
-    integer  :: ier           ! error status 
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
-!------------------------------------------------------------------------
-
-    ! Set decomposition properties
-
-!   call subgrid_get_gcellinfo(nw, wtxy, nurban_hd=npfts, wturban_hd=wtlunit2gcell)
-    call subgrid_get_gcellinfo(nw, nurban_hd=npfts, wturban_hd=wtlunit2gcell)
-
-    if (npfts > 0) then
-
-       ! Set pointers into derived types for this module
-
-       lptr => clm3%g%l
-       cptr => clm3%g%l%c
-       pptr => clm3%g%l%c%p
-       
-       ! Determine landunit properties - each columns has its own pft
-       
-       ncols = npfts
-
-       li = li + 1
-       if (setdata) then
-          lptr%itype    (li) = ltype
-          lptr%udenstype(li) = udenstype
-          lptr%ifspecial(li) = .true.
-          lptr%lakpoi   (li) = .false.
-          lptr%urbpoi   (li) = .true.
-
-          lptr%gridcell (li) = gi
-          lptr%wtgcell  (li) = wtlunit2gcell
-       endif
-
-       ! Loop through columns for this landunit and set the column and pft properties
-       ! For the urban landunits it is assumed that each column has its own pft
-       
-       n = 2
-       do m = npatch_urban_hd, npatch_urban_hd + maxpatch_urb - 1
-          if (wtxy(nw,m) > 0._r8) then
-                
-             wtlunit_roof = urbinp%wtlunit_roof(nw,n)
-             wtroad_perv  = urbinp%wtroad_perv(nw,n)
-             
-             if (m == npatch_urban_hd  ) then
-                ctype = icol_roof
-                wtcol2lunit = wtlunit_roof
-             else if (m == npatch_urban_hd+1) then
-                ctype = icol_sunwall
-                wtcol2lunit = (1. - wtlunit_roof)/3
-             else if (m == npatch_urban_hd+2) then
-                ctype = icol_shadewall
-                wtcol2lunit = (1. - wtlunit_roof)/3
-             else if (m == npatch_urban_hd+3) then
-                ctype = icol_road_imperv
-                wtcol2lunit = ((1. - wtlunit_roof)/3) * (1.-wtroad_perv)
-             else if (m == npatch_urban_hd+4) then
-                ctype = icol_road_perv
-                wtcol2lunit = ((1. - wtlunit_roof)/3) * (wtroad_perv)
-             end if
-             
-             ci = ci + 1
-             pi = pi + 1 
-             
-             if (setdata) then
-                cptr%itype(ci)     = ctype
-
-                cptr%gridcell (ci) = gi
-                cptr%wtgcell  (ci) = wtcol2lunit * wtlunit2gcell
-                cptr%landunit (ci) = li
-                cptr%wtlunit  (ci) = wtcol2lunit
-
-                pptr%mxy     (pi)  = m
-                pptr%itype   (pi)  = vegxy(nw,m)
-                
-                pptr%gridcell(pi)  = gi
-                pptr%wtgcell (pi)  = wtcol2lunit * wtlunit2gcell
-                pptr%landunit(pi)  = li
-                pptr%wtlunit (pi)  = wtcol2lunit
-                pptr%column  (pi)  = ci
-                pptr%wtcol   (pi)  = 1.0_r8
-             end if
-             
-          end if
-       end do   ! end of loop through urban columns-pfts
-    end if
-
-  end subroutine set_landunit_urban_hd
-
-!------------------------------------------------------------------------------
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: set_landunit_urban_md
-!
-! !INTERFACE:
-!  subroutine set_landunit_urban_md (ltype, wtxy, vegxy, &
-  subroutine set_landunit_urban_md (ltype, udenstype, &
-                                 nw, gi, li, ci, pi, setdata)
-!
-! !DESCRIPTION: 
-! Initialize urban landunits
-!
-! !USES
-    use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
-                              icol_road_perv, icol_road_imperv
-    use clm_varpar   , only : npatch_urban_md, maxpatch_urb
-    use clmtype      , only : clm3, model_type, gridcell_type, landunit_type, &
-                              column_type, pft_type
-    use subgridMod   , only : subgrid_get_gcellinfo
-    use UrbanInputMod, only : urbinp
-    use decompMod    , only : ldecomp
-!
-! !ARGUMENTS:
-    implicit none
-    integer , intent(in)    :: ltype             ! landunit type
-    integer , intent(in)    :: udenstype         ! urban density type
-!   real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
-!   integer , intent(in)    :: vegxy(:,:)        ! PFT types 
-    integer , intent(in)    :: nw                ! cell index
-    integer , intent(in)    :: gi                ! gridcell index
-    integer , intent(inout) :: li                ! landunit index
-    integer , intent(inout) :: ci                ! column index
-    integer , intent(inout) :: pi                ! pft index
-    logical , intent(in)    :: setdata           ! set info or just compute
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-    integer  :: c             ! column loop index
-    integer  :: m             ! m index in wtxy(nw,m)
-    integer  :: n             ! urban density type index
-    integer  :: ctype         ! column type
-    integer  :: npfts         ! number of pfts in landunit
-    integer  :: ncols         ! number of columns in landunit
-    real(r8) :: wtlunit2gcell ! weight relative to gridcell of landunit
-    real(r8) :: wtcol2lunit   ! weight of column with respect to landunit
-    real(r8) :: wtlunit_roof  ! weight of roof with respect to landunit
-    real(r8) :: wtroad_perv   ! weight of pervious road column with respect to total road
-    integer  :: ier           ! error status 
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
-!------------------------------------------------------------------------
-
-    ! Set decomposition properties
-
-!   call subgrid_get_gcellinfo(nw, wtxy, nurban_md=npfts, wturban_md=wtlunit2gcell)
-    call subgrid_get_gcellinfo(nw, nurban_md=npfts, wturban_md=wtlunit2gcell)
-
-    if (npfts > 0) then
-
-       ! Set pointers into derived types for this module
-
-       lptr => clm3%g%l
-       cptr => clm3%g%l%c
-       pptr => clm3%g%l%c%p
-       
-       ! Determine landunit properties - each columns has its own pft
-       
-       ncols = npfts
-
-       li = li + 1
-       if (setdata) then
-          lptr%itype    (li) = ltype
-          lptr%udenstype(li) = udenstype
-          lptr%ifspecial(li) = .true.
-          lptr%lakpoi   (li) = .false.
-          lptr%urbpoi   (li) = .true.
-
-          lptr%gridcell (li) = gi
-          lptr%wtgcell  (li) = wtlunit2gcell
-       endif
-
-       ! Loop through columns for this landunit and set the column and pft properties
-       ! For the urban landunits it is assumed that each column has its own pft
-       
-       n = 3
-       do m = npatch_urban_md, npatch_urban_md + maxpatch_urb - 1
-          if (wtxy(nw,m) > 0._r8) then
-                
-             wtlunit_roof = urbinp%wtlunit_roof(nw,n)
-             wtroad_perv  = urbinp%wtroad_perv(nw,n)
-             
-             if (m == npatch_urban_md  ) then
-                ctype = icol_roof
-                wtcol2lunit = wtlunit_roof
-             else if (m == npatch_urban_md+1) then
-                ctype = icol_sunwall
-                wtcol2lunit = (1. - wtlunit_roof)/3
-             else if (m == npatch_urban_md+2) then
-                ctype = icol_shadewall
-                wtcol2lunit = (1. - wtlunit_roof)/3
-             else if (m == npatch_urban_md+3) then
-                ctype = icol_road_imperv
-                wtcol2lunit = ((1. - wtlunit_roof)/3) * (1.-wtroad_perv)
-             else if (m == npatch_urban_md+4) then
-                ctype = icol_road_perv
-                wtcol2lunit = ((1. - wtlunit_roof)/3) * (wtroad_perv)
-             end if
-             
-             ci = ci + 1
-             pi = pi + 1 
-             
-             if (setdata) then
-                cptr%itype(ci)     = ctype
-
-                cptr%gridcell (ci) = gi
-                cptr%wtgcell  (ci) = wtcol2lunit * wtlunit2gcell
-                cptr%landunit (ci) = li
-                cptr%wtlunit  (ci) = wtcol2lunit
-
-                pptr%mxy     (pi)  = m
-                pptr%itype   (pi)  = vegxy(nw,m)
-                
-                pptr%gridcell(pi)  = gi
-                pptr%wtgcell (pi)  = wtcol2lunit * wtlunit2gcell
-                pptr%landunit(pi)  = li
-                pptr%wtlunit (pi)  = wtcol2lunit
-                pptr%column  (pi)  = ci
-                pptr%wtcol   (pi)  = 1.0_r8
-             end if
-             
-          end if
-       end do   ! end of loop through urban columns-pfts
-    end if
-
-  end subroutine set_landunit_urban_md
+  end subroutine set_landunit_urban
 
 !------------------------------------------------------------------------------
 

@@ -161,14 +161,13 @@ contains
   max_pft_per_col   = max(numpft+1, numcft, maxpatch_urb)
 
   nlevsoifl   =  10
+  nlevurb     =  5
   if ( .not. more_vertlayers )then
      nlevsoi     =  nlevsoifl
      nlevgrnd    =  15
-     nlevurb     =  5
   else
      nlevsoi     =  8  + nlev_equalspace
      nlevgrnd    =  15 + nlev_equalspace
-     nlevurb     =  0       ! Urban must be zero area for this case
   end if
 
   ! here is a switch to set the number of soil levels for the biogeochemistry calculations.

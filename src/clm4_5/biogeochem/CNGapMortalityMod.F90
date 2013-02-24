@@ -375,9 +375,9 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
 ! !LOCAL VARIABLES:
 !
 ! local pointers to implicit in scalars
+   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
    integer , pointer :: ivt(:)      ! pft vegetation type
    real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   real(r8), pointer :: pwtgcell(:) ! weight of pft relative to corresponding gridcell
    real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
    real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
    real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
@@ -548,9 +548,9 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
    m_deadcrootn_xfer_to_litr_met_n    => clm3%g%l%c%cnf%m_deadcrootn_xfer_to_litr_met_n
 
    ! assign local pointers to pft-level arrays
+   pactive                        => clm3%g%l%c%p%active
    ivt                            => clm3%g%l%c%p%itype
    wtcol                          => clm3%g%l%c%p%wtcol
-   pwtgcell                       => clm3%g%l%c%p%wtgcell  
    m_leafc_to_litter              => clm3%g%l%c%p%pcf%m_leafc_to_litter
    m_frootc_to_litter             => clm3%g%l%c%p%pcf%m_frootc_to_litter
    m_livestemc_to_litter          => clm3%g%l%c%p%pcf%m_livestemc_to_litter
@@ -604,7 +604,7 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
             if (pi <=  npfts(c)) then
                p = pfti(c) + pi - 1
                
-               if (pwtgcell(p)>0._r8) then
+               if (pactive(p)) then
                   
                   
                   ! leaf gap mortality carbon fluxes

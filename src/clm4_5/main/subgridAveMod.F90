@@ -115,12 +115,14 @@ contains
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(lbc:ubc)         ! sum of weights
+    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
     real(r8), pointer :: wtcol(:)      ! weight of pft relative to column
     integer , pointer :: pcolumn(:)    ! column index of corresponding pft
     integer , pointer :: npfts(:)      ! number of pfts in column
     integer , pointer :: pfti(:)       ! initial pft index in column
 !------------------------------------------------------------------------
 
+    pactive  => clm3%g%l%c%p%active
     wtcol    => clm3%g%l%c%p%wtcol
     pcolumn  => clm3%g%l%c%p%column
     npfts    => clm3%g%l%c%npfts
@@ -138,7 +140,7 @@ contains
     carr(lbc:ubc) = spval
     sumwt(lbc:ubc) = 0._r8
     do p = lbp,ubp
-       if (wtcol(p) /= 0._r8) then
+       if (pactive(p) .and. wtcol(p) /= 0._r8) then
           if (parr(p) /= spval) then
              c = pcolumn(p)
              if (sumwt(c) == 0._r8) carr(c) = 0._r8
@@ -197,12 +199,14 @@ contains
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(lbc:ubc)         ! sum of weights
+    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
     real(r8), pointer :: wtcol(:)      ! weight of pft relative to column
     integer , pointer :: pcolumn(:)    ! column index of corresponding pft
     integer , pointer :: npfts(:)      ! number of pfts in column
     integer , pointer :: pfti(:)       ! initial pft index in column
 !------------------------------------------------------------------------
 
+    pactive  => clm3%g%l%c%p%active
     wtcol    => clm3%g%l%c%p%wtcol
     pcolumn  => clm3%g%l%c%p%column
     npfts    => clm3%g%l%c%npfts
@@ -221,7 +225,7 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do p = lbp,ubp
-          if (wtcol(p) /= 0._r8) then
+          if (pactive(p) .and. wtcol(p) /= 0._r8) then
              if (parr(p,j) /= spval) then
                 c = pcolumn(p)
                 if (sumwt(c) == 0._r8) carr(c,j) = 0._r8
@@ -259,7 +263,6 @@ contains
 !
 ! !USES:
     use clm_varpar, only : max_pft_per_col
-    use clm_varcon, only : istice_mec
 !
 ! !ARGUMENTS:
     implicit none
@@ -274,31 +277,25 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: fc,c,pi,p,l         ! indices
+    integer :: fc,c,pi,p           ! indices
+    logical , pointer :: pactive(:)! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: npfts(:)
     integer , pointer :: pfti(:)
     integer , pointer :: pftf(:)
-    integer , pointer :: clandunit(:)
-    integer , pointer :: ltype(:)
     real(r8), pointer :: wtcol(:)
-    real(r8), pointer :: wtgcell(:)
 !-----------------------------------------------------------------------
 
-    npfts     => clm3%g%l%c%npfts
-    pfti      => clm3%g%l%c%pfti
-    pftf      => clm3%g%l%c%pftf
-    clandunit => clm3%g%l%c%landunit
-    ltype     => clm3%g%l%itype
-    wtcol     => clm3%g%l%c%p%wtcol
-    wtgcell   => clm3%g%l%c%p%wtgcell
+    pactive => clm3%g%l%c%p%active
+    npfts   => clm3%g%l%c%npfts
+    pfti    => clm3%g%l%c%pfti
+    pftf    => clm3%g%l%c%pftf
+    wtcol   => clm3%g%l%c%p%wtcol
 
     do fc = 1,numfc
        c = filterc(fc)
-       l = clandunit(c)
        colarr(c) = 0._r8
        do p = pfti(c), pftf(c)
-          ! Note: some glacier_mec pfts may have zero weight
-          if (wtgcell(p) > 0._r8 .or. ltype(l)==istice_mec) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
+          if (pactive(p)) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
        end do
     end do
 
@@ -333,23 +330,25 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     integer :: fc,c,pi,p,j    ! indices
+    logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: npfts(:)
     integer , pointer :: pfti(:)
     integer , pointer :: pftf(:)
     real(r8), pointer :: wtcol(:)
 !-----------------------------------------------------------------------
 
-    npfts => clm3%g%l%c%npfts
-    pfti  => clm3%g%l%c%pfti
-    pftf  => clm3%g%l%c%pftf
-    wtcol => clm3%g%l%c%p%wtcol
+    pactive => clm3%g%l%c%p%active
+    npfts   => clm3%g%l%c%npfts
+    pfti    => clm3%g%l%c%pfti
+    pftf    => clm3%g%l%c%pftf
+    wtcol   => clm3%g%l%c%p%wtcol
 
     do j = 1,lev
        do fc = 1,numfc
           c = filterc(fc)
           colarr(c,j) = 0._r8
           do p = pfti(c), pftf(c)
-             colarr(c,j) = colarr(c,j) + pftarr(p,j) * wtcol(p)
+             if (pactive(p)) colarr(c,j) = colarr(c,j) + pftarr(p,j) * wtcol(p)
           end do
        end do
     end do
@@ -393,6 +392,7 @@ contains
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
     real(r8) :: scale_p2c(lbc:ubc)     ! scale factor for pft->column mapping
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
+    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
     real(r8), pointer :: wtlunit(:)    ! weight of pft relative to landunit
     integer , pointer :: pcolumn(:)    ! column of corresponding pft
     integer , pointer :: plandunit(:)  ! landunit of corresponding pft
@@ -404,6 +404,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    pactive    => clm3%g%l%c%p%active
     canyon_hwr => clm3%g%l%canyon_hwr
     ltype      => clm3%g%l%itype
     ctype      => clm3%g%l%c%itype
@@ -469,7 +470,7 @@ contains
     larr(:) = spval
     sumwt(:) = 0._r8
     do p = lbp,ubp
-       if (wtlunit(p) /= 0._r8) then
+       if (pactive(p) .and. wtlunit(p) /= 0._r8) then
           c = pcolumn(p)
           if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
              l = plandunit(p)
@@ -533,6 +534,7 @@ contains
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
     real(r8) :: scale_p2c(lbc:ubc)     ! scale factor for pft->column mapping
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
+    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
     real(r8), pointer :: wtlunit(:)    ! weight of pft relative to landunit
     integer , pointer :: pcolumn(:)    ! column of corresponding pft
     integer , pointer :: plandunit(:)  ! landunit of corresponding pft
@@ -544,6 +546,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    pactive    => clm3%g%l%c%p%active
     canyon_hwr => clm3%g%l%canyon_hwr
     ltype      => clm3%g%l%itype
     clandunit  => clm3%g%l%c%landunit
@@ -610,7 +613,7 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do p = lbp,ubp
-          if (wtlunit(p) /= 0._r8) then
+          if (pactive(p) .and. wtlunit(p) /= 0._r8) then
              c = pcolumn(p)
              if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = plandunit(p)
@@ -676,6 +679,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
+    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
     real(r8), pointer :: wtgcell(:)    ! weight of pfts relative to gridcells
     integer , pointer :: pcolumn(:)    ! column of corresponding pft
     integer , pointer :: plandunit(:)  ! landunit of corresponding pft
@@ -688,6 +692,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    pactive    => clm3%g%l%c%p%active
     canyon_hwr => clm3%g%l%canyon_hwr
     ltype      => clm3%g%l%itype
     clandunit  => clm3%g%l%c%landunit
@@ -756,7 +761,7 @@ contains
     garr(:) = spval
     sumwt(:) = 0._r8
     do p = lbp,ubp
-       if (wtgcell(p) /= 0._r8) then
+       if (pactive(p) .and. wtgcell(p) /= 0._r8) then
           c = pcolumn(p)
           l = plandunit(p)
           if (parr(p) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
@@ -824,6 +829,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
+    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
     real(r8), pointer :: wtgcell(:)    ! weight of pfts relative to gridcells
     integer , pointer :: pcolumn(:)    ! column of corresponding pft
     integer , pointer :: plandunit(:)  ! landunit of corresponding pft
@@ -836,6 +842,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    pactive      => clm3%g%l%c%p%active
     canyon_hwr   => clm3%g%l%canyon_hwr
     ltype        => clm3%g%l%itype
     clandunit    => clm3%g%l%c%landunit
@@ -905,7 +912,7 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do p = lbp,ubp
-          if (wtgcell(p) /= 0._r8) then
+          if (pactive(p) .and. wtgcell(p) /= 0._r8) then
              c = pcolumn(p)
              l = plandunit(p)
              if (parr(p,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
@@ -964,6 +971,7 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
+    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
     real(r8), pointer :: wtlunit(:)    ! weight of landunits relative to gridcells
     integer , pointer :: clandunit(:)  ! gridcell of corresponding column
     integer , pointer :: ncolumns(:)   ! number of columns in landunit
@@ -973,6 +981,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    cactive    => clm3%g%l%c%active
     ctype      => clm3%g%l%c%itype
     ltype      => clm3%g%l%itype
     canyon_hwr => clm3%g%l%canyon_hwr
@@ -1027,7 +1036,7 @@ contains
     larr(:) = spval
     sumwt(:) = 0._r8
     do c = lbc,ubc
-       if (wtlunit(c) /= 0._r8) then
+       if (cactive(c) .and. wtlunit(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
              l = clandunit(c)
              if (sumwt(l) == 0._r8) larr(l) = 0._r8
@@ -1084,6 +1093,7 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_c2l(lbc:ubc)        ! scale factor for column->landunit mapping
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
+    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
     real(r8), pointer :: wtlunit(:)    ! weight of column relative to landunit
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: ncolumns(:)   ! number of columns in landunit
@@ -1093,6 +1103,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    cactive    => clm3%g%l%c%active
     ctype      => clm3%g%l%c%itype
     ltype      => clm3%g%l%itype
     canyon_hwr => clm3%g%l%canyon_hwr
@@ -1148,7 +1159,7 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do c = lbc,ubc
-          if (wtlunit(c) /= 0._r8) then
+          if (cactive(c) .and. wtlunit(c) /= 0._r8) then
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = clandunit(c)
                 if (sumwt(l) == 0._r8) larr(l,j) = 0._r8
@@ -1209,6 +1220,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
+    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
     real(r8), pointer :: wtgcell(:)    ! weight of columns relative to gridcells
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: cgridcell(:)  ! gridcell of corresponding column
@@ -1219,6 +1231,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    cactive    => clm3%g%l%c%active
     ctype      => clm3%g%l%c%itype
     ltype      => clm3%g%l%itype
     canyon_hwr => clm3%g%l%canyon_hwr
@@ -1276,7 +1289,7 @@ contains
     garr(:) = spval
     sumwt(:) = 0._r8
     do c = lbc,ubc
-       if ( wtgcell(c) /= 0._r8) then
+       if (cactive(c) .and. wtgcell(c) /= 0._r8) then
           l = clandunit(c)
           if (carr(c) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
              g = cgridcell(c)
@@ -1338,6 +1351,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
+    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
     real(r8), pointer :: wtgcell(:)    ! weight of columns relative to gridcells
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: cgridcell(:)  ! gridcell of corresponding column
@@ -1348,6 +1362,7 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    cactive    => clm3%g%l%c%active
     ctype      => clm3%g%l%c%itype
     ltype      => clm3%g%l%itype
     canyon_hwr => clm3%g%l%canyon_hwr
@@ -1406,7 +1421,7 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do c = lbc,ubc
-          if (wtgcell(c) /= 0._r8) then
+          if (cactive(c) .and. wtgcell(c) /= 0._r8) then
              l = clandunit(c)
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
                 g = cgridcell(c)
@@ -1464,12 +1479,14 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
+    logical , pointer :: lactive(:)    ! true=>do computations on this landunit (see reweightMod for details)
     real(r8), pointer :: wtgcell(:)    ! weight of landunits relative to gridcells
     integer , pointer :: lgridcell(:)  ! gridcell of corresponding landunit
     integer , pointer :: nlandunits(:) ! number of landunits in gridcell
     integer , pointer :: luni(:)       ! initial landunit index in gridcell
 !------------------------------------------------------------------------
 
+    lactive    => clm3%g%l%active
     wtgcell    => clm3%g%l%wtgcell
     lgridcell  => clm3%g%l%gridcell
     nlandunits => clm3%g%nlandunits
@@ -1480,7 +1497,7 @@ contains
     garr(:) = spval
     sumwt(:) = 0._r8
     do l = lbl,ubl
-       if (wtgcell(l) /= 0._r8) then
+       if (lactive(l) .and. wtgcell(l) /= 0._r8) then
           if (larr(l) /= spval .and. scale_l2g(l) /= spval) then
              g = lgridcell(l)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
@@ -1537,12 +1554,14 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
+    logical , pointer :: lactive(:)    ! true=>do computations on this landunit (see reweightMod for details)
     real(r8), pointer :: wtgcell(:)    ! weight of landunits relative to gridcells
     integer , pointer :: lgridcell(:)  ! gridcell of corresponding landunit
     integer , pointer :: nlandunits(:) ! number of landunits in gridcell
     integer , pointer :: luni(:)       ! initial landunit index in gridcell
 !------------------------------------------------------------------------
 
+    lactive   => clm3%g%l%active
     wtgcell   => clm3%g%l%wtgcell
     lgridcell => clm3%g%l%gridcell
     nlandunits => clm3%g%nlandunits
@@ -1554,7 +1573,7 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do l = lbl,ubl
-          if (wtgcell(l) /= 0._r8) then
+          if (lactive(l) .and. wtgcell(l) /= 0._r8) then
              if (larr(l,j) /= spval .and. scale_l2g(l) /= spval) then
                 g = lgridcell(l)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8

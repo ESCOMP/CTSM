@@ -19,7 +19,7 @@ module controlMod
   use clm_varpar   , only : maxpatch_pft, maxpatch_glcmec, more_vertlayers
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, &
                             model_version=>version,    &
-                            iulog, outnc_large_files, finidat, fsurdat, fatmlndfrc, &
+                            iulog, outnc_large_files, finidat, fsurdat, fatmlndfrc,  &
                             fatmtopo, flndtopo, fpftdyn, fpftcon, nrevsn, &
                             create_crop_landunit, allocate_all_vegpfts,   &
                             co2_type, wrtdia, co2_ppmv, nsegspc, pertlim,       &

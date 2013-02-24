@@ -2121,6 +2121,7 @@ type, public :: pft_type
    ! topological mapping functionality
    integer , pointer :: itype(:)        !pft vegetation 
    integer , pointer :: mxy(:)          !m index for laixy(i,j,m),etc.
+   logical , pointer :: active(:)       !true=>do computations on this pft (see reweightMod for details)
 
    ! conservation check structures for the pft level
    type(energy_balance_type)   :: pebal !energy balance structure
@@ -2181,6 +2182,7 @@ type, public :: column_type
    
    ! topological mapping functionality
    integer , pointer :: itype(:)        !column type
+   logical , pointer :: active(:)       !true=>do computations on this column (see reweightMod for details)
 
    ! conservation check structures for the column level
    type(energy_balance_type)   :: cebal !energy balance structure
@@ -2250,11 +2252,12 @@ type, public :: landunit_type
    
    ! topological mapping functionality
    integer , pointer :: itype(:)        !landunit type
-   logical , pointer :: ifspecial(:)    !BOOL: true=>landunit is not vegetated
-   logical , pointer :: lakpoi(:)       !BOOL: true=>lake point
-   logical , pointer :: urbpoi(:)       !BOOL: true=>urban point
-   logical , pointer :: glcmecpoi(:)    !BOOL: true=>glacier_mec point
+   logical , pointer :: ifspecial(:)    !true=>landunit is not vegetated
+   logical , pointer :: lakpoi(:)       !true=>lake point
+   logical , pointer :: urbpoi(:)       !true=>urban point
+   logical , pointer :: glcmecpoi(:)    !true=>glacier_mec point
    integer , pointer :: udenstype(:)    !urban density type
+   logical , pointer :: active(:)       !true=>do computations on this landunit (see reweightMod for details)
 
    ! state variables defined at the land unit level
    type(landunit_pstate_type) :: lps    !land unit physical state variables

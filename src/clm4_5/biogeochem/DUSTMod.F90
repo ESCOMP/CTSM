@@ -83,6 +83,7 @@ contains
 !
 ! local pointers to implicit in arguments
 !
+    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: pcolumn(:)         ! pft's column index
     integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
@@ -167,6 +168,7 @@ contains
 
     ! Assign local pointers to derived type scalar members (pft-level)
 
+    pactive         => clm3%g%l%c%p%active
     pgridcell       => clm3%g%l%c%p%gridcell
     plandunit       => clm3%g%l%c%p%landunit
     pcolumn         => clm3%g%l%c%p%column
@@ -189,7 +191,7 @@ contains
     tlai_lu(:) = spval
     sumwt(:) = 0._r8
     do p = lbp,ubp
-       if (ttlai(p) /= spval .and. wtlunit(p) /= 0._r8) then
+       if (ttlai(p) /= spval .and. pactive(p) .and. wtlunit(p) /= 0._r8) then
           c = pcolumn(p)
           l = plandunit(p)
           if (sumwt(l) == 0._r8) tlai_lu(l) = 0._r8
@@ -416,10 +418,8 @@ contains
 !
 ! local pointers to implicit in arguments
 !
-    integer , pointer :: plandunit(:)   ! pft's landunit index
+    logical , pointer :: pactive(:)     ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: pgridcell(:)   ! pft's gridcell index
-    integer , pointer :: ityplun(:)     ! landunit type
-    real(r8), pointer :: pwtgcell(:)    ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: forc_t(:)      ! atm temperature (K)
     real(r8), pointer :: forc_pbot(:)   ! atm pressure (Pa)
     real(r8), pointer :: forc_rho(:)    ! atm density (kg/m**3)
@@ -438,7 +438,7 @@ contains
 ! !LOCAL VARIABLES
 !EOP
 !
-    integer  :: p,l,g,m,n             ! indices
+    integer  :: p,g,m,n               ! indices
     real(r8) :: vsc_dyn_atm(lbp:ubp)  ! [kg m-1 s-1] Dynamic viscosity of air
     real(r8) :: vsc_knm_atm(lbp:ubp)  ! [m2 s-1] Kinematic viscosity of atmosphere
     real(r8) :: shm_nbr_xpn           ! [frc] Sfc-dep exponent for aerosol-diffusion dependence on Schmidt number
@@ -463,15 +463,10 @@ contains
     forc_rho  => clm_a2l%forc_rho
     forc_t    => clm_a2l%forc_t
 
-    ! Assign local pointers to derived type members (landunit-level)
-
-    ityplun   => clm3%g%l%itype
-
     ! Assign local pointers to derived type members (pft-level)
 
-    plandunit => clm3%g%l%c%p%landunit
+    pactive   => clm3%g%l%c%p%active
     pgridcell => clm3%g%l%c%p%gridcell
-    pwtgcell  => clm3%g%l%c%p%wtgcell  
     fv        => clm3%g%l%c%p%pps%fv
     ram1      => clm3%g%l%c%p%pps%ram1
     vlc_trb   => clm3%g%l%c%p%pdf%vlc_trb
@@ -481,9 +476,7 @@ contains
     vlc_trb_4 => clm3%g%l%c%p%pdf%vlc_trb_4
 
     do p = lbp,ubp
-       l = plandunit(p)
-       ! Note: some glacier_mec pfts may have zero weight
-       if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+       if (pactive(p)) then
           g = pgridcell(p)
 
           ! from subroutine dst_dps_dry (consider adding sanity checks from line 212)
@@ -512,8 +505,7 @@ contains
 
     do m = 1, ndst
        do p = lbp,ubp
-          l = plandunit(p)
-          if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+          if (pactive(p)) then
              g = pgridcell(p)
              
              stk_nbr = vlc_grv(p,m) * fv(p) * fv(p) / (grav * vsc_knm_atm(p))  ![frc] SeP97 p.965
@@ -539,8 +531,7 @@ contains
 
     do m = 1, ndst
        do p = lbp,ubp
-          l = plandunit(p)
-          if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+          if (pactive(p)) then
              rss_trb = ram1(p) + rss_lmn(p,m) + ram1(p) * rss_lmn(p,m) * vlc_grv(p,m) ![s m-1]
              vlc_trb(p,m) = 1.0_r8 / rss_trb                                          ![m s-1]
           end if
@@ -548,8 +539,7 @@ contains
     end do
 
     do p = lbp,ubp
-       l = plandunit(p)
-       if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+       if (pactive(p)) then
           vlc_trb_1(p) = vlc_trb(p,1)
           vlc_trb_2(p) = vlc_trb(p,2)
           vlc_trb_3(p) = vlc_trb(p,3)

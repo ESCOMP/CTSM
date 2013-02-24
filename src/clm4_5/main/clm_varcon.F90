@@ -156,32 +156,32 @@ module clm_varcon
   !   7     land ice (glacier) with multiple elevation classes
   !   8     crop
 
-  integer :: istsoil    = 1  !soil         landunit type
-  integer :: istice     = 2  !land ice     landunit type
-  integer :: istdlak    = 3  !deep lake    landunit type
+  integer, parameter :: istsoil    = 1  !soil         landunit type
+  integer, parameter :: istice     = 2  !land ice     landunit type
+  integer, parameter :: istdlak    = 3  !deep lake    landunit type
   ! Not used; now 3 is used for all lakes, which have variable depth.
-  integer :: istslak    = 4  !shallow lake landunit type
-  integer :: istwet     = 5  !wetland      landunit type
-  integer :: isturb     = 6  !urban        landunit type
-  integer :: istice_mec = 7  !land ice (multiple elevation classes) landunit type
-  integer :: istcrop    = 8  !crop         landunit type
-  integer :: max_lunit  = 8  !maximum value that clm3%g%l%itype can have
+  integer, parameter :: istslak    = 4  !shallow lake landunit type
+  integer, parameter :: istwet     = 5  !wetland      landunit type
+  integer, parameter :: isturb     = 6  !urban        landunit type
+  integer, parameter :: istice_mec = 7  !land ice (multiple elevation classes) landunit type
+  integer, parameter :: istcrop    = 8  !crop         landunit type
+  integer, parameter :: max_lunit  = 8  !maximum value that clm3%g%l%itype can have
                              !(i.e., largest value in the above list)
 
   ! urban column types
 
-  integer :: icol_roof        = 61
-  integer :: icol_sunwall     = 62
-  integer :: icol_shadewall   = 63
-  integer :: icol_road_imperv = 64
-  integer :: icol_road_perv   = 65
+  integer, parameter :: icol_roof        = 61
+  integer, parameter :: icol_sunwall     = 62
+  integer, parameter :: icol_shadewall   = 63
+  integer, parameter :: icol_road_imperv = 64
+  integer, parameter :: icol_road_perv   = 65
 
   ! urban density types
 
-  integer :: udens_base     = 600
-  integer :: udens_tbd      = 601
-  integer :: udens_hd       = 602
-  integer :: udens_md       = 603
+  integer, parameter :: udens_base     = 600
+  integer, parameter :: udens_tbd      = 601
+  integer, parameter :: udens_hd       = 602
+  integer, parameter :: udens_md       = 603
 
   !------------------------------------------------------------------
   ! Initialize miscellaneous radiation constants

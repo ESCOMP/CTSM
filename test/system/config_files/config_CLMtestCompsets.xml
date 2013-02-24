@@ -92,12 +92,6 @@
          CLM_BLDNML_OPTS="-drydep -megan -note"
 />
 
-<compset GEN_COMPSET_MATCH="_GLCMECPD"
-         RUN_STARTDATE="1980-01-15"
-         CLM_NML_USE_CASE="glacierMEC_pd"
-         GLC_NEC="10"
-/>
-
 <compset GEN_COMPSET_MATCH="_CNDV"
          RUN_STARTDATE=" 1997-12-31"
          CLM_CONFIG_OPTS="-bgc cndv"
@@ -107,6 +101,24 @@
          RUN_STARTDATE="1980-01-15"
          CLM_NML_USE_CASE="glacierMEC_pd"
          GLC_NEC="10"
+         COMP_GLC="cism"
+/>
+
+<compset GEN_COMPSET_MATCH="_CISM1"
+         CISM_PHYS="cism1"
+         CISM_USE_TRILINOS="FALSE"
+/>
+
+<!-- CISM2, parallel support -->
+<compset GEN_COMPSET_MATCH="_CISM2P"
+         CISM_PHYS="cism2"
+         CISM_USE_TRILINOS="TRUE"
+/>
+
+<!-- CISM2, serial support only -->
+<compset GEN_COMPSET_MATCH="_CISM2S"
+         CISM_PHYS="cism2"
+         CISM_USE_TRILINOS="FALSE"
 />
 
 <compset GEN_COMPSET_MATCH="_f19_alaskaUSA"
@@ -208,7 +220,7 @@
          DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC and SNICAR-FRC on"
 />
 
-<compset NAME="I_2000_VOC_SNCRFRC_CN_GLCMECPD" SHORTNAME="IVSCNGLC"
+<compset NAME="I_2000_VOC_SNCRFRC_CN_GLCMECPD_CISM1" SHORTNAME="IVSCNGLC"
          DESC="CLM with QIAN atm input data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC Glc-MEC and SNICAR-FRC on"
 />
 
@@ -216,7 +228,7 @@
          DESC="CLM with QIAN atm input data for 1850-2000 transient aerosol deposition and land-use change and Carbon Nitrogen (CN), VOC and SNICAR-FRC on"
 />
 
-<compset NAME="I_2000_GLCMECPD" SHORTNAME="IGLCMEC"
+<compset NAME="I_2000_GLCMECPD_CISM1" SHORTNAME="IGLCMEC"
          DESC="CLM with QIAN atm input data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000, Glacier Multi-Elev.  classes on"
 />
 
@@ -324,7 +336,7 @@
          DESC="QIAN atm data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC and SNICAR-FRC on"
 />
 
-<compset NAME="I_2000_CLM45_VOC_SNCRFRC_CN_GLCMECPD" SHORTNAME="ICLM45VSCNGLC"
+<compset NAME="I_2000_CLM45_VOC_SNCRFRC_CN_GLCMECPD_CISM1" SHORTNAME="ICLM45VSCNGLC"
          DESC="QIAN atm data for 1972-2004 and Carbon Nitrogen (CN), CO2 level and Aerosol deposition for 2000, VOC Glc-MEC and SNICAR-FRC on"
 />
 
@@ -332,7 +344,7 @@
          DESC="QIAN atm data for 1850-2000 transient aerosol deposition and land-use change and Carbon Nitrogen (CN), VOC and SNICAR-FRC on"
 />
 
-<compset NAME="I_2000_CLM45_GLCMECPD" SHORTNAME="ICLM45GLCMEC"
+<compset NAME="I_2000_CLM45_GLCMECPD_CISM1" SHORTNAME="ICLM45GLCMEC"
          DESC="QIAN atm data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000, Glacier Multi-Elev.  classes on"
 />
 

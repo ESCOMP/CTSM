@@ -1108,9 +1108,8 @@ contains
 !EOP
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or pft index
-    integer  :: l                       ! landunit index
     integer  :: beg1d,end1d             ! beginning and ending indices
-    logical  :: checkwt                 ! true => check weight of pft relative to gridcell
+    logical  :: check_active            ! true => check 'active' flag of each point (this refers to a point being active, NOT a history field being active)
     logical  :: valid                   ! true => history operation is valid
     logical  :: map2gcell               ! true => map clm pointer field to gridcell
     character(len=8)  :: type1d         ! 1d clm pointerr type   ["gridcell","landunit","column","pft"]
@@ -1121,10 +1120,8 @@ contains
     character(len=8)  :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
     real(r8), pointer :: hbuf(:,:)      ! history buffer
     integer , pointer :: nacs(:,:)      ! accumulation counter
-    integer , pointer :: ltype(:)       ! landunit type
-    integer , pointer :: plandunit(:)   ! pft's landunit index
-    real(r8), pointer :: pwtgcell(:)    ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: field(:)       ! clm 1d pointer field
+    logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) (this refers to a point being active, NOT a history field being active)
     real(r8) :: field_gcell(begg:endg)  ! gricell level field (used if mapping to gridcell is done)
     integer j
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_1d'
@@ -1213,21 +1210,27 @@ contains
 
     else  ! Do not map to gridcell
 
-       pwtgcell  => clm3%g%l%c%p%wtgcell
-       plandunit => clm3%g%l%c%p%landunit
-       ltype     => clm3%g%l%itype
-
-       checkwt = .false.
-       if (type1d == namep) checkwt = .true.
+       ! For data defined on the pft, col or landunit, we need to check if a point is active
+       ! to determine whether that point should be assigned spval
+       if (type1d == namep) then
+          check_active = .true.
+          active => clm3%g%l%c%p%active
+       else if (type1d == namec) then
+          check_active = .true.
+          active => clm3%g%l%c%active
+       else if (type1d == namel) then
+          check_active = .true.
+          active => clm3%g%l%active
+       else
+          check_active = .false.
+       end if
 
        select case (avgflag)
        case ('I') ! Instantaneous
           do k = beg1d,end1d
              valid = .true.
-             if (checkwt) then
-                l = plandunit(k)
-                ! Note: some glacier_mec pfts may have zero weight and still be considered valid
-                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+             if (check_active) then
+                if (.not. active(k)) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1249,9 +1252,8 @@ contains
           endif
           do k = beg1d,end1d
              valid = .true.
-             if (checkwt) then
-                l = plandunit(k)
-                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+             if (check_active) then
+                if (.not. active(k)) valid = .false.
              end if
              if (valid) then
                 if (field(k+k_offset) /= spval) then   ! add k_offset
@@ -1268,9 +1270,8 @@ contains
        case ('X') ! Maximum over time
           do k = beg1d,end1d
              valid = .true.
-             if (checkwt) then
-                l = plandunit(k)
-                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+             if (check_active) then
+                if (.not. active(k)) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1287,9 +1288,8 @@ contains
        case ('M') ! Minimum over time
           do k = beg1d,end1d
              valid = .true.
-             if (checkwt) then
-                l = plandunit(k)
-                if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+             if (check_active) then
+                if (.not. active(k)) valid = .false.
              end if
              if (valid) then
                 if (field(k) /= spval) then
@@ -1346,10 +1346,9 @@ contains
 !EOP
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or pft index
-    integer  :: l                       ! landunit index
     integer  :: j                       ! level index
     integer  :: beg1d,end1d             ! beginning and ending indices
-    logical  :: checkwt                 ! true => check weight of pft relative to gridcell
+    logical  :: check_active            ! true => check 'active' flag of each point (this refers to a point being active, NOT a history field being active)
     logical  :: valid                   ! true => history operation is valid
     logical  :: map2gcell               ! true => map clm pointer field to gridcell
     character(len=8)  :: type1d         ! 1d clm pointerr type   ["gridcell","landunit","column","pft"]
@@ -1360,10 +1359,8 @@ contains
     character(len=8)  :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
     real(r8), pointer :: hbuf(:,:)      ! history buffer
     integer , pointer :: nacs(:,:)      ! accumulation counter
-    integer , pointer :: ltype(:)       ! landunit type
-    integer , pointer :: plandunit(:)   ! pft's landunit index
-    real(r8), pointer :: pwtgcell(:)    ! weight of pft relative to corresponding gridcell
     real(r8), pointer :: field(:,:)     ! clm 2d pointer field
+    logical , pointer :: active(:)      ! flag saying whether each point is active (used for type1d = landunit/column/pft) (this refers to a point being active, NOT a history field being active)
     real(r8) :: field_gcell(begg:endg,num2d) ! gricell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
 !-----------------------------------------------------------------------
@@ -1458,25 +1455,32 @@ contains
 
     else  ! Do not map to gridcell
 
+       ! For data defined on the pft, col or landunit, we need to check if a point is active
+       ! to determine whether that point should be assigned spval
+       if (type1d == namep) then
+          check_active = .true.
+          active => clm3%g%l%c%p%active
+       else if (type1d == namec) then
+          check_active = .true.
+          active => clm3%g%l%c%active
+       else if (type1d == namel) then
+          check_active = .true.
+          active => clm3%g%l%active
+       else
+          check_active = .false.
+       end if
+
        ! Note that since field points to an array section the
        ! bounds are field(1:end1d-beg1d+1, num2d) - therefore
        ! need to do the shifting below
-
-       pwtgcell  => clm3%g%l%c%p%wtgcell
-       plandunit => clm3%g%l%c%p%landunit
-       ltype     => clm3%g%l%itype
-
-       checkwt = .false.
-       if (type1d == namep) checkwt = .true.
 
        select case (avgflag)
        case ('I') ! Instantaneous
           do j = 1,num2d
              do k = beg1d,end1d
                 valid = .true.
-                if (checkwt) then
-                   l = plandunit(k)
-                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+                if (check_active) then
+                   if (.not. active(k)) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -1494,9 +1498,8 @@ contains
           do j = 1,num2d
              do k = beg1d,end1d
                 valid = .true.
-                if (checkwt) then
-                   l = plandunit(k)
-                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+                if (check_active) then
+                   if (.not. active(k)) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -1515,9 +1518,8 @@ contains
           do j = 1,num2d
              do k = beg1d,end1d
                 valid = .true.
-                if (checkwt) then
-                   l = plandunit(k)
-                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+                if (check_active) then
+                   if (.not. active(k)) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -1536,9 +1538,8 @@ contains
           do j = 1,num2d
              do k = beg1d,end1d
                 valid = .true.
-                if (checkwt) then
-                   l = plandunit(k)
-                   if (pwtgcell(k) == 0._r8 .and. ltype(l)/=istice_mec) valid = .false.
+                if (check_active) then
+                   if (.not. active(k)) valid = .false.
                 end if
                 if (valid) then
                    if (field(k-beg1d+1,j) /= spval) then
@@ -2663,6 +2664,9 @@ contains
                long_name='landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
                   ncid=ncid)
 
+          call ncd_defvar(varname='land1d_active', xtype=ncd_log, dim1name=namel, &
+               long_name='true => do computations on this landunit', ncid=ncid)
+
           ! Define column info
 
           call ncd_defvar(varname='cols1d_lon', xtype=ncd_double, dim1name=namec, &
@@ -2694,6 +2698,9 @@ contains
           call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name=namec, &
                long_name='column landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
                   ncid=ncid)
+
+          call ncd_defvar(varname='cols1d_active', xtype=ncd_log, dim1name=namec, &
+               long_name='true => do computations on this column', ncid=ncid)
 
           ! Define pft info
 
@@ -2735,6 +2742,9 @@ contains
           call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name=namep, &
                long_name='pft landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)',  &
                   ncid=ncid)
+
+          call ncd_defvar(varname='pfts1d_active', xtype=ncd_log, dim1name=namep, &
+               long_name='true => do computations on this pft', ncid=ncid)
 
     else if (mode == 'write') then
 
@@ -2791,6 +2801,7 @@ contains
        ! ----------------------------------------------------------------
        call ncd_io(varname='land1d_wtgcell'  , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lptr%itype   , dim1name=namel, ncid=ncid, flag='write')
+       call ncd_io(varname='land1d_active'   , data=lptr%active  , dim1name=namel, ncid=ncid, flag='write')
 
        ! Write column info
 
@@ -2820,6 +2831,7 @@ contains
          icarr(c) = lptr%itype(cptr%landunit(c))
        enddo
        call ncd_io(varname='cols1d_itype_lunit', data=icarr    , dim1name=namec, ncid=ncid, flag='write')
+       call ncd_io(varname='cols1d_active' , data=cptr%active  , dim1name=namec, ncid=ncid, flag='write')
 
        ! Write pft info
 
@@ -2853,6 +2865,7 @@ contains
           iparr(p) = lptr%itype(pptr%landunit(p))
        enddo
        call ncd_io(varname='pfts1d_itype_lunit', data=iparr      , dim1name=namep, ncid=ncid, flag='write')
+       call ncd_io(varname='pfts1d_active'   , data=pptr%active  , dim1name=namep, ncid=ncid, flag='write')
 
        deallocate(rgarr,rlarr,rcarr,rparr)
        deallocate(igarr,ilarr,icarr,iparr)

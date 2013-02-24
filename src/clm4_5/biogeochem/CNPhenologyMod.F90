@@ -2615,9 +2615,9 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
 !
+   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: pwtgcell(:)     ! weight of pft relative to corresponding gridcell
    real(r8), pointer :: leafc_to_litter(:)     ! leaf C litterfall (gC/m2/s)
    real(r8), pointer :: frootc_to_litter(:)    ! fine root N litterfall (gN/m2/s)
    real(r8), pointer :: livestemc_to_litter(:) ! live stem C litterfall (gC/m2/s)
@@ -2674,9 +2674,9 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
+    pactive                        => clm3%g%l%c%p%active
     ivt                            => clm3%g%l%c%p%itype
     wtcol                          => clm3%g%l%c%p%wtcol
-    pwtgcell                       => clm3%g%l%c%p%wtgcell  
     leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
     frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
     livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
@@ -2730,7 +2730,7 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
              
              if ( pi <=  npfts(c) ) then
                 p = pfti(c) + pi - 1
-                if (pwtgcell(p)>0._r8) then
+                if (pactive(p)) then
                    
                    
                    ! leaf litter carbon fluxes

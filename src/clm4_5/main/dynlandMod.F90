@@ -84,6 +84,8 @@ contains
    real(r8) :: heat          ! sum of heat content at column level
    real(r8) :: cv            ! heat capacity [J/(m^2 K)]
 
+   logical ,pointer :: pactive(:)        ! true=>do computations on this pft (see reweightMod for details)
+    
    integer ,pointer :: ltype(:)          ! landunit type index
    integer ,pointer :: ctype(:)          ! column   type index
    integer ,pointer :: ptype(:)          ! pft      type index
@@ -119,6 +121,8 @@ contains
    lptr => clm3%g%l
    cptr => clm3%g%l%c
    pptr => clm3%g%l%c%p
+
+   pactive => clm3%g%l%c%p%active
 
    ltype => clm3%g%l%itype
    ctype => clm3%g%l%c%itype
@@ -215,8 +219,10 @@ contains
                pi = cptr%pfti(c)
                pf = cptr%pftf(c)
                do p = pi,pf ! loop over pfts
-                  wtcol = pptr%wtcol(p)
-                  liq = liq + pptr%pws%h2ocan(p) * wtcol
+                  if (pactive(p)) then
+                     wtcol = pptr%wtcol(p)
+                     liq = liq + pptr%pws%h2ocan(p) * wtcol
+                  end if
                end do
             end if
 

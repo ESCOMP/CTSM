@@ -716,10 +716,10 @@ contains
 ! local pointers to original implicit in arguments
 !
     real(r8), pointer :: h2osoi_ice(:,:)      ! ice water (kg/m2)
+    logical , pointer :: pactive(:)           ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: ctype(:)             ! column type index
     integer , pointer :: npfts(:)             ! column's number of pfts - ADD
     real(r8), pointer :: pwtcol(:)            ! weight relative to column for each pft
-    real(r8), pointer :: pwtgcell(:)          ! weight relative to gridcell for each pft
     real(r8), pointer :: z(:,:)               ! layer depth (m)
     real(r8), pointer :: dz(:,:)              ! layer thickness (m)
     real(r8), pointer :: smpmin(:)            ! restriction for min of soil potential (mm)
@@ -830,10 +830,10 @@ contains
 
     ! Assign local pointers to derived type members (pft-level)
 
+    pactive           => clm3%g%l%c%p%active
     qflx_tran_veg_pft => clm3%g%l%c%p%pwf%qflx_tran_veg
     rootr_pft         => clm3%g%l%c%p%pps%rootr
     pwtcol            => clm3%g%l%c%p%wtcol
-    pwtgcell          => clm3%g%l%c%p%wtgcell
 
     ! Get time step
 
@@ -883,7 +883,7 @@ contains
              c = filter_hydrologyc(fc)
              if (pi <= npfts(c)) then
                 p = pfti(c) + pi - 1
-                if (pwtgcell(p)>0._r8) then
+                if (pactive(p)) then
                    rootr_col(c,j) = rootr_col(c,j) + rootr_pft(p,j) * qflx_tran_veg_pft(p) * pwtcol(p)
                 end if
              end if
@@ -893,7 +893,7 @@ contains
           c = filter_hydrologyc(fc)
           if (pi <= npfts(c)) then
              p = pfti(c) + pi - 1
-             if (pwtgcell(p)>0._r8) then
+             if (pactive(p)) then
                 temp(c) = temp(c) + qflx_tran_veg_pft(p) * pwtcol(p)
              end if
           end if

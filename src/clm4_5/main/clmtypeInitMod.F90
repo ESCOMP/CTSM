@@ -414,6 +414,7 @@ contains
 
     allocate(p%itype(beg:end))
     allocate(p%mxy(beg:end))
+    allocate(p%active(beg:end))
 
   end subroutine init_pft_type
 
@@ -445,6 +446,7 @@ contains
    allocate(c%pfti(beg:end),c%pftf(beg:end),c%npfts(beg:end))
 
    allocate(c%itype(beg:end))
+   allocate(c%active(beg:end))
 
   end subroutine init_column_type
 
@@ -481,6 +483,7 @@ contains
    allocate(l%urbpoi(beg:end))
    allocate(l%glcmecpoi(beg:end))
    allocate(l%udenstype(beg:end))
+   allocate(l%active(beg:end))
 
    ! MV - these should be moved to landunit physical state -MV
    allocate(l%canyon_hwr(beg:end))

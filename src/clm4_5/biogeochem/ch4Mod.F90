@@ -112,8 +112,8 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    real(r8), pointer :: conc_o2_sat(:,:) ! O2 conc  in each soil layer (mol/m3) (nlevsoi)
    real(r8), pointer :: qflx_surf(:)   ! surface runoff (mm H2O /s)
    real(r8), pointer :: latdeg(:)      ! latitude (degrees)
-   real(r8), pointer :: wtlunit(:)     ! weight (relative to landunit) 
    real(r8), pointer :: frac_h2osfc(:) ! fraction of ground covered by surface water (0 to 1)
+   logical , pointer :: cactive(:)     ! true=>do computations on this column (see reweightMod for details)
 
 
 
@@ -239,8 +239,8 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    qflx_surf_lag       => clm3%g%l%c%cch4%qflx_surf_lag
    finundated_lag      => clm3%g%l%c%cch4%finundated_lag
    layer_sat_lag       => clm3%g%l%c%cch4%layer_sat_lag
-   wtlunit             => clm3%g%l%c%wtlunit
    frac_h2osfc         => clm3%g%l%c%cps%frac_h2osfc
+   cactive             => clm3%g%l%c%active
 
 
    ! Pft level pointers
@@ -391,12 +391,12 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    call p2c (num_soilc, filter_soilc, grnd_ch4_cond, grnd_ch4_cond_col)
 
    if (nlevdecomp == 1) then
-      ! Check for zero-weight columns, e.g. inactive crop columns
+      ! Check for inactive columns
       do j=1, nlevsoi
          do fc = 1, num_soilc
             c = filter_soilc(fc)
    
-            if (wtlunit(c) == 0._r8) rootfr_col(c,j) = dz(c,j) / zi(c,nlevsoi)
+            if (.not. cactive(c)) rootfr_col(c,j) = dz(c,j) / zi(c,nlevsoi)
          end do
       end do
    end if

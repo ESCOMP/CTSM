@@ -274,7 +274,8 @@ contains
     use clm_glclnd      , only : create_clm_s2x
     use clm_varctl      , only : finidat, fpftdyn
     use decompMod       , only : get_proc_clumps, get_proc_bounds
-    use filterMod       , only : allocFilters, setFilters
+    use filterMod       , only : allocFilters
+    use reweightMod     , only : reweightWrapup
     use histFldsMod     , only : hist_initFlds
     use histFileMod     , only : hist_htapes_build
     use restFileMod     , only : restFile_getfile, &
@@ -559,7 +560,7 @@ contains
     nclumps = get_proc_clumps()
 !$OMP PARALLEL DO PRIVATE (nc)
     do nc = 1, nclumps
-       call setFilters(nc)
+       call reweightWrapup(nc)
     end do
 !$OMP END PARALLEL DO
 

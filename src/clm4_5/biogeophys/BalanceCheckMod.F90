@@ -237,14 +237,14 @@ contains
     real(r8), pointer :: sabg_snow(:)       ! solar radiation absorbed by snow (W/m**2)
     real(r8), pointer :: sabg_chk(:)        ! sum of soil/snow using current fsno, for balance check
     integer , pointer :: pcolumn(:)         ! pft's column index
+    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
+    logical , pointer :: cactive(:)         ! true=>do computations on this column (see reweightMod for details)
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
     integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: cgridcell(:)       ! column's gridcell index
     integer , pointer :: clandunit(:)       ! column's landunit index
     integer , pointer :: ltype(:)           ! landunit type 
     integer , pointer :: ctype(:)           ! column type 
-    real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding gridcell
-    real(r8), pointer :: cwtgcell(:)        ! column's weight relative to corresponding gridcell
     real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
     real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
@@ -350,10 +350,10 @@ contains
 
     ! Assign local pointers to derived type scalar members (column-level)
 
+    cactive           => clm3%g%l%c%active
     ctype             => clm3%g%l%c%itype
     cgridcell         => clm3%g%l%c%gridcell
     clandunit         => clm3%g%l%c%landunit
-    cwtgcell          => clm3%g%l%c%wtgcell
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
     qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
@@ -384,9 +384,9 @@ contains
 
     ! Assign local pointers to derived type scalar members (pft-level)
 
+    pactive           => clm3%g%l%c%p%active
     pgridcell         => clm3%g%l%c%p%gridcell
     plandunit         => clm3%g%l%c%p%landunit
-    pwtgcell          => clm3%g%l%c%p%wtgcell
     fsa               => clm3%g%l%c%p%pef%fsa
     fsr               => clm3%g%l%c%p%pef%fsr
     eflx_lwrad_out    => clm3%g%l%c%p%pef%eflx_lwrad_out
@@ -439,8 +439,7 @@ contains
        l = clandunit(c)
       
        ! add qflx_drain_perched and qflx_flood
-       ! Note: Some glacier_mec cols may have zero weight
-       if (cwtgcell(c) > 0._r8 .or. ltype(l)==istice_mec)then
+       if (cactive(c))then
           errh2o(c) = endwb(c) - begwb(c) &
                - (forc_rain_col(c) + forc_snow_col(c)  + qflx_floodc(c) + qflx_irrig(c) &
                  - qflx_evap_tot(c) - qflx_surf(c)  - qflx_h2osfc_surf(c) &
@@ -584,8 +583,7 @@ contains
 
     found = .false.
     do c = lbc, ubc
-       l = clandunit(c)
-       if ((cwtgcell(c) > 0._r8  .or. ltype(l)==istice_mec) .and. abs(errh2osno(c)) > 1.0e-7_r8) then
+       if (cactive(c) .and. abs(errh2osno(c)) > 1.0e-7_r8) then
           found = .true.
           indexc = c
        end if
@@ -622,9 +620,8 @@ contains
     ! Energy balance checks
 
     do p = lbp, ubp
-       l = plandunit(p)
-       ! Note: Some glacier_mec pfts may have zero weight
-       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+       if (pactive(p)) then
+          l = plandunit(p)
           g = pgridcell(p)
 
           ! Solar radiation energy balance
@@ -672,8 +669,7 @@ contains
 
     found = .false.
     do p = lbp, ubp
-       l = plandunit(p)
-       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+       if (pactive(p)) then
           if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > .10_r8) ) then
              found = .true.
              indexp = p
@@ -699,8 +695,7 @@ contains
 
     found = .false.
     do p = lbp, ubp
-       l = plandunit(p)
-       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+       if (pactive(p)) then
           if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > .10_r8) ) then
              found = .true.
              indexp = p
@@ -717,8 +712,7 @@ contains
 
     found = .false.
     do p = lbp, ubp
-       l = plandunit(p)
-       if (pwtgcell(p)>0._r8 .or. ltype(l)==istice_mec) then
+       if (pactive(p)) then
           if (abs(errseb(p)) > .10_r8 ) then
              found = .true.
              indexp = p

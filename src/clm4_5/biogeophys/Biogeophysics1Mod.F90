@@ -106,11 +106,11 @@ contains
     real(r8), pointer :: qg_snow(:)       ! specific humidity at snow surface [kg/kg]
     real(r8), pointer :: qg_soil(:)       ! specific humidity at soil surface [kg/kg]
     real(r8), pointer :: qg_h2osfc(:)     ! specific humidity at h2osfc surface [kg/kg]
+    logical , pointer :: pactive(:)       !true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: ivt(:)           !pft vegetation type
     integer , pointer :: ityplun(:)       !landunit type
     integer , pointer :: clandunit(:)     !column's landunit index
     integer , pointer :: cgridcell(:)     !column's gridcell index
-    real(r8), pointer :: pwtgcell(:)      !weight relative to gridcell for each pft
     integer , pointer :: ctype(:)         !column type
     real(r8), pointer :: forc_pbot(:)     !atmospheric pressure (Pa)
     real(r8), pointer :: forc_q(:)        !atmospheric specific humidity (kg/kg)
@@ -288,6 +288,7 @@ contains
 
     ! Assign local pointers to derived type members (pft-level)
 
+    pactive       => clm3%g%l%c%p%active
     ivt           => clm3%g%l%c%p%itype
     elai          => clm3%g%l%c%p%pps%elai
     esai          => clm3%g%l%c%p%pps%esai
@@ -319,7 +320,6 @@ contains
     thm            => clm3%g%l%c%p%pes%thm
     pgridcell      => clm3%g%l%c%p%gridcell
     pcolumn        => clm3%g%l%c%p%column
-    pwtgcell       => clm3%g%l%c%p%wtgcell
 
     ! Assign local pointers to derived type members (ecophysiological)
 
@@ -578,9 +578,8 @@ contains
        do g = lbg, ubg
           if (pi <= npfts(g)) then
             p = pfti(g) + pi - 1
-            l = plandunit(p)
-            ! Note: Some glacier_mec pfts may have zero weight  
-            if (pwtgcell(p) > 0._r8 .or. ityplun(l)==istice_mec) then 
+            if (pactive(p)) then
+              l = plandunit(p)
               c = pcolumn(p)
               if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
                 if (frac_veg_nosno(p) == 0) then

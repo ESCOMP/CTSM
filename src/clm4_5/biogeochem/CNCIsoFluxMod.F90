@@ -702,7 +702,7 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    integer , pointer :: npfts(:)        ! number of pfts for each column
    integer , pointer :: pfti(:)         ! beginning pft index for each column
    real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: pwtgcell(:)     ! weight of pft relative to corresponding gridcell
+   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
 
 
 !
@@ -730,7 +730,7 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    npfts                          => clm3%g%l%c%npfts
    pfti                           => clm3%g%l%c%pfti
    wtcol                          => clm3%g%l%c%p%wtcol
-   pwtgcell                       => clm3%g%l%c%p%wtgcell  
+   pactive                        => clm3%g%l%c%p%active
 
 	
    ! pft-level fire mortality fluxes
@@ -829,7 +829,7 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
          cc = filter_soilc(fc)
          if ( pi <=  npfts(cc) ) then
             pp = pfti(cc) + pi - 1
-            if (pwtgcell(pp)>0._r8) then
+            if (pactive(pp)) then
                do j = 1, nlevdecomp
                   ccisof%m_deadstemc_to_cwdc_fire(cc,j) = ccisof%m_deadstemc_to_cwdc_fire(cc,j) + &
                        pcisof%m_deadstemc_to_litter_fire(pp) * wtcol(pp) * stem_prof(pp,j)
@@ -894,7 +894,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
 !
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: pwtgcell(:)     ! weight of pft relative to corresponding gridcell
+   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
    real(r8), pointer :: leafc_to_litter(:)
    real(r8), pointer :: frootc_to_litter(:)
    real(r8), pointer :: lf_flab(:)      ! leaf litter labile fraction
@@ -942,7 +942,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
    ! assign local pointers to derived type arrays (in)
     ivt                            => clm3%g%l%c%p%itype
     wtcol                          => clm3%g%l%c%p%wtcol
-    pwtgcell                       => clm3%g%l%c%p%wtgcell  
+    pactive                        => clm3%g%l%c%p%active
     leafc_to_litter                => pcisof%leafc_to_litter
     frootc_to_litter               => pcisof%frootc_to_litter
     npfts                          => clm3%g%l%c%npfts
@@ -972,7 +972,7 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
              
              if ( pi <=  npfts(c) ) then
                 p = pfti(c) + pi - 1
-                if (pwtgcell(p)>0._r8) then
+                if (pactive(p)) then
                    ! leaf litter carbon fluxes
                    leafc_to_litr_met_c(c,j) = leafc_to_litr_met_c(c,j) + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                    leafc_to_litr_cel_c(c,j) = leafc_to_litr_cel_c(c,j) + leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
@@ -1026,7 +1026,7 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
 ! local pointers to implicit in scalars
    integer , pointer :: ivt(:)      ! pft vegetation type
    real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   real(r8), pointer :: pwtgcell(:) ! weight of pft relative to corresponding gridcell
+   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
    real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
    real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
    real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
@@ -1147,7 +1147,7 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
    ! assign local pointers to pft-level arrays
    ivt                            => clm3%g%l%c%p%itype
    wtcol                          => clm3%g%l%c%p%wtcol
-   pwtgcell                       => clm3%g%l%c%p%wtgcell  
+   pactive                        => clm3%g%l%c%p%active
    m_leafc_to_litter              => pcisof%m_leafc_to_litter
    m_frootc_to_litter             => pcisof%m_frootc_to_litter
    m_livestemc_to_litter          => pcisof%m_livestemc_to_litter
@@ -1181,7 +1181,7 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
             if (pi <=  npfts(c)) then
                p = pfti(c) + pi - 1
                
-               if (pwtgcell(p)>0._r8) then
+               if (pactive(p)) then
                   
                   ! leaf gap mortality carbon fluxes
                   m_leafc_to_litr_met_c(c,j) = m_leafc_to_litr_met_c(c,j) + &
@@ -1285,7 +1285,7 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
 ! local pointers to implicit in scalars
    integer , pointer :: ivt(:)      ! pft vegetation type
    real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   real(r8), pointer :: pwtgcell(:) ! weight of pft relative to corresponding gridcell
+   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
    real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
    real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
    real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
@@ -1408,7 +1408,7 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
    ! assign local pointers to pft-level arrays
    ivt                            => clm3%g%l%c%p%itype
    wtcol                          => clm3%g%l%c%p%wtcol
-   pwtgcell                       => clm3%g%l%c%p%wtgcell  
+   pactive                        => clm3%g%l%c%p%active
    hrv_leafc_to_litter              => pcisof%hrv_leafc_to_litter
    hrv_frootc_to_litter             => pcisof%hrv_frootc_to_litter
    hrv_livestemc_to_litter          => pcisof%hrv_livestemc_to_litter
@@ -1443,7 +1443,7 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
             if (pi <=  npfts(c)) then
                p = pfti(c) + pi - 1
                
-               if (pwtgcell(p)>0._r8) then
+               if (pactive(p)) then
                   
                   ! leaf harvest mortality carbon fluxes
                   hrv_leafc_to_litr_met_c(c,j) = hrv_leafc_to_litr_met_c(c,j) + &
@@ -1516,7 +1516,7 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
          if (pi <=  npfts(c)) then
             p = pfti(c) + pi - 1
             
-            if (pwtgcell(p)>0._r8) then
+            if (pactive(p)) then
                
                
                chrv_deadstemc_to_prod10c(c)  = chrv_deadstemc_to_prod10c(c)  + &

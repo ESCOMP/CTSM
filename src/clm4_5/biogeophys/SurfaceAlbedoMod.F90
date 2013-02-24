@@ -106,12 +106,12 @@ contains
 !
 ! local pointers to implicit in arguments
 !
+    logical , pointer :: pactive(:)   ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: pgridcell(:) ! gridcell of corresponding pft
     integer , pointer :: plandunit(:) ! index into landunit level quantities
     integer , pointer :: itypelun(:)  ! landunit type
     integer , pointer :: pcolumn(:)   ! column of corresponding pft
     integer , pointer :: cgridcell(:) ! gridcell of corresponding column
-    real(r8), pointer :: pwtgcell(:)  ! weight of pft wrt corresponding gridcell
     real(r8), pointer :: lat(:)       ! gridcell latitude (radians)
     real(r8), pointer :: lon(:)       ! gridcell longitude (radians)
     real(r8), pointer :: tlai(:)      ! one-sided leaf area index, no burying by snow
@@ -285,10 +285,10 @@ contains
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
+    pactive   => clm3%g%l%c%p%active
     plandunit => clm3%g%l%c%p%landunit
     pgridcell => clm3%g%l%c%p%gridcell
     pcolumn   => clm3%g%l%c%p%column
-    pwtgcell  => clm3%g%l%c%p%wtgcell
     albd      => clm3%g%l%c%p%pps%albd
     albi      => clm3%g%l%c%p%pps%albi
     fabd      => clm3%g%l%c%p%pps%fabd
@@ -633,7 +633,7 @@ contains
              if ((itypelun(plandunit(p)) == istsoil .or.  &
                   itypelun(plandunit(p)) == istcrop     ) &
                  .and. (elai(p) + esai(p)) > 0._r8        &
-                 .and. pwtgcell(p) > 0._r8) then
+                 .and. pactive(p)) then
                 num_vegsol = num_vegsol + 1
                 filter_vegsol(num_vegsol) = p
              else

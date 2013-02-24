@@ -61,7 +61,6 @@ contains
      use clm_atmlnd      , only : clm_a2l
      use clm_varpar      , only : numrad
      use clm_varcon      , only : spval, istsoil, degpsec, isecspday
-     use clm_varcon      , only : istice_mec
      use clm_varcon      , only : istcrop
      use clm_varctl      , only : subgridflag
      use clm_time_manager, only : get_curr_date, get_step_size
@@ -113,10 +112,10 @@ contains
      real(r8), pointer :: albsoi(:,:)      ! diffuse soil albedo (col,bnd) [frc]
      real(r8), pointer :: sabg_soil(:)     ! solar radiation absorbed by soil (W/m**2)
      real(r8), pointer :: sabg_snow(:)     ! solar radiation absorbed by snow (W/m**2)
+     logical , pointer :: pactive(:)       ! true=>do computations on this pft (see reweightMod for details)
      integer , pointer :: ivt(:)           ! pft vegetation type
      integer , pointer :: pcolumn(:)       ! pft's column index
      integer , pointer :: pgridcell(:)     ! pft's gridcell index
-     real(r8), pointer :: pwtgcell(:)      ! pft's weight relative to corresponding gridcell
      real(r8), pointer :: elai(:)          ! one-sided leaf area index with burying by snow
      real(r8), pointer :: esai(:)          ! one-sided stem area index with burying by snow
      real(r8), pointer :: londeg(:)        ! longitude (degrees)
@@ -273,11 +272,11 @@ contains
      albsoi        => clm3%g%l%c%cps%albsoi
      sabg_soil     => clm3%g%l%c%p%pef%sabg_soil
      sabg_snow     => clm3%g%l%c%p%pef%sabg_snow
+     pactive       => clm3%g%l%c%p%active
      plandunit     => clm3%g%l%c%p%landunit
      ivt           => clm3%g%l%c%p%itype
      pcolumn       => clm3%g%l%c%p%column
      pgridcell     => clm3%g%l%c%p%gridcell
-     pwtgcell      => clm3%g%l%c%p%wtgcell
      elai          => clm3%g%l%c%p%pps%elai
      esai          => clm3%g%l%c%p%pps%esai
      laisun        => clm3%g%l%c%p%pps%laisun
@@ -375,9 +374,7 @@ contains
         p = filter_nourbanp(fp)
         ! was redundant b/c filter already included wt>0; 
         ! not redundant anymore with chg in filter definition
-        l = plandunit(p)
-        !Note: Some glacier_mec pfts may have zero weight
-        if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+        if (pactive(p)) then
            sabg_soil(p)  = 0._r8
            sabg_snow(p)  = 0._r8
            sabg(p)       = 0._r8
@@ -408,8 +405,7 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        l = plandunit(p)
-        if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+        if (pactive(p)) then
 
            laisun(p) = 0._r8
            laisha(p) = 0._r8
@@ -432,9 +428,9 @@ contains
      do ib = 1, nband
         do fp = 1,num_nourbanp
            p = filter_nourbanp(fp)
-           l = plandunit(p)
-           if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+           if (pactive(p)) then
               c = pcolumn(p)
+              l = plandunit(p)
               g = pgridcell(p)
 
               ! Absorbed by canopy
@@ -446,7 +442,6 @@ contains
               if (ib == 1) then
                 parveg(p) = cad(p,ib) + cai(p,ib)
               end if
-              l = plandunit(p)
               if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
                 fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
               end if
@@ -517,9 +512,9 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-           l = plandunit(p)
-           if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+           if (pactive(p)) then
            c = pcolumn(p)
+           l = plandunit(p)
            sabg_snl_sum = 0._r8
 
            ! CASE1: No snow layers: all energy is absorbed in top soil layer
@@ -643,8 +638,7 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        l = plandunit(p)
-        if (pwtgcell(p)>0._r8 .or. ityplun(l)==istice_mec) then
+        if (pactive(p)) then
            g = pgridcell(p)
         
            ! NDVI and reflected solar radiation

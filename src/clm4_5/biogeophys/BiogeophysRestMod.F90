@@ -69,7 +69,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(inout) :: ncid ! netcdf id
-    character(len=*), intent(in)  :: flag  ! 'read' or 'write'
+    character(len=*) , intent(in)    :: flag ! 'read' or 'write'
 !
 ! !CALLED FROM:
 !

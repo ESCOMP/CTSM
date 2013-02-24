@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_62        sacks 02/24/2013 add active flags, change subgrid weighting convention, other misc fixes
    clm4_0_61      muszala 02/20/2013 rtm, drv and clm mods: tws, olr, r01 rdric file and SoilHydroMod
    clm4_0_60         erik 02/11/2013 Bring CLM4.5 code from clm45sci branch to trunk as an option set at configure time
    clm4_0_59     mvertens 12/20/2012 restructure clmtype and all pointer references, new directory structure
