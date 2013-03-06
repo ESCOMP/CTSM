@@ -1,4 +1,86 @@
 ===============================================================
+Tag name:  clm4_0_64
+Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
+Date: Wed Mar  6 12:41:26 MST 2013
+One-line Summary: update externals.  fixes 40/45 intial condition problem
+
+Purpose of changes:  Main purpose is to bring in scripts4_130227b so that
+                     CLM45 compsets do not use CLM40 initial conditions.  Put in
+                     PTCLM fix.  Secondary purpose is to update other externals.
+                     NOTE:  This tag only changes externals.  No clm 
+                     code, scripts or xml files were touched.
+
+Requirements for tag: N/A
+
+Test level of tag: critical (only yellowstone, Icompset and aux 40/45 aux tests)
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: Changes in processor count for certain resolutions.
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: the 40/45 fix in scripts4_130227b will fix initial condition problems.
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: muszala, Erik
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   cprnc_120828 -> cprnc_130301
+   scripts4_130207 -> scripts4_130304
+   Machines_130214 -> Machines_130304b
+   rtm1_0_19 -> rtm1_0_20
+   share3_130220 -> share3_130226
+   esmf_wrf_timemgr_120427 -> esmf_wrf_timemgr_130213
+   timing_120731 -> timing_130214
+   mapping_121113b -> mapping_130222
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes: N/A
+
+   M   models/lnd/clm/tools/SVN_EXTERNAL_DIRECTORIES
+   M   models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+   M   SVN_EXTERNAL_DIRECTORIES
+
+Machines testing ran on:  (Tests in priority order)
+    yellowstone/CESM:              yes - looks decent, but not great.  There are no new test failures and new tests that do fail are
+                                         most likely due to new testlists that weren't tested in a clm tag.
+                                         A few nl comp failures since number of pes changed (expected).
+                                         Many comparisons failed due to baselines not existing.
+                                         5 IG compsets fail due to a linking error.
+                                         2 NCK.F10_f10 tests die with "ERROR: lnd_prognostic but num_inst_lnd not num_inst_max"
+																	  
+    yellowstone/CESM/allIcompsets: yes  - looks OK.  Transient runs added to xFail list as well as SBN.1x1_smallvilleIA.ICLM45CNCROP
+	                                       and SBN.f09_g16.IGCLM45IS2 
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_63
+
+Changes answers relative to baseline: Yes. PE counts change plus the initial condition fixes will change answers compared
+                                      to existing baselines
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+   The 40/45 fix should bring this back to being correct (ie. the state before clm4_0_60).
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_63
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Mon Mar  4 13:50:15 MST 2013
@@ -63,7 +145,7 @@ Machines testing ran on:  (Tests in priority order)
     yellowstone/CESM:              yes only 40 list - OK. Matches xFail list
     yellowstone/CESM/allIcompsets: yes              - OK. Matches xFail list
 
-   Also had D. Lawrence look at a 45 run and a 40 run from this tag compared to one from
+   Also had D. Lawrence look at one 45 run and a 40 run from this tag compared to one from
    clm4_0_58 (the tag just before this bug was introduced).  All three runs were 2 years long.
 
 CLM tag used for the baseline comparison tests if applicable: clm4_0_62

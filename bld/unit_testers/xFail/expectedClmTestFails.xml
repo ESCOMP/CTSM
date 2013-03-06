@@ -126,6 +126,15 @@
                <entry testId="SBN.ne16_g16.I20TR"       failType="TFAIL">missing datasets</entry>
                <entry testId="SBN.ne60_g16.I20TR"       failType="SFAIL">missing datasets</entry>
                <entry testId="SBN.ne240_g16.I1850"      failType="FAIL" >missing 0.1 mapping dataset (for RTM at R01)</entry>
+               <entry testId="SBN.1x1_smallvilleIA.ICLM45CNCROP" failType="SFAIL">build-namelist - No default value found for fsurdat </entry>
+               <entry testId="SBN.f09_g16.IGCLM45IS2"            failType="SFAIL">build-namelist - ERROR: No default value found for cisminputfile </entry>
+               <entry testId="SBN.f19_g16.I20TRCRU4MeCLM43"      failType="TFAIL"> 45 transient case not supported </entry>
+               <entry testId="SBN.f19_g16.IRCP26CLM45CN"         failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SBN.f19_g16.IRCP45CLM45CN"         failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SBN.f19_g16.IRCP60CLM45CN"         failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SBN.f19_g16.IRCP85CLM45CN"         failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SBN.f09_g16.IGRCP45CLM45CN"        failType="TFAIL"> 45 transient case not supported </entry>
+               <entry testId="SBN.f19_g16.IGRCP45CLM45CN"        failType="TFAIL"> 45 transient case not supported </entry>
             </INTEL>
             <PGI>
             </PGI>
@@ -145,16 +154,26 @@
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue component not threaded</entry>
                <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="SFAIL">missing finidat file</entry>
                <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="SFAIL">missing finidat file</entry>
+
+               <entry testId="ERS_D.f19_g16.IGRCP26CN"        failType="CFAIL">No rule to make target `glc_constants.o/glade/scratch/muszala/ERI.f19_g16.IG1850.yellowstone_pgi.GC.161430/bld/glc/lib/libglimmercismfortran.a', needed by `glc_constants.mod'</entry> 
+               <entry testId="ERS_Lm3.f19_g16.IGRCP60CN"      failType="CFAIL">No rule to make target `glc_constants.o/glade/scratch/muszala/ERI.f19_g16.IG1850.yellowstone_pgi.GC.161430/bld/glc/lib/libglimmercismfortran.a', needed by `glc_constants.mod'</entry> 
+
+               <entry testId="NCK.f10_f10.I"                  failType="FAIL">ERROR: lnd_prognostic but num_inst_lnd not num_inst_max</entry>
+               <entry testId="NCK.f10_f10.ICRUCLM45"          failType="FAIL">ERROR: lnd_prognostic but num_inst_lnd not num_inst_max</entry>
             </INTEL>
             <PGI>
-               <entry testId="PET_PT.f19_g16.I1850"              failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="SMS.1x1_numaIA.ICN_CROP"           failType="TFAIL">Bad compset name: ICNCROP</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCN"            failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="PET_PT.f19_g16.I1850"           failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="SMS.1x1_numaIA.ICN_CROP"        failType="TFAIL">Bad compset name: ICNCROP</entry>
+               <entry testId="PET_PT.f10_f10.I20TRCN"         failType="TFAIL">scripts issue with ocean not threaded</entry>
 
-               <entry testId="PET_PT.f19_g16.ICLM451850"              failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="SMS.T31_g37.IG4804CLM45"                failType="FAIL" >checkWeights error, probably due to old-format urban on surface dataset</entry>
-               <entry testId="SMS.1x1_numaIA.ICLM45CN_CROP"           failType="TFAIL">Bad compset name: ICNCROP</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"            failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="PET_PT.f19_g16.ICLM451850"      failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="SMS.T31_g37.IG4804CLM45"        failType="FAIL" >checkWeights error, probably due to old-format urban on surface dataset</entry>
+               <entry testId="SMS.1x1_numaIA.ICLM45CN_CROP"   failType="TFAIL">Bad compset name: ICNCROP</entry>
+               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
+
+               <entry testId="ERI.f19_g16.IG1850.yellowstone_pgi"          failType="CFAIL">No rule to make target `glc_constants.o/glade/scratch/muszala/ERI.f19_g16.IG1850.yellowstone_pgi.GC.161430/bld/glc/lib/libglimmercismfortran.a', needed by `glc_constants.mod'</entry> 
+               <entry testId="SMS.T31_g37.IG4804.yellowstone_pgi"          failType="CFAIL">No rule to make target `glc_constants.o/glade/scratch/muszala/ERI.f19_g16.IG1850.yellowstone_pgi.GC.161430/bld/glc/lib/libglimmercismfortran.a', needed by `glc_constants.mod'</entry> 
+               <entry testId="ERI.f19_g16.IG1850CLM45.yellowstone_pgi"     failType="CFAIL">No rule to make target `glc_constants.o/glade/scratch/muszala/ERI.f19_g16.IG1850.yellowstone_pgi.GC.161430/bld/glc/lib/libglimmercismfortran.a', needed by `glc_constants.mod'</entry>
             </PGI>
          </yellowstone>
       </auxTests>
