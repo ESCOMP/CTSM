@@ -183,6 +183,12 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
       call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
    end if
 
+   ! column loop
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
+      if (annsum_counter(c) >= get_days_per_year() * secspday) annsum_counter(c) = 0._r8
+   end do
+
 end subroutine CNAnnualUpdate
 !-----------------------------------------------------------------------
 

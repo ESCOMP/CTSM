@@ -1,4 +1,94 @@
 ===============================================================
+Tag name:  clm4_0_63
+Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
+Date: Mon Mar  4 13:50:15 MST 2013
+One-line Summary: bug 1635 fix - 4_0 CN bug
+
+Purpose of changes:  Put back some removed code.  This allows CN to run with 4_0
+                     beyond one year
+
+Requirements for tag:
+
+Test level of tag: critical
+
+Bugs fixed (include bugzilla ID): 1635
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: Dave Lawrence, Sam Levis
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_0/biogeochem/CNAnnualUpdateMod.F90
+--- models/lnd/clm/src/clm4_0/biogeochem/CNAnnualUpdateMod.F90  (revision 44311)
++++ models/lnd/clm/src/clm4_0/biogeochem/CNAnnualUpdateMod.F90  (working copy)
+@@ -183,6 +183,12 @@
+       call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
+    end if
+			   
+      +   ! column loop
+      +   do fc = 1,num_soilc
+      +      c = filter_soilc(fc)
+      +      if (annsum_counter(c) >= get_days_per_year() * secspday) annsum_counter(c) = 0._r8
+      +   end do
+      +
+      end subroutine CNAnnualUpdate
+      !-----------------------------------------------------------------------
+
+
+Machines testing ran on:  (Tests in priority order)
+    yellowstone/CESM:              yes only 40 list - OK. Matches xFail list
+    yellowstone/CESM/allIcompsets: yes              - OK. Matches xFail list
+
+   Also had D. Lawrence look at a 45 run and a 40 run from this tag compared to one from
+   clm4_0_58 (the tag just before this bug was introduced).  All three runs were 2 years long.
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_62
+
+Changes answers relative to baseline: No
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: 
+
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_62
 Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
 Date: Sun Feb 24 15:27:09 MST 2013
