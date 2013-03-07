@@ -915,7 +915,15 @@ subroutine iniTimeConst
        end if
 
       ! SCA shape function defined
-      n_melt(c) = 200.0/max(10.0_r8,topo_std(c))
+      if (ltype(l)==istice_mec) then
+         ! ice_mec columns already account for subgrid topographic variability through
+         ! their use of multiple elevation classes; thus, to avoid double-accounting for
+         ! topographic variability in these columns, we ignore topo_std and use a value
+         ! of n_melt that assumes little topographic variability within the column
+         n_melt(c) = 10._r8
+      else
+         n_melt(c) = 200.0/max(10.0_r8,topo_std(c))
+      end if
 
       ! microtopographic parameter, units are meters
       minslope=0.05

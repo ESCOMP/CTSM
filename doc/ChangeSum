@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_66        sacks 03/07/2013 turn off subgrid topography snow parameterization for glc_mec landunits
    clm4_0_65        sacks 03/07/2013 back out Machines external to get more tests to pass, especially IG
    clm4_0_64      muszala 03/06/2013 update externals.  fixes 40/45 intial condition problem
    clm4_0_63      muszala 03/04/2013 bug 1635 fix - 4_0 CN bug
