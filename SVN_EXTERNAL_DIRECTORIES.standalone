@@ -1,6 +1,6 @@
 # CESM scripts, machines and driver
 scripts                         https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_130304
-scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_130304b
+scripts/ccsm_utils/Machines     https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_130301
 models/drv                      https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_2_22
 
 # Model components: Data atmosphere, and stub components as well as land-ice model
