@@ -143,6 +143,8 @@ type, public :: pft_pstate_type
    real(r8), pointer :: rresis(:,:)             !root resistance by layer (0-1)  (nlevgrnd)
    real(r8), pointer :: dewmx(:)                !Maximum allowed dew [mm]
    real(r8), pointer :: rssun(:)                !sunlit stomatal resistance (s/m)
+   real(r8), pointer :: rhal(:)                 !relative humidity of the canopy air vs leaf
+   real(r8), pointer :: vpdal(:)                !vpd of the canopy air vs leaf
    real(r8), pointer :: rssha(:)                !shaded stomatal resistance (s/m)
    real(r8), pointer :: rssun_z(:,:)            !canopy layer: sunlit leaf stomatal resistance (s/m)
    real(r8), pointer :: rssha_z(:,:)            !canopy layer: shaded leaf stomatal resistance (s/m)
@@ -244,6 +246,24 @@ type, public :: pft_pstate_type
    real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
 end type pft_pstate_type
 
+type, public :: pft_psynstate_type
+   logical, pointer :: c3flag(:)                ! true if C3 and false if C4
+   real(r8),pointer :: ac(:,:)                  ! Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
+   real(r8),pointer :: aj(:,:)                  ! RuBP-limited gross photosynthesis (umol CO2/m**2/s)
+   real(r8),pointer :: ap(:,:)                  ! product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
+   real(r8),pointer :: ag(:,:)                  ! co-limited gross leaf photosynthesis (umol CO2/m**2/s)
+   real(r8),pointer :: an(:,:)                  ! net leaf photosynthesis (umol CO2/m**2/s)   
+   real(r8),pointer :: vcmax_z(:,:)             ! maximum rate of carboxylation (umol co2/m**2/s)
+   real(r8),pointer :: cp(:)                    ! CO2 compensation point (Pa)
+   real(r8),pointer :: kc(:)                    ! Michaelis-Menten constant for CO2 (Pa)
+   real(r8),pointer :: ko(:)                    ! Michaelis-Menten constant for O2 (Pa)
+   real(r8),pointer :: qe(:)                    ! quantum efficiency, used only for C4 (mol CO2 / mol photons)
+   real(r8),pointer :: tpu_z(:,:)               ! triose phosphate utilization rate (umol CO2/m**2/s)
+   real(r8),pointer :: kp_z(:,:)                ! initial slope of CO2 response curve (C4 plants)
+   real(r8),pointer :: theta_cj(:)              ! empirical curvature parameter for ac, aj photosynthesis co-limitation
+   real(r8),pointer :: bbb(:)                   ! Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
+   real(r8),pointer :: mbb(:)                   ! Ball-Berry slope of conductance-photosynthesis relationship
+end type pft_psynstate_type
 !----------------------------------------------------
 ! pft ecophysiological constants structure
 !----------------------------------------------------
@@ -1090,6 +1110,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: hkdepth(:)            !decay factor (m)
    real(r8), pointer :: wtfact(:)             !maximum saturated fraction for a gridcell
    real(r8), pointer :: fracice(:,:)          !fractional impermeability (-)
+   real(r8), pointer :: icefrac(:,:)          !fraction of ice      
    real(r8), pointer :: csol(:,:)             !heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
    real(r8), pointer :: tkmg(:,:)             !thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd) 
    real(r8), pointer :: tkdry(:,:)            !thermal conductivity, dry soil (W/m/Kelvin) (nlevgrnd) 
@@ -1519,6 +1540,7 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_h2osfc_surf(:)   !surface water runoff
    real(r8), pointer :: qflx_snow_h2osfc(:)   !snow falling on surface water
    real(r8), pointer :: qflx_drain_perched(:) ! sub-surface runoff from perched wt (mm H2O /s)
+   real(r8), pointer :: qflx_deficit(:)       ! water deficit to keep non-negative liquid water content (mm H2O)
    real(r8), pointer :: qflx_floodc(:) 	      ! flood water flux at column level
    real(r8), pointer :: qflx_sl_top_soil(:)   ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
    real(r8), pointer :: qflx_snomelt(:)       ! snow melt (mm H2O /s)
@@ -2139,6 +2161,7 @@ type, public :: pft_type
    
    ! state variables defined at the pft level
    type(pft_pstate_type) :: pps         !physical state variables
+   type(pft_psynstate_type)::ppsyns     !photosynthesis relevant variables
    type(pft_estate_type) :: pes         !pft energy state
    type(pft_wstate_type) :: pws         !pft water state
    type(pft_cstate_type) :: pcs         !pft carbon state

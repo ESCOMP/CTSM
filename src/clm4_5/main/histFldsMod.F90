@@ -639,6 +639,17 @@ contains
          ptr_pft=clm3%g%l%c%p%pps%rssha, set_lake=spval, set_urb=spval, &
          default='inactive')
 
+    call hist_addfld1d (fname='RHAL', units='none',  &
+         avgflag='M', long_name='relative humidity of canopy air vs leaf', &
+         ptr_pft=clm3%g%l%c%p%pps%rhal, set_lake=spval, set_urb=spval, &
+         default='inactive')
+
+
+    call hist_addfld1d (fname='VPDAL', units='Pa',  &
+         avgflag='M', long_name='vapor pressure deficit of canopy air vs leaf', &
+         ptr_pft=clm3%g%l%c%p%pps%vpdal, set_lake=spval, set_urb=spval, &
+         default='inactive')
+
     call hist_addfld1d (fname='BTRAN', units='unitless',  &
          avgflag='A', long_name='transpiration beta factor', &
          ptr_pft=clm3%g%l%c%p%pps%btran, set_lake=spval, set_urb=spval)

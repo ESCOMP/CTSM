@@ -123,7 +123,6 @@ contains
     real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (kg/m2)
     real(r8), pointer :: dz(:,:)           ! layer depth (m)
     real(r8), pointer :: watsat(:,:)       ! volumetric soil water at saturation (porosity)
-    real(r8), pointer :: frac_sno(:)       ! fraction of ground covered by snow (0 to 1)
     real(r8), pointer :: soilbeta(:)       ! soil wetness relative to field capacity
 !
 ! local pointers to implicit inout arguments
@@ -261,7 +260,6 @@ contains
     h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
     dz             => clm3%g%l%c%cps%dz
     h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    frac_sno       => clm3%g%l%c%cps%frac_sno
     soilbeta       => clm3%g%l%c%cws%soilbeta
 
     ! Assign local pointers to derived type members (pft-level)
@@ -485,6 +483,9 @@ contains
        fpsn_wc(p) = 0._r8
        fpsn_wj(p) = 0._r8
        fpsn_wp(p) = 0._r8
+       !lines below are for stomatal model testing
+       clm3%g%l%c%p%pps%vpdal(p) = 0._r8
+       clm3%g%l%c%p%pps%rhal(p) = 1._r8
        ! adding code for isotopes, 8/17/05, PET
 
      if ( use_c13 ) then

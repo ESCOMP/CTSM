@@ -74,7 +74,6 @@ module clmtypeInitMod
   private :: init_column_nflux_type
   private :: init_landunit_pstate_type
   private :: init_landunit_eflux_type
-  private :: init_gridcell_pstate_type
   private :: init_gridcell_efstate_type
   private :: init_gridcell_wflux_type
 #ifdef LCH4
@@ -178,6 +177,8 @@ contains
     ! pft ecophysiological variables (only at the pft level for now)
     call init_pft_epv_type(begp, endp, clm3%g%l%c%p%pepv)
 
+    !pft photosynthesis relevant variables
+    call init_pft_psynstate_type(begp, endp, clm3%g%l%c%p%ppsyns)
 #if (defined CNDV)
     ! pft DGVM state variables at pft level and averaged to column
 
@@ -950,6 +951,8 @@ contains
     allocate(pps%dewmx(beg:end))
     allocate(pps%rssun(beg:end))
     allocate(pps%rssha(beg:end))
+    allocate(pps%rhal(beg:end))
+    allocate(pps%vpdal(beg:end))
     allocate(pps%rssun_z(beg:end,1:nlevcan))
     allocate(pps%rssha_z(beg:end,1:nlevcan))
     allocate(pps%laisun(beg:end))
@@ -1070,6 +1073,8 @@ contains
     pps%rresis(beg:end,:nlevgrnd) = spval
     pps%dewmx(beg:end) = nan
     pps%rssun(beg:end) = nan
+    pps%rhal(beg:end) = nan
+    pps%vpdal(beg:end) = nan    
     pps%rssha(beg:end) = nan
     pps%rssun_z(beg:end,:nlevcan) = nan
     pps%rssha_z(beg:end,:nlevcan) = nan
@@ -1427,6 +1432,67 @@ contains
     pvs%fsun240 (beg:end)   = spval
     pvs%elai_p  (beg:end)   = spval
   end subroutine init_pft_vstate_type
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_pft_psynstate_type
+!
+! !INTERFACE:
+  subroutine init_pft_psynstate_type(beg, end, ppsyns)
+!
+! !DESCRIPTION:
+! Initialize pft energy state
+!
+! !USES:
+    use clm_varcon, only : spval 
+    use surfrdMod, only : crop_prog
+! !AGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (pft_psynstate_type), intent(inout):: ppsyns
+!
+! !REVISION HISTORY:
+! Created by Jinyun Tang
+!
+!EOP
+!-----------------------------------------------------------------------
+
+   allocate(ppsyns%c3flag(beg:end))
+   allocate(ppsyns%ac(beg:end,1:nlevcan))
+   allocate(ppsyns%aj(beg:end,1:nlevcan))
+   allocate(ppsyns%ap(beg:end,1:nlevcan))
+   allocate(ppsyns%ag(beg:end,1:nlevcan))
+   allocate(ppsyns%an(beg:end,1:nlevcan))
+   allocate(ppsyns%vcmax_z(beg:end,1:nlevcan))
+   allocate(ppsyns%cp(beg:end))
+   allocate(ppsyns%kc(beg:end))
+   allocate(ppsyns%ko(beg:end))
+   allocate(ppsyns%qe(beg:end))
+   allocate(ppsyns%tpu_z(beg:end,1:nlevcan))
+   allocate(ppsyns%kp_z(beg:end,1:nlevcan))   
+   allocate(ppsyns%theta_cj(beg:end))
+   allocate(ppsyns%bbb(beg:end))
+   allocate(ppsyns%mbb(beg:end))
+
+   ppsyns%c3flag = .false.
+   ppsyns%ac(beg:end,1:nlevcan) = nan
+   ppsyns%aj(beg:end,1:nlevcan) = nan
+   ppsyns%ap(beg:end,1:nlevcan) = nan
+   ppsyns%ag(beg:end,1:nlevcan) = nan
+   ppsyns%an(beg:end,1:nlevcan) = nan
+   ppsyns%vcmax_z(beg:end,1:nlevcan) = nan
+   ppsyns%cp(beg:end) = nan
+   ppsyns%kc(beg:end) = nan
+   ppsyns%ko(beg:end) = nan
+   ppsyns%qe(beg:end) = nan
+   ppsyns%tpu_z(beg:end,1:nlevcan) = nan
+   ppsyns%kp_z(beg:end,1:nlevcan) = nan
+   ppsyns%theta_cj(beg:end) = nan
+   ppsyns%bbb(beg:end) = nan
+   ppsyns%mbb(beg:end) = nan
+
+  end subroutine init_pft_psynstate_type
+
 
 !------------------------------------------------------------------------
 !BOP
@@ -2854,6 +2920,7 @@ contains
     allocate(cps%hkdepth(beg:end))
     allocate(cps%wtfact(beg:end))
     allocate(cps%fracice(beg:end,nlevgrnd))
+    allocate(cps%icefrac(beg:end,nlevgrnd))    
     allocate(cps%gwc_thr(beg:end))
     allocate(cps%mss_frc_cly_vld(beg:end))
     allocate(cps%mbl_bsn_fct(beg:end))
@@ -3007,6 +3074,7 @@ contains
     cps%hkdepth(beg:end) = nan
     cps%wtfact(beg:end) = nan
     cps%fracice(beg:end,1:nlevgrnd) = nan
+    cps%icefrac(beg:end,1:nlevgrnd) = nan    
     cps%gwc_thr(beg:end) = nan
     cps%mss_frc_cly_vld(beg:end) = nan
     cps%mbl_bsn_fct(beg:end) = nan
@@ -3640,6 +3708,7 @@ contains
     allocate(cwf%qflx_h2osfc_surf(beg:end))
     allocate(cwf%qflx_snow_h2osfc(beg:end))
     allocate(cwf%qflx_drain_perched(beg:end))
+    allocate(cwf%qflx_deficit(beg:end))
     allocate(cwf%qflx_floodc(beg:end))
     allocate(cwf%qflx_snow_melt(beg:end))
 
@@ -3647,6 +3716,7 @@ contains
     cwf%qflx_h2osfc_surf(beg:end) = spval
     cwf%qflx_snow_h2osfc(beg:end) = nan
     cwf%qflx_drain_perched(beg:end) = spval
+    cwf%qflx_deficit(beg:end) = spval
     cwf%qflx_floodc(beg:end) = spval
     cwf%qflx_snow_melt(beg:end) = spval
   end subroutine init_column_wflux_type
@@ -4578,60 +4648,6 @@ contains
   end subroutine init_gridcell_dgvstate_type
 #endif
 
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_gridcell_pstate_type
-!
-! !INTERFACE:
-  subroutine init_gridcell_pstate_type(beg, end, gps)
-!
-! !DESCRIPTION:
-! Initialize gridcell physical state variables
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: beg, end
-    type (gridcell_pstate_type), intent(inout):: gps
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------
-    
-    
-    !allocate(gps%bcphiwet2t(beg:end,1:2))
-    !allocate(gps%bcphidry2t(beg:end,1:2))
-    !allocate(gps%bcphodry2t(beg:end,1:2))
-    !allocate(gps%ocphiwet2t(beg:end,1:2))
-    !allocate(gps%ocphidry2t(beg:end,1:2))
-    !allocate(gps%ocphodry2t(beg:end,1:2))
-    !allocate(gps%dstx01wd2t(beg:end,1:2))
-    !allocate(gps%dstx01dd2t(beg:end,1:2))
-    !allocate(gps%dstx02wd2t(beg:end,1:2))
-    !allocate(gps%dstx02dd2t(beg:end,1:2))
-    !allocate(gps%dstx03wd2t(beg:end,1:2))
-    !allocate(gps%dstx03dd2t(beg:end,1:2))
-    !allocate(gps%dstx04wd2t(beg:end,1:2))
-    !allocate(gps%dstx04dd2t(beg:end,1:2))
-    
-    !gps%bcphiwet2t(beg:end,1:2) = nan
-    !gps%bcphidry2t(beg:end,1:2) = nan
-    !gps%bcphodry2t(beg:end,1:2) = nan
-    !gps%ocphiwet2t(beg:end,1:2) = nan
-    !gps%ocphidry2t(beg:end,1:2) = nan
-    !gps%ocphodry2t(beg:end,1:2) = nan
-    !gps%dstx01wd2t(beg:end,1:2) = nan
-    !gps%dstx01dd2t(beg:end,1:2) = nan
-    !gps%dstx02wd2t(beg:end,1:2) = nan
-    !gps%dstx02dd2t(beg:end,1:2) = nan
-    !gps%dstx03wd2t(beg:end,1:2) = nan
-    !gps%dstx03dd2t(beg:end,1:2) = nan
-    !gps%dstx04wd2t(beg:end,1:2) = nan
-    !gps%dstx04dd2t(beg:end,1:2) = nan
-
-  end subroutine init_gridcell_pstate_type
 
 !------------------------------------------------------------------------
 !BOP

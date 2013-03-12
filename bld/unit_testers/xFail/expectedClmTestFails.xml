@@ -85,6 +85,9 @@
               <entry testId="ERI_Mmpi-serial.f10_f10.I_2000_CLM45_CN4Me"                   failType="FAIL"  ></entry>
               <entry testId="ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000_VOC_SNCRFRC_CN"       failType="RUN" ></entry>
               <entry testId="ERS_D_P1x16_Mmpi-serial.f19_g16.I_2000_GLCMECP"               failType="RUN" ></entry>
+              <entry testId="ERS_D_Mmpi-serial.CLM_USRDAT.ICLM45alaskaCN.yellowstone_intel_user_nl_dirs"    failType="RUN (needs new surface data set" ></entry>
+              <entry testId="ERS_D_P1x1_Mmpi-serial.5x5_amazon.I_2000_CLM45.yellowstone_intel_user_nl_dirs" failType="RUN (needs new surface data set" ></entry>
+              <entry testId="ERS_Ln48_D_P1x1_Mmpi-serial.f45_g37.ICLM45VOC.yellowstone_intel_voc"           failType="RUN (needs new surface data set" ></entry>
           </INTEL>
       </yellowstone>
    </test_system_interactive> 
@@ -97,7 +100,7 @@
       </lynx>
       <frankfurt>
          <INTEL>
-              <entry testId="ERS_D_P16x1.f19_g16.I_2000_CLM45_CN4Me_CROP"       failType="RUN" ></entry>
+              tentry testId="ERS_D_P16x1.f19_g16.I_2000_CLM45_CN4Me_CROP"       failType="RUN" ></entry>
          </INTEL>
       </frankfurt>
       <yellowstone>
@@ -105,13 +108,13 @@
               <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"                 failType="RUN" >History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.oldhyd"        failType="TFAIL"></entry>
-              <entry testId="SMS_D.f10_f10.I_2000_CLM45CN4Me.anoxia_wtsat"       failType="TFAIL"></entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_ciso"      failType="TFAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.ch4_set2_pftr" failType="TFAIL"></entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.ch4_set3_pftroot"   failType="TFAIL"></entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.rootlit"     failType="TFAIL"></entry>
-              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4Me.vrtlay"             failType="TFAIL"></entry>
+              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_oldhyd"        failType="TFAIL"></entry>
+              <entry testId="SMS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_anoxia_wtsat"       failType="TFAIL"></entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_ciso"      failType="TFAIL"></entry>
+              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_pftr" failType="TFAIL"></entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set3_pftroot"   failType="TFAIL"></entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.yellowstone_intel_rootlit"     failType="TFAIL"></entry>
+              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_vrtlay"             failType="TFAIL"></entry>
               <entry testId="PET_D_P1x32.ne30_g16.ICN"                           failType="SFAIL"></entry>
               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="FAIL"></entry>
           </INTEL>
