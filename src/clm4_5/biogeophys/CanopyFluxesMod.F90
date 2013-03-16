@@ -1751,7 +1751,7 @@ contains
 !KO
       jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
 !KO
-      tpu25top = 0.06_r8 * jmax25top
+      tpu25top = 0.167_r8 * vcmax25top
       kp25top = 20000._r8 * vcmax25top
 
       ! Nitrogen scaling factor. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593 used

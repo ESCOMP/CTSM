@@ -1,5 +1,5 @@
 ;
-; Take the greenhouse gas file used by CAM for historical representations of
+; Take the greenhouse gas file used by CAM for historical (and future) representations of
 ; greenhouse gases, and convert it to a format that can be used by streams.
 ; So include domain data for a single point that covers the globe, as well
 ; as CO2 data over that single point. In the process we also discard the other
@@ -20,20 +20,25 @@ begin
    ;
    csmdata  = getenv("CSMDATA");
    clmroot  = getenv("CLM_ROOT");
+   rcp      = getenv("RCP");          ; Get representative concentration pathway from env variable
    querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
    if ( .not. ismissing(csmdata) )then
       querynml = querynml+" -csmdata "+csmdata;
    end if
    if ( ismissing(clmroot) )then
-      querynml = "../../"+querynml;
+      querynml = "../../../"+querynml;
    else
       querynml = clmroot+"/models/lnd/clm/"+querynml;
+   end if
+   histrcp = -999.9
+   if ( ismissing(rcp) )then
+     rcp = histrcp
    end if
    ;
    ; Get input Greenhouse gas file and open it
    ;
    filetype  = "mkghg_bndtvghg";
-   ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype );
+   ghgfile  = systemfunc( querynml+" -namelist clmexp -var "+filetype+" -options rcp="+rcp );
    print( "Use "+filetype+" file: "+ghgfile );
    if ( systemfunc("test -f "+ghgfile+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+ghgfile );
@@ -53,7 +58,11 @@ begin
 
    sim_yr_rng = sim_yr0 + "-" + sim_yr2;
    
-   outco2filename = "fco2_datm_"+sim_yr_rng+"_c"+sdate+".nc";
+   if ( rcp .eq. histrcp )then
+      outco2filename = "fco2_datm_"+sim_yr_rng+"_c"+sdate+".nc";
+   else
+      outco2filename = "fco2_datm_rcp"+rcp+"_"+sim_yr_rng+"_c"+sdate+".nc";
+   end if
    system( "/bin/rm -f "+outco2filename );
    print( "output file: "+outco2filename );
    nco = addfile( outco2filename, "c" );

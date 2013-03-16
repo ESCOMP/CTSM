@@ -1117,16 +1117,19 @@ subroutine normalizencheck_landuse(ldomain)
 !
 ! !LOCAL VARIABLES:
     integer  :: m,k,n,ns_o                  ! indices
+    integer  :: nsmall                      ! number of small PFT values
     real(r8) :: suma                        ! sum for error check
     real(r8) :: bare_urb_diff               ! difference between bare soil and urban %
     real(r8) :: pcturb_excess               ! excess urban % not accounted for by bare soil
     real(r8) :: sumpft                      ! sum of non-baresoil pfts
     real(r8) :: sum8, sum8a                 ! sum for error check
     real(r4) :: sum4a                       ! sum for error check
+    real(r8), parameter :: toosmallPFT = 1.e-10_r8            ! tolerance for PFT's to ignore
     character(len=32) :: subname = 'normalizencheck_landuse'  ! subroutine name
 !-----------------------------------------------------------------------
 
     ns_o = ldomain%ns
+    nsmall = 0
     do n = 1,ns_o
        if (pcturb(n) .gt. 0._r8) then
           
@@ -1183,16 +1186,31 @@ subroutine normalizencheck_landuse(ldomain)
                n,pctlak(n),pctwet(n),pcturb(n),pctgla(n),pctpft(n,:),suma
           call abort()
        else
-          pctlak(n)   = pctlak(n)   * 100._r8/suma
-          pctwet(n)   = pctwet(n)   * 100._r8/suma
-          pcturb(n)   = pcturb(n)   * 100._r8/suma
-          pctgla(n)   = pctgla(n)   * 100._r8/suma
-          pctpft(n,:) = pctpft(n,:) * 100._r8/suma
+          do m = 0, numpft
+             if ( pctpft(n,m) > 0.0_r8 .and. pctpft(n,m)*100.0_r8/suma < toosmallPFT )then
+                pctpft(n,m) = 0.0_r8
+                nsmall = nsmall + 1
+             end if
+          end do
+          if ( nsmall > 1 )then
+             suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+             do m = 0,numpft
+                suma = suma + pctpft(n,m)
+             end do
+          end if 
+          if ( abs(suma - 100.0_r8) > 2.0*epsilon(suma) )then
+             pctlak(n)   = pctlak(n)   * 100._r8/suma
+             pctwet(n)   = pctwet(n)   * 100._r8/suma
+             pcturb(n)   = pcturb(n)   * 100._r8/suma
+             pctgla(n)   = pctgla(n)   * 100._r8/suma
+             pctpft(n,:) = pctpft(n,:) * 100._r8/suma
+          end if
        end if
        
        ! Roundoff error fix
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) then
+       if ( (suma < 100._r8 .and. suma > (100._r8 - 1.e-6_r8)) .or. &
+            (sum(pctpft(n,:)) > 0.0_r8 .and. sum(pctpft(n,:)) <  1.e-6_r8) ) then
           write (6,*) 'Special land units near 100%, but not quite for n,suma =',n,suma
           write (6,*) 'Adjusting special land units to 100%'
           if (pctlak(n) >= 25._r8) then
@@ -1210,6 +1228,12 @@ subroutine normalizencheck_landuse(ldomain)
              call abort()
           end if
           pctpft(n,:) = 0._r8
+       end if
+       if ( any(pctpft(n,:) > 0.0_r8 .and. pctpft(n,:) < toosmallPFT ) )then
+          write (6,*) 'pctpft is small'
+          write (6,*) 'pctpft(',n,') = ', pctpft(n,:)
+          write (6,*) 'sum(pctpft) = ', sum(pctpft(n,:))
+          call abort()
        end if
        
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
@@ -1267,7 +1291,7 @@ subroutine normalizencheck_landuse(ldomain)
              write (6,*) subname, ' error: sum of pctlak, pctwet,', &
                   'pcturb, pctgla is < 100% when pctpft==0 sum = ', sum8
              write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
-             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,epsilon= ', &
+             write (6,*)'n,pctlak,pctwet,pcturb,pctgla,pctpft,epsilon= ', &
                   n,pctlak(n),pctwet(n),pcturb(n),pctgla(n), pctpft(n,:), epsilon(sum8)
              call abort()
           end if
@@ -1287,6 +1311,9 @@ subroutine normalizencheck_landuse(ldomain)
           call abort()
        end if
     end do
+    if ( nsmall > 1 )then
+       write (6,*)'number of small pft = ', nsmall
+    end if
 
 end subroutine normalizencheck_landuse
 

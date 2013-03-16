@@ -27,12 +27,12 @@ ERS_Ld211.f10_f10.I_2000_CLM45_VOC_CN     -user_nl_dir ../models/lnd/clm/test/sy
 ERS_Ln48_D.f10_f10.I_2000_CLM45_CN        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ciso
 
 # Different cases for CLMCN4Me with different namelist options
-SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me      -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/oldhyd
-SMS_D.f10_f10.I_2000_CLM45CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/anoxia_wtsat
-ERS_D.f10_f10.I_2000_CLM45CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ch4_set2_ciso
-ERS_D.f10_f10.I_2000_CLM45CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ch4_set3_pftroot
-ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil    -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/rootlit
-ERI_D.f10_f10.I_2000_CLM45CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vrtlay
+SMS_Ln48_D.f10_f10.I_2000_CLM45_CN4Me     -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/oldhyd
+SMS_D.f10_f10.I_2000_CLM45_CN4Me          -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/anoxia_wtsat
+ERS_D.f10_f10.I_2000_CLM45_CN4Me          -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ch4_set2_ciso
+ERS_D.f10_f10.I_2000_CLM45_CN4Me          -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/ch4_set3_pftroot
+ERS_D.f10_f10.I_2000_CLM45_CN4MeNoVSoil   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/rootlit
+ERI_D.f10_f10.I_2000_CLM45_CN4Me           -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vrtlay
 
 # #
 # GLC MEC tests

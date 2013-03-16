@@ -159,7 +159,7 @@ ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/init
 ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false."  crop="on" >lnd/clm2/initdata/clmi.IQCNCROPmp20_1992-01-01_1.9x2.5_gx1v6_simyr2000_c110427.nc
 </finidat>
 
-<!-- Surface datasets (relative to {csmdata}) -->
+<!-- Initial datasets (relative to {csmdata}) -->
 
 <finidat hgrid="10x15"     maxpft="17"  mask="USGS"  bgc="cn"   ic_ymd="18500101" 
 ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false." crop="off" >lnd/clm2/initdata/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c100322.nc
@@ -227,30 +227,6 @@ ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BC
 
 <finidat hgrid="ne30np4"  maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
 ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_ne30np4_gx1v6_simyr2000_c110328.nc
-</finidat>
-
-<finidat hgrid="ne120np4"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="01820101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata_map/clmi.BCN.0182-01-01_ne120np4_gx1v6_simyr1850_c121001.nc
-</finidat>
-
-<finidat hgrid="ne120np4"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="01820101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata_map/clmi.BCN.0182-01-01_ne120np4_gx1v6_simyr1850_c121001.nc
-</finidat>
-
-<finidat hgrid="ne120np4"  maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="01820101" 
-ic_tod="0" sim_year="1850" glc_nec="0" irrig=".false.">lnd/clm2/initdata_map/clmi.BCN.0182-01-01_ne120np4_gx1v6_simyr1850_c121001.nc
-</finidat>
-
-<finidat hgrid="ne120np4"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_ne120np4_gx1v6_simyr2000_c110503.nc
-</finidat>
-
-<finidat hgrid="ne120np4"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_ne120np4_gx1v6_simyr2000_c110503.nc
-</finidat>
-
-<finidat hgrid="ne120np4"  maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="20000101" 
-ic_tod="0" sim_year="2000" glc_nec="0" irrig=".false.">lnd/clm2/initdata/clmi.BCN.2000-01-01_ne120np4_gx1v6_simyr2000_c110503.nc
 </finidat>
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
@@ -329,9 +305,9 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr2000_c110801.nc</fsurdat>
 <fsurdat hgrid="ne60np4"     sim_year="2000" irrig=".false." >
 lnd/clm2/surfdata_map/surfdata_ne60np4_simyr2000_c120416.nc</fsurdat>
 <fsurdat hgrid="ne120np4"    sim_year="2000" irrig=".false." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_simyr2000_c110817.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_simyr2000_c130313.nc</fsurdat>
 <fsurdat hgrid="ne240np4"    sim_year="2000" irrig=".false." >
-lnd/clm2/surfdata_map/surfdata_ne240np4_simyr2000_c120124.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne240np4_simyr2000_c130313.nc</fsurdat>
 
 
 <!-- Crop and Irrigation surface datasets -->
@@ -419,9 +395,9 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c110727.nc</fsurdat>
 <fsurdat hgrid="ne60np4"     sim_year="1850" irrig=".false." >
 lnd/clm2/surfdata_map/surfdata_ne60np4_simyr1850_c120416.nc</fsurdat>
 <fsurdat hgrid="ne120np4"    sim_year="1850" irrig=".false." >
-lnd/clm2/surfdata_map/surfdata_ne120np4_simyr1850_c130211.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne120np4_simyr1850_c130311.nc</fsurdat>
 <fsurdat hgrid="ne240np4"    sim_year="1850" irrig=".false." >
-lnd/clm2/surfdata_map/surfdata_ne240np4_simyr1850_c120127.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_ne240np4_simyr1850_c130313.nc</fsurdat>
 
 <!-- Single point data for year 1850 -->
 <fsurdat hgrid="1x1_tropicAtl" sim_year="1850" irrig=".false." crop="off" >
@@ -468,7 +444,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="ne60np4"       sim_year_range="1850-2000" 
  irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne60np4_hist_simyr1850-2005_c120907.nc</fpftdyn>
 <fpftdyn hgrid="ne120np4"      sim_year_range="1850-2000" 
- irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_hist_simyr1850-2005_c120416.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_hist_simyr1850-2005_c130313.nc</fpftdyn>
 
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 
@@ -515,7 +491,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="ne30np4"       rcp="8.5" sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp8.5_simyr1850-2100_c121001.nc</fpftdyn>
 <fpftdyn hgrid="ne120np4"      rcp="8.5" sim_year_range="1850-2100"
- irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp8.5_simyr1850-2100_c130214.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp8.5_simyr1850-2100_c130311.nc</fpftdyn>
 
 <fpftdyn hgrid="0.47x0.63"     rcp="6"   sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.47x0.63_rcp6.0_simyr1850-2100_c120223.nc</fpftdyn>
@@ -530,7 +506,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="ne30np4"       rcp="6"   sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp6.0_simyr1850-2100_c121001.nc</fpftdyn>
 <fpftdyn hgrid="ne120np4"      rcp="6"   sim_year_range="1850-2100"
- irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp6.0_simyr1850-2100_c130214.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp6.0_simyr1850-2100_c130313.nc</fpftdyn>
 
 <fpftdyn hgrid="0.47x0.63"     rcp="4.5" sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.47x0.63_rcp4.5_simyr1850-2100_c120217.nc</fpftdyn>
@@ -545,7 +521,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="ne30np4"       rcp="4.5" sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp4.5_simyr1850-2100_c121001.nc</fpftdyn>
 <fpftdyn hgrid="ne120np4"      rcp="4.5" sim_year_range="1850-2100"
- irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp4.5_simyr1850-2100_c130214.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp4.5_simyr1850-2100_c130313.nc</fpftdyn>
 
 <fpftdyn hgrid="0.47x0.63"     rcp="2.6" sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata/surfdata.pftdyn_0.47x0.63_rcp2.6_simyr1850-2100_c120215.nc</fpftdyn>
@@ -560,7 +536,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="ne30np4"       rcp="2.6" sim_year_range="1850-2100"
  irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp2.6_simyr1850-2100_c121001.nc</fpftdyn>
 <fpftdyn hgrid="ne120np4"      rcp="2.6" sim_year_range="1850-2100"
- irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp2.6_simyr1850-2100_c130214.nc</fpftdyn>
+ irrig=".false." crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_ne120np4_rcp2.6_simyr1850-2100_c130313.nc</fpftdyn>
 
 <!-- GLC mask datasets (relative to {csmdata}) -->
 <fglcmask hgrid="48x96"    glc_grid="gland20" >glc/cism/griddata/glcmaskdata_48x96_Gland20km.nc</fglcmask>

@@ -1084,9 +1084,9 @@ contains
                 sumpct = sumpct + pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
              end do
              if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
-                write(iulog,*) trim(subname)//' WARNING: sum(pct) over numpft+1 is not = 100.' // &
-                              ' Should only be triggered for ne120 and ne240. '
+                write(iulog,*) trim(subname)//' ERROR: sum(pct) over numpft+1 is not = 100.'
                 write(iulog,*) sumpct, sumpct-100._r8, nl
+                call endrun()
              end if
              if (sumpct < -0.000001_r8) then
                 write(iulog,*) trim(subname)//' ERROR: sum(pct) over numpft+1 is < 0.'

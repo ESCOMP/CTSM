@@ -1,4 +1,140 @@
 ===============================================================
+Tag name:  clm4_0_68
+Originator(s):  erik (Erik Kluzek)
+Date: Sat Mar 16 16:03:14 MDT 2013
+One-line Summary:  Fix mksurfdata_map for ne120np. Error out if SUM(weights)/=100. Photosynthesis change for CLM45.
+
+Purpose of changes:
+
+Bring in ne120fix branch to trunk. This fixes some issues in mksurfdata_map for generation 
+of ne120np surface data file. Put error back in CLM if weights don't sum to 100. Add in 
+Keith Oleson's photosynthesis change. This changes canopy top: triose phosphate utilization rate at 25C to
+be dependent on vcmax25top ( maximum rate of carboxylation) rather than jmax25top (maximum electron 
+transport rate). Update getco2_historical.ncl script to be able to handle rcp files as well.
+
+Update scripts so that I1PT settings for urban single-point files will be used, and IRCP
+will properly do a hybrid startup. And seperate out intel/pgi test lists.
+
+Update datasets for ne120np4 and ne240np4 (CLM40), with updated mksurfdata_map.
+
+Requirements for tag:
+   Tools test, yellowstone batch, fix bug 1632/1643
+
+Test level of tag: critical
+
+Bugs fixed (include bugzilla ID): 1632 (ne120np4 mksurfdata problem)
+                                  1643 (Fix RES_COMPSET_MATCH for I1PT, IRCP*)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+   New surfdata and pftdyn files for ne120np4 (CLM40)
+   New surfdata            files for ne240np4 (CLM40)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, sacks (mksrfdata changes)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+   scripts updated to scripts4_130315c
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  models/lnd/clm/test/system/yellowstone.batch --- Fix some compset names
+
+   M  models/lnd/clm/tools/clm4_5/ncl_scripts/getco2_historical.ncl - Handle rcp CO2 files
+   M  models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90 -- Clean out small PFT values
+   M  models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mksurfdat.F90 -- Clean out small PFT values
+
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml ------- Update ne120/ne240 surfdata/pftdyn datasets
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ------- Delete ALL finidat files as none compatible
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml - Add rcp CO2 datasets: rcp2.6/4.5/6/8.5
+
+   M  models/lnd/clm/src/clm4_5/main/surfrdMod.F90 - Add back abort if surfdata weights don't sum to 100%
+   M  models/lnd/clm/src/clm4_0/main/surfrdMod.F90 - Add back abort if surfdata weights don't sum to 100%
+   M  models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90 - change in photosynthesis
+
+Changes in expected fails for testing:
+
+  build-namelist unit-test: Following fail because of new datasets will pass next tag
+     203 ne120
+     208 ne240
+     306 ne120 20th Century
+     428 48x96 for CLM45 (remove finidat)
+		    failType="FAIL">answers change on restart</entry>
+
+
+  Changes to expected fail:
+
+   <test_system_batch>
+        <yellowstone>
+            <INTEL>
++               <entry testId="ERS.f19_g16.I_1850_CLM45_CN4Me"                     failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CNCENTNoMe"              failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS.f19_g16.I_2000_CLM45_CN4Me_CROP"                failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS_Ld211.f10_f10.ICLM45CNADSPIN"                   failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS_Ld211_D_P224x1.f10_f10.ICLM45CNCROP"            failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS_Ld211_P384x1.f19_g16.ICLM45CNDVCROP"            failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS_Ld211.f10_f10.I_2000_CLM45_VOC_CN"              failType="FAIL">answers change on restart</entry>
++               <entry testId="ERS_D.f19_g16.ICLM45GLCMEC"                         failType="FAIL">answers change on restart</entry>
+
+   <auxTests>
+     <yellowstone>
+	<INTEL>
+	+<entry testId="ERH_D.f19_g16.I1850CLM45CN" failType="FAIL" >Restart difference</entry>
+        +<entry testId="ERB.ne30_g16.I_1948-2004_CLM45" failType="FAIL" >Restart difference</entry>
+        +<entry testId="ERS_E.f19_g16.I1850CRUCLM45CN" failType="FAIL" >Restart difference</entry>
+        +<entry testId="CME.f10_f10.ICN" failType="FAIL" >Restart difference</entry>
+        +<entry testId="ERS_D.f10_f10.ICLM45" failType="FAIL" >Restart difference</entry>
+
+Machines testing ran on:  (Tests in priority order)
+  build-namelist unit tester:   yes
+
+  CESM test lists:
+
+    yellowstone/CESM:              yes
+    yellowstone/CESM/allIcompsets: yes
+
+  test_system testing:
+
+    yellowstone batch:          yes
+    frankfurt interactive:      yes
+
+  test_driver.sh tools testing:
+
+    yellowstone interactive:    yes
+    frankfurt   interactive:    yes
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_68
+
+Changes answers relative to baseline: Yes!
+
+    - what code configurations:
+       All CLM45 change because of change in photosynthisis
+       I1PT compsets change because of scripts bug
+       IRCP compsets now startup with new initial conditions
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_67
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Tue Mar 12 11:14:59 MDT 2013

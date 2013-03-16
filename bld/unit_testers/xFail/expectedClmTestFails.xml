@@ -70,8 +70,6 @@
       </lynx>
       <frankfurt>
          <INTEL>
-              <entry testId="SMS_RLA_Mmpi-serial.f45_f45.ICLM45"                     failType="FAIL" ></entry>
-              <entry testId="ERS_Ln48_D_P1x1_Mmpi-serial.f10_f10.ICLM45CNCROP"       failType="RUN" ></entry>
          </INTEL>
       </frankfurt>
       <yellowstone>
@@ -100,22 +98,28 @@
       </lynx>
       <frankfurt>
          <INTEL>
-              tentry testId="ERS_D_P16x1.f19_g16.I_2000_CLM45_CN4Me_CROP"       failType="RUN" ></entry>
+              <entry testId="ERS_D_P16x1.f19_g16.I_2000_CLM45_CN4Me_CROP"       failType="RUN" ></entry>
          </INTEL>
       </frankfurt>
       <yellowstone>
           <INTEL>
+              <entry testId="ERS.f19_g16.I_1850_CLM45_CN4Me"                     failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_D.f19_g16.I_1850_CLM45_CNCENTNoMe"              failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS.f19_g16.I_2000_CLM45_CN4Me_CROP"                failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_Ld211.f10_f10.ICLM45CNADSPIN"                   failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_Ld211_D_P224x1.f10_f10.ICLM45CNCROP"            failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_Ld211_P384x1.f19_g16.ICLM45CNDVCROP"            failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_Ld211.f10_f10.I_2000_CLM45_VOC_CN"              failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_D.f19_g16.ICLM45GLCMEC"                         failType="FAIL">answers change on restart</entry>
               <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"                 failType="RUN" >History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_oldhyd"        failType="TFAIL"></entry>
-              <entry testId="SMS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_anoxia_wtsat"       failType="TFAIL"></entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_ciso"      failType="TFAIL"></entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_pftr" failType="TFAIL"></entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set3_pftroot"   failType="TFAIL"></entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.yellowstone_intel_rootlit"     failType="TFAIL"></entry>
-              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_vrtlay"             failType="TFAIL"></entry>
-              <entry testId="PET_D_P1x32.ne30_g16.ICN"                           failType="SFAIL"></entry>
+              <entry testId="SMS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_anoxia_wtsat"       failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_ciso"      failType="FAIL">answers change on restart</entry>
+              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_pftr" failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set3_pftroot"   failType="FAIL">answers change on restart</entry>
+              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.yellowstone_intel_rootlit"     failType="FAIL">answers change on restart</entry>
+              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_vrtlay"             failType="FAIL">answers change on restart</entry>
               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="FAIL"></entry>
           </INTEL>
       </yellowstone>
@@ -146,10 +150,14 @@
       <auxTests>
          <yellowstone>
             <INTEL>
+               <entry testId="ERH_D.f19_g16.I1850CLM45CN"     failType="FAIL" >Restart difference</entry>
+               <entry testId="ERB.ne30_g16.I_1948-2004_CLM45" failType="FAIL" >Restart difference</entry>
+               <entry testId="ERS_E.f19_g16.I1850CRUCLM45CN"  failType="FAIL" >Restart difference</entry>
+               <entry testId="CME.f10_f10.ICN"                failType="FAIL" >Restart difference</entry>
+               <entry testId="ERS_D.f10_f10.ICLM45"      failType="FAIL" >Restart difference</entry>
                <entry testId="PET_PT.f19_g16.I1850CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="ERB.ne30_g16.I_1948-2004"  failType="FAIL" >Restart difference</entry>
                <entry testId="PET_PT.f10_f10.I20TRCN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
-
                <entry testId="PET_PT.f19_g16.I1850CLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="ERS_E.f19_g16.ICLM451850"       failType="TFAIL">bad compset name</entry>
                <entry testId="ERS_D.f19_g16.IGRCP26CLM45CN"   failType="RUN"  >surfdata and pftdyn file mismatched</entry>
