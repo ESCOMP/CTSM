@@ -98,7 +98,6 @@ contains
 #endif
     real(r8), pointer :: zi(:,:)            ! interface level below a "z" level (m)
     real(r8), pointer :: wa(:)              ! water in the unconfined aquifer (mm)
-    real(r8), pointer :: wt(:)              ! total water storage (unsaturated soil water + groundwater) (mm)
     real(r8), pointer :: zwt(:)             ! water table depth (m)
     real(r8), pointer :: h2osfc(:)          ! surface water (mm)
     real(r8), pointer :: t_h2osfc(:)        ! surface water temperature
@@ -218,7 +217,6 @@ contains
     t_grnd           => clm3%g%l%c%ces%t_grnd
     zi               => clm3%g%l%c%cps%zi
     wa               => clm3%g%l%c%cws%wa
-    wt               => clm3%g%l%c%cws%wt
     zwt              => clm3%g%l%c%cws%zwt
     snw_rds          => clm3%g%l%c%cps%snw_rds
     snw_rds_top      => clm3%g%l%c%cps%snw_rds_top
@@ -487,7 +485,6 @@ contains
     h2osoi_ice(begc:endc,-nlevsno+1:) = spval
 
     wa(begc:endc)  = 5000._r8
-    wt(begc:endc)  = 5000._r8
     zwt(begc:endc) = 0._r8
 
     do c = begc,endc
@@ -496,11 +493,9 @@ contains
           if (ltype(l) == isturb) then
              if (ctype(c) == icol_road_perv) then
                 wa(c)  = 4800._r8
-                wt(c)  = wa(c)
                 zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
              else
                 wa(c)  = spval
-                wt(c)  = spval
                 zwt(c) = spval
              end if
              ! initialize frost_table, zwt_perched
@@ -508,7 +503,6 @@ contains
              frost_table(c) = spval
           else
              wa(c)  = 4000._r8
-             wt(c)  = wa(c)
              zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
              ! initialize frost_table, zwt_perched to bottom of soil column
              zwt_perched(c) = zi(c,nlevsoi)

@@ -97,7 +97,7 @@ contains
 ! The following clmtype components should NOT be initialized here
 ! since they are set in routine clm_map which is called before this
 ! routine is invoked
-!    *%area, *%wt, *%wtlnd, *%wtxy, *%ixy, *%jxy, *%mxy, %snindex
+!    *%area, *%wtlnd, *%wtxy, *%ixy, *%jxy, *%mxy, %snindex
 !    *%ifspecial, *%ityplun, *%itype
 !    *%pfti, *%pftf, *%pftn
 !    *%coli, *%colf, *%coln
@@ -2920,7 +2920,6 @@ contains
     allocate(cps%hkdepth(beg:end))
     allocate(cps%wtfact(beg:end))
     allocate(cps%fracice(beg:end,nlevgrnd))
-    allocate(cps%icefrac(beg:end,nlevgrnd))    
     allocate(cps%gwc_thr(beg:end))
     allocate(cps%mss_frc_cly_vld(beg:end))
     allocate(cps%mbl_bsn_fct(beg:end))
@@ -3074,7 +3073,6 @@ contains
     cps%hkdepth(beg:end) = nan
     cps%wtfact(beg:end) = nan
     cps%fracice(beg:end,1:nlevgrnd) = nan
-    cps%icefrac(beg:end,1:nlevgrnd) = nan    
     cps%gwc_thr(beg:end) = nan
     cps%mss_frc_cly_vld(beg:end) = nan
     cps%mbl_bsn_fct(beg:end) = nan
@@ -3342,7 +3340,6 @@ contains
     allocate(cws%finundated(beg:end))
 #endif
     allocate(cws%wa(beg:end))
-    allocate(cws%wt(beg:end))
     allocate(cws%qcharge(beg:end))
     allocate(cws%smp_l(beg:end,1:nlevgrnd))
     allocate(cws%hk_l(beg:end,1:nlevgrnd))
@@ -3375,7 +3372,6 @@ contains
     cws%finundated(beg:end) = nan
 #endif
     cws%wa(beg:end) = spval
-    cws%wt(beg:end) = nan
     cws%qcharge(beg:end) = nan
     cws%smp_l(beg:end,1:nlevgrnd) = spval
     cws%hk_l(beg:end,1:nlevgrnd) = spval
@@ -3708,7 +3704,6 @@ contains
     allocate(cwf%qflx_h2osfc_surf(beg:end))
     allocate(cwf%qflx_snow_h2osfc(beg:end))
     allocate(cwf%qflx_drain_perched(beg:end))
-    allocate(cwf%qflx_deficit(beg:end))
     allocate(cwf%qflx_floodc(beg:end))
     allocate(cwf%qflx_snow_melt(beg:end))
 
@@ -3716,7 +3711,6 @@ contains
     cwf%qflx_h2osfc_surf(beg:end) = spval
     cwf%qflx_snow_h2osfc(beg:end) = nan
     cwf%qflx_drain_perched(beg:end) = spval
-    cwf%qflx_deficit(beg:end) = spval
     cwf%qflx_floodc(beg:end) = spval
     cwf%qflx_snow_melt(beg:end) = spval
   end subroutine init_column_wflux_type

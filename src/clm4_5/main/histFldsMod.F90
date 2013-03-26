@@ -639,17 +639,6 @@ contains
          ptr_pft=clm3%g%l%c%p%pps%rssha, set_lake=spval, set_urb=spval, &
          default='inactive')
 
-    call hist_addfld1d (fname='RHAL', units='none',  &
-         avgflag='M', long_name='relative humidity of canopy air vs leaf', &
-         ptr_pft=clm3%g%l%c%p%pps%rhal, set_lake=spval, set_urb=spval, &
-         default='inactive')
-
-
-    call hist_addfld1d (fname='VPDAL', units='Pa',  &
-         avgflag='M', long_name='vapor pressure deficit of canopy air vs leaf', &
-         ptr_pft=clm3%g%l%c%p%pps%vpdal, set_lake=spval, set_urb=spval, &
-         default='inactive')
-
     call hist_addfld1d (fname='BTRAN', units='unitless',  &
          avgflag='A', long_name='transpiration beta factor', &
          ptr_pft=clm3%g%l%c%p%pps%btran, set_lake=spval, set_urb=spval)
@@ -838,10 +827,6 @@ contains
     call hist_addfld1d (fname='WA',  units='mm',  &
          avgflag='A', long_name='water in the unconfined aquifer (vegetated landunits only)', &
          ptr_col=clm3%g%l%c%cws%wa, l2g_scale_type='veg')
-
-    call hist_addfld1d (fname='WT',  units='mm',  &
-         avgflag='A', long_name='DEPRECATED total water storage (unsaturated soil water + groundwater, veg landunits)', &
-         ptr_col=clm3%g%l%c%cws%wt, l2g_scale_type='veg')
 
     call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
          avgflag='A', long_name='aquifer recharge rate (vegetated landunits only)', &

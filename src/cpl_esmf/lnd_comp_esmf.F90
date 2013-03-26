@@ -1194,6 +1194,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
         a2l%forc_flood(g)   = -fptr(index_x2l_Flrr_flood,i)  
 
+        a2l%volr(g)   = fptr(index_x2l_Slrr_volr,i)
+
         ! Determine required receive fields
 
         a2l%forc_hgt(g)     = fptr(index_x2l_Sa_z,i)         ! zgcmxy  Atm state m

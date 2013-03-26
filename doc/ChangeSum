@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_69      muszala 03/26/2013 remove hydro reorder, volr and esmf mods
    clm4_0_68         erik 03/16/2013  Fix some issues in mksurfdata_map for generation of ne120np surface data file. Put error back in CLM if weights don't sum to 100. Add in Keith's photosynthesis change for  CLM45.
    clm4_0_67      muszala 03/12/2013 Jinyun photosynthesis and hydrology reorder
    clm4_0_66        sacks 03/07/2013 turn off subgrid topography snow parameterization for glc_mec landunits

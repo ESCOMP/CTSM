@@ -173,7 +173,7 @@
 
                <entry testId="PET_PT.f19_g16.ICLM451850"      failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="SMS.T31_g37.IG4804CLM45"        failType="FAIL" >checkWeights error, probably due to old-format urban on surface dataset</entry>
-               <entry testId="SMS.1x1_numaIA.ICLM45CN_CROP"   failType="TFAIL">Bad compset name: ICNCROP</entry>
+               <entry testId="SMS.1x1_numaIA.ICLM45CNCROP"    failType="TFAIL">Bad compset name: ICNCROP</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
             </PGI>
          </yellowstone>

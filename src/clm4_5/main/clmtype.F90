@@ -1110,7 +1110,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: hkdepth(:)            !decay factor (m)
    real(r8), pointer :: wtfact(:)             !maximum saturated fraction for a gridcell
    real(r8), pointer :: fracice(:,:)          !fractional impermeability (-)
-   real(r8), pointer :: icefrac(:,:)          !fraction of ice      
    real(r8), pointer :: csol(:,:)             !heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
    real(r8), pointer :: tkmg(:,:)             !thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd) 
    real(r8), pointer :: tkdry(:,:)            !thermal conductivity, dry soil (W/m/Kelvin) (nlevgrnd) 
@@ -1326,7 +1325,6 @@ type, public :: column_wstate_type
    real(r8), pointer :: int_snow(:)           !integrated snowfall (mm H2O)
    real(r8), pointer :: fcov(:)               !fractional impermeable area
    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (mm)
-   real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
    real(r8), pointer :: qcharge(:)            !aquifer recharge rate (mm/s)
    real(r8), pointer :: smp_l(:,:)            !soil matric potential (mm)
    real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
@@ -1540,7 +1538,6 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_h2osfc_surf(:)   !surface water runoff
    real(r8), pointer :: qflx_snow_h2osfc(:)   !snow falling on surface water
    real(r8), pointer :: qflx_drain_perched(:) ! sub-surface runoff from perched wt (mm H2O /s)
-   real(r8), pointer :: qflx_deficit(:)       ! water deficit to keep non-negative liquid water content (mm H2O)
    real(r8), pointer :: qflx_floodc(:) 	      ! flood water flux at column level
    real(r8), pointer :: qflx_sl_top_soil(:)   ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
    real(r8), pointer :: qflx_snomelt(:)       ! snow melt (mm H2O /s)

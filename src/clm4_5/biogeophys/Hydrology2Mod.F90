@@ -10,14 +10,15 @@ module Hydrology2Mod
 !
 ! !USES:
    use shr_kind_mod, only : r8 => shr_kind_r8
+   use clm_varctl,   only : iulog
+   use abortutils,   only : endrun
 
 ! !PUBLIC TYPES:
   implicit none
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: Hydrology2A        ! Calculates soil/snow hydrology, without drainage
-  public :: Hydrology2B        ! Calculates soil/snow hydrology, with drainage
+  public :: Hydrology2        ! Calculates soil/snow hydrology
 !
 ! !REVISION HISTORY:
 ! 2/28/02 Peter Thornton: Migrated to new data structures.
@@ -25,7 +26,6 @@ module Hydrology2Mod
 ! 11/05/03 Peter Thornton: Added calculation of soil water potential
 !   for use in CN phenology code.
 ! 04/25/07 Keith Oleson: CLM3.5 Hydrology
-! 12/09/2012 Jinyun Tang: Separate into A and B
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -35,10 +35,10 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: Hydrology2A
+! !IROUTINE: Hydrology2
 !
 ! !INTERFACE:
-  subroutine Hydrology2A(lbc, ubc, lbp, ubp, &
+  subroutine Hydrology2(lbc, ubc, lbp, ubp, &
                         num_nolakec, filter_nolakec, &
                         num_hydrologyc, filter_hydrologyc, &
                         num_urbanc, filter_urbanc, &
@@ -46,7 +46,6 @@ contains
                         num_nosnowc, filter_nosnowc)
 !
 ! !DESCRIPTION:
-! muszala March 7 2013 - description needs updating after Jinyun mods.
 ! This is the main subroutine to execute the calculation of soil/snow
 ! hydrology
 ! Calling sequence is:
@@ -56,6 +55,7 @@ contains
 !    -> Infiltration:          infiltration into surface soil layer
 !    -> SoilWater:             soil water movement between layers
 !          -> Tridiagonal      tridiagonal matrix solution
+!    -> Drainage:              subsurface runoff
 !    -> SnowCompaction:        compaction of snow layers
 !    -> CombineSnowLayers:     combine snow layers that are thinner than minimum
 !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
@@ -63,14 +63,16 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l
-    use clm_varcon      , only : denh2o, denice, istsoil, isturb,  spval, &
-                                 icol_roof, icol_sunwall, &
-                                 icol_shadewall
+    use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, isturb, istice_mec, spval, &
+                                 icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
+                                 icol_shadewall, istdlak, &
+                                 tfrz, hfus, grav
     use clm_varcon      , only : istcrop
+    use clm_varctl      , only : glc_dyntopo
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
-    use SoilHydrologyMod, only : Infiltration, SoilWater, SurfaceRunoff, WaterTable
+    use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
     use clm_time_manager, only : get_step_size, get_nstep, is_perpetual
 
 !
@@ -84,12 +86,10 @@ contains
     integer, intent(in) :: filter_hydrologyc(ubc-lbc+1)! column filter for soil points
     integer, intent(in) :: num_urbanc                  ! number of column urban points in column filter
     integer, intent(in) :: filter_urbanc(ubc-lbc+1)    ! column filter for urban points
-    ! muszala March 7 2013, the following 4 dummy args are set to inout due to 
-    ! an ifort bug, they should be 'in'.  http://software.intel.com/en-us/forums/topic/270899
-    integer, intent(inout) :: num_snowc                  ! number of column snow points
-    integer, intent(inout) :: filter_snowc(ubc-lbc+1)    ! column filter for snow points
-    integer, intent(inout) :: num_nosnowc                ! number of column non-snow points
-    integer, intent(inout) :: filter_nosnowc(ubc-lbc+1)  ! column filter for non-snow points
+    integer  :: num_snowc                  ! number of column snow points
+    integer  :: filter_snowc(ubc-lbc+1)    ! column filter for snow points
+    integer  :: num_nosnowc                ! number of column non-snow points
+    integer  :: filter_nosnowc(ubc-lbc+1)  ! column filter for non-snow points
 !
 ! !CALLED FROM:
 ! subroutine clm_driver1
@@ -102,17 +102,29 @@ contains
 ! local pointers to implicit in arguments
 !
     real(r8), pointer :: frac_sno_eff(:)  !eff.  snow cover fraction (col) [frc]
+    real(r8), pointer :: qflx_evap_soi(:) ! soil evaporation
+    real(r8), pointer :: h2osfc(:)        ! surface water (mm)
     real(r8), pointer :: frac_h2osfc(:)   ! fraction of ground covered by surface water (0 to 1)
     real(r8), pointer :: t_h2osfc(:) 	  ! surface water temperature
+    real(r8), pointer :: qflx_drain_perched(:)    ! sub-surface runoff from perched zwt (mm H2O /s)
+    real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
+    real(r8), pointer :: qflx_h2osfc_surf(:)!surface water runoff (mm/s)
+    logical , pointer :: cactive(:)       ! true=>do computations on this column (see reweightMod for details)
+    integer , pointer :: cgridcell(:)     ! column's gridcell
     integer , pointer :: clandunit(:)     ! column's landunit
     integer , pointer :: ityplun(:)       ! landunit type
     integer , pointer :: ctype(:)         ! column type
     integer , pointer :: snl(:)           ! number of snow layers
+    real(r8), pointer :: h2ocan(:)        ! canopy water (mm H2O)
     real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
     real(r8), pointer :: watsat(:,:)      ! volumetric soil water at saturation (porosity)
     real(r8), pointer :: sucsat(:,:)      ! minimum soil suction (mm)
     real(r8), pointer :: bsw(:,:)         ! Clapp and Hornberger "b"
     real(r8), pointer :: z(:,:)           ! layer depth  (m)
+    real(r8), pointer :: forc_rain(:)     ! rain rate [mm/s]
+    real(r8), pointer :: forc_snow(:)     ! snow rate [mm/s]
+    real(r8), pointer :: begwb(:)         ! water mass begining of the time step
+    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
 #ifndef STNDRD_BSW_FOR_SOILPSI_CALC
     real(r8), pointer :: bsw2(:,:)        ! Clapp and Hornberger "b" for CN code
     real(r8), pointer :: psisat(:,:)      ! soil water potential at saturation for CN code (MPa)
@@ -124,10 +136,18 @@ contains
 !
     real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)
     real(r8), pointer :: zi(:,:)          ! interface depth (m)
+    real(r8), pointer :: zwt(:)           ! water table depth (m)
+    real(r8), pointer :: fcov(:)          ! fractional impermeable area
+    real(r8), pointer :: fsat(:)          ! fractional area with water table at surface
+    real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
+    real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
     real(r8), pointer :: smp_l(:,:)       ! soil matrix potential [mm]
+    real(r8), pointer :: hk_l(:,:)        ! hydraulic conductivity (mm/s)
+    real(r8), pointer :: qflx_rsub_sat(:) ! soil saturation excess [mm h2o/s]
 !
 ! local pointers to implicit out arguments
 !
+    real(r8), pointer :: endwb(:)         ! water mass end of the time step
     real(r8), pointer :: wf(:)            ! soil water as frac. of whc for top 0.5 m
     real(r8), pointer :: snowice(:)       ! average snow ice lens
     real(r8), pointer :: snowliq(:)       ! average snow liquid water
@@ -138,6 +158,14 @@ contains
     real(r8), pointer :: t_soi_10cm(:)         ! soil temperature in top 10cm of soil (Kelvin)
     real(r8), pointer :: h2osoi_liqice_10cm(:) ! liquid water + ice lens in top 10cm of soil (kg/m2)
     real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+    real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_infl(:)     ! infiltration (mm H2O /s)
+    real(r8), pointer :: qflx_qrgwl(:)    ! qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_irrig(:)    ! irrigation flux (mm H2O /s)
+    real(r8), pointer :: qflx_runoff(:)   ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+    real(r8), pointer :: qflx_runoff_u(:) ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+    real(r8), pointer :: qflx_runoff_r(:) ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
     real(r8), pointer :: t_grnd_u(:)      ! Urban ground temperature (Kelvin)
     real(r8), pointer :: t_grnd_r(:)      ! Rural ground temperature (Kelvin)
     real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
@@ -148,6 +176,7 @@ contains
     real(r8), pointer :: snw_rds(:,:)       ! effective snow grain radius (col,lyr) [microns, m^-6]
     real(r8), pointer :: snw_rds_top(:)     ! effective snow grain size, top layer(col) [microns]
     real(r8), pointer :: sno_liq_top(:)     ! liquid water fraction in top snow layer (col) [frc]
+    real(r8), pointer :: frac_sno(:)        ! snow cover fraction (col) [frc]
     real(r8), pointer :: h2osno_top(:)      ! mass of snow in top layer (col) [kg]
 
     real(r8), pointer :: mss_bcpho(:,:)     ! mass of hydrophobic BC in snow (col,lyr) [kg]
@@ -177,6 +206,8 @@ contains
     real(r8), pointer :: mss_cnc_dst3(:,:)  ! mass concentration of dust species 3 (col,lyr) [kg/kg]
     real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
     logical , pointer :: do_capsnow(:)      ! true => do snow capping
+    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s)
+    real(r8), pointer :: qflx_glcice_frz(:) ! ice growth (positive definite) (mm H2O/s)
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -186,6 +217,7 @@ contains
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
     real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
+    real(r8) :: icefrac(lbc:ubc,1:nlevgrnd)! ice fraction in layer
     real(r8) :: dwat(lbc:ubc,1:nlevgrnd)   ! change in soil water
     real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
@@ -205,6 +237,10 @@ contains
 
 !-----------------------------------------------------------------------
 
+    ! Assign local pointers to derived subtypes components (gridcell-level)
+
+    forc_rain => clm_a2l%forc_rain
+    forc_snow => clm_a2l%forc_snow
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -213,16 +249,29 @@ contains
     ! Assign local pointers to derived subtypes components (column-level)
 
     frac_sno_eff      => clm3%g%l%c%cps%frac_sno_eff 
+    qflx_evap_soi     => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
+    h2osfc            => clm3%g%l%c%cws%h2osfc
     frac_h2osfc       => clm3%g%l%c%cps%frac_h2osfc
     t_h2osfc          => clm3%g%l%c%ces%t_h2osfc
+    qflx_drain_perched=> clm3%g%l%c%cwf%qflx_drain_perched
+    qflx_floodg       => clm_a2l%forc_flood
+    qflx_h2osfc_surf  => clm3%g%l%c%cwf%qflx_h2osfc_surf
+    cactive           => clm3%g%l%c%active
+    cgridcell         => clm3%g%l%c%gridcell
     clandunit         => clm3%g%l%c%landunit
     ctype             => clm3%g%l%c%itype
     snl               => clm3%g%l%c%cps%snl
     t_grnd            => clm3%g%l%c%ces%t_grnd
+    h2ocan            => clm3%g%l%c%cws%pws_a%h2ocan
     h2osno            => clm3%g%l%c%cws%h2osno
     wf                => clm3%g%l%c%cps%wf
     snowice           => clm3%g%l%c%cws%snowice
     snowliq           => clm3%g%l%c%cws%snowliq
+    zwt               => clm3%g%l%c%cws%zwt
+    fcov              => clm3%g%l%c%cws%fcov
+    fsat              => clm3%g%l%c%cws%fsat
+    wa                => clm3%g%l%c%cws%wa
+    qcharge           => clm3%g%l%c%cws%qcharge
     watsat            => clm3%g%l%c%cps%watsat
     sucsat            => clm3%g%l%c%cps%sucsat
     bsw               => clm3%g%l%c%cps%bsw
@@ -235,6 +284,14 @@ contains
     h2osoi_vol        => clm3%g%l%c%cws%h2osoi_vol
     t_soi_10cm         => clm3%g%l%c%ces%t_soi_10cm
     h2osoi_liqice_10cm => clm3%g%l%c%cws%h2osoi_liqice_10cm
+    qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+    qflx_drain        => clm3%g%l%c%cwf%qflx_drain
+    qflx_surf         => clm3%g%l%c%cwf%qflx_surf
+    qflx_infl         => clm3%g%l%c%cwf%qflx_infl
+    qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
+    endwb             => clm3%g%l%c%cwbal%endwb
+    begwb             => clm3%g%l%c%cwbal%begwb
 #ifndef STNDRD_BSW_FOR_SOILPSI_CALC
     bsw2              => clm3%g%l%c%cps%bsw2
     psisat            => clm3%g%l%c%cps%psisat
@@ -242,6 +299,11 @@ contains
 #endif
     soilpsi           => clm3%g%l%c%cps%soilpsi
     smp_l             => clm3%g%l%c%cws%smp_l
+    hk_l              => clm3%g%l%c%cws%hk_l
+    qflx_rsub_sat     => clm3%g%l%c%cwf%qflx_rsub_sat
+    qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
+    qflx_runoff_u     => clm3%g%l%c%cwf%qflx_runoff_u
+    qflx_runoff_r     => clm3%g%l%c%cwf%qflx_runoff_r
     t_grnd_u          => clm3%g%l%c%ces%t_grnd_u
     t_grnd_r          => clm3%g%l%c%ces%t_grnd_r
     snot_top          => clm3%g%l%c%cps%snot_top
@@ -249,6 +311,7 @@ contains
     snw_rds           => clm3%g%l%c%cps%snw_rds    
     snw_rds_top       => clm3%g%l%c%cps%snw_rds_top
     sno_liq_top       => clm3%g%l%c%cps%sno_liq_top
+    frac_sno          => clm3%g%l%c%cps%frac_sno
     h2osno_top        => clm3%g%l%c%cps%h2osno_top
     mss_bcpho         => clm3%g%l%c%cps%mss_bcpho
     mss_bcphi         => clm3%g%l%c%cps%mss_bcphi
@@ -277,7 +340,9 @@ contains
     mss_cnc_dst4      => clm3%g%l%c%cps%mss_cnc_dst4
     do_capsnow        => clm3%g%l%c%cps%do_capsnow
     qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
     smpmin            => clm3%g%l%c%cps%smpmin
+    qflx_glcice_frz   => clm3%g%l%c%cwf%qflx_glcice_frz
 
     ! Determine time step and step size
 
@@ -298,7 +363,7 @@ contains
 
     ! moved vol_liq from SurfaceRunoff to Infiltration
     call SurfaceRunoff(lbc, ubc, lbp, ubp, num_hydrologyc, filter_hydrologyc, &
-                       num_urbanc, filter_urbanc)
+                       num_urbanc, filter_urbanc,icefrac )
 
     call Infiltration(lbc, ubc,  num_hydrologyc, filter_hydrologyc, &
                       num_urbanc, filter_urbanc, vol_liq)
@@ -307,8 +372,9 @@ contains
                    num_urbanc, filter_urbanc, &
                    vol_liq, dwat, hk, dhkdw)
 
-    call WaterTable(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
-                  num_urbanc, filter_urbanc)
+    call Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+                  num_urbanc, filter_urbanc, &
+                  vol_liq, hk, icefrac)
 
     if (.not. is_perpetual()) then
 
@@ -383,11 +449,6 @@ contains
 
     ! Determine ground temperature, ending water balance and volumetric soil water
     ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
-    
-    ! It is possible that these two variables "t_soi_10cm and h2osoi_liqice_10cm"
-    ! will be used for biogeochemistry modeling, so I leave them here for the
-    ! moment, Jinyun Tang, Oct. 31, 2012
-
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
@@ -442,6 +503,14 @@ contains
        if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          t_grnd_r(c) = t_soisno(c,snl(c)+1)
        end if
+       if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
+          .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
+         endwb(c) = h2ocan(c) + h2osno(c)
+       else
+          ! add h2osfc to water balance
+          endwb(c) = h2ocan(c) + h2osno(c) + h2osfc(c) + wa(c)
+
+       end if
     end do
 
     do j = 1, nlevgrnd
@@ -450,10 +519,85 @@ contains
           if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
                .or. ctype(c) == icol_roof) .and. j > nlevurb) then
           else
+            endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
             h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
           end if
        end do
     end do
+
+    ! Determine wetland and land ice hydrology (must be placed here
+    ! since need snow updated from CombineSnowLayers)
+
+    do fc = 1,num_nolakec
+       c = filter_nolakec(fc)
+       l = clandunit(c)
+       g = cgridcell(c)
+       if (ityplun(l)==istwet .or. ityplun(l)==istice      &
+                              .or. ityplun(l)==istice_mec) then
+          qflx_drain(c)         = 0._r8
+          qflx_drain_perched(c) = 0._r8
+          qflx_h2osfc_surf(c)   = 0._r8
+          qflx_irrig(c)         = 0._r8
+          qflx_surf(c)          = 0._r8
+          qflx_infl(c)          = 0._r8
+          ! add flood water flux to runoff for wetlands/glaciers
+          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
+                          (endwb(c)-begwb(c))/dtime
+          ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
+          ! (Negative qflx_glcice => positive contribution to runoff)
+          ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).
+          !       This code will not work if Hydrology2 is called before Biogeophysics2, or if
+          !        qflx_snwcp_ice has alread been included in qflx_glcice.
+          !       (The snwcp flux is added to qflx_glcice later in this subroutine.)
+
+          if (glc_dyntopo .and. ityplun(l)==istice_mec) then
+             qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice(c)   ! meltwater from melted ice
+          endif
+          fcov(c)       = spval
+          fsat(c)       = spval
+          qcharge(c)    = spval
+          qflx_rsub_sat(c) = spval
+       else if (ityplun(l) == isturb .and. ctype(c) /= icol_road_perv) then
+          fcov(c)               = spval
+          fsat(c)               = spval
+          qflx_drain_perched(c) = 0._r8
+          qflx_h2osfc_surf(c)   = 0._r8
+          qcharge(c)            = spval
+          qflx_rsub_sat(c)      = spval
+       end if
+       ! If snow exceeds the thickness limit in glacier_mec columns, convert to an ice flux.
+       ! For dynamic glacier topography, remove qflx_snwcp_ice from the runoff.
+       ! Note that qflx_glcice can also have a negative component from melting of bare ice,
+       !  as computed in SoilTemperatureMod.F90
+
+       if (ityplun(l)==istice_mec) then
+
+          qflx_glcice_frz(c) = qflx_snwcp_ice(c)
+          qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
+
+          ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
+          ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
+          !  CLM runoff terms are not changed.
+ 
+          if (glc_dyntopo) qflx_snwcp_ice(c) = 0._r8
+
+       endif   ! istice_mec
+
+
+       qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
+
+       if ((ityplun(l)==istsoil .or. ityplun(l)==istcrop) &
+           .and. cactive(c)) then
+          qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
+       end if
+       if (ityplun(l)==isturb) then
+         qflx_runoff_u(c) = qflx_runoff(c)
+       else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+         qflx_runoff_r(c) = qflx_runoff(c)
+       end if
+
+    end do
+
 #if (defined CN) 
     ! Update soilpsi.
     ! ZMS: Note this could be merged with the following loop updating smp_l in the future.
@@ -488,7 +632,7 @@ contains
     ! Update smp_l for history and for ch4Mod.
     ! ZMS: Note, this form, which seems to be the same as used in SoilWater, DOES NOT distinguish between
     ! ice and water volume, in contrast to the soilpsi calculation above. It won't be used in ch4Mod if
-    ! t_soisno <= tfrz, though. ! muszala March 7 2013- tfrz not used in this code anymore.
+    ! t_soisno <= tfrz, though.
     do j = 1, nlevgrnd
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
@@ -675,268 +819,6 @@ contains
        sno_liq_top(c)     = spval
     enddo
 
-  end subroutine Hydrology2A
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: Hydrology2B
-!
-! !INTERFACE:
-  subroutine Hydrology2B(lbc, ubc, lbp, ubp, &
-                        num_nolakec, filter_nolakec, &
-                        num_hydrologyc, filter_hydrologyc, &
-                        num_urbanc, filter_urbanc)
-!
-! !DESCRIPTION:
-! This is the main subroutine to execute the calculation of soil/snow
-! hydrology
-! muszala March 7 2013 - description needs updating after Jinyun mods.
-! Calling sequence is:
-!  Hydrology2:                 surface hydrology driver
-!    -> Drainage:              subsurface runoff
-!
-! !USES:
-    use clmtype
-    use clm_atmlnd      , only : clm_a2l
-    use clm_varcon      , only : istice, istwet, istsoil, isturb, istice_mec, spval, &
-                                 icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
-                                 icol_shadewall
-    use clm_varcon      , only : istcrop
-    use clm_varctl      , only : glc_dyntopo
-    use clm_varpar      , only : nlevgrnd, nlevurb
-    use SoilHydrologyMod, only : Drainage
-    use clm_time_manager, only : get_step_size, get_nstep
-
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: lbc, ubc                    ! column bounds
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
-    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
-    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
-    integer, intent(in) :: num_hydrologyc              ! number of column soil points in column filter
-    integer, intent(in) :: filter_hydrologyc(ubc-lbc+1)! column filter for soil points
-    integer, intent(in) :: num_urbanc                  ! number of column urban points in column filter
-    integer, intent(in) :: filter_urbanc(ubc-lbc+1)    ! column filter for urban points
-!
-! !CALLED FROM:
-! subroutine clm_driver1
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: h2osfc(:)        ! surface water (mm)
-    real(r8), pointer :: qflx_drain_perched(:)    ! sub-surface runoff from perched zwt (mm H2O /s)
-    real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
-    logical , pointer :: cactive(:)       ! true=>do computations on this column (see reweightMod for details)
-    real(r8), pointer :: qflx_h2osfc_surf(:)!surface water runoff (mm/s)
-    integer , pointer :: cgridcell(:)     ! column's gridcell
-    integer , pointer :: clandunit(:)     ! column's landunit
-    integer , pointer :: ityplun(:)       ! landunit type
-    integer , pointer :: ctype(:)         ! column type
-    real(r8), pointer :: h2ocan(:)        ! canopy water (mm H2O)
-    real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
-    real(r8), pointer :: forc_rain(:)     ! rain rate [mm/s]
-    real(r8), pointer :: forc_snow(:)     ! snow rate [mm/s]
-    real(r8), pointer :: begwb(:)         ! water mass begining of the time step
-    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-!
-! local pointers to implicit inout arguments
-!
-    real(r8), pointer :: fcov(:)          ! fractional impermeable area
-    real(r8), pointer :: fsat(:)          ! fractional area with water table at surface
-    real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
-    real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
-    real(r8), pointer :: qflx_rsub_sat(:) ! soil saturation excess [mm h2o/s]
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: endwb(:)         ! water mass end of the time step
-    real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
-    real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_infl(:)     ! infiltration (mm H2O /s)
-    real(r8), pointer :: qflx_qrgwl(:)    ! qflx_surf at glaciers, wetlands, lakes
-    real(r8), pointer :: qflx_irrig(:)    ! irrigation flux (mm H2O /s)
-    real(r8), pointer :: qflx_runoff(:)   ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-    real(r8), pointer :: qflx_runoff_u(:) ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
-    real(r8), pointer :: qflx_runoff_r(:) ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-    real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
-
-
-    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s)
-    real(r8), pointer :: qflx_glcice_frz(:) ! ice growth (positive definite) (mm H2O/s)
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
-!
-    integer  :: g,l,c,j,fc                 ! indices
-    integer  :: nstep                      ! time step number
-    real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
-    real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
-
-!-----------------------------------------------------------------------
-
-    ! Assign local pointers to derived subtypes components (gridcell-level)
-
-    forc_rain => clm_a2l%forc_rain
-    forc_snow => clm_a2l%forc_snow
-
-    ! Assign local pointers to derived subtypes components (landunit-level)
-
-    ityplun => clm3%g%l%itype
-
-    ! Assign local pointers to derived subtypes components (column-level)
-
-    h2osfc            => clm3%g%l%c%cws%h2osfc
-    qflx_drain_perched=> clm3%g%l%c%cwf%qflx_drain_perched
-    qflx_floodg       => clm_a2l%forc_flood
-    cactive           => clm3%g%l%c%active
-    qflx_h2osfc_surf  => clm3%g%l%c%cwf%qflx_h2osfc_surf
-    cgridcell         => clm3%g%l%c%gridcell
-    clandunit         => clm3%g%l%c%landunit
-    ctype             => clm3%g%l%c%itype
-    h2ocan            => clm3%g%l%c%cws%pws_a%h2ocan
-    h2osno            => clm3%g%l%c%cws%h2osno
-    fcov              => clm3%g%l%c%cws%fcov
-    fsat              => clm3%g%l%c%cws%fsat
-    wa                => clm3%g%l%c%cws%wa
-    qcharge           => clm3%g%l%c%cws%qcharge
-    h2osoi_ice        => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
-    qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
-    qflx_drain        => clm3%g%l%c%cwf%qflx_drain
-    qflx_surf         => clm3%g%l%c%cwf%qflx_surf
-    qflx_infl         => clm3%g%l%c%cwf%qflx_infl
-    qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
-    qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
-    endwb             => clm3%g%l%c%cwbal%endwb
-    begwb             => clm3%g%l%c%cwbal%begwb
-    qflx_rsub_sat     => clm3%g%l%c%cwf%qflx_rsub_sat
-    qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
-    qflx_runoff_u     => clm3%g%l%c%cwf%qflx_runoff_u
-    qflx_runoff_r     => clm3%g%l%c%cwf%qflx_runoff_r
-    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
-    qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
-    qflx_glcice_frz   => clm3%g%l%c%cwf%qflx_glcice_frz
-
-    ! Determine time step and step size
-
-    nstep = get_nstep()
-    dtime = get_step_size()
-
-    !do Drainage, J.Y. Tang, 25/10/2012
-    call Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
-                  num_urbanc, filter_urbanc, &
-                  vol_liq, hk)
-                  
-    do fc = 1, num_nolakec       
-      c = filter_nolakec(fc)
-      l = clandunit(c)
-
-      if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
-             .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
-         endwb(c) = h2ocan(c) + h2osno(c)
-      else
-         ! add h2osfc to water balance
-         endwb(c) = h2ocan(c) + h2osno(c) + h2osfc(c) + wa(c)
-      end if
-    end do
-   
-    do j = 1, nlevgrnd
-      do fc = 1, num_nolakec
-         c = filter_nolakec(fc)
-         if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
-            .or. ctype(c) == icol_roof) .and. j > nlevurb) then
-               
-         else
-            endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-         end if
-      end do
-    end do
-       
-    ! Determine wetland and land ice hydrology (must be placed here
-    ! since need snow updated from CombineSnowLayers)
-    ! Jinyun Tang moved it to here, Oct. 31, 2012.
-    do fc = 1,num_nolakec
-      c = filter_nolakec(fc)
-      l = clandunit(c)
-      g = cgridcell(c)
-      if (ityplun(l)==istwet .or. ityplun(l)==istice      &
-                        .or. ityplun(l)==istice_mec) then
-         qflx_drain(c)         = 0._r8
-         qflx_drain_perched(c) = 0._r8
-         qflx_h2osfc_surf(c)   = 0._r8
-         qflx_irrig(c)         = 0._r8
-         qflx_surf(c)          = 0._r8
-         qflx_infl(c)          = 0._r8
-         ! add flood water flux to runoff for wetlands/glaciers
-         qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
-                   (endwb(c)-begwb(c))/dtime
-         ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
-         ! (Negative qflx_glcice => positive contribution to runoff)
-         ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).
-         !       This code will not work if Hydrology2 is called before Biogeophysics2, or if
-         !        qflx_snwcp_ice has alread been included in qflx_glcice.
-         !       (The snwcp flux is added to qflx_glcice later in this subroutine.)
-
-         if (glc_dyntopo .and. ityplun(l)==istice_mec) then
-            qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice(c)   ! meltwater from melted ice
-         endif
-         fcov(c)       = spval
-         fsat(c)       = spval
-         qcharge(c)    = spval
-         qflx_rsub_sat(c) = spval
-      else if (ityplun(l) == isturb .and. ctype(c) /= icol_road_perv) then
-         fcov(c)               = spval
-         fsat(c)               = spval
-         qflx_drain_perched(c) = 0._r8
-         qflx_h2osfc_surf(c)   = 0._r8
-         qcharge(c)            = spval
-         qflx_rsub_sat(c)      = spval
-      end if
-      ! If snow exceeds the thickness limit in glacier_mec columns, convert to an ice flux.
-      ! For dynamic glacier topography, remove qflx_snwcp_ice from the runoff.
-      ! Note that qflx_glcice can also have a negative component from melting of bare ice,
-      !  as computed in SoilTemperatureMod.F90
-
-      if (ityplun(l)==istice_mec) then
-
-         qflx_glcice_frz(c) = qflx_snwcp_ice(c)
-         qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
-
-         ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
-         ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
-         !  CLM runoff terms are not changed.
- 
-         if (glc_dyntopo) qflx_snwcp_ice(c) = 0._r8
-
-      endif   ! istice_mec
-
-
-      qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
-
-
-      if ((ityplun(l)==istsoil .or. ityplun(l)==istcrop) &
-              .and. cactive(c) ) then
-         qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
-      end if
-      if (ityplun(l)==isturb) then
-         qflx_runoff_u(c) = qflx_runoff(c)
-      else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
-         qflx_runoff_r(c) = qflx_runoff(c)
-      end if
-
-    end do
-
-  end subroutine Hydrology2B
+  end subroutine Hydrology2
 
 end module Hydrology2Mod

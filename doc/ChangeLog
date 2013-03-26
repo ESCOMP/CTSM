@@ -1,4 +1,122 @@
 ===============================================================
+Tag name:  clm4_0_69
+Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
+Date: Tue Mar 26 16:24:54 MDT 2013
+One-line Summary: remove hydro reorder, volr and esmf mods
+
+Purpose of changes: fix volrlnd init. from SPVAL to 0.0 so TWS in CLM looks correct.
+    modify esmf interfaces for volr.  remove hydrology reordering due to nasty bug in
+    restart.
+
+Requirements for tag: fix bug 1644
+
+Test level of tag: critical
+
+Bugs fixed (include bugzilla ID): 1644
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist:N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: Dave L. and Jinyn Tang.  Minor review by Erik and Bill.
+
+List any svn externals directories updated (csm_share, mct, etc.): update RTM to 1_0_22
+
+List all files eliminated: N/A
+
+List all files added and what they do:N/A
+
+List all existing files that have been modified, and describe the changes:
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/initSurfAlbMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+M       models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+M       SVN_EXTERNAL_DIRECTORIES
+
+Machines testing ran on:  (Tests in priority order)
+
+  only run CESM tests:
+
+=== CESM Yellowstone PGI tests:  OK.  All BFAILS occur in cmopare_hist which is expected due to the removal of the hydro. reordering.
+Status with expected failures removed:
+./cs.status.114300.yellowstone | grep -v PET_PT.f19_g16.I1850 | grep -v SMS.1x1_numaIA.ICN_CROP | grep -v PET_PT.f10_f10.I20TRCN | grep -v PET_PT.f19_g16.ICLM451850 | grep -v SMS.T31_g37.IG4804CLM45 | grep -v SMS.1x1_numaIA.ICLM45CNCROP | grep -v PET_PT.f10_f10.I20TRCLM45CN | grep -v PASS
+Possible test result outcomes:
+...
+BFAIL SMS_RLB.f45_f45.I.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL ERS_D.hcru_hcru.I_2000_CRUFRC_CN.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL ERS.f19_g16.ICNCROP.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL ERI.f19_g16.IG1850.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL SMS.T31_g37.IG4804.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL SMS.1x1_numaIA.ICNCROP.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL SMS_RLB.f45_f45.ICLM45.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL ERS_D.hcru_hcru.I_2000_CRUFRC_CLM45_CN.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL ERS.f19_g16.ICLM45CNCROP.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68 
+BFAIL ERI.f19_g16.IG1850CLM45.yellowstone_pgi.GC.114300.compare_hist.clm4_0_68
+
+=== CESM Yellowstone INTEL tests:  OK.  All BFAILS occur in cmopare_hist which is expected due to the removal of the hydro. reordering.
+Status with expected failures removed:
+>>./cs.status.114247.yellowstone | grep -v ERH_D.f19_g16.I1850CLM45CN | grep -v ERB.ne30_g16.I_1948-2004_CLM45 | grep -v ERS_E.f19_g16.I1850CRUCLM45CN | grep -v CME.f10_f10.ICN | grep -v ERS_D.f10_f10.ICLM45 | grep -v PET_PT.f19_g16.I1850CN | grep -v ERB.ne30_g16.I_1948-2004 | grep -v PET_PT.f10_f10.I20TRCN | grep -v PET_PT.f19_g16.I1850CLM45CN | grep -v ERS_E.f19_g16.ICLM451850 | grep -v ERS_D.f19_g16.IGRCP26CLM45CN | grep -v ERS_Lm3.f19_g16.IGRCP60CLM45CN | grep -v PET_PT.f10_f10.I20TRCLM45CN | grep -v SMS.f19_g16.IRCP45CLM45CN | grep -v ERS_D.f19_g16.IRCP85CLM45CN | grep -v PASS | grep -v COMMENT
+...
+FAIL  ERS_D.f10_f10.I.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_D.f10_f10.I.yellowstone_intel.GC.114247.tputcomp.clm4_0_68 
+FAIL  NCK.f10_f10.I.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_E.f19_g16.I1850.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERH_D.f19_g16.I1850CN.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_D.f19_g16.IGRCP26CN.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_Lm3.f19_g16.IGRCP60CN.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_Lm3.f19_g16.IGRCP60CN.yellowstone_intel.GC.114247.tputcomp.clm4_0_68 
+FAIL  SMS.f19_g16.IRCP45CN.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_D.f19_g16.IRCP85CN.yellowstone_intel.GC.114247.compare_hist.clm4_0_68 
+FAIL  ERS_D.f19_g16.IRCP85CN.yellowstone_intel.GC.114247.memcomp.clm4_0_68 
+FAIL  SMS_ROA.f45_f45.ICLM45.yellowstone_intel.GC.114247.tputcomp.clm4_0_68 
+FAIL  NCK.f10_f10.ICRUCLM45.yellowstone_intel.GC.114247.compare_hist.clm4_0_68
+
+=== test_system  yellowstone.rtm.batch:  OK. All compare_hist failures are expected due changes in photosynthesis
+
+CLM tag used for the baseline comparison tests if applicable: For Cesm intel and pgi tests- clme_0_68
+  for rtm tests, against clm4_0_66.
+  for science validation, clm4_0_66
+
+Changes answers relative to baseline: yes
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    obvious changes in GPP,FPSN and FCTR.  Other fields changed as well.
+       ran the following and had Dave L. and Jinyun Tang look at output.
+       f19_g16_I_1850_CLM45_CN_yellowstone_intel_photo_clm4_0_66/
+       f19_g16_I_1850_CLM45_CN_yellowstone_intel_photo_clm4_0_68/
+       f19_g16_I_1850_CLM45_CN_yellowstone_intel_photo_clm4_0_69/
+       f19_g16_ICLM45_yellowstone_intel_photo_clm4_0_66/
+       f19_g16_ICLM45_yellowstone_intel_photo_clm4_0_68/
+       f19_g16_ICLM45_yellowstone_intel_photo_clm4_0_69/
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_68
 Originator(s):  erik (Erik Kluzek)
 Date: Sat Mar 16 16:03:14 MDT 2013

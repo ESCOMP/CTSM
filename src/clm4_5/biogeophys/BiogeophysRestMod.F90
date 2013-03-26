@@ -333,22 +333,22 @@ contains
        end if
     end if
 
-    ! DEPRECTATE column water state variable - wt.  As of clm4_0_61 we
-    ! have TWS
- 
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='WT', xtype=ncd_double,  &
-          dim1name='column', &
-          long_name='DEPRECATED: total water storage', units='mm')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='WT', data=cptr%cws%wt, &
-          dim1name=namec, &
-          ncid=ncid, flag=flag, readvar=readvar)
-       if (flag == 'read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
-
+    ! gridcell type water flux variable - tws
+     if (flag == 'define') then
+        call ncd_defvar(ncid=ncid, varname='TWS', xtype=ncd_double, &
+             dim1name='gridcell', long_name='total water storage', units='mm/s')
+     else if (flag == 'read' .or. flag == 'write') then
+        call ncd_io(varname='TWS', data=clm3%g%tws, &
+             dim1name='gridcell', ncid=ncid, flag=flag, readvar=readvar)
+        if (flag == 'read' .and. .not. readvar) then
+           if (is_restart()) then
+              call endrun()
+           else
+              ! initial run, not restart: initialize flood to zero
+              clm3%g%tws = 0._r8
+           endif
+        end if
+     end if
 
     ! column water state variable - zwt
 
