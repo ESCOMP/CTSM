@@ -21,7 +21,8 @@
                <entry testId="298" failType="xFail"> ne16 missing finidat file for 1850</entry>
                <entry testId="301" failType="xFail"> ne60 missing finidat file for 1850</entry>
                <entry testId="303" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="308" failType="xFail"> ne120 problem?</entry>
+               <entry testId="306" failType="xFail"> ne120 transient problem?</entry>
+               <entry testId="308" failType="xFail"> ne120 transient problem?</entry>
                <entry testId="316" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
                <entry testId="318" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </compare>
@@ -29,6 +30,7 @@
                <entry testId="141" failType="xFail"> missing datasets for us20 </entry>
                <entry testId="189" failType="xFail"> ne16 missing finidat file for 1850</entry>
                <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="195" failType="xFail"> ne120 problem</entry>
                <entry testId="201" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </INTEL>
@@ -70,6 +72,8 @@
       </lynx>
       <frankfurt>
          <INTEL>
+              <entry testId="ERS_Ln48_D_P1x1_Mmpi-serial.f10_f10.ICLM45CNCROP" failType="RUN">likely cause is the RTM restart problem that we see with restart boundaries that are under a day</entry>
+              <entry testId="SMS_RLA_Mmpi-serial.f45_f45.ICLM45.frankfurt_intel_user_nl_dirs.GC.104101" failType="FAIL">dies a silent death.  same test works on yellowstone so likely a frankfurt bug</entry>
          </INTEL>
       </frankfurt>
       <yellowstone>
@@ -103,23 +107,10 @@
       </frankfurt>
       <yellowstone>
           <INTEL>
-              <entry testId="ERS.f19_g16.I_1850_CLM45_CN4Me"                     failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_D.f19_g16.I_1850_CLM45_CNCENTNoMe"              failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS.f19_g16.I_2000_CLM45_CN4Me_CROP"                failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_Ld211.f10_f10.ICLM45CNADSPIN"                   failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_Ld211_D_P224x1.f10_f10.ICLM45CNCROP"            failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_Ld211_P384x1.f19_g16.ICLM45CNDVCROP"            failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_Ld211.f10_f10.I_2000_CLM45_VOC_CN"              failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_D.f19_g16.ICLM45GLCMEC"                         failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_Ld211_D_P112x2.f10_f10.ICNCROP"                 failType="RUN" >History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
-              <entry testId="SMS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_anoxia_wtsat"       failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_ciso"      failType="FAIL">answers change on restart</entry>
-              <entry testId="SMS_Ln48_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set2_pftr" failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_ch4_set3_pftroot"   failType="FAIL">answers change on restart</entry>
-              <entry testId="ERS_D.f10_f10.I_2000_CLM45CN4MeNoVSoil.yellowstone_intel_rootlit"     failType="FAIL">answers change on restart</entry>
-              <entry testId="ERI_D.f10_f10.I_2000_CLM45CN4Me.yellowstone_intel_vrtlay"             failType="FAIL">answers change on restart</entry>
+              <entry testId="SMS_D.f10_f10.I_2000_CLM45_CN4Me.yellowstone_intel_anoxia_wtsat"       failType="FAIL">answers change on restart</entry>
+              <entry testId="PET_D_P1x32.ne30_g16.ICN"                           failType="SFAIL">   </entry>
               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="FAIL"></entry>
           </INTEL>
       </yellowstone>
@@ -142,6 +133,16 @@
                <entry testId="SBN.f19_g16.IRCP85CLM45CN"         failType="SFAIL"> 45 transient case not supported </entry>
                <entry testId="SBN.f09_g16.IGRCP45CLM45CN"        failType="TFAIL"> 45 transient case not supported </entry>
                <entry testId="SBN.f19_g16.IGRCP45CLM45CN"        failType="TFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.I20TRCN.yellowstone_intel.G.095449"       failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP26CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP45CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP60CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP85CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.I20TRCLM45.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP26CLM45CN.yellowstone_intel.G.095449"   failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP45CLM45CN.yellowstone_intel.G.095449"   failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP60CLM45CN.yellowstone_intel.G.095449"   failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP85CLM45CN.yellowstone_intel.G.09544"    failType="SFAIL"> 45 transient case not supported </entry>
             </INTEL>
             <PGI>
             </PGI>
@@ -165,6 +166,8 @@
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue component not threaded</entry>
                <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="SFAIL">missing finidat file</entry>
                <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="SFAIL">missing finidat file</entry>
+               <entry testId="ERS_D.f09_g16.I_2000_CLM45_VIC" failType="SFAIL">error running in debug mode.  non-debug mode works.  also on frankfurt.  problem looks to be around line 198 of initSoilParVICmod</entry>
+
             </INTEL>
             <PGI>
                <entry testId="PET_PT.f19_g16.I1850"           failType="TFAIL">scripts issue with ocean not threaded</entry>

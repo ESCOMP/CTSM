@@ -19,7 +19,9 @@ module clm_varcon
                            SHR_CONST_RGAS
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full, nsompools
   use clm_varpar   , only: ngases
-
+#if (defined VICHYDRO)
+  use clm_varpar   , only: nlayer
+#endif
 
 !
 ! !PUBLIC TYPES:
@@ -209,6 +211,9 @@ module clm_varcon
   real(r8), pointer :: dzsoi(:)        !soil dz (thickness)
   real(r8), pointer :: zisoi(:)        !soil zi (interfaces)
   real(r8), pointer :: dzsoi_decomp(:) !soil dz (thickness)
+#if (defined VICHYDRO)
+  integer, pointer  :: nlvic(:)        !number of CLM layers in each VIC layer (#)
+#endif
 
   !------------------------------------------------------------------
   ! (Non-tunable) Constants for the CH4 submodel (Tuneable constants in ch4varcon)
@@ -279,6 +284,9 @@ contains
   allocate( dzsoi(1:nlevgrnd) )
   allocate( zisoi(0:nlevgrnd) )
   allocate( dzsoi_decomp(1:nlevdecomp_full) )
+#if (defined VICHYDRO)
+  allocate( nlvic(1:nlayer))
+#endif
 
   end subroutine clm_varcon_init
 

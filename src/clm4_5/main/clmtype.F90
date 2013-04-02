@@ -1151,6 +1151,27 @@ type, public :: column_pstate_type
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.5 m
 !  real(r8), pointer :: xirrig(:)             !irrigation rate
    real(r8), pointer :: max_dayl(:)           !maximum daylength for this column (s)
+#if (defined VICHYDRO)
+   real(r8), pointer :: b_infil(:)          !b infiltration parameter
+   real(r8), pointer :: ds(:)               !fracton of Dsmax where non-linear baseflow begins
+   real(r8), pointer :: dsmax(:)            !max. velocity of baseflow (mm/day)
+   real(r8), pointer :: c_param(:)          !baseflow exponent (Qb)
+   real(r8), pointer :: expt(:,:)           !pore-size distribution related paramter(Q12)
+   real(r8), pointer :: ksat(:,:)           !Saturated hydrologic conductivity
+   real(r8), pointer :: phi_s(:,:)          !soil moisture dissusion parameter
+   real(r8), pointer :: depth(:,:)          !layer depth of upper layer 
+   real(r8), pointer :: bubble(:,:)         !bubble pressure of soil(cm)
+   real(r8), pointer :: quartz(:,:)         !quartz content of soil (cm)
+   real(r8), pointer :: bulk_density(:,:)   !bulk density of soil layer (kg/m^3)
+   real(r8), pointer :: soil_density(:,:)   !soil partical density,normally 2685kg/m^2
+   real(r8), pointer :: resid_moist(:,:)    !soil layer residule moisture (fration)
+   real(r8), pointer :: porosity(:,:)       !soil porisity (1-bulk_density/soil_density)
+   real(r8), pointer :: max_moist(:,:)      !max layer moist + ice (mm)
+   real(r8), pointer :: wcr_fract(:,:)      !Critial point where there is no restriction to ET(fract) 
+   real(r8), pointer :: wpwp_fract(:,:)     !soil layer wilting point (fraction)
+   real(r8), pointer :: wfc_fract(:,:)      !field capacity 
+   real(r8), pointer :: vic_clm_fract(:,:,:)!fraction of VIC layers in CLM layers
+#endif
    ! new variables for CN code
 #ifndef STNDRD_BSW_FOR_SOILPSI_CALC
    real(r8), pointer :: bsw2(:,:)        !Clapp and Hornberger "b" for CN code
@@ -1330,6 +1351,13 @@ type, public :: column_wstate_type
    real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
    real(r8), pointer :: fsat(:)               !fractional area with water table at surface
    real(r8), pointer :: forc_q(:)             !atm specific humidity, downscaled to column (kg/kg)
+#if (defined VICHYDRO)
+   real(r8), pointer :: moist(:,:)            !soil moisture (kg/m2) for VIC soil layers
+   real(r8), pointer :: ice(:,:)              !soil ice (kg/m2) for VIC soil layers
+   real(r8), pointer :: moist_vol(:,:)        !volumetric soil moisture for VIC soil layers
+   real(r8), pointer :: max_infil(:)          !maximum infiltration rate calculated by VIC
+   real(r8), pointer :: i_0(:)                !average saturation in top soil layers in VIC
+#endif
 #ifdef LCH4
    real(r8), pointer :: finundated(:)         !fractional inundated area (excluding dedicated wetland columns)
 #endif

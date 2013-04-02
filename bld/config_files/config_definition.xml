@@ -83,7 +83,9 @@ CLM Biogeochemistry mode
    cn   = Carbon Nitrogen model
    cndv = Carbon Nitrogen with Dynamic Global Vegetation Model
 </entry>
-
+<entry id="vichydro" valid_values="on,off" value="off">
+Toggle to turn on the VIC hydrologic parameterizations
+</entry>
 <entry id="crop" 
        valid_values="on,off" 
        value="off">

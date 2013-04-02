@@ -87,6 +87,7 @@
          CLM_CONFIG_OPTS="-snicar_frc on"
 />
 
+
 <compset GEN_COMPSET_MATCH="_VOC"
          RUN_STARTDATE=" 2002-12-30" ATM_NCPL="24"
          CLM_BLDNML_OPTS="-drydep -megan -note"
@@ -306,6 +307,11 @@
 
 <compset NAME="I_2000_CLM45" SHORTNAME="ICLM45"
          DESC="QIAN atm data for 1972-2004 and Satellite phenology (SP), CO2 level and Aerosol deposition for 2000" 
+/>
+
+<compset NAME="I_2000_CLM45_VIC" SHORTNAME="ICLM45VIC"
+         CLM_CONFIG_OPTS="-phys clm4_5 -vichydro on"
+         DESC="test of VIC hydrology"
 />
 
 <compset NAME="I_2000_CLM45_CN_f19_alaskaUSA" SHORTNAME="ICLM45alaskaCN"

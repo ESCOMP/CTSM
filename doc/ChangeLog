@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  clm4_0_70
+Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
+Date: Mon Apr  1 15:58:23 MDT 2013
+One-line Summary: bring in vic hydrology
+
+Purpose of changes: Merge in VIC hydrology.  This is an isolated option that stands on it's 
+own and does not effect existing code.  Added tests with and without vrtlay = .true..  
+
+Requirements for tag: Add vic tests for CLM45 and CLM45-vrtlay, normal testing protocol
+
+Test level of tag: standard + I_compsets + yellowstone_rtm batch
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID):VIC crashes when run in debug mode-1648
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: Add namelist option for vichydro
+
+Describe any changes made to the namelist: Add namelist option for vichydro
+
+List any changes to the defaults for the boundary datasets: Using temporary surface data sets.  New datasets
+   will come in at a later tag.  The temporary data sets do not effect normal CLM runs.
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: Erik,Maoyi Huang
+
+List any svn externals directories updated (csm_share, mct, etc.):N/A
+
+List all files eliminated:N/A
+
+List all files added and what they do:
+
+- For new VIC tests:
+A       models/lnd/clm/test/system/user_nl_dirs/vic/vic_f09/user_nl_clm
+A       models/lnd/clm/test/system/user_nl_dirs/vic/vic_f09
+A       models/lnd/clm/test/system/user_nl_dirs/vic/vic_f19/user_nl_clm
+A       models/lnd/clm/test/system/user_nl_dirs/vic/vic_f19
+A       models/lnd/clm/test/system/user_nl_dirs/vic/vic_vrtlay/user_nl_clm
+A       models/lnd/clm/test/system/user_nl_dirs/vic/vic_vrtlay
+A       models/lnd/clm/test/system/user_nl_dirs/vic
+- For VIC implementation:
+A       models/lnd/clm/src/clm4_5/main/initSoilParVICMod.F90
+A       models/lnd/clm/src/clm4_5/biogeophys/CLMVICMapMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+- For VIC namelist fucntionality
+M       models/lnd/clm/test/system/config_files/config_CLMtestCompsets.xml
+M       models/lnd/clm/bld/configure
+M       models/lnd/clm/bld/config_files/config_definition.xml
+- For new VIC tests
+M       models/lnd/clm/test/system/yellowstone.batch
+- VIC implementation
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+M       models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+M       models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   OK
+
+  CESM test lists:
+
+    yellowstone/CESM:             
+        cesm intel: OK.  some tputcomp FAILs, but main tests pass
+        cesm pgi:   OK.  one tputcomp FAIL, main tests pass
+    yellowstone/CESM/allIcompsets: OK.
+
+  test_system testing:
+    yellowstone rtm batch: OK.
+    yellowstone batch:     OK.
+
+	    new VIC tests:
+    ERS.f09_g16.I_2000_CLM45_VIC              -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vic/vic_f09
+    SMS.f19_g16.I_2000_CLM45_VIC              -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vic/vic_f19
+    ERS.f09_g16.I_2000_CLM45_VIC              -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vic/vic_vrtlay
+    ERS_D.f09_g16.I_2000_CLM45_VIC            -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/vic/vic_vrtlay
+      this last one expected to Fail.
+
+    frankfurt interactive: OK.
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_69
+
+Changes answers relative to baseline: No.  The VIC hydro option, if turned on 
+    does change answers, but the use of this code is isolated from the rest of CLM.
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_69
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Tue Mar 26 16:24:54 MDT 2013

@@ -111,6 +111,10 @@ contains
                              
     use clm_varpar      , only : nlevsoi, maxpatch_pft
     use clm_time_manager, only : get_step_size
+#if (defined VICHYDRO)
+    use clm_varpar      , only : nlayer, nlayert
+    use abortutils      , only : endrun
+#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -169,6 +173,15 @@ contains
     real(r8), pointer :: qflx_surf(:)      ! surface runoff (mm H2O /s)
     real(r8), pointer :: eff_porosity(:,:) ! effective porosity = porosity - vol_ice
     real(r8), pointer :: fracice(:,:)      !fractional impermeability (-)
+
+#if (defined VICHYDRO)
+    real(r8), pointer :: b_infil(:)        !VIC b infiltration parameter
+    real(r8), pointer :: max_moist(:,:)    !maximum soil moisture (ice + liq, mm) 
+    real(r8), pointer :: moist(:,:)        !soil moisture in each VIC layers (liq, mm)
+    real(r8), pointer :: ice(:,:)          !ice len in each VIC layers(ice, mm) 
+    real(r8), pointer :: max_infil(:)      !maximum infiltration capacity in VIC (mm)
+    real(r8), pointer :: i_0(:)            !column average soil moisture in top VIC layers (mm)
+#endif
 !
 !EOP
 !
@@ -183,6 +196,16 @@ contains
     real(r8) :: su                         !variable to calculate qinmax
     real(r8) :: v                          !variable to calculate qinmax
     real(r8) :: qinmax                     !maximum infiltration capacity (mm/s)
+#if (defined VICHYDRO)
+    real(r8) :: A(lbc:ubc)                 !fraction of the saturated area
+    real(r8) :: ex(lbc:ubc)                !temporary variable (exponent)
+    real(r8) :: top_moist(lbc:ubc)         !temporary, soil moisture in top VIC layers
+    real(r8) :: top_max_moist(lbc:ubc)     !temporary, maximum soil moisture in top VIC layers
+    real(r8) :: top_ice(lbc:ubc)           !temporary, ice len in top VIC layers
+    real(r8) :: top_icefrac                !temporary, ice fraction in top VIC layers
+    real(r8) :: top_fracice                !temporary, fraction covered by ice for runoff calculations
+    character(len=32) :: subname = 'SurfaceRunoff'  ! subroutine name
+#endif
 
 !-----------------------------------------------------------------------
 
@@ -216,6 +239,14 @@ contains
     snl               => clm3%g%l%c%cps%snl
     qflx_evap_grnd    => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
     zi                => clm3%g%l%c%cps%zi
+#if (defined VICHYDRO)
+    b_infil           => clm3%g%l%c%cps%b_infil
+    max_moist         => clm3%g%l%c%cps%max_moist
+    moist             => clm3%g%l%c%cws%moist
+    ice               => clm3%g%l%c%cws%ice
+    max_infil         => clm3%g%l%c%cws%max_infil
+    i_0               => clm3%g%l%c%cws%i_0 
+#endif
 
     ! Get time step
 
@@ -244,18 +275,46 @@ contains
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        fff(c) = 0.5_r8
+#if (defined VICHYDRO)
+       top_moist(c) = 0._r8
+       top_ice(c) = 0._r8
+       top_max_moist(c) = 0._r8
+       do j = 1, nlayer - 1
+          top_ice(c) = top_ice(c) + ice(c,j)
+          top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
+          top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
+       end do
+       if(top_moist(c)> top_max_moist(c)) top_moist(c)= top_max_moist(c)
+       top_ice(c)     = max(0._r8,top_ice(c))
+       max_infil(c)   = (1._r8+b_infil(c)) * top_max_moist(c)
+       ex(c)          = b_infil(c) / (1._r8 + b_infil(c))
+       A(c)           = 1._r8 - (1._r8 - top_moist(c) / top_max_moist(c))**ex(c)
+       i_0(c)         = max_infil(c) * (1._r8 - (1._r8 - A(c))**(1._r8/b_infil(c)))
+       fsat(c)        = A(c)  !for output
+       top_icefrac    = min(1._r8,top_ice(c)/top_moist(c))
+       top_fracice    = max(0._r8,exp(-3._r8*(1._r8-top_icefrac))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
+#else
        fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
+#endif
 
        ! use perched water table to determine fsat (if present)
        if ( frost_table(c) > zwt(c)) then 
+#if (defined VICHYDRO)
+          fsat(c) =  A(c)
+#else
           fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
+#endif
        else
           if ( frost_table(c) > zwt_perched(c)) then 
              fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt_perched(c))!*( frost_table(c) - zwt_perched(c))/4.0
           endif
        endif
        if (origflag == 1) then
+#if (defined VICHYDRO)
+          call endrun(subname // ':: VICHYDRO is not available for origflag = 1')
+#else
           fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
+#endif
        else
           fcov(c) = fsat(c)
        endif
@@ -338,6 +397,9 @@ contains
     use clm_varpar      , only : nlevsoi
     use H2OSfcMod       , only : FracH2oSfc
     use shr_const_mod   , only : shr_const_pi
+#if (defined VICHYDRO)
+    use clm_varpar      , only : nlayer, nlayert
+#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -399,6 +461,15 @@ contains
     real(r8), pointer :: qflx_top_soil(:)  ! net water input into soil from top (mm/s)
     real(r8), pointer :: qflx_surf(:)      ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_evap_grnd(:) ! ground surface evaporation rate (mm H2O/s) [+]
+
+#if (defined VICHYDRO)
+    real(r8), pointer :: b_infil(:)        !VIC b infiltration parameter
+    real(r8), pointer :: max_moist(:,:)    !maximum soil moisture (ice + liq, mm) 
+    real(r8), pointer :: moist(:,:)        !soil moisture in each VIC layers (liq, mm)
+    real(r8), pointer :: ice(:,:)          !ice len in each VIC layers(ice, mm) 
+    real(r8), pointer :: max_infil(:)      !maximum infiltration capacity in VIC (mm)
+    real(r8), pointer :: i_0(:)            !column average soil moisture in top VIC layers (mm)
+#endif
 !
 ! local pointers to original implicit out arguments
 !
@@ -433,6 +504,16 @@ contains
     real(r8) :: d
     real(r8) :: icefrac(lbc:ubc,1:nlevsoi) !
     real(r8) :: h2osoi_vol                 !
+#if (defined VICHYDRO)
+    real(r8) :: basis                      ! temporary, variable soil moisture holding capacity 
+                                           ! in top VIC layers for runoff calculation
+    real(r8) :: rsurf_vic                  ! temp VIC surface runoff
+    real(r8) :: top_moist(lbc:ubc)         ! temporary, soil moisture in top VIC layers
+    real(r8) :: top_max_moist(lbc:ubc)     ! temporary, maximum soil moisture in top VIC layers
+    real(r8) :: top_ice(lbc:ubc)           ! temporary, ice len in top VIC layers
+    real(r8) :: top_icefrac                ! temporary, ice fraction in top VIC layers
+    real(r8) :: top_fracice                ! temporary, fraction covered by ice for runoff calculations
+#endif
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived type members (column-level)
@@ -475,6 +556,14 @@ contains
     qflx_surf      => clm3%g%l%c%cwf%qflx_surf
     qflx_infl      => clm3%g%l%c%cwf%qflx_infl
     qflx_evap_grnd => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+#if (defined VICHYDRO)
+    b_infil        => clm3%g%l%c%cps%b_infil
+    max_moist      => clm3%g%l%c%cps%max_moist
+    moist          => clm3%g%l%c%cws%moist
+    ice            => clm3%g%l%c%cws%ice
+    max_infil      => clm3%g%l%c%cws%max_infil
+    i_0            => clm3%g%l%c%cws%i_0
+#endif
 
     dtime = get_step_size()
 
@@ -514,7 +603,32 @@ contains
           qflx_in_h2osfc(c) =  qflx_in_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
        
           !3. determine maximum infiltration rate
+#if (defined VICHYDRO)
+          top_moist(c)= 0._r8
+          top_ice(c)=0._r8
+          top_max_moist(c)= 0._r8
+          do j = 1, nlayer - 1
+             top_ice(c) = top_ice(c) + ice(c,j)
+             top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
+             top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
+          end do
+          top_icefrac = min(1._r8,top_ice(c)/top_moist(c))
+          if(qflx_in_soil(c) <= 0._r8) then
+             rsurf_vic = 0._r8
+          else if(max_infil(c) <= 0._r8) then
+             rsurf_vic = qflx_in_soil(c)
+          else if((i_0(c) + qflx_in_soil(c)*dtime) > max_infil(c)) then             !(Eq.(3a) Wood et al. 1992)
+             rsurf_vic = (qflx_in_soil(c)*dtime - top_max_moist(c) + top_moist(c))/dtime
+          else                                                                      !(Eq.(3b) Wood et al. 1992)
+             basis = 1._r8 - (i_0(c) + qflx_in_soil(c)*dtime)/max_infil(c)
+             rsurf_vic = (qflx_in_soil(c)*dtime - top_max_moist(c) + top_moist(c)    &
+                       + top_max_moist(c) * basis**(1._r8 + b_infil(c)))/dtime
+          end if
+          rsurf_vic = max(0._r8, rsurf_vic)
+          qinmax = (1._r8 - fsat(c)) * 10._r8**(-e_ice*top_icefrac)*(qflx_in_soil(c) - rsurf_vic)
+#else
           qinmax=(1._r8 - fsat(c)) * minval(10._r8**(-e_ice*(icefrac(c,1:3)))*hksat(c,1:3))
+#endif
           qflx_infl_excess(c) = max(0._r8,qflx_in_soil(c) -  (1.0_r8 - frac_h2osfc(c))*qinmax)
        
           !4. soil infiltration and h2osfc "run-on"
@@ -615,7 +729,7 @@ contains
 ! !INTERFACE:
   subroutine SoilWater(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
                        num_urbanc, filter_urbanc, &
-                       vol_liq, dwat, hk, dhkdw)
+                       dwat, hk, dhkdw)
 !
 ! !DESCRIPTION:
 ! Soil hydrology
@@ -696,7 +810,6 @@ contains
     integer , intent(in)  :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
     integer , intent(in)  :: num_urbanc                   ! number of column urban points in column filter
     integer , intent(in)  :: filter_urbanc(ubc-lbc+1)     ! column filter for urban points
-    real(r8), intent(in)  :: vol_liq(lbc:ubc,1:nlevsoi)   ! soil water per unit volume [mm/mm]
     real(r8), intent(out) :: dwat(lbc:ubc,1:nlevsoi)      ! change of soil water [m3/m3]
     real(r8), intent(out) :: hk(lbc:ubc,1:nlevsoi)        ! hydraulic conductivity [mm h2o/s]
     real(r8), intent(out) :: dhkdw(lbc:ubc,1:nlevsoi)     ! d(hk)/d(vol_liq)
@@ -1235,7 +1348,7 @@ contains
 !
 ! !INTERFACE:
   subroutine Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
-                      num_urbanc, filter_urbanc, vol_liq, hk, &
+                      num_urbanc, filter_urbanc, vol_liq, &
                       icefrac)
 !
 ! !DESCRIPTION:
@@ -1247,6 +1360,11 @@ contains
     use clm_time_manager, only : get_step_size
     use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv, watmin,isturb,rpi
     use clm_varpar  , only : nlevsoi,nlevgrnd
+#if (defined VICHYDRO)
+    use clm_varcon  , only : secspday,nlvic
+    use clm_varpar  , only : nlayer, nlayert
+    use CLMVICMapMod , only : CLMVICMap
+#endif
     use abortutils  , only : endrun
 !
 ! !ARGUMENTS:
@@ -1257,7 +1375,6 @@ contains
     integer , intent(in) :: filter_urbanc(ubc-lbc+1)     ! column filter for urban points
     integer , intent(in) :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
     real(r8), intent(in) :: vol_liq(lbc:ubc,1:nlevsoi)   ! partial volume of liquid water in layer
-    real(r8), intent(in) :: hk(lbc:ubc,1:nlevsoi)        ! hydraulic conductivity (mm h2o/s)
     real(r8), intent(in) :: icefrac(lbc:ubc,1:nlevsoi)   ! fraction of ice in layer
 !
 ! !CALLED FROM:
@@ -1304,6 +1421,20 @@ contains
     real(r8), pointer :: zwt(:)            ! water table depth (m)
     real(r8), pointer :: wa(:)             ! water in the unconfined aquifer (mm)
     real(r8), pointer :: qcharge(:)        ! aquifer recharge rate (mm/s)
+#if (defined VICHYDRO)
+    real(r8), pointer :: moist(:,:)        !soil layer moisture (mm)
+    real(r8), pointer :: ice(:,:)          !soil layer moisture (mm)
+    real(r8), pointer :: Ds(:)             !fracton of Dsmax where non-linear baseflow begins
+    real(r8), pointer :: Dsmax(:)          !max. velocity of baseflow (mm/day)
+    real(r8), pointer :: Wsvic(:)          !fraction of maximum soil moisutre where non-liear base flow occurs
+    real(r8), pointer :: c_param(:)        !baseflow exponent (Qb)
+    real(r8), pointer :: resid_moist(:,:)  !soil layer residule moisture (fration)
+    real(r8), pointer :: max_moist(:,:)    !maximum soil moisture (ice + liq) 
+    real(r8), pointer :: depth(:,:)        !VIC soil depth
+    real(r8), pointer :: hk_l(:,:)         !hydraulic conductivity (mm/s)
+    character(len=32) :: subname = 'Drainage'  ! subroutine name
+#endif
+
 !
 ! local pointers to original implicit inout arguments
 !
@@ -1364,6 +1495,12 @@ contains
     real(r8) :: b
     real(r8) :: q_perch
     real(r8) :: q_perch_max
+#if (defined VICHYDRO)
+    real(r8) :: dsmax_tmp(lbc:ubc)       ! temporary variable for ARNO subsurface runoff calculation
+    real(r8) :: rsub_tmp                 ! temporary variable for ARNO subsurface runoff calculation
+    real(r8) :: frac                     ! temporary variable for ARNO subsurface runoff calculation
+    real(r8) :: rel_moist                ! relative moisture, temporary variable
+#endif
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -1404,6 +1541,18 @@ contains
     eflx_impsoil  => clm3%g%l%c%cef%eflx_impsoil
     h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
+#if (defined VICHYDRO)
+    Dsmax          => clm3%g%l%c%cps%dsmax
+    Ds             => clm3%g%l%c%cps%ds
+    Wsvic          => clm3%g%l%c%cps%ws
+    c_param        => clm3%g%l%c%cps%c_param
+    resid_moist    => clm3%g%l%c%cps%resid_moist
+    max_moist      => clm3%g%l%c%cps%max_moist
+    depth          => clm3%g%l%c%cps%depth
+    moist          => clm3%g%l%c%cws%moist
+    ice            => clm3%g%l%c%cws%ice
+    hk_l          => clm3%g%l%c%cws%hk_l
+#endif
 
     ! Get time step
 
@@ -1675,15 +1824,40 @@ contains
        end do
        ! add ice impedance factor to baseflow
        if(origflag == 1) then 
+#if (defined VICHYDRO)
+          call endrun(subname // ':: VICHYDRO is not available for origflag = 1')
+#else
           fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum))) &
                - exp(-3._r8))/(1.0_r8-exp(-3._r8))
           imped=(1._r8 - fracice_rsub(c))
           rsub_top_max = 5.5e-3_r8
+#endif
        else
+#if (defined VICHYDRO)
+          imped=10._r8**(-e_ice*ice(c,nlayer)/(depth(c,nlayer)*1000.0_r8))
+          dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
+          rsub_top_max = dsmax_tmp(c)
+#else
           imped=10._r8**(-e_ice*(icefracsum/dzsum))
           rsub_top_max = 10._r8 * sin((rpi/180.) * topo_slope(c))
+#endif
        endif
+#if (defined VICHYDRO)
+       ! ARNO model for the bottom soil layer (based on bottom soil layer 
+       ! moisture from previous time step
+       !rel_moist = (moist(c,nlayer) -resid_moist(c,nlayer))/(max_moist(c,nlayer)-resid_moist(c,nlayer))
+       rel_moist = (moist(c,nlayer) - watmin)/(max_moist(c,nlayer)-watmin) !use watmin instead for resid_moist to be consistent with default hydrology
+       frac = (Ds(c) * rsub_top_max )/Wsvic(c)
+       rsub_tmp = (frac * rel_moist)/dtime
+       if(rel_moist > Wsvic(c))then
+          frac = (rel_moist - Wsvic(c))/(1.0_r8 - Wsvic(c))
+          rsub_top(c) = imped * (rsub_tmp + (rsub_top_max * (1.0_r8 - Ds(c)/Wsvic(c)) *frac**c_param(c))/dtime)
+       end if
+       ! make sure baseflow isn't negative
+       rsub_top(c) = max(0._r8, rsub_top(c))
+#else
        rsub_top(c)    = imped * rsub_top_max* exp(-fff(c)*zwt(c))
+#endif
 
 ! use analytical expression for aquifer specific yield
        rous = watsat(c,nlevsoi) &
@@ -1709,6 +1883,18 @@ contains
 
 
           else ! deepening water table
+#if (defined VICHYDRO)
+             do j = (nlvic(1)+nlvic(2)+1), nlevsoi
+                wtsub = wtsub + hk_l(c,j)*dzmm(c,j)
+             end do
+
+             do j = (nlvic(1)+nlvic(2)+1), nlevsoi
+                rsub_top_layer=max(rsub_top_tot, rsub_top_tot*hk_l(c,j)*dzmm(c,j)/wtsub)
+                rsub_top_layer=min(rsub_top_layer,0._r8)
+                h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
+                rsub_top_tot = rsub_top_tot - rsub_top_layer
+             end do
+#else
              do j = jwt(c)+1, nlevsoi
 ! use analytical expression for specific yield
                 s_y = watsat(c,j) &
@@ -1729,6 +1915,7 @@ contains
                    zwt(c) = zi(c,j)
                 endif
             enddo
+#endif
 
 !--  remove residual rsub_top  ---------------------------------------------
             zwt(c) = zwt(c) - rsub_top_tot/1000._r8/rous

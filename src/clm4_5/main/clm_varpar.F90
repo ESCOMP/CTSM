@@ -52,6 +52,10 @@ module clm_varpar
   integer, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
   integer, parameter :: mxpft       =  24     ! maximum number of PFT's for any mode; might we set some of these automatically from reading pft-physiology?
   integer, parameter :: numveg      =  16     ! number of veg types (without specific crop)
+#if (defined VICHYDRO)
+  integer, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
+  integer, parameter :: nlayert     =   8     ! number of VIC soil layer + 3 lower thermal layers
+#endif
 #if (defined CROP)
   integer, parameter :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer, parameter :: numcft      =  10     ! actual # of crops

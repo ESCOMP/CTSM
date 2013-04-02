@@ -74,6 +74,9 @@ contains
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
     use clm_time_manager, only : get_step_size, get_nstep, is_perpetual
+#if (defined VICHYDRO)
+    use CLMVICMapMod    , only : CLMVICMap
+#endif
 
 !
 ! !ARGUMENTS:
@@ -217,7 +220,6 @@ contains
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
     real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
-    real(r8) :: icefrac(lbc:ubc,1:nlevgrnd)! ice fraction in layer
     real(r8) :: dwat(lbc:ubc,1:nlevgrnd)   ! change in soil water
     real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
@@ -234,6 +236,7 @@ contains
     real(r8) :: snowcap_scl_fct            ! temporary factor used to correct for snow capping
     real(r8) :: fracl                      ! fraction of soil layer contributing to 10cm total soil water
     real(r8) :: s_node                     ! soil wetness (-)
+    real(r8) :: icefrac(lbc:ubc,1:nlevsoi)
 
 !-----------------------------------------------------------------------
 
@@ -360,21 +363,28 @@ contains
     call SnowWater(lbc, ubc, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
 
     ! Determine soil hydrology
+#if (defined VICHYDRO)
+    ! mapping soilmoist from CLM to VIC layers for runoff calculations
+    call CLMVICMap(lbc, ubc, num_hydrologyc, filter_hydrologyc)
+#endif
 
     ! moved vol_liq from SurfaceRunoff to Infiltration
     call SurfaceRunoff(lbc, ubc, lbp, ubp, num_hydrologyc, filter_hydrologyc, &
-                       num_urbanc, filter_urbanc,icefrac )
+                       num_urbanc, filter_urbanc, icefrac )
 
     call Infiltration(lbc, ubc,  num_hydrologyc, filter_hydrologyc, &
                       num_urbanc, filter_urbanc, vol_liq)
 
     call SoilWater(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
-                   num_urbanc, filter_urbanc, &
-                   vol_liq, dwat, hk, dhkdw)
+                   num_urbanc, filter_urbanc, dwat, hk, dhkdw)
+
+#if (defined VICHYDRO)
+    ! mapping soilmoist from CLM to VIC layers for runoff calculations
+    call CLMVICMap(lbc, ubc, num_hydrologyc, filter_hydrologyc)
+#endif
 
     call Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
-                  num_urbanc, filter_urbanc, &
-                  vol_liq, hk, icefrac)
+                  num_urbanc, filter_urbanc, vol_liq, icefrac)
 
     if (.not. is_perpetual()) then
 

@@ -60,6 +60,7 @@ OPTIONS
                             (default: directory above location of this script)
      -cppdefs <string>      A string of user specified CPP defines.  Appended to
                             Makefile defaults.  e.g. -cppdefs '-DVAR1 -DVAR2'
+     -vichydro <name>       Turn VIC hydrologic parameterizations : [on | off] (default is off)
      -crop <name>           Toggle for prognostic crop model. [on | off] (default is off) 
                             (can ONLY be turned on when BGC type is CN or CNDV)
      -comp_intf <name>      Component interface to use (ESMF or MCT) (default MCT)
@@ -179,6 +180,7 @@ GetOptions(
     "usr_src=s"                 => \$opts{'usr_src'},
     "v|verbose"                 => \$opts{'verbose'},
     "version"                   => \$opts{'version'},
+    "vichydro=s"                => \$opts{'vichydro'},
     "crop=s"                    => \$opts{'crop'}, 
 )  or usage();
 
@@ -512,6 +514,15 @@ my $comp_intf = $cfg_ref->get('comp_intf');
 if ($print>=2) { print "Using $comp_intf for comp_intf.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# VICHYDRO option
+if (defined $opts{'vichydro'}) {
+    $cfg_ref->set('vichydro', $opts{'vichydro'});
+}
+my $vichydro = $cfg_ref->get('vichydro');
+if ($vichydro eq "on") { print "Using VIC hydrology for runoff calculations.$eol"; }
+
+
+#-----------------------------------------------------------------------------------------------
 # CROP option
 if (defined $opts{'crop'}) {
     $cfg_ref->set('crop', $opts{'crop'});
@@ -612,6 +623,9 @@ $cfg_cppdefs .= " -DMAXPATCH_PFT=$maxpft";
 
 if ($bgc_mode eq 'cn') { 
     $cfg_cppdefs .= " -DCN";
+}
+if ($vichydro eq 'on') {
+    $cfg_cppdefs .= " -DVICHYDRO";
 }
 if ($crop eq 'on') { 
     $cfg_cppdefs .= " -DCROP";

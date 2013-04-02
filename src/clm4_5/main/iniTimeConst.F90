@@ -26,6 +26,12 @@ subroutine iniTimeConst
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry, dzsoi_decomp, secspday
+#if (defined VICHYDRO)
+  use clm_varpar       , only : nlayer, nlayert
+  use clm_varcon       , only : nlvic
+  use CLMVICMapMod  , only : initCLMVICMap
+  use initSoilParVICMod , only : initSoilParVIC
+#endif
   use clm_varctl  , only : fsurdat,scmlon,scmlat,single_column
   use clm_varctl  , only : iulog
   use clm_varsur  , only : pctspec
@@ -152,6 +158,30 @@ subroutine iniTimeConst
   real(r8), pointer :: max_dayl(:)        ! maximum daylength (s)
   real(r8), pointer :: sandfrac(:)
   real(r8), pointer :: clayfrac(:)
+#if (defined VICHYDRO)
+  real(r8), pointer :: sandcol(:,:)              !CLM column level sand fraction for calculating VIC parameters
+  real(r8), pointer :: claycol(:,:)              !CLM column level clay fraction for calculating VIC parameters
+  real(r8), pointer :: om_fraccol(:,:)           !CLM column level organic matter fraction for calculating VIC parameters
+  real(r8), pointer :: b_infil(:)                !b infiltration parameter
+  real(r8), pointer :: dsmax(:)                  !maximum baseflow rate
+  real(r8), pointer :: ds(:)                     !fracton of Dsmax where non-linear baseflow begins
+  real(r8), pointer :: ws(:)                     !fraction of maximum soil moisutre where non-liear base flow occurs
+  real(r8), pointer :: c_param(:)                !baseflow exponent (Qb)
+  real(r8), pointer :: expt(:,:)                 !pore-size distribution related paramter(Q12)
+  real(r8), pointer :: ksat(:,:)                 !Saturated hydrologic conductivity
+  real(r8), pointer :: phi_s(:,:)                !soil moisture dissusion parameter
+  real(r8), pointer :: depth(:,:)                !layer depth of upper layer(m) 
+  real(r8), pointer :: bubble(:,:)               !bubble pressure of soil(cm)
+  real(r8), pointer :: quartz(:,:)               !quartz content of soil (cm)
+  real(r8), pointer :: bulk_density(:,:)         !bulk density of soil layer (kg/m^3)
+  real(r8), pointer :: soil_density(:,:)         !soil partical density,normally 2685kg/m^2
+  real(r8), pointer :: resid_moist(:,:)          !soil layer residule moisture (fration)
+  real(r8), pointer :: porosity(:,:)             !soil porosity
+  real(r8), pointer :: max_moist(:,:)            !maximum soil moisture (ice + liq)
+  real(r8), pointer :: wcr_fract(:,:)            !critical point of soil moisture for ET (fraction)
+  real(r8), pointer :: wpwp_fract(:,:)           !soil layer wilting point (fraction)
+  real(r8), pointer :: wfc_fract(:,:)            !soil field capacity (fraction of porosity)
+#endif
 ! For lakes
   real(r8), pointer :: cellsand(:,:)      ! column 3D sand
   real(r8), pointer :: cellclay(:,:)      ! column 3D clay
@@ -186,6 +216,13 @@ subroutine iniTimeConst
   integer  :: numl             ! total number of landunits across all processors
   integer  :: numc             ! total number of columns across all processors
   integer  :: nump             ! total number of pfts across all processors
+#if (defined VICHYDRO)
+  integer  :: ivic,ivicstrt,ivicend  ! indices
+  real(r8),pointer :: b2d(:)         ! read in - VIC b 
+  real(r8),pointer :: ds2d(:)        ! read in - VIC Ds
+  real(r8),pointer :: dsmax2d(:)     ! read in - VIC Dsmax
+  real(r8),pointer :: ws2d(:)        ! read in - VIC Ws
+#endif
 
   real(r8),pointer :: temp_ef(:)        ! read in - temporary EFs
   real(r8),pointer :: efisop2d(:,:)     ! read in - isoprene emission factors
@@ -270,6 +307,10 @@ subroutine iniTimeConst
 
 
   allocate(temp_ef(begg:endg),efisop2d(6,begg:endg))
+#if (defined VICHYDRO)
+  allocate(b2d(begg:endg), ds2d(begg:endg), dsmax2d(begg:endg),ws2d(begg:endg))
+  allocate(sandcol(begc:endc,1:nlevgrnd), claycol(begc:endc,1:nlevgrnd), om_fraccol(begc:endc,1:nlevgrnd)) ! allocation for local variables
+#endif
 
   efisop          => clm3%g%gve%efisop
 
@@ -334,6 +375,27 @@ subroutine iniTimeConst
   lakedepth       => clm3%g%l%c%cps%lakedepth
   etal            => clm3%g%l%c%cps%etal
   lakefetch       => clm3%g%l%c%cps%lakefetch
+#if (defined VICHYDRO)
+  b_infil        => clm3%g%l%c%cps%b_infil
+  dsmax          => clm3%g%l%c%cps%dsmax
+  ds             => clm3%g%l%c%cps%ds
+  ws             => clm3%g%l%c%cps%ws
+  c_param        => clm3%g%l%c%cps%c_param
+  expt           => clm3%g%l%c%cps%expt
+  ksat           => clm3%g%l%c%cps%ksat
+  phi_s          => clm3%g%l%c%cps%phi_s
+  depth          => clm3%g%l%c%cps%depth
+  bubble         => clm3%g%l%c%cps%bubble
+  quartz         => clm3%g%l%c%cps%quartz
+  bulk_density   => clm3%g%l%c%cps%bulk_density
+  soil_density   => clm3%g%l%c%cps%soil_density
+  resid_moist    => clm3%g%l%c%cps%resid_moist
+  porosity       => clm3%g%l%c%cps%porosity
+  max_moist      => clm3%g%l%c%cps%max_moist
+  wcr_fract      => clm3%g%l%c%cps%wcr_fract
+  wpwp_fract     => clm3%g%l%c%cps%wpwp_fract
+  wfc_fract      => clm3%g%l%c%cps%wfc_fract
+#endif
 
   ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -472,6 +534,16 @@ subroutine iniTimeConst
 
   call ncd_io(ncid=ncid, varname='FMAX', flag='read', data=gti, dim1name=grlnd, readvar=readvar)
   if (.not. readvar) call endrun( trim(subname)//' ERROR: FMAX NOT on surfdata file') 
+#if (defined VICHYDRO)
+  call ncd_io(ncid=ncid, varname='binfl', flag='read', data=b2d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: binfl NOT on surfdata file')
+  call ncd_io(ncid=ncid, varname='Ds', flag='read', data=ds2d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: Ds NOT on surfdata file')
+  call ncd_io(ncid=ncid, varname='Dsmax', flag='read', data=dsmax2d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: Dsmax NOT on surfdata file')
+  call ncd_io(ncid=ncid, varname='Ws', flag='read', data=ws2d, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: Ws NOT on surfdata file')
+#endif
 
   ! Read in soil color, sand and clay fraction
 
@@ -691,6 +763,13 @@ subroutine iniTimeConst
    if (masterproc) write(iulog, *) 'zisoi: ', zisoi(:)
    if (masterproc) write(iulog, *) 'dzsoi: ', dzsoi(:)
 
+#if (defined VICHYDRO)
+   !define the depth of VIC soil layers here
+   nlvic(1) = 3
+   nlvic(2) = 3
+   nlvic(3) = nlevsoi-(nlvic(1)+nlvic(2))
+#endif
+
 ! define a vertical grid spacing such that it is the normal dzsoi if nlevdecomp =nlevgrnd, or else 1 meter
 #ifdef VERTSOILC
    dzsoi_decomp(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
@@ -885,6 +964,12 @@ subroutine iniTimeConst
 
       ! Maximum saturated fraction
       wtfact(c) = gti(g)
+#if (defined VICHYDRO)
+      b_infil(c) = b2d(g)
+      ds(c)      = ds2d(g)
+      dsmax(c)   = dsmax2d(g)
+      ws(c)      = ws2d(g)
+#endif
 
       ! Parameters for calculation of finundated
 #ifdef LCH4
@@ -998,6 +1083,27 @@ subroutine iniTimeConst
                cellorg(c,lev)  = spval
             end if
          end do
+#if (defined VICHYDRO)
+         do lev = 1, nlayer
+            sandcol(c,lev)   = spval
+            claycol(c,lev)   = spval
+            om_fraccol(c,lev) = spval
+            porosity(c,lev)  = spval
+            max_moist(c,lev) = spval
+            expt(c,lev)      = spval
+            ksat(c,lev)      = spval
+            phi_s(c,lev)     = spval
+            depth(c,lev)     = spval
+            bubble(c,lev)     = spval
+            quartz(c,lev)     = spval
+            bulk_density(c,lev) = spval
+            soil_density(c,lev) = spval
+            resid_moist(c,lev)  = spval
+            wpwp_fract(c,lev)   = spval
+            wcr_fract(c,lev)    = spval
+            wfc_fract(c,lev)    = spval
+         end do
+#endif
       else if (ltype(l)==isturb .and. (ctype(c) /= icol_road_perv) .and. (ctype(c) /= icol_road_imperv) )then
          ! Urban Roof, sunwall, shadewall properties set to special value
          do lev = 1,nlevgrnd
@@ -1024,6 +1130,27 @@ subroutine iniTimeConst
                cellorg(c,lev)  = spval
             end if
          end do
+#if (defined VICHYDRO)
+         do lev = 1, nlayer
+            sandcol(c,lev)   = spval
+            claycol(c,lev)   = spval
+            om_fraccol(c,lev) = spval
+            porosity(c,lev)  = spval
+            max_moist(c,lev) = spval
+            expt(c,lev)      = spval
+            ksat(c,lev)      = spval
+            phi_s(c,lev)     = spval
+            depth(c,lev)     = spval
+            bubble(c,lev)     = spval
+            quartz(c,lev)     = spval
+            bulk_density(c,lev) = spval
+            soil_density(c,lev) = spval
+            resid_moist(c,lev)  = spval
+            wpwp_fract(c,lev)   = spval
+            wcr_fract(c,lev)    = spval
+            wfc_fract(c,lev)    = spval
+         end do
+#endif
       !else if (ltype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
       else
          do lev = 1,nlevgrnd
@@ -1074,6 +1201,12 @@ subroutine iniTimeConst
                cellclay(c,lev) = clay
                cellorg(c,lev)  = om_frac*organic_max
             end if
+#if (defined VICHYDRO)
+            claycol(c,lev)    = clay
+            sandcol(c,lev)    = sand
+            om_fraccol(c,lev) = om_frac
+#endif
+
             ! Note that the following properties are overwritten for urban impervious road 
             ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
             watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
@@ -1178,12 +1311,43 @@ subroutine iniTimeConst
             z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
             zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
             dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+#if (defined VICHYDRO)
+            depth(c,:) = 0._r8
+            ivicstrt = 1 
+            do ivic = 1,nlayer
+               ivicend = ivicstrt+nlvic(ivic)-1
+               do j = ivicstrt,ivicend
+                  depth(c,ivic) = depth(c,ivic)+dz(c,j)
+               end do
+               ivicstrt = ivicend+1
+            end do
+            depth(c, nlayer+1:nlayert) = dz(c, nlevsoi+1:nlevgrnd)
+            ! Column level initialization
+            ! create weights to map soil moisture profiles (10 layer) to 3 layers for VIC hydrology, M.Huang
+            call initCLMVICMap(c)
+            call initSoilParVIC(c, claycol, sandcol, om_fraccol)
+#endif
          end if
       else if (ltype(l) /= istdlak) then
          z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
          zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
          dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
-         ! if (masterproc) write(iulog,*) 'z(c,1:nlevgrnd)', z(c,1:nlevgrnd)
+#if (defined VICHYDRO)
+          depth(c,:) = 0._r8
+          ivicstrt = 1
+          do ivic = 1,nlayer
+             ivicend = ivicstrt+nlvic(ivic)-1
+             do j = ivicstrt,ivicend
+                depth(c,ivic) = depth(c,ivic)+dz(c,j)
+             end do
+             ivicstrt = ivicend+1
+          end do
+          depth(c, nlayer+1:nlayert) = dz(c, nlevsoi+1:nlevgrnd)
+         ! Column level initialization
+         ! create weights to map soil moisture profiles (10 layer) to 3 layers for VIC hydrology, M.Huang
+         call initCLMVICMap(c)
+         call initSoilParVIC(c, claycol, sandcol, om_fraccol)
+#endif
       end if
 
       ! Initialize terms needed for dust model
@@ -1192,7 +1356,6 @@ subroutine iniTimeConst
       mss_frc_cly_vld(c) = min(clay*0.01_r8, 0.20_r8)
 
    end do
-
 
    if ( nzero_slope > 0 )then
       write(iulog,'(A,I6,A)') "Set", nzero_slope, &
@@ -1296,6 +1459,10 @@ subroutine iniTimeConst
 
    deallocate(cti)
    deallocate(tslope)
+#if (defined VICHYDRO)
+   deallocate(b2d, ds2d, dsmax2d,ws2d)
+   deallocate(sandcol, claycol, om_fraccol)
+#endif
 
    ! Initialize SNICAR optical and aging parameters:
    call SnowOptics_init( )

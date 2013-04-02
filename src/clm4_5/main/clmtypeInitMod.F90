@@ -15,6 +15,9 @@ module clmtypeInitMod
   use clm_varpar  , only : maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
                            numpft, ndst, nlevurb, nlevsoi, nlevdecomp, nlevdecomp_full, &
                            ndecomp_cascade_transitions, ndecomp_pools, nlevcan
+#if (defined VICHYDRO)
+  use clm_varpar  , only : nlayer, nlayert
+#endif
   use clm_varctl  , only : use_c13, use_c14
 
 !
@@ -3030,6 +3033,29 @@ contains
     allocate(cps%lakefetch(beg:end))
     allocate(cps%ust_lake(beg:end))
 ! End new variables for S Lakes
+#if (defined VICHYDRO)
+  ! new variables for VIC hydrology 
+    allocate(cps%b_infil(beg:end))
+    allocate(cps%dsmax(beg:end))
+    allocate(cps%ds(beg:end))
+    allocate(cps%ws(beg:end))
+    allocate(cps%c_param(beg:end))
+    allocate(cps%expt(beg:end, nlayer))
+    allocate(cps%ksat(beg:end, nlayer))
+    allocate(cps%phi_s(beg:end, nlayer))
+    allocate(cps%depth(beg:end, nlayert))
+    allocate(cps%bubble(beg:end, nlayer))
+    allocate(cps%quartz(beg:end, nlayer))
+    allocate(cps%bulk_density(beg:end, nlayer))
+    allocate(cps%soil_density(beg:end, nlayer))
+    allocate(cps%resid_moist(beg:end, nlayer))
+    allocate(cps%porosity(beg:end, nlayer))
+    allocate(cps%max_moist(beg:end, nlayer))
+    allocate(cps%wcr_fract(beg:end, nlayer))
+    allocate(cps%wpwp_fract(beg:end, nlayer))
+    allocate(cps%wfc_fract(beg:end, nlayer))
+    allocate(cps%vic_clm_fract(beg:end, nlayer, nlevsoi))
+#endif
 #ifdef LCH4
 ! New variable for finundated parameterization
     allocate(cps%zwt0(beg:end))
@@ -3231,6 +3257,29 @@ contains
     cps%h2osfc_thresh(beg:end) = nan
     cps%frac_h2osfc_temp(beg:end) = 0.0_r8
     cps%n_melt(beg:end) = nan
+#if (defined VICHYDRO)
+   ! new variables for VIC hydrology
+    cps%b_infil(beg:end)  = nan
+    cps%dsmax(beg:end)    = nan
+    cps%ds(beg:end)       = nan
+    cps%ws(beg:end)       = nan
+    cps%c_param(beg:end)  = nan
+    cps%expt(beg:end, 1:nlayer)     = nan
+    cps%ksat(beg:end, 1:nlayer)     = nan
+    cps%phi_s(beg:end, 1:nlayer)    = nan
+    cps%depth(beg:end, 1:nlayert)    = nan
+    cps%bubble(beg:end, 1:nlayer)   = nan
+    cps%quartz(beg:end, 1:nlayer)   = nan
+    cps%bulk_density(beg:end, 1:nlayer)  = nan
+    cps%soil_density(beg:end,1:nlayer)  = nan
+    cps%resid_moist(beg:end, 1:nlayer)   = nan
+    cps%porosity(beg:end, 1:nlayer)   = nan
+    cps%max_moist(beg:end, 1:nlayer)   = nan
+    cps%wcr_fract(beg:end, 1:nlayer)   = nan 
+    cps%wpwp_fract(beg:end, 1:nlayer)   = nan
+    cps%wfc_fract(beg:end, 1:nlayer)   = nan
+    cps%vic_clm_fract(beg:end,1:nlayer,1:nlevsoi) = nan
+#endif
 
   end subroutine init_column_pstate_type
 
@@ -3348,6 +3397,13 @@ contains
     allocate(cws%lake_icethick(beg:end))
 ! End new variables for S lakes
     allocate(cws%forc_q(beg:end))
+#if (defined VICHYDRO)
+    allocate(cws%moist(beg:end,1:nlayert))
+    allocate(cws%ice(beg:end,1:nlayert))
+    allocate(cws%moist_vol(beg:end,1:nlayert))
+    allocate(cws%max_infil(beg:end))
+    allocate(cws%i_0(beg:end))
+#endif
 
     cws%h2osno(beg:end) = nan
     cws%errh2osno(beg:end) = nan
@@ -3400,6 +3456,14 @@ contains
     cws%zwt_perched(beg:end) = spval
     cws%int_snow(beg:end)    = spval
     cws%swe_old(beg:end,-nlevsno+1:0)= nan
+#if (defined VICHYDRO)
+    cws%moist(beg:end,1:nlayert) = spval
+    cws%ice(beg:end,1:nlayert) = spval
+    cws%moist_vol(beg:end,1:nlayert) = spval
+    cws%max_infil(beg:end) = spval
+    cws%i_0(beg:end) = spval
+#endif
+
   end subroutine init_column_wstate_type
 
 !------------------------------------------------------------------------
