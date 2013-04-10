@@ -1,0 +1,10 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_inparm
+ hist_ndens=1,1
+ oldfflag=1
+ h2osfcflag=0
+ origflag=1
+ subgridflag=0
+/

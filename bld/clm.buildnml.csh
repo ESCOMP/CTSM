@@ -6,12 +6,23 @@ if !(-d $CASEBUILD/clmconf) mkdir -p $CASEBUILD/clmconf
 # Invoke clm configure - output will go in CASEBUILD/clmconf
 #--------------------------------------------------------------------
 
-set config_opts=" "
-if ($LND_GRID == "reg" && $GRID != "CLM_USRDAT" ) then
-   set config_opts=" -sitespf_pt $GRID"
+if ($MASK_GRID != "reg") then
+   set config_opts=" "
+   set RESOLUTION = $LND_GRID
+   set clmusr     = ""
 endif
-if ("$CCSM_COMPSET" =~ P* || "$CCSM_COMPSET" =~ R* ) then
-   set config_opts=" -sitespf_pt $LND_GRID"
+if ($MASK_GRID == "reg" && $LND_GRID != "CLM_USRDAT" ) then
+   set config_opts = "-sitespf_pt $LND_GRID"
+   set RESOLUTION  = $LND_GRID 
+   set clmusr      = ""
+endif
+if ( $LND_GRID == CLM_USRDAT ) then
+   set config_opts=" "
+   set RESOLUTION = $CLM_USRDAT_NAME
+   set clmusr     = " -clm_usr_name $CLM_USRDAT_NAME"
+endif
+if ("$CCSM_COMPSET" =~ 1PT* ) then
+   set config_opts=" -sitespf_pt reg"
 endif
 
 cd $CASEBUILD/clmconf  
@@ -33,17 +44,6 @@ else
      set START_TYPE = "startup"
    else
      set START_TYPE = $RUN_TYPE
-   endif
-endif
-
-set RESOLUTION = $LND_GRID
-set clmusr     = ""
-if ($LND_GRID == reg ) then
-   if ( $GRID == CLM_USRDAT ) then
-      set RESOLUTION = $CLM_USRDAT_NAME
-      set clmusr     = " -clm_usr_name $CLM_USRDAT_NAME"
-   else
-      set RESOLUTION = $GRID
    endif
 endif
 
@@ -76,7 +76,7 @@ endif
 
 set glc_opts = ""
 if ("$COMP_GLC" != "sglc" )then
-   set glc_opts = "-glc_grid $GLC_GRID -glc_smb .$GLC_SMB. "
+   set glc_opts = "-glc_grid $CISM_GRID -glc_smb .$GLC_SMB. "
 endif
 
 set usecase = " "

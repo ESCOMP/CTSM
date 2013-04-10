@@ -2,6 +2,6 @@ SMS_RLA_Mmpi-serial.f45_f45.ICLM45                 -user_nl_dir ../models/lnd/cl
 # Comment out threaded version for now
 #ERS_Ln48_D_P1x16_Mmpi-serial.f10_f10.ICLM45CNCROP -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
 ERS_Ln48_D_P1x1_Mmpi-serial.f10_f10.ICLM45CNCROP   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
-SMS_D_Mmpi-serial.1x1_vancouverCAN.ICLM451PT       -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-ERS_Mmpi-serial.1x1_mexicocityMEX.ICLM451PT        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45       -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
+ERS_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45        -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
 

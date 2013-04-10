@@ -1,7 +1,0 @@
-SMS_RLA_Mmpi-serial.f45_f45.I                   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-SMS_Mmpi-serial.CLM_USRDAT.I_2000_1PTFRC_US-UMB -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-ERS_Ld211_Mmpi-serial.1x1_brazil.I_2000         -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/monthly
-ERS_Ln48_D_P1x12_Mmpi-serial.f10_f10.ICNCROP    -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/crop
-ERS_Ld211_Mmpi-serial.1x1_camdenNJ.I_2000_VOC   -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs/voc
-SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PT         -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs
-ERS_Mmpi-serial.1x1_mexicocityMEX.I1PT          -user_nl_dir ../models/lnd/clm/test/system/user_nl_dirs

@@ -1,0 +1,78 @@
+clm/test/system/README					10/24/2012
+
+Scripts for testing CLM and the CLM support tools with many different 
+configurations and run-time options.
+
+I.   MAIN SCRIPTS:
+
+test_system ---- Run tests of the model specific for CLM
+test_driver.sh - Test the CLM offline tools
+
+To use...
+
+./test_system
+./test_driver.sh -i
+
+Intended for use on NCAR machines: yellowstone, frankfurt.cgd, lynx, mirage, bluefire, 
+and ORNL machine titan. And works on the MacBook laptop yongi.cgd. For most machines 
+more than one compiler is supported.
+
+II.  RUNNING test_system TESTING:
+
+Basic use:
+
+./test_system
+./test_system --help # to get help on options
+
+To generate files for a new tag and compare to a previous tag
+
+./test_system --compare clm4_0_60 --generate clm4_0_61
+
+Important files for test_system testing:
+
+user_nl_dirs ---------------------------- Directories with namelist changes for testing
+
+lynx.batch ------------------------------ Batch test runs for lynx
+shortlist.batch ------------------------- Shortlist batch test runs for any machine
+yellowstone.batch ----------------------- Batch test runs for yellowstone
+lynx.interactive ------------------------ Interactive test runs for lynx
+mirage.interactive ---------------------- Interactive test runs for mirage
+shortlist.interactive ------------------- Shortlist Interactive test runs for any machine
+yellowstone.interactive ----------------- Interactive test runs for yellowstone
+
+III. RUNNING test_driver.sh TOOLS TESTING:
+
+Basic use:
+
+./test_driver.sh -i
+./test_driver.sh -h   # to get help on options
+ 
+Important environment variables (just used by test_driver.sh)
+
+BL_ROOT ---------------- Root directory of CLM baseline code to compare to 
+                         (if not set BL test will not be performed)
+BL_TESTDIR ------------- Root directory of where to put baseline tests
+CLM_INPUT_TESTS -------- Filename of file with list of tests to perform
+CLM_TESTDIR ------------ Root directory of where to put most tests
+CLM_RETAIN_FILES ------- If set to TRUE -- don't cleanup files after testing
+CLM_FC ----------------- Use given compiler
+CLM_JOBID -------------- Job identification number to use (rather than process ID)
+CLM_THREADS ------------ Number of open-MP threads to use 
+                         (by default this is set differently by machine)
+CLM_SOFF --------------- If set to TRUE -- stop on first failed test
+
+Important files for test_driver tools testing:
+
+test_driver.sh ------- Main test script for tools
+nl_files ------------- Directory with various namelists to test
+config_files --------- Directory with various configurations to test
+input_tests_master --- Master list of tests
+tests_pretag_* ------- Tests for specific machines to do by default before a tag is done
+tests_posttag_* ------ Tests for specific machines to do for more extensive testing 
+                       after a tag is done
+CLM_compare.sh ------- Compares output history files between two cases
+T*.sh ---------------- Basic test script to do a specific type of test
+gen_test_table.sh ---- Creates HTML table of tests
+Makefile ------------- Will build the HTML table of tests
+
+../../tools/README.testing - Information on how the testing works for the CLM tools

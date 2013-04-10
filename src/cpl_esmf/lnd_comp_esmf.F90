@@ -336,6 +336,8 @@ end subroutine
     ! If no land then exit out of initialization
 
     if ( noland) then
+       call ESMF_AttributeSet(export_state, name="sno_present", value=.false., rc=rc)
+       if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="lnd_present", value=.false., rc=rc)
        if( rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
        call ESMF_AttributeSet(export_state, name="lnd_prognostic", value=.false., rc=rc)

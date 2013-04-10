@@ -168,7 +168,7 @@ foreach my $options ( "clm_demand", "rcp",      "res",
    } else {
       $expect = "use cases:";
    }
-   $expect    = "/^build-namelist - $expect/";
+   $expect    = "/^CLM build-namelist - $expect/";
    like( $result, $expect, "$options list" );
    is( (-f "lnd_in"), undef, "Check that lnd_in file does NOT exist" );
    &cleanup();
@@ -524,7 +524,7 @@ print "==================================================\n";
 
 my $mode = "phys45";
 system( "../configure -s -phys clm4_5 -bgc cn -clm4me on -vsoilc_centbgc on" );
-my @clm45res = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720" );
+my @clm45res = ( "10x15", "48x96", "0.9x1.25", "1.9x2.5", "360x720cru" );
 foreach my $res ( @clm45res ) {
    $options = "-res $res";
    eval{ system( "$bldnml $options  > $tempfile 2>&1 " ); };

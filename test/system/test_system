@@ -231,7 +231,12 @@ else
 fi
 echo "Test list to use:               $testlist"
 echo "Create test suite with options: $options"
-./create_test_suite -input_list $testlist -compset_file $testdir/config_files/config_CLMtestCompsets.xml $options
+./create_test_suite -input_list $testlist $options
+
+# Assume that runs are done in default location
+component_gen_comp_options="$component_gen_comp_options -runloc $defaultrunloc"
+component_gen_comp_cmd="ccsm_utils/Tools/component_gen_comp $component_gen_comp_options -model clm2"
+
 
 # Assume that runs are done in default location
 component_gen_comp_options="$component_gen_comp_options -runloc $defaultrunloc"

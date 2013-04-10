@@ -193,9 +193,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner_c120922.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner-mergeGIS"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner-mergeGIS_c120922.nc</scripgriddata>
-<scripgriddata hgrid="360x720"   lmask="cruncep" 
+<scripgriddata hgrid="360x720cru"   lmask="cruncep" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_cruncep_c120830.nc</scripgriddata>
-<scripgriddata hgrid="360x720"   lmask="nomask" 
+<scripgriddata hgrid="360x720cru"   lmask="nomask" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
 
 <!-- Single-point / Regional grids -->

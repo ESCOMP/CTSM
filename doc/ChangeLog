@@ -1,4 +1,211 @@
 ===============================================================
+Tag name:  clm4_0_71
+Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
+Date:  Wed Apr 10 08:43:00 MDT 2013
+One-line Summary: compsets refactoring by mvertens
+
+Purpose of changes:   Bring in externals that refactor the compset handling.  Update CLM to 
+                      work with the new compsets.  Compsets are now extensible and easier to
+                      modify and work with.
+
+Requirements for tag: N/A
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: modify CLM to work with new compset refactor
+
+Describe any changes made to the namelist: modify CLM to work with new compset refactor
+
+List any changes to the defaults for the boundary datasets: N/A  Levy's new files will come in later.
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: mvertens, erik
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/newcompsets2_tags/newcompsets2_01_scripts4_130405a
+https://svn-ccsm-models.cgd.ucar.edu/Machines/trunk_tags/Machines_130403
+https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq4_2_26
+https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_130325
+https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/socn
+https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/sice
+https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/sglc
+https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_4_02/swav
+https://svn-ccsm-models.cgd.ucar.edu/glc/trunk_tags/cism1_130405
+http://parallelio.googlecode.com/svn/trunk_tags/pio1_6_5/pio
+https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130308
+https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130308/gen_domain_files
+
+List all files eliminated:
+
+D       models/lnd/clm/test/system/tests_posttag_lynx_nompi
+D       models/lnd/clm/test/system/mirage.interactive
+D       models/lnd/clm/test/system/TCBCFGtools.sh
+D       models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+D       models/lnd/clm/test/system/config_files
+D       models/lnd/clm/test/system/config_files/gen_domain
+D       models/lnd/clm/test/system/config_files/tools__do
+D       models/lnd/clm/test/system/config_files/tools__s
+D       models/lnd/clm/test/system/config_files/CFGtools__ds
+D       models/lnd/clm/test/system/config_files/tools__ds
+D       models/lnd/clm/test/system/config_files/README
+D       models/lnd/clm/test/system/config_files/config_CLMtestCompsets.xml
+D       models/lnd/clm/test/system/config_files/tools__o
+D       models/lnd/clm/test/system/get_cprnc_diffs.sh
+D       models/lnd/clm/test/system/TSMncl_tools.sh
+D       models/lnd/clm/test/system/CLM_compare.sh
+D       models/lnd/clm/test/system/TBLCFGtools.sh
+D       models/lnd/clm/test/system/README.testnames
+D       models/lnd/clm/test/system/tests_posttag_yong
+D       models/lnd/clm/test/system/TCBtools.sh
+D       models/lnd/clm/test/system/test_driver.sh
+D       models/lnd/clm/test/system/lynx.interactive
+D       models/lnd/clm/test/system/tests_pretag_yellowstone_nompi
+D       models/lnd/clm/test/system/bluefire.batch
+D       models/lnd/clm/test/system/Makefile
+D       models/lnd/clm/test/system/TSMscript_tools.sh
+D       models/lnd/clm/test/system/tests_posttag_mirage
+D       models/lnd/clm/test/system/tests_posttag_frankfurt_nompi
+D       models/lnd/clm/test/system/gen_test_table.sh
+D       models/lnd/clm/test/system/TOPtools.sh
+D       models/lnd/clm/test/system/input_tests_master
+D       models/lnd/clm/test/system/TSMtools.sh
+D       models/lnd/clm/test/system/TBLscript_tools.sh
+D       models/lnd/clm/test/system/tests_posttag_nompi_regression
+D       models/lnd/clm/test/system/TBLtools.sh
+D       models/lnd/clm/test/system/show_var_diffs.sh
+D       models/lnd/clm/test/system/TSMCFGtools.sh
+
+List all files added and what they do:
+
+A  +    models/lnd/clm/test/tools
+A  +    models/lnd/clm/test/tools/TSMscript_tools.sh
+A  +    models/lnd/clm/test/tools/TCBCFGtools.sh
+A  +    models/lnd/clm/test/tools/tests_posttag_frankfurt_nompi
+A  +    models/lnd/clm/test/tools/config_files
+A  +    models/lnd/clm/test/tools/config_files/gen_domain
+A  +    models/lnd/clm/test/tools/config_files/tools__do
+A  +    models/lnd/clm/test/tools/config_files/tools__s
+A  +    models/lnd/clm/test/tools/config_files/CFGtools__ds
+A  +    models/lnd/clm/test/tools/config_files/tools__ds
+A  +    models/lnd/clm/test/tools/config_files/README
+A  +    models/lnd/clm/test/tools/config_files/tools__o
+A  +    models/lnd/clm/test/tools/get_cprnc_diffs.sh
+A  +    models/lnd/clm/test/tools/gen_test_table.sh
+A  +    models/lnd/clm/test/tools/TSMncl_tools.sh
+A  +    models/lnd/clm/test/tools/CLM_compare.sh
+A  +    models/lnd/clm/test/tools/nl_files
+A  +    models/lnd/clm/test/tools/nl_files/nl_ch4_set2_ciso
+A  +    models/lnd/clm/test/tools/nl_files/nl_ch4_set3_pftroot
+A  +    models/lnd/clm/test/tools/nl_files/gen_domain.ne30.runoptions
+A  +    models/lnd/clm/test/tools/nl_files/mksrfdt_1x1_brazil_1850
+A  +    models/lnd/clm/test/tools/nl_files/nl_rootlit
+A  +    models/lnd/clm/test/tools/nl_files/gen_domain.T31.runoptions
+A  +    models/lnd/clm/test/tools/nl_files/mksrfdt_10x15_1850
+A  +    models/lnd/clm/test/tools/nl_files/nl_ciso
+A  +    models/lnd/clm/test/tools/nl_files/nl_anoxia_wtsat
+A  +    models/lnd/clm/test/tools/nl_files/clm4_0_mksrfdt_1x1_numaIA_mp20irrcr_2000
+A  +    models/lnd/clm/test/tools/nl_files/mksrfdt_T31_crpglc_2000
+A  +    models/lnd/clm/test/tools/nl_files/clm4_0_mksrfdt_10x15_irr_1850
+A  +    models/lnd/clm/test/tools/nl_files/getregional
+A  +    models/lnd/clm/test/tools/nl_files/mksrfdt_1x1_numaIA_mp24_2000
+A  +    models/lnd/clm/test/tools/nl_files/mksrfdt_1x1_brazil_1850-2000
+A  +    models/lnd/clm/test/tools/nl_files/mkprocdata_ne30_to_f19_I2000
+A  +    models/lnd/clm/test/tools/nl_files/mkmapdata_ne30np4
+A  +    models/lnd/clm/test/tools/nl_files/nl_vrtlay
+A  +    models/lnd/clm/test/tools/nl_files/nl_oldhyd
+A  +    models/lnd/clm/test/tools/nl_files/mksrfdt_1x1_vancouverCAN_2000
+A  +    models/lnd/clm/test/tools/nl_files/mkmapdata_if10
+A  +    models/lnd/clm/test/tools/TBLCFGtools.sh
+A  +    models/lnd/clm/test/tools/input_tests_master
+A  +    models/lnd/clm/test/tools/TOPtools.sh
+A  +    models/lnd/clm/test/tools/README
+A  +    models/lnd/clm/test/tools/TSMtools.sh
+A  +    models/lnd/clm/test/tools/README.testnames
+A  +    models/lnd/clm/test/tools/TBLscript_tools.sh
+A  +    models/lnd/clm/test/tools/tests_posttag_yong
+A  +    models/lnd/clm/test/tools/TCBtools.sh
+A  +    models/lnd/clm/test/tools/test_driver.sh
+A  +    models/lnd/clm/test/tools/tests_posttag_nompi_regression
+A  +    models/lnd/clm/test/tools/tests_pretag_yellowstone_nompi
+A  +    models/lnd/clm/test/tools/TBLtools.sh
+A  +    models/lnd/clm/test/tools/show_var_diffs.sh
+A  +    models/lnd/clm/test/tools/TSMCFGtools.sh
+A  +    models/lnd/clm/test/tools/Makefile
+A  +    models/lnd/clm/test/system/yellowstone.namelist
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/test/system/test_system
+M       models/lnd/clm/test/system/yellowstone.interactive
+M       models/lnd/clm/test/system/frankfurt.interactive
+M       models/lnd/clm/test/system/README
+M       models/lnd/clm/test/system/yellowstone.batch
+M       models/lnd/clm/bld/user_nl_clm
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+M       models/lnd/clm/bld/build-namelist
+M       models/lnd/clm/bld/clm.buildnml.csh
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+MM      models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+MM      models/lnd/clm/src/cpl_mct/lnd_comp_mct.F90
+MM      models/lnd/clm/src/cpl_esmf/lnd_comp_esmf.F90
+M       SVN_EXTERNAL_DIRECTORIES
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:
+
+These should pass next time around:
+-these two are due to megan now being on by default:
+  030/449 < FAIL> <Test Id: 30> <Desc: drv_flds_in file the same as expected for standard>
+  037/449 < FAIL> <Test Id: 37> <Desc: drv_flds_in file the same as expected for standard>
+-these four should pass next time...no baselines in clm4_0_70
+  108/449 < FAIL> <Test Id: 108> <Desc: compare file lnd_in DNE for CN and -res+360x720cru>
+  109/449 < FAIL> <Test Id: 109> <Desc: compare file temp_file.txt DNE for CN and -res+360x720cru>
+  443/449 < FAIL> <Test Id: 443> <Desc: compare file lnd_in DNE for phys45 and -res+360x720cru>
+  444/449 < FAIL> <Test Id: 444> <Desc: compare file temp_file.txt DNE for phys45 and -res+360x720cru>
+
+  CESM test lists:
+
+    yellowstone/CESM:
+intel: other than our expected fail list, current failures should pass during the next round of testing 
+pgi  : see intel 
+
+note for intel and pgi:  nlcomp fails should not be considered truth or otherwise.  There is a bug compare_namelist.
+lots of BFAILS when comparing to clm4_0_70 and some differences in coupler hist. vars.
+These are expected due to a new CISM and DATM.
+ 
+  test_system testing:
+
+    yellowstone batch:         OK.  See explanation for yellowstone/CESM tests above.
+    frankfurt interactive:     OK.  After modifying the frankfurt compset for 1PT.
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_70
+
+Changes answers relative to baseline: yes, due to CISM, but not due to any science changes in CLM itself.  There will be
+changes in some coupler history files.
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_70
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Mon Apr  1 15:58:23 MDT 2013

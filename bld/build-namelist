@@ -66,10 +66,6 @@ OPTIONS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
-     -drydep                  Also produce a drydep_inparm namelist that will go into the
-                              "drv_flds_in" file for the driver to pass dry-deposition
-                              to the atm.
-                              (Note: buildnml.csh copies the file for use by the driver)
      -glc_grid "grid"         Glacier model grid and resolution when glacier model, 
                               Only used if glc_nec > 0 for determining fglcmask 
                               Default:  gland5UM
@@ -107,13 +103,16 @@ OPTIONS
      -lnd_frac "domainfile"   Land fraction file (the input domain file)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
-     -megan                   Also produce a megan_emis_nl namelist that will go into the
-                              "drv_flds_in" file for the driver to pass VOC's to atm.
-                              MEGAN (Model of Emissions of Gases and Aerosols from Nature)
-                              (Note: buildnml.csh copies the file for use by the driver)
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
+     -no-drydep               DO NOT PRODUCE a drydep_inparm namelist that will go into the
+                              "drv_flds_in" file for the driver to pass dry-deposition to the atm.
+                              (Note: buildnml.csh copies the file for use by the driver)
+     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
+                              "drv_flds_in" file for the driver to pass VOCs to the atm.
+                              MEGAN (Model of Emissions of Gases and Aerosols from Nature)
+                              (Note: buildnml.csh copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
      -rcp "value"             Representative concentration pathway (rcp) to use for 
@@ -156,6 +155,7 @@ EOF
 # command was issued from the current working directory.
 
 (my $ProgName = $0) =~ s!(.*)/!!;      # name of this script
+$ProgName = "CLM " . "$ProgName";
 my $ProgDir = $1;                      # name of directory containing this script -- may be a
                                        # relative or absolute path, or null if the script is in
                                        # the user's PATH
@@ -194,8 +194,8 @@ my %opts = ( config                => $cfg_cache,
              sim_year              => "default",
              chk_res               => undef,
              note                  => undef,
-	     drydep                => 0,
-	     megan                 => 0,
+	     drydep                => 1,
+	     megan                 => 1,
              irrig                 => ".false.",
 	     res                   => "default",
 	     silent                => 0,
@@ -211,10 +211,10 @@ GetOptions(
     "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "clm_usr_name=s"            => \$opts{'clm_usr_name'},
-    "drydep"                    => \$opts{'drydep'},
+    "drydep!"                   => \$opts{'drydep'},
     "chk_res!"                  => \$opts{'chk_res'},
     "note!"                     => \$opts{'note'},
-    "megan"                     => \$opts{'megan'},
+    "megan!"                    => \$opts{'megan'},
     "glc_nec=i"                 => \$opts{'glc_nec'},
     "glc_grid=s"                => \$opts{'glc_grid'},
     "glc_smb=s"                 => \$opts{'glc_smb'},	   
@@ -411,7 +411,7 @@ elsif (defined $ENV{'CSMDATA'}) {
     $inputdata_rootdir = $ENV{'CSMDATA'};
 }
 else {
-    die "$ProgName - ERROR: CESM inputdata root directory must be specified by either -csmdata argument\n" .
+    die "$ProgName ERROR: CESM inputdata root directory must be specified by either -csmdata argument\n" .
 	" or by the CSMDATA environment variable. :";
 }
 if ( $ENV{'DIN_LOC_ROOT'} eq "" ) {
@@ -647,7 +647,7 @@ if (defined $opts{'namelist'}) {
     my $nl_arg_valid;
     eval { $nl_arg_valid = $definition->validate($nl_arg); };
     if ($@) {
-	die "$ProgName - ERROR: Invalid namelist variable in commandline arg '-namelist'.\n $@";
+	die "$ProgName ERROR: Invalid namelist variable in commandline arg '-namelist'.\n $@";
     }
 
     # Merge input values into namelist.  Previously specified values have higher precedence
@@ -664,7 +664,7 @@ if (defined $opts{'infile'}) {
        if (    -f "$infile" ) {
        # Otherwise abort as a valid file doesn't exist
        } else {
-	  die "$ProgName - ERROR: input namelist file does NOT exist $infile.\n $@";
+	  die "$ProgName ERROR: input namelist file does NOT exist $infile.\n $@";
        }
        # Parse namelist input from the next file
        my $nl_infile = Build::Namelist->new($infile);
@@ -673,7 +673,7 @@ if (defined $opts{'infile'}) {
        my $nl_infile_valid;
        eval { $nl_infile_valid = $definition->validate($nl_infile); };
        if ($@) {
-	   die "$ProgName - ERROR: Invalid namelist variable in '-infile' $infile.\n $@";
+	   die "$ProgName ERROR: Invalid namelist variable in '-infile' $infile.\n $@";
        }
 
        # Merge input values into namelist.  Previously specified values have higher precedence
@@ -780,23 +780,23 @@ if ( defined($opts{$var}) ) {
     my $file = $val;
     if (     $clm_start_type =~ /startup/ || $clm_start_type =~ /arb_ic/ ) {
        if ( defined($nl->get_value('finidat')) ) {
-          die "$ProgName ERROR:: Can NOT set both -clm_startfile option AND finidat on namelist\n";
+          die "$ProgName ERROR: Can NOT set both -clm_startfile option AND finidat on namelist\n";
        }
        add_default($nl, 'finidat','val'=>"$val",'no_abspath'=>1);
     } elsif ($clm_start_type =~ /branch/ ) {
        if ( defined($nl->get_value('nrevsn')) ) {
-          die "$ProgName ERROR:: Can NOT set both -clm_startfile option AND nrevsn on namelist\n";
+          die "$ProgName ERROR: Can NOT set both -clm_startfile option AND nrevsn on namelist\n";
        }
        add_default($nl, 'nrevsn', 'val'=>"$val",'no_abspath'=>1);
     } elsif ( $clm_start_type =~ /cold/ ) {
-       die "$ProgName ERROR:: Can only set -clm_startfile option for cold clm_start_type\n";
+       die "$ProgName ERROR: Can only set -clm_startfile option for cold clm_start_type\n";
     }
 }
     
 $var = "lnd_frac";
 if ( defined($opts{$var}) ) {
    if ( defined($nl->get_value('fatmlndfrc')) ) {
-      die "$ProgName ERROR:: Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE env variables) AND fatmlndfrac on namelist\n";
+      die "$ProgName ERROR: Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE env variables) AND fatmlndfrac on namelist\n";
    }
    my $lnd_frac = &Streams::TemplateGeneric::expandXMLVar( $opts{$var}, \%ENV );
    add_default($nl, 'fatmlndfrc','val'=>$lnd_frac );
@@ -807,7 +807,7 @@ if ( defined($opts{$var}) ) {
     if ( ! defined($nl->get_value($var)) ) {
        add_default($nl, 'co2_type','val'=>"$opts{'co2_type'}");
     } else {
-       die "$ProgName ERROR:: co2_type set on namelist as well as -co2_type option.\n";
+       die "$ProgName ERROR: co2_type set on namelist as well as -co2_type option.\n";
     }
 }
 
@@ -816,7 +816,7 @@ if ($phys eq "clm4_5") {
 	add_default($nl, 'irrigate', 'val'=>$opts{'irrig'});
     }
     elsif ( $nl->get_value('irrigate') =~ /$TRUE/i ) {
-	die "$ProgName ERROR:: irrigate TRUE needs crop TRUE but it is not\n";
+	die "$ProgName ERROR: irrigate TRUE needs crop TRUE but it is not\n";
     }
 }
 
@@ -829,24 +829,24 @@ if ( defined($nsrest) ) {
    if ( $nsrest == 1 ) { $my_start_type = "continue"; }
    if ( $nsrest == 3 ) { $my_start_type = "branch";   }
    if ( "$my_start_type" eq "$drv_start_type" ) {
-      die "$ProgName ERROR:: no need to set override_nsrest to same as start_type.\n";
+      die "$ProgName ERROR: no need to set override_nsrest to same as start_type.\n";
    }
    if ( "$drv_start_type" !~ /startup/ ) {
-      die "$ProgName ERROR:: can NOT set override_nsrest if driver is NOT a startup type.\n";
+      die "$ProgName ERROR: can NOT set override_nsrest if driver is NOT a startup type.\n";
    }
 }
 
 if ( defined($opts{'l_ncpl'}) ) {
     my $l_ncpl = $opts{'l_ncpl'};
     if ( $l_ncpl <= 0 ) {
-       die "$ProgName ERROR:: bad value for -l_ncpl option.\n";
+       die "$ProgName ERROR: bad value for -l_ncpl option.\n";
     }
     $val = ( 3600 * 24 ) / $l_ncpl;
     my $dtime = $nl->get_value('dtime');
     if ( ! defined($dtime)  ) {
        add_default($nl, 'dtime', 'val'=>$val);
     } elsif ( $dtime ne $val ) {
-       die "$ProgName ERROR:: can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.\n";
+       die "$ProgName ERROR: can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.\n";
     }
 } else {
     add_default($nl, 'dtime', 'hgrid'=>$res);
@@ -854,21 +854,21 @@ if ( defined($opts{'l_ncpl'}) ) {
 
 if ( $my_start_type =~ /branch/ ) {
    if (not defined $nl->get_value('nrevsn')) {
-      die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
+      die "$ProgName ERROR: nrevsn is required for a branch type.\n";
    }
 } else {
    if (defined $nl->get_value('nrevsn')) {
-      die "$ProgName ERROR:: nrevsn should ONLY be set for a branch type.\n";
+      die "$ProgName ERROR: nrevsn should ONLY be set for a branch type.\n";
    }
 }
 
 if ( $my_start_type =~ /branch/ ) {
    if (not defined $nl->get_value('nrevsn')) {
-      die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
+      die "$ProgName ERROR: nrevsn is required for a branch type.\n";
    }
 } else {
    if (defined $nl->get_value('nrevsn')) {
-      die "$ProgName ERROR:: nrevsn should ONLY be set for a branch type.\n";
+      die "$ProgName ERROR: nrevsn should ONLY be set for a branch type.\n";
    }
 }
 
@@ -879,7 +879,7 @@ add_default($nl, 'nsegspc', 'hgrid'=>$res);
 if (defined $nl->get_value('fatmlndfrc')) {
     # do nothing - use value provided by config_grid.xml and clm.cpl7.template
 } else {
-    die "$ProgName ERROR:: fatmlndfrc was NOT sent into CLM build-namelist.\n";
+    die "$ProgName ERROR: fatmlndfrc was NOT sent into CLM build-namelist.\n";
 }
 
 add_default($nl, 'outnc_large_files' );
@@ -912,7 +912,7 @@ if ( $glc_nec > 0 ) {
      $val = $nl->get_value($var);
      if ($print>=2) { print "Glacier model $var is $val $eol"; }
      if ( ! defined($val) ) {
-        die "$ProgName ERROR:: $var is NOT set, but glc_nec is positive\n";
+        die "$ProgName ERROR: $var is NOT set, but glc_nec is positive\n";
      }
   }
   my $glc_grid = $nl->get_value('glc_grid');
@@ -923,7 +923,7 @@ if ( $glc_nec > 0 ) {
   my $glc_grid = $nl->get_value('glc_grid');
   $glc_grid =~ s/['"]//g;
   if ( defined($glc_grid) ) {
-     die "$ProgName ERROR:: glc_grid is set, but glc_nec is zero\n";
+     die "$ProgName ERROR: glc_grid is set, but glc_nec is zero\n";
   }
   # Error checking for glacier multiple elevation class options when glc_nec off
   # Make sure create_glacier_mec_landunit/glc_smb/glc_dyntopo are NOT true, and fglcmask
@@ -931,25 +931,25 @@ if ( $glc_nec > 0 ) {
   my $create_glcmec = $nl->get_value('create_glacier_mec_landunit');
   if ( defined($create_glcmec) ) {
      if ( $create_glcmec =~ /$TRUE/i ) {
-        die "$ProgName ERROR:: create_glacer_mec_landunit is true, but glc_nec is equal to
+        die "$ProgName ERROR: create_glacer_mec_landunit is true, but glc_nec is equal to
  zero\n";
      }
   }
   my $glc_smb = $nl->get_value('glc_smb');
   if ( defined($glc_smb) ) {
      if ( $glc_smb =~ /$TRUE/i ) {
-        die "$ProgName ERROR:: glc_smb is true, but glc_nec is equal to zero\n";
+        die "$ProgName ERROR: glc_smb is true, but glc_nec is equal to zero\n";
      }
   }
   my $glc_dyntopo= $nl->get_value('glc_dyntopo');
   if ( defined($glc_dyntopo) ) {
      if ( $glc_dyntopo =~ /$TRUE/i ) {
-        die "$ProgName ERROR:: glc_dyntopo is true, but glc_nec is equal to zero\n";
+        die "$ProgName ERROR: glc_dyntopo is true, but glc_nec is equal to zero\n";
      }
   }
   my $fglcmask = $nl->get_value('fglcmask');
   if ( defined($fglcmask) ) {
-      die "$ProgName ERROR:: fglcmask is set, but glc_nec is equal to zero\n";
+      die "$ProgName ERROR: fglcmask is set, but glc_nec is equal to zero\n";
   }
 }
 
@@ -972,7 +972,7 @@ if ( $nl->get_value('co2_type') =~ /constant/ ) {
   my $var = 'co2_ppmv';
   if ( defined($opts{$var}) ) {
     if ( $opts{$var} <= 0.0 ) {
-       die "$ProgName ERROR:: co2_ppmv can NOT be less than or equal to zero.\n";
+       die "$ProgName ERROR: co2_ppmv can NOT be less than or equal to zero.\n";
     }
     my $group = $definition->get_group_name($var);
     $nl->set_variable_value($group, $var, $opts{$var});
@@ -1032,7 +1032,7 @@ my $fsurdat = $nl->get_value( 'fsurdat' );
 
 if ( $clm_start_type =~ /cold/ ) {
    if (defined $nl->get_value('finidat')) {
-      die "$ProgName ERROR:: setting finidat is incomptable with using start_type=cold.\n";
+      die "$ProgName ERROR: setting finidat is incomptable with using start_type=cold.\n";
    }
    add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
 }
@@ -1044,7 +1044,7 @@ if (not defined $nl->get_value('finidat')) {
     if ( $clm_start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
            if ( $crop eq "on" ) {
-              die "$ProgName ERROR:: using ignore_ic_date is incompatable with crop!\n";
+              die "$ProgName ERROR: using ignore_ic_date is incompatable with crop!\n";
            }
 	   if ($phys eq "clm4_0") {
 	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
@@ -1102,10 +1102,10 @@ my $subgrid    = $nl->get_value('subgridflag' );
 my $origflag   = $nl->get_value('origflag'    );
 my $h2osfcflag = $nl->get_value('h2osfcflag'  );
 if ( $origflag == 1 && $subgrid == 1 ) {
-   die "$ProgName ERROR:: if origflag is ON, subgridflag can NOT also be on!\n";
+   die "$ProgName ERROR: if origflag is ON, subgridflag can NOT also be on!\n";
 }
 if ( $h2osfcflag == 1 && $subgrid == 0 ) {
-   die "$ProgName ERROR:: if h2osfcflag is ON, subgridflag can NOT be off!\n";
+   die "$ProgName ERROR: if h2osfcflag is ON, subgridflag can NOT be off!\n";
 }
 
 #
@@ -1119,7 +1119,7 @@ if ( $clm4me  eq "on" ) {
 } else {
    my @vars = $nl->get_variable_names('ch4par_in');
    if ( $#vars >= 0 ) {
-      die "$ProgName ERROR:: ch4par_in namelist variables were set, but clm4me Methane model NOT defined in the configuration\n";
+      die "$ProgName ERROR: ch4par_in namelist variables were set, but clm4me Methane model NOT defined in the configuration\n";
    }
 }
 #
@@ -1133,7 +1133,7 @@ if ( $bgc =~ /^cn/ ) {
           defined($use_c14) ||
           defined($nl->get_value('use_c14_bombspike')) ||
           defined($nl->get_value('atm_c14_filename')) ) {
-            die "$ProgName ERROR:: CROP is on and C isotope  namelist variables were set, both can't be used at the same time\n";
+            die "$ProgName ERROR: CROP is on and C isotope  namelist variables were set, both can't be used at the same time\n";
      }
   }
   if ( $vsoilc ne "on" ) {
@@ -1149,18 +1149,18 @@ if ( $bgc =~ /^cn/ ) {
        my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
        if ( defined($use_c14_bombspike) && $use_c14_bombspike =~ /$TRUE/i && 
             ! defined($nl->get_value('atm_c14_filename')) ) {
-          die "$ProgName ERROR:: use_c14_bombspike TRUE but atm_c14_filename NOT set\n";
+          die "$ProgName ERROR: use_c14_bombspike TRUE but atm_c14_filename NOT set\n";
        }
     } else {
        if ( defined($nl->get_value('use_c14_bombspike')) ||
             defined($nl->get_value('atm_c14_filename')) ) {
-              die "$ProgName ERROR:: use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set\n";
+              die "$ProgName ERROR: use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set\n";
        }
     }
   } else {
      if ( defined($nl->get_value('use_c14_bombspike')) ||
           defined($nl->get_value('atm_c14_filename')) ) {
-         die "$ProgName ERROR:: use_c14 NOT set to .true., but use_c14_bompspike/atm_c14_filename defined.\n";
+         die "$ProgName ERROR: use_c14 NOT set to .true., but use_c14_bompspike/atm_c14_filename defined.\n";
      }
   }
 }
@@ -1172,31 +1172,31 @@ if ( $clm4me  eq "on" ) {
    if ( ! defined($allowlakeprod) || 
          (defined($allowlakeprod) && $allowlakeprod =~ /$FALSE/i) ) {
       if ( defined($nl->get_value('lake_decomp_fact')) ) {
-         die "$ProgName ERROR:: lake_decomp_fact set without allowlakeprod=.true.\n";
+         die "$ProgName ERROR: lake_decomp_fact set without allowlakeprod=.true.\n";
       }
    }
    if ( $vsoilc eq "on" && defined($nl->get_value('rootlitfrac')) ) {
-      die "$ProgName ERROR:: rootlitfrac is only used if vsoilc_centbgc configure option NOT on\n";
+      die "$ProgName ERROR: rootlitfrac is only used if vsoilc_centbgc configure option NOT on\n";
    }
    my $anoxia = $nl->get_value('anoxia');
    if ( ! defined($anoxia) || 
          (defined($anoxia) && $anoxia =~ /$FALSE/i) ) {
       if ( defined($nl->get_value('anoxia_wtsat')) ) {
-         die "$ProgName ERROR:: anoxia_wtsat set without anoxia=.true.\n";
+         die "$ProgName ERROR: anoxia_wtsat set without anoxia=.true.\n";
       }
    }
    my $pftspec_rootprof = $nl->get_value('pftspecific_rootingprofile');
    if ( ! defined($pftspec_rootprof) || 
          (defined($pftspec_rootprof) && $pftspec_rootprof =~ /$TRUE/i) ) {
       if ( defined($nl->get_value('rootprof_exp')) ) {
-         die "$ProgName ERROR:: rootprof_exp set without pftspecific_rootingprofile=.false.\n";
+         die "$ProgName ERROR: rootprof_exp set without pftspecific_rootingprofile=.false.\n";
       }
    }
 } else {
    my @vars = ( "allowlakeprod", "anoxia", "anoxia_wtsat", "pftspecific_rootingprofile" );
    foreach my $var ( @vars ) {
       if ( defined($nl->get_value($var)) ) {
-         die "$ProgName ERROR:: $var set without clm4me methane model configuration on\n";
+         die "$ProgName ERROR: $var set without clm4me methane model configuration on\n";
       }
    }
 }
@@ -1227,13 +1227,13 @@ if ( $bgc =~ /^cn/ ) {
        defined($nl->get_value('model_year_align_ndep'))  ||
        defined($nl->get_value('stream_fldfilename_ndep'))
   ) {
-     die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
+     die "$ProgName ERROR: When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
           "stream_year_last_ndep, model_year_align_ndep, nor stream_fldfilename_ndep" . 
           " can be set!\n";
   }
 }
 if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl->get_value('scaled_harvest') ) {
-   die "$ProgName ERROR:: scaled_harvest is set, but neither CN nor CNDV is active!\n";
+   die "$ProgName ERROR: scaled_harvest is set, but neither CN nor CNDV is active!\n";
 }
 # 
 # Error checking for suplnitro
@@ -1241,16 +1241,16 @@ if ( ($bgc ne "cn") && ($bgc ne "cndv") && defined $nl->get_value('scaled_harves
 my $suplnitro = $nl->get_value('suplnitro');
 if ( defined($suplnitro) ) {
    if ( $bgc !~ /^cn/ ) {
-      die "$ProgName ERROR:: supplemental Nitrogen (suplnitro) is set, but neither CN nor CNDV is active!\n";
+      die "$ProgName ERROR: supplemental Nitrogen (suplnitro) is set, but neither CN nor CNDV is active!\n";
    }
    if ( $crop ne "on" && $suplnitro =~ /PROG_CROP_ONLY/i ) {
-      die "$ProgName ERROR:: supplemental Nitrogen is set to run over prognostic crops, but prognostic crop is NOT active!\n";
+      die "$ProgName ERROR: supplemental Nitrogen is set to run over prognostic crops, but prognostic crop is NOT active!\n";
    }
 
    if ( $suplnitro =~ /ALL/i ) {
       if ( $spinup ne "normal" ) {
         print "There is no need to use a spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen\n";
-        die "$ProgName ERROR:: when spinup != normal you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
+        die "$ProgName ERROR: when spinup != normal you can NOT set supplemental Nitrogen (suplnitro) to ALL\n";
       }
    }
 }
@@ -1265,7 +1265,7 @@ if ($opts{'drydep'} ) {
 } else {
     if ( defined($nl->get_value('drydep_list')) ||
          defined($nl->get_value('drydep_method')) ) {
-       die "$ProgName - ERROR: drydep_list or drydep_method defined, but drydep option NOT set\n"
+       die "$ProgName ERROR: drydep_list or drydep_method defined, but drydep option NOT set\n"
     }
 }
 
@@ -1280,7 +1280,7 @@ if ($opts{'megan'} ) {
 } else {
     if ( defined($nl->get_value('megan_specifier')) ||
          defined($nl->get_value('megan_factors_file')) ) {
-       die "$ProgName - ERROR: megan_specifier or megan_factors_file defined, but megan option NOT set\n"
+       die "$ProgName ERROR: megan_specifier or megan_factors_file defined, but megan option NOT set\n"
     }
 }
 
@@ -1384,7 +1384,7 @@ sub add_default {
     my $group = $definition->get_group_name($var);
     unless ($group) {
 	my $fname = $definition->get_file_name();
-	die "$ProgName - ERROR: variable \"$var\" not found in namelist definition file $fname.\n";
+	die "$ProgName ERROR: variable \"$var\" not found in namelist definition file $fname.\n";
     }
 
     # check whether the variable has a value in the namelist object -- if so then skip to end
@@ -1414,8 +1414,13 @@ sub add_default {
        # if no value is found then exit w/ error (unless 'nofail' option set)
        unless ( defined($val) ) {
 	   unless ($opts{'nofail'}) {
-	       die "$ProgName - No default value found for $var.\n" . 
-                   "            Are defaults provided for this resolution and land mask?\n";
+	       if ($var eq 'finidat') {
+		   print "$ProgName WARNING: No default value found for $var.\n" . 
+		       "            Are defaults provided for this resolution and land mask?\n";
+	       } else {
+		   die "$ProgName ERROR: No default value found for $var.\n" . 
+		       "            Are defaults provided for this resolution and land mask?\n";
+	       }
 	   }
 	   else {
 	       return;
@@ -1435,7 +1440,7 @@ sub add_default {
 	       if ($is_input_pathname eq 'abs') {
 		   $val = set_abs_filepath($val, $inputdata_rootdir);
                    if ( $test_files and ($val !~ /null/) and (! -f "$val") ) {
-                      die "$ProgName - file not found: $var = $val\n";
+                      die "$ProgName ERROR - file not found: $var = $val\n";
                    }
 	       }
 	   }
@@ -1833,7 +1838,7 @@ sub check_megan_spec {
           my $warn = 0;
           foreach my $megan_cmpd ( @megan_cmpds ) {
              if (  ! $definition->is_valid_value( $var, $megan_cmpd, 'noquotes'=>1 ) ) {
-                print "$ProgName - WARNING: megan_compound $megan_cmpd NOT found in list\n";
+                print "$ProgName WARNING: megan_compound $megan_cmpd NOT found in list\n";
                 $warn++;
              }
           }
@@ -1845,7 +1850,7 @@ sub check_megan_spec {
              print "If NOT your simulation will fail.\n";
           }
        } else {
-          die "$ProgName - ERROR: Bad format for megan_specifier = $megan_spec\n"
+          die "$ProgName ERROR: Bad format for megan_specifier = $megan_spec\n"
        }
     }
 }

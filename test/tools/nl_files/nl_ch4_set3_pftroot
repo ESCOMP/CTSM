@@ -1,0 +1,12 @@
+&drv_in
+ brnch_retain_casename=.true.
+/
+&clm_nl
+ shape_fluxprof = 3
+ pftspecific_rootingprofile=.false.
+ f_ch4=0.1
+ scale_factor_gasdiff = 2.0d00
+ scale_factor_liqdiff = 2.0d00
+ hist_wrtch4diag = .true.
+ hist_ndens=1,1
+/
