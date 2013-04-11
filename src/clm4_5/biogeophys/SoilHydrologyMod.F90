@@ -1428,7 +1428,6 @@ contains
     real(r8), pointer :: Dsmax(:)          !max. velocity of baseflow (mm/day)
     real(r8), pointer :: Wsvic(:)          !fraction of maximum soil moisutre where non-liear base flow occurs
     real(r8), pointer :: c_param(:)        !baseflow exponent (Qb)
-    real(r8), pointer :: resid_moist(:,:)  !soil layer residule moisture (fration)
     real(r8), pointer :: max_moist(:,:)    !maximum soil moisture (ice + liq) 
     real(r8), pointer :: depth(:,:)        !VIC soil depth
     real(r8), pointer :: hk_l(:,:)         !hydraulic conductivity (mm/s)
@@ -1500,6 +1499,7 @@ contains
     real(r8) :: rsub_tmp                 ! temporary variable for ARNO subsurface runoff calculation
     real(r8) :: frac                     ! temporary variable for ARNO subsurface runoff calculation
     real(r8) :: rel_moist                ! relative moisture, temporary variable
+    real(r8) :: wtsub_vic                ! summation of hk*dzmm for layers in the third VIC layer
 #endif
 !-----------------------------------------------------------------------
 
@@ -1544,9 +1544,8 @@ contains
 #if (defined VICHYDRO)
     Dsmax          => clm3%g%l%c%cps%dsmax
     Ds             => clm3%g%l%c%cps%ds
-    Wsvic          => clm3%g%l%c%cps%ws
+    Wsvic          => clm3%g%l%c%cps%Wsvic
     c_param        => clm3%g%l%c%cps%c_param
-    resid_moist    => clm3%g%l%c%cps%resid_moist
     max_moist      => clm3%g%l%c%cps%max_moist
     depth          => clm3%g%l%c%cps%depth
     moist          => clm3%g%l%c%cws%moist
@@ -1845,7 +1844,6 @@ contains
 #if (defined VICHYDRO)
        ! ARNO model for the bottom soil layer (based on bottom soil layer 
        ! moisture from previous time step
-       !rel_moist = (moist(c,nlayer) -resid_moist(c,nlayer))/(max_moist(c,nlayer)-resid_moist(c,nlayer))
        rel_moist = (moist(c,nlayer) - watmin)/(max_moist(c,nlayer)-watmin) !use watmin instead for resid_moist to be consistent with default hydrology
        frac = (Ds(c) * rsub_top_max )/Wsvic(c)
        rsub_tmp = (frac * rel_moist)/dtime
@@ -1884,12 +1882,13 @@ contains
 
           else ! deepening water table
 #if (defined VICHYDRO)
+             wtsub_vic = 0._r8
              do j = (nlvic(1)+nlvic(2)+1), nlevsoi
-                wtsub = wtsub + hk_l(c,j)*dzmm(c,j)
+                wtsub_vic = wtsub_vic + hk_l(c,j)*dzmm(c,j)
              end do
 
              do j = (nlvic(1)+nlvic(2)+1), nlevsoi
-                rsub_top_layer=max(rsub_top_tot, rsub_top_tot*hk_l(c,j)*dzmm(c,j)/wtsub)
+                rsub_top_layer=max(rsub_top_tot, rsub_top_tot*hk_l(c,j)*dzmm(c,j)/wtsub_vic)
                 rsub_top_layer=min(rsub_top_layer,0._r8)
                 h2osoi_liq(c,j) = h2osoi_liq(c,j) + rsub_top_layer
                 rsub_top_tot = rsub_top_tot - rsub_top_layer

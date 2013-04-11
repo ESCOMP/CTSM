@@ -3038,22 +3038,14 @@ contains
     allocate(cps%b_infil(beg:end))
     allocate(cps%dsmax(beg:end))
     allocate(cps%ds(beg:end))
-    allocate(cps%ws(beg:end))
+    allocate(cps%Wsvic(beg:end))
     allocate(cps%c_param(beg:end))
     allocate(cps%expt(beg:end, nlayer))
     allocate(cps%ksat(beg:end, nlayer))
     allocate(cps%phi_s(beg:end, nlayer))
     allocate(cps%depth(beg:end, nlayert))
-    allocate(cps%bubble(beg:end, nlayer))
-    allocate(cps%quartz(beg:end, nlayer))
-    allocate(cps%bulk_density(beg:end, nlayer))
-    allocate(cps%soil_density(beg:end, nlayer))
-    allocate(cps%resid_moist(beg:end, nlayer))
     allocate(cps%porosity(beg:end, nlayer))
     allocate(cps%max_moist(beg:end, nlayer))
-    allocate(cps%wcr_fract(beg:end, nlayer))
-    allocate(cps%wpwp_fract(beg:end, nlayer))
-    allocate(cps%wfc_fract(beg:end, nlayer))
     allocate(cps%vic_clm_fract(beg:end, nlayer, nlevsoi))
 #endif
 #ifdef LCH4
@@ -3262,22 +3254,14 @@ contains
     cps%b_infil(beg:end)  = nan
     cps%dsmax(beg:end)    = nan
     cps%ds(beg:end)       = nan
-    cps%ws(beg:end)       = nan
+    cps%Wsvic(beg:end)    = nan
     cps%c_param(beg:end)  = nan
     cps%expt(beg:end, 1:nlayer)     = nan
     cps%ksat(beg:end, 1:nlayer)     = nan
     cps%phi_s(beg:end, 1:nlayer)    = nan
     cps%depth(beg:end, 1:nlayert)    = nan
-    cps%bubble(beg:end, 1:nlayer)   = nan
-    cps%quartz(beg:end, 1:nlayer)   = nan
-    cps%bulk_density(beg:end, 1:nlayer)  = nan
-    cps%soil_density(beg:end,1:nlayer)  = nan
-    cps%resid_moist(beg:end, 1:nlayer)   = nan
     cps%porosity(beg:end, 1:nlayer)   = nan
     cps%max_moist(beg:end, 1:nlayer)   = nan
-    cps%wcr_fract(beg:end, 1:nlayer)   = nan 
-    cps%wpwp_fract(beg:end, 1:nlayer)   = nan
-    cps%wfc_fract(beg:end, 1:nlayer)   = nan
     cps%vic_clm_fract(beg:end,1:nlayer,1:nlevsoi) = nan
 #endif
 

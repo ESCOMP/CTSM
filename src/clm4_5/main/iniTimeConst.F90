@@ -165,22 +165,13 @@ subroutine iniTimeConst
   real(r8), pointer :: b_infil(:)                !b infiltration parameter
   real(r8), pointer :: dsmax(:)                  !maximum baseflow rate
   real(r8), pointer :: ds(:)                     !fracton of Dsmax where non-linear baseflow begins
-  real(r8), pointer :: ws(:)                     !fraction of maximum soil moisutre where non-liear base flow occurs
-  real(r8), pointer :: c_param(:)                !baseflow exponent (Qb)
+  real(r8), pointer :: Wsvic(:)                  !fraction of maximum soil moisutre where non-liear base flow occurs
   real(r8), pointer :: expt(:,:)                 !pore-size distribution related paramter(Q12)
   real(r8), pointer :: ksat(:,:)                 !Saturated hydrologic conductivity
   real(r8), pointer :: phi_s(:,:)                !soil moisture dissusion parameter
   real(r8), pointer :: depth(:,:)                !layer depth of upper layer(m) 
-  real(r8), pointer :: bubble(:,:)               !bubble pressure of soil(cm)
-  real(r8), pointer :: quartz(:,:)               !quartz content of soil (cm)
-  real(r8), pointer :: bulk_density(:,:)         !bulk density of soil layer (kg/m^3)
-  real(r8), pointer :: soil_density(:,:)         !soil partical density,normally 2685kg/m^2
-  real(r8), pointer :: resid_moist(:,:)          !soil layer residule moisture (fration)
   real(r8), pointer :: porosity(:,:)             !soil porosity
   real(r8), pointer :: max_moist(:,:)            !maximum soil moisture (ice + liq)
-  real(r8), pointer :: wcr_fract(:,:)            !critical point of soil moisture for ET (fraction)
-  real(r8), pointer :: wpwp_fract(:,:)           !soil layer wilting point (fraction)
-  real(r8), pointer :: wfc_fract(:,:)            !soil field capacity (fraction of porosity)
 #endif
 ! For lakes
   real(r8), pointer :: cellsand(:,:)      ! column 3D sand
@@ -379,22 +370,13 @@ subroutine iniTimeConst
   b_infil        => clm3%g%l%c%cps%b_infil
   dsmax          => clm3%g%l%c%cps%dsmax
   ds             => clm3%g%l%c%cps%ds
-  ws             => clm3%g%l%c%cps%ws
-  c_param        => clm3%g%l%c%cps%c_param
+  Wsvic          => clm3%g%l%c%cps%Wsvic
   expt           => clm3%g%l%c%cps%expt
   ksat           => clm3%g%l%c%cps%ksat
   phi_s          => clm3%g%l%c%cps%phi_s
   depth          => clm3%g%l%c%cps%depth
-  bubble         => clm3%g%l%c%cps%bubble
-  quartz         => clm3%g%l%c%cps%quartz
-  bulk_density   => clm3%g%l%c%cps%bulk_density
-  soil_density   => clm3%g%l%c%cps%soil_density
-  resid_moist    => clm3%g%l%c%cps%resid_moist
   porosity       => clm3%g%l%c%cps%porosity
   max_moist      => clm3%g%l%c%cps%max_moist
-  wcr_fract      => clm3%g%l%c%cps%wcr_fract
-  wpwp_fract     => clm3%g%l%c%cps%wpwp_fract
-  wfc_fract      => clm3%g%l%c%cps%wfc_fract
 #endif
 
   ! Assign local pointers to derived subtypes components (pft-level)
@@ -968,7 +950,7 @@ subroutine iniTimeConst
       b_infil(c) = b2d(g)
       ds(c)      = ds2d(g)
       dsmax(c)   = dsmax2d(g)
-      ws(c)      = ws2d(g)
+      Wsvic(c)   = ws2d(g)
 #endif
 
       ! Parameters for calculation of finundated
@@ -1094,14 +1076,6 @@ subroutine iniTimeConst
             ksat(c,lev)      = spval
             phi_s(c,lev)     = spval
             depth(c,lev)     = spval
-            bubble(c,lev)     = spval
-            quartz(c,lev)     = spval
-            bulk_density(c,lev) = spval
-            soil_density(c,lev) = spval
-            resid_moist(c,lev)  = spval
-            wpwp_fract(c,lev)   = spval
-            wcr_fract(c,lev)    = spval
-            wfc_fract(c,lev)    = spval
          end do
 #endif
       else if (ltype(l)==isturb .and. (ctype(c) /= icol_road_perv) .and. (ctype(c) /= icol_road_imperv) )then
@@ -1141,14 +1115,6 @@ subroutine iniTimeConst
             ksat(c,lev)      = spval
             phi_s(c,lev)     = spval
             depth(c,lev)     = spval
-            bubble(c,lev)     = spval
-            quartz(c,lev)     = spval
-            bulk_density(c,lev) = spval
-            soil_density(c,lev) = spval
-            resid_moist(c,lev)  = spval
-            wpwp_fract(c,lev)   = spval
-            wcr_fract(c,lev)    = spval
-            wfc_fract(c,lev)    = spval
          end do
 #endif
       !else if (ltype(l) /= istdlak) then  ! soil columns of both urban and non-urban types

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_72      muszala 04/11/2013 maoyi bug fix for vic hydro
    clm4_0_71      muszala 04/10/2013 compsets refactoring by mvertens
    clm4_0_70      muszala 04/01/2013 bring in vic hydrology
    clm4_0_69      muszala 03/26/2013 remove hydro reorder, volr and esmf mods

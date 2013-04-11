@@ -1155,21 +1155,14 @@ type, public :: column_pstate_type
    real(r8), pointer :: b_infil(:)          !b infiltration parameter
    real(r8), pointer :: ds(:)               !fracton of Dsmax where non-linear baseflow begins
    real(r8), pointer :: dsmax(:)            !max. velocity of baseflow (mm/day)
+   real(r8), pointer :: Wsvic(:)            !fraction of maximum soil moisutre where non-liear base flow occurs
    real(r8), pointer :: c_param(:)          !baseflow exponent (Qb)
    real(r8), pointer :: expt(:,:)           !pore-size distribution related paramter(Q12)
    real(r8), pointer :: ksat(:,:)           !Saturated hydrologic conductivity
    real(r8), pointer :: phi_s(:,:)          !soil moisture dissusion parameter
    real(r8), pointer :: depth(:,:)          !layer depth of upper layer 
-   real(r8), pointer :: bubble(:,:)         !bubble pressure of soil(cm)
-   real(r8), pointer :: quartz(:,:)         !quartz content of soil (cm)
-   real(r8), pointer :: bulk_density(:,:)   !bulk density of soil layer (kg/m^3)
-   real(r8), pointer :: soil_density(:,:)   !soil partical density,normally 2685kg/m^2
-   real(r8), pointer :: resid_moist(:,:)    !soil layer residule moisture (fration)
    real(r8), pointer :: porosity(:,:)       !soil porisity (1-bulk_density/soil_density)
    real(r8), pointer :: max_moist(:,:)      !max layer moist + ice (mm)
-   real(r8), pointer :: wcr_fract(:,:)      !Critial point where there is no restriction to ET(fract) 
-   real(r8), pointer :: wpwp_fract(:,:)     !soil layer wilting point (fraction)
-   real(r8), pointer :: wfc_fract(:,:)      !field capacity 
    real(r8), pointer :: vic_clm_fract(:,:,:)!fraction of VIC layers in CLM layers
 #endif
    ! new variables for CN code

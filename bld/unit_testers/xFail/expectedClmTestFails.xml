@@ -110,8 +110,9 @@
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
               <entry testId="SMS_D.f10_f10.I_2000_CLM45_CN4Me.yellowstone_intel_anoxia_wtsat"       failType="FAIL">answers change on restart</entry>
-              <entry testId="PET_D_P1x32.ne30_g16.ICN"                           failType="SFAIL">   </entry>
               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="FAIL"></entry>
+              <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"                 failType="FAIL">restart difference due to RTM coupler freq. error</entry>
+              <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                     failType="FAIL">restart difference due to RTM coupler freq. error</entry>
           </INTEL>
       </yellowstone>
    </test_system_batch> 
@@ -157,9 +158,6 @@
                <entry testId="CME.f10_f10.ICN"                failType="FAIL" >Restart difference</entry>
                <entry testId="ERS_D.f10_f10.ICLM45"           failType="FAIL" >Restart difference</entry>
                <entry testId="PET_PT.f19_g16.I1850CN"         failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="ERB.ne30_g16.I_1948-2004"       failType="FAIL" >Restart difference</entry>
-               <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN" failType="FAIL" >restart difference</entry>
-               <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN" failType="FAIL" >restart difference</entry>
                <entry testId="PET_PT.f10_f10.I20TRCN"         failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="PET_PT.f19_g16.I1850CLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="ERS_E.f19_g16.ICLM451850"       failType="TFAIL">bad compset name</entry>

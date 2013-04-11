@@ -139,7 +139,7 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
 !
 ! !USES:
    use clmtype
-   use clm_varcon  , only : denh2o, denice, pondmx
+   use clm_varcon  , only : denh2o, denice, pondmx, watmin
    use clm_varpar  , only : nlevsoi, nlayer, nlayert, nlevgrnd 
    use shr_kind_mod, only: r8 => shr_kind_r8
 
@@ -165,7 +165,6 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
     real(r8), pointer :: ice(:,:)                   !ice lens (mm)
     real(r8), pointer :: depth(:,:)                 !layer depth of upper layer (m)
     real(r8), pointer :: max_moist(:,:)             !max layer moist + ice (mm)
-    real(r8), pointer :: resid_moist(:,:)           !soil layer residule moisture (fration)
     real(r8), pointer :: moist_vol(:,:)             !volumetric soil moisture for VIC soil layers
     real(r8), pointer :: h2osoi_vol(:,:)            !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
     real(r8), pointer :: porosity(:,:)              !soil porisity (1-bulk_density/soil_density)
@@ -191,7 +190,6 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
     porosity      => clm3%g%l%c%cps%porosity
     depth         => clm3%g%l%c%cps%depth
     max_moist     => clm3%g%l%c%cps%max_moist
-    resid_moist   => clm3%g%l%c%cps%resid_moist
     vic_clm_fract => clm3%g%l%c%cps%vic_clm_fract
 
    ! map CLM to VIC
@@ -208,7 +206,7 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
          end do
          ice(c,i) = min((moist0(i) + ice0(i)), ice(c,i))
          ice(c,i) = max(0._r8, ice(c,i))
-         moist(c,i) =max(resid_moist(c,i), moist(c,i))
+         moist(c,i) =max(watmin, moist(c,i))
          moist(c,i) =min(max_moist(c,i)-ice(c,i), moist(c,i))
          moist_vol(c,i) = moist(c,i)/(depth(c,i)*denice) &
                       + ice(c,i)/(depth(c,i)*denh2o)

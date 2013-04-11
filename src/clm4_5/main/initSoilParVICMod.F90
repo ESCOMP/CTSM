@@ -88,22 +88,14 @@ contains
    real(r8), pointer :: b_infil(:)          !b infiltration parameter
    real(r8), pointer :: ds(:)               !fracton of Dsmax where non-linear baseflow begins
    real(r8), pointer :: dsmax(:)            !max. velocity of baseflow (mm/day)
-   real(r8), pointer :: ws(:)               !fraction of maximum soil moisutre where non-liear base flow occurs
+   real(r8), pointer :: Wsvic(:)            !fraction of maximum soil moisutre where non-liear base flow occurs
    real(r8), pointer :: c_param(:)          !baseflow exponent (Qb)
    real(r8), pointer :: expt(:,:)           !pore-size distribution related paramter(Q12)
    real(r8), pointer :: ksat(:,:)           !Saturated hydrologic conductivity (mm/s)
    real(r8), pointer :: phi_s(:,:)          !soil moisture dissusion parameter
    real(r8), pointer :: depth(:,:)          !layer depth of upper layer(m) 
-   real(r8), pointer :: bubble(:,:)         !bubble pressure of soil(cm)
-   real(r8), pointer :: quartz(:,:)         !quartz content of soil (cm)
-   real(r8), pointer :: bulk_density(:,:)   !bulk density of soil layer (kg/m^3)
-   real(r8), pointer :: soil_density(:,:)   !soil partical density,normally 2685kg/m^2
-   real(r8), pointer :: resid_moist(:,:)    !soil layer residule moisture (fration)
    real(r8), pointer :: porosity(:,:)       !soil porosity
    real(r8), pointer :: max_moist(:,:)      !maximum soil moisture (ice + liq)
-   real(r8), pointer :: wcr_fract(:,:)      !critical point of soil moisture for ET (fraction)
-   real(r8), pointer :: wpwp_fract(:,:)     !soil layer wilting point (fraction)
-   real(r8), pointer :: wfc_fract(:,:)      !soil field capacity (fraction of porosity)
 !-------------------------------------------------------------------------------------------
 
  ! other local variables
@@ -122,21 +114,13 @@ contains
     b_infil        => clm3%g%l%c%cps%b_infil
     dsmax          => clm3%g%l%c%cps%dsmax
     ds             => clm3%g%l%c%cps%ds
-    ws             => clm3%g%l%c%cps%ws
+    Wsvic          => clm3%g%l%c%cps%Wsvic
     c_param        => clm3%g%l%c%cps%c_param
     expt           => clm3%g%l%c%cps%expt
     ksat           => clm3%g%l%c%cps%ksat
     phi_s          => clm3%g%l%c%cps%phi_s
-    bubble         => clm3%g%l%c%cps%bubble
-    quartz         => clm3%g%l%c%cps%quartz
-    bulk_density   => clm3%g%l%c%cps%bulk_density
-    soil_density   => clm3%g%l%c%cps%soil_density
-    resid_moist    => clm3%g%l%c%cps%resid_moist
     porosity       => clm3%g%l%c%cps%porosity
     max_moist      => clm3%g%l%c%cps%max_moist
-    wcr_fract      => clm3%g%l%c%cps%wcr_fract
-    wpwp_fract     => clm3%g%l%c%cps%wpwp_fract
-    wfc_fract      => clm3%g%l%c%cps%wfc_fract
 
 !************************************************************************  
 !  map parameters between VIC layers and CLM layers
@@ -171,8 +155,6 @@ contains
       porosity(c, i) = 0.489_r8 - 0.00126_r8*sandvic(i)
       expt(c, i) = 3._r8+ 2._r8*(2.91_r8 + 0.159_r8*clayvic(i))
       xksat = 0.0070556 *( 10.**(-0.884+0.0153*sandvic(i)) )
-      bulk_density(c, i) = (1._r8-porosity(c,i))*2.7e3_r8
-      bubble(c,i) =  10._r8**(1.88_r8-0.0131_r8*sandvic(i)) 
       !consider organic matter, M.Huang 
       expt(c, i) = (1._r8-om_fracvic(i))*expt(c, i) + om_fracvic(i)*om_expt 
       porosity(c,i) = (1._r8 - om_fracvic(i))*porosity(c,i) + om_watsat*om_fracvic(i) 
@@ -193,15 +175,10 @@ contains
           uncon_hksat = 0._r8
       end if
       ksat(c,i)  = uncon_frac*uncon_hksat + (perc_frac*om_fracvic(i))*om_hksat
-      bubble(c,i) =(1._r8-om_fracvic(i))*bubble(c,i) + om_sucsat*om_fracvic(i)/10._r8
       max_moist(c,i) = porosity(c,i)*depth(c,i)*1000._r8 !in mm!
-      wpwp_fract(c,i) = (316230._r8/(bubble(c,i)*10._r8)) ** (-1._r8/((expt(c,i) - 3.)/2.))
-      wcr_fract(c,i) = (158490._r8/(bubble(c,i)*10._r8)) ** (-1._r8/((expt(c,i) - 3.)/2.))
-      wfc_fract(c,i) = (0.1_r8 / (ksat(c,i)*86400._r8))**(1._r8/expt(c,i))
 
       phi_s(c,i)=-(exp((1.54_r8 - 0.0095_r8*sandvic(i) + &
                  0.0063_r8*(100.0_r8-sandvic(i)-clayvic(i)))*log(10.0_r8))*9.8e-5_r8)
-      resid_moist(c,i) = 0.99*wpwp_fract(c,i)*max_moist(c,i) ! set to following VIC preprocessing, not used
      end do
 
   end subroutine initSoilParVIC
