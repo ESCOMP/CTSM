@@ -100,5 +100,6 @@ determine default values for namelists.
 <glc_nec glc_nec="3" >3</glc_nec>
 <glc_nec glc_nec="5" >5</glc_nec>
 <glc_nec glc_nec="10">10</glc_nec>
+<glc_nec glc_nec="36">36</glc_nec>
 
 </namelist_defaults>

@@ -1,4 +1,320 @@
 ===============================================================
+Tag name:  clm4_0_73
+Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
+Date: Mon Apr 15 09:48:03 MDT 2013
+One-line Summary: update mksurfdata_map for CLM4.5, and other misc. updates, mainly to tools
+
+Purpose of changes:
+
+Main purpose is to add a bunch of new fields to the CLM4.5 mksurfdata_map:
+- SLOPE, STD_ELEV
+- LAKEDEPTH
+- peatf, abm, gdp (for fire)
+- binfl, Ws, Dsmax, Ds (for VIC)
+- F0, P3, ZWT0 (for methane)
+
+Also, other miscellaneous changes:
+
+- some refactoring of mksurfdata_map, and get more routines under unit test
+
+- for CLM4.5 mksurfdata_map, always use hires datasets, except for pft
+
+- add support for 36 glc_mec elevation classes (though there are currently
+  no surface datasets for this option)
+
+- add support for 1-d domain files in mksurfdata_map
+
+- add createXMLEntries.pl for creating xml entries for new mapping files
+
+- change default behavior of new_woodharv for clm4.0 (default is true now),
+  and only support new_woodharv=true for clm4.5
+
+- allow global & regional map generation in a single submission of
+  mkmapdata/regridbatch.sh
+
+- handle clm4_0 vs clm4_5 distinction in mkmapdata.sh
+
+- handle large file support more robustly in mkmapdata.sh
+
+- refactored mkscripgrid.ncl to use built-in ESMF utility
+
+- remove 0.47x0.63 support for CLM4.5, since we don't have a good scrip
+  grid file for that resolution
+
+- in some files in bld/namelist_files, fix some resolutions listed as
+  360x720 to be 360x720cru
+
+- a few other minor changes, as noted below
+
+
+Requirements for tag: Requirements: tools tests, and build-namelist
+test (to catch any accidental changes to CLM's namelist), fix bug:
+1641. Also ran standard tests to cover all bases.
+
+Test level of tag: standard + tools
+
+Bugs fixed (include bugzilla ID): 
+    - 1641 (RCP6 and RCP8.5 used old bad wood harvest for 2006 and 2007)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None to CLM namelist, but many
+changes to mksurfdata_map namelist.
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated:
+
+========= Move to new inputs directory
+D       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_lookup_2d_netcdf.nc
+
+List all files added and what they do:
+
+========= Create xml entries and commands to move files to inputdata for
+          a bunch of mapping files
+A       models/lnd/clm/tools/clm4_5/mkmapdata/createXMLEntries.pl
+
+========= Guide for how to add new fields to mksurfdata_map
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/README.developers
+
+========= Pull out shared mksurfdata_map code into new, shared modules
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkdiagnosticsMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkchecksMod.F90
+
+========= Regrid new fields for mksurfdata_map
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mktopostatsMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkgdpMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkagfirepkmonthMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpeatMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkVICparamsMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkCH4inversionMod.F90
+
+========= Get more of mksurfdata_map code under unit tests
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkchecksMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkgridmapMod.F90
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkdomainMod.F90
+
+========= Add inputs for new mksurfdata_map unit tests
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/test_domain_read_dims__lsmlon.nc
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/test_domain_read_dims__lon.nc
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/test_domain_read_dims__lon_and_num_pixels.nc
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/test_domain_read_dims__lon_and_ni.nc
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/test_domain_read_dims__num_pixels.nc
+
+========= Move to inputs directory
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/inputs/test_lookup_2d_netcdf.nc
+
+
+List all existing files that have been modified, and describe the changes:
+
+========= Add new mksurfdata_map variables and mapping files
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkvarctl.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+           - also add no_inlandwet option
+           - also handle the case where special landunits sum to a
+             tiny bit more than 100% and thus give negative pct_pft
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mklanwatMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90
+           - also add some other global attributes
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Srcfiles
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl
+           - also add merge_gis and inlandwet options, remove ngwh
+             option, remove hires option (instead use hirespft)
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata_map.namelist
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+           - also add support for 36 glc_mec columns, and remove 0.47x0.63
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5_tools.xml
+           - also remove 0.47x0.63, remove coarse-res lake, change logic for
+             determining glacier dataset, remove ngwh=off rcp6 and rcp8.5 datasets
+           - also add xml file support for more scrip grid file info
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+           - also add support for 36 glc_mec columns, no_inlandwet option,
+             remove a duplicate section, remove 0.47x0.63
+           - also add xml file support for more scrip grid file info
+M       models/lnd/clm/bld/namelist_files/checkmapfiles.ncl
+M       models/lnd/clm/doc/UsersGuide/tools.xml
+
+========= Add nodata argument to gridmap_areaave
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkgridmapMod.F90
+           - also add gridmap_areastddev and gridmap_check routines
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mklaiMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksoilMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkharvestMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkurbanparCommonMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkvocefMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90
+
+========= Add support for 36 glc_mec elevation classes
+M       models/lnd/clm/tools/clm4_0/mksurfdata_map/src/mkglcmecMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkglcmecMod.F90
+M       models/lnd/clm/bld/build-namelist
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0_tools.xml
+           - also fix ngwh default for rcp6 for 2006 and 2007
+           - also add xml file support for more scrip grid file info
+M       models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+           - also add xml file support for more scrip grid file info
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+
+========= Change default behavior of new_woodharv for clm4.0
+M       models/lnd/clm/tools/clm4_0/mksurfdata_map/mksurfdata.pl
+
+========= Add new test routines
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/Srcfiles
+
+========= Change location of input files for unit testing
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkncdio.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkindexmapMod.F90
+
+========= Add support for 1-d domain files; allow larger diffs in
+          domain_checksame
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkdomainMod.F90
+
+========= Allow global & regional map generation in a single submission
+M       models/lnd/clm/tools/clm4_5/mkmapdata/regridbatch.sh
+
+========= Fix yellowstone ESMF path, add new grids, remove bluefire,
+          no longer make atm-ocn and RTM mapping files, handle large
+          file support and other grid-specific flags in a more robust
+          way, add option to differentiate between clm4_0 vs 4_5
+M       models/lnd/clm/tools/clm4_5/mkmapdata/mkmapdata.sh
+
+========= Refactored to use built-in ESMF utility
+M       models/lnd/clm/tools/clm4_5/mkmapgrids/mkscripgrid.ncl
+
+========= Remove 0.47x0.63 for CLM4.5, since we don't have a good scrip grid
+          file for that resolution
+M       models/lnd/clm/tools/clm4_5/mkmapgrids/mkmapgrids.csh
+
+========= Renumber build-namelist unit tests due to removing a
+          resolution. Also cleaned up expectedFails list, mostly removing
+          tests that now pass, changing failure types, and adding
+          ERB.ne30_g16.I_1948-2004, which failed in clm4_0_72, too
+M       models/lnd/clm/bld/unit_testers/build-namelist_test.pl
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+========= Fix some paths in tools test scripts
+M       models/lnd/clm/test/tools/TBLCFGtools.sh
+M       models/lnd/clm/test/tools/TBLscript_tools.sh
+M       models/lnd/clm/test/tools/test_driver.sh
+M       models/lnd/clm/test/tools/TBLtools.sh
+M       models/lnd/clm/test/tools/TOPtools.sh
+
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes
+    All PASS or xFAIL
+
+  CESM test lists:
+
+    yellowstone/CESM:              yes
+      All PASS or xFAIL except:
+
+        ***** Not listed in xFAIL list, but failed in clm4_0_72, so I'm
+              adding it to the xFAIL list
+        FAIL  ERB.ne30_g16.I_1948-2004.yellowstone_intel
+
+    yellowstone/CESM/allIcompsets: no
+
+  test_system testing:
+
+    yellowstone batch:          yes
+      All PASS or xFAIL except:
+
+        ***** No baselines
+        BFAIL ERS_D.f10_f10.I_2000_CLM45_CN4MeNoVSoil.yellowstone_intel_rootlit.GC.142502.compare_hist.clm4_0_72 
+
+      From component_gen_comp, all PASS or BFAIL1 except:
+
+        ****** No baselines
+        BFAIL2 ERS_D.f10_f10.I_2000_CLM45_CN4MeNoVSoil.yellowstone_intel_rootlit.compare_hist.clm4_0_72.clm2.h0 (baseline history file does not exist)
+        BFAIL2 ERS_D.f10_f10.I_2000_CLM45_CN4MeNoVSoil.yellowstone_intel_rootlit.compare_hist.clm4_0_72.clm2.h1 (baseline history file does not exist)
+
+
+    frankfurt interactive:      yes
+      All PASS or xFAIL (including component_gen_comp)
+
+
+    yellowstone interactive:    no
+    lynx batch:                 no
+    lynx interactive:           no
+    frankfurt batch:            no
+
+  test_driver.sh tools testing:
+
+    frankfurt interactive:      no
+      Couldn't get tools to build on frankfurt, from either my branch or
+      the clm4_0_72 trunk tag
+
+    yellowstone interactive:    yes
+      All PASS except:
+
+        ********* These seem to be expected failures, based on the fact that they fail in clm4_0_72. Note that the
+        ********* gen_domain tests themselves pass, but the baseline comparisons fail, even if I compare clm4_0_72
+        ********* against itself
+        006 ble14 TBLCFGtools.sh clm4_5 gen_domain CFGtools__ds T31.runoptions ..........................rc=4 FAIL
+        008 ble@4 TBLCFGtools.sh clm4_5 gen_domain CFGtools__ds ne30.runoptions .........................rc=4 FAIL
+        027 smiS4 TSMscript_tools.sh clm4_5 ncl_scripts getregional_datasets.pl getregional .............rc=6 FAIL
+        028 bliS4 TBLscript_tools.sh clm4_5 ncl_scripts getregional_datasets.pl getregional .............rc=4 FAIL
+
+        ********* Expected baseline failures due to changes in default behavior of CLM4_5 mksurfdata_map
+        ********* (see notes on answer changes, below, for what changed; I have rerun these tests with some
+        ********* changes on my branch and in the trunk tag to confirm that baseline comparisons pass when I
+        ********* revert the differences noted there)
+        012 blg54 TBLtools.sh clm4_5 mksurfdata_map tools__s namelist ...................................rc=7 FAIL
+        020 bli24 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds rc=7 FAIL
+        022 bli53 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o ....rc=7 FAIL
+        024 bli54 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds ...rc=7 FAIL
+        026 bli57 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do ...rc=7 FAIL
+        030 bli74 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_1850-2000^tools_ rc=7 FAIL
+        032 bliT4 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools_ rc=7 FAIL
+
+
+  yellowstone/PTCLM:            no
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_72
+
+Changes answers relative to baseline: NO. However, changes behavior of
+these offline tools:
+
+mksurfdata_map for clm4.5: changes the following defaults:
+- use hires raw datasets (where available) for everything except pctpft
+- zeroes out inland wetland areas
+- changes default glacier dataset for glc_mec surface datasets
+- uses correct ngwh dataset for rcp6.0 2006 & 2007
+
+mksurfdata_map for clm4.0: changes the following defaults:
+- uses correct ngwh dataset for rcp6.0 2006 & 2007
+
+mkmapdata.sh:
+- no longer generates ocean-atmosphere and RTM mapping files
+
+mkscripgrid.ncl:
+- roundoff-level changes in coordinates
+- grid_dims is fixed (now correctly nx by ny, rather than ntot by ntot)
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_72
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date:  Thu Apr 11 15:13:40 MDT 2013

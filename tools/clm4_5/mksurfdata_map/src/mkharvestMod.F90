@@ -313,7 +313,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harv_o)
      ! Determine harv_o on output grid
 
      do ifld = 1,numharv
-        call gridmap_areaave(tgridmap, harv_i(:,ifld), harv_o(:,ifld))
+        call gridmap_areaave(tgridmap, harv_i(:,ifld), harv_o(:,ifld), nodata=0._r8)
      end do
 
      ! -----------------------------------------------------------------

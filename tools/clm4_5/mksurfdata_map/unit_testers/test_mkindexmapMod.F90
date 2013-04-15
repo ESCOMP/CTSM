@@ -429,7 +429,7 @@ contains
       type(dim_slice_type), allocatable :: extra_dims(:)
       
       integer :: ncid
-      character(len=*), parameter :: filename = 'unit_testers/test_lookup_2d_netcdf.nc'
+      character(len=*), parameter :: filename = 'unit_testers/inputs/test_lookup_2d_netcdf.nc'
 
       ! flags to enable tests that we don't usually want to run, because they result in
       ! an abort, but we may occasionally want to run to make sure this error-handling is

@@ -298,7 +298,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, pctlnd_o, pctpft_o)
      end do
 
      do m = 0,numpft
-        call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m))
+        call gridmap_areaave(tgridmap, pctpft_i(:,m), pctpft_o(:,m), nodata=0._r8)
         do no = 1,ns_o
            if (pctlnd_o(no) < 1.0e-6) then
               if (m == 0) then

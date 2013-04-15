@@ -70,7 +70,7 @@ OPTIONS
                               Only used if glc_nec > 0 for determining fglcmask 
                               Default:  gland5UM
                               (i.e. gland20, gland10 etcetera)
-     -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10] 
+     -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36] 
                               (default is 0) (standard option with land-ice model is 10)
      -glc_smb <value>         Only used if glc_nec > 0
                               If .true., pass surface mass balance info to GLC

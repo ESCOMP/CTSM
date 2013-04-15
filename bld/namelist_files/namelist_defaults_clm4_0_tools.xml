@@ -134,6 +134,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fndepdat hgrid="1.9x2.5"   bgc="cndv" sim_year="2105" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2100-2109_1.9x2.5_c100127.nc</fndepdat>
 
 <!-- SCRIP grid data files -->
+
+<!-- Set default values for grid attributes -->
+<scripgriddata_lrgfile_needed>none</scripgriddata_lrgfile_needed>
+<scripgriddata_type>SCRIP</scripgriddata_type>
+
 <!-- Finite-Volume grids -->
 <scripgriddata hgrid="0.23x0.31" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.23x0.31_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.47x0.63" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.47x0.63_nomask_c120914.nc</scripgriddata>
@@ -183,17 +188,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="MODIS"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODIS_c110915.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="USGS"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3_USGS_c120912.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="USGS">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="LandScan2004"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_LandScan2004_c120517.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="LandScan2004">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner_c120922.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="GLOBE-Gardner">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner-mergeGIS"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner-mergeGIS_c120922.nc</scripgriddata>
-<scripgriddata hgrid="360x720"   lmask="cruncep" 
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="GLOBE-Gardner-mergeGIS">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="360x720cru"   lmask="cruncep" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_cruncep_c120830.nc</scripgriddata>
-<scripgriddata hgrid="360x720"   lmask="nomask" 
+<scripgriddata hgrid="360x720cru"   lmask="nomask" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
 
 <!-- Single-point / Regional grids -->
@@ -234,6 +244,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="glc" glc_nec="3"  >GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="glc" glc_nec="5"  >GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="glc" glc_nec="10" >GLOBE-Gardner-mergeGIS</lmask>
+<lmask type="glc" glc_nec="36" >GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="fmx"              >USGS</lmask>
 <lmask type="fmx" hires="on"   >USGS</lmask>
 <lmask type="irr"              >nomask</lmask>
@@ -368,6 +379,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="5"  
 >lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
 <mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="10" 
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="36" 
 >lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
 
 <!-- mksrf_furbtopo - topography for urban threshold -->
@@ -3117,7 +3130,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="4.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.minicam.simyr2005-2100.c100121/mksrf_landuse_minicam2100_c100121.nc
 </mksrf_fvegtyp>
 
-<!-- rcp 6.0 the AIM future scenario with the old wood harvesting (remove this section when OK to change answers) -->
+<!-- rcp 6.0 the AIM future scenario with the old wood harvesting -->
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2006_c100318.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2007_c100318.nc
@@ -3309,7 +3322,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2100_c100318.nc
 </mksrf_fvegtyp>
 
-<!-- rcp 8.5 the MESSAGE future scenario with old wood harvesting (remove this section when OK to change answers) -->
+<!-- rcp 8.5 the MESSAGE future scenario with old wood harvesting -->
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2006_c100121.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2007_c100121.nc
@@ -3500,10 +3513,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <!-- rcp 6.0 the AIM future scenario with the new good wood harvesting -->
-<!-- Make this section the default when it is OK to change answers -->
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="6"   ngwh="on"  >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2006_c110602.nc
+<!-- This section is now the default -->
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2006_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="6"   ngwh="on"  >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2007_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2007_c110602.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2008_c110602.nc
 </mksrf_fvegtyp>
@@ -3693,7 +3706,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <!-- rcp 8.5 the MESSAGE future scenario with new good wood harvesting -->
-<!-- Make this section the default when it is OK to change answers -->
+<!-- This section is now the default -->
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2006_c110602.nc
 </mksrf_fvegtyp>
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2007_c110602.nc

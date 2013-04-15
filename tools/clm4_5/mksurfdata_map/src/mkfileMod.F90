@@ -115,6 +115,17 @@ contains
             'all_urban', len_trim(str), trim(str)), subname)
     end if
 
+    if ( no_inlandwet )then
+       str = 'TRUE'
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'no_inlandwet', len_trim(str), trim(str)), subname)
+    end if
+
+    call check_ret(nf_put_att_int(ncid, NF_GLOBAL, &
+         'nglcec', nf_int, 1, nglcec), subname)
+
+    ! Raw data file names
+
     str = get_filename(mksrf_fgrid)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Input_grid_dataset', len_trim(str), trim(str)), subname)
@@ -153,25 +164,41 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_raw_data_file_name', len_trim(str), trim(str)), subname)
 
-    str = get_filename(map_fpft)
-    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-         'map_pft_file_name', len_trim(str), trim(str)), subname)
-
     if (.not. dynlanduse) then
        str = get_filename(mksrf_flai)
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
             'Lai_raw_data_file_name', len_trim(str), trim(str)), subname)
     end if
 
-    ! ----------------------------------------------------------------------
-    ! Define variables
-    ! ----------------------------------------------------------------------
- 
-    if ( .not. outnc_double )then
-       xtype = nf_float
-    else
-       xtype = nf_double
-    end if
+    str = get_filename(mksrf_fabm)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'agfirepkmon_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_fgdp)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'gdp_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_fpeat)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'peatland_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_ftopostats)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'topography_stats_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_fvic)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'vic_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_fch4)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'ch4_params_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    ! Mapping file names
+
+    str = get_filename(map_fpft)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_pft_file_name', len_trim(str), trim(str)), subname)
 
     str = get_filename(map_flakwat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -224,6 +251,30 @@ contains
     str = get_filename(map_flndtopo)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'map_land_topography_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_fabm)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_agfirepkmon_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_fgdp)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_gdp_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_fpeat)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_peatland_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_ftopostats)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_topography_stats_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_fvic)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_vic_file', len_trim(str), trim(str)), subname)
+
+    str = get_filename(map_fch4)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'map_ch4_params_file', len_trim(str), trim(str)), subname)
 
     ! ----------------------------------------------------------------------
     ! Define variables
@@ -608,6 +659,136 @@ contains
           call ncd_defvar(ncid=ncid, varname='NLEV_IMPROAD', xtype=nf_int, &
                dim1name='lsmlon', dim2name='lsmlat', dim3name='numurbl', &
                long_name='number of impervious road layers', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='peatf', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='peatland fraction', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='peatf', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='peatland fraction', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='abm', xtype=nf_int, &
+               dim1name='gridcell',&
+               long_name='agricultural fire peak month', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='abm', xtype=nf_int, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='agricultural fire peak month', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='gdp', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='gdp', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='gdp', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='gdp', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='SLOPE', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='mean topographic slope', units='degrees')
+       else
+          call ncd_defvar(ncid=ncid, varname='SLOPE', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='mean topographic slope', units='degrees')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='STD_ELEV', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='standard deviation of elevation', units='m')
+       else
+          call ncd_defvar(ncid=ncid, varname='STD_ELEV', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='standard deviation of elevation', units='m')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='binfl', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='binfl', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='VIC b parameter for the Variable Infiltration Capacity Curve', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='Ws', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='VIC Ws parameter for the ARNO curve', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='Ws', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='VIC Ws parameter for the ARNO Curve', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='Dsmax', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
+       else
+          call ncd_defvar(ncid=ncid, varname='Dsmax', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='VIC Dsmax parameter for the ARNO curve', units='mm/day')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='Ds', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='VIC Ds parameter for the ARNO curve', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='Ds', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='VIC Ds parameter for the ARNO curve', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='LAKEDEPTH', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='lake depth', units='m')
+       else
+          call ncd_defvar(ncid=ncid, varname='LAKEDEPTH', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='lake depth', units='m')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='F0', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='maximum gridcell fractional inundated area', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='F0', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='maximum gridcell fractional inundated area', units='unitless')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='P3', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='coefficient for qflx_surf_lag for finundated', units='s/mm')
+       else
+          call ncd_defvar(ncid=ncid, varname='P3', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='coefficient for qflx_surf_lag for finundated', units='s/mm')
+       end if
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='ZWT0', xtype=xtype, &
+               dim1name='gridcell',&
+               long_name='decay factor for finundated', units='m')
+       else
+          call ncd_defvar(ncid=ncid, varname='ZWT0', xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='decay factor for finundated', units='m')
        end if
 
     endif

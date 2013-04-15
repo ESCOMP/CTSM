@@ -88,9 +88,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 280;
+my $ntests = 277;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 169;
+   $ntests += 167;
 }
 plan( tests=>$ntests );
 
@@ -340,7 +340,8 @@ foreach my $res ( @resolutions ) {
              $res eq "3x3min"      ||
              $res eq "5x5min"      ||
              $res eq "10x10min"    ||
-             $res eq "0.33x0.33"  ) {
+             $res eq "0.33x0.33"   ||
+             $res eq "1km-merge-10min" ) {
       next;
    }
 

@@ -134,9 +134,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fndepdat hgrid="1.9x2.5"   bgc="cndv" sim_year="2105" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2100-2109_1.9x2.5_c100127.nc</fndepdat>
 
 <!-- SCRIP grid data files -->
+
+<!-- Set default values for grid attributes -->
+<scripgriddata_lrgfile_needed>none</scripgriddata_lrgfile_needed>
+<scripgriddata_type>SCRIP</scripgriddata_type>
+
 <!-- Finite-Volume grids -->
 <scripgriddata hgrid="0.23x0.31" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.23x0.31_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="0.47x0.63" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.47x0.63_nomask_c120914.nc</scripgriddata>
 <scripgriddata hgrid="0.9x1.25"  lmask="nomask" >lnd/clm2/mappingdata/grids/0.9x1.25_c110307.nc</scripgriddata>
 <scripgriddata hgrid="1.9x2.5"   lmask="nomask" >lnd/clm2/mappingdata/grids/1.9x2.5_c110308.nc</scripgriddata>
 <scripgriddata hgrid="2.5x3.33"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_2.5x3.33_nomask_c110308.nc</scripgriddata>
@@ -171,8 +175,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_AVHRR_c110228.nc</scripgriddata>
 <scripgriddata hgrid="0.5x0.5"   lmask="MODIS"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_MODIS_c110228.nc</scripgriddata>
-<scripgriddata hgrid="0.5x0.5"   lmask="USGS"      
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_USGS_c110725.nc</scripgriddata>
 <scripgriddata hgrid="5x5min"    lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_nomask_c110530.nc</scripgriddata>
 <scripgriddata hgrid="5x5min"    lmask="IGBP-GSDP" 
@@ -185,18 +187,33 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_IGBPmergeICESatGIS_c110818.nc</scripgriddata>
 <scripgriddata hgrid="3x3min"    lmask="MODIS"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODIS_c110915.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="USGS"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3_USGS_c120912.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="USGS">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="LandScan2004"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_LandScan2004_c120517.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="LandScan2004">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner_c120922.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="GLOBE-Gardner">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner-mergeGIS"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner-mergeGIS_c120922.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="GLOBE-Gardner-mergeGIS">64bit_offset</scripgriddata_lrgfile_needed>
 <scripgriddata hgrid="360x720cru"   lmask="cruncep" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_cruncep_c120830.nc</scripgriddata>
 <scripgriddata hgrid="360x720cru"   lmask="nomask" 
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
+<scripgriddata hgrid="0.9x1.25"  lmask="GRDC"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.9x1.25_GRDC_c130307.nc</scripgriddata>
+
+<!-- Other raw data grids -->
+<!-- Note that the following is a UGRID file rather than a SCRIP grid file -->
+<scripgriddata hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
+   >lnd/clm2/mappingdata/grids/UGRID_1km-merge-10min_HYDRO1K-merge-nomask_c130402.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">netcdf4</scripgriddata_lrgfile_needed>
+<scripgriddata_type hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">UGRID</scripgriddata_type>
+<scripgriddata_meshname hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">landmesh</scripgriddata_meshname>
 
 <!-- Single-point / Regional grids -->
 <scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
@@ -219,50 +236,51 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="tx0.1v2"    lmask="tx0.1v2"   >/glade/proj3/cseg/mapping/grids/tx0.1v2_090127.nc</scripgriddata>
 
 <!-- land masks for different types of mksurfdata_map input files -->
-<lmask type="lak"              >AVHRR</lmask>
-<lmask type="lak" hires="on"   >MODIS</lmask>
+<lmask type="lak"              >MODIS</lmask>
 <lmask type="wet"              >AVHRR</lmask>
 <lmask type="voc"              >AVHRR</lmask>
 <lmask type="lai"              >MODIS</lmask>
 <lmask type="veg"              >MODIS</lmask>
-<lmask type="veg" hires="on"   >MODIS</lmask>
+<lmask type="veg" hirespft="on">MODIS</lmask>
 <lmask type="urb"              >LandScan2004</lmask>
-<lmask type="urb" hires="on"   >LandScan2004</lmask>
 <lmask type="col"              >MODIS</lmask>
-<lmask type="org"              >MODIS</lmask>
-<lmask type="org" hires="on"   >ISRIC-WISE</lmask>
-<lmask type="glc" glc_nec="0"  >GLOBE-Gardner</lmask>
-<lmask type="glc" glc_nec="1"  >GLOBE-Gardner-mergeGIS</lmask>
-<lmask type="glc" glc_nec="3"  >GLOBE-Gardner-mergeGIS</lmask>
-<lmask type="glc" glc_nec="5"  >GLOBE-Gardner-mergeGIS</lmask>
-<lmask type="glc" glc_nec="10" >GLOBE-Gardner-mergeGIS</lmask>
+<lmask type="org"              >ISRIC-WISE</lmask>
+<lmask type="glc"              >GLOBE-Gardner</lmask>
+<lmask type="glc" mergeGIS="on">GLOBE-Gardner-mergeGIS</lmask>
 <lmask type="fmx"              >USGS</lmask>
-<lmask type="fmx" hires="on"   >USGS</lmask>
 <lmask type="irr"              >nomask</lmask>
 <lmask type="utp"              >nomask</lmask>
 <lmask type="top"              >nomask</lmask>
 <lmask type="tex"              >IGBP-GSDP</lmask>
+<lmask type="gdp"              >AVHRR</lmask>
+<lmask type="peat"             >AVHRR</lmask>
+<lmask type="abm"              >AVHRR</lmask>
+<lmask type="topostats"        >HYDRO1K-merge-nomask</lmask>
+<lmask type="vic"              >GRDC</lmask>
+<lmask type="ch4"              >cruncep</lmask>
 
 <!-- Grid resolutions for different types of mksurfdata_map input files -->
-<hgrid type="lak"              >0.5x0.5</hgrid>
-<hgrid type="lak" hires="on"   >3x3min</hgrid>
+<hgrid type="lak"              >3x3min</hgrid>
 <hgrid type="wet"              >0.5x0.5</hgrid>
 <hgrid type="voc"              >0.5x0.5</hgrid>
 <hgrid type="lai"              >0.5x0.5</hgrid>
 <hgrid type="veg"              >0.5x0.5</hgrid>
-<hgrid type="veg" hires="on"   >3x3min</hgrid>
+<hgrid type="veg" hirespft="on">3x3min</hgrid>
 <hgrid type="urb"              >3x3min</hgrid>
-<hgrid type="urb" hires="on"   >3x3min</hgrid>
 <hgrid type="col"              >0.5x0.5</hgrid>
-<hgrid type="org"              >0.5x0.5</hgrid>
-<hgrid type="org" hires="on"   >5x5min</hgrid>
+<hgrid type="org"              >5x5min</hgrid>
 <hgrid type="glc"              >3x3min</hgrid>
-<hgrid type="fmx"              >0.5x0.5</hgrid>
-<hgrid type="fmx" hires="on"   >3x3min</hgrid>
+<hgrid type="fmx"              >3x3min</hgrid>
 <hgrid type="irr"              >5x5min</hgrid>
 <hgrid type="utp"              >10x10min</hgrid>
 <hgrid type="top"              >10x10min</hgrid>
 <hgrid type="tex"              >5x5min</hgrid>
+<hgrid type="gdp"              >0.5x0.5</hgrid>
+<hgrid type="peat"             >0.5x0.5</hgrid>
+<hgrid type="abm"              >0.5x0.5</hgrid>
+<hgrid type="topostats"        >1km-merge-10min</hgrid>
+<hgrid type="vic"              >0.9x1.25</hgrid>
+<hgrid type="ch4"              >360x720cru</hgrid>
 
 <!-- namelist filenames for different types of mksurfdata_map input files -->
 <mksrf_filename type="lak" >mksrf_flakwat</mksrf_filename>
@@ -278,6 +296,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_filename type="utp" >mksrf_furbtopo</mksrf_filename>
 <mksrf_filename type="top" >mksrf_flndtopo</mksrf_filename>
 <mksrf_filename type="tex" >mksrf_fsoitex</mksrf_filename>
+<mksrf_filename type="gdp" >mksrf_fgdp</mksrf_filename>
+<mksrf_filename type="peat">mksrf_fpeat</mksrf_filename>
+<mksrf_filename type="abm" >mksrf_fabm</mksrf_filename>
+<mksrf_filename type="topostats">mksrf_ftopostats</mksrf_filename>
+<mksrf_filename type="vic" >mksrf_fvic</mksrf_filename>
+<mksrf_filename type="ch4" >mksrf_fch4</mksrf_filename>
 
 <!-- mksrf_navyoro Orography -->
 <mksrf_fnavyoro hgrid="0.33x0.33" mask="navy" >lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc</mksrf_fnavyoro>
@@ -301,22 +325,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fsoicol  hgrid="0.5x0.5"  lmask="MODIS"
 >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc</mksrf_fsoicol>
 
-<mksrf_forganic hgrid="0.5x0.5"  lmask="MODIS"
->lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc</mksrf_forganic>
-
 <mksrf_forganic hgrid="5x5min"  lmask="ISRIC-WISE"
 >lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
-
-<mksrf_fmax     hgrid="0.5x0.5"  lmask="USGS"
->lnd/clm2/rawdata/mksrf_fmax.070406.nc</mksrf_fmax>
 
 <mksrf_fmax     hgrid="3x3min"   lmask="USGS"
 >lnd/clm2/rawdata/mksrf_fmax_3x3min_USGS_c120911.nc</mksrf_fmax>
 
 <!-- Lake and wetlands -->
-<mksrf_flakwat  hgrid="0.5x0.5"  lmask="AVHRR"
->lnd/clm2/rawdata/mksrf_lanwat.050425.nc</mksrf_flakwat>
-
 <mksrf_flakwat  hgrid="3x3min"   lmask="MODIS"
 >lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_c111116.nc</mksrf_flakwat>
 
@@ -344,33 +359,37 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      the Gardner data globally. But if you are running with CISM, then it's probably best
      to use the merged data, since CLM will then be more consistent with CISM. 
 
-     In the logic here, we equate "running with CISM" with "running with multiple
-     elevation classes." Soon, though, we want to separate those conditions, so that (1)
-     you can run with multiple elevation classes without CISM, and perhaps more
-     importantly (2) you can use the same surface dataset for runs with multiple elevation
-     classes or a single elevation class. At that point, we will need to rethink the rule
-     deciding between the two raw datasets, or perhaps just always use one of these raw
-     datasets by default, leaving the other as an option that would require manual editing
-     of the namelist.
-
      In the longer-term, once we have dynamic landunits, I plan to make CLM adjust its
      initial conditions to match CISM. At that point, the need for the "mergeGreenland"
      version of the raw dataset will probably go away.
 -->
-<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner"          glc_nec="0"  
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner"
 >lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="1" 
->lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="3"  
->lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="5"  
->lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
-<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" glc_nec="10" 
+<mksrf_fglacier hgrid="3x3min"   lmask="GLOBE-Gardner-mergeGIS" mergeGIS="on"
 >lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
 
 <!-- mksrf_furbtopo - topography for urban threshold -->
 <mksrf_furbtopo hgrid="10x10min" lmask="nomask"
 >lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc</mksrf_furbtopo>
+
+<!-- fire-related datasets -->
+<mksrf_fgdp hgrid="0.5x0.5" lmask="AVHRR"
+>lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fgdp>
+
+<mksrf_fpeat hgrid="0.5x0.5" lmask="AVHRR"
+>lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fpeat>
+
+<mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR"
+>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</mksrf_fabm>
+
+<mksrf_ftopostats hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
+>lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc</mksrf_ftopostats>
+
+<mksrf_fvic hgrid="0.9x1.25" lmask="GRDC"
+>lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</mksrf_fvic>
+
+<mksrf_fch4 hgrid="360x720cru" lmask="cruncep"
+>lnd/clm2/rawdata/mksrf_ch4inversion_360x720_cruncep_simyr2000.c130322.nc</mksrf_fch4>
 
 <!-- RCP 6.0 - the AIM scenario -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn"   sim_year="2005" rcp="6">lnd/clm2/ndepdata/ndep_clm_rcp6.0_simyr2000-2009_1.9x2.5_c100806.nc</fndepdat>
@@ -3116,772 +3135,388 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="4.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.minicam.simyr2005-2100.c100121/mksrf_landuse_minicam2100_c100121.nc
 </mksrf_fvegtyp>
 
-<!-- rcp 6.0 the AIM future scenario with the old wood harvesting (remove this section when OK to change answers) -->
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2006_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2007_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2008_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2009" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2009_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2010" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2010_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2011" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2011_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2012" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2012_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2013" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2013_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2014" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2014_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2015" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2015_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2016" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2016_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2017" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2017_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2018" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2018_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2019" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2019_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2020" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2020_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2021" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2021_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2022" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2022_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2023" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2023_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2024" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2024_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2025" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2025_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2026" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2026_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2027" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2027_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2028" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2028_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2029" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2029_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2030" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2030_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2031" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2031_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2032" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2032_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2033" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2033_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2034" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2034_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2035" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2035_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2036" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2036_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2037" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2037_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2038" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2038_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2039" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2039_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2040" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2040_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2041" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2041_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2042" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2042_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2043" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2043_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2044" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2044_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2045" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2045_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2046" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2046_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2047" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2047_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2048" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2048_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2049" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2049_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2050" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2050_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2051" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2051_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2052" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2052_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2053" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2053_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2054" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2054_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2055" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2055_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2056" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2056_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2057" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2057_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2058" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2058_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2059" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2059_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2060" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2060_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2061" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2061_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2062" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2062_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2063" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2063_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2064" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2064_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2065" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2065_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2066" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2066_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2067" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2067_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2068" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2068_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2069" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2069_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2070" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2070_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2071" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2071_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2072" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2072_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2073" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2073_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2074" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2074_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2075" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2075_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2076" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2076_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2077" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2077_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2078" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2078_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2079" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2079_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2080" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2080_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2081" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2081_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2082" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2082_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2083" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2083_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2084" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2084_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2085" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2085_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2086" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2086_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2087" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2087_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2088" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2088_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2089" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2089_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2090" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2090_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2091" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2091_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2092" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2092_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2093" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2093_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2094" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2094_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2095" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2095_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2096" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2096_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2097" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2097_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2098" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2098_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2099" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2099_c100318.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.simyr2005-2100.c100318/mksrf_landuse_aim2100_c100318.nc
-</mksrf_fvegtyp>
-
-<!-- rcp 8.5 the MESSAGE future scenario with old wood harvesting (remove this section when OK to change answers) -->
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2006_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2007_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2008_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2009" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2009_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2010" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2010_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2011" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2011_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2012" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2012_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2013" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2013_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2014" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2014_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2015" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2015_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2016" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2016_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2017" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2017_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2018" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2018_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2019" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2019_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2020" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2020_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2021" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2021_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2022" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2022_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2023" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2023_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2024" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2024_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2025" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2025_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2026" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2026_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2027" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2027_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2028" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2028_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2029" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2029_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2030" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2030_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2031" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2031_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2032" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2032_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2033" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2033_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2034" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2034_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2035" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2035_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2036" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2036_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2037" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2037_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2038" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2038_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2039" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2039_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2040" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2040_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2041" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2041_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2042" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2042_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2043" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2043_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2044" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2044_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2045" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2045_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2046" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2046_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2047" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2047_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2048" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2048_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2049" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2049_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2050" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2050_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2051" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2051_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2052" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2052_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2053" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2053_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2054" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2054_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2055" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2055_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2056" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2056_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2057" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2057_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2058" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2058_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2059" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2059_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2060" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2060_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2061" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2061_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2062" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2062_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2063" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2063_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2064" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2064_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2065" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2065_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2066" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2066_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2067" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2067_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2068" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2068_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2069" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2069_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2070" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2070_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2071" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2071_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2072" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2072_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2073" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2073_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2074" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2074_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2075" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2075_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2076" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2076_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2077" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2077_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2078" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2078_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2079" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2079_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2080" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2080_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2081" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2081_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2082" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2082_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2083" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2083_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2084" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2084_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2085" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2085_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2086" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2086_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2087" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2087_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2088" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2088_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2089" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2089_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2090" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2090_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2091" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2091_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2092" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2092_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2093" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2093_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2094" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2094_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2095" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2095_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2096" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2096_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2097" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2097_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2098" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2098_c100121.nc
-</mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2099" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.simyr2005-2100.c100121/mksrf_landuse_message2099_c100121.nc
-</mksrf_fvegtyp>
-
 <!-- rcp 6.0 the AIM future scenario with the new good wood harvesting -->
-<!-- Make this section the default when it is OK to change answers -->
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="6"   ngwh="on"  >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2006_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2006_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="6"   ngwh="on"  >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2007_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2007_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2008_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2008_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2009" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2009_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2009" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2009_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2010" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2010_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2010" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2010_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2011" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2011_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2011" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2011_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2012" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2012_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2012" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2012_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2013" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2013_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2013" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2013_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2014" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2014_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2014" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2014_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2015" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2015_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2015" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2015_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2016" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2016_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2016" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2016_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2017" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2017_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2017" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2017_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2018" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2018_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2018" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2018_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2019" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2019_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2019" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2019_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2020" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2020_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2020" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2020_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2021" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2021_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2021" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2021_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2022" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2022_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2022" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2022_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2023" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2023_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2023" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2023_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2024" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2024_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2024" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2024_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2025" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2025_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2025" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2025_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2026" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2026_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2026" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2026_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2027" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2027_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2027" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2027_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2028" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2028_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2028" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2028_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2029" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2029_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2029" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2029_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2030" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2030_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2030" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2030_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2031" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2031_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2031" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2031_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2032" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2032_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2032" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2032_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2033" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2033_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2033" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2033_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2034" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2034_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2034" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2034_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2035" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2035_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2035" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2035_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2036" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2036_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2036" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2036_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2037" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2037_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2037" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2037_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2038" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2038_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2038" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2038_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2039" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2039_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2039" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2039_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2040" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2040_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2040" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2040_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2041" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2041_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2041" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2041_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2042" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2042_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2042" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2042_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2043" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2043_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2043" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2043_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2044" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2044_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2044" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2044_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2045" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2045_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2045" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2045_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2046" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2046_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2046" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2046_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2047" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2047_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2047" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2047_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2048" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2048_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2048" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2048_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2049" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2049_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2049" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2049_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2050" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2050_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2050" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2050_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2051" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2051_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2051" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2051_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2052" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2052_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2052" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2052_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2053" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2053_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2053" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2053_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2054" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2054_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2054" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2054_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2055" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2055_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2055" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2055_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2056" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2056_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2056" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2056_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2057" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2057_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2057" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2057_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2058" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2058_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2058" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2058_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2059" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2059_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2059" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2059_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2060" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2060_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2060" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2060_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2061" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2061_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2061" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2061_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2062" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2062_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2062" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2062_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2063" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2063_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2063" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2063_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2064" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2064_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2064" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2064_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2065" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2065_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2065" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2065_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2066" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2066_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2066" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2066_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2067" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2067_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2067" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2067_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2068" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2068_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2068" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2068_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2069" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2069_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2069" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2069_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2070" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2070_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2070" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2070_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2071" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2071_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2071" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2071_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2072" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2072_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2072" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2072_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2073" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2073_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2073" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2073_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2074" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2074_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2074" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2074_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2075" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2075_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2075" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2075_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2076" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2076_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2076" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2076_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2077" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2077_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2077" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2077_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2078" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2078_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2078" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2078_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2079" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2079_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2079" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2079_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2080" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2080_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2080" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2080_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2081" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2081_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2081" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2081_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2082" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2082_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2082" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2082_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2083" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2083_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2083" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2083_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2084" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2084_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2084" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2084_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2085" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2085_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2085" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2085_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2086" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2086_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2086" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2086_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2087" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2087_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2087" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2087_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2088" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2088_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2088" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2088_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2089" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2089_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2089" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2089_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2090" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2090_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2090" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2090_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2091" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2091_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2091" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2091_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2092" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2092_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2092" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2092_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2093" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2093_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2093" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2093_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2094" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2094_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2094" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2094_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2095" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2095_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2095" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2095_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2096" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2096_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2096" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2096_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2097" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2097_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2097" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2097_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2098" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2098_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2098" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2098_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2099" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2099_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2099" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2099_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="6" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2100_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="6" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.aim.ngwh.simyr2005-2100.c110602/mksrf_landuse_aim_2100_c110602.nc
 </mksrf_fvegtyp>
 
 <!-- rcp 8.5 the MESSAGE future scenario with new good wood harvesting -->
-<!-- Make this section the default when it is OK to change answers -->
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2006_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2006" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2006_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2007_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2007" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2007_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2008_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2008" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2008_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2009" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2009_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2009" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2009_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2010" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2010_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2010" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2010_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2011" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2011_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2011" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2011_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2012" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2012_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2012" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2012_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2013" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2013_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2013" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2013_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2014" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2014_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2014" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2014_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2015" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2015_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2015" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2015_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2016" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2016_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2016" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2016_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2017" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2017_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2017" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2017_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2018" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2018_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2018" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2018_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2019" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2019_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2019" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2019_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2020" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2020_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2020" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2020_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2021" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2021_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2021" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2021_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2022" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2022_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2022" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2022_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2023" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2023_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2023" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2023_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2024" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2024_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2024" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2024_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2025" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2025_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2025" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2025_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2026" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2026_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2026" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2026_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2027" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2027_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2027" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2027_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2028" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2028_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2028" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2028_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2029" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2029_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2029" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2029_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2030" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2030_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2030" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2030_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2031" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2031_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2031" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2031_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2032" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2032_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2032" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2032_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2033" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2033_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2033" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2033_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2034" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2034_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2034" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2034_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2035" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2035_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2035" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2035_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2036" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2036_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2036" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2036_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2037" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2037_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2037" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2037_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2038" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2038_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2038" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2038_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2039" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2039_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2039" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2039_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2040" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2040_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2040" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2040_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2041" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2041_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2041" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2041_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2042" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2042_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2042" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2042_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2043" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2043_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2043" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2043_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2044" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2044_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2044" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2044_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2045" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2045_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2045" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2045_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2046" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2046_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2046" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2046_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2047" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2047_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2047" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2047_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2048" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2048_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2048" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2048_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2049" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2049_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2049" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2049_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2050" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2050_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2050" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2050_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2051" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2051_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2051" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2051_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2052" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2052_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2052" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2052_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2053" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2053_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2053" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2053_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2054" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2054_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2054" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2054_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2055" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2055_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2055" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2055_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2056" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2056_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2056" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2056_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2057" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2057_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2057" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2057_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2058" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2058_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2058" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2058_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2059" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2059_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2059" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2059_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2060" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2060_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2060" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2060_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2061" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2061_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2061" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2061_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2062" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2062_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2062" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2062_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2063" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2063_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2063" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2063_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2064" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2064_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2064" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2064_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2065" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2065_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2065" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2065_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2066" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2066_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2066" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2066_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2067" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2067_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2067" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2067_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2068" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2068_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2068" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2068_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2069" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2069_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2069" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2069_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2070" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2070_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2070" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2070_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2071" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2071_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2071" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2071_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2072" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2072_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2072" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2072_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2073" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2073_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2073" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2073_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2074" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2074_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2074" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2074_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2075" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2075_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2075" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2075_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2076" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2076_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2076" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2076_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2077" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2077_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2077" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2077_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2078" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2078_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2078" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2078_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2079" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2079_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2079" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2079_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2080" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2080_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2080" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2080_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2081" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2081_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2081" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2081_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2082" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2082_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2082" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2082_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2083" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2083_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2083" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2083_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2084" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2084_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2084" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2084_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2085" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2085_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2085" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2085_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2086" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2086_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2086" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2086_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2087" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2087_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2087" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2087_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2088" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2088_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2088" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2088_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2089" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2089_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2089" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2089_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2090" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2090_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2090" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2090_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2091" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2091_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2091" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2091_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2092" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2092_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2092" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2092_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2093" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2093_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2093" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2093_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2094" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2094_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2094" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2094_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2095" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2095_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2095" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2095_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2096" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2096_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2096" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2096_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2097" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2097_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2097" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2097_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2098" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2098_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2098" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2098_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2099" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2099_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2099" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2099_c110602.nc
 </mksrf_fvegtyp>
-<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="8.5" ngwh="on" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2100_c110602.nc
+<mksrf_fvegtyp hgrid="0.5x0.5" sim_year="2100" rcp="8.5" crop="off" >lnd/clm2/rawdata/pftlandusedyn.0.5x0.5.message.ngwh.simyr2005-2100.c110602/mksrf_landuse_message_2100_c110602.nc
 </mksrf_fvegtyp>
 
 <!-- Historical Greenhouse gas concentrations from CAM -->

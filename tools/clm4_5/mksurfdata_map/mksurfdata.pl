@@ -53,12 +53,13 @@ my %opts = (
                exedir=>undef,
                allownofile=>undef,
                crop=>undef,
-               hires=>undef,
+               hirespft=>undef,
                years=>"1850,2000",
                glc_nec=>0,
+               merge_gis=>undef,
+               inlandwet=>undef,
                help=>0,
                mv=>0,
-               ngwh=>undef,
                pft_override=>undef,
                pft_frc=>undef,
                pft_idx=>undef,
@@ -108,16 +109,19 @@ OPTIONS
                                    (rather than create it on the fly) 
                                    (must be consistent with first year)
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
-     -hires                        If you want to use high-resolution input datasets rather 
-                                   than the default lower resolution datasets 
-                                   (low resolution is typically at half-degree)
+     -merge_gis                    If you want to use the glacier dataset that merges in
+                                   the Greenland Ice Sheet data that CISM uses (typically
+                                   used only if consistency with CISM is important)
+     -hirespft                     If you want to use the high-resolution pft dataset rather 
+                                   than the default lower resolution dataset
+                                   (low resolution is at half-degree, high resolution at 3')
+                                   (hires only available for present-day [2000])
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
+     -inlandwet                    If you want to allow inland wetlands
      -mv                           If you want to move the files after creation to the 
                                    correct location in inputdata
                                    (by default -nomv is assumed so files are NOT moved)
-     -new_woodharv                 Use the new good wood harvesting (for rcp6 and rcp8.5)
-                                   (by default use the old harvesting used for IPCC simulations)
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -240,17 +244,18 @@ sub trim($)
         "usr_gname=s"  => \$opts{'usr_gname'},
         "usr_gdate=s"  => \$opts{'usr_gdate'},
         "crop"         => \$opts{'crop'},
-        "hires"        => \$opts{'hires'},
+        "hirespft"     => \$opts{'hirespft'},
         "c|rcp=s"      => \$opts{'rcp'},
         "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
-        "new_woodharv" => \$opts{'ngwh'},
         "exedir=s"     => \$opts{'exedir'},
         "h|help"       => \$opts{'help'},
         "usrname=s"    => \$opts{'usrname'},
         "glc_nec=i"    => \$opts{'glc_nec'},
+        "merge_gis"    => \$opts{'merge_gis'},
+        "inlandwet"    => \$opts{'inlandwet'},
         "mv"           => \$opts{'mv'},
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
@@ -273,6 +278,10 @@ sub trim($)
       $CSMDATA = $opts{'csmdata'};
    }
    my $glc_nec = $opts{'glc_nec'};
+   my $no_inlandwet = ".true.";
+   if (defined($opts{'inlandwet'})) {
+      $no_inlandwet = ".false.";
+   }
    #
    # Set disk location to send files to, and list resolutions to operate over, 
    # set filenames, and short-date-name
@@ -395,17 +404,22 @@ EOF
       # Mapping files
       #
       my %map; my %hgrd; my %lmsk; my %datfil;
-      my $hires = "off";
-      if ( defined($opts{'hires'}) ) {
-         $hires = "on";
+      my $hirespft = "off";
+      if ( defined($opts{'hirespft'}) ) {
+         $hirespft = "on";
+      }
+      my $merge_gis = "off";
+      if ( defined($opts{'merge_gis'}) ) {
+         $merge_gis = "on";
       }
       my $mopts  = "$queryopts -namelist default_settings $usrnam";
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       foreach my $typ ( "lak", "veg", "voc", "top", "tex", "col", 
-                        "fmx", "lai", "urb", "org", "glc", "utp", "wet" ) {
-         my $lmask = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec,hires=$hires -var lmask`;
+                        "fmx", "lai", "urb", "org", "glc", "utp", "wet",
+		        "gdp", "peat","abm", "topostats" , "vic", "ch4") {
+         my $lmask = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,mergeGIS=$merge_gis,hirespft=$hirespft -var lmask`;
          $lmask = trim($lmask);
-         my $hgrid = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,glc_nec=$glc_nec,hires=$hires -var hgrid`;
+         my $hgrid = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ,hirespft=$hirespft -var hgrid`;
          $hgrid = trim($hgrid);
          my $filnm = `$scrdir/../../../bld/queryDefaultNamelist.pl $mopts -options type=$typ -var mksrf_filename`;
          $filnm = trim($filnm);
@@ -423,7 +437,7 @@ EOF
          if ( ! defined($opts{'allownofile'}) && ! -f $map{$typ} ) {
             die "ERROR: mapping file for this resolution does NOT exist ($map{$typ}).\n";
          }
-         $datfil{$typ} = `$scrdir/../../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,glc_nec=$glc_nec$mkcrop -var $filnm`;
+         $datfil{$typ} = `$scrdir/../../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop -var $filnm`;
          $datfil{$typ} = trim($datfil{$typ});
          if ( $datfil{$typ} !~ /[^ ]+/ ) {
             die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n";
@@ -492,33 +506,46 @@ EOF
 	    print "CSMDATA is $CSMDATA \n";
             print $fh <<"EOF";
 &clmexp
- nglcec         = $glc_nec
- mksrf_fgrid    = '$griddata'
- map_fpft       = '$map{'veg'}'
- map_fglacier   = '$map{'glc'}'
- map_fsoicol    = '$map{'col'}'
- map_furban     = '$map{'urb'}'
- map_fmax       = '$map{'fmx'}'
- map_forganic   = '$map{'org'}'
- map_flai       = '$map{'lai'}'
- map_fharvest   = '$map{'lai'}'
- map_flakwat    = '$map{'lak'}'
- map_fwetlnd    = '$map{'wet'}'
- map_fvocef     = '$map{'voc'}'
- map_fsoitex    = '$map{'tex'}'
- map_furbtopo   = '$map{'utp'}'
- map_flndtopo   = '$map{'top'}'
- mksrf_fsoitex  = '$datfil{'tex'}'
- mksrf_forganic = '$datfil{'org'}'
- mksrf_flakwat  = '$datfil{'lak'}'
- mksrf_fwetlnd  = '$datfil{'wet'}'
- mksrf_fmax     = '$datfil{'fmx'}'
- mksrf_fglacier = '$datfil{'glc'}'
- mksrf_fvocef   = '$datfil{'voc'}'
- mksrf_furbtopo = '$datfil{'utp'}'
- mksrf_flndtopo = '$datfil{'top'}'
+ nglcec           = $glc_nec
+ mksrf_fgrid      = '$griddata'
+ map_fpft         = '$map{'veg'}'
+ map_fglacier     = '$map{'glc'}'
+ map_fsoicol      = '$map{'col'}'
+ map_furban       = '$map{'urb'}'
+ map_fmax         = '$map{'fmx'}'
+ map_forganic     = '$map{'org'}'
+ map_flai         = '$map{'lai'}'
+ map_fharvest     = '$map{'lai'}'
+ map_flakwat      = '$map{'lak'}'
+ map_fwetlnd      = '$map{'wet'}'
+ map_fvocef       = '$map{'voc'}'
+ map_fsoitex      = '$map{'tex'}'
+ map_furbtopo     = '$map{'utp'}'
+ map_flndtopo     = '$map{'top'}'
+ map_fgdp         = '$map{'gdp'}'
+ map_fpeat        = '$map{'peat'}'
+ map_fabm         = '$map{'abm'}'
+ map_ftopostats   = '$map{'topostats'}'
+ map_fvic         = '$map{'vic'}'
+ map_fch4         = '$map{'ch4'}'
+ mksrf_fsoitex    = '$datfil{'tex'}'
+ mksrf_forganic   = '$datfil{'org'}'
+ mksrf_flakwat    = '$datfil{'lak'}'
+ mksrf_fwetlnd    = '$datfil{'wet'}'
+ mksrf_fmax       = '$datfil{'fmx'}'
+ mksrf_fglacier   = '$datfil{'glc'}'
+ mksrf_fvocef     = '$datfil{'voc'}'
+ mksrf_furbtopo   = '$datfil{'utp'}'
+ mksrf_flndtopo   = '$datfil{'top'}'
+ mksrf_fgdp       = '$datfil{'gdp'}'
+ mksrf_fpeat      = '$datfil{'peat'}'
+ mksrf_fabm       = '$datfil{'abm'}'
+ mksrf_ftopostats = '$datfil{'topostats'}'
+ mksrf_fvic       = '$datfil{'vic'}'
+ mksrf_fch4       = '$datfil{'ch4'}'
  outnc_double   = $double
  all_urban      = $all_urb
+ no_inlandwet   = $no_inlandwet
 EOF
             my $urbdesc = "urb3den";
             if ( ! $urb_pt ) {
@@ -574,12 +601,8 @@ EOF
 		    my $fhpftdyn = IO::File->new;
 		    $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
 		    print "Writing out pftdyn text file: $pftdyntext_file\n";
-                    my $ngwh = "";
-                    if ( defined($opts{'ngwh'}) ) {
-                       $ngwh = ",ngwh=on";
-                    }
 		    for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-                        my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop}${ngwh} -var mksrf_fvegtyp -namelist clmexp`;
+                        my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
 			chomp( $vegtypyr );
 			printf $fhpftdyn $dynpft_format, $vegtypyr, $yr;
 			if ( $yr % 100 == 0 ) {

@@ -7,7 +7,7 @@ set cdate="c"`date +%y%m%d`
 
 # Currently ESMF regridding does NOT work for single-point files
 # Although it does for regional files of at least 4 grid points
-set resols = ( "0.9x1.25" "0.23x0.31" "0.47x0.63" "1.9x2.5" "128x256" \
+set resols = ( "0.9x1.25" "0.23x0.31" "1.9x2.5" "128x256" \
                "2.5x3.33" "32x64" "48x96" "4x5" "5x5_amazon" \
                "1x1_brazil" "1x1_camdenNJ" "1x1_urbanc_alpha" "1x1_mexicocityMEX" \
                "1x1_vancouverCAN" "1x1_tropicAtl" \

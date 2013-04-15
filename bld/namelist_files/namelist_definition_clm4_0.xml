@@ -73,7 +73,7 @@ If TRUE, separate the vegetated landunit into a crop landunit and a natural vege
 </entry>
 
 <entry id="maxpatch_glcmec" type="integer"  category="clm_physics"
-       group="clm_inparm" valid_values="0,1,3,5,10" >
+       group="clm_inparm" valid_values="0,1,3,5,10,36" >
 Number of  multiple elevation classes over glacier points.
 Normally this is ONLY used when running CESM with the active glacier model.
 </entry>
@@ -313,6 +313,26 @@ If TRUE, write diagnostic of global radiative temperature written to CLM log fil
 <entry id="scripgriddata" type="char*256" category="mkmapdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 SCRIP format grid data file
+</entry>
+
+<entry id="scripgriddata_lrgfile_needed" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="none,64bit_offset,netcdf4" >
+Flag to pass to the ESMF mapping utility, telling it what kind of large
+file support is needed for an output file generated with this grid as
+either the source or destination ('none', '64bit_offset' or 'netcdf4'). 
+</entry>
+
+<entry id="scripgriddata_type" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="SCRIP,UGRID" >
+Flag to pass to the ESMF mapping utility, telling it what kind of grid
+file this is (SCRIP or UGRID).
+</entry>
+
+<entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="" >
+For UGRID files, flag to pass to the ESMF mapping utility, telling it the
+name of the dummy variable that has all of the topology information stored
+in its attributes. (Only used if scripgriddata_src_type = UGRID.)
 </entry>
 
 <!--                                                   -->
@@ -702,7 +722,7 @@ Land mask description for mksurfdata input files
 
 <entry id="hgrid" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="0.1x0.1,0.5x0.5,10x10min,5x5min,360x720,19basin">
+       valid_values="0.1x0.1,0.5x0.5,10x10min,5x5min,360x720cru,19basin">
 Horizontal grid resolutions for mksurfdata input files
 </entry> 
 

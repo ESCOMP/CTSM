@@ -7,6 +7,7 @@ module mklanwatMod
 !
 ! !DESCRIPTION:
 ! make %lake and %wetland from input lake / wetland data
+! also make lake parameters
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -23,8 +24,9 @@ module mklanwatMod
   private
 
 ! !PUBLIC MEMBER FUNCTIONS:
-  public mklakwat
-  public mkwetlnd
+  public mklakwat           ! make % lake
+  public mkwetlnd           ! make % wetland
+  public mklakparams        ! make lake parameters
 
 !EOP
 !===============================================================
@@ -95,7 +97,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
 
   ns_o = ldomain%ns
 
-  call domain_read(tdomain,datfname)  !todo - put in routine to read in 1d domains 
+  call domain_read(tdomain,datfname)
   ns_i = tdomain%ns
 
   if ( .not. zero_out )then
@@ -120,7 +122,7 @@ subroutine mklakwat(ldomain, mapfname, datfname, ndiag, zero_out, lake_o)
 
      ! Determine lake_o on output grid
 
-     call gridmap_areaave(tgridmap, lake_i,lake_o)
+     call gridmap_areaave(tgridmap, lake_i,lake_o, nodata=0._r8)
 
      do no = 1,ns_o
         if (lake_o(no) < 1.) lake_o(no) = 0.
@@ -281,7 +283,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
 
   ns_o = ldomain%ns
 
-  call domain_read(tdomain,datfname)  !todo - put in routine to read in 1d domains 
+  call domain_read(tdomain,datfname)
   ns_i = tdomain%ns
 
   if ( .not. zero_out )then
@@ -305,7 +307,7 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
      call domain_checksame( tdomain, ldomain, tgridmap )
      ! Determine swmp_o on output grid
 
-     call gridmap_areaave(tgridmap, swmp_i,swmp_o)
+     call gridmap_areaave(tgridmap, swmp_i,swmp_o, nodata=0._r8)
 
      do no = 1,ns_o
         if (swmp_o(no) < 1.) swmp_o(no) = 0.
@@ -401,5 +403,107 @@ subroutine mkwetlnd(ldomain, mapfname, datfname, ndiag, zero_out, swmp_o)
   call shr_sys_flush(6)
 
 end subroutine mkwetlnd
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: mklakparams
+!
+! !INTERFACE:
+subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
+                       lakedepth_o)
+!
+! !DESCRIPTION:
+! make lake parameters (currently just lake depth)
+!
+! !USES:
+  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkgridmapMod
+  use mkncdio
+  use mkdiagnosticsMod, only : output_diagnostics_continuous
+  use mkchecksMod, only : min_bad
+!
+! !ARGUMENTS:
+  
+  implicit none
+  type(domain_type) , intent(in) :: ldomain
+  character(len=*)  , intent(in) :: mapfname          ! input mapping file name
+  character(len=*)  , intent(in) :: datfname          ! input data file name
+  integer           , intent(in) :: ndiag             ! unit number for diag out
+  real(r8)          , intent(out):: lakedepth_o(:)    ! output grid: lake depth (m)
+!
+! !CALLED FROM:
+! subroutine mksrfdat in module mksrfdatMod
+!
+! !REVISION HISTORY:
+! Author: Bill Sacks
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+  type(gridmap_type)    :: tgridmap
+  type(domain_type)     :: tdomain            ! local domain
+  real(r8), allocatable :: data_i(:)          ! data on input grid
+  integer  :: ncid,varid                      ! input netCDF id's
+  integer  :: ier                             ! error status
+  
+  real(r8), parameter :: min_valid_lakedepth = 0._r8
+
+  character(len=32) :: subname = 'mklakparams'
+!-----------------------------------------------------------------------
+
+  write (6,*) 'Attempting to make lake parameters.....'
+  call shr_sys_flush(6)
+
+  ! -----------------------------------------------------------------
+  ! Read domain and mapping information, check for consistency
+  ! -----------------------------------------------------------------
+
+  call domain_read(tdomain,datfname)
+  
+  call gridmap_mapread(tgridmap, mapfname )
+  call gridmap_check( tgridmap, subname )
+
+  call domain_checksame( tdomain, ldomain, tgridmap )
+
+  ! -----------------------------------------------------------------
+  ! Open input file, allocate memory for input data
+  ! -----------------------------------------------------------------
+
+  write(6,*)'Open lake parameter file: ', trim(datfname)
+  call check_ret(nf_open(datfname, 0, ncid), subname)
+
+  allocate(data_i(tdomain%ns), stat=ier)
+  if (ier/=0) call abort()
+
+  ! -----------------------------------------------------------------
+  ! Regrid lake depth
+  ! -----------------------------------------------------------------
+
+  call check_ret(nf_inq_varid (ncid, 'LAKEDEPTH', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
+  call gridmap_areaave(tgridmap, data_i, lakedepth_o, nodata=10._r8)
+
+  ! Check validity of output data
+  if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
+     stop
+  end if
+
+  call output_diagnostics_continuous(data_i, lakedepth_o, tgridmap, "Lake Depth", "m", ndiag)
+
+  ! -----------------------------------------------------------------
+  ! Close files and deallocate dynamic memory
+  ! -----------------------------------------------------------------
+
+  call check_ret(nf_close(ncid), subname)
+  call domain_clean(tdomain) 
+  call gridmap_clean(tgridmap)
+  deallocate (data_i)
+
+  write (6,*) 'Successfully made lake parameters'
+  write (6,*)
+  call shr_sys_flush(6)
+
+end subroutine mklakparams
 
 end module mklanwatMod

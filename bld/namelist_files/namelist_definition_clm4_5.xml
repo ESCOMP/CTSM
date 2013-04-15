@@ -84,7 +84,7 @@ If TRUE, irrigation will be active.
 </entry> 
 
 <entry id="maxpatch_glcmec" type="integer"  category="clm_physics"
-       group="clm_inparm" valid_values="0,1,3,5,10" >
+       group="clm_inparm" valid_values="0,1,3,5,10,36" >
 Number of  multiple elevation classes over glacier points.
 Normally this is ONLY used when running CESM with the active glacier model.
 </entry>
@@ -331,12 +331,32 @@ Subgrid fluxes for snow
 SCRIP format grid data file
 </entry>
 
+<entry id="scripgriddata_lrgfile_needed" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="none,64bit_offset,netcdf4" >
+Flag to pass to the ESMF mapping utility, telling it what kind of large
+file support is needed for an output file generated with this grid as
+either the source or destination ('none', '64bit_offset' or 'netcdf4'). 
+</entry>
+
+<entry id="scripgriddata_type" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="SCRIP,UGRID" >
+Flag to pass to the ESMF mapping utility, telling it what kind of grid
+file this is (SCRIP or UGRID).
+</entry>
+
+<entry id="scripgriddata_meshname" type="char*256" category="mkmapdata"
+       group="clmexp" valid_values="" >
+For UGRID files, flag to pass to the ESMF mapping utility, telling it the
+name of the dummy variable that has all of the topology information stored
+in its attributes. (Only used if scripgriddata_src_type = UGRID.)
+</entry>
+
 <!--                                                   -->
 <!-- mksurfdata namelist                               -->
 <!--                                                   -->
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_furbtopo,mksrf_flndtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fvocef,mksrf_furbtopo,mksrf_flndtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -439,6 +459,36 @@ Urban dataset for mksurfdata
 Biogenic Volatile Organic Compounds (VOC) emissions dataset for mksurfdata
 </entry>
 
+<entry id="mksrf_fgdp" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+GDP dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fpeat" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Peat dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fabm" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Agricultural burning dominant month dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_ftopostats" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Topography statistics dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fvic" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+VIC parameters dataset for mksurfdata
+</entry>
+
+<entry id="mksrf_fch4" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Inversion-derived CH4 parameters dataset for mksurfdata
+</entry>
+
 <entry id="outnc_double" type="logical" category="mksurfdata"
        group="clmexp" value=".true.">
 If TRUE, output variables in double precision for mksurfdata
@@ -453,6 +503,12 @@ If TRUE, use the large file format for NetCDF
        group="clmexp" value=".false.">
 If TRUE, ignore other files, and set the output percentage to 100% urban and
 zero for other land-use types.
+</entry>
+
+<entry id="no_inlandwet" type="logical" category="mksurfdata"
+       group="clmexp" value=".true.">
+If TRUE, set wetland to 0% over land (renormalizing other landcover types as needed);
+wetland will only be used for ocean points.
 </entry>
 
 <entry id="numpft" type="integer" category="mksurfdata"
@@ -701,27 +757,6 @@ datm output directory
 Datm logfile name
 </entry>
 
-<!-- ========================================================================================  -->
-<!-- Mapping files                                                                             -->
-<!-- ========================================================================================  -->
-
-<entry id="map" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Mapping file to go from one resolution/land-mask to another resolution/land-mask
-</entry>
-
-<entry id="lmask" type="char*10" category="mksurfdata"
-       group="default_settings"  
-       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS">
-Land mask description for mksurfdata input files
-</entry> 
-
-<entry id="hgrid" type="char*10" category="mksurfdata"
-       group="default_settings"  
-       valid_values="0.1x0.1,0.5x0.5,10x10min,5x5min,360x720,19basin">
-Horizontal grid resolutions for mksurfdata input files
-</entry> 
-
 <!-- ======================================================================================== -->
 <!-- CPL7 Driver Namelist -->
 <!-- ======================================================================================== -->
@@ -896,6 +931,28 @@ Type of output files for ice PIO
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- Mapping files                                                                             -->
+<!-- ========================================================================================  -->
+
+<entry id="map" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Mapping file to go from one resolution/land-mask to another resolution/land-mask
+</entry>
+
+<entry id="lmask" type="char*10" category="mksurfdata"
+       group="default_settings"  
+       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS,GRDC,HYDRO1K-merge-nomask">
+Land mask description for mksurfdata input files
+</entry> 
+
+<entry id="hgrid" type="char*10" category="mksurfdata"
+       group="default_settings"  
+       valid_values="0.1x0.1,0.5x0.5,10x10min,5x5min,360x720cru,0.9x1.25,19basin,1km-merge-10min">
+Horizontal grid resolutions for mksurfdata input files
+</entry> 
+
+
+<!-- ========================================================================================  -->
 <!-- Generic issues (resolution, mask etc.)                                                    -->
 <!-- ========================================================================================  -->
 
@@ -908,32 +965,6 @@ Check that the resolution and land-mask is valid before continuing.
        group="default_settings" valid_values="0,1" >
 Add a note to the output namelist about the options given to build-namelist
 </entry>
-
-<!-- ========================================================================================  -->
-<!-- Mapping files                                                                             -->
-<!-- ========================================================================================  -->
-
-<entry id="map" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Mapping file to go from one resolution/land-mask to another resolution/land-mask
-</entry>
-
-<entry id="lmask" type="char*10" category="mksurfdata"
-       group="default_settings"  
-       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004">
-Land mask description for mksurfdata input files
-</entry> 
-
-<entry id="hgrid" type="char*10" category="mksurfdata"
-       group="default_settings"  
-       valid_values="0.5x0.5,10x10min,5x5min,360x720,19basin">
-Horizontal grid resolutions for mksurfdata input files
-</entry> 
-
-
-<!-- ========================================================================================  -->
-<!-- Generic issues (resolution, mask etc.)                                                    -->
-<!-- ========================================================================================  -->
 
 <entry id="clm_start_type" type="char*8"  category="default_settings"
        group="default_settings" valid_values="default,cold,arb_ic,startup,continue,branch" >
@@ -949,7 +980,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,wus12,us20">
+"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,wus12,us20,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 

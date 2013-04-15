@@ -2,6 +2,7 @@
 ;  mkscripgrid.ncl
 ;
 ;  Create SCRIP grid and mapping file for a land-only point or region.
+;  Requires NCL 6.1.0 or later for the ESMF regridding functions
 ;
 ;  Erik Kluzek
 ;  Dec/07/2011
@@ -9,6 +10,7 @@
 ;  $HeadURL;
 ;
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
   ; ===========================================================================================================
   ; Set a few constants needed later
@@ -86,79 +88,47 @@ begin
   if ( printn )then
      print( "output file: "+outfilename );
   end if
-  nc = addfile( outfilename, "c" );
-  ;
-  ; Define dimensions
-  ;
-  ns = nx * ny;
-  dimnames = (/ "grid_size", "grid_corners", "grid_rank" /);
-  dsizes   = (/ ns,           4,              2/);
-  is_unlim = (/ False, False, False /);
-  filedimdef( nc, dimnames, dsizes, is_unlim );
 
   ;
-  ; Define variables
+  ; Compute derived quantities
   ;
-  dvars = (/ "grid_dims", "grid_center_lat", "grid_center_lon", "grid_corner_lat", "grid_corner_lon" /);
 
-  filevardef ( nc, "grid_dims",       "integer", (/ "grid_rank" /) );
-  filevardef ( nc, "grid_center_lat", "double",  (/ "grid_size" /) );
-  filevardef ( nc, "grid_center_lon", "double",  (/ "grid_size" /) );
-  filevardef ( nc, "grid_imask",      "integer", (/ "grid_size" /) );
-  filevardef ( nc, "grid_corner_lat", "double",  (/ "grid_size", "grid_corners" /) );
-  filevardef ( nc, "grid_corner_lon", "double",  (/ "grid_size", "grid_corners" /) );
+  delX       = (lonE - lonW) / int2dble(nx);
+  delY       = (latN - latS) / int2dble(ny);
 
-  do i = 0, dimsizes(dvars)-1
-    nc->$dvars(i)$@units = "degrees";
-  end do
-  nc->grid_imask@units = "unitless";
+  lonCenters = fspan( (lonW + delX/2.), (lonE - delX/2.), nx)
+  latCenters = fspan( (latS + delY/2.), (latN - delY/2.), ny)
+
+  LLCorner = (/ latS, lonW /)
+  URCorner = (/ latN, lonE /)
+
+  ; for some reason, "No_FillValue" isn't working in the case where imask=1
+  Mask2D = new( (/ny,nx/), "integer", "No_FillValue" )
+  Mask2D(:,:) = imask
+
+  ;
+  ; Create SCRIP grid file
+  ;
+  
+  Opt = True
+  Opt@LLCorner = LLCorner
+  Opt@URCorner = URCorner
+  Opt@Mask2D = Mask2D
+  Opt@Title = "SCRIP grid file for "+name
+  if (printn) then
+    Opt@Debug = True
+  end if
+  rectilinear_to_SCRIP(outfilename, latCenters, lonCenters, Opt)
+
   ;
   ; Add global attributes to file
   ;
-  nc@title   = "SCRIP grid file for "+name;
+
+  nc = addfile( outfilename, "w" );
   nc@history = ldate+": create using mkscripgrid.ncl";
   nc@comment = "Ocean is assumed to non-existant at this point";
   nc@Version = "$HeadURL$";
   nc@Revision = "$Id$";
-  ;
-  ; Add data
-  ;
-  latxy      = new( (/ ns /), "double"  );
-  lonxy      = new( (/ ns /), "double"  );
-  latSxy     = new( (/ ns /), "double"  );
-  lonExy     = new( (/ ns /), "double"  );
-  latNxy     = new( (/ ns /), "double"  );
-  lonWxy     = new( (/ ns /), "double"  );
-  delX       = (lonE - lonW) / int2dble(nx);
-  delY       = (latN - latS) / int2dble(ny);
-  latSy      = fspan( latS,      latN-delY, ny );
-  lonWx      = fspan( lonW,      lonE-delX, nx );
-  latNy      = fspan( latS+delY, latN,      ny );
-  lonEx      = fspan( lonW+delX, lonE,      nx );
-  do i = 0, ns-1, nx
-     j = i/nx;
-     latSxy(i:i+nx-1) = latSy(j);
-     latNxy(i:i+nx-1) = latNy(j);
-     lonExy(i:i+nx-1) = lonEx;
-     lonWxy(i:i+nx-1) = lonWx;
-  end do
-  ; Center latitude/longitudes
-  latxy      = (latSxy + latNxy)/2.0d00
-  lonxy      = (lonExy + lonWxy)/2.0d00
-  ;
-  nc->grid_dims       = (/ ns /);
-  nc->grid_center_lat = (/ latxy /);
-  nc->grid_center_lon = (/ lonxy /);
-  nc->grid_imask      = (/ imask /);
-  nc->grid_corner_lat(:,0) = (/ latSxy /);
-  nc->grid_corner_lat(:,1) = (/ latSxy /);
-  nc->grid_corner_lat(:,2) = (/ latNxy /);
-  nc->grid_corner_lat(:,3) = (/ latNxy /);
-  nc->grid_corner_lon(:,0) = (/ lonWxy /);
-  nc->grid_corner_lon(:,1) = (/ lonExy /);
-  nc->grid_corner_lon(:,2) = (/ lonExy /);
-  nc->grid_corner_lon(:,3) = (/ lonWxy /);
-
   if ( printn )then
     print( "================================================================================================" );
     print( "Successfully created SCRIP grid file: "+outfilename);

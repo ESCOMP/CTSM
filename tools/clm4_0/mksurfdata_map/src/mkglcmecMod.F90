@@ -67,7 +67,16 @@ subroutine mkglcmecInit( elevclass_o )
   ! Define elevation classes, represents lower boundary of each class
   ! -----------------------------------------------------------------
 
-  if (      nglcec == 10 )then
+  if (      nglcec == 36 )then
+     elevclass(:) = (/ 0.,   200.,   400.,   600.,   800.,  &
+                    1000.,  1200.,  1400.,  1600.,  1800.,  &
+                    2000.,  2200.,  2400.,  2600.,  2800.,  &
+                    3000.,  3200.,  3400.,  3600.,  3800.,  &
+                    4000.,  4200.,  4400.,  4600.,  4800.,  &
+                    5000.,  5200.,  5400.,  5600.,  5800.,  &
+                    6000.,  6200.,  6400.,  6600.,  6800.,  &
+                    7000., 10000./)
+  else if ( nglcec == 10 )then
      elevclass(1)  =     0.
      elevclass(2)  =   200.
      elevclass(3)  =   400.
@@ -97,7 +106,7 @@ subroutine mkglcmecInit( elevclass_o )
   else if ( nglcec == 0  )then
      elevclass(1)  = 10000.
   else
-     write(6,*) subname//"ERROR:: nglcec must be 0, 1, 3, 5, or 10",&
+     write(6,*) subname//"ERROR:: nglcec must be 0, 1, 3, 5, 10 or 36",&
           " to work with CLM: "
      call abort()
   end if

@@ -67,7 +67,16 @@ subroutine mkglcmecInit( elevclass_o )
   ! Define elevation classes, represents lower boundary of each class
   ! -----------------------------------------------------------------
 
-  if (      nglcec == 10 )then
+  if (      nglcec == 36 )then
+     elevclass(:) = (/ 0.,   200.,   400.,   600.,   800.,  &
+                    1000.,  1200.,  1400.,  1600.,  1800.,  &
+                    2000.,  2200.,  2400.,  2600.,  2800.,  &
+                    3000.,  3200.,  3400.,  3600.,  3800.,  &
+                    4000.,  4200.,  4400.,  4600.,  4800.,  &
+                    5000.,  5200.,  5400.,  5600.,  5800.,  &
+                    6000.,  6200.,  6400.,  6600.,  6800.,  &
+                    7000., 10000./)
+  else if ( nglcec == 10 )then
      elevclass(1)  =     0.
      elevclass(2)  =   200.
      elevclass(3)  =   400.
@@ -97,7 +106,7 @@ subroutine mkglcmecInit( elevclass_o )
   else if ( nglcec == 0  )then
      elevclass(1)  = 10000.
   else
-     write(6,*) subname//"ERROR:: nglcec must be 0, 1, 3, 5, or 10",&
+     write(6,*) subname//"ERROR:: nglcec must be 0, 1, 3, 5, 10 or 36",&
           " to work with CLM: "
      call abort()
   end if
@@ -280,9 +289,10 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   topoglcmec_unnorm_o(:,:) = 0.
 
-  write(6,'(a)',advance='no') 'Level: '
+  write(6,'(a,i4,a)',advance='no') 'Level (out of ', nlev, '): '
   do lev = 1, nlev
      write(6,'(i4)',advance='no') lev
+     flush(6)
 
      ! Read this level's data
      ! We assume that the last dimension is the level dimension
@@ -598,7 +608,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o, glac_
      
      ! Determine glac_o on output grid
 
-     call gridmap_areaave(tgridmap, glac_i, glac_o)
+     call gridmap_areaave(tgridmap, glac_i, glac_o, nodata=0._r8)
      
      ! Save a copy of glac_o before any corrections are done. This is needed for
      ! normalization in mkglcmec

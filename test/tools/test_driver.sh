@@ -674,8 +674,8 @@ if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
     export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../../../../..; pwd \`
 else
-    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/models/lnd/clm*/test/system/test_driver.sh ]; then
-	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/models/lnd/clm*/test/system; pwd \`
+    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/models/lnd/clm*/test/tools/test_driver.sh ]; then
+	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/models/lnd/clm*/test/tools; pwd \`
     else
 	echo "ERROR: unable to determine script directory "
 	echo "       if initiating batch job from directory other than the one containing test_driver.sh, "

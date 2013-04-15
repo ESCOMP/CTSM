@@ -13,10 +13,10 @@
 # -f <scripfilename> Input grid filename 
 # -t <type>          Output type, supported values are [regional, global]
 # -r <res>           Output resolution
+# -p <CLM-version>   CLM version to use (clm4_0 or clm4_5) (defaults to clm4_5)
 # -b                 use batch mode (not default)
 # -l                 list mapping files required (so can use check_input_data to get them)
 # -d                 debug usage -- display mkmapdata that will be run but don't execute them
-# -o <ogrid>         Also map to the input ocean-grid resolution"
 # -v                 verbose usage -- log more information on what is happening
 # -h                 displays this help message
 #
@@ -67,6 +67,9 @@ usage() {
   echo "[-t|--gridtype <type>]"
   echo "     Model output grid type"
   echo "     supported values are [regional,global], (default is global)"
+  echo "[-p|--phys <CLM-version>]"
+  echo "     Whether to generate mapping files for clm4_0 or clm4_5"
+  echo "     supported values are [clm4_0,clm4_5], (default is clm4_5)"
   echo "[-b|--batch]"
   echo "     Toggles batch mode usage. If you want to run in batch mode"
   echo "     you need to have a separate batch script for a supported machine"
@@ -77,8 +80,6 @@ usage() {
   echo "     also writes data to $outfilelist"
   echo "[-d|--debug]"
   echo "     Toggles debug-only (don't actually run mkmapdata just echo what would happen)"
-  echo "[-o|--ocn] <ogrid>"
-  echo "     Also map to the input ocean-grid resolution"
   echo "[-h|--help]  "
   echo "     Displays this help message"
   echo "[-v|--verbose]"
@@ -133,8 +134,8 @@ interactive="YES"
 debug="no"
 res="default"
 type="global"
+phys="clm4_5"
 verbose="no"
-ocean="no"
 list="no"
 outgrid=""
 gridfile="default"
@@ -158,16 +159,16 @@ while [ $# -gt 0 ]; do
 	   res=$2
 	   shift
 	   ;;
-       -o|--ocn)
-	   ocn=$2
-	   shift
-	   ;;
        -f|--gridfile)
 	   gridfile=$2
 	   shift
 	   ;;
        -t|--gridtype)
 	   type=$2
+	   shift
+	   ;;
+       -p|--phys)
+	   phys=$2
 	   shift
 	   ;;
        -h|--help )
@@ -190,11 +191,12 @@ echo "Script to create mapping files required by mksurfdata_map"
 #----------------------------------------------------------------------
 
 # Set general query command used below
-QUERY="$dir/../../../bld/queryDefaultNamelist.pl -silent -namelist clmexp -onlyfiles "
+QUERY="$dir/../../../bld/queryDefaultNamelist.pl -silent -namelist clmexp -phys $phys "
 QUERY="$QUERY -justvalue -options sim_year=2000 -csmdata $CSMDATA"
 echo "query command is $QUERY"
 
 echo ""
+DST_EXTRA_ARGS=""
 if [ "$gridfile" != "default" ]; then
     GRIDFILE=$gridfile
     echo "Using user specified scrip grid file: $GRIDFILE" 
@@ -202,18 +204,39 @@ if [ "$gridfile" != "default" ]; then
        echo "When user specified grid file is given you MUST set the resolution (as the name of your grid)\n";
        exit 1
     fi
+    
+    # For now, make some assumptions about user-specified grids --
+    # that they are SCRIP format, and small enough to not require
+    # large file support for the output mapping file. In the future,
+    # we may want to provide command-line options to allow the user to
+    # override these defaults.
+    DST_LRGFIL="none"
+    DST_TYPE="SCRIP"
 else
     if [ "$res" = "default" ]; then
        res=$default_res
     fi
+
+    QUERYARGS="-res $res -options lmask=nomask"
+
     # Find the output grid file for this resolution using the XML database
-    QUERYFIL="$QUERY -var scripgriddata -res $res -options lmask=nomask"
+    QUERYFIL="$QUERY -var scripgriddata $QUERYARGS -onlyfiles"
     if [ "$verbose" = "YES" ]; then
 	echo $QUERYFIL
     fi
     GRIDFILE=`$QUERYFIL`
     echo "Using default scrip grid file: $GRIDFILE" 
+
+    # Determine extra information about the destination grid file
+    DST_LRGFIL=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
+    DST_TYPE=`$QUERY -var scripgriddata_type $QUERYARGS`
+    if [ "$DST_TYPE" = "UGRID" ]; then
+        # For UGRID, we need extra information: the meshname variable
+	dst_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
+	DST_EXTRA_ARGS="$DST_EXTRA_ARGS --dst_meshname $dst_meshname"
+    fi
 fi
+
 if [ "$type" = "global" ] && [ `echo "$res" | grep -c "1x1_"` = 1 ]; then
    echo "This is a regional resolution and yet it is being run as global, set type with '-t' option\n";
    exit 1
@@ -237,25 +260,49 @@ fi
 # Determine all input grid files and output file names 
 #----------------------------------------------------------------------
 
-grids=(                    \
-       "0.5x0.5_USGS"      \
-       "0.5x0.5_AVHRR"     \
-       "0.5x0.5_MODIS"     \
-       "3x3min_LandScan2004" \
-       "3x3min_MODIS"      \
-       "3x3min_USGS"       \
-       "5x5min_nomask"     \
-       "5x5min_IGBP-GSDP"  \
-       "5x5min_ISRIC-WISE" \
-       "10x10min_nomask"   \
-       "10x10min_IGBPmergeICESatGIS" \
-       "3x3min_GLOBE-Gardner" \
-       "3x3min_GLOBE-Gardner-mergeGIS" )
+if [ "$phys" = "clm4_0" ]; then
+    grids=(                    \
+	   "0.5x0.5_USGS"      \
+	   "0.5x0.5_AVHRR"     \
+	   "0.5x0.5_MODIS"     \
+	   "3x3min_LandScan2004" \
+	   "3x3min_MODIS"      \
+	   "3x3min_USGS"       \
+	   "5x5min_nomask"     \
+	   "5x5min_IGBP-GSDP"  \
+	   "5x5min_ISRIC-WISE" \
+	   "10x10min_nomask"   \
+	   "10x10min_IGBPmergeICESatGIS" \
+	   "3x3min_GLOBE-Gardner" \
+	   "3x3min_GLOBE-Gardner-mergeGIS" )
+
+elif [ "$phys" = "clm4_5" ]; then
+    grids=(                    \
+           "0.5x0.5_AVHRR"     \
+           "0.5x0.5_MODIS"     \
+           "3x3min_LandScan2004" \
+           "3x3min_MODIS"      \
+           "3x3min_USGS"       \
+           "5x5min_nomask"     \
+           "5x5min_IGBP-GSDP"  \
+           "5x5min_ISRIC-WISE" \
+           "10x10min_nomask"   \
+           "10x10min_IGBPmergeICESatGIS" \
+           "3x3min_GLOBE-Gardner" \
+           "3x3min_GLOBE-Gardner-mergeGIS" \
+           "0.9x1.25_GRDC" \
+           "360x720cru_cruncep" \
+           "1km-merge-10min_HYDRO1K-merge-nomask" )
+
+else
+    echo "ERROR: Unknown value for phys: $phys"
+    exit 1
+fi
 
 # Set timestamp for names below 
 CDATE="c"`date +%y%m%d`
 
-# Set name of each output mapping file OTHER than RTM
+# Set name of each output mapping file
 # First determine the name of the input scrip grid file  
 # for each of the above grids
 declare -i nfile=1
@@ -263,7 +310,10 @@ for gridmask in ${grids[*]}
 do
    grid=${gridmask%_*}
    lmask=${gridmask#*_}
-   QUERYFIL="$QUERY -var scripgriddata -res $grid -options lmask=$lmask,glc_nec=10 "
+
+   QUERYARGS="-res $grid -options lmask=$lmask,glc_nec=10 "
+
+   QUERYFIL="$QUERY -var scripgriddata $QUERYARGS -onlyfiles"
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
    fi
@@ -272,43 +322,21 @@ do
       echo "ingrid = ${INGRID[nfile]}"
       echo "ingrid = ${INGRID[nfile]}" >> $outfilelist
    fi
-   if [[ "$gridmask" = "3x3min_MODIS" || "$gridmask" = "3x3min_LandScan2004" || "$gridmask" = "3x3min_GLOBE-Gardner" || "$gridmask" = "3x3min_GLOBE-Gardner-mergeGIS" ]]; then
-      LRGFIL[nfile]="yes"
-   else
-      LRGFIL[nfile]="no"
-   fi
-   GRIDFILE[nfile]=$GRIDFILE
+
    OUTFILE[nfile]=map_${grid}_${lmask}_to_${res}_nomask_aave_da_$CDATE.nc
+
+   # Determine extra information about the source grid file
+   SRC_EXTRA_ARGS[nfile]=""
+   SRC_LRGFIL[nfile]=`$QUERY -var scripgriddata_lrgfile_needed $QUERYARGS`
+   SRC_TYPE[nfile]=`$QUERY -var scripgriddata_type $QUERYARGS`
+   if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
+       # For UGRID, we need extra information: the meshname variable
+       src_meshname=`$QUERY -var scripgriddata_meshname $QUERYARGS`
+       SRC_EXTRA_ARGS[nfile]="${SRC_EXTRA_ARGS[nfile]} --src_meshname $src_meshname"
+   fi
+
    nfile=nfile+1
 done
-
-# Add main mapping file from ocean to atmosphere
-if [ "$ocean" != "no" ]; then
-   INGRID[nfile]=`$QUERY -var scripgriddata -options hgrid=$ocean,lmask=$ocean`
-   OUTGRID[nfile]=$GRIDFILE
-   OUTFILE[nfile]=map_${ocean}_to_${res}_aave_da_$CDATE.nc
-   nfile=nfile+1
-fi
-
-# Set name of RTM output mapping file
-if [ "$type" = "global" ]; then
-   grid=0.5x0.5
-   lmask=nomask
-   INGRID[nfile]=$GRIDFILE
-   QUERYFIL="$QUERY -var scripgriddata -res $grid -options lmask=$lmask"
-   if [ "$verbose" = "YES" ]; then
-      echo $QUERYFIL
-   fi
-   GRIDFILE[nfile]=`$QUERYFIL`
-   OUTFILE[nfile]=map_${res}_${lmask}_to_${grid}_${lmask}_aave_da_$CDATE.nc
-   if [ "$list" = "YES" ]; then
-      echo "ingrid = ${GRIDFILE[nfile]}"
-      echo "ingrid = ${GRIDFILE[nfile]}" >> $outfilelist
-      echo "Succesffully found and listed all required mapping files"
-      exit 0
-   fi
-   nfile=nfile+1
-fi
 
 #----------------------------------------------------------------------
 # Determine supported machine specific stuff
@@ -321,6 +349,7 @@ case $hostname in
   . /glade/apps/opt/lmod/lmod/init/bash
   module load esmf
   module load ncl
+  module load nco
 
   if [ -z "$ESMFBIN_PATH" ]; then
      if [ "$type" = "global" ]; then
@@ -330,40 +359,10 @@ case $hostname in
         mpi=uni
         mpitype="mpiuni"
      fi
-     module load esmf-5.3.0-ncdfio-${mpi}-O
-     ESMFBIN_PATH=$ESMF_LIBDIR/../../../bin/binO/Linux.intel.64.${mpitype}.default
+     ESMFBIN_PATH=/glade/apps/opt/esmf/6.1.1-ncdfio/intel/12.1.5/bin/binO/Linux.intel.64.${mpitype}.default
   fi
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpirun.lsf"
-  fi
-  ;;
-
-  ##bluefire
-  be* )
-  source /contrib/Modules/3.2.6/init/bash
-  module load netcdf/4.1.3_seq
-
-  if [ -z "$ESMFBIN_PATH" ]; then
-     if [ "$type" = "global" ]; then
-        ESMFBIN_PATH=/contrib/esmf-5.2.0rp1bs09-64/bin
-     else
-        ESMFBIN_PATH=/contrib/esmf-5.3.0-64-O-mpiuni-netcdf4.1.3/bin
-     fi
-  fi
-  if [ -z "$MPIEXEC" ]; then
-     MPIEXEC="mpirun.lsf"
-  fi
-  if [ "$interactive" != "NO" ]; then
-    # Bluefire specific commands to prepare to run interactively
-    export MP_PROCS=$REGRID_PROC
-    export MP_EUILIB=ip
-    hostname > hostfile
-    declare -i p=2
-    until ((p>$MP_PROCS)); do
-       hostname >> hostfile
-       p=p+1
-    done
-    export MP_HOSTFILE=hostfile
   fi
   ;;
 
@@ -395,7 +394,6 @@ fi
 
 #----------------------------------------------------------------------
 # Generate the mapping files needed for surface dataset generation
-# and the RTM run time mapping
 #----------------------------------------------------------------------
  
 # Resolve interactive or batch mode command
@@ -440,9 +438,9 @@ declare -i nfile=1
 until ((nfile>${#INGRID[*]})); do
    echo "Creating mapping file: ${OUTFILE[nfile]}"
    echo "From input grid: ${INGRID[nfile]}"
-   echo "For output grid: ${GRIDFILE[nfile]}"
+   echo "For output grid: $GRIDFILE"
    echo " "
-   if [ -z "${INGRID[nfile]}" ] || [ -z "${GRIDFILE[nfile]}" ] || [ -z "${OUTFILE[nfile]}" ]; then
+   if [ -z "${INGRID[nfile]}" ] || [ -z "$GRIDFILE" ] || [ -z "${OUTFILE[nfile]}" ]; then
       echo "Either input or output grid or output mapping file is NOT set"
       exit 3
    fi
@@ -452,28 +450,66 @@ until ((nfile>${#INGRID[*]})); do
          exit 2
       fi
    fi
-   if [ ! -f "${GRIDFILE[nfile]}" ]; then
-      echo "Output grid file does NOT exist: ${GRIDFILE[nfile]}"
+   if [ ! -f "$GRIDFILE" ]; then
+      echo "Output grid file does NOT exist: $GRIDFILE"
       exit 3
    fi
-   cmd="$mpirun $ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
-   cmd="$cmd -d ${GRIDFILE[nfile]} -m conserve -w ${OUTFILE[nfile]}"
+
+   # Determine what (if any) large file support is needed. Use the
+   # most extreme large file support needed by either the source file
+   # or the destination file.
+   if [ "$DST_LRGFIL" = "netcdf4" ] || [ "${SRC_LRGFIL[nfile]}" = "netcdf4" ]; then
+       lrgfil="--netcdf4"
+   elif [ "$DST_LRGFIL" = "64bit_offset" ] || [ "${SRC_LRGFIL[nfile]}" = "64bit_offset" ]; then
+       lrgfil="--64bit_offset"
+   elif [ "$DST_LRGFIL" = "none" ] && [ "${SRC_LRGFIL[nfile]}" = "none" ]; then
+       lrgfil=""
+   else
+       echo "Unknown LRGFIL type:"
+       echo "DST_LRGFIL = $DST_LRGFIL"
+       echo "SRC_LRGFIL = ${SRC_LRGFIL[nfile]}"
+       exit 4
+   fi
+
+   # WJS (4-11-13): The current release version of the ESMF regridding
+   # tool doesn't handle netcdf4 output, and doesn't (properly?)
+   # handle UGRID format. Thus, for now we need this kludge to use a
+   # different version if we need either of those features.
+   MY_ESMF_REGRID=$ESMF_REGRID
+   if [ "$lrgfil" = "--netcdf4" ] || [ ${SRC_TYPE[nfile]} = "UGRID" ] || [ $DST_TYPE = "UGRID" ]; then
+       case $hostname in
+	   ys* | caldera* | geyser* )
+	       if [ $mpitype = "mpiuni" ]; then
+		   MY_ESMF_REGRID=/glade/p/work/svasquez/ESMF620bs18-mpiuni/bin/ESMF_RegridWeightGen
+	       else
+		   MY_ESMF_REGRID=/glade/p/work/svasquez/ESMF620bs18/bin/ESMF_RegridWeightGen
+	       fi
+	       ;;
+	   *)
+	       echo "No support for --netcdf4 or UGRID on machines other than yellowstone/caldera/geyser"
+	       exit 5
+	       ;;
+       esac
+   fi
+
+   cmd="$mpirun $MY_ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
+   cmd="$cmd -d $GRIDFILE -m conserve -w ${OUTFILE[nfile]}"
    if [ $type = "regional" ]; then
      cmd="$cmd --dst_regional"
    fi
 
-   if [ "${LRGFIL[nfile]}" = "yes" ]; then
-      cmd="$cmd --64bit_offset "
-   fi
+   cmd="$cmd --src_type ${SRC_TYPE[nfile]} ${SRC_EXTRA_ARGS[nfile]} --dst_type $DST_TYPE $DST_EXTRA_ARGS"
+   cmd="$cmd $lrgfil"
+
    runcmd $cmd
 
    if [ "$debug" != "YES" ] && [ ! -f "${OUTFILE[nfile]}" ]; then
       echo "Output mapping file was NOT created: ${OUTFILE[nfile]}"
-      exit 4
+      exit 6
    fi
    # add some metadata to the file
    HOST=`hostname`
-   history="$ESMF_REGRID"
+   history="$MY_ESMF_REGRID"
    runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
    runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
    runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"

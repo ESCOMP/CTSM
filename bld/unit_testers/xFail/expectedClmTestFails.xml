@@ -15,23 +15,23 @@
       <yellowstone>
          <INTEL>
             <compare>
-               <entry testId="216" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="218" failType="xFail"> compare fails </entry>
-               <entry testId="296" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="298" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="301" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="303" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="306" failType="xFail"> ne120 transient problem?</entry>
-               <entry testId="308" failType="xFail"> ne120 transient problem?</entry>
-               <entry testId="316" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
-               <entry testId="318" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="211" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="213" failType="xFail"> compare fails </entry>
+               <entry testId="291" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="293" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="296" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="298" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="301" failType="xFail"> ne120 transient problem?</entry>
+               <entry testId="303" failType="xFail"> ne120 transient problem?</entry>
+               <entry testId="311" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="313" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </compare>
             <generate>
-               <entry testId="141" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="189" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="192" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="195" failType="xFail"> ne120 problem</entry>
-               <entry testId="201" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
+               <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="189" failType="xFail"> ne60 missing finidat file for 1850</entry>
+               <entry testId="192" failType="xFail"> ne120 problem</entry>
+               <entry testId="198" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </INTEL>
       </yellowstone>
@@ -109,7 +109,7 @@
           <INTEL>
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"           failType="FAIL"></entry>
-              <entry testId="SMS_D.f10_f10.I_2000_CLM45_CN4Me.yellowstone_intel_anoxia_wtsat"       failType="FAIL">answers change on restart</entry>
+              <entry testId="SMS_D.f10_f10.I_2000_CLM45_CN4Me.yellowstone_intel_anoxia_wtsat"       failType="FAIL">floating point exception</entry>
               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                 failType="FAIL"></entry>
               <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"                 failType="FAIL">restart difference due to RTM coupler freq. error</entry>
               <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                     failType="FAIL">restart difference due to RTM coupler freq. error</entry>
@@ -152,31 +152,21 @@
       <auxTests>
          <yellowstone>
             <INTEL>
-               <entry testId="ERH_D.f19_g16.I1850CLM45CN"     failType="FAIL" >Restart difference</entry>
-               <entry testId="ERB.ne30_g16.I_1948-2004_CLM45" failType="FAIL" >Restart difference</entry>
-               <entry testId="ERS_E.f19_g16.I1850CRUCLM45CN"  failType="FAIL" >Restart difference</entry>
-               <entry testId="CME.f10_f10.ICN"                failType="FAIL" >Restart difference</entry>
-               <entry testId="ERS_D.f10_f10.ICLM45"           failType="FAIL" >Restart difference</entry>
-               <entry testId="PET_PT.f19_g16.I1850CN"         failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCN"         failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="PET_PT.f19_g16.I1850CLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="ERS_E.f19_g16.ICLM451850"       failType="TFAIL">bad compset name</entry>
+               <entry testId="ERB.ne30_g16.I_1948-2004"       failType="FAIL"></entry>
                <entry testId="ERS_D.f19_g16.IGRCP26CLM45CN"   failType="RUN"  >surfdata and pftdyn file mismatched</entry>
                <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN" failType="RUN"  >Soil balance error on restart</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue component not threaded</entry>
-               <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="SFAIL">missing finidat file</entry>
-               <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="SFAIL">missing finidat file</entry>
+               <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="FAIL ">local filename has zero length</entry>
+               <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="RUN"  ></entry>
                <entry testId="ERS_D.f09_g16.I_2000_CLM45_VIC" failType="SFAIL">error running in debug mode.  non-debug mode works.  also on frankfurt.  problem looks to be around line 198 of initSoilParVICmod</entry>
 
             </INTEL>
             <PGI>
-               <entry testId="PET_PT.f19_g16.I1850"           failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="SMS.1x1_numaIA.ICN_CROP"        failType="TFAIL">Bad compset name: ICNCROP</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCN"         failType="TFAIL">scripts issue with ocean not threaded</entry>
-
                <entry testId="PET_PT.f19_g16.ICLM451850"      failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="SMS.T31_g37.IG4804CLM45"        failType="FAIL" >checkWeights error, probably due to old-format urban on surface dataset</entry>
-               <entry testId="SMS.1x1_numaIA.ICLM45CNCROP"    failType="TFAIL">Bad compset name: ICNCROP</entry>
+               <entry testId="SMS.1x1_numaIA.ICLM45CNCROP"    failType="FAIL" >check_dim ERROR for lsmpft (21 vs 25)</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
             </PGI>
          </yellowstone>

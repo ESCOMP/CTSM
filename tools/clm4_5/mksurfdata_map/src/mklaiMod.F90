@@ -239,10 +239,10 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
 
      do l = 0,numpft
         mask_src(:) = 1._r8 
-        call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , mask_src)
-        call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , mask_src)
-        call gridmap_areaave(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), mask_src)
-        call gridmap_areaave(tgridmap, mhgtb_i(:,l), mhgtb_o(:,l), mask_src)
+        call gridmap_areaave(tgridmap, mlai_i(:,l) , mlai_o(:,l) , nodata=0._r8, mask_src=mask_src)
+        call gridmap_areaave(tgridmap, msai_i(:,l) , msai_o(:,l) , nodata=0._r8, mask_src=mask_src)
+        call gridmap_areaave(tgridmap, mhgtt_i(:,l), mhgtt_o(:,l), nodata=0._r8, mask_src=mask_src)
+        call gridmap_areaave(tgridmap, mhgtb_i(:,l), mhgtb_o(:,l), nodata=0._r8, mask_src=mask_src)
      enddo
 
      ! Determine laimask

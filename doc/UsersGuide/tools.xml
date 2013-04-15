@@ -1038,6 +1038,12 @@ the extent of urban regions and is used for glacier multiple elevation classes)
 <listitem><para><varname>mksrf_fvegtyp</varname> PFT vegetation type dataset</para></listitem>
 <listitem><para><varname>mksrf_fvocef</varname> Volatile Organic Compound Emission Factor
 dataset</para></listitem>
+<listitem><para><varname>mksrf_fgdp</varname> GDP dataset</para></listitem>
+<listitem><para><varname>mksrf_fpeat</varname> Peatland dataset</para></listitem>
+<listitem><para><varname>mksrf_fabm</varname> Agricultural fire peak month dataset</para></listitem>
+<listitem><para><varname>mksrf_ftopostats</varname> Topography statistics dataset</para></listitem>
+<listitem><para><varname>mksrf_fvic</varname> VIC parameters dataset</para></listitem>
+<listitem><para><varname>mksrf_fch4</varname> Inversion-derived CH4 parameters dataset</para></listitem>
 </orderedlist>
 You specify the ASCII text file with the land-use files.
 <orderedlist>
@@ -1055,6 +1061,10 @@ And optionally you can specify settings for:
 <orderedlist>
 <listitem><para><varname>all_urban</varname> If entire area is urban (typically used for
 single-point urban datasets, that you want to be exclusively urban)</para></listitem>
+<listitem><para><varname>no_inlandwet</varname> If TRUE, set wetland to 0% over land
+(renormalizing other landcover types as needed); wetland will only be used for ocean
+points. (Only applies to CLM4.5 version of mksurfdata_map, for which the default is
+TRUE.)</para></listitem>
 <listitem><para><varname>mksrf_firrig</varname> Irrigation dataset, if you want
 activate the irrigation model over generic cropland
 (experimental mode, normally NOT used)</para></listitem>

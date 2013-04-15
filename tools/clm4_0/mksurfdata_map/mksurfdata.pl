@@ -59,7 +59,7 @@ my %opts = (
                glc_nec=>0,
                help=>0,
                mv=>0,
-               ngwh=>undef,
+               old_woodharv=>undef,
                irrig=>undef,
                pft_override=>undef,
                pft_frc=>undef,
@@ -119,8 +119,9 @@ OPTIONS
      -mv                           If you want to move the files after creation to the 
                                    correct location in inputdata
                                    (by default -nomv is assumed so files are NOT moved)
-     -new_woodharv                 Use the new good wood harvesting (for rcp6 and rcp8.5)
-                                   (by default use the old harvesting used for IPCC simulations)
+     -old_woodharv                 Use the old "bad" wood harvesting (for rcp6 and rcp8.5)
+                                   (this is the version that was used for IPCC simulations)
+                                   (by default use the new good wood harvest datasets)
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
@@ -250,7 +251,7 @@ sub trim($)
         "d|debug"      => \$opts{'debug'},
         "dynpft=s"     => \$opts{'dynpft'},
         "y|years=s"    => \$opts{'years'},
-        "new_woodharv" => \$opts{'ngwh'},
+        "old_woodharv" => \$opts{'old_woodharv'},
         "exedir=s"     => \$opts{'exedir'},
         "h|help"       => \$opts{'help'},
         "usrname=s"    => \$opts{'usrname'},
@@ -592,10 +593,13 @@ EOF
 		    my $fhpftdyn = IO::File->new;
 		    $fhpftdyn->open( ">$pftdyntext_file" ) or die "** can't open file: $pftdyntext_file\n";
 		    print "Writing out pftdyn text file: $pftdyntext_file\n";
-                    my $ngwh = "";
-                    if ( defined($opts{'ngwh'}) ) {
-                       $ngwh = ",ngwh=on";
+
+                    # use new good wood harvest by default:
+                    my $ngwh = ",ngwh=on";
+                    if ( defined($opts{'old_woodharv'}) ) {
+                       $ngwh = "";
                     }
+
 		    for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
                         my $vegtypyr = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,rcp=${rcp}${mkcrop}${ngwh} -var mksrf_fvegtyp -namelist clmexp`;
 			chomp( $vegtypyr );

@@ -40,6 +40,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <albice glc_nec="3" >0.60,0.40</albice>
 <albice glc_nec="5" >0.60,0.40</albice>
 <albice glc_nec="10">0.60,0.40</albice>
+<albice glc_nec="36">0.60,0.40</albice>
 
 <!-- Default urban air conditioning/heating and wasteheat -->
 <urban_hac>ON_WASTEHEAT</urban_hac>

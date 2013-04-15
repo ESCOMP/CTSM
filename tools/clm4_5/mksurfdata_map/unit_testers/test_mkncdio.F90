@@ -24,7 +24,7 @@ contains
     integer            :: ndims, ndims_t
     integer            :: dim_lengths(nf_max_var_dims), dim_lengths_t(nf_max_var_dims)
 
-    character(len=*), parameter :: filename = 'unit_testers/test_lookup_2d_netcdf.nc'
+    character(len=*), parameter :: filename = 'unit_testers/inputs/test_lookup_2d_netcdf.nc'
 
     character(len=*), parameter :: subname = 'test_get_dim_lengths'
 

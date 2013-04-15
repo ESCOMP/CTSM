@@ -39,10 +39,12 @@ module mkgridmapMod
   public :: gridmap_type
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: gridmap_setptrs   ! Set pointers to gridmap data
-  public :: gridmap_mapread   ! Read in gridmap
-  public :: gridmap_areaave   ! do area average
-  public :: gridmap_clean     ! Clean and deallocate a gridmap structure
+  public :: gridmap_setptrs     ! Set pointers to gridmap data
+  public :: gridmap_mapread     ! Read in gridmap
+  public :: gridmap_check       ! Check validity of a gridmap
+  public :: gridmap_areaave     ! do area average
+  public :: gridmap_areastddev  ! do area-weighted standard deviation
+  public :: gridmap_clean       ! Clean and deallocate a gridmap structure
 !
 !
 ! !REVISION HISTORY:
@@ -303,10 +305,82 @@ contains
 !------------------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: gridmap_check
+!
+! !INTERFACE:
+  subroutine gridmap_check(gridmap, caller)
+!
+! !DESCRIPTION:
+! Check validity of a gridmap
+! Aborts if there are any errors
+!
+! !USES:
+    use mkvarctl, only : mksrf_gridtype
+    use mkvarpar, only : re
+!
+! !ARGUMENTS:
+    implicit none
+    type(gridmap_type) , intent(in) :: gridmap   ! mapping data
+    character(len=*)   , intent(in) :: caller    ! calling subroutine (used for error messages)
+!
+! !REVISION HISTORY:
+!   Created by Bill Sacks
+!
+! !LOCAL VARIABLES:
+    real(r8) :: sum_area_i        ! global sum of input area
+    real(r8) :: sum_area_o        ! global sum of output area
+    integer  :: ni,no,ns_i,ns_o   ! indices
+
+    real(r8), parameter :: relerr = 0.00001        ! max error: sum overlap wts ne 1
+    character(len=*), parameter :: subname = 'gridmap_check'
+!EOP
+!------------------------------------------------------------------------------
+
+    ns_i = gridmap%na
+    ns_o = gridmap%nb
+
+    ! -----------------------------------------------------------------
+    ! Error check prep
+    ! Global sum of output area -- must multiply by fraction of
+    ! output grid that is land as determined by input grid
+    ! -----------------------------------------------------------------
+    
+    sum_area_i = 0.0_r8
+    do ni = 1,ns_i
+       sum_area_i = sum_area_i + gridmap%area_src(ni)*gridmap%frac_src(ni)*re**2
+    enddo
+
+    sum_area_o = 0.
+    do no = 1,ns_o
+       sum_area_o = sum_area_o + gridmap%area_dst(no)*gridmap%frac_dst(no)*re**2
+    end do
+
+    ! -----------------------------------------------------------------
+    ! Error check1
+    ! Compare global sum_area_i to global sum_area_o.
+    ! -----------------------------------------------------------------
+
+    if ( trim(mksrf_gridtype) == 'global' ) then
+       if ( abs(sum_area_o/sum_area_i-1.) > relerr ) then
+          write (6,*) subname//' ERROR from '//trim(caller)//': mapping areas not conserved'
+          write (6,'(a30,e20.10)') 'global sum output field = ',sum_area_o
+          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_area_i
+          stop
+       end if
+    end if
+
+  end subroutine gridmap_check
+    
+
+!==========================================================================
+
+!------------------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: gridmap_areaave_default
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_default (gridmap, src_array, dst_array)
+  subroutine gridmap_areaave_default (gridmap, src_array, dst_array, nodata)
 !
 ! !DESCRIPTION:
 ! This subroutine does a simple area average
@@ -316,6 +390,7 @@ contains
     type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
     real(r8), intent(in) :: src_array(:)
     real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
 !
 ! !REVISION HISTORY:
 !   Created by Mariana Vertenstein
@@ -323,11 +398,15 @@ contains
 ! !LOCAL VARIABLES:
     integer :: n,ns,ni,no
     real(r8):: wt,frac
+    real(r8), allocatable :: sum_weights(:)      ! sum of weights on the output grid
     character(*),parameter :: subName = '(gridmap_areaave_default) '
 !EOP
 !------------------------------------------------------------------------------
     call gridmap_checkifset( gridmap, subname )
+    allocate(sum_weights(size(dst_array)))
+    sum_weights = 0._r8
     dst_array = 0._r8
+
     do n = 1,gridmap%ns
        ni = gridmap%src_indx(n)
        no = gridmap%dst_indx(n)
@@ -335,8 +414,15 @@ contains
        frac = gridmap%frac_dst(no)
        if (frac > 0.) then  
           dst_array(no) = dst_array(no) + wt * src_array(ni)/frac
+          sum_weights(no) = sum_weights(no) + wt
        end if
     end do
+
+    where (sum_weights == 0._r8)
+       dst_array = nodata
+    end where
+
+    deallocate(sum_weights)
 
   end subroutine gridmap_areaave_default
 
@@ -348,7 +434,7 @@ contains
 ! !IROUTINE: gridmap_areaave_srcmask
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_srcmask (gridmap, src_array, dst_array, mask_src)
+  subroutine gridmap_areaave_srcmask (gridmap, src_array, dst_array, nodata, mask_src)
 !
 ! !DESCRIPTION:
 ! This subroutine does an area average with the source mask
@@ -358,6 +444,7 @@ contains
     type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
     real(r8), intent(in) :: src_array(:)
     real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
     real(r8), intent(in) :: mask_src(:)
 !
 ! !REVISION HISTORY:
@@ -394,6 +481,10 @@ contains
        end if
     end do
 
+    where (wtnorm == 0._r8)
+       dst_array = nodata
+    end where
+
     deallocate(wtnorm)
 
   end subroutine gridmap_areaave_srcmask
@@ -406,7 +497,7 @@ contains
 ! !IROUTINE: gridmap_areaave_srcmask2
 !
 ! !INTERFACE:
-  subroutine gridmap_areaave_srcmask2 (gridmap, src_array, dst_array, mask_src, &
+  subroutine gridmap_areaave_srcmask2 (gridmap, src_array, dst_array, nodata, mask_src, &
        mask_dst, mask_dst_min)
 !
 ! !DESCRIPTION:
@@ -418,6 +509,7 @@ contains
     type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
     real(r8), intent(in) :: src_array(:)
     real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
     real(r8), intent(in) :: mask_src(:)
     real(r8), intent(in) :: mask_dst(:)
     real(r8), intent(in) :: mask_dst_min
@@ -459,9 +551,87 @@ contains
        end if
     end do
 
+    where ((wtnorm == 0._r8) .or. (mask_dst <= mask_dst_min))
+       dst_array = nodata
+    end where
+
     deallocate(wtnorm)
 
   end subroutine gridmap_areaave_srcmask2
+
+!==========================================================================
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gridmap_areastddev
+!
+! !INTERFACE:
+  subroutine gridmap_areastddev (gridmap, src_array, dst_array, nodata)
+!
+! !DESCRIPTION:
+! Computes area-weighted standard deviation
+!
+! We use the definition of standard deviation that applies if you measure the full
+! population (as opposed to the unbiased standard deviation that should be used when
+! sampling a subset of the full population). (This is equivalent to using 1/N rather than
+! 1/(N-1).) This makes sense if we assume that the underlying values are constant
+! throughout each source grid cell -- in that case, we know the full population as long as
+! we know the values in all source grid cells, which is generally the case.
+!
+! The formula is from <http://en.wikipedia.org/wiki/Weighted_mean#Weighted_sample_variance>
+! (accessed 3-4-13). 
+!
+! !ARGUMENTS:
+    implicit none
+    type(gridmap_type) , intent(in) :: gridmap   ! gridmap data
+    real(r8), intent(in) :: src_array(:)
+    real(r8), intent(out):: dst_array(:)
+    real(r8), intent(in) :: nodata               ! value to apply where there are no input data
+!
+! !REVISION HISTORY:
+!   Created by Bill Sacks
+!
+! !LOCAL VARIABLES:
+    integer :: n,ni,no
+    integer :: ns_o                                ! number of output points
+    real(r8):: wt                                  ! weight of overlap
+    real(r8), allocatable :: weighted_means(:)     ! weighted mean on the output grid
+    real(r8), allocatable :: sum_weights(:)        ! sum of weights on the output grid
+    character(*),parameter :: subName = '(gridmap_areastddev) '
+!EOP
+!------------------------------------------------------------------------------
+    call gridmap_checkifset( gridmap, subname )
+
+    ns_o = size(dst_array)
+    allocate(weighted_means(ns_o))
+    call gridmap_areaave(gridmap, src_array, weighted_means, nodata=0._r8)
+
+    ! WJS (3-5-13): I believe that sum_weights should be the same as gridmap%frac_dst,
+    ! but I'm not positive of this, so we compute it explicitly to be safe
+    allocate(sum_weights(ns_o))
+    sum_weights(:) = 0._r8
+    dst_array(:)   = 0._r8
+    do n = 1,gridmap%ns
+       ni = gridmap%src_indx(n)
+       no = gridmap%dst_indx(n)
+       wt = gridmap%wovr(n)
+       ! The following accumulates the numerator of the weighted sigma-squared
+       dst_array(no) = dst_array(no) + wt * (src_array(ni) - weighted_means(no))**2
+       sum_weights(no) = sum_weights(no) + wt
+    end do
+
+    do no = 1,ns_o
+       if (sum_weights(no) > 0._r8) then
+          dst_array(no) = sqrt(dst_array(no)/sum_weights(no))
+       else
+          dst_array(no) = nodata
+       end if
+    end do
+
+    deallocate(weighted_means, sum_weights)
+
+  end subroutine gridmap_areastddev
 
 !==========================================================================
 

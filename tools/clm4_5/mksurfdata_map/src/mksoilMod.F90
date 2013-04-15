@@ -948,7 +948,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
   call domain_checksame( tdomain, ldomain, tgridmap )
 
   do lev = 1,nlay
-     call gridmap_areaave(tgridmap, organic_i(:,lev), organic_o(:,lev))
+     call gridmap_areaave(tgridmap, organic_i(:,lev), organic_o(:,lev), nodata=0._r8)
   end do
 
   do lev = 1,nlevsoi
@@ -1210,16 +1210,10 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
 
   ! Determine fmax_o on output grid
  
-  call gridmap_areaave(tgridmap, fmax_i, fmax_o)
-
-  do no = 1,ns_o
-     if (fmax_o(no) == 0.0) then
-        fmax_o(no) = .365783  ! fmax_o(no) = globalAvg
-     end if
-     if (fmax_o(no) == -999.99) then
-        fmax_o(no) = .365783  ! fmax_o(no) = globalAvg
-     end if
-  enddo
+  ! In points with no data, use globalAvg
+  ! (WJS (3-11-13): use real(.365783,r8) rather than .365783_r8 to maintain bfb results
+  ! with old code)
+  call gridmap_areaave(tgridmap, fmax_i, fmax_o, nodata=real(.365783,r8))
 
   ! Check for conservation
 
