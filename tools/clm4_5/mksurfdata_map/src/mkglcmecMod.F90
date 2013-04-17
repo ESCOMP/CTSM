@@ -424,7 +424,7 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   ! Check that sum over pctglcmec_o (from 1 to nglcec) is equal to pctglac_o(no)
   !
-  ! Note: We use a threshold of 1e-5 rather than 1e-6 or smaller because there is single-
+  ! Note: We use a threshold of 2e-5 rather than 1e-6 or smaller because there is single-
   ! precision roundoff error in the storage of the flat (i.e., non-multi-level)
   ! PCT_GLACIER variable on the input dataset (which is used to compute pctglac_o) (since
   ! the input dataset uses single-precision floats)
@@ -433,7 +433,7 @@ subroutine mkglcmec(ldomain, mapfname, &
      do m = 1,nglcec
         glc_sum = glc_sum + pctglcmec_o(no,m)
      end do
-     if (abs(glc_sum - pctglac_o(no)) > 1.e-5) then
+     if (abs(glc_sum - pctglac_o(no)) > 2.e-5) then
         write(6,*)'no,pctglc,pctglac= ',no,glc_sum,pctglac_o(no)
         errors = .true.
      end if
@@ -441,12 +441,12 @@ subroutine mkglcmec(ldomain, mapfname, &
 
   ! Check that GIC + ICESHEET = total glacier, for variables summed over elevation classes
   !
-  ! Note: We use a threshold of 1e-5 rather than 1e-6 or smaller because there is single-
+  ! Note: We use a threshold of 2e-5 rather than 1e-6 or smaller because there is single-
   ! precision roundoff error in the storage of the flat (i.e., non-multi-level)
   ! PCT_GLACIER variable on the input dataset (which is used to compute pctglac_o) (since
   ! the input dataset uses single-precision floats)
   do no = 1,ns_o
-     if (abs((pctglc_gic_o(no) + pctglc_icesheet_o(no)) - pctglac_o(no)) > 1.e-5) then
+     if (abs((pctglc_gic_o(no) + pctglc_icesheet_o(no)) - pctglac_o(no)) > 2.e-5) then
         write(6,*)'no,pctglc_gic,pctglc_icesheet,pctglac,pctglac_uncorrected,lon,lat=',no,pctglc_gic_o(no),&
              pctglc_icesheet_o(no),pctglac_o(no),pctglac_o_uncorrected(no),tgridmap%&
              xc_dst(no),tgridmap%yc_dst(no)

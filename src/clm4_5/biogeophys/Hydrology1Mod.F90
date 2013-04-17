@@ -186,7 +186,7 @@ contains
 ! local pointers to original implicit inout arrays
 !
     integer , pointer :: snl(:)            ! number of snow layers
-    real(r8), pointer :: snowdp(:)         ! snow height (m)
+    real(r8), pointer :: snow_depth(:)         ! snow height (m)
     real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
     real(r8), pointer :: h2ocan(:)         ! total canopy water (mm H2O)
     real(r8), pointer :: qflx_irrig(:)          ! irrigation amount (mm/s)
@@ -255,7 +255,7 @@ contains
     real(r8) :: qflx_prec_grnd_rain(lbp:ubp) ! rain precipitation incident on ground [mm/s]
     real(r8) :: z_avg                        ! grid cell average snow depth
     real(r8) :: rho_avg                      ! avg density of snow column
-    real(r8) :: temp_snowdp,temp_intsnow     ! temporary variables
+    real(r8) :: temp_snow_depth,temp_intsnow     ! temporary variables
     real(r8) :: fmelt
     real(r8) :: smr
     real(r8) :: delf_melt
@@ -299,7 +299,7 @@ contains
     forc_t             => clm3%g%l%c%ces%forc_t
     t_grnd             => clm3%g%l%c%ces%t_grnd
     snl                => clm3%g%l%c%cps%snl
-    snowdp             => clm3%g%l%c%cps%snowdp
+    snow_depth             => clm3%g%l%c%cps%snow_depth
     h2osno             => clm3%g%l%c%cws%h2osno
     zi                 => clm3%g%l%c%cps%zi
     dz                 => clm3%g%l%c%cps%dz
@@ -516,7 +516,7 @@ contains
 
        qflx_snow_h2osfc(c) = 0._r8
        ! set temporary variables prior to updating
-       temp_snowdp=snowdp(c)
+       temp_snow_depth=snow_depth(c)
        ! save initial snow content
        do j= -nlevsno+1,snl(c)
           swe_old(c,j) = 0.0_r8
@@ -581,21 +581,21 @@ contains
              ! for subgrid fluxes
              if (subgridflag ==1 .and. ltype(l) /= isturb) then
                 if (frac_sno(c) > 0._r8)then
-                    snowdp(c)=snowdp(c) + newsnow(c)/(bifall * frac_sno(c))
+                    snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall * frac_sno(c))
                 else
-                    snowdp(c)=0._r8
+                    snow_depth(c)=0._r8
                 end if
              else
                 ! for uniform snow cover
-                snowdp(c)=snowdp(c)+newsnow(c)/bifall
+                snow_depth(c)=snow_depth(c)+newsnow(c)/bifall
              endif
 
              ! use original fsca formulation (n&y 07)
              if (oldfflag == 1) then 
                 ! snow cover fraction in Niu et al. 2007
-                if(snowdp(c) .gt. 0.0_r8)  then
-                   frac_sno(c) = tanh(snowdp(c)/(2.5_r8*zlnd* &
-                        (min(800._r8,(h2osno(c)+ newsnow(c))/snowdp(c))/100._r8)**1._r8) )
+                if(snow_depth(c) .gt. 0.0_r8)  then
+                   frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
+                        (min(800._r8,(h2osno(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
                 endif
                 if(h2osno(c) < 1.0_r8)  then
                    frac_sno(c)=min(frac_sno(c),h2osno(c))
@@ -603,7 +603,7 @@ contains
              endif
 
           else !h2osno == 0
-             ! initialize frac_sno and snowdp when no snow present initially
+             ! initialize frac_sno and snow_depth when no snow present initially
              if (newsnow(c) > 0._r8) then 
                 z_avg = newsnow(c)/bifall
                 fmelt=newsnow(c)
@@ -615,23 +615,23 @@ contains
                      / (0.5*(cos(rpi*(1._r8-max(frac_sno(c),1e-6_r8))**(1./n_melt(c)))+1._r8))
                 int_snow(c) = min(1.e8_r8,temp_intsnow)
 
-                ! update snowdp and h2osno to be consistent with frac_sno, z_avg
+                ! update snow_depth and h2osno to be consistent with frac_sno, z_avg
                 if (subgridflag ==1 .and. ltype(l) /= isturb) then
-                   snowdp(c)=z_avg/frac_sno(c)
+                   snow_depth(c)=z_avg/frac_sno(c)
                 else
-                   snowdp(c)=newsnow(c)/bifall
+                   snow_depth(c)=newsnow(c)/bifall
                 endif
                 ! use n&y07 formulation
                 if (oldfflag == 1) then 
                    ! snow cover fraction in Niu et al. 2007
-                   if(snowdp(c) .gt. 0.0_r8)  then
-                      frac_sno(c) = tanh(snowdp(c)/(2.5_r8*zlnd* &
-                           (min(800._r8,newsnow(c)/snowdp(c))/100._r8)**1._r8) )
+                   if(snow_depth(c) .gt. 0.0_r8)  then
+                      frac_sno(c) = tanh(snow_depth(c)/(2.5_r8*zlnd* &
+                           (min(800._r8,newsnow(c)/snow_depth(c))/100._r8)**1._r8) )
                    endif
                 endif
              else
                 z_avg = 0._r8
-                snowdp(c) = 0._r8
+                snow_depth(c) = 0._r8
                 frac_sno(c) = 0._r8
              endif
           endif ! end of h2osno > 0
@@ -644,7 +644,7 @@ contains
           int_snow(c) = int_snow(c) + newsnow(c)
 
           ! update change in snow depth
-          dz_snowf = (snowdp(c) - temp_snowdp) / dtime
+          dz_snowf = (snow_depth(c) - temp_snow_depth) / dtime
 
         end if !end of do_capsnow construct
 
@@ -661,7 +661,7 @@ contains
 
        if (ltype(l)==istwet .and. t_grnd(c)>tfrz) then
           h2osno(c)=0._r8
-          snowdp(c)=0._r8
+          snow_depth(c)=0._r8
        end if
 
        ! When the snow accumulation exceeds 10 mm, initialize snow layer
@@ -669,10 +669,10 @@ contains
        ! as the surface air temperature
 
        newnode = 0    ! flag for when snow node will be initialized
-       if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. frac_sno(c)*snowdp(c) >= 0.01_r8) then
+       if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. frac_sno(c)*snow_depth(c) >= 0.01_r8) then
           newnode = 1
           snl(c) = -1
-          dz(c,0) = snowdp(c)                       ! meter
+          dz(c,0) = snow_depth(c)                       ! meter
           z(c,0) = -0.5_r8*dz(c,0)
           zi(c,-1) = -dz(c,0)
           t_soisno(c,0) = min(tfrz, forc_t(c))      ! K

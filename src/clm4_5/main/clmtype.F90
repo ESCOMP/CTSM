@@ -1119,7 +1119,8 @@ type, public :: column_pstate_type
    real(r8), pointer :: mss_frc_cly_vld(:)    ![frc] Mass fraction clay limited to 0.20
    real(r8), pointer :: mbl_bsn_fct(:)        !basin factor
    logical , pointer :: do_capsnow(:)         !true => do snow capping
-   real(r8), pointer :: snowdp(:)             !snow height (m)
+   real(r8), pointer :: snow_depth(:)             !snow height of snow covered area (m)
+   real(r8), pointer :: snowdp(:)             ! gridcell averaged snow height (m)
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: frac_sno_eff(:)       !fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: frac_h2osfc(:)        !fractional area with surface water greater than zero

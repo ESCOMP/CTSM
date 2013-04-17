@@ -1957,7 +1957,7 @@ end subroutine CropPhenologyInit
       real(r8), pointer :: t_ref2m(:)     ! 2 m height surface air temperature (K)
       real(r8), pointer :: t_ref2m_min(:) !daily minimum of average 2 m height surface air temperature (K)
       real(r8), pointer :: t_ref2m_max(:) !daily maximum of average 2 m height surface air temperature (K)
-      real(r8), pointer :: snowdp(:)      ! snow height (m)
+      real(r8), pointer :: snow_depth(:)      ! snow height (m)
 ! local pointers to implicit out scalars
       real(r8), pointer :: vf(:)          ! vernalization factor for cereal
       real(r8), pointer :: cumvd(:)       ! cumulative vernalization d?ependence?
@@ -1977,7 +1977,7 @@ end subroutine CropPhenologyInit
         t_ref2m     => clm3%g%l%c%p%pes%t_ref2m
         t_ref2m_min => clm3%g%l%c%p%pes%t_ref2m_min
         t_ref2m_max => clm3%g%l%c%p%pes%t_ref2m_max
-        snowdp      => clm3%g%l%c%cps%snowdp
+        snow_depth      => clm3%g%l%c%cps%snow_depth
 
         c = pcolumn(p)
 
@@ -1987,8 +1987,8 @@ end subroutine CropPhenologyInit
 
         if (t_ref2m(p) < tfrz) then !slevis: t_ref2m inst of td=daily avg (K)
            tcrown = 2._r8 + (t_ref2m(p) - tfrz) * (0.4_r8 + 0.0018_r8 * &
-                    (min(snowdp(c)*100._r8, 15._r8) - 15._r8)**2)
-        else !slevis: snowdp inst of adsnod=daily average (m)
+                    (min(snow_depth(c)*100._r8, 15._r8) - 15._r8)**2)
+        else !slevis: snow_depth inst of adsnod=daily average (m)
            tcrown = t_ref2m(p) - tfrz
         end if
 

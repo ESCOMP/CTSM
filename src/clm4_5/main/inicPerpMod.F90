@@ -134,7 +134,7 @@ contains
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='SNOWDP', data=cptr%cps%snowdp, dim1name=namec, &
+    call ncd_io(varname='SNOW_DEPTH', data=cptr%cps%snow_depth, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
@@ -172,13 +172,13 @@ contains
        l = clandunit(c)
        if (itypelun(l) == isturb) then
           ! Urban landunit use Bonan 1996 (LSM Technical Note)
-          cptr%cps%frac_sno(c) = min( cptr%cps%snowdp(c)/0.05_r8, 1._r8)
+          cptr%cps%frac_sno(c) = min( cptr%cps%snow_depth(c)/0.05_r8, 1._r8)
        else
           ! snow cover fraction in Niu et al. 2007
           cptr%cps%frac_sno(c) = 0.0_r8
-          if ( cptr%cps%snowdp(c) > 0.0_r8 ) then
-            cptr%cps%frac_sno(c) = tanh(cptr%cps%snowdp(c)/(2.5_r8*zlnd* &
-              (min(800._r8,cptr%cws%h2osno(c)/cptr%cps%snowdp(c))/100._r8)**1._r8) )
+          if ( cptr%cps%snow_depth(c) > 0.0_r8 ) then
+            cptr%cps%frac_sno(c) = tanh(cptr%cps%snow_depth(c)/(2.5_r8*zlnd* &
+              (min(800._r8,cptr%cws%h2osno(c)/cptr%cps%snow_depth(c))/100._r8)**1._r8) )
           endif
        end if
     end do

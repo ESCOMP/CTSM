@@ -231,7 +231,7 @@ else
 fi
 echo "Test list to use:               $testlist"
 echo "Create test suite with options: $options"
-./create_test_suite -input_list $testlist $options
+./create_test -input_list $testlist $options
 
 # Assume that runs are done in default location
 component_gen_comp_options="$component_gen_comp_options -runloc $defaultrunloc"

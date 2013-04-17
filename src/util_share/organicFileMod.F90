@@ -68,9 +68,7 @@ contains
 !EOP
     character(len=256) :: locfn                 ! local file name
     type(file_desc_t)  :: ncid                  ! netcdf id
-    integer            :: dimid                 ! dimension id
     integer            :: ni,nj,ns              ! dimension sizes  
-    integer            :: ier                   ! error status
     logical            :: isgrid2d              ! true => file is 2d
     logical            :: readvar               ! true => variable is on dataset
     character(len=32)  :: subname = 'organicrd' ! subroutine name

@@ -104,6 +104,8 @@ contains
 !
 ! local pointers to implicit in arguments
 !
+    real(r8), pointer :: snow_depth(:)      !snow height of snow covered area (m)
+    real(r8), pointer :: snowdp(:)             ! gridcell averaged snow height (m)
     real(r8), pointer :: frac_sno_eff(:)  !eff.  snow cover fraction (col) [frc]
     real(r8), pointer :: qflx_evap_soi(:) ! soil evaporation
     real(r8), pointer :: h2osfc(:)        ! surface water (mm)
@@ -251,6 +253,8 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
+    snow_depth      => clm3%g%l%c%cps%snow_depth
+    snowdp             => clm3%g%l%c%cps%snowdp
     frac_sno_eff      => clm3%g%l%c%cps%frac_sno_eff 
     qflx_evap_soi     => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
     h2osfc            => clm3%g%l%c%cws%h2osfc
@@ -457,7 +461,12 @@ contains
        end do
     end do
 
-    ! Determine ground temperature, ending water balance and volumetric soil water
+! Calculate column average snow depth
+    do c = lbc,ubc
+       snowdp(c) = snow_depth(c) * frac_sno_eff(c)
+    end do
+
+   ! Determine ground temperature, ending water balance and volumetric soil water
     ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)

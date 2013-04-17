@@ -41,7 +41,7 @@ contains
 ! !DESCRIPTION:
 ! Initializes the following time varying variables:
 ! water      : h2osno, h2ocan, h2osoi_liq, h2osoi_ice, h2osoi_vol
-! snow       : snowdp, snl, dz, z, zi
+! snow       : snow_depth, snl, dz, z, zi
 ! temperature: t_soisno, t_veg, t_grnd
 !
 ! !USES:
@@ -122,7 +122,7 @@ contains
     real(r8), pointer :: h2ocan_col(:)      ! canopy water (mm H2O) (column-level)
     real(r8), pointer :: h2ocan_pft(:)      ! canopy water (mm H2O) (pft-level)
     real(r8), pointer :: h2osno(:)          ! snow water (mm H2O)
-    real(r8), pointer :: snowdp(:)          ! snow height (m)
+    real(r8), pointer :: snow_depth(:)          ! snow height (m)
     real(r8), pointer :: qflx_irrig(:)      ! irrigation flux (mm H2O/s)
     real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
     real(r8), pointer :: soilpsi(:,:)       ! soil water potential in each soil layer (MPa)
@@ -210,7 +210,7 @@ contains
     h2osoi_vol       => clm3%g%l%c%cws%h2osoi_vol
     h2ocan_col       => clm3%g%l%c%cws%pws_a%h2ocan
     qflx_irrig       => clm3%g%l%c%cwf%qflx_irrig
-    snowdp           => clm3%g%l%c%cps%snowdp
+    snow_depth           => clm3%g%l%c%cps%snow_depth
     h2osno           => clm3%g%l%c%cws%h2osno
     t_soisno         => clm3%g%l%c%ces%t_soisno
     t_lake           => clm3%g%l%c%ces%t_lake
@@ -264,7 +264,7 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
-    ! NOTE: h2ocan, h2osno, and snowdp has valid values everywhere
+    ! NOTE: h2ocan, h2osno, and snow_depth has valid values everywhere
     ! canopy water (pft level)
 
     do p = begp, endp
@@ -316,7 +316,7 @@ contains
        int_snow(c) = h2osno(c)
        ! snow depth
 
-       snowdp(c)  = h2osno(c) / bdsno
+       snow_depth(c)  = h2osno(c) / bdsno
 
        ! Initialize Irrigation to zero
        if (ltype(l)==istsoil) then
@@ -328,7 +328,7 @@ contains
 
     ! Set snow layer number, depth and thickiness
 
-    call snowdp2lev(begc, endc)
+    call snow_depth2lev(begc, endc)
 
     ! Set snow/soil temperature, note:
     ! t_soisno only has valid values over non-lake
@@ -756,10 +756,10 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: snowdp2lev
+! !ROUTINE: snow_depth2lev
 !
 ! !INTERFACE:
-  subroutine snowdp2lev(lbc, ubc)
+  subroutine snow_depth2lev(lbc, ubc)
 !
 ! !DESCRIPTION:
 ! Create snow layers and interfaces given snow depth.
@@ -782,7 +782,7 @@ contains
 ! local pointers to implicit in arguments
 !
   integer , pointer :: clandunit(:)  ! landunit index associated with each column
-  real(r8), pointer :: snowdp(:)     ! snow height (m)
+  real(r8), pointer :: snow_depth(:)     ! snow height (m)
   logical , pointer :: lakpoi(:)     ! true => landunit is a lake point
 !
 ! local pointers to implicit out arguments
@@ -805,7 +805,7 @@ contains
   ! Assign local pointers to derived type members (column-level)
 
   clandunit => clm3%g%l%c%landunit
-  snowdp    => clm3%g%l%c%cps%snowdp
+  snow_depth    => clm3%g%l%c%cps%snow_depth
   snl       => clm3%g%l%c%cps%snl
   zi        => clm3%g%l%c%cps%zi
   dz        => clm3%g%l%c%cps%dz
@@ -824,59 +824,59 @@ contains
   do c = lbc,ubc
      l = clandunit(c)
      if (.not. lakpoi(l)) then
-        if (snowdp(c) < 0.01_r8) then
+        if (snow_depth(c) < 0.01_r8) then
            snl(c) = 0
            dz(c,-nlevsno+1:0) = 0._r8
            z (c,-nlevsno+1:0) = 0._r8
            zi(c,-nlevsno+0:0) = 0._r8
         else
-           if ((snowdp(c) >= 0.01_r8) .and. (snowdp(c) <= 0.03_r8)) then
+           if ((snow_depth(c) >= 0.01_r8) .and. (snow_depth(c) <= 0.03_r8)) then
               snl(c) = -1
-              dz(c,0)  = snowdp(c)
-           else if ((snowdp(c) > 0.03_r8) .and. (snowdp(c) <= 0.04_r8)) then
+              dz(c,0)  = snow_depth(c)
+           else if ((snow_depth(c) > 0.03_r8) .and. (snow_depth(c) <= 0.04_r8)) then
               snl(c) = -2
-              dz(c,-1) = snowdp(c)/2._r8
+              dz(c,-1) = snow_depth(c)/2._r8
               dz(c, 0) = dz(c,-1)
-           else if ((snowdp(c) > 0.04_r8) .and. (snowdp(c) <= 0.07_r8)) then
+           else if ((snow_depth(c) > 0.04_r8) .and. (snow_depth(c) <= 0.07_r8)) then
               snl(c) = -2
               dz(c,-1) = 0.02_r8
-              dz(c, 0) = snowdp(c) - dz(c,-1)
-           else if ((snowdp(c) > 0.07_r8) .and. (snowdp(c) <= 0.12_r8)) then
+              dz(c, 0) = snow_depth(c) - dz(c,-1)
+           else if ((snow_depth(c) > 0.07_r8) .and. (snow_depth(c) <= 0.12_r8)) then
               snl(c) = -3
               dz(c,-2) = 0.02_r8
-              dz(c,-1) = (snowdp(c) - 0.02_r8)/2._r8
+              dz(c,-1) = (snow_depth(c) - 0.02_r8)/2._r8
               dz(c, 0) = dz(c,-1)
-           else if ((snowdp(c) > 0.12_r8) .and. (snowdp(c) <= 0.18_r8)) then
+           else if ((snow_depth(c) > 0.12_r8) .and. (snow_depth(c) <= 0.18_r8)) then
               snl(c) = -3
               dz(c,-2) = 0.02_r8
               dz(c,-1) = 0.05_r8
-              dz(c, 0) = snowdp(c) - dz(c,-2) - dz(c,-1)
-           else if ((snowdp(c) > 0.18_r8) .and. (snowdp(c) <= 0.29_r8)) then
+              dz(c, 0) = snow_depth(c) - dz(c,-2) - dz(c,-1)
+           else if ((snow_depth(c) > 0.18_r8) .and. (snow_depth(c) <= 0.29_r8)) then
               snl(c) = -4
               dz(c,-3) = 0.02_r8
               dz(c,-2) = 0.05_r8
-              dz(c,-1) = (snowdp(c) - dz(c,-3) - dz(c,-2))/2._r8
+              dz(c,-1) = (snow_depth(c) - dz(c,-3) - dz(c,-2))/2._r8
               dz(c, 0) = dz(c,-1)
-           else if ((snowdp(c) > 0.29_r8) .and. (snowdp(c) <= 0.41_r8)) then
+           else if ((snow_depth(c) > 0.29_r8) .and. (snow_depth(c) <= 0.41_r8)) then
               snl(c) = -4
               dz(c,-3) = 0.02_r8
               dz(c,-2) = 0.05_r8
               dz(c,-1) = 0.11_r8
-              dz(c, 0) = snowdp(c) - dz(c,-3) - dz(c,-2) - dz(c,-1)
-           else if ((snowdp(c) > 0.41_r8) .and. (snowdp(c) <= 0.64_r8)) then
+              dz(c, 0) = snow_depth(c) - dz(c,-3) - dz(c,-2) - dz(c,-1)
+           else if ((snow_depth(c) > 0.41_r8) .and. (snow_depth(c) <= 0.64_r8)) then
               snl(c) = -5
               dz(c,-4) = 0.02_r8
               dz(c,-3) = 0.05_r8
               dz(c,-2) = 0.11_r8
-              dz(c,-1) = (snowdp(c) - dz(c,-4) - dz(c,-3) - dz(c,-2))/2._r8
+              dz(c,-1) = (snow_depth(c) - dz(c,-4) - dz(c,-3) - dz(c,-2))/2._r8
               dz(c, 0) = dz(c,-1)
-           else if (snowdp(c) > 0.64_r8) then
+           else if (snow_depth(c) > 0.64_r8) then
               snl(c) = -5
               dz(c,-4) = 0.02_r8
               dz(c,-3) = 0.05_r8
               dz(c,-2) = 0.11_r8
               dz(c,-1) = 0.23_r8
-              dz(c, 0)=snowdp(c)-dz(c,-4)-dz(c,-3)-dz(c,-2)-dz(c,-1)
+              dz(c, 0)=snow_depth(c)-dz(c,-4)-dz(c,-3)-dz(c,-2)-dz(c,-1)
            endif
         end if
      end if
@@ -906,7 +906,7 @@ contains
      end if
   end do
 
-  end subroutine snowdp2lev
+  end subroutine snow_depth2lev
 
 
 !-----------------------------------------------------------------------

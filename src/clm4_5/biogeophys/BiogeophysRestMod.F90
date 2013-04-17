@@ -287,14 +287,14 @@ contains
        end if
     end if
 
-    ! column water state variable - snowdp
+    ! column water state variable - snow_depth
 
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='SNOWDP', xtype=ncd_double, &
+       call ncd_defvar(ncid=ncid, varname='SNOW_DEPTH', xtype=ncd_double, &
             dim1name='column', &
             long_name='snow depth', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='SNOWDP', data=cptr%cps%snowdp, &
+       call ncd_io(varname='SNOW_DEPTH', data=cptr%cps%snow_depth, &
             dim1name=namec, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then

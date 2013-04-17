@@ -192,7 +192,7 @@ contains
    real(r8), pointer :: smpsc(:)       ! soil water potential at full stomatal closure (mm)
    real(r8), pointer :: frac_sno(:)    ! fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: htop(:)        ! canopy top(m)
-   real(r8), pointer :: snowdp(:)      ! snow height (m)
+   real(r8), pointer :: snow_depth(:)      ! snow height (m)
    real(r8), pointer :: soilbeta(:)    ! soil wetness relative to field capacity
    real(r8), pointer :: lat(:)         ! latitude (radians)
    real(r8), pointer :: decl(:)        ! declination angle (radians)
@@ -417,7 +417,7 @@ contains
    real(r8) :: ri                    ! stability parameter for under canopy air (unitless)
    real(r8) :: csoilb                ! turbulent transfer coefficient over bare soil (unitless)
    real(r8) :: ricsoilc              ! modified transfer coefficient under dense canopy (unitless)
-   real(r8) :: snowdp_c              ! critical snow depth to cover plant litter (m)
+   real(r8) :: snow_depth_c              ! critical snow depth to cover plant litter (m)
    real(r8) :: rdl                   ! dry litter layer resistance for water vapor  (s/m)
    real(r8) :: elai_dl               ! exposed (dry) plant litter area index
    real(r8) :: fsno_dl               ! effective snow cover over plant litter
@@ -497,7 +497,7 @@ contains
    htvp           => clm3%g%l%c%cps%htvp
    z0mg           => clm3%g%l%c%cps%z0mg
    frac_sno       => clm3%g%l%c%cps%frac_sno_eff
-   snowdp         => clm3%g%l%c%cps%snowdp
+   snow_depth         => clm3%g%l%c%cps%snow_depth
    soilbeta       => clm3%g%l%c%cws%soilbeta
    decl           => clm3%g%l%c%cps%decl
    max_dayl       => clm3%g%l%c%cps%max_dayl
@@ -1044,8 +1044,8 @@ contains
          wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
          !Litter layer resistance. Added by K.Sakaguchi
-         snowdp_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
-         fsno_dl = snowdp(c)/snowdp_c    ! effective snow cover for (dry)plant litter
+         snow_depth_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
+         fsno_dl = snow_depth(c)/snow_depth_c    ! effective snow cover for (dry)plant litter
          elai_dl = lai_dl*(1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
          rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance
 

@@ -127,16 +127,25 @@ contains
          avgflag='A', long_name='river channel water storage', &
          ptr_lnd=clm_a2l%volr)
 
+
     ! Snow properties
     ! These will be vertically averaged over the snow profile
 
+    call hist_addfld1d (fname='SNOW_DEPTH',  units='m',  &
+         avgflag='A', long_name='snow height of snow covered area', &
+         ptr_col=clm3%g%l%c%cps%snow_depth, c2l_scale_type='urbanf')!, default='inactive')
+
     call hist_addfld1d (fname='SNOWDP',  units='m',  &
-         avgflag='A', long_name='snow height', &
+         avgflag='A', long_name='gridcell mean snow height', &
          ptr_col=clm3%g%l%c%cps%snowdp, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSNO',  units='unitless',  &
          avgflag='A', long_name='fraction of ground covered by snow', &
          ptr_col=clm3%g%l%c%cps%frac_sno, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='FSNO_EFF',  units='unitless',  &
+         avgflag='A', long_name='effective fraction of ground covered by snow', &
+         ptr_col=clm3%g%l%c%cps%frac_sno_eff, c2l_scale_type='urbanf')!, default='inactive')
 
     ! Temperatures
 

@@ -613,13 +613,13 @@ contains
     real(r8) :: fsno_melt
     integer, pointer :: clandunit(:)       !landunit index for each column
     integer, pointer :: ltype(:)           !landunit type
-    real(r8), pointer :: snowdp(:)         ! snow height (m)
+    real(r8), pointer :: snow_depth(:)         ! snow height (m)
 
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes (column-level)
 
-    snowdp      => clm3%g%l%c%cps%snowdp
+    snow_depth      => clm3%g%l%c%cps%snow_depth
     frac_sno    => clm3%g%l%c%cps%frac_sno_eff 
     swe_old     => clm3%g%l%c%cws%swe_old
     int_snow    => clm3%g%l%c%cws%int_snow
@@ -775,7 +775,7 @@ contains
 !
     integer , pointer :: snl(:)            !number of snow layers
     real(r8), pointer :: h2osno(:)         !snow water (mm H2O)
-    real(r8), pointer :: snowdp(:)         !snow height (m)
+    real(r8), pointer :: snow_depth(:)         !snow height (m)
     real(r8), pointer :: dz(:,:)           !layer depth (m)
     real(r8), pointer :: zi(:,:)           !interface level below a "z" level (m)
     real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
@@ -826,7 +826,7 @@ contains
     int_snow       => clm3%g%l%c%cws%int_snow
     clandunit  => clm3%g%l%c%landunit
     snl        => clm3%g%l%c%cps%snl
-    snowdp     => clm3%g%l%c%cps%snowdp
+    snow_depth     => clm3%g%l%c%cps%snow_depth
     h2osno     => clm3%g%l%c%cws%h2osno
     dz         => clm3%g%l%c%cps%dz
     zi         => clm3%g%l%c%cps%zi
@@ -959,7 +959,7 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        h2osno(c) = 0._r8
-       snowdp(c) = 0._r8
+       snow_depth(c) = 0._r8
        zwice(c)  = 0._r8
        zwliq(c)  = 0._r8
     end do
@@ -969,7 +969,7 @@ contains
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
              h2osno(c) = h2osno(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-             snowdp(c) = snowdp(c) + dz(c,j)
+             snow_depth(c) = snow_depth(c) + dz(c,j)
              zwice(c)  = zwice(c) + h2osoi_ice(c,j)
              zwliq(c)  = zwliq(c) + h2osoi_liq(c,j)
           end if
@@ -982,10 +982,10 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        l = clandunit(c)
-       if (snowdp(c) > 0._r8) then
-          if ((ltype(l) == istdlak .and. snowdp(c) < 0.01_r8 + lsadz ) .or. &
-               ((ltype(l) /= istdlak) .and. ((frac_sno_eff(c)*snowdp(c) < 0.01_r8)  &
-               .or. (h2osno(c)/(frac_sno_eff(c)*snowdp(c)) < 50._r8)))) then
+       if (snow_depth(c) > 0._r8) then
+          if ((ltype(l) == istdlak .and. snow_depth(c) < 0.01_r8 + lsadz ) .or. &
+               ((ltype(l) /= istdlak) .and. ((frac_sno_eff(c)*snow_depth(c) < 0.01_r8)  &
+               .or. (h2osno(c)/(frac_sno_eff(c)*snow_depth(c)) < 50._r8)))) then
 
           snl(c) = 0
           h2osno(c) = zwice(c)
@@ -999,7 +999,7 @@ contains
           mss_dst3(c,:)  = 0._r8
           mss_dst4(c,:)  = 0._r8
 
-          if (h2osno(c) <= 0._r8) snowdp(c) = 0._r8
+          if (h2osno(c) <= 0._r8) snow_depth(c) = 0._r8
              ! this is where water is transfered from layer 0 (snow) to layer 1 (soil)
              if (ltype(l) == istsoil .or. ltype(l) == isturb .or. ltype(l) == istcrop) then
                 h2osoi_liq(c,0) = 0.0_r8
@@ -1014,7 +1014,7 @@ contains
           endif
        end if
           if (h2osno(c) <= 0._r8) then
-             snowdp(c) = 0._r8
+             snow_depth(c) = 0._r8
              frac_sno(c) = 0._r8
              frac_sno_eff(c) = 0._r8
              int_snow(c) = 0._r8

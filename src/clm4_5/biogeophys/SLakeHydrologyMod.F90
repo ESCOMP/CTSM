@@ -131,7 +131,7 @@ contains
     real(r8), pointer :: zi(:,:)          ! interface depth (m)
     integer , pointer :: snl(:)           ! number of snow layers
     real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
-    real(r8), pointer :: snowdp(:)        ! snow height (m)
+    real(r8), pointer :: snow_depth(:)        ! snow height (m)
     real(r8), pointer :: lake_icefrac(:,:)! mass fraction of lake layer that is frozen
     real(r8), pointer :: t_lake(:,:)      ! lake temperature (Kelvin)
     real(r8), pointer :: qflx_snomelt(:)  ! snow melt (mm H2O /s)
@@ -304,7 +304,7 @@ contains
     t_lake         => clm3%g%l%c%ces%t_lake
     lake_icefrac   => clm3%g%l%c%cws%lake_icefrac
     do_capsnow    => clm3%g%l%c%cps%do_capsnow
-    snowdp        => clm3%g%l%c%cps%snowdp
+    snow_depth        => clm3%g%l%c%cps%snow_depth
     qflx_snow_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
     frac_iceold   => clm3%g%l%c%cps%frac_iceold
     qflx_evap_tot_col => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
@@ -450,7 +450,7 @@ contains
              bifall=50._r8
           end if
           dz_snowf = qflx_snow_grnd_col(c)/bifall
-          snowdp(c) = snowdp(c) + dz_snowf*dtime
+          snow_depth(c) = snow_depth(c) + dz_snowf*dtime
           h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
        end if
 
@@ -459,10 +459,10 @@ contains
        ! as the surface air temperature
 
        newnode = 0    ! flag for when snow node will be initialized
-       if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. snowdp(c) >= 0.01_r8 + lsadz) then
+       if (snl(c) == 0 .and. qflx_snow_grnd_col(c) > 0.0_r8 .and. snow_depth(c) >= 0.01_r8 + lsadz) then
           newnode = 1
           snl(c) = -1
-          dz(c,0) = snowdp(c)                       ! meter
+          dz(c,0) = snow_depth(c)                       ! meter
           z(c,0) = -0.5_r8*dz(c,0)
           zi(c,-1) = -dz(c,0)
           t_soisno(c,0) = min(tfrz, forc_t(g))      ! K
@@ -579,14 +579,14 @@ contains
              h2osno(c) = h2osno(c) + (-qflx_sub_snow(p)+qflx_dew_snow(p))*dtime
           end if
           if (h2osno_temp > 0._r8) then
-             snowdp(c) = snowdp(c) * h2osno(c) / h2osno_temp
+             snow_depth(c) = snow_depth(c) * h2osno(c) / h2osno_temp
           else
-             snowdp(c) = h2osno(c)/snow_bd !Assume a constant snow bulk density = 250.
+             snow_depth(c) = h2osno(c)/snow_bd !Assume a constant snow bulk density = 250.
           end if
 
 #if (defined PERGRO)
           if (abs(h2osno(c)) < 1.e-10_r8) h2osno(c) = 0._r8
-          if (h2osno(c) == 0._r8) snowdp(c) = 0._r8
+          if (h2osno(c) == 0._r8) snow_depth(c) = 0._r8
 #else
           h2osno(c) = max(h2osno(c), 0._r8)
 #endif
@@ -731,7 +731,7 @@ contains
           qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)
           snl(c) = 0
           h2osno(c) = 0._r8
-          snowdp(c) = 0._r8
+          snow_depth(c) = 0._r8
           ! Rest of snow layer book-keeping will be done below.
        end if
     end do
@@ -787,7 +787,7 @@ contains
              qflx_sl_top_soil(c) = qflx_sl_top_soil(c) + h2osno(c)
 
              h2osno(c) = 0._r8
-             snowdp(c) = 0._r8
+             snow_depth(c) = 0._r8
              snl(c) = 0
              ! The rest of the bookkeeping for the removed snow will be done below.
              if (heatrem > 0._r8) then ! simply subtract the heat from the layer

@@ -1658,7 +1658,7 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
    real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (kg/m2) [for snow & soil layers]
    real(r8), pointer :: h2osoi_ice(:,:)   ! ice lens (kg/m2) [for snow & soil layers]
    real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
-   real(r8), pointer :: snowdp(:)         ! snow height (m)
+   real(r8), pointer :: snow_depth(:)         ! snow height (m)
    real(r8), pointer :: lake_icefrac(:,:) ! mass fraction of lake layer that is frozen
    real(r8), pointer :: bsw(:,:)          ! Clapp and Hornberger "b" (nlevgrnd)  
    real(r8), pointer :: cellorg(:,:)      ! column 3D org (kg/m^3 organic matter) (nlevgrnd)
@@ -1758,7 +1758,7 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
    watsat         => clm3%g%l%c%cps%watsat
    grnd_ch4_cond  => clm3%g%l%c%cps%pps_a%grnd_ch4_cond
    h2osno    => clm3%g%l%c%cws%h2osno
-   snowdp       => clm3%g%l%c%cps%snowdp
+   snow_depth       => clm3%g%l%c%cps%snow_depth
    lake_icefrac => clm3%g%l%c%cws%lake_icefrac
    bsw       => clm3%g%l%c%cps%bsw
    cellorg   => clm3%g%l%c%cps%cellorg

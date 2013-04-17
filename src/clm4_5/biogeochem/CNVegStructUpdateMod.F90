@@ -71,7 +71,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    integer , pointer :: ivt(:)        ! pft vegetation type
    integer , pointer :: pcolumn(:)    ! column index associated with each pft
    integer , pointer :: pgridcell(:)  ! pft's gridcell index
-   real(r8), pointer :: snowdp(:)     ! snow height (m)
+   real(r8), pointer :: snow_depth(:)     ! snow height (m)
    real(r8), pointer :: leafc(:)      ! (gC/m2) leaf C
    real(r8), pointer :: deadstemc(:)  ! (gC/m2) dead stem C
    real(r8), pointer :: woody(:)      !binary flag for woody lifeform (1=woody, 0=not woody)
@@ -137,7 +137,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     pgridcell                      => clm3%g%l%c%p%gridcell
     leafc                          => clm3%g%l%c%p%pcs%leafc
     deadstemc                      => clm3%g%l%c%p%pcs%deadstemc
-    snowdp                         => clm3%g%l%c%cps%snowdp
+    snow_depth                         => clm3%g%l%c%cps%snow_depth
     woody                          => pftcon%woody
     slatop                         => pftcon%slatop
     dsladlai                       => pftcon%dsladlai
@@ -296,10 +296,10 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
       ! snow burial fraction for short vegetation (e.g. grasses) as in
       ! Wang and Zeng, 2007.
       if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
-         ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
+         ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
          fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
       else
-         fb = 1._r8 - max(min(snowdp(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+         fb = 1._r8 - max(min(snow_depth(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
               !depth of snow required for complete burial of grasses
       endif
 

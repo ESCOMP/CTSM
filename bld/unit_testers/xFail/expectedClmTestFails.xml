@@ -2,16 +2,6 @@
 
 <expectedFails>
    <namelistTest> 
-      <mirage>
-      </mirage>
-      <lynx>
-      </lynx>
-      <janus>
-         <IBM>
-            <compare>
-            </compare>
-         </IBM>
-      </janus>
       <yellowstone>
          <INTEL>
             <compare>
@@ -37,43 +27,13 @@
       </yellowstone>
    </namelistTest>
 
-   <clmInteractive> 
-      <mirage>
-      </mirage>
-      <lynx>
-         <PGI>
-            <compare>
-            </compare>
-         </PGI>
-      </lynx>
-      <janus>
-      </janus>
-   </clmInteractive>
-
-   <clmBatch> 
-      <mirage>
-      </mirage>
-      <lynx>
-         <INTEL>
-              <entry testId="ERS.1x1_brazil.I_2000.lynx_intel"                failType="FAIL">CESM script issue</entry>
-              <entry testId="ERS_D.1x1_asphaltjungleNJ.I_2000_VOC.lynx_intel" failType="FAIL">CESM script issue</entry>
-         </INTEL>
-      </lynx>
-      <janus>
-      </janus>
-   </clmBatch>
-
    <test_system_interactive> 
-      <lynx>
-         <PGI>
-         </PGI>
-         <INTEL>
-         </INTEL>
-      </lynx>
       <frankfurt>
          <INTEL>
               <entry testId="ERS_Ln48_D_P1x1_Mmpi-serial.f10_f10.ICLM45CNCROP" failType="RUN">likely cause is the RTM restart problem that we see with restart boundaries that are under a day</entry>
               <entry testId="SMS_RLA_Mmpi-serial.f45_f45.ICLM45.frankfurt_intel_user_nl_dirs.GC.104101" failType="FAIL">dies a silent death.  same test works on yellowstone so likely a frankfurt bug</entry>
+              <entry testId="SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45" failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+              <entry testId="ERS_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45"  failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
          </INTEL>
       </frankfurt>
       <yellowstone>
@@ -100,11 +60,6 @@
               <entry testId="ERS_Ln48_P96x2.f19_g16.I_2000_VOC_SNCRFRC_CN_GLCMECPD" failType="FAIL">History files are different on restart (known problem restarting mid-day with _GLC: bug 1557)</entry>
          </PGI>
       </lynx>
-      <frankfurt>
-         <INTEL>
-              <entry testId="ERS_D_P16x1.f19_g16.I_2000_CLM45_CN4Me_CROP"       failType="RUN" ></entry>
-         </INTEL>
-      </frankfurt>
       <yellowstone>
           <INTEL>
               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"                  failType="FAIL"></entry>
@@ -134,16 +89,16 @@
                <entry testId="SBN.f19_g16.IRCP85CLM45CN"         failType="SFAIL"> 45 transient case not supported </entry>
                <entry testId="SBN.f09_g16.IGRCP45CLM45CN"        failType="TFAIL"> 45 transient case not supported </entry>
                <entry testId="SBN.f19_g16.IGRCP45CLM45CN"        failType="TFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.ne120_g16.I20TRCN.yellowstone_intel.G.095449"       failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.ne120_g16.IRCP26CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.ne120_g16.IRCP45CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.ne120_g16.IRCP60CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.ne120_g16.IRCP85CN.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.f09_g16.I20TRCLM45.yellowstone_intel.G.095449"      failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.f09_g16.IRCP26CLM45CN.yellowstone_intel.G.095449"   failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.f09_g16.IRCP45CLM45CN.yellowstone_intel.G.095449"   failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.f09_g16.IRCP60CLM45CN.yellowstone_intel.G.095449"   failType="SFAIL"> 45 transient case not supported </entry>
-               <entry testId="SFAIL SBN.f09_g16.IRCP85CLM45CN.yellowstone_intel.G.09544"    failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.I20TRCN"       failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP26CN"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP45CN"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP60CN"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.ne120_g16.IRCP85CN"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.I20TRCLM45"      failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP26CLM45CN"   failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP45CLM45CN"   failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP60CLM45CN"   failType="SFAIL"> 45 transient case not supported </entry>
+               <entry testId="SFAIL SBN.f09_g16.IRCP85CLM45CN"   failType="SFAIL"> 45 transient case not supported </entry>
             </INTEL>
             <PGI>
             </PGI>
@@ -152,24 +107,43 @@
       <auxTests>
          <yellowstone>
             <INTEL>
-               <entry testId="PET_PT.f19_g16.I1850CLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="ERS_E.f19_g16.ICLM451850"       failType="TFAIL">bad compset name</entry>
-               <entry testId="ERB.ne30_g16.I_1948-2004"       failType="FAIL"></entry>
-               <entry testId="ERS_D.f19_g16.IGRCP26CLM45CN"   failType="RUN"  >surfdata and pftdyn file mismatched</entry>
-               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN" failType="RUN"  >Soil balance error on restart</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue component not threaded</entry>
-               <entry testId="SMS.f19_g16.IRCP45CLM45CN"      failType="FAIL ">local filename has zero length</entry>
-               <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"    failType="RUN"  ></entry>
-               <entry testId="ERS_D.f09_g16.I_2000_CLM45_VIC" failType="SFAIL">error running in debug mode.  non-debug mode works.  also on frankfurt.  problem looks to be around line 198 of initSoilParVICmod</entry>
+               <entry testId="PET_PT.f19_g16.I1850CLM45CN"                     failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="ERB.ne30_g16.I_1948-2004"                        failType="FAIL"></entry>
+               <entry testId="ERS_D.f19_g16.IGRCP26CLM45CN"                    failType="RUN"  >surfdata and pftdyn file mismatched</entry>
+               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN"                  failType="RUN"  >Soil balance error on restart</entry>
+               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"                     failType="TFAIL">scripts issue component not threaded</entry>
+               <entry testId="SMS.f19_g16.IRCP45CLM45CN"                       failType="FAIL ">local filename has zero length</entry>
+               <entry testId="ERS_D.f19_g16.IRCP85CLM45CN"                     failType="RUN"  ></entry>
+               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"              failType="FAIL"></entry>
+               <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"              failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
+               <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                  failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
+               <entry testId "SMS_RLA.f45_f45.I"                               failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId "SMS_RLA.f45_f45.ICLM45"                          failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId "SMS_ROA.f45_f45.I"                               failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId "SMS_ROA.f45_f45.ICLM45"                          failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId "PET_D_P1x30.ne30_g16.ICN"                        failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
 
+               <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"               failType="FAIL">NOT BEING TESTED</entry>
+               <entry testId="ERS_E.f19_g16.ICLM451850"                        failType="FAIL">NOT BEING TESTED</entry>
+               <entry testId="ERS_D.f19_g16.I_1850_CLM45_CN4Me_EADSPIN"        failType="FAIL">NOT BEING TESTED</entry>
+               <entry testId="SMS_D.f10_f10.ICLM45CN4Me.nldir_anoxia_wtsat"    failType="FAIL">NOT BEING TESTED.  floating point exception</entry>
             </INTEL>
             <PGI>
                <entry testId="PET_PT.f19_g16.ICLM451850"      failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="SMS.T31_g37.IG4804CLM45"        failType="FAIL" >checkWeights error, probably due to old-format urban on surface dataset</entry>
                <entry testId="SMS.1x1_numaIA.ICLM45CNCROP"    failType="FAIL" >check_dim ERROR for lsmpft (21 vs 25)</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId "SMS_RLB.f45_f45.I"              failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId "SMS_RLB.f45_f45.ICLM45"         failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
             </PGI>
          </yellowstone>
+         <frankfurt>
+            <INTEL>
+              <entry testId="ERI_D.T31_g37.I1850CLM45"                 failType="FAIL" >surfrd_wtxy_veg_all ERROR: sum(pct) over numpft+1 is not = 100.</entry>
+              <entry testId "ERS_Lm3.1x1_numaIA.ICLM45CN"              failType="RUN">check_dim ERROR: mismatch of input dimension 21  with expected value 25 for variable lsmpft</entry>
+              <entry testId="SMS.f10_f10.IRCP45CLM45CN"                failType="FAIL ">local filename has zero length</entry>
+            </INTEL>
+         </frankfurt>
       </auxTests>
    </cesm>
 

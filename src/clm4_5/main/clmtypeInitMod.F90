@@ -2927,6 +2927,7 @@ contains
     allocate(cps%mss_frc_cly_vld(beg:end))
     allocate(cps%mbl_bsn_fct(beg:end))
     allocate(cps%do_capsnow(beg:end))
+    allocate(cps%snow_depth(beg:end))
     allocate(cps%snowdp(beg:end))
     allocate(cps%frac_sno (beg:end))
     allocate(cps%zi(beg:end,-nlevsno+0:nlevgrnd))
@@ -3095,6 +3096,7 @@ contains
     cps%mss_frc_cly_vld(beg:end) = nan
     cps%mbl_bsn_fct(beg:end) = nan
     cps%do_capsnow (beg:end)= .false.
+    cps%snow_depth(beg:end) = nan
     cps%snowdp(beg:end) = nan
     cps%frac_sno(beg:end) = nan
     cps%zi(beg:end,-nlevsno+0:nlevgrnd) = nan

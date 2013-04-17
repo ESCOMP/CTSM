@@ -65,24 +65,17 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: lns                    ! global domain size
-    integer :: lg,ln,li,lj            ! indices
+    integer :: ln,lj                  ! indices
     integer :: ag,an,ai,aj            ! indices
     integer :: numg                   ! number of land gridcells
     logical :: seglen1                ! is segment length one
     real(r8):: seglen                 ! average segment length
     real(r8):: rcid                   ! real value of cid
     integer :: cid,pid                ! indices
-    integer :: n,m,np,ng              ! indices
+    integer :: n,m,ng                 ! indices
     integer :: ier                    ! error code
-    integer :: npmin,npmax,npint      ! do loop values for printing
-    integer :: clmin,clmax,clint      ! do loop values for printing
     integer :: beg,end,lsize,gsize    ! used for gsmap init
-    integer :: cnt                    ! local counter
-    integer :: lnidx
     integer, pointer :: gindex(:)     ! global index for gsmap init
-    integer, pointer :: lncnt(:)      ! lnd cell count per atm cell
-    integer, pointer :: lnoff(:)      ! atm cell offset in lnmap
-    integer, pointer :: lnmap(:)      ! map from atm cell to lnd cells
     integer, parameter :: dbug=1      ! 0 = min, 1=normal, 2=much, 3=max
 
 ! !CALLED FROM:
@@ -338,8 +331,8 @@ contains
     integer , pointer, optional   :: glcmask(:)  ! glc mask
 !
 ! !LOCAL VARIABLES:
-    integer :: lg,ln,li,lj,an     ! indices
-    integer :: i,g,l,c,p,k        ! indices
+    integer :: ln,an              ! indices
+    integer :: i,g,l,k            ! indices
     integer :: cid,pid            ! indices
     integer :: n,m,np             ! indices
     integer :: anumg              ! lnd num gridcells
@@ -353,7 +346,7 @@ contains
     integer :: ipfts              ! temporary
     integer :: ier                ! error code
     integer :: npmin,npmax,npint  ! do loop values for printing
-    integer :: clmin,clmax,clint  ! do loop values for printing
+    integer :: clmin,clmax        ! do loop values for printing
     integer :: lsize,gsize        ! used for gsmap init
     integer :: ng                 ! number of gridcells in gsmap
     integer :: beg,end,num        ! temporaries

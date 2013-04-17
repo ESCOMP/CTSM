@@ -107,7 +107,7 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
-    real(r8), pointer :: snowdp(:)          ! snow height (m)
+    real(r8), pointer :: snow_depth(:)          ! snow height (m)
     real(r8), pointer :: frac_sno_eff(:)    ! eff. fraction of ground covered by snow (0 to 1)
     real(r8), pointer :: frac_sno(:)        ! fraction of ground covered by snow (0 to 1)
     real(r8), pointer :: frac_h2osfc(:)     ! fraction of ground covered by surface water (0 to 1)
@@ -262,7 +262,7 @@ contains
     h2osfc         => clm3%g%l%c%cws%h2osfc
     t_h2osfc       => clm3%g%l%c%ces%t_h2osfc
     t_h2osfc_bef   => clm3%g%l%c%ces%t_h2osfc_bef
-    snowdp         => clm3%g%l%c%cps%snowdp
+    snow_depth         => clm3%g%l%c%cps%snow_depth
     eflx_sh_snow   => clm3%g%l%c%p%pef%eflx_sh_snow
     eflx_sh_soil   => clm3%g%l%c%p%pef%eflx_sh_soil
     eflx_sh_h2osfc => clm3%g%l%c%p%pef%eflx_sh_h2osfc
@@ -1219,7 +1219,7 @@ contains
 !
 ! local pointers to original implicit inout scalars
 !
-    real(r8), pointer :: snowdp(:)        !snow height (m)
+    real(r8), pointer :: snow_depth(:)        !snow height (m)
 !
 
 ! local pointers to original implicit in arrays
@@ -1269,7 +1269,7 @@ contains
     qflx_h2osfc_to_ice       => clm3%g%l%c%cwf%qflx_h2osfc_to_ice
     snl          => clm3%g%l%c%cps%snl
     h2osno       => clm3%g%l%c%cws%h2osno
-    snowdp       => clm3%g%l%c%cps%snowdp
+    snow_depth       => clm3%g%l%c%cps%snow_depth
     h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
     t_soisno     => clm3%g%l%c%ces%t_soisno
     tssbef       => clm3%g%l%c%ces%tssbef
@@ -1306,7 +1306,7 @@ contains
           ! compute change in cv due to additional ice
           dcv(c)=cpice*min(xm(c),h2osfc(c))
 
-          z_avg=frac_sno(c)*snowdp(c)
+          z_avg=frac_sno(c)*snow_depth(c)
           if (z_avg > 0._r8) then 
              rho_avg=min(800._r8,h2osno(c)/z_avg)
           else
@@ -1329,9 +1329,9 @@ contains
 
              ! update snow depth
              if (frac_sno(c) > 0 .and. snl(c) < 0) then 
-                snowdp(c)=h2osno(c)/(rho_avg*frac_sno(c))
+                snow_depth(c)=h2osno(c)/(rho_avg*frac_sno(c))
              else
-                snowdp(c)=h2osno(c)/denice
+                snow_depth(c)=h2osno(c)/denice
              endif
 !=========================  xm > h2osfc  =============================
           else !all h2osfc converted to ice, apply residual heat to top soil layer
@@ -1386,9 +1386,9 @@ contains
 
              ! update snow depth
              if (frac_sno(c) > 0 .and. snl(c) < 0) then 
-                snowdp(c)=h2osno(c)/(rho_avg*frac_sno(c))
+                snow_depth(c)=h2osno(c)/(rho_avg*frac_sno(c))
              else
-                snowdp(c)=h2osno(c)/denice
+                snow_depth(c)=h2osno(c)/denice
              endif
 
           endif
@@ -1463,7 +1463,7 @@ contains
 !
 ! local pointers to original implicit inout scalars
 !
-    real(r8), pointer :: snowdp(:)        ! snow height (m)
+    real(r8), pointer :: snow_depth(:)        ! snow height (m)
 !
 ! local pointers to original implicit out scalars
 !
@@ -1527,7 +1527,7 @@ contains
     ctype        => clm3%g%l%c%itype
     snl          => clm3%g%l%c%cps%snl
     h2osno       => clm3%g%l%c%cws%h2osno
-    snowdp       => clm3%g%l%c%cps%snowdp
+    snow_depth       => clm3%g%l%c%cps%snow_depth
     qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
    eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
    eflx_snomelt_u => clm3%g%l%c%cef%eflx_snomelt_u
@@ -1717,7 +1717,7 @@ contains
                          temp1 = h2osno(c)                           ! kg/m2
                          h2osno(c) = max(0._r8,temp1-xm(c,j))
                          propor = h2osno(c)/temp1
-                         snowdp(c) = propor * snowdp(c)
+                         snow_depth(c) = propor * snow_depth(c)
                          heatr = hm(c,j) - hfus*(temp1-h2osno(c))/dtime   ! W/m2
                          if (heatr > 0._r8) then
                             xm(c,j) = heatr*dtime/hfus                    ! kg/m2

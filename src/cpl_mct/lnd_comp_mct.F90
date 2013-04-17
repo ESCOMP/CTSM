@@ -474,7 +474,6 @@ contains
     integer :: lbnum                      ! input to memory diagnostic
     type(seq_infodata_type),pointer :: infodata ! CESM information from the driver
     type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
-    real(r8),               pointer :: data(:)  ! temporary
     integer  :: g,i,lsize                       ! counters
     logical,save :: first_call = .true.         ! first call work
     logical  :: glcrun_alarm          ! if true, sno data is averaged and sent to glc this step

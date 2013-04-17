@@ -900,7 +900,6 @@ contains
     integer , pointer :: ltype(:)        ! landunit type
     integer , pointer :: isoicol(:)      ! soil color class
     real(r8), pointer :: t_grnd(:)       ! ground temperature (Kelvin)
-    real(r8), pointer :: frac_sno(:)     ! fraction of ground covered by snow (0 to 1)
     real(r8), pointer :: h2osoi_vol(:,:) ! volumetric soil water [m3/m3]
     real(r8), pointer :: lake_icefrac(:,:)  ! mass fraction of lake layer that is frozen
     integer , pointer :: snl(:)             ! number of snow layers
@@ -934,7 +933,6 @@ contains
     clandunit  => clm3%g%l%c%landunit
     isoicol    => clm3%g%l%c%cps%isoicol
     t_grnd     => clm3%g%l%c%ces%t_grnd
-    frac_sno   => clm3%g%l%c%cps%frac_sno
     h2osoi_vol => clm3%g%l%c%cws%h2osoi_vol
     albgrd     => clm3%g%l%c%cps%albgrd
     albgri     => clm3%g%l%c%cps%albgri

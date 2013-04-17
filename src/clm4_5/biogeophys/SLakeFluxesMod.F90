@@ -93,8 +93,6 @@ contains
     real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
     real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
     real(r8), pointer :: t_grnd(:)          ! ground temperature (Kelvin)
-    !real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
-    real(r8), pointer :: snowdp(:)          ! snow height (m)
     real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
     real(r8), pointer :: lat(:)             ! latitude (radians)
     real(r8), pointer :: dz(:,:)            ! layer thickness for soil or snow (m)
@@ -250,8 +248,6 @@ contains
     dz_lake        => clm3%g%l%c%cps%dz_lake
     t_soisno       => clm3%g%l%c%ces%t_soisno
     t_lake         => clm3%g%l%c%ces%t_lake
-    !h2osno         => clm3%g%l%c%cws%h2osno
-    snowdp         => clm3%g%l%c%cps%snowdp
     snl            => clm3%g%l%c%cps%snl
     h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice

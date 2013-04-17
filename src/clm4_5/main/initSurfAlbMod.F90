@@ -105,7 +105,7 @@ contains
 ! local pointers to implicit out arguments
 !
     real(r8), pointer :: h2osoi_vol(:,:)   ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-    real(r8), pointer :: snowdp(:)         ! snow height (m)
+    real(r8), pointer :: snow_depth(:)         ! snow height (m)
     real(r8), pointer :: frac_sno(:)       ! fraction of ground covered by snow (0 to 1)
     integer , pointer :: frac_veg_nosno(:) ! fraction of vegetation not covered by snow (0 OR 1) [-]
     real(r8), pointer :: fwet(:)           ! fraction of canopy that is wet (0 to 1) (pft-level)
@@ -148,7 +148,7 @@ contains
     h2osoi_ice          => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq          => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_vol          => clm3%g%l%c%cws%h2osoi_vol
-    snowdp              => clm3%g%l%c%cps%snowdp
+    snow_depth              => clm3%g%l%c%cps%snow_depth
     h2osno              => clm3%g%l%c%cws%h2osno
     frac_sno            => clm3%g%l%c%cps%frac_sno 
     ctype               => clm3%g%l%c%itype
@@ -245,16 +245,16 @@ contains
           l = clandunit(c)
           if (itypelun(l) == isturb) then
              ! From Bonan 1996 (LSM technical note)
-             frac_sno(c) = min( snowdp(c)/0.05_r8, 1._r8)
+             frac_sno(c) = min( snow_depth(c)/0.05_r8, 1._r8)
           else
              frac_sno(c) = 0._r8
              ! snow cover fraction as in Niu and Yang 2007
-             if(snowdp(c) .gt. 0.0)  then
-                snowbd   = min(400._r8,h2osno(c)/snowdp(c)) !bulk density of snow (kg/m3)
+             if(snow_depth(c) .gt. 0.0)  then
+                snowbd   = min(400._r8,h2osno(c)/snow_depth(c)) !bulk density of snow (kg/m3)
                 fmelt    = (snowbd/100.)**1.
                 ! 100 is the assumed fresh snow density; 1 is a melting factor that could be
                 ! reconsidered, optimal value of 1.5 in Niu et al., 2007
-                frac_sno(c) = tanh( snowdp(c) /(2.5 * zlnd * fmelt) )
+                frac_sno(c) = tanh( snow_depth(c) /(2.5 * zlnd * fmelt) )
              endif
           end if
        end do

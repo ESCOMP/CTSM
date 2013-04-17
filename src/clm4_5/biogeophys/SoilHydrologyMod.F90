@@ -449,7 +449,7 @@ contains
     real(r8), pointer :: fcov(:)           ! fractional area with water table at surface
     real(r8), pointer :: eff_porosity(:,:) ! effective porosity = porosity - vol_ice
     real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
-    real(r8), pointer :: snowdp(:)         ! snow height (m)
+    real(r8), pointer :: snow_depth(:)     ! snow height (m)
     real(r8), pointer :: var_track2(:)     ! generic tracking variable
     real(r8), pointer :: topo_slope(:)     ! topographic slope
     real(r8), pointer :: qflx_ev_snow(:)   ! evaporation flux from snow (W/m**2) [+ to atm]
@@ -541,7 +541,7 @@ contains
     hksat_min      => clm3%g%l%c%cps%hksat_min
     dz             => clm3%g%l%c%cps%dz
     h2osno         => clm3%g%l%c%cws%h2osno
-    snowdp         => clm3%g%l%c%cps%snowdp
+    snow_depth     => clm3%g%l%c%cps%snow_depth
     t_h2osfc       => clm3%g%l%c%ces%t_h2osfc
     clandunit      => clm3%g%l%c%landunit
     ltype          => clm3%g%l%itype

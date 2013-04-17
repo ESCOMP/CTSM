@@ -1365,7 +1365,7 @@ contains
 !
 ! local pointers to original implicit inout scalars
 !
-    real(r8), pointer :: snowdp(:)        ! snow height (m)
+    real(r8), pointer :: snow_depth(:)        ! snow height (m)
     real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
     ! Needed in case snow height is less than critical value.
 !
@@ -1417,7 +1417,7 @@ contains
     qflx_snow_melt => clm3%g%l%c%cwf%qflx_snow_melt
     snl          => clm3%g%l%c%cps%snl
     h2osno       => clm3%g%l%c%cws%h2osno
-    snowdp       => clm3%g%l%c%cps%snowdp
+    snow_depth       => clm3%g%l%c%cps%snow_depth
     qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
     eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
     h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
@@ -1467,14 +1467,14 @@ contains
           heatrem = max(heatavail - melt*hfus, 0._r8)
                        !catch small negative value to keep t at tfrz
           t_lake(c,1) = tfrz + heatrem/(cv_lake(c,1))
-          snowdp(c) = snowdp(c)*(1._r8 - melt/h2osno(c))
+          snow_depth(c) = snow_depth(c)*(1._r8 - melt/h2osno(c))
           h2osno(c) = h2osno(c) - melt
           lhabs(c) = lhabs(c) + melt*hfus
           qflx_snomelt(c)   = qflx_snomelt(c)   + melt/dtime
           qflx_snow_melt(c) = qflx_snow_melt(c) + melt/dtime
           ! Prevent tiny residuals
           if (h2osno(c) < smallnumber) h2osno(c) = 0._r8
-          if (snowdp(c) < smallnumber) snowdp(c) = 0._r8
+          if (snow_depth(c) < smallnumber) snow_depth(c) = 0._r8
        end if
     end do
 

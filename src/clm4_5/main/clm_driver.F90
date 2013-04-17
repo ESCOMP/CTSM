@@ -608,7 +608,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         l = clandunit(c)
         if (itypelun(l) == isturb) then
            ! Urban landunit use Bonan 1996 (LSM Technical Note)
-           cptr%cps%frac_sno(c) = min( cptr%cps%snowdp(c)/0.05_r8, 1._r8)
+           cptr%cps%frac_sno(c) = min( cptr%cps%snow_depth(c)/0.05_r8, 1._r8)
         end if
      end do
 

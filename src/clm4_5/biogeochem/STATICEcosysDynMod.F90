@@ -135,7 +135,7 @@ contains
 !
     real(r8), pointer :: frac_sno(:) ! fraction of ground covered by snow (0 to 1)
     integer , pointer :: pcolumn(:)  ! column index associated with each pft
-    real(r8), pointer :: snowdp(:)   ! snow height (m)
+    real(r8), pointer :: snow_depth(:)   ! snow height (m)
     integer , pointer :: ivt(:)      ! pft vegetation type
 !
 ! local pointers to implicit out arguments
@@ -162,7 +162,7 @@ contains
        ! Assign local pointers to derived type scalar members (column-level)
 
        frac_sno => clm3%g%l%c%cps%frac_sno 
-       snowdp  => clm3%g%l%c%cps%snowdp
+       snow_depth  => clm3%g%l%c%cps%snow_depth
 
        ! Assign local pointers to derived type scalar members (pftlevel)
 
@@ -209,10 +209,10 @@ contains
           ! Wang and Zeng, 2007. 
 
           if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
-             ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
+             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
              fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
           else
-             fb = 1._r8 - max(min(snowdp(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+             fb = 1._r8 - max(min(snow_depth(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
                   !depth of snow required for complete burial of grasses
           endif
 

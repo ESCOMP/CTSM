@@ -100,7 +100,6 @@ CONTAINS
     logical , pointer :: pactive(:)       ! true=>do computations on this pft (see reweightMod for details)
     integer , pointer :: plandunit(:)     !pft's landunit index
     integer , pointer :: ivt(:)           !landunit type
-    integer , pointer :: itypveg(:)       !vegetation type for current pft  
     integer , pointer :: pgridcell(:)     !pft's gridcell index
     real(r8), pointer :: elai(:)          !one-sided leaf area index with burying by snow 
     real(r8), pointer :: forc_t(:)        !atmospheric temperature (Kelvin) 
@@ -109,8 +108,6 @@ CONTAINS
     real(r8), pointer :: latdeg(:)        !latitude (degrees) 
     real(r8), pointer :: londeg(:)        !longitude (degrees) 
     real(r8), pointer :: forc_rain(:)     !rain rate [mm/s] 
-    real(r8), pointer :: forc_snow(:)     !snow rate [mm/s]   
-    real(r8), pointer :: forc_lwrad(:)    !direct beam radiation (visible only) 
     real(r8), pointer :: forc_solad(:,:)  !direct beam radiation (visible only) 
     real(r8), pointer :: forc_solai(:,:)  !direct beam radiation (visible only) 
     real(r8), pointer :: ram1(:)          !aerodynamical resistance 
@@ -122,7 +119,7 @@ CONTAINS
     real(r8), pointer :: annlai(:,:)      !12 months of monthly lai from input data set 
     real(r8), pointer :: mlaidiff(:)      !difference in lai between month one and month two 
     real(r8), pointer :: velocity(:,:)
-    real(r8), pointer :: snowdp(:)        ! snow height (m)
+    real(r8), pointer :: snow_depth(:)        ! snow height (m)
 
     integer, pointer :: pcolumn(:)        ! column index associated with each pft
     integer :: c
@@ -230,7 +227,7 @@ CONTAINS
 
     velocity   => clm3%g%l%c%p%pdd%drydepvel ! cm/sec
 
-    snowdp        => clm3%g%l%c%cps%snowdp
+    snow_depth        => clm3%g%l%c%cps%snow_depth
 
     ! Assign local pointers to original implicit out arrays 
     !_________________________________________________________________ 
@@ -319,7 +316,7 @@ CONTAINS
                 wesveg       = 1
                 index_season = 2
              end if
-          else if ( snowdp(c) > 0 ) then
+          else if ( snow_depth(c) > 0 ) then
              index_season = 4
           else if(elai(pi).gt.0.5_r8*maxlai) then  
              index_season = 1  

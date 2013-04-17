@@ -209,7 +209,7 @@ contains
      real(r8), pointer :: fsds_sno_nd(:)   ! incident near-IR, direct radiation on snow (for history files) (pft) [W/m2]
      real(r8), pointer :: fsds_sno_vi(:)   ! incident visible, diffuse radiation on snow (for history files) (pft) [W/m2]
      real(r8), pointer :: fsds_sno_ni(:)   ! incident near-IR, diffuse radiation on snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: snowdp(:)        ! snow height (m)
+     real(r8), pointer :: snow_depth(:)        ! snow height (m)
 
 !
 !
@@ -305,7 +305,7 @@ contains
      fsun          => clm3%g%l%c%p%pps%fsun
      sabg          => clm3%g%l%c%p%pef%sabg
      sabv          => clm3%g%l%c%p%pef%sabv
-     snowdp        => clm3%g%l%c%cps%snowdp
+     snow_depth        => clm3%g%l%c%cps%snow_depth
      fsa           => clm3%g%l%c%p%pef%fsa
      fsa_r         => clm3%g%l%c%p%pef%fsa_r
      fsr           => clm3%g%l%c%p%pef%fsr
@@ -562,7 +562,7 @@ contains
               ! If shallow snow depth, all solar radiation absorbed in top or top two snow layers
               ! to prevent unrealistic timestep soil warming 
               if (subgridflag == 0) then 
-                 if (snowdp(c) < 0.10_r8) then
+                 if (snow_depth(c) < 0.10_r8) then
                     if (snl(c) == 0) then
                        sabg_lyr(p,-4:0) = 0._r8
                        sabg_lyr(p,1) = sabg(p)

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_74      muszala 04/17/2013 snow_depth changes, major scripts overhaul, bug fix for tools
    clm4_0_73        sacks 04/15/2013 update mksurfdata_map for CLM4.5, and other misc. updates, mainly to tools
    clm4_0_72      muszala 04/11/2013 maoyi bug fix for vic hydro
    clm4_0_71      muszala 04/10/2013 compsets refactoring by mvertens

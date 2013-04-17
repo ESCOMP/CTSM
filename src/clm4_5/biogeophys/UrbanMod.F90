@@ -2592,7 +2592,7 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)      ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)      ! liquid water (kg/m2)
     real(r8), pointer :: frac_sno(:)          ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: snowdp(:)            ! snow height (m)
+    real(r8), pointer :: snow_depth(:)            ! snow height (m)
     real(r8), pointer :: h2osno(:)            ! snow water (mm H2O)
     integer , pointer :: snl(:)               ! number of snow layers
     real(r8), pointer :: rootr_road_perv(:,:) ! effective fraction of roots in each soil layer for urban pervious road
@@ -2780,7 +2780,7 @@ contains
     h2osoi_ice         => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
     frac_sno           => clm3%g%l%c%cps%frac_sno
-    snowdp             => clm3%g%l%c%cps%snowdp
+    snow_depth             => clm3%g%l%c%cps%snow_depth
     h2osno             => clm3%g%l%c%cws%h2osno
     snl                => clm3%g%l%c%cps%snl
     rootr_road_perv    => clm3%g%l%c%cps%rootr_road_perv
@@ -3008,8 +3008,8 @@ contains
                  ! unscaled sensible heat conductance
                  wtus_roof(l) = 1._r8/canyon_resistance(fl)
 
-                 if (snowdp(c) > 0._r8) then
-                   fwet_roof = min(snowdp(c)/0.05_r8, 1._r8)
+                 if (snow_depth(c) > 0._r8) then
+                   fwet_roof = min(snow_depth(c)/0.05_r8, 1._r8)
                  else
                    fwet_roof = (max(0._r8, h2osoi_liq(c,1)+h2osoi_ice(c,1))/pondmx_urban)**0.666666666666_r8
                    fwet_roof = min(fwet_roof,1._r8)
@@ -3068,8 +3068,8 @@ contains
                    wtus_road_imperv(l) = 0._r8
                  end if
 
-                 if (snowdp(c) > 0._r8) then
-                   fwet_road_imperv = min(snowdp(c)/0.05_r8, 1._r8)
+                 if (snow_depth(c) > 0._r8) then
+                   fwet_road_imperv = min(snow_depth(c)/0.05_r8, 1._r8)
                  else
                    fwet_road_imperv = (max(0._r8, h2osoi_liq(c,1)+h2osoi_ice(c,1))/pondmx_urban)**0.666666666666_r8
                    fwet_road_imperv = min(fwet_road_imperv,1._r8)
