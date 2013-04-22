@@ -115,7 +115,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
+   real(r8), pointer :: totlitc_1m(:)         ! (gC/m2) total litter carbon to 1 meter
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
+   real(r8), pointer :: totsomc_1m(:)         ! (gC/m2) total soil organic matter carbon to 1 meter
    real(r8), pointer :: agnpp(:)              ! (gC/m2/s) aboveground NPP
    real(r8), pointer :: ar(:)                 ! (gC/m2/s) autotrophic respiration (MR + GR)
    real(r8), pointer :: bgnpp(:)                  ! (gC/m2/s) belowground NPP
@@ -421,7 +423,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
     totcolc                        => ccisos%totcolc
     totecosysc                     => ccisos%totecosysc
     totlitc                        => ccisos%totlitc
+    totlitc_1m                     => ccisos%totlitc_1m
     totsomc                        => ccisos%totsomc
+    totsomc_1m                     => ccisos%totsomc_1m
     agnpp                          => pcisof%agnpp
     ar                             => pcisof%ar
     bgnpp                          => pcisof%bgnpp
@@ -696,7 +700,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
       npp(p) = gpp(p) - ar(p)
 
       ! update the annual NPP accumulator, for use in allocation code
-      tempsum_npp(p) = tempsum_npp(p) + npp(p)
+      if (isotope == 'bulk') then      
+         tempsum_npp(p) = tempsum_npp(p) + npp(p)
+      end if
 
       ! aboveground NPP: leaf, live stem, dead stem (AGNPP)
       ! This is supposed to correspond as closely as possible to
@@ -1099,6 +1105,24 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
             end do
          end do
 
+         ! total litter carbon in the top meter (TOTLITC_1m)
+         totlitc_1m(c) = 0._r8
+         do l = 1, ndecomp_pools
+            if ( is_litter(l) ) then
+               totlitc_1m(c) = totlitc_1m(c) + &
+                    decomp_cpools_1m(c,l)
+            endif
+         end do
+         
+         ! total soil organic matter carbon in the top meter (TOTSOMC_1m)
+         totsomc_1m(c) = 0._r8
+         do l = 1, ndecomp_pools
+            if ( is_soil(l) ) then
+               totsomc_1m(c) = totsomc_1m(c) + &
+                    decomp_cpools_1m(c,l)
+            end if
+         end do
+         
       endif
 
       totlitc(c) = 0._r8
@@ -1297,7 +1321,9 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: totcoln(:)            ! (gN/m2) total column nitrogen, incl veg
    real(r8), pointer :: totecosysn(:)         ! (gN/m2) total ecosystem nitrogen, incl veg 
    real(r8), pointer :: totlitn(:)            ! (gN/m2) total litter nitrogen
+   real(r8), pointer :: totlitn_1m(:)         ! (gN/m2) total litter nitrogen to 1 meter
    real(r8), pointer :: totsomn(:)            ! (gN/m2) total soil organic matter nitrogen
+   real(r8), pointer :: totsomn_1m(:)         ! (gN/m2) total soil organic matter nitrogen to 1 meter
    real(r8), pointer :: m_deadcrootn_storage_to_fire(:) 
    real(r8), pointer :: m_deadcrootn_to_fire(:)         
    real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)
@@ -1442,7 +1468,9 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     totcoln                        => clm3%g%l%c%cns%totcoln
     totecosysn                     => clm3%g%l%c%cns%totecosysn
     totlitn                        => clm3%g%l%c%cns%totlitn
+    totlitn_1m                     => clm3%g%l%c%cns%totlitn_1m
     totsomn                        => clm3%g%l%c%cns%totsomn
+    totsomn_1m                     => clm3%g%l%c%cns%totsomn_1m
     m_deadcrootn_storage_to_fire   => clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_fire
     m_deadcrootn_to_fire           => clm3%g%l%c%p%pnf%m_deadcrootn_to_fire
     m_deadcrootn_xfer_to_fire      => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_fire
@@ -1730,8 +1758,26 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
             end do
          end do
 
+         ! total litter nitrogen to 1 meter (TOTLITN_1m)
+         totlitn_1m(c) = 0._r8
+         do l = 1, ndecomp_pools
+            if ( is_litter(l) ) then
+               totlitn_1m(c) = totlitn_1m(c) + &
+                    decomp_npools_1m(c,l)
+            end if
+         end do
+         
+         ! total soil organic matter nitrogen to 1 meter (TOTSOMN_1m)
+         totsomn_1m(c) = 0._r8
+         do l = 1, ndecomp_pools
+            if ( is_soil(l) ) then
+               totsomn_1m(c) = totsomn_1m(c) + &
+                    decomp_npools_1m(c,l)
+            end if
+         end do
+         
       endif
-
+      
       ! total litter nitrogen (TOTLITN)
       totlitn(c) = 0._r8
       do l = 1, ndecomp_pools

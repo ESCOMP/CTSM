@@ -55,9 +55,7 @@ subroutine C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
    use clmtype
    use clm_time_manager, only: get_step_size, get_days_per_year
    use clm_varcon, only: secspday
-#if (defined AD_SPINUP)
-   use clm_varcon, only: spinup_vector
-#endif
+   use clm_varctl, only : spinup_state
 !
 ! !ARGUMENTS:
    implicit none
@@ -107,7 +105,8 @@ subroutine C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8) :: decay_const
    real(r8), pointer :: spinup_factor(:)      ! factor for AD spinup associated with each pool
    real(r8) :: days_per_year                  ! days per year
-   
+   real(r8) :: spinup_term               ! spinup accelerated decomposition factor, used to accelerate transport as well
+
 
     ! assign local pointers at the column level
     decomp_cpools_vr                   => clm3%g%l%c%cc14s%decomp_cpools_vr
@@ -155,20 +154,22 @@ subroutine C14Decay(num_soilc, filter_soilc, num_soilp, filter_soilp)
     ! column loop
     do fc = 1,num_soilc
        c = filter_soilc(fc)
-       
        seedc(c) = seedc(c) *  (1._r8 - decay_const * dt)
+    end do ! end of columns loop
 
+    do l = 1, ndecomp_pools
+       if ( spinup_state .eq. 1) then
+          ! speed up radioactive decay by the same factor as decomposition so tat SOM ages prematurely in all respects
+          spinup_term = spinup_factor(l) 
+       else
+          spinup_term = 1.
+       endif
        do j = 1, nlevdecomp
-          do l = 1, ndecomp_pools
-#if (defined AD_SPINUP)
-             ! speed up radioactive decay by the same factor as decomposition so tat SOM ages prematurely in all respects
-             decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_factor(l) * dt)
-#else
-             decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * dt)
-#endif
+          do fc = 1,num_soilc
+             c = filter_soilc(fc)
+             decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
           end do
        end do
-
     end do ! end of columns loop
 
  

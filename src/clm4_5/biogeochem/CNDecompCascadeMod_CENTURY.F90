@@ -16,9 +16,9 @@ module CNDecompCascadeMod_CENTURY
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
    use shr_const_mod, only: SHR_CONST_TKFRZ
-   use clm_varpar   , only: nlevsoi,nlevgrnd,nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools 
+   use clm_varpar   , only: nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, nsompools 
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-   use clm_varctl   , only: iulog
+   use clm_varctl   , only: iulog, spinup_state
    use clm_varcon   , only: zsoi
 #ifdef LCH4
    use clm_varctl   , only: anoxia
@@ -46,6 +46,9 @@ module CNDecompCascadeMod_CENTURY
    real(r8), public :: froz_q10 = 1.5_r8                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
    integer, public :: nlev_soildecomp_standard               ! used here and in ch4Mod
 
+   !! parameters for AD spinup
+   real(r8), public, parameter :: spinup_vector(nsompools) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /) ! multipliers for soil decomp during accelerated spinup
+
 !EOP
 !-----------------------------------------------------------------------
 
@@ -68,8 +71,6 @@ subroutine init_decompcascade(begc, endc)
 ! !USES:
    use clmtype
    use clm_time_manager    , only : get_step_size
-
-   use clm_varcon, only: spinup_vector
 
 ! !ARGUMENTS:
    implicit none
@@ -415,7 +416,7 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 ! !USES:
    use clmtype
    use shr_const_mod, only : SHR_CONST_PI
-   use clm_varcon, only: spinup_vector, secspday
+   use clm_varcon, only: secspday
    use clm_time_manager, only : get_days_per_year
 
    !
@@ -559,11 +560,11 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    catanf_30 = catanf(30._r8)
    ! The following code implements the acceleration part of the AD spinup algorithm
 
-#if (defined AD_SPINUP)
+if ( spinup_state .eq. 1 ) then
    k_s1 = k_s1 * spinup_vector(1)
    k_s2 = k_s2 * spinup_vector(2)
    k_s3 = k_s3 * spinup_vector(3)
-#endif
+endif
 
    i_litr1 = 1
    i_litr2 = 2

@@ -126,6 +126,7 @@ module clm_driver
                                    CBalanceCheck, NBalanceCheck
   use ndepStreamMod       , only : ndep_interp
   use CNVerticalProfileMod, only: decomp_vertprofiles
+  use CNrestMod           , only : bypass_CN_balance_check_on_restart
 #else
   use STATICEcosysDynMod  , only : EcosystemDyn
 #endif
@@ -663,13 +664,11 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call BalanceCheck(begp, endp, begc, endc, begl, endl, begg, endg)
      call t_stopf('balchk')
 
-#if (defined EXIT_SPINUP || defined ENTER_SPINUP)
-     ! skip calls to C and N balance checking during EXIT_SPINUP
-     ! because the system is (intentionally) not conserving mass
-     ! on the first EXIT_SPINUP doalb timestep     
-#elif (defined CN)
+#if (defined CN)
      nstep = get_nstep()
-     if (nstep > 2) then
+     if (nstep .lt. 2 .and. bypass_CN_balance_check_on_restart) then
+        if (masterproc) write(iulog,*) '--WARNING-- skipping CN balance check for first timestep due to nonconservative restart (e.g. enter_spinup / exit_spinup)'
+     else
         call t_startf('cnbalchk')
         call CBalanceCheck(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
         call NBalanceCheck(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)

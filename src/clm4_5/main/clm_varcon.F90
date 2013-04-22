@@ -120,22 +120,6 @@ module clm_varcon
                                                   ! Pritchard et al. (GRL, 35, 2008) use 0.006  
   integer, private :: i  ! loop index
 
-#ifndef CENTURY_DECOMP
-  real(r8) :: spinup_vector(nsompools)     ! multipliers for soil decomp during accelerated spinup
-  data (spinup_vector(i),i=1,nsompools) /1.0_r8, 1.0_r8, 5.0_r8, 70.0_r8/
-#else
-
-#ifndef SPINUP_DOWNSHIFT
-  real(r8) :: spinup_vector(nsompools)     ! multipliers for soil decomp during accelerated spinup
-  data (spinup_vector(i),i=1,nsompools) /1.0_r8, 15.0_r8, 675.0_r8/
-#else
-  ! these are for secondary equilibration in a less sped-up mode.
-  real(r8) :: spinup_vector(nsompools)     ! multipliers for soil decomp during slightly-accelerated spinup
-  data (spinup_vector(i),i=1,nsompools) /1.0_r8, 1.0_r8, 25.0_r8/
-  real(r8) :: spinup_vector_previous(nsompools)     ! multipliers for soil decomp fully-during accelerated spinup
-  data (spinup_vector_previous(i),i=1,nsompools) /1.0_r8, 15.0_r8, 675.0_r8/
-#endif
-#endif
 
 #ifdef NITRIF_DENITRIF
  !  real(r8), parameter :: nitrif_n2o_loss_frac = 0.02_r8   !fraction of N lost as N2O in nitrification (Parton et al., 2001)

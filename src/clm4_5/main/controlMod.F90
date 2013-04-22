@@ -26,7 +26,8 @@ module controlMod
                             username, fsnowaging, fsnowoptics, fglcmask, &
                             create_glacier_mec_landunit, glc_dyntopo, glc_smb, &
                             glc_topomax, glc_grid, subgridflag, &
-                            use_c13, use_c14, irrigate
+                            use_c13, use_c14, irrigate, &
+                            spinup_state, override_bgc_restart_mismatch_dump
   use CanopyFluxesMod , only : perchroot, perchroot_alt
 #if (defined LCH4) && (defined CN)
   use clm_varctl   , only : anoxia
@@ -83,10 +84,6 @@ module controlMod
 #if (defined CN)
   !!! C14
   use CNC14DecayMod, only: use_c14_bombspike, atm_c14_filename
-#endif
-
-#ifdef CN
-  use CNrestMod, only: reset_permafrost_c_n_pools
 #endif
 
 
@@ -249,6 +246,8 @@ contains
          suplnitro
     namelist /clm_inparm/ &
          nfix_timeconst
+    namelist /clm_inparm/ &
+         spinup_state, override_bgc_restart_mismatch_dump
 #endif
 
     namelist /clm_inparm / &
@@ -303,12 +302,6 @@ contains
          use_c14_bombspike, atm_c14_filename
 #endif
 
-#if (defined CN) 
-
-    namelist /clm_inparm/ &
-         reset_permafrost_c_n_pools
-
-#endif
 
     ! ----------------------------------------------------------------------
     ! Default values
@@ -500,6 +493,8 @@ contains
 #ifdef CN
     call mpi_bcast (suplnitro, len(suplnitro), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (nfix_timeconst,             1, MPI_REAL8,     0, mpicom, ier)
+    call mpi_bcast (spinup_state,               1, MPI_INTEGER,   0, mpicom, ier)
+    call mpi_bcast (override_bgc_restart_mismatch_dump, 1, MPI_LOGICAL,   0, mpicom, ier)
 #endif
 
     ! isotopes
@@ -535,10 +530,6 @@ contains
     !!! C14
     call mpi_bcast (use_c14_bombspike,  1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (atm_c14_filename,  len(atm_c14_filename), MPI_CHARACTER, 0, mpicom, ier)
-#endif
-
-#if (defined CN)
-    call mpi_bcast (reset_permafrost_c_n_pools,           1, MPI_LOGICAL,     0, mpicom, ier)
 #endif
 
     call mpi_bcast (perchroot, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -687,6 +678,16 @@ contains
        write(iulog,*) '   nfix_timeconst == zero, use standard N fixation scheme. '
     end if
 
+    write(iulog,*) '   spinup_state, (0 = normal mode; 1 = AD spinup)         : ', spinup_state
+    if ( spinup_state .eq. 0 ) then
+       write(iulog,*) '   model is currently NOT in AD spinup mode.'
+    else if ( spinup_state .eq. 1 ) then
+       write(iulog,*) '   model is currently in AD spinup mode.'
+    else
+       call endrun( subname//' error: spinup_state can only have integer value of 0 or 1' )
+    end if
+
+    write(iulog,*) '   override_bgc_restart_mismatch_dump                     : ', override_bgc_restart_mismatch_dump
 #endif
 
 #if (defined CN) && (defined VERTSOILC)
@@ -717,10 +718,6 @@ contains
     !!! C14
     write(iulog, *) '  use_c14_bombspike: ', use_c14_bombspike
     write(iulog, *) '  atm_c14_filename: ', atm_c14_filename
-#endif
-
-#if (defined CN) 
-    write(iulog, *) '   reset_permafrost_c_n_pools: ', reset_permafrost_c_n_pools
 #endif
 
 

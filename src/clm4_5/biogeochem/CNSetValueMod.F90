@@ -998,6 +998,8 @@ subroutine CNSetCcs(num, filter, val, ccs)
       ccs%totsomc(i) = val
       ccs%totecosysc(i) = val
       ccs%totcolc(i) = val
+      ccs%totlitc_1m(i) = val
+      ccs%totsomc_1m(i) = val
    end do
 
    ! column and levdecomp
@@ -1075,6 +1077,8 @@ subroutine CNSetCns(num, filter, val, cns)
       cns%totsomn(i) = val
       cns%totecosysn(i) = val
       cns%totcoln(i) = val
+      cns%totsomn_1m(i) = val
+      cns%totlitn_1m(i) = val
    end do
    
    ! column and levdecomp

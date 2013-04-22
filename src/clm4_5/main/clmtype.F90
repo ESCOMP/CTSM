@@ -248,21 +248,23 @@ end type pft_pstate_type
 
 type, public :: pft_psynstate_type
    logical, pointer :: c3flag(:)                ! true if C3 and false if C4
-   real(r8),pointer :: ac(:,:)                  ! Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
-   real(r8),pointer :: aj(:,:)                  ! RuBP-limited gross photosynthesis (umol CO2/m**2/s)
-   real(r8),pointer :: ap(:,:)                  ! product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
-   real(r8),pointer :: ag(:,:)                  ! co-limited gross leaf photosynthesis (umol CO2/m**2/s)
-   real(r8),pointer :: an(:,:)                  ! net leaf photosynthesis (umol CO2/m**2/s)   
-   real(r8),pointer :: vcmax_z(:,:)             ! maximum rate of carboxylation (umol co2/m**2/s)
-   real(r8),pointer :: cp(:)                    ! CO2 compensation point (Pa)
-   real(r8),pointer :: kc(:)                    ! Michaelis-Menten constant for CO2 (Pa)
-   real(r8),pointer :: ko(:)                    ! Michaelis-Menten constant for O2 (Pa)
-   real(r8),pointer :: qe(:)                    ! quantum efficiency, used only for C4 (mol CO2 / mol photons)
-   real(r8),pointer :: tpu_z(:,:)               ! triose phosphate utilization rate (umol CO2/m**2/s)
-   real(r8),pointer :: kp_z(:,:)                ! initial slope of CO2 response curve (C4 plants)
-   real(r8),pointer :: theta_cj(:)              ! empirical curvature parameter for ac, aj photosynthesis co-limitation
-   real(r8),pointer :: bbb(:)                   ! Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
-   real(r8),pointer :: mbb(:)                   ! Ball-Berry slope of conductance-photosynthesis relationship
+   real(r8), pointer :: ac(:,:)                  ! Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
+   real(r8), pointer :: aj(:,:)                  ! RuBP-limited gross photosynthesis (umol CO2/m**2/s)
+   real(r8), pointer :: ap(:,:)                  ! product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
+   real(r8), pointer :: ag(:,:)                  ! co-limited gross leaf photosynthesis (umol CO2/m**2/s)
+   real(r8), pointer :: an(:,:)                  ! net leaf photosynthesis (umol CO2/m**2/s)   
+   real(r8), pointer :: vcmax_z(:,:)             ! maximum rate of carboxylation (umol co2/m**2/s)
+   real(r8), pointer :: cp(:)                    ! CO2 compensation point (Pa)
+   real(r8), pointer :: kc(:)                    ! Michaelis-Menten constant for CO2 (Pa)
+   real(r8), pointer :: ko(:)                    ! Michaelis-Menten constant for O2 (Pa)
+   real(r8), pointer :: qe(:)                    ! quantum efficiency, used only for C4 (mol CO2 / mol photons)
+   real(r8), pointer :: tpu_z(:,:)               ! triose phosphate utilization rate (umol CO2/m**2/s)
+   real(r8), pointer :: kp_z(:,:)                ! initial slope of CO2 response curve (C4 plants)
+   real(r8), pointer :: theta_cj(:)              ! empirical curvature parameter for ac, aj photosynthesis co-limitation
+   real(r8), pointer :: bbb(:)                   ! Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
+   real(r8), pointer :: mbb(:)                   ! Ball-Berry slope of conductance-photosynthesis relationship
+   real(r8), pointer :: gs_mol(:,:)              ! leaf stomatal conductance (umol H2O/m**2/s)
+   real(r8), pointer :: gb_mol(:)                ! leaf boundary layer conductance (umol H2O/m**2/s)
 end type pft_psynstate_type
 !----------------------------------------------------
 ! pft ecophysiological constants structure
@@ -1386,6 +1388,8 @@ type, public :: column_cstate_type
    real(r8), pointer :: col_ctrunc(:)                   ! (gC/m2) column-level sink for C truncation
    real(r8), pointer :: totlitc(:)                      ! (gC/m2) total litter carbon
    real(r8), pointer :: totsomc(:)                      ! (gC/m2) total soil organic matter carbon
+   real(r8), pointer :: totlitc_1m(:)                   ! (gC/m2) total litter carbon to 1 meter
+   real(r8), pointer :: totsomc_1m(:)                   ! (gC/m2) total soil organic matter carbon to 1 meter
    real(r8), pointer :: totecosysc(:)                   ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totcolc(:)                      ! (gC/m2) total column carbon, incl veg and cpool
 end type column_cstate_type
@@ -1494,6 +1498,8 @@ type, public :: column_nstate_type
    real(r8), pointer :: cwdn(:)                    ! (gN/m2) Diagnostic: coarse woody debris N
    real(r8), pointer :: totlitn(:)                 ! (gN/m2) total litter nitrogen
    real(r8), pointer :: totsomn(:)                 ! (gN/m2) total soil organic matter nitrogen
+   real(r8), pointer :: totlitn_1m(:)              ! (gN/m2) total litter nitrogen to 1 meter
+   real(r8), pointer :: totsomn_1m(:)              ! (gN/m2) total soil organic matter nitrogen to 1 meter
    real(r8), pointer :: totecosysn(:)              ! (gN/m2) total ecosystem nitrogen, incl veg 
    real(r8), pointer :: totcoln(:)                 ! (gN/m2) total column nitrogen, incl veg
 end type column_nstate_type

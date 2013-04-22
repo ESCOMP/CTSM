@@ -77,6 +77,9 @@ module clm_varctl
 ! BGC logic and datasets
 !
   character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
+  integer, public :: spinup_state = 0    ! State of the model for the accelerated decomposition (AD) spinup. 0 (default) = normal model; 1 = AD SPINUP
+  logical, public :: override_bgc_restart_mismatch_dump = .false. ! used to override an error check on reading in restart files
+
 !
 ! Physics
 !

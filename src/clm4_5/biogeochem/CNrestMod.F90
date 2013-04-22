@@ -12,7 +12,7 @@ module CNrestMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, override_bgc_restart_mismatch_dump
   use abortutils  , only : endrun
 !
 ! !PUBLIC TYPES:
@@ -23,7 +23,7 @@ module CNrestMod
   public :: CNrest
 
 ! !PUBLIC DATA MEMBERS:
-  logical, public :: reset_permafrost_c_n_pools = .false.  ! option to reset all organic pools below active layer to zero
+  logical, public :: bypass_CN_balance_check_on_restart = .false.  ! option to bypass the CN balance check when performing a non-conservative restart
 !
 ! !REVISION HISTORY:
 ! 11/05/03: Module created by Peter Thornton
@@ -52,16 +52,10 @@ contains
     use clm_time_manager, only : is_restart, get_nstep
     use clm_varcon, only : nlevgrnd
     use ncdio_pio
-#if (defined EXIT_SPINUP || defined ENTER_SPINUP || defined SPINUP_DOWNSHIFT)
-    use clm_varcon, only : spinup_vector
-#ifdef SPINUP_DOWNSHIFT
-    use clm_varcon, only : spinup_vector_previous
-#endif
-#endif
-    use clm_varpar, only : nsompools
-    use clm_varctl, only : use_c13, use_c14
-    use clm_varcon, only : c14ratio, spval
+    use clm_varctl, only : use_c13, use_c14, spinup_state
+    use clm_varcon, only : c13ratio, c14ratio, spval
     use nanMod    , only : nan
+    use shr_const_mod,only : SHR_CONST_PDB
 !
 ! !ARGUMENTS:
     implicit none
@@ -75,6 +69,17 @@ contains
 ! Author: Peter Thornton
 !
 !
+!Other local variables
+    real(r8) :: c3_del13c     ! typical del13C for C3 photosynthesis (permil, relative to PDB)
+    real(r8) :: c4_del13c     ! typical del13C for C4 photosynthesis (permil, relative to PDB)
+    real(r8) :: c3_r1         ! isotope ratio (13c/12c) for C3 photosynthesis
+    real(r8) :: c4_r1         ! isotope ratio (13c/12c) for C4 photosynthesis
+    real(r8) :: c3_r2         ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
+    real(r8) :: c4_r2         ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
+!   real(r8), pointer :: rc13_annsum_npp(:)
+!   real(r8), pointer :: rc13_cannsum_npp(:)
+   type(pft_cstate_type), pointer :: pcisos
+   type(pft_cstate_type), pointer :: pcbulks
 ! !LOCAL VARIABLES:
 !EOP
     integer :: c,p,j,k,i,l           ! indices 
@@ -93,8 +98,17 @@ contains
     integer :: ier                 ! error status
     real(r8), pointer :: ptr1d(:), ptr2d(:,:) !temporary arrays for slicing larger arrays
     integer  :: nstep                    ! time step number
+    integer  :: restart_file_spinup_state  ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
+    logical :: exit_spinup = .false.
+    logical :: enter_spinup = .false.
+    integer :: decomp_cascade_state, restart_file_decomp_cascade_state      ! flags for comparing the model and restart decomposition cascades
 !-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+    if ( use_c13 ) then
+       pcisos => clm3%g%l%c%p%pc13s
+       pcbulks => clm3%g%l%c%p%pcs
+    endif
     ! Set pointers into derived type
 
     gptr => clm3%g
@@ -102,9 +116,19 @@ contains
     cptr => clm3%g%l%c
     pptr => clm3%g%l%c%p
 
+
     ! Determine necessary subgrid bounds
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+
+    if ( use_c13 ) then
+       c3_del13c = -28._r8
+       c4_del13c = -13._r8
+       c3_r1 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
+       c3_r2 = c3_r1/(1._r8 + c3_r1)
+       c4_r1 = SHR_CONST_PDB + ((c4_del13c*SHR_CONST_PDB)/1000._r8)
+       c4_r2 = c4_r1/(1._r8 + c4_r1)
+    endif
 
     !--------------------------------
     ! pft ecophysiological variables 
@@ -986,8 +1010,19 @@ contains
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
            call ncd_io(varname='leafc_13', data=pptr%pc13s%leafc, &
-                dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
+                dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%leafc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%leafc(i) = pcbulks%leafc(i) * c3_r2
+                 else
+                    pcisos%leafc(i) = pcbulks%leafc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%leafc(i) .ne. spval .and. pptr%pcs%leafc(i) .ne. nan ) then
+!                    pptr%pc13s%leafc(i) = pptr%pcs%leafc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1000,6 +1035,17 @@ contains
            call ncd_io(varname='leafc_storage_13', data=pptr%pc13s%leafc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%leafc_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%leafc_storage(i) = pcbulks%leafc_storage(i) * c3_r2
+                 else
+                    pcisos%leafc_storage(i) = pcbulks%leafc_storage(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%leafc_storage(i) .ne. spval .and. pptr%pcs%leafc_storage(i) .ne. nan ) then
+!                    pptr%pc13s%leafc_storage(i) = pptr%pcs%leafc_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1012,6 +1058,17 @@ contains
            call ncd_io(varname='leafc_xfer_13', data=pptr%pc13s%leafc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%leafc_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%leafc_xfer(i) = pcbulks%leafc_xfer(i) * c3_r2
+                 else
+                    pcisos%leafc_xfer(i) = pcbulks%leafc_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%leafc_xfer(i) .ne. spval .and. pptr%pcs%leafc_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%leafc_xfer(i) = pptr%pcs%leafc_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1024,6 +1081,17 @@ contains
            call ncd_io(varname='frootc_13', data=pptr%pc13s%frootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%frootc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%frootc(i) = pcbulks%frootc(i) * c3_r2
+                 else
+                    pcisos%frootc(i) = pcbulks%frootc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%frootc(i) .ne. spval .and. pptr%pcs%frootc(i) .ne. nan ) then
+!                    pptr%pc13s%frootc(i) = pptr%pcs%frootc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1036,6 +1104,17 @@ contains
            call ncd_io(varname='frootc_storage_13', data=pptr%pc13s%frootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%frootc_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%frootc_storage(i) = pcbulks%frootc_storage(i) * c3_r2
+                 else
+                    pcisos%frootc_storage(i) = pcbulks%frootc_storage(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%frootc_storage(i) .ne. spval .and. pptr%pcs%frootc_storage(i) .ne. nan ) then
+!                    pptr%pc13s%frootc_storage(i) = pptr%pcs%frootc_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1048,6 +1127,17 @@ contains
            call ncd_io(varname='frootc_xfer_13', data=pptr%pc13s%frootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%frootc_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%frootc_xfer(i) = pcbulks%frootc_xfer(i) * c3_r2
+                 else
+                    pcisos%frootc_xfer(i) = pcbulks%frootc_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%frootc_xfer(i) .ne. spval .and. pptr%pcs%frootc_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%frootc_xfer(i) = pptr%pcs%frootc_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1060,6 +1150,17 @@ contains
            call ncd_io(varname='livestemc_13', data=pptr%pc13s%livestemc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%livestemc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%livestemc(i) = pcbulks%livestemc(i) * c3_r2
+                 else
+                    pcisos%livestemc(i) = pcbulks%livestemc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%livestemc(i) .ne. spval .and. pptr%pcs%livestemc(i) .ne. nan ) then
+!                    pptr%pc13s%livestemc(i) = pptr%pcs%livestemc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1072,6 +1173,17 @@ contains
            call ncd_io(varname='livestemc_storage_13', data=pptr%pc13s%livestemc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%livestemc_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%livestemc_storage(i) = pcbulks%livestemc_storage(i) * c3_r2
+                 else
+                    pcisos%livestemc_storage(i) = pcbulks%livestemc_storage(i) * c4_r2
+                 endif
+!                if (pptr%pcs%livestemc_storage(i) .ne. spval .and. pptr%pcs%livestemc_storage(i) .ne. nan ) then
+!                    pptr%pc13s%livestemc_storage(i) = pptr%pcs%livestemc_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1084,6 +1196,17 @@ contains
            call ncd_io(varname='livestemc_xfer_13', data=pptr%pc13s%livestemc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%livestemc_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%livestemc_xfer(i) = pcbulks%livestemc_xfer(i) * c3_r2
+                 else
+                    pcisos%livestemc_xfer(i) = pcbulks%livestemc_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%livestemc_xfer(i) .ne. spval .and. pptr%pcs%livestemc_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%livestemc_xfer(i) = pptr%pcs%livestemc_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1096,6 +1219,17 @@ contains
            call ncd_io(varname='deadstemc_13', data=pptr%pc13s%deadstemc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%deadstemc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%deadstemc(i) = pcbulks%deadstemc(i) * c3_r2
+                 else
+                    pcisos%deadstemc(i) = pcbulks%deadstemc(i) * c4_r2
+                 endif 
+!                 if (pptr%pcs%deadstemc(i) .ne. spval .and. pptr%pcs%deadstemc(i) .ne. nan ) then
+!                    pptr%pc13s%deadstemc(i) = pptr%pcs%deadstemc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1108,6 +1242,17 @@ contains
            call ncd_io(varname='deadstemc_storage_13', data=pptr%pc13s%deadstemc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%deadstemc_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%deadstemc_storage(i) = pcbulks%deadstemc_storage(i) * c3_r2
+                 else
+                    pcisos%deadstemc_storage(i) = pcbulks%deadstemc_storage(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%deadstemc_storage(i) .ne. spval .and. pptr%pcs%deadstemc_storage(i) .ne. nan ) then
+!                    pptr%pc13s%deadstemc_storage(i) = pptr%pcs%deadstemc_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1120,6 +1265,17 @@ contains
            call ncd_io(varname='deadstemc_xfer_13', data=pptr%pc13s%deadstemc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%deadstemc_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%deadstemc_xfer(i) = pcbulks%deadstemc_xfer(i) * c3_r2
+                 else
+                    pcisos%deadstemc_xfer(i) = pcbulks%deadstemc_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%deadstemc_xfer(i) .ne. spval .and. pptr%pcs%deadstemc_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%deadstemc_xfer(i) = pptr%pcs%deadstemc_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1132,6 +1288,17 @@ contains
            call ncd_io(varname='livecrootc_13', data=pptr%pc13s%livecrootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%livecrootc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%livecrootc(i) = pcbulks%livecrootc(i) * c3_r2
+                 else
+                    pcisos%livecrootc(i) = pcbulks%livecrootc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%livecrootc(i) .ne. spval .and. pptr%pcs%livecrootc(i) .ne. nan ) then
+!                    pptr%pc13s%livecrootc(i) = pptr%pcs%livecrootc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1144,6 +1311,17 @@ contains
            call ncd_io(varname='livecrootc_storage_13', data=pptr%pc13s%livecrootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%livecrootc_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%livecrootc_storage(i) = pcbulks%livecrootc_storage(i) * c3_r2
+                 else
+                    pcisos%livecrootc_storage(i) = pcbulks%livecrootc_storage(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%livecrootc_storage(i) .ne. spval .and. pptr%pcs%livecrootc_storage(i) .ne. nan ) then
+!                    pptr%pc13s%livecrootc_storage(i) = pptr%pcs%livecrootc_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1156,6 +1334,17 @@ contains
            call ncd_io(varname='livecrootc_xfer_13', data=pptr%pc13s%livecrootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%livecrootc_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%livecrootc_xfer(i) = pcbulks%livecrootc_xfer(i) * c3_r2
+                 else
+                    pcisos%livecrootc_xfer(i) = pcbulks%livecrootc_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%livecrootc_xfer(i) .ne. spval .and. pptr%pcs%livecrootc_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%livecrootc_xfer(i) = pptr%pcs%livecrootc_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1168,6 +1357,17 @@ contains
            call ncd_io(varname='deadcrootc_13', data=pptr%pc13s%deadcrootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%deadcrootc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%deadcrootc(i) = pcbulks%deadcrootc(i) * c3_r2
+                 else
+                    pcisos%deadcrootc(i) = pcbulks%deadcrootc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%deadcrootc(i) .ne. spval .and. pptr%pcs%deadcrootc(i) .ne. nan ) then
+!                    pptr%pc13s%deadcrootc(i) = pptr%pcs%deadcrootc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1180,6 +1380,17 @@ contains
            call ncd_io(varname='deadcrootc_storage_13', data=pptr%pc13s%deadcrootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%deadcrootc_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%deadcrootc_storage(i) = pcbulks%deadcrootc_storage(i) * c3_r2
+                 else
+                    pcisos%deadcrootc_storage(i) = pcbulks%deadcrootc_storage(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%deadcrootc_storage(i) .ne. spval .and. pptr%pcs%deadcrootc_storage(i) .ne. nan ) then
+!                    pptr%pc13s%deadcrootc_storage(i) = pptr%pcs%deadcrootc_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1192,6 +1403,17 @@ contains
            call ncd_io(varname='deadcrootc_xfer_13', data=pptr%pc13s%deadcrootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%deadcrootc_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%deadcrootc_xfer(i) = pcbulks%deadcrootc_xfer(i) * c3_r2
+                 else
+                    pcisos%deadcrootc_xfer(i) = pcbulks%deadcrootc_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%deadcrootc_xfer(i) .ne. spval .and. pptr%pcs%deadcrootc_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%deadcrootc_xfer(i) = pptr%pcs%deadcrootc_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1204,6 +1426,17 @@ contains
            call ncd_io(varname='gresp_storage_13', data=pptr%pc13s%gresp_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%gresp_storage with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%gresp_storage(i) = pcbulks%gresp_storage(i) * c3_r2
+                 else
+                    pcisos%gresp_storage(i) = pcbulks%gresp_storage(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%gresp_storage(i) .ne. spval .and. pptr%pcs%gresp_storage(i) .ne. nan ) then
+!                    pptr%pc13s%gresp_storage(i) = pptr%pcs%gresp_storage(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1216,6 +1449,17 @@ contains
            call ncd_io(varname='gresp_xfer_13', data=pptr%pc13s%gresp_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%gresp_xfer with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%gresp_xfer(i) = pcbulks%gresp_xfer(i) * c3_r2
+                 else
+                    pcisos%gresp_xfer(i) = pcbulks%gresp_xfer(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%gresp_xfer(i) .ne. spval .and. pptr%pcs%gresp_xfer(i) .ne. nan ) then
+!                    pptr%pc13s%gresp_xfer(i) = pptr%pcs%gresp_xfer(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1228,6 +1472,17 @@ contains
            call ncd_io(varname='cpool_13', data=pptr%pc13s%cpool, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%cpool with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%cpool(i) = pcbulks%cpool(i) * c3_r2
+                 else
+                    pcisos%cpool(i) = pcbulks%cpool(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%cpool(i) .ne. spval .and. pptr%pcs%cpool(i) .ne. nan ) then
+!                    pptr%pc13s%cpool(i) = pptr%pcs%cpool(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1240,6 +1495,17 @@ contains
            call ncd_io(varname='xsmrpool_13', data=pptr%pc13s%xsmrpool, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%xsmrpool with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%xsmrpool(i) = pcbulks%xsmrpool(i) * c3_r2
+                 else
+                    pcisos%xsmrpool(i) = pcbulks%xsmrpool(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%xsmrpool(i) .ne. spval .and. pptr%pcs%xsmrpool(i) .ne. nan ) then
+!                    pptr%pc13s%xsmrpool(i) = pptr%pcs%xsmrpool(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1252,6 +1518,17 @@ contains
            call ncd_io(varname='pft_ctrunc_13', data=pptr%pc13s%pft_ctrunc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%pft_ctrunc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%pft_ctrunc(i) = pcbulks%pft_ctrunc(i) * c3_r2
+                 else
+                    pcisos%pft_ctrunc(i) = pcbulks%pft_ctrunc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%pft_ctrunc(i) .ne. spval .and. pptr%pcs%pft_ctrunc(i) .ne. nan ) then
+!                    pptr%pc13s%pft_ctrunc(i) = pptr%pcs%pft_ctrunc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -1264,6 +1541,17 @@ contains
            call ncd_io(varname='totvegc_13', data=pptr%pc13s%totvegc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
+              write(iulog,*) 'initializing pptr%pc13s%totvegc with atmospheric c13 value'
+              do i = begp,endp
+                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                    pcisos%totvegc(i) = pcbulks%totvegc(i) * c3_r2
+                 else
+                    pcisos%totvegc(i) = pcbulks%totvegc(i) * c4_r2
+                 endif
+!                 if (pptr%pcs%totvegc(i) .ne. spval .and. pptr%pcs%totvegc(i) .ne. nan ) then
+!                    pptr%pc13s%totvegc(i) = pptr%pcs%totvegc(i) * c13ratio
+!                 endif
+              end do
               if (is_restart()) call endrun
            end if
         end if
@@ -2306,6 +2594,16 @@ contains
           ptr2d => cptr%cc13s%decomp_cpools_vr(:,:,k)
           varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_13'
           call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=ptr2d, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             write(iulog,*) 'initializing cptr%cc13s%decomp_cpools_vr with atmospheric c13 value for: '//varname
+             do i = begc,endc
+                do j = 1, nlevdecomp
+                   if (cptr%ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. cptr%ccs%decomp_cpools_vr(i,j,k) .ne. nan ) then
+                      cptr%cc13s%decomp_cpools_vr(i,j,k) = cptr%ccs%decomp_cpools_vr(i,j,k) * c3_r2
+                   endif
+                end do
+             end do
+          end if
        end do
        
        ! seedc
@@ -2316,11 +2614,16 @@ contains
           call ncd_io(varname='seedc_13', data=cptr%cc13s%seedc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
+             do i = begc,endc
+                if (cptr%ccs%seedc(i) .ne. spval .and. cptr%ccs%seedc(i) .ne. nan ) then
+                   cptr%cc13s%seedc(i) = cptr%ccs%seedc(i) * c3_r2
+                endif
+             end do
              if (is_restart()) call endrun
           end if
        end if
        
-       ! col_ctrunc_c13
+       ! col_ctrunc_13
        call cnrest_addfld_decomp(ncid=ncid, varname='col_ctrunc_13_vr', longname='', units='', flag=flag, data_rl=cptr%cc13s%col_ctrunc_vr, readvar=readvar)
 
        ! ! col_ctrunc
@@ -2343,6 +2646,11 @@ contains
           call ncd_io(varname='totlitc_13', data=cptr%cc13s%totlitc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
+             do i = begc,endc
+                if (cptr%ccs%totlitc(i) .ne. spval .and. cptr%ccs%totlitc(i) .ne. nan ) then
+                   cptr%cc13s%totlitc(i) = cptr%ccs%totlitc(i) * c3_r2
+                endif
+             end do
              if (is_restart()) call endrun
           end if
        end if
@@ -2355,6 +2663,11 @@ contains
           call ncd_io(varname='totcolc_13', data=cptr%cc13s%totcolc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
+             do i = begc,endc
+                if (cptr%ccs%totcolc(i) .ne. spval .and. cptr%ccs%totcolc(i) .ne. nan ) then
+                   cptr%cc13s%totcolc(i) = cptr%ccs%totcolc(i) * c3_r2
+                endif
+             end do
              if (is_restart()) call endrun
           end if
        end if
@@ -2367,6 +2680,11 @@ contains
           call ncd_io(varname='prod10c_13', data=cptr%cc13s%prod10c, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
+             do i = begc,endc
+                if (cptr%ccs%prod10c(i) .ne. spval .and. cptr%ccs%prod10c(i) .ne. nan ) then
+                   cptr%cc13s%prod10c(i) = cptr%ccs%prod10c(i) * c3_r2
+                endif
+             end do
              if (is_restart()) call endrun
           end if
        end if
@@ -2379,6 +2697,11 @@ contains
           call ncd_io(varname='prod100c_13', data=cptr%cc13s%prod100c, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
+             do i = begc,endc
+                if (cptr%ccs%prod100c(i) .ne. spval .and. cptr%ccs%prod100c(i) .ne. nan ) then
+                   cptr%cc13s%prod100c(i) = cptr%ccs%prod100c(i) * c3_r2
+                endif
+             end do
              if (is_restart()) call endrun
           end if
        end if
@@ -2604,84 +2927,132 @@ contains
        end if	
     end if
 
-! 6 possible spinup CPP flag combinations:
-! AD_SPINUP  => period of accelrated decomposition
-! EXIT_SPINUP => increase C stocks on first timestep, then normal deomposition
-! ENTER_SPINUP, AD_SPINUP => decrease C stocks during first timestep, then proceed to re-equilibrate in accelerated decomposition mode
-! AD_SPINUP, SPINUP_DOWNSHIFT => accelerated decomposition, but with lesser degree of acceleration to use as an intermediate step in reaching equilbrium with baseline model
-! AD_SPINUP, SPINUP_DOWNSHIFT, EXIT_SPINUP => transition from full AD mode to lesser AD mode; first timestep increase carbon stocks by ratio of two AD modes; subsequently, proceed in lesser AD mode
-! SPINUP_DOWNSHIFT, EXIT_SPINUP => transition from lesser AD mode to base model mode. at first timestep, increase carbon stocks by degree of AD for lesser mode
-! no flags = normal model integration.
-        
-#if (defined EXIT_SPINUP || defined ENTER_SPINUP)
-    if (flag == 'read') then
-       i = 0
+    ! decomp_cascade_state  
+    ! the purpose of this is to check to make sure the bgc used matches what the restart file was generated with.  
+    ! add info about the SOM decomposition cascade
+#ifdef CENTURY_DECOMP
+    decomp_cascade_state = 1
+#else
+    decomp_cascade_state = 0
+#endif
+    ! add info about the nitrification / denitrification state
+#ifdef NITRIF_DENITRIF
+    decomp_cascade_state = decomp_cascade_state + 10
+#endif
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='decomp_cascade_state', xtype=ncd_int,  &
+            long_name='BGC of the model that wrote this restart file: 1s column: 0 = CLM-CN cascade, 1 = Century cascade;' &
+            // ' 10s column: 0 = CLM-CN denitrification, 10 = Century denitrification',units='')
+    else if (flag == 'read') then
+       call ncd_io(varname='decomp_cascade_state', data=restart_file_decomp_cascade_state, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if ( .not. readvar) then
+  	  !!! assume, for sake of backwards compatibility, that if decomp_cascade_state is not in the restart file, then the current model state is the same as the prior model state
+          restart_file_decomp_cascade_state = decomp_cascade_state
+          if ( masterproc ) write(iulog,*) ' CNRest: WARNING!  Restart file does not contain info on decomp_cascade_state used to generate the restart file.  '
+          if ( masterproc ) write(iulog,*) '   Assuming the same as current setting: ', decomp_cascade_state
+       end if	
+    else if (flag == 'write') then
+       call ncd_io(varname='decomp_cascade_state', data=decomp_cascade_state, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+    end if
+    if ( flag == 'read' .and. decomp_cascade_state .ne. restart_file_decomp_cascade_state ) then
+       if ( masterproc ) then
+           write(iulog,*) 'CNRest: ERROR--the decomposition cascade differs between the current model state and the model that wrote the restart file. '
+           write(iulog,*) 'This means that the model will be horribly out of equilibrium until after a lengthy spinup. '
+           write(iulog,*) 'Stopping here since this is probably an error in configuring the run. If you really wish to proceed, '
+           write(iulog,*) 'then override by setting override_bgc_restart_mismatch_dump to .true. in the namelist'
+           if ( .not. override_bgc_restart_mismatch_dump ) then
+              call endrun( ' CNRest: Stopping. Decomposition cascade mismatch error.')
+           endif
+        endif
+    endif
+
+    ! spinup_state
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='spinup_state', xtype=ncd_int,  &
+            long_name='Spinup state of the model that wrote this restart file: 0 = normal model mode, 1 = AD spinup',units='')
+    else if (flag == 'read') then
+       call ncd_io(varname='spinup_state', data=restart_file_spinup_state, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if ( .not. readvar) then
+  	  !!! assume, for sake of backwards compatibility, that if spinup_state is not in the restart file, then the current model state is the same as the prior model state
+          restart_file_spinup_state = spinup_state
+          if ( masterproc ) write(iulog,*) ' CNRest: WARNING!  Restart file does not contain info on spinup state used to generate the restart file. '
+          if ( masterproc ) write(iulog,*) '   Assuming the same as current setting: ', spinup_state
+       end if	
+    else if (flag == 'write') then
+       call ncd_io(varname='spinup_state', data=spinup_state, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+    end if
+
+    ! now compare the model and restart file spinup states, and either take the model into spinup mode or out of it if they are not identical
+    ! taking model out of spinup mode requires multiplying each decomposing pool by the associated AD factor.
+    ! putting model into spinup mode requires dividing each decomposing pool by the associated AD factor.
+    nstep = get_nstep()  ! only allow this to occur on first timestep of model run.
+
+    if (flag == 'read' .and. spinup_state .ne. restart_file_spinup_state ) then
+       if (spinup_state .eq. 0 .and. restart_file_spinup_state .eq. 1 ) then
+          if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools out of AD spinup mode'
+          exit_spinup = .true.
+       else if (spinup_state .eq. 1 .and. restart_file_spinup_state .eq. 0 ) then
+          if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools into AD spinup mode'
+          enter_spinup = .true.
+       else
+          call endrun(' CNRest: error in entering/exiting spinup.  spinup_state != restart_file_spinup_state, but do not know what to do')
+       end if
+       if (nstep .ge. 2) then
+          call endrun(' CNRest: error in entering/exiting spinup. this should occur only when nstep = 1 ')
+       endif
+       bypass_CN_balance_check_on_restart = .true.
        do k = 1, ndecomp_pools
-          if ( decomp_cascade_con%is_soil(k) ) then
-             i = i+1
-#ifndef SPINUP_DOWNSHIFT
-             m = spinup_vector(i)
-#else
-#ifdef AD_SPINUP
-             m = spinup_vector_previous(i) / spinup_vector(i)
-#else
-             m = spinup_vector(i)
-#endif
-#endif
-#ifdef ENTER_SPINUP
-             m = 1._r8 / m
-#endif
-             if ( masterproc ) write(iulog,*) ' CNRest: taking SOM pools into/out of AD spinup mode. k, i, m:', k, i, m
-             do c = begc, endc
-                do j = 1, nlevdecomp
-                   clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) = clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) * m
-
-                   if ( use_c13 ) then
-                      clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) = clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) * m
-                   endif
-
-                   if ( use_c14 ) then
-                      clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) = clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) * m
-                   endif
-
-                   clm3%g%l%c%cns%decomp_npools_vr(c,j,k) = clm3%g%l%c%cns%decomp_npools_vr(c,j,k) * m
-                end do
+          if ( exit_spinup ) then
+             m = decomp_cascade_con%spinup_factor(k)
+          else if ( enter_spinup ) then
+             m = 1. / decomp_cascade_con%spinup_factor(k)
+          end if
+          do c = begc, endc
+             do j = 1, nlevdecomp
+                clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) = clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) * m
+                
+                if ( use_c13 ) then
+                   clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) = clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) * m
+                endif
+                
+                if ( use_c14 ) then
+                   clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) = clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) * m
+                endif
+                
+                clm3%g%l%c%cns%decomp_npools_vr(c,j,k) = clm3%g%l%c%cns%decomp_npools_vr(c,j,k) * m
              end do
+          end do
+       end do
+    end if
+
+ 
+    if ( .not. is_restart() .and. nstep .eq. 1 ) then
+       do i = begp, endp
+          if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+             pcisos%grainc(i) = pcbulks%grainc(i) * c3_r2
+             pcisos%grainc_storage(i) = pcbulks%grainc_storage(i) * c3_r2
+             pcisos%grainc_xfer(i) = pcbulks%grainc_xfer(i) * c3_r2
+             pcisos%dispvegc(i) = pcbulks%dispvegc(i) * c3_r2
+             pcisos%storvegc(i) = pcbulks%storvegc(i) * c3_r2
+             pcisos%totvegc(i) = pcbulks%totvegc(i) * c3_r2
+             pcisos%totpftc(i) = pcbulks%totpftc(i) * c3_r2
+             pcisos%woodc(i) = pcbulks%woodc(i) * c3_r2
+          else
+             pcisos%grainc(i) = pcbulks%grainc(i) * c4_r2
+             pcisos%grainc_storage(i) = pcbulks%grainc_storage(i) * c4_r2
+             pcisos%grainc_xfer(i) = pcbulks%grainc_xfer(i) * c4_r2
+             pcisos%dispvegc(i) = pcbulks%dispvegc(i) * c4_r2
+             pcisos%storvegc(i) = pcbulks%storvegc(i) * c4_r2
+             pcisos%totvegc(i) = pcbulks%totvegc(i) * c4_r2
+             pcisos%totpftc(i) = pcbulks%totpftc(i) * c4_r2
+             pcisos%woodc(i) = pcbulks%woodc(i) * c4_r2
           end if
        end do
     end if
-#endif
-
-
-    ! create an option to reset all permafrost C and N pools to zero so that we can try different experiments without having to spinup from scratch
-    nstep = get_nstep()
-    if ( reset_permafrost_c_n_pools .and. flag == 'read' .and. nlevdecomp .gt. 1) then
-       if ( nstep .lt. 2 ) then
-          if ( masterproc ) write(iulog, *) 'resetting all permafrost C and N pools to zero'
-          do k = 1, ndecomp_pools
-             do c = begc, endc
-                do j = 1, nlevdecomp
-                   if ( max(clm3%g%l%c%cps%altmax_indx(c), clm3%g%l%c%cps%altmax_lastyear_indx(c)) .lt. j ) then
-                      clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) = 0._r8
-
-                      if ( use_c13 ) then
-                         clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) = 0._r8
-                      endif
-                      
-                      if ( use_c14 ) then
-                         clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) = 0._r8
-                      endif
-
-                      clm3%g%l%c%cns%decomp_npools_vr(c,j,k) = 0._r8
-                   end if
-                end do
-             end do
-          end do
-       else
-          if ( masterproc ) write(iulog, *) 'ignoring permafrost reset command. only possible at nstep = 1 or else C balance error triggered.'
-       endif
-    end if
-    
 
 #if (defined CNDV)
     ! pft type dgvm physical state - crownarea

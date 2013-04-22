@@ -13,7 +13,7 @@ module CNSoilLittVertTranspMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use clm_varctl  , only : iulog, use_c13, use_c14
+  use clm_varctl  , only : iulog, use_c13, use_c14, spinup_state
   use clm_varcon  , only : secspday
 !
 ! !PUBLIC TYPES:
@@ -117,10 +117,8 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    integer :: jtop(lbc:ubc)              ! top level at each column
    real(r8) :: dtime                     ! land model time step (sec)
    integer :: zerolev_diffus
-#if ( defined AD_SPINUP)
-   real(r8), pointer :: spinup_factor(:) ! spinup accelerated decomposiiotn factor, used to accelerate transport as well
-#endif
-   real(r8) :: spinup_term               ! spinup accelerated decomposiiotn factor, used to accelerate transport as well
+   real(r8), pointer :: spinup_factor(:) ! spinup accelerated decomposition factor, used to accelerate transport as well
+   real(r8) :: spinup_term               ! spinup accelerated decomposition factor, used to accelerate transport as well
    real(r8) :: epsilon                   ! small number
 
 !EOP
@@ -133,9 +131,7 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patankar, Table 5.2, pg 95
    
    is_cwd                                  => decomp_cascade_con%is_cwd
-#if ( defined AD_SPINUP)
    spinup_factor                           => decomp_cascade_con%spinup_factor
-#endif   
    altmax                          => clm3%g%l%c%cps%altmax
    altmax_lastyear                 => clm3%g%l%c%cps%altmax_lastyear
    som_adv_coef                    => clm3%g%l%c%cps%som_adv_coef
@@ -284,13 +280,14 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
       
       do s = 1, ndecomp_pools
 
-#if ( defined AD_SPINUP)
+      if ( spinup_state .eq. 1 ) then
          ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
          spinup_term = spinup_factor(s)
-#endif
+      else
+         spinup_term = 1.
+      endif
 
          if ( .not. is_cwd(s) ) then
-
 
             do j = 1,nlevdecomp+1
                do fc = 1, num_soilc

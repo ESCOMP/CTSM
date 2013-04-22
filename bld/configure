@@ -80,23 +80,14 @@ OPTIONS
      -sitespf_pt <name>     Setup for the given site specific single-point resolution.
      -snicar_frc <name>     Turn on SNICAR radiative forcing calculation. [on | off] 
                             (default is off)
-     -spinup <name>         Turn on given spinup mode for BGC setting of CN		  (level)
-                              Enter-AD      Turn on Accelerated Decomposition from	      (6)
-                                            existing initial conditions (optional) (deprecated)
-                                            (ONLY valid for CLM4.5!)
-                              AD            Turn on Accelerated Decomposition from	      (5)
+     -spinup <name>         CLM 4.0 Only. For CLM 4.5, spinup is controlled from build-namelist.
+                            Turn on given spinup mode for BGC setting of CN		  (level)
+                              AD            Turn on Accelerated Decomposition from	      (2)
                                             bare-soil
-                              exit          Jump directly from AD spinup to normal mode	      (2)
-                              AD2Lesser     Jump from full AD to lesser AD spinup (optional)  (4)
-                                            (deprecated) (ONLY valid for CLM4.5!)
-                              LesserAD      Lesser Accelerated Decomposition mode	      (3)
-                                            (deprecated) (ONLY valid for CLM4.5!)
-                              LesserAD-exit Jump from lesser AD to normal mode		      (1)
-                                            (deprecated) (ONLY valid for CLM4.5!)
+                              exit          Jump directly from AD spinup to normal mode	      (1)
                               normal        Normal decomposition ("final spinup mode")	      (0)
                                             (default)
-                            Two sequences are valid: 6-5-4-3-1-0 or 6-5-2-0 (where 6 and 4 are optional)
-                            The recommended sequence is 5-2-0
+                            The recommended sequence is 2-1-0
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
                             Directories containing user source code.
      -verbose [or -v]       Turn on verbose echoing of settings made by configure.
@@ -421,25 +412,30 @@ if ($print>=2 && $bgc_mode =~ /^cn/ ) {
 
 #-----------------------------------------------------------------------------------------------
 # SPINUP option for BGC/CN mode only
-if (defined $opts{'spinup'}) {
+my $spinup = undef;
+if ($phys eq "clm4_0") {
+  if (defined $opts{'spinup'}) {
     $cfg_ref->set('spinup', $opts{'spinup'});
-}
-my $spinup = $cfg_ref->get('spinup');
-if ( ($spinup ne "normal" ) && ($bgc_mode ne "cn") ) {
-   die <<"EOF";
+  }
+  $spinup = $cfg_ref->get('spinup');
+  if ( ($spinup ne "normal" ) && ($bgc_mode ne "cn") ) {
+    die <<"EOF";
 ** Cannot turn spinup mode on -- without cn for bgc mode** 
 ** 
 ** Set the bgc mode by the following means from highest to lowest precedence:
 ** * by the command-line option -bgc cn
 ** * by a default configuration file, specified by -defaults 
 EOF
-}
-if ( ($spinup =~ /Enter-AD|AD2Lesser|LesserAD|LesserAD-exit/) && ($phys !~ /clm4_5/) ) {
-   die <<"EOF";
-** Cannot turn spinup to this mode ($spinup) -- without clm4_5 physics!** 
+  }
+  if ($print>=2) { print "Using $spinup for spinup for cn mode.$eol"; }
+} else {
+  if ($opts{'spinup'} ne "normal") {
+    die <<"EOF";
+** Spinup mode can only be controlled with configure for CLM 4.0.
+** For CLM 4.5 use the bgc_spinup option to build-namelist
 EOF
+  }
 }
-if ($print>=2) { print "Using $spinup for spinup for cn mode.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # CLM4 Methane model
@@ -639,23 +635,13 @@ if ($nofire eq 'on') {
 if ($noio eq 'on') {
     $cfg_cppdefs .= " -D_NOIO";
 }
-if ($spinup eq 'AD') { 
+if ($phys eq "clm4_0") {
+  if ($spinup eq 'AD') { 
     $cfg_cppdefs .= " -DAD_SPINUP";
-}
-if ($spinup eq 'Enter-AD') { 
-    $cfg_cppdefs .= " -DAD_SPINUP -DENTER_SPINUP";
-}
-if ($spinup eq 'exit') { 
+  }
+  if ($spinup eq 'exit') { 
     $cfg_cppdefs .= " -DEXIT_SPINUP";
-}
-if ($spinup eq 'AD2Lesser' ) { 
-    $cfg_cppdefs .= " -DAD_SPINUP -DSPINUP_DOWNSHIFT -DEXIT_SPINUP";
-}
-if ($spinup eq 'LesserAD' ) { 
-    $cfg_cppdefs .= " -DAD_SPINUP -DSPINUP_DOWNSHIFT";
-}
-if ($spinup eq 'LesserAD-exit' ) { 
-    $cfg_cppdefs .= " -DSPINUP_DOWNSHIFT -DEXIT_SPINUP";
+  }
 }
 if ($exlaklayers eq 'on') { 
     $cfg_cppdefs .= " -DEXTRALAKELAYERS";

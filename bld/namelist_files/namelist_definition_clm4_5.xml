@@ -1047,6 +1047,11 @@ Prescribed aerosol mode for the atmosphere model
     rcp8.5 = For datm use rcp=8.5 future scenario
 </entry>
 
+<entry id="bgc_spinup" type="char*3" category="default_settings"
+       group="default_settings" valid_values="on,off" >
+Command line arguement for turning on CN spinup mode.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- drydep Namelists                                                                          -->
 <!-- ========================================================================================  -->
@@ -1075,6 +1080,16 @@ List of chemical constituents that dry deposition will be calculated for
 <!-- ========================================================================================  -->
 <!-- namelist elements associated with the vertical CN model                                   -->
 <!-- ========================================================================================  -->
+
+<entry id="override_bgc_restart_mismatch_dump" type="logical" category="clm_vertcn"
+       group="clm_inparm" valid_values="" >
+Flag for overriding the crash that should occur if user tries to start the model from a restart file made with a different version of the soil decomposition structure than is currently being used.
+</entry>
+
+<entry id="spinup_state" type="integer" category="clm_vertcn"
+       group="clm_inparm" valid_values="0,1" >
+Flag for setting the state of the Accelerated decomposition spinup state for the model.  0 = normal model behavior; 1 = AD spinup.  Entering and exiting spinup mode occurs automatically by comparing the namelist and restart file values for this variable.
+</entry>
 
 <!-- vertical mixing switches    -->
 <entry id="som_diffus" type="real" category="clm_vertcn"
@@ -1201,11 +1216,6 @@ Filename with time series of atmospheric Delta C14 data.  variables in file are 
 
 
 <!-- permfrost-specific flags    -->
-
-<entry id="reset_permafrost_c_n_pools" type="logical" category="clm_permafrost"
-       group="clm_inparm" valid_values="" >
-Flag to reset C and N pools in permafrost layers to zero at model initialization--should only be used during spinup as a less costly way of spinning up the model than completely restarting from iniital conditions.
-</entry>
 
 <entry id="perchroot" type="logical" category="clm_permafrost"
        group="clm_inparm" valid_values="" >

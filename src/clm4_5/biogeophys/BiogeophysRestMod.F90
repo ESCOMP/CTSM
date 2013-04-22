@@ -288,6 +288,9 @@ contains
     end if
 
     ! column water state variable - snow_depth
+    ! As of clm4_0_76, SWNODP is written to restarts.
+    ! To remain backwards compatible, if SWNODP does not exist, look for
+    ! SWOW_DEPTH.  SPM - April 22, 2013
 
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='SNOW_DEPTH', xtype=ncd_double, &
@@ -299,6 +302,21 @@ contains
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
+          if (masterproc) write(iulog,*) "Can't find SNOW_DEPTH in restart (or initial) file."
+          if (masterproc) write(iulog,*) "Looking for SNOWDP..."
+          if (masterproc) write(iulog,*) "NOTE: SNOWDP-clm4_0_75 and earlier"
+          if (masterproc) write(iulog,*) "NOTE: SNOW_DEPTH-clm4_0_76 and later"
+          call ncd_io(varname='SNOWDP', data=cptr%cps%snow_depth, &
+               dim1name=namec, &
+               ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (masterproc) write(iulog,*) "Can't find SNOWDP either."
+             if (masterproc) write(iulog,*) &
+                "BiogeophyRestMod.F90::BiogeophysRest"
+             call endrun()
+          else
+             if (masterproc) write(iulog,*) "Found SNOWDP:: continuing "
+          endif
        end if
     end if
 

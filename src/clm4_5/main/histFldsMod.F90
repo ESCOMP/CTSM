@@ -1823,10 +1823,20 @@ contains
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C in active layer'
           call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)
+               ptr_col=data1dptr)    
        endif
 
     end do
+
+    if ( nlevdecomp_full .gt. 1 ) then
+       call hist_addfld1d (fname='TOTLITC_1m', units='gC/m^2', &
+            avgflag='A', long_name='total litter carbon to 1 meter depth', &
+            ptr_col=clm3%g%l%c%ccs%totlitc_1m)
+       
+       call hist_addfld1d (fname='TOTSOMC_1m', units='gC/m^2', &
+            avgflag='A', long_name='total soil organic matter carbon to 1 meter depth', &
+            ptr_col=clm3%g%l%c%ccs%totsomc_1m)
+    end if
 
     call hist_addfld1d (fname='COL_CTRUNC', units='gC/m^2',  &
          avgflag='A', long_name='column-level sink for C truncation', &
@@ -1834,11 +1844,11 @@ contains
 
     call hist_addfld_decomp (fname='NFIXATION_PROF', units='1/m',  type2d='levdcmp', &
          avgflag='A', long_name='profile for biological N fixation', &
-         ptr_col=clm3%g%l%c%cps%nfixation_prof)
+         ptr_col=clm3%g%l%c%cps%nfixation_prof, default='inactive')
 
     call hist_addfld_decomp (fname='NDEP_PROF', units='1/m',  type2d='levdcmp', &
          avgflag='A', long_name='profile for atmospheric N  deposition', &
-         ptr_col=clm3%g%l%c%cps%ndep_prof)
+         ptr_col=clm3%g%l%c%cps%ndep_prof, default='inactive')
 
     call hist_addfld1d (fname='ALT', units='m', &
          avgflag='A', long_name='current active layer thickness', &
@@ -1930,7 +1940,17 @@ contains
        call hist_addfld1d (fname='C13_TOTSOMC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total soil organic matter carbon', &
             ptr_col=clm3%g%l%c%cc13s%totsomc)
-       
+
+       if ( nlevdecomp_full .gt. 1 ) then
+          call hist_addfld1d (fname='C13_TOTLITC_1m', units='gC13/m^2', &
+               avgflag='A', long_name='C13 total litter carbon to 1 meter', &
+               ptr_col=clm3%g%l%c%cc13s%totlitc_1m)
+          
+          call hist_addfld1d (fname='C13_TOTSOMC_1m', units='gC13/m^2', &
+               avgflag='A', long_name='C13 total soil organic matter carbon to 1 meter', &
+               ptr_col=clm3%g%l%c%cc13s%totsomc_1m)
+       endif
+
        call hist_addfld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
             avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool', &
             ptr_col=clm3%g%l%c%cc13s%totecosysc)
@@ -2015,7 +2035,17 @@ contains
        call hist_addfld1d (fname='C14_TOTSOMC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total soil organic matter carbon', &
             ptr_col=clm3%g%l%c%cc14s%totsomc)
-       
+
+       if ( nlevdecomp_full .gt. 1 ) then       
+          call hist_addfld1d (fname='C14_TOTLITC_1m', units='gC14/m^2', &
+               avgflag='A', long_name='C14 total litter carbon to 1 meter', &
+               ptr_col=clm3%g%l%c%cc14s%totlitc_1m)
+          
+          call hist_addfld1d (fname='C14_TOTSOMC_1m', units='gC14/m^2', &
+               avgflag='A', long_name='C14 total soil organic matter carbon to 1 meter', &
+               ptr_col=clm3%g%l%c%cc14s%totsomc_1m)
+       endif
+
        call hist_addfld1d (fname='C14_TOTECOSYSC', units='gC14/m^2', &
             avgflag='A', long_name='C14 total ecosystem carbon, incl veg but excl cpool', &
             ptr_col=clm3%g%l%c%cc14s%totecosysc)
@@ -2189,8 +2219,6 @@ contains
                avgflag='A', long_name=longname, &
                ptr_col=data1dptr)
        endif
-
-
     end do
 
 
@@ -2198,11 +2226,15 @@ contains
        call hist_addfld1d (fname='SMINN', units='gN/m^2', &
             avgflag='A', long_name='soil mineral N', &
             ptr_col=clm3%g%l%c%cns%sminn)
+       
+       call hist_addfld1d (fname='TOTLITN_1m', units='gN/m^2', &
+            avgflag='A', long_name='total litter N to 1 meter', &
+            ptr_col=clm3%g%l%c%cns%totlitn_1m)
+       
+       call hist_addfld1d (fname='TOTSOMN_1m', units='gN/m^2', &
+            avgflag='A', long_name='total soil organic matter N to 1 meter', &
+            ptr_col=clm3%g%l%c%cns%totsomn_1m)
     endif
-
-    call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
-         avgflag='A', long_name='soil mineral N', &
-         ptr_col=clm3%g%l%c%cns%sminn_vr)
 
     call hist_addfld1d (fname='COL_NTRUNC', units='gN/m^2',  &
          avgflag='A', long_name='column-level sink for N truncation', &
@@ -2228,6 +2260,16 @@ contains
             avgflag='A', long_name='soil mineral NH4', &
             ptr_col=clm3%g%l%c%cns%smin_nh4)
     endif
+
+    call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
+         avgflag='A', long_name='soil mineral N', &
+         ptr_col=clm3%g%l%c%cns%sminn_vr, default = 'inactive')
+
+#else
+    call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3',  type2d='levdcmp', &
+         avgflag='A', long_name='soil mineral N', &
+         ptr_col=clm3%g%l%c%cns%sminn_vr)
+
 #endif
     call hist_addfld1d (fname='TOTLITN', units='gN/m^2', &
          avgflag='A', long_name='total litter N', &
@@ -3916,7 +3958,7 @@ contains
           longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C tendency due to vertical transport'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
-               ptr_col=data2dptr)
+               ptr_col=data2dptr, default='inactive')
        endif
     end do
 

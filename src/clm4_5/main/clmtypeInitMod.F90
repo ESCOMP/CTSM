@@ -1476,6 +1476,8 @@ contains
    allocate(ppsyns%theta_cj(beg:end))
    allocate(ppsyns%bbb(beg:end))
    allocate(ppsyns%mbb(beg:end))
+   allocate(ppsyns%gb_mol(beg:end))
+   allocate(ppsyns%gs_mol(beg:end,1:nlevcan))
 
    ppsyns%c3flag = .false.
    ppsyns%ac(beg:end,1:nlevcan) = nan
@@ -1493,6 +1495,8 @@ contains
    ppsyns%theta_cj(beg:end) = nan
    ppsyns%bbb(beg:end) = nan
    ppsyns%mbb(beg:end) = nan
+   ppsyns%gb_mol(beg:end) = nan
+   ppsyns%gs_mol(beg:end,1:nlevcan) = nan
 
   end subroutine init_pft_psynstate_type
 
@@ -3492,6 +3496,8 @@ contains
     allocate(ccs%totprodc(beg:end))
     allocate(ccs%totlitc(beg:end))
     allocate(ccs%totsomc(beg:end))
+    allocate(ccs%totlitc_1m(beg:end))
+    allocate(ccs%totsomc_1m(beg:end))
     allocate(ccs%totecosysc(beg:end))
     allocate(ccs%totcolc(beg:end))
 
@@ -3511,6 +3517,8 @@ contains
     ccs%totprodc(beg:end) = nan
     ccs%totlitc(beg:end) = nan
     ccs%totsomc(beg:end) = nan
+    ccs%totlitc_1m(beg:end) = nan
+    ccs%totsomc_1m(beg:end) = nan
     ccs%totecosysc(beg:end) = nan
     ccs%totcolc(beg:end) = nan
 
@@ -3564,6 +3572,8 @@ contains
     allocate(cns%totprodn(beg:end))
     allocate(cns%totlitn(beg:end))
     allocate(cns%totsomn(beg:end))
+    allocate(cns%totlitn_1m(beg:end))
+    allocate(cns%totsomn_1m(beg:end))
     allocate(cns%totecosysn(beg:end))
     allocate(cns%totcoln(beg:end))
 
@@ -3589,6 +3599,8 @@ contains
     cns%totprodn(beg:end) = nan
     cns%totlitn(beg:end) = nan
     cns%totsomn(beg:end) = nan
+    cns%totlitn_1m(beg:end) = nan
+    cns%totsomn_1m(beg:end) = nan
     cns%totecosysn(beg:end) = nan
     cns%totcoln(beg:end) = nan
 

@@ -21,6 +21,7 @@ module CNEcosystemDynMod
   public :: CNEcosystemDynInit   ! Ecosystem dynamics initialization
   public :: CNEcosystemDyn       ! Ecosystem dynamics: phenology, vegetation
 !
+!
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
 ! 19 May 2009: PET - modified to include call to harvest routine
@@ -103,7 +104,6 @@ contains
     use CNFireMod            , only: CNFireArea, CNFireFluxes
     use CNCStateUpdate3Mod   , only: CStateUpdate3
     use CNNStateUpdate3Mod   , only: NStateUpdate3
-    use CNBalanceCheckMod    , only: CBalanceCheck, NBalanceCheck
     use CNPrecisionControlMod, only: CNPrecisionControl
     use CNVegStructUpdateMod , only: CNVegStructUpdate
     use CNAnnualUpdateMod    , only: CNAnnualUpdate

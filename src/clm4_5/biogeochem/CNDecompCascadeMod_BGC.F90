@@ -14,9 +14,9 @@ module CNDecompCascadeMod_BGC
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
    use shr_const_mod, only: SHR_CONST_TKFRZ
-   use clm_varpar   , only: nlevsoi,nlevgrnd,nlevdecomp,ndecomp_cascade_transitions,ndecomp_pools 
+   use clm_varpar   , only: nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, nsompools
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-   use clm_varctl  , only: iulog
+   use clm_varctl  , only: iulog, spinup_state
    use clm_varcon, only: zsoi
 #ifdef LCH4
    use clm_varctl, only: anoxia
@@ -38,6 +38,10 @@ module CNDecompCascadeMod_BGC
    logical,  public :: anoxia_wtsat = .false.            ! true ==> weight anoxia by inundated fraction
 #endif
    integer, public :: nlev_soildecomp_standard           ! used here and in ch4Mod
+
+   !! parameters for AD spinup
+   real(r8), public, parameter :: spinup_vector(nsompools) = (/ 1.0_r8, 1.0_r8, 5.0_r8, 70.0_r8 /) ! multipliers for soil decomp during accelerated spinup
+
 !EOP
 !-----------------------------------------------------------------------
 
@@ -60,8 +64,6 @@ subroutine init_decompcascade(begc, endc)
 ! !USES:
    use clmtype
    use clm_time_manager    , only : get_step_size
-
-   use clm_varcon, only: spinup_vector
 
 ! !ARGUMENTS:
    implicit none
@@ -401,7 +403,7 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 ! !USES:
    use clmtype
    use clm_time_manager    , only : get_step_size
-   use clm_varcon, only: spinup_vector, secspday
+   use clm_varcon, only: secspday
 
    !
 ! !ARGUMENTS:
@@ -536,12 +538,12 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    ! The following code implements the acceleration part of the AD spinup
    ! algorithm, by multiplying all of the SOM decomposition base rates by 10.0.
 
-#if (defined AD_SPINUP)
+if ( spinup_state .eq. 1 ) then
    k_s1 = k_s1 * spinup_vector(1)
    k_s2 = k_s2 * spinup_vector(2)
    k_s3 = k_s3 * spinup_vector(3)
    k_s4 = k_s4 * spinup_vector(4)
-#endif
+endif
 
    i_litr1 = 1
    i_litr2 = 2

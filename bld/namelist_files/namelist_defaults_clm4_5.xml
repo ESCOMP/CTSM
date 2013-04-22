@@ -28,6 +28,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
 
+<!-- Spinup state -->
+<spinup_state bgc_spinup="on" >1</spinup_state>
+<spinup_state bgc_spinup="off">0</spinup_state>
+
 <!-- Supplmental Nitrogen mode -->
 <suplnitro bgc="cn"   crop="on" >NONE</suplnitro>
 <suplnitro bgc="cndv" crop="on" >NONE</suplnitro>

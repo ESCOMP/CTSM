@@ -207,12 +207,16 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
+   real(r8), pointer :: totlitc_1m(:)         ! (gC/m2) total litter carbon to 1 meter
+   real(r8), pointer :: totsomc_1m(:)         ! (gC/m2) total soil organic matter carbon to 1 meter
 
    real(r8), pointer :: woodc(:)              ! (gC/m2) pft-level wood C
    real(r8), pointer :: totcoln(:)            ! (gN/m2) total column nitrogen, incl veg
    real(r8), pointer :: totecosysn(:)         ! (gN/m2) total ecosystem nitrogen, incl veg
    real(r8), pointer :: totlitn(:)            ! (gN/m2) total litter nitrogen
    real(r8), pointer :: totsomn(:)            ! (gN/m2) total soil organic matter nitrogen
+   real(r8), pointer :: totlitn_1m(:)         ! (gN/m2) total litter nitrogen to 1 meter
+   real(r8), pointer :: totsomn_1m(:)         ! (gN/m2) total soil organic matter nitrogen to 1 meter
    real(r8), pointer :: dispvegc(:)           ! (gC/m2) displayed veg carbon, excluding storage and cpool
    real(r8), pointer :: pft_ctrunc(:)         ! (gC/m2) pft-level sink for C truncation
    real(r8), pointer :: storvegc(:)           ! (gC/m2) stored vegetation carbon, excluding cpool
@@ -402,12 +406,16 @@ subroutine CNiniTimeVar()
     totecosysc                     => clm3%g%l%c%ccs%totecosysc
     totlitc                        => clm3%g%l%c%ccs%totlitc
     totsomc                        => clm3%g%l%c%ccs%totsomc
+    totlitc_1m                     => clm3%g%l%c%ccs%totlitc_1m
+    totsomc_1m                     => clm3%g%l%c%ccs%totsomc_1m
     
     totcoln                        => clm3%g%l%c%cns%totcoln
     cwdn                           => clm3%g%l%c%cns%cwdn
     totecosysn                     => clm3%g%l%c%cns%totecosysn
     totlitn                        => clm3%g%l%c%cns%totlitn
     totsomn                        => clm3%g%l%c%cns%totsomn
+    totlitn_1m                     => clm3%g%l%c%cns%totlitn_1m
+    totsomn_1m                     => clm3%g%l%c%cns%totsomn_1m
     if ( use_c13 ) then
        seedc13                          => clm3%g%l%c%cc13s%seedc
        prod10c13                        => clm3%g%l%c%cc13s%prod10c
@@ -701,6 +709,8 @@ subroutine CNiniTimeVar()
          col_ctrunc(c) = 0._r8
          totlitc(c)    = 0._r8
          totsomc(c)    = 0._r8
+         totlitc_1m(c) = 0._r8
+         totsomc_1m(c) = 0._r8
          totecosysc(c) = 0._r8
          totcolc(c)    = 0._r8
 
@@ -787,6 +797,8 @@ subroutine CNiniTimeVar()
 #endif
          totlitn(c)    = 0._r8
          totsomn(c)    = 0._r8
+         totlitn_1m(c) = 0._r8
+         totsomn_1m(c) = 0._r8
          totecosysn(c) = 0._r8
          totcoln(c)    = 0._r8
          cwdn(c)       = 0._r8

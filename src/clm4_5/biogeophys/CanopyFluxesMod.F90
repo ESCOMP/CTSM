@@ -981,8 +981,13 @@ contains
       end do
 
       call Photosynthesis (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, dayl_factor, phase='sun')
+      if ( use_c13 ) then
+         call Fractionation (lbp, ubp, fn, filterp, phase='sun')
+      endif
       call Photosynthesis (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, dayl_factor, phase='sha')
-
+      if ( use_c13 ) then
+         call Fractionation (lbp, ubp, fn, filterp, phase='sha')
+      end if
       do f = 1, fn
          p = filterp(f)
          c = pcolumn(p)
@@ -1474,9 +1479,7 @@ contains
    real(r8) :: cf                ! s m**2/umol -> s/m
    real(r8) :: rsmax0            ! maximum stomatal resistance [s/m]
    real(r8) :: gb                ! leaf boundary layer conductance (m/s)
-   real(r8) :: gb_mol            ! leaf boundary layer conductance (umol H2O/m**2/s)
    real(r8) :: cs                ! CO2 partial pressure at leaf surface (Pa)
-   real(r8) :: gs_mol            ! leaf stomatal conductance (umol H2O/m**2/s)
    real(r8) :: gs                ! leaf stomatal conductance (m/s)
    real(r8) :: hs                ! fractional humidity at leaf surface (dimensionless)
    real(r8) :: sco               ! relative specificity of rubisco
@@ -1505,6 +1508,9 @@ contains
    real(r8),pointer :: ap(:,:)           ! product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
    real(r8),pointer :: ag(:,:)           ! co-limited gross leaf photosynthesis (umol CO2/m**2/s)
    real(r8),pointer :: an(:,:)           ! net leaf photosynthesis (umol CO2/m**2/s)
+   real(r8),pointer :: gs_mol(:,:)       ! leaf stomatal conductance (umol H2O/m**2/s)
+   real(r8),pointer :: gb_mol(:)         ! leaf boundary layer conductance (umol H2O/m**2/s)
+
    real(r8) :: ai                  ! intermediate co-limited photosynthesis (umol CO2/m**2/s)
 
    real(r8) :: psn_wc_z(lbp:ubp,nlevcan) ! Rubisco-limited contribution to psn_z (umol CO2/m**2/s)
@@ -1592,6 +1598,8 @@ contains
    ap     => clm3%g%l%c%p%ppsyns%ap
    ag     => clm3%g%l%c%p%ppsyns%ag
    an     => clm3%g%l%c%p%ppsyns%an   
+   gb_mol => clm3%g%l%c%p%ppsyns%gb_mol   
+   gs_mol => clm3%g%l%c%p%ppsyns%gs_mol
    vcmax_z=> clm3%g%l%c%p%ppsyns%vcmax_z
    cp     => clm3%g%l%c%p%ppsyns%cp
    kc     => clm3%g%l%c%p%ppsyns%kc
@@ -1894,7 +1902,7 @@ contains
 
       cf = forc_pbot(g)/(rgas*1.e-3_r8*tgcm(p))*1.e06_r8
       gb = 1._r8/rb(p)
-      gb_mol = gb * cf
+      gb_mol(p) = gb * cf
 
       ! Loop through canopy layers (above snow). Only do calculations if daytime
 
@@ -1951,30 +1959,24 @@ contains
 
             ciold = ci_z(p,iv)
             !find ci and stomatal conductance
-            call hybrid(ciold, p, iv, g, gb_mol, je, cair(p), oair(p), &
-               lmr_z(p,iv), par_z(p,iv), rh_can, gs_mol, niter)
+            call hybrid(ciold, p, iv, g, gb_mol(p), je, cair(p), oair(p), &
+               lmr_z(p,iv), par_z(p,iv), rh_can, gs_mol(p,iv), niter)
 
 
             ! End of ci iteration.  Check for an < 0, in which case gs_mol = bbb
 
-            if (an(p,iv) < 0._r8) gs_mol = bbb(p)
+            if (an(p,iv) < 0._r8) gs_mol(p,iv) = bbb(p)
 
             ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
-            cs = cair(p) - 1.4_r8/gb_mol * an(p,iv) * forc_pbot(g)
+            cs = cair(p) - 1.4_r8/gb_mol(p) * an(p,iv) * forc_pbot(g)
             cs = max(cs,1.e-06_r8)
-            ci_z(p,iv) = cair(p) - an(p,iv) * forc_pbot(g) * (1.4_r8*gs_mol+1.6_r8*gb_mol) / (gb_mol*gs_mol)
+            ci_z(p,iv) = cair(p) - an(p,iv) * forc_pbot(g) * (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv))
 
             ! Convert gs_mol (umol H2O/m**2/s) to gs (m/s) and then to rs (s/m)
 
-            gs = gs_mol / cf
+            gs = gs_mol(p,iv) / cf
             rs_z(p,iv) = min(1._r8/gs, rsmax0)
-
-            !!! C13
-            if ( use_c13 ) then
-               alphapsn(p) = 1._r8 + (((c3psn(ivt(p)) * (4.4_r8 + (22.6_r8*(ci_z(p,iv)/cair(p))))) + &
-                             ((1._r8 - c3psn(ivt(p))) * 4.4_r8))/1000._r8)
-            end if 
 
             ! Photosynthesis. Save rate-limiting photosynthesis
 
@@ -1993,23 +1995,23 @@ contains
 
             ! Make sure iterative solution is correct
 
-            if (gs_mol < 0._r8) then
+            if (gs_mol(p,iv) < 0._r8) then
                write (iulog,*) 'Negative stomatal conductance:'
-               write (iulog,*) gs_mol
+               write (iulog,*) gs_mol(p,iv)
                call endrun()
             end if
 
             ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
 
-            hs = (gb_mol*ceair + gs_mol*esat_tv(p)) / ((gb_mol+gs_mol)*esat_tv(p))
+            hs = (gb_mol(p)*ceair + gs_mol(p,iv)*esat_tv(p)) / ((gb_mol(p)+gs_mol(p,iv))*esat_tv(p))
 !KO
             rh_leaf(p) = hs
 !KO
             gs_mol_err = mbb(p)*max(an(p,iv), 0._r8)*hs/cs*forc_pbot(g) + bbb(p)
 
-            if (abs(gs_mol-gs_mol_err) > 1.e-01_r8) then
+            if (abs(gs_mol(p,iv)-gs_mol_err) > 1.e-01_r8) then
                write (iulog,*) 'Ball-Berry error check - stomatal conductance error:'
-               write (iulog,*) gs_mol, gs_mol_err
+               write (iulog,*) gs_mol(p,iv), gs_mol_err
             end if
 
          end if    ! night or day if branch
@@ -2540,6 +2542,8 @@ contains
    
    return
    end function ft
+
+
 !-------------------------------------------------------------------------------   
 !BOP
 !
@@ -2571,6 +2575,8 @@ contains
    ans = cc / ( 1._r8 + exp( (-hd+se*tl) / (rgas*1.e-3_r8*tl) ) )
    return
    end function fth
+
+
 !-------------------------------------------------------------------------------   
 !BOP
 !
@@ -2604,4 +2610,92 @@ contains
    return
    
    end function fth25
+
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: Fractionation
+!
+! !INTERFACE:
+   subroutine Fractionation(lbp, ubp, fn, filterp, phase)
+                              
+! !DESCRIPTION:
+! C13 fractionation during photosynthesis is calculated here after the nitrogen
+! limitation is taken into account in the CNAllocation module.
+     
+! !USES:
+   use clm_varctl         , only: use_c13
+   use clmtype
+   use clm_atmlnd         , only : clm_a2l  
+   use shr_kind_mod       , only : r8 => shr_kind_r8
+   implicit none
+
+! !ARGUMENTS:
+   integer, intent(in)          :: lbp, ubp                    ! pft bounds
+   integer, intent(in)          :: fn                   ! size of pft filter
+   integer, intent(in)          :: filterp(fn)          ! pft filter
+   character(len=*), intent(in) :: phase           ! 'sun' or 'sha'
+   
+! !CALLED FROM:
+! subroutine CanopyFluxes in this module
+
+! !LOCAL VARIABLES:
+!
+! local pointers to implicit in variables
+   integer , pointer :: pgridcell(:)! pft's gridcell index
+   integer , pointer :: ivt(:)      ! pft vegetation type
+   real(r8), pointer :: c3psn(:)    ! photosynthetic pathway: 0. = c4, 1. = c3
+   integer , pointer :: nrad(:)     ! number of canopy layers, above snow for radiative transfer
+   real(r8), pointer :: par_z(:,:)  ! par absorbed per unit lai for canopy layer (w/m**2)
+   real(r8), pointer :: forc_pco2(:)   ! partial pressure co2 (Pa)
+   real(r8), pointer :: downreg(:)               ! fractional reduction in GPP due to N limitation (DIM)   
+   real(r8), pointer :: alphapsn(:)
+   real(r8), pointer :: forc_pbot(:)! atmospheric pressure (Pa)
+   real(r8), pointer :: an(:,:)           ! net leaf photosynthesis (umol CO2/m**2/s)
+   real(r8), pointer :: gs_mol(:,:)       ! leaf stomatal conductance (umol H2O/m**2/s)
+   real(r8), pointer :: gb_mol(:)         ! leaf boundary layer conductance (umol H2O/m**2/s)
+
+! !OTHER LOCAL VARIABLES:
+!   
+   integer  :: f,p,g,iv              ! indices
+   real(r8) :: co2(lbp:ubp)          ! atmospheric co2 partial pressure (pa)
+   real(r8) :: ci
+!------------------------------------------------------------------------------
+
+   pgridcell      => clm3%g%l%c%p%gridcell
+   nrad           => clm3%g%l%c%p%pps%nrad
+   forc_pbot      => clm_a2l%forc_pbot
+   forc_pco2      => clm_a2l%forc_pco2      
+   c3psn          => pftcon%c3psn
+   ivt            => clm3%g%l%c%p%itype
+   downreg        => clm3%g%l%c%p%pepv%downreg
+   an             => clm3%g%l%c%p%ppsyns%an   
+   gb_mol         => clm3%g%l%c%p%ppsyns%gb_mol   
+   gs_mol         => clm3%g%l%c%p%ppsyns%gs_mol
+
+   if (phase == 'sun') then
+      par_z       => clm3%g%l%c%p%pef%parsun_z
+      alphapsn    => clm3%g%l%c%p%pps%alphapsnsun 
+   else if (phase == 'sha') then
+      par_z       => clm3%g%l%c%p%pef%parsha_z
+      alphapsn    => clm3%g%l%c%p%pps%alphapsnsha               
+   end if
+
+   do f = 1, fn
+      p = filterp(f)
+      g= pgridcell(p)
+      co2(p) = forc_pco2(g)
+      do iv = 1,nrad(p)
+         if (par_z(p,iv) <= 0._r8) then           ! night time
+            alphapsn(p) = 1._r8
+         else                                     ! day time
+            ci = co2(p) - ((an(p,iv) * (1._r8-downreg(p)) )* forc_pbot(g) * (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv)))
+            alphapsn(p) = 1._r8 + (((c3psn(ivt(p)) * (4.4_r8 + (22.6_r8*(ci/co2(p))))) + ((1._r8 - c3psn(ivt(p))) * 4.4_r8))/1000._r8)
+         end if
+      end do        
+   end do
+
+   end subroutine Fractionation
+
 end module CanopyFluxesMod

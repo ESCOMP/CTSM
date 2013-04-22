@@ -12,17 +12,13 @@ Specifies either clm4_0 or clm4_5 physics
 </entry>
 
 <entry id="spinup" 
-       valid_values="Enter-AD,AD,exit,AD2Lesser,LesserAD,LesserAD-exit,normal" 
+       valid_values="AD,exit,normal" 
        value="normal" 
        category="bgc">
+CLM 4.0 Only. For CLM 4.5, spinup is controlled from build-namelist.
 Spinup mode for the CN Carbon Nitrogen BGC model
-   Enter-AD      enter into accelerated decomposition spinup with existing initial 
-                 conditions
    AD            turn on accelerated decomposition spinup for CN biogeochemistry model
    exit          jump from AD spinup mode to normal mode
-   AD2Lesser     jump from AD spinup mode to Lesser AD mode
-   LesserAD      turn on lesser accelerated decomposition
-   LesserAD-exit jump from lesser AD to normal mode
    normal        no acceleration of decompositon (i.e. "final spinup")
 </entry>
 
