@@ -1,4 +1,135 @@
 ===============================================================
+Tag name:  clm4_0_77
+Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
+Date: Tue Apr 23 11:38:45 MDT 2013
+One-line Summary: fix carbon balance bug in transient runs with VERTSOI, and fix Soil Hydrology bug
+
+Purpose of changes:
+
+Fix two bugs:
+
+(1) In transient CLM45 runs with VERTSOI, a carbon balance error
+    occurred due to two routines being called with updated filters
+    when they should have been called with filters set at their values
+    from the previous time step. This bug has existed since clm4_0_62.
+
+(2) A potential for an array out-of-bounds error (which could show up
+    as garbage results if array bounds checking was off) which showed
+    up in rare circumstances (e.g., a single grid cell in Greenland in
+    a 1-year test run)
+
+Requirements for tag: Fix bugs 1663, 1664
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+
+    1663 (array bounds error in SoilHydrologyMod)
+    1664 (carbon balance errors)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+========= Fix for bug 1664
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+
+========= Fix for bug 1663
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+
+Machines testing ran on:  (Tests in priority order)
+  Standard Tag Pretag ***                    Standard Tag Posttag **
+
+  build-namelist unit tester:   no
+
+  CESM test lists:
+
+    yellowstone/CESM:              yes
+
+      All PASS or xFAIL; all component_gen_comp comparisons pass or BFAIL1
+
+    yellowstone/CESM/allIcompsets: no
+
+    frankfurt/CESM:            yes
+
+      All PASS or xFAIL
+
+  test_system testing:
+
+    yellowstone batch:          no
+    frankfurt interactive:      no
+    yellowstone interactive:    no
+    lynx batch:                 no
+    lynx interactive:           no
+    frankfurt batch:            no
+
+  test_driver.sh tools testing:
+
+    lynx interactive:           no
+    yellowstone interactive:    no
+
+  yellowstone/PTCLM:            no
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_76
+
+Changes answers relative to baseline: YES, potentially (though none
+observed in standard testing)
+
+  Answer changes are possible in any CLM45 case due to the SoilHydrology
+  bug fix (1663). This changes answers only in rare situations where the
+  water table comes near the surface (e.g., in a 1-year test run, this only
+  happened in one grid cell in Greenland)
+
+  In addition, the following answer changes are expected due to the fix for
+  bug 1664:
+
+  (1) CLM45 transient with VERTSOI (i.e., BGC). Implementing this change in
+      clm4_0_62 (the first tag that exhibited bug 1664), clm4_0_62-withFix
+      was identical to clm4_0_61 for this configuration. But clm4_0_77 will
+      differ from clm4_0_76 for this configuration.
+
+  (2) Answers are changed for CLM45 CNDV with VERTSOI (i.e., BGCDV). It
+      appears that this configuration was buggy before this tag (e.g.,
+      restarts weren't exact), so this tag changes answers in a way that
+      seems to fix this configuration.
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? NOT DONE 
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_76
 Originator(s):  muszala (Stefan Muszala)
 Date: Mon Apr 22 13:36:26 MDT 2013

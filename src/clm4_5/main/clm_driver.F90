@@ -317,6 +317,31 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
    end do
 !$OMP END PARALLEL DO
 
+
+   ! ==================================================================================
+   ! Determine decomp vertical profiles
+   !
+   ! These routines (alt_calc & decomp_vertprofiles) need to be called before
+   ! pftdyn_cnbal, and it appears that they need to be called before pftdyn_interp and
+   ! the associated filter updates, too (otherwise we get a carbon balance error)
+   ! ==================================================================================
+
+!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
+   do nc = 1,nclumps
+      call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
+      
+      call t_startf("decomp_vert")
+      call alt_calc(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
+
+#if (defined CN)
+      call decomp_vertprofiles(begp, endp, begc, endc, filter(nc)%num_soilc, filter(nc)%soilc, filter(nc)%num_soilp, filter(nc)%soilp)
+#endif
+
+      call t_stopf("decomp_vert")
+   end do
+!$OMP END PARALLEL DO
+
+
 #if (!defined CNDV)
    if (fpftdyn /= ' ') then
       call t_startf("pftdyn_interp")
@@ -381,7 +406,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 #if (defined CNDV)
      ! NOTE: Currently CNDV and fpftdyn /= ' ' are incompatible
      call CNZeroFluxes_dwt( begc, endc, begp, endp )
-     call alt_calc(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
      call pftwt_interp( begp, endp )
      call reweightWrapup(nc)
      call pftdyn_wbal( begg, endg, begc, endc, begp, endp )
@@ -390,15 +414,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 
 #if (defined CN)
      call CNZeroFluxes_dwt( begc, endc, begp, endp )
-#endif
-
-     call alt_calc(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
-
-#if (defined CN)
-     call decomp_vertprofiles(begp, endp, begc, endc, filter(nc)%num_soilc, filter(nc)%soilc, filter(nc)%num_soilp, filter(nc)%soilp)
-#endif
-     
-#if (defined CN)     
      if (fpftdyn /= ' ') then
         call pftdyn_cnbal( begc, endc, begp, endp )
      end if

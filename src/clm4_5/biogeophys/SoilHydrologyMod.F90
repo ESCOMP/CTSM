@@ -1316,13 +1316,12 @@ contains
                *s1**(2._r8*bsw(c,jwt(c)+1)+3._r8)
           
           ! Recharge rate qcharge to groundwater (positive to aquifer)
-          smp1 = -sucsat(c,jwt(c))*s1**(-bsw(c,jwt(c)))
-          smp1 = max(smpmin(c), smp(c,jwt(c)))
-          wh      = smp1 - zq(c,jwt(c))
+          smp1 = max(smpmin(c), smp(c,max(1,jwt(c))))
+          wh      = smp1 - zq(c,max(1,jwt(c)))
           
           !scs: original formulation
-          if(zwt(c) <= zi(c,jwt(c))) then
-             qcharge(c) = -ka * (wh_zwt-wh)  /((zwt(c)+1e-3)*1000._r8)
+          if(jwt(c) == 0) then
+             qcharge(c) = -ka * (wh_zwt-wh)  /((zwt(c)+1.e-3)*1000._r8)
           else
              !             qcharge(c) = -ka * (wh_zwt-wh)/((zwt(c)-z(c,jwt(c)))*1000._r8)
              !scs: 1/2, assuming flux is at zwt interface, saturation deeper than zwt
