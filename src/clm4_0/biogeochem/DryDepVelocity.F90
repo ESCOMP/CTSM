@@ -60,7 +60,8 @@ Module DryDepVelocity
   use seq_drydep_mod,       only : n_drydep, drydep_list
   use seq_drydep_mod,       only : drydep_method, DD_XLND
   use seq_drydep_mod,       only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx, &
-                                   index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx
+                                   index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx, &
+                                   index_xpan=>xpan_ndx
   implicit none 
   save 
 
@@ -200,7 +201,7 @@ CONTAINS
     ! Assign local pointers to derived subtypes components (column-level) 
     forc_t     => clm_a2l%forc_t
     forc_q     => clm_a2l%forc_q
-    forc_psrf  => clm_a2l%forc_psrf
+    forc_psrf  => clm_a2l%forc_pbot
     forc_rain  => clm_a2l%forc_rain 
 
     latdeg     => grc%latdeg
@@ -449,7 +450,7 @@ CONTAINS
              !-------------------------------------------------------------------------------------
              ! jfl : special case for PAN
              !-------------------------------------------------------------------------------------
-             if( ispec == index_pan ) then
+             if( ispec == index_pan .or. ispec == index_xpan ) then
                 dv_pan =  c0_pan(wesveg) * (1._r8 - exp( -k_pan(wesveg)*(dewm*rs*drat(ispec))*1.e-2_r8 ))
                 if( dv_pan > 0._r8 .and. index_season /= 4 ) then
                    rsmx(ispec) = ( 1._r8/dv_pan )
@@ -554,7 +555,7 @@ CONTAINS
              select case( drydep_list(ispec) )
              case ( 'SO4' )
                 velocity(pi,ispec) = (1._r8/(ram1(pi)+rds))*100._r8
-             case ( 'NH4','NH4NO3' )
+             case ( 'NH4','NH4NO3','XNH4NO3' )
                 velocity(pi,ispec) = (1._r8/(ram1(pi)+0.5_r8*rds))*100._r8
              case ( 'Pb' )
                 velocity(pi,ispec) = 0.2_r8

@@ -1029,7 +1029,7 @@ File containing MEGAN emissions factors. Includes the list of MEGAN compounds th
 used in the Comp_Name variable on the file.
 </entry>
 
-<entry id="megan_specifier" type="char*512(100)" category="drv_physics"
+<entry id="megan_specifier" type="char*1024(100)" category="drv_physics"
        group="megan_emis_nl" valid_values="" >
 MEGAN specifier. This is in the form of: Chem-compound = megan_compound(s)
 where megan_compound(s) can be the sum of megan compounds with a "+" between them.

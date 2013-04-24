@@ -122,7 +122,6 @@ contains
     real(r8), pointer :: elai(:)          ! one-sided leaf area index with burying by snow
     real(r8), pointer :: clayfrac(:)      ! fraction of soil that is clay
     real(r8), pointer :: sandfrac(:)      ! fraction of soil that is sand
-    real(r8), pointer :: landfrac(:)      ! fraction of gridbox that is land
     real(r8), pointer :: forc_solad(:,:)  ! direct beam radiation (visible only)
     real(r8), pointer :: forc_solai(:,:)  ! diffuse radiation     (visible only)
     real(r8), pointer :: elai_p(:)        ! one-sided leaf area index from previous timestep
@@ -243,7 +242,6 @@ contains
     elai             => clm3%g%l%c%p%pps%elai
     clayfrac         => clm3%g%l%c%p%pps%clayfrac
     sandfrac         => clm3%g%l%c%p%pps%sandfrac
-    landfrac         => ldomain%frac 
 
     cisun_z          => clm3%g%l%c%p%pcf%cisun_z
     cisha_z          => clm3%g%l%c%p%pcf%cisha_z
@@ -313,6 +311,9 @@ contains
 
     topt_out(lbp:ubp) = spval
     Eopt_out(lbp:ubp) = spval
+
+    ! initalize to zero since this might not alway get set
+    vocflx_meg(:) = 0._r8
 
     ! Begin loop over points
     !_______________________________________________________________________________
@@ -391,13 +392,12 @@ contains
 
                 vocflx_meg(imeg) = epsilon * gamma * megemis_units_factor / meg_cmp%molec_weight ! moles/m2/sec
 
-                ! assign to arrays for history file output (normalize to landfrac area 
-                ! so that get emissions right at the coast)
+                ! assign to arrays for history file output (not weighted by landfrac)
                 meg_out(imeg)%flux_out(p) = meg_out(imeg)%flux_out(p) &
-                                          + epsilon * gamma * megemis_units_factor*landfrac(g)*1.e-3_r8 ! Kg/m2/sec
+                                          + epsilon * gamma * megemis_units_factor*1.e-3_r8 ! Kg/m2/sec
 
                 if (imeg==1) then 
-                   ! should these be weighted by landfrac also ??
+                   ! 
                    gamma_out(p)=gamma
                    gammaP_out(p)=gamma_p
                    gammaT_out(p)=gamma_t
@@ -442,9 +442,6 @@ contains
           enddo
 
        end if ! ivt(1:15 only)
-
-       ! weight with land fraction...
-       vocflx_tot(p) = vocflx_tot(p)*landfrac(g)
 
     enddo ! fp 
 
