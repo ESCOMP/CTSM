@@ -53,7 +53,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon           >lnd/clm2/pftdata/pft-physiology.c110425.nc</fpftcon>
+<fpftcon           >lnd/clm2/pftdata/pft-physiology.clm40.c130424.nc</fpftcon>
 
 <!-- Initial files at 0.47x0.63 resolution -->
 <finidat hgrid="0.47x0.63"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" 

@@ -47,7 +47,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <albice glc_nec="36">0.60,0.40</albice>
 
 <!-- Default urban air conditioning/heating and wasteheat -->
-<urban_hac>ON_WASTEHEAT</urban_hac>
+<urban_hac>ON</urban_hac>
 
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
@@ -62,7 +62,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon           >lnd/clm2/pftdata/pft-physiology.c121025.nc</fpftcon>
+<fpftcon           >lnd/clm2/pftdata/pft-physiology.c130424.nc</fpftcon>
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
 <fsurdat hgrid="10x15"         sim_year="1000" crop="off" >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc

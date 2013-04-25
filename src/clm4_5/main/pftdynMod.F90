@@ -312,8 +312,9 @@ contains
     integer  :: ier              ! error status
     integer  :: lbc,ubc
     real(r8) :: wt1              ! time interpolation weights
-    real(r8), pointer :: wtpfttot1(:)           ! summation of pft weights for renormalization
-    real(r8), pointer :: wtpfttot2(:)           ! summation of pft weights for renormalization
+    real(r8), pointer :: wtpfttot1(:)            ! summation of pft weights for renormalization
+    real(r8), pointer :: wtpfttot2(:)            ! summation of pft weights for renormalization
+    real(r8), parameter :: wtpfttol = 1.e-10     ! tolerance for pft weight renormalization
     type(gridcell_type), pointer :: gptr         ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(pft_type)     , pointer :: pptr         ! pointer to pft derived subtype
@@ -420,7 +421,8 @@ contains
        g = pptr%gridcell(p)
        l = pptr%landunit(p)
        if (lptr%itype(l) == istsoil .or. lptr%itype(l) == istcrop) then
-          if (wtpfttot2(c) .ne. 0) then
+          if (wtpfttot2(c) /= 0 .and. &
+              abs(wtpfttot1(c)-wtpfttot2(c)) > wtpfttol) then
              pptr%wtgcell(p)   = (wtpfttot1(c)/wtpfttot2(c))*pptr%wtgcell(p)
              pptr%wtlunit(p)   = pptr%wtgcell(p) / lptr%wtgcell(l)
              pptr%wtcol(p)     = pptr%wtgcell(p) / lptr%wtgcell(l)

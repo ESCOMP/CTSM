@@ -1,4 +1,121 @@
 ===============================================================
+Tag name:  clm4_0_79
+Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
+Date: Wed Apr 24 20:27:01 MDT 2013
+One-line Summary: pftdyn, pft-phys*.nc and datm8 update
+
+Purpose of changes: From Erik:: -  update Don't re-weight pftdyn if weights are essentially identical (Both CLM40 AND CLM45).
+   - Turn wasteheat to "ON" in CLM45. (namelist change) (done)
+   - Change from Sam Levis for CROP to pft-physiology file so that CROP parameter is in Kelvin rather than Celsius (both CLM40 and CLM45).
+   - Change datm so that LWDN is NOT read from files for CRUNCEP (datm8_130424).
+
+Requirements for tag: fix bug 1621
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID): fixed 1621
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: turn waste heat on in clm4_5
+
+List any changes to the defaults for the boundary datasets: change pft-phys files for 4_0 and 4_5
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self, Erik, Dave Lawrence
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+< models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_130424
+---
+> models/atm/datm                 https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_130325
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+M SVN_EXTERNAL_DIRECTORIES
+    update to datm8_130424
+
+M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml
+  - $CSMDATA/lnd/clm2/pftdata/pft-physiology.clm40.c130424.nc
+M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+  - change <urban_hac>ON_WASTEHEAT</urban_hac> to <urban_hac>ON</urban_hac>
+  - use $CSMDATA/lnd/clm2/pftdata/pft-physiology.c130424.nc
+
+M models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+M models/lnd/clm/src/clm4_0/main/pftdynMod.F90
+  - change wtpfttot2 check
+
+M models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+  - syntax clean up - caught by Ben Andre
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   OK.  many expected failures due to new pft-physiology files.  Should pass next time.
+
+  CESM test lists:
+    Many nlcomp failures:
+    clm4_5:
+       NEW:         fpftcon = '/fs/cgd/csm/inputdata/lnd/clm2/pftdata/pft-physiology.c130424.nc'
+       BASELINE:  fpftcon = '/fs/cgd/csm/inputdata/lnd/clm2/pftdata/pft-physiology.c121025.nc'
+       NEW:         urban_hac = 'ON'
+       BASELINE:  urban_hac = 'ON_WASTEHEAT'
+    clm4_0:
+       NEW:         fpftcon = '/fs/cgd/csm/inputdata/lnd/clm2/pftdata/pft-physiology.clm40.c130424.nc'
+       BASELINE:  fpftcon = '/fs/cgd/csm/inputdata/lnd/clm2/pftdata/pft-physiology.c110425.nc'
+
+    component_gen_comp: all PASS or BFAIL1
+    summarize_cprnc_diffs: differences in CLM files
+
+    yellowstone/CESM:
+      intel: OK.  Expected failures for compare_hist (should pass next time)
+         FAIL  ERS_D.f19_g16.IGRCP26CN.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+         FAIL  ERS_D.f19_g16.IRCP85CN.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+         FAIL  ERS_E.f19_g16.I1850CRUCLM45CN.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+         FAIL  ERS_Lm3.f19_g16.IGRCP60CN.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+         FAIL  NCK.f10_f10.ICRUCLM45.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+         FAIL  PET_PT.f10_f10.I20TRCN.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+         FAIL  SMS.f19_g16.IRCP45CN.yellowstone_intel.GC.222079.compare_hist.clm4_0_78 
+      pgi  : OK.  Expected failures for compare_hist (should pass next time)
+         FAIL  ERS_D.hcru_hcru.I_2000_CRUFRC_CLM45_CN.yellowstone_pgi.GC.111079.compare_hist.clm4_0_78 
+         FAIL  ERS_D.hcru_hcru.I_2000_CRUFRC_CN.yellowstone_pgi.GC.111079.compare_hist.clm4_0_78 
+         FAIL  PET_PT.f10_f10.I20TRCN.yellowstone_pgi.GC.111079.compare_hist.clm4_0_78 
+
+    frankfurt/CESM: 
+      intel: OK.  Expected failures for compare_hist (should pass next time)
+        FAIL  SMS.f10_f10.IRCP26CN.frankfurt_intel.GC.pft79.compare_hist.clm4_0_78 
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_78
+
+Changes answers relative to baseline: yes
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):  same climate
+      -in coupler history files: l2x_Sl_*, l2x_Fall,  x2l_Slrr* and some r2x_* fields change
+      -in clm history files: for these tests only differences seen in IGRCP60CN
+	
+===============================================================
+===============================================================
 Tag name:  clm4_0_78
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Tue Apr 23 19:25:18 MDT 2013

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_79      muszala 04/24/2013 pftdyn, pft-phys*.nc and datm8 update
    clm4_0_78      muszala 04/23/2013 MEGAN fixes
    clm4_0_77        sacks 04/23/2013 fix carbon balance bug in transient runs with VERTSOI, and fix Soil Hydrology bug
    clm4_0_76      muszala 04/22/2013 spinup changes from Charlie Koven (part 1)

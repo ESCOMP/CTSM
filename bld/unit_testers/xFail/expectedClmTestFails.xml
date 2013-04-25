@@ -117,11 +117,11 @@
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"              failType="FAIL"></entry>
                <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"              failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
                <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                  failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
-               <entry testId "SMS_RLA.f45_f45.I"                               failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
-               <entry testId "SMS_RLA.f45_f45.ICLM45"                          failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
-               <entry testId "SMS_ROA.f45_f45.I"                               failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
-               <entry testId "SMS_ROA.f45_f45.ICLM45"                          failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
-               <entry testId "PET_D_P1x30.ne30_g16.ICN"                        failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="SMS_RLA.f45_f45.I"                               failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="SMS_RLA.f45_f45.ICLM45"                          failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="SMS_ROA.f45_f45.I"                               failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="SMS_ROA.f45_f45.ICLM45"                          failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="PET_D_P1x30.ne30_g16.ICN"                        failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
 
                <entry testId="SMS_Ln48_D.f09_g16.ICLM45CNEXSPIN"               failType="FAIL">NOT BEING TESTED</entry>
                <entry testId="ERS_E.f19_g16.ICLM451850"                        failType="FAIL">NOT BEING TESTED</entry>
@@ -133,14 +133,14 @@
                <entry testId="SMS.T31_g37.IG4804CLM45"        failType="FAIL" >checkWeights error, probably due to old-format urban on surface dataset</entry>
                <entry testId="SMS.1x1_numaIA.ICLM45CNCROP"    failType="FAIL" >check_dim ERROR for lsmpft (21 vs 25)</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"    failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId "SMS_RLB.f45_f45.I"              failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
-               <entry testId "SMS_RLB.f45_f45.ICLM45"         failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="SMS_RLB.f45_f45.I"              failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
+               <entry testId="SMS_RLB.f45_f45.ICLM45"         failType="CFAIL">will not compile due to mpi-serial problems with pio1_6_6</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
             <INTEL>
               <entry testId="ERI_D.T31_g37.I1850CLM45"                 failType="FAIL" >surfrd_wtxy_veg_all ERROR: sum(pct) over numpft+1 is not = 100.</entry>
-              <entry testId "ERS_Lm3.1x1_numaIA.ICLM45CN"              failType="RUN">check_dim ERROR: mismatch of input dimension 21  with expected value 25 for variable lsmpft</entry>
+              <entry testId="ERS_Lm3.1x1_numaIA.ICLM45CN"              failType="RUN">check_dim ERROR: mismatch of input dimension 21  with expected value 25 for variable lsmpft</entry>
               <entry testId="SMS.f10_f10.IRCP45CLM45CN"                failType="FAIL ">local filename has zero length</entry>
             </INTEL>
          </frankfurt>
