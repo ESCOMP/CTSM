@@ -128,10 +128,21 @@ module pftvarcon
   real(r8):: pprod10(0:mxpft)      !proportion of deadstem to 10-yr product pool
   real(r8):: pprod100(0:mxpft)     !proportion of deadstem to 100-yr product pool
   real(r8):: pprodharv10(0:mxpft)  !harvest mortality proportion of deadstem to 10-yr pool
-
-  ! new pft parameters for CN-fire code
-  real(r8):: resist(0:mxpft)       !resistance to fire (no units)
-  ! new pft parameters for crop code
+  ! pft paraemeters for fire code
+  real(r8):: cc_leaf(0:mxpft)
+  real(r8):: cc_lstem(0:mxpft)
+  real(r8):: cc_dstem(0:mxpft)
+  real(r8):: cc_other(0:mxpft)
+  real(r8):: fm_leaf(0:mxpft)
+  real(r8):: fm_lstem(0:mxpft)
+  real(r8):: fm_dstem(0:mxpft)
+  real(r8):: fm_other(0:mxpft)
+  real(r8):: fm_root(0:mxpft)
+  real(r8):: fm_lroot(0:mxpft)
+  real(r8):: fm_droot(0:mxpft)
+  real(r8):: fsr_pft(0:mxpft)
+  real(r8):: fd_pft(0:mxpft)
+  ! pft parameters for crop code
   real(r8):: fertnitro(0:mxpft)    !fertilizer
   real(r8):: fleafcn(0:mxpft)      !C:N during grain fill; leaf
   real(r8):: ffrootcn(0:mxpft)     !C:N during grain fill; fine root
@@ -194,7 +205,7 @@ contains
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
-!
+!F. Li and S. Levis (11/06/12)
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -344,8 +355,6 @@ contains
     if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
     call ncd_io('season_decid',season_decid, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
-    call ncd_io('resist',resist, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
     call ncd_io('pftpar20',pftpar20, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
     call ncd_io('pftpar28',pftpar28, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -417,6 +426,32 @@ contains
     call ncd_io('grnfill',grnfill, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
     call ncd_io('mxmat',mxmat, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('cc_leaf', cc_leaf, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('cc_lstem',cc_lstem, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('cc_dstem',cc_dstem, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('cc_other',cc_other, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_leaf', fm_leaf, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_lstem',fm_lstem, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_dstem',fm_dstem, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_other',fm_other, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_root', fm_root, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_lroot',fm_lroot, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fm_droot',fm_droot, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fsr_pft', fsr_pft, 'read', ncid, readvar=readv)  
+    if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
+    call ncd_io('fd_pft',  fd_pft, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )
     call ncd_io('planting_temp',planttemp, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun( trim(subname)//' ERROR: error in reading in pft data' )

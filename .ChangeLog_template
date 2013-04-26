@@ -48,17 +48,10 @@ Machines testing ran on:  (Tests in priority order)
 
   CESM test lists:
 
-    yellowstone/CESM:              yes/no ***
-    yellowstone/CESM/allIcompsets: yes/no
-
-  test_system testing:
-
-    yellowstone batch:          yes/no **
-    frankfurt interactive:      yes/no **
-    yellowstone interactive:    yes/no
-    lynx batch:                 yes/no
-    lynx interactive:           yes/no
-    frankfurt batch:            yes/no
+    yellowstone/aux_clm     intel       yes ***
+    frankfurt/aux_clm_int   intel       yes ***
+    yellowstone/aux_clm     pgi         yes **
+    frankfurt/aux_clm       intel       yes **
 
   test_driver.sh tools testing:
 

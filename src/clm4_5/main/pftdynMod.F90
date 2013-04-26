@@ -43,7 +43,8 @@ module pftdynMod
 ! Created by Peter Thornton
 ! slevis modified to handle CNDV and crop model
 ! 19 May 2009: PET - modified to handle harvest fluxes
-!
+! F. Li and S. Levis (11/06/12)
+
 !EOP
 !
 ! ! PRIVATE TYPES
@@ -57,6 +58,8 @@ module pftdynMod
   integer :: ntimes
   logical :: do_harvest
   type(file_desc_t)  :: ncid   ! netcdf id
+  ! default multiplication factor for epsilon for error checks
+  real(r8), private, parameter :: eps_fact = 2._r8
 !---------------------------------------------------------------------------
 
 contains
@@ -108,7 +111,6 @@ contains
     character(len=256) :: locfn                 ! local file name
     character(len= 32) :: subname='pftdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
-
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     ! Error check
@@ -318,13 +320,14 @@ contains
     type(gridcell_type), pointer :: gptr         ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(pft_type)     , pointer :: pptr         ! pointer to pft derived subtype
+    type(column_type),   pointer :: cptr         ! F. Li and S. Levis
     character(len=32) :: subname='pftdyn_interp' ! subroutine name
+    logical  :: readvar    ! F. Li and S. Levis
 !-----------------------------------------------------------------------
 
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     ! Set pointers into derived type
-
     gptr => clm3%g
     lptr => clm3%g%l
     pptr => clm3%g%l%c%p
@@ -376,6 +379,7 @@ contains
        end do
 
        call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
+
 #ifdef CN
        call pftdyn_getharvest(nt1,begg,endg)
 #endif
@@ -477,12 +481,13 @@ contains
 
     err = 0
     do n = begg,endg
-       if (pctspec(n) < 100._r8) then
+       ! THESE CHECKS NEEDS TO BE THE SAME AS IN surfrdMod.F90!
+       if (pctspec(n) < 100._r8 * (1._r8 - eps_fact*epsilon(1._r8))) then  ! pctspec not within eps_fact*epsilon of 100
           sumpct = 0._r8
           do m = 0, numpft
              sumpct = sumpct + pctpft(n,m) * 100._r8/(100._r8-pctspec(n))
           end do
-          if (abs(sumpct - 100._r8) > 0.1_r8) then
+          if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
              err = 1; ierr = n; sumerr = sumpct
           end if
           if (sumpct < -0.000001_r8) then
@@ -783,6 +788,8 @@ contains
     real(r8) :: leafc_seed, leafn_seed
     real(r8) :: deadstemc_seed, deadstemn_seed
     real(r8), pointer :: dwt_ptr0, dwt_ptr1, dwt_ptr2, dwt_ptr3, ptr
+    integer , pointer :: ivt(:)    ! pft vegetation type added by F. Li and S. Levis
+    real(r8),   pointer :: lfpftd(:)       !F. Li and S. Levis
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(column_type),   pointer :: cptr         ! pointer to column derived subtype
     type(pft_type)   ,   pointer :: pptr         ! pointer to pft derived subtype
@@ -820,6 +827,7 @@ contains
     real(r8) :: c3_r2_c14         ! isotope ratio (14c/[12c+14c]) for C3 photosynthesis
     real(r8) :: c4_r2_c14         ! isotope ratio (14c/[12c+14c]) for C4 photosynthesis
     real(r8) :: leafc14_seed, deadstemc14_seed
+   
 !-----------------------------------------------------------------------
     
     ! Set pointers into derived type
@@ -828,6 +836,8 @@ contains
     cptr    => clm3%g%l%c
     pptr    => clm3%g%l%c%p
     pcolumn => pptr%column
+    lfpftd  => clm3%g%l%c%p%pps%lfpftd     ! F. Li and S. Levis
+    ivt     => clm3%g%l%c%p%itype           ! F. Li and S. Levis
 
     ! Allocate pft-level mass loss arrays
     allocate(dwt_leafc_seed(begp:endp), stat=ier)
@@ -1014,7 +1024,7 @@ contains
           
           ! calculate the change in weight for the timestep
           dwt = pptr%wtcol(p)-wtcol_old(p)
-          
+            lfpftd(p)=-dwt
           ! PFTs for which weight increases on this timestep
           if (dwt > 0._r8) then
              
@@ -2832,7 +2842,11 @@ contains
              cptr%ccf%dwt_conv_cflux(c) = cptr%ccf%dwt_conv_cflux(c) - conv_cflux(p)/dt
              cptr%ccf%dwt_prod10c_gain(c) = cptr%ccf%dwt_prod10c_gain(c) - prod10_cflux(p)/dt
              cptr%ccf%dwt_prod100c_gain(c) = cptr%ccf%dwt_prod100c_gain(c) - prod100_cflux(p)/dt
-             
+
+             ! These magic constants should be replaced with: nbrdlf_evr_trp_tree and nbrdlf_dcd_trp_tree
+             if(ivt(p)==4.or.ivt(p)==6)then
+                cptr%ccf%lf_conv_cflux(c) = cptr%ccf%lf_conv_cflux(c) - conv_cflux(p)/dt
+             end if
              
              if ( use_c13 ) then
                 ! C13 column-level flux updates

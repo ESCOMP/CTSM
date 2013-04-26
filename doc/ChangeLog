@@ -1,4 +1,192 @@
 ===============================================================
+Tag name:  clm4_0_80
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Apr 26 02:28:39 MDT 2013
+One-line Summary: Bring Fang Li. Fire model into CLM4.5 science, update ALL CLM4.5 surface datasets, 
+                  provide a working initial condition file for CLM45BGC@f19_g16-1850
+
+Purpose of changes: Bring the F. Li and S. Levis Fire model for CLMCN and CLMBGC based on 
+Li et al. (2012a,b; 2013). New data streams are added to bring in lightning frequency 
+(NASA-LIS climatology of 1995-2011 interpolated to T62) and human population density at half-degree
+(currently from 1850 to 2010, no rcp data is available yet). Annual 1850–2010 population 
+density that is obtained by temporal linear interpolation of the data from HYDEv3.1 
+(prior to 1990) and GPWv3 (since 1990) at 0.5 degree resolution. GDP (Gross Domestic Product), 
+peat fraction, and maximum month for agricultural fires are also included on the 
+surface datasets. Fang Li tuned the fire model based on a branch version 
+(newfire05_clm45sci15_clm4_0_58) at f19_g16 resolution with CLMBGC for transient 1850-2000
+with Qian atmosphere forcing.  New fire fields are read in from the pft-physiology file.
+
+ALL CLM4.5 surface datasets and pftdyn datasets were updated. ALL standard datasets 
+now have glc_nec=10 data on them and CAN be used for IG simulations with CISM for 
+10 glacier elevation classes. The standard way of running is still 
+with glc_nec=0. Surface datasets include data used by previous parameterizations added in CLM4.5:
+
+   ZWT0, F0, and P3 for the CLM4Me methane model
+   (PH can be read in on the surface dataset, but is NOT included on the current datasets)
+   LAKEDEPTH for the Subin variable depth lake model
+   (ETALAKE and LAKEFETCH can be read in, but are NOT included on the current datasets)
+   SLOPE, STD_ELEV for the Swenson dynamic wetlands parameterization
+   binfl, Ds, Dsmax, Ws for the optional VIC hydrology scheme (only read in when VIC active)
+   gdp, peatf, and abm for the new fire model above	      
+         (always read in although it wouldn't HAVE to be for CLMSP)
+
+Also provide one working initial condition file for CLM45BGC at 1.9x2.5_gx1v6 resolution for 1850. This
+will work for CLM45BGC (-vsoil_centbgc on) as long as the vertical carbon profiles are active. No other
+initial condition files are provided at this time. This was from year 51 of a CLMBGC spinup simulation
+by Fang Li with Qian forcing for 1850 (case qian_1850).
+   
+Bug fix, from Sam Levis so that non-irrigated prognostic crop for CLM4.5 works correctly. Previously
+irrigated and non-irrigated crop for CLM4_5 gave the same results (with irrigation active even when
+you told it NOT to be).
+
+Also transient simulations are now allowed to be done with a cold start -- YOU SHOULD NEVER DO THIS FOR SCIENCE!
+It does help facilitate testing however.
+
+Requirements for tag:
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID): 
+             1670 (irrigated crop and non-irrigated crop for CLM45 give same answers)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: New light_streams and popd_streams namelists for CLM
+    By default the light_stremas namelist runs over the NASA_LIS climatology data (3-hourly).
+    The population density namelist runs over the applicable years for the use_case given for the compset.
+    This can be customized with:
+        stream_year_first_popdens, stream_year_last_popdens, model_year_align_popdens
+        (and the filename and map-algorithm can be changed as well)
+
+List any changes to the defaults for the boundary datasets: All surfdata, finidat, and pftdyn
+   datasets for clm4_5 were updated
+
+Code reviewed by: self, slevis, fangli
+
+List any svn externals directories updated (csm_share, mct, etc.): pio
+  pio to pio_1_6_7
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+  M models/lnd/clm/bld/listDefaultNamelist.pl -- Get working for clm4_5.
+  M models/lnd/clm/bld/build-namelist ---------- check vsoilc_centbgc for finidat files, new light_streams and
+         popd_streams namelists for clm4_5
+  M models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- all new fsurdat, fpftdyn datasets, settings
+         for new popd_streams and light_streams namelists
+  M models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Add new light_streams and popd_streams namelists
+
+>>>>>>>>>>>> Set first and last pop-dens year, and do "arb_ic" rather than "startup"
+>>>>>>>>>>>> type for all transient cases (allow transient cases to do a cold-start)
+>>>>>>>>>>>> ALTHOUGH YOU SHOULD NEVER DO A COLD START FOR A TRANSIENT CASE!
+  M models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/20thC_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/2000_glacierMEC_control.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850_glacierMEC_control.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_glacierMEC_transient.xml
+  M models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_glacierMEC_transient.xml
+
+>>>>>>>>>>>> Some small changes to documentation about irrigation.
+  M models/lnd/clm/doc/UsersGuide/preface.xml
+  M models/lnd/clm/doc/UsersGuide/custom.xml
+
+  M models/lnd/clm/src/util_share/ndepStreamMod.F90 -- make default private, namelist data private, and clm_domain_mct public
+
+  M models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90 --- add number of individuals
+  M models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate3Mod.F90 -- handle more impacts of fire
+  M models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90 ----------- Fire module -- almost entirely replaced. Two new public
+         methods added:
++  public :: CNFireInit    ! Initialization of CNFire
++  public :: CNFireInterp  ! Interpolate fire data
+  M models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90 -------- Handle more impacts of fire
+  M models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90 -- Handle more impacts of fire
+  M models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90 ----------- burndate, lfc, wf, btran2, col_ctrunc, totsomc added to restart
+      old fire fields removed, _vr fields required if expected.,
+  M models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90 --- Add CNFireInit, and update CNFireArea call.
+  M models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90 ------- Set fire variables.
+  M models/lnd/clm/src/clm4_5/biogeochem/CNVegStructUpdateMod.F90  farea_burned impacts SAI for stubble after harvest
+  M models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90 -------------- Initialize new fire variables
+  M models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90 --------- Update CNEcosystemDynInit call
+  M models/lnd/clm/src/clm4_5/main/accFldsMod.F90 ---------------- Add prec10 and prec60 (10 and 60 day total precipitation)
+  M models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90 ------------ Initialize new fire variables.
+  M models/lnd/clm/src/clm4_5/main/pftdynMod.F90 ----------------- Update lf_conv_cflux, make PFT weight check same as for surfrdMod.F90
+  M models/lnd/clm/src/clm4_5/main/iniTimeConst.F90 -------------- Read in new fire data, abort if data needed NOT found on the
+             surface dataset.
+  M models/lnd/clm/src/clm4_5/main/findHistFields.pl ------------- Also read in CNFireMod for history fields.
+  M models/lnd/clm/src/clm4_5/main/clm_driver.F90 ---------------- Add CNFireInterp call.
+  M models/lnd/clm/src/clm4_5/main/CNiniSpecial.F90 -------------- Initialize lf_conv_cflux to zero.
+  M models/lnd/clm/src/clm4_5/main/pftvarcon.F90 ----------------- Read in new fire parameters 
+        (no longer need "resist" on the pft-physiology file)
+  M models/lnd/clm/src/clm4_5/main/surfrdMod.F90 ----------------- Fix tolerances to match mksurdata_map
+        bug fix for non-irrigated crop.
+  M models/lnd/clm/src/clm4_5/main/clmtype.F90 ------------------- New fire fields
+  M models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90 -------------- Initialize some new fire fields: tsoi17, fsat
+  M models/lnd/clm/src/clm4_5/main/histFldsMod.F90 --------------- New fire history fields
+  M models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90 ----- Save btran2, smp_node_lf for fire
+  M models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90 ------- Save wf2, tsoi17, h2osoi_liqice_10cm
+
+  M models/lnd/clm/src/clm4_0/main/surfrdMod.F90 ----------------- Fix tolerances to match mksurdata_map
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       yes
+    yellowstone/aux_clm     pgi         yes
+    frankfurt/aux_clm_int   intel       yes
+    frankfurt/aux_clm       intel       yes
+
+  test_driver.sh tools testing:
+
+    lynx interactive:           no
+    yellowstone interactive:    no
+
+  yellowstone/PTCLM:            no
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_79
+
+Changes answers relative to baseline: YES!
+
+  Summarize any changes to answers:
+    - what code configurations: All with CLM45
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+     /glade/p/cesm/lmwg/cases/cesm1/C20new -- on yellowstone
+     /glade/scratch/erik/archive/clm4079_NewFire10f19_CRU_20TR_CN4Me
+     /glade/scratch/erik/archive/clm4077_I1850CLM45CN4Me
+     /glade/scratch/erik/archive/clm4077_NewFire10f19_QIAN_20TR_CN4Me
+    hsi:/home/fangli/qian20
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_79
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date: Wed Apr 24 20:27:01 MDT 2013

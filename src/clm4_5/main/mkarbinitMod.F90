@@ -154,7 +154,9 @@ contains
     real(r8), pointer :: mss_cnc_dst2(:,:)  ! mass concentration of dust species 2 (col,lyr) [kg/kg]
     real(r8), pointer :: mss_cnc_dst3(:,:)  ! mass concentration of dust species 3 (col,lyr) [kg/kg]
     real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
-    real(r8), pointer :: irrig_rate(:)         ! current irrigation rate [mm/s]
+    real(r8), pointer :: irrig_rate(:)      ! current irrigation rate [mm/s]
+    real(r8), pointer :: tsoi17(:)          ! soil T for top 0.17 m
+    real(r8), pointer :: fsat(:)               !fractional area with water table at surface
     integer,  pointer :: n_irrig_steps_left(:) ! number of time steps for which we still need to irrigate today (if 0, ignore irrig_rate)
 
 !
@@ -215,9 +217,11 @@ contains
     t_soisno         => clm3%g%l%c%ces%t_soisno
     t_lake           => clm3%g%l%c%ces%t_lake
     t_grnd           => clm3%g%l%c%ces%t_grnd
+    tsoi17           => clm3%g%l%c%ces%tsoi17
     zi               => clm3%g%l%c%cps%zi
     wa               => clm3%g%l%c%cws%wa
     zwt              => clm3%g%l%c%cws%zwt
+    fsat             => clm3%g%l%c%cws%fsat
     snw_rds          => clm3%g%l%c%cps%snw_rds
     snw_rds_top      => clm3%g%l%c%cps%snw_rds_top
     sno_liq_top      => clm3%g%l%c%cps%sno_liq_top
@@ -417,6 +421,7 @@ contains
           t_lake(c,1:nlevlak) = 277._r8
           t_grnd(c) = t_lake(c,1)
        endif
+       tsoi17(c) = t_grnd(c)
 
     end do
 
@@ -592,6 +597,7 @@ contains
                 end if
              end do
           end if
+          fsat(c)   = 0.0_r8
 #endif
        end if
 

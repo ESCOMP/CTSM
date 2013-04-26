@@ -41,6 +41,7 @@ module accFldsMod
 !
 ! !REVISION HISTORY:
 ! Created by M. Vertenstein 03/2003
+! F. Li and S. Levis (11/06/12) for prec10, prec60
 !
 !EOP
 
@@ -193,6 +194,16 @@ contains
          subgrid_type='pft', numlev=1, init_value=0._r8)
 #endif
 
+      call init_accum_field (name='PREC60', units='MM H2O/S', &
+         desc='60-day running mean of total precipitation', &
+         accum_type='runmean', accum_period=-60, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+         call init_accum_field (name='PREC10', units='MM H2O/S', &
+         desc='10-day running mean of total precipitation', &
+         accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
     if ( crop_prog )then
        ! 10-day average of min 2m temperature.
 
@@ -336,6 +347,8 @@ contains
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
     real(r8), pointer :: twmax(:)            ! upper limit of temperature of the warmest month
 #endif
+     real(r8), pointer :: prec10(:)          ! 10-day running mean of tot. precipitation
+    real(r8), pointer :: prec60(:)          ! 60-day running mean of tot. precipitation
     real(r8), pointer :: gdd0(:)             ! growing degree-days base 0C'
     real(r8), pointer :: gdd8(:)             ! growing degree-days base 8C from planting
     real(r8), pointer :: gdd10(:)            ! growing degree-days base 10C from planting
@@ -411,6 +424,8 @@ contains
     agdd             => clm3%g%l%c%p%pdgvs%agdd
     twmax            => dgv_pftcon%twmax
 #endif
+    prec60           => clm3%g%l%c%p%pps%prec60
+    prec10           => clm3%g%l%c%p%pps%prec10
     gdd0             => clm3%g%l%c%p%pps%gdd0
     gdd8             => clm3%g%l%c%p%pps%gdd8
     gdd10            => clm3%g%l%c%p%pps%gdd10
@@ -642,7 +657,23 @@ contains
     call update_accum_field  ('AGDD', rbufslp, nstep)
     call extract_accum_field ('AGDD', agdd, nstep)
 #endif
+    
+     do p = begp,endp
+       g = pgridcell(p)
+       rbufslp(p) = forc_rain(g) + forc_snow(g)
+    end do
+    call update_accum_field  ('PREC60', rbufslp, nstep)
+    call extract_accum_field ('PREC60', prec60, nstep)
 
+    ! Accumulate and extract PREC10
+    ! (accumulates total precipitation as 10-day running mean)
+     do p = begp,endp
+       g = pgridcell(p)
+       rbufslp(p) = forc_rain(g) + forc_snow(g)
+    end do
+    call update_accum_field  ('PREC10', rbufslp, nstep)
+    call extract_accum_field ('PREC10', prec10, nstep)
+ 
     if ( crop_prog )then
        ! Accumulate and extract TDM10
 
@@ -817,6 +848,8 @@ contains
     real(r8), pointer :: agddtw(:)           ! accumulated growing degree days above twmax
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
 #endif
+    real(r8), pointer :: prec60(:)            ! 60-day running mean of tot. precipitation
+    real(r8), pointer :: prec10(:)            ! 10-day running mean of tot. precipitation
     real(r8), pointer :: gdd0(:)             ! growing degree-days base 0C'
     real(r8), pointer :: gdd8(:)             ! growing degree-days base 8C from planting
     real(r8), pointer :: gdd10(:)            ! growing degree-days base 10C from planting
@@ -874,6 +907,8 @@ contains
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
 #endif
+    prec60           => clm3%g%l%c%p%pps%prec60
+    prec10           => clm3%g%l%c%p%pps%prec10
     gdd0             => clm3%g%l%c%p%pps%gdd0
     gdd8             => clm3%g%l%c%p%pps%gdd8
     gdd10            => clm3%g%l%c%p%pps%gdd10
@@ -1039,6 +1074,16 @@ contains
     end do
 
 #endif
+    call extract_accum_field ('PREC60', rbufslp, nstep)
+    do p = begp,endp
+       prec60(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('PREC10', rbufslp, nstep)
+    do p = begp,endp
+       prec10(p) = rbufslp(p)
+    end do
+
     deallocate(rbufslp)
 
   end subroutine initAccClmtype

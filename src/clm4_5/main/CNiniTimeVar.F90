@@ -33,7 +33,7 @@ subroutine CNiniTimeVar()
 !
 ! !REVISION HISTORY:
 ! 10/21/03: Created by Peter Thornton
-!
+! F. Li and S. Levis (11/06/12)
 !
 ! local pointers to implicit in arguments
 !
@@ -195,14 +195,17 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: qflx_drain(:)         ! sub-surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_surf(:)          ! surface runoff (mm H2O /s)
    real(r8), pointer :: qflx_irrig(:)         !irrigation flux (mm H2O/s)
-   ! new variables for fire
-   real(r8), pointer :: wf(:)                 ! soil moisture in top 0.5 m
-   real(r8), pointer :: me(:)                 ! moisture of extinction (proportion)
-   real(r8), pointer :: fire_prob(:)          ! daily fire probability (0-1)
-   real(r8), pointer :: mean_fire_prob(:)     ! e-folding mean of daily fire probability (0-1)
-   real(r8), pointer :: fireseasonl(:)        ! annual fire season length (days, <= days/year)
+
+   ! fire-related variables changed by F. Li and S. Levis
+   real(r8), pointer :: wf(:)                 ! soil moisture in top 0.05 m
+   real(r8), pointer :: wf2(:) 
+   real(r8), pointer :: nfire(:)              ! fire counts/km2/timestep
+   real(r8), pointer :: baf_crop(:)          ! burned area fraction in crop
+   real(r8), pointer :: baf_peatf(:)         ! burned area fraction in peatland
+   real(r8), pointer :: fbac(:)          
+   real(r8), pointer :: fbac1(:)          
    real(r8), pointer :: farea_burned(:)       ! timestep fractional area burned (proportion)
-   real(r8), pointer :: ann_farea_burned(:)   ! annual total fractional area burned (proportion)
+
    real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
@@ -347,13 +350,17 @@ subroutine CNiniTimeVar()
     annsum_counter                 => clm3%g%l%c%cps%annsum_counter
     cannsum_npp                    => clm3%g%l%c%cps%cannsum_npp
     cannavg_t2m                    => clm3%g%l%c%cps%cannavg_t2m
+
+     !fire related variables changed by F. Li and S. Levis
     wf                             => clm3%g%l%c%cps%wf
-    me                             => clm3%g%l%c%cps%me
-    fire_prob                      => clm3%g%l%c%cps%fire_prob
-    mean_fire_prob                 => clm3%g%l%c%cps%mean_fire_prob
-    fireseasonl                    => clm3%g%l%c%cps%fireseasonl
+    wf2                            => clm3%g%l%c%cps%wf2
+    nfire                          => clm3%g%l%c%cps%nfire
+    baf_crop                       => clm3%g%l%c%cps%baf_crop
+    baf_peatf                      => clm3%g%l%c%cps%baf_peatf
+    fbac                           => clm3%g%l%c%cps%fbac
+    fbac1                          => clm3%g%l%c%cps%fbac1
     farea_burned                   => clm3%g%l%c%cps%farea_burned
-    ann_farea_burned               => clm3%g%l%c%cps%ann_farea_burned
+
     qflx_drain                     => clm3%g%l%c%cwf%qflx_drain
     qflx_surf                      => clm3%g%l%c%cwf%qflx_surf
     decomp_cpools                  => clm3%g%l%c%ccs%decomp_cpools
@@ -648,13 +655,16 @@ subroutine CNiniTimeVar()
          annsum_counter(c) = 0._r8
          cannsum_npp(c)    = 0._r8
          cannavg_t2m(c)    = 280._r8
+         ! fire related variables changed by F. Li and S. Levis
          wf(c) = 1.0_r8  ! it needs to be non zero so the first time step has no fires
-         me(c) = 0._r8
-         fire_prob(c) = 0._r8
-         mean_fire_prob(c) = 0._r8
-         fireseasonl(c) = 0._r8
+         wf2(c) = 1.0_r8
+         nfire(c) = 0._r8
+         baf_crop(c) = 0._r8
+         baf_peatf(c) = 0._r8
+         fbac(c) = 0._r8
+         fbac1(c) = 0._r8
          farea_burned(c) = 0._r8
-         ann_farea_burned(c) = 0._r8
+
          
          ! needed for CNNLeaching
          qflx_drain(c) = 0._r8
@@ -833,6 +843,7 @@ subroutine CNiniTimeVar()
 	 clm3%g%l%c%ccf%dwt_seedc_to_leaf(c) = 0._r8
 	 clm3%g%l%c%ccf%dwt_seedc_to_deadstem(c) = 0._r8
 	 clm3%g%l%c%ccf%dwt_conv_cflux(c) = 0._r8
+        clm3%g%l%c%ccf%lf_conv_cflux(c) = 0._r8
 	 clm3%g%l%c%ccf%dwt_prod10c_gain(c) = 0._r8
 	 clm3%g%l%c%ccf%prod10c_loss(c) = 0._r8
 	 clm3%g%l%c%ccf%dwt_prod100c_gain(c) = 0._r8

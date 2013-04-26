@@ -25,7 +25,7 @@ module CNEcosystemDynMod
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
 ! 19 May 2009: PET - modified to include call to harvest routine
-!
+!F. Li and S. Levis (11/06/12)
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -41,7 +41,7 @@ contains
 ! !IROUTINE: CNEcosystemDynInit
 !
 ! !INTERFACE:
-  subroutine CNEcosystemDynInit(lbc, ubc, lbp, ubp )
+  subroutine CNEcosystemDynInit(lbg, ubg, lbc, ubc, lbp, ubp )
 !
 ! !DESCRIPTION:
 ! Initialzation of the CN Ecosystem dynamics.
@@ -49,10 +49,12 @@ contains
 ! !USES:
     use CNAllocationMod, only : CNAllocationInit
     use CNPhenologyMod , only : CNPhenologyInit
-    use CNC14DecayMod, only : C14_init_BombSpike
+    use CNFireMod      , only : CNFireInit
+    use CNC14DecayMod  , only : C14_init_BombSpike
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: lbg, ubg        ! gridcell bounds
     integer, intent(in) :: lbc, ubc        ! column bounds
     integer, intent(in) :: lbp, ubp        ! pft bounds
 !
@@ -66,9 +68,9 @@ contains
 !-----------------------------------------------------------------------
      call CNAllocationInit ( lbc, ubc, lbp, ubp )
      call CNPhenologyInit  ( lbp, ubp )
+     call CNFireInit       ( lbg, ubg )
 
      if ( use_c14 ) call C14_init_BombSpike()
-
 
   end subroutine CNEcosystemDynInit
 
@@ -115,7 +117,7 @@ contains
     use CNSoilLittVertTranspMod, only: CNSoilLittVertTransp
     use perf_mod               , only: t_startf, t_stopf
     use surfrdMod              , only: crop_prog
-
+    use shr_sys_mod            , only: shr_sys_flush
 !
 ! !ARGUMENTS:
     implicit none
@@ -251,7 +253,7 @@ contains
        
        call CNWoodProducts(num_soilc, filter_soilc)
        
-       call CNFireArea(num_soilc, filter_soilc)
+       call CNFireArea(num_soilc, filter_soilc,num_soilp, filter_soilp)
 
        call CNFireFluxes(num_soilc, filter_soilc, num_soilp, filter_soilp)
 

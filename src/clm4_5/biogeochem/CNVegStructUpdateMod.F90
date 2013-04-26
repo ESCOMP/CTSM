@@ -19,7 +19,7 @@ module CNVegStructUpdateMod
 !
 ! !REVISION HISTORY:
 ! 4/23/2004: Created by Peter Thornton
-!
+!  F. Li and S. Levis (11/06/12)
 !EOP
 !-----------------------------------------------------------------------
 
@@ -81,7 +81,8 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    real(r8), pointer :: displar(:)    !ratio of displacement height to canopy top height (-)
    real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft-level [m]
    real(r8), pointer :: dwood(:)      ! density of wood (gC/m^3)
-!
+   real(r8), pointer :: farea_burned(:)   !F. Li and S. Levis
+! 
 ! local pointers to implicit in/out scalars
 !
    integer , pointer :: frac_veg_nosno_alb(:) ! frac of vegetation not covered by snow [-]
@@ -144,6 +145,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     z0mr                           => pftcon%z0mr
     displar                        => pftcon%displar
     dwood                          => pftcon%dwood
+    farea_burned                   => clm3%g%l%c%cps%farea_burned
 
    ! assign local pointers to derived type arrays (out)
     tlai                           => clm3%g%l%c%p%pps%tlai
@@ -258,7 +260,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
              ! "stubble" after harvest
              if (harvdate(p) < 999 .and. tlai(p) == 0._r8) then
-                tsai(p) = 0.25_r8
+                tsai(p) = 0.25_r8*(1._r8-farea_burned(c)*0.90_r8)    !changed by F. Li and S. Levis
                 htmx(p) = 0._r8
                 peaklai(p) = 0
              end if

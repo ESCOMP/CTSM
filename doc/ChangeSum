@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_80         erik 04/26/2013 Bring Fang Li. Fire model into CLM4.5 science, update ALL CLM4.5 surface datasets, 
+                                     provide a working initial condition file for CLM45BGC@f19_g16-1850
    clm4_0_79      muszala 04/24/2013 pftdyn, pft-phys*.nc and datm8 update
    clm4_0_78      muszala 04/23/2013 MEGAN fixes
    clm4_0_77        sacks 04/23/2013 fix carbon balance bug in transient runs with VERTSOI, and fix Soil Hydrology bug

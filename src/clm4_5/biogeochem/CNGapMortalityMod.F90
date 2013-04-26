@@ -56,7 +56,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !REVISION HISTORY:
 ! 3/29/04: Created by Peter Thornton
-!
+! F. Li and S. Levis (11/06/12)
 ! !LOCAL VARIABLES:
 !
 ! local pointers to implicit in arrays
@@ -105,6 +105,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
 #if (defined CNDV)
    real(r8), pointer :: greffic(:)
    real(r8), pointer :: heatstress(:)
+   real(r8), pointer :: nind(:)         ! number of individuals (#/m2) added by F. Li and S. Levis
 #endif
 !
 ! local pointers to implicit in/out arrays
@@ -247,6 +248,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
 #if (defined CNDV)
    greffic                        => clm3%g%l%c%p%pdgvs%greffic
    heatstress                     => clm3%g%l%c%p%pdgvs%heatstress
+   nind                           => clm3%g%l%c%p%pdgvs%nind     ! F. Li and S. Levis
 #endif
 
    ! set the mortality rate based on annual rate
@@ -334,6 +336,17 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
       m_deadstemn_xfer_to_litter(p)      = deadstemn_xfer(p)      * m
       m_livecrootn_xfer_to_litter(p)     = livecrootn_xfer(p)     * m
       m_deadcrootn_xfer_to_litter(p)     = deadcrootn_xfer(p)     * m
+
+! added by F. Li and S. Levis
+#if (defined CNDV)
+    if (woody(ivt(p)) == 1._r8)then
+     if (livestemc(p)+deadstemc(p)> 0._r8)then
+         nind(p)=nind(p)*(1._r8-m)
+     else
+         nind(p) = 0._r8 
+     end if
+    end if
+#endif
 
    end do ! end of pft loop
 

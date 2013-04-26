@@ -691,6 +691,79 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- light_streams streams Namelist (when CN an CLM4_5 is active)                              -->
+<!-- ========================================================================================  -->
+
+<!-- Lightning -->
+<entry id="stream_year_first_lightng" type="integer" category="datasets"
+       group="light_streams" valid_values="" >
+First year to loop over for Lightning data
+</entry>
+
+<entry id="stream_year_last_lightng" type="integer" category="datasets"
+       group="light_streams" valid_values="" >
+Last year to loop over for Lightning data
+</entry>
+
+<entry id="model_year_align_lightng" type="integer" category="datasets"
+       group="light_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_lightng value
+</entry>
+
+<entry id="stream_fldfilename_lightng" type="char*256" category="datasets"
+       input_pathname="abs" group="light_streams" valid_values="" >
+Filename of input stream data for Lightning
+</entry>
+
+<entry id="lightngmapalgo" type="char*256" category="datasets"
+       group="light_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from Lightning input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- popd_streams Namelist (when CN an CLM4_5 is active)                              -->
+<!-- ========================================================================================  -->
+
+<!-- human population density -->
+
+<entry id="stream_year_first_popdens" type="integer" category="datasets"
+       group="popd_streams" valid_values="" >
+First year to loop over for human population density data
+</entry>
+
+<entry id="stream_year_last_popdens" type="integer" category="datasets"
+       group="popd_streams" valid_values="" >
+Last year to loop over for human population density data
+</entry>
+
+<entry id="model_year_align_popdens" type="integer" category="datasets"
+       group="popd_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_popdens value
+</entry>
+
+<entry id="stream_fldfilename_popdens" type="char*256" category="datasets"
+       input_pathname="abs" group="popd_streams" valid_values="" >
+Filename of input stream data for human population density
+</entry>
+
+<entry id="popdensmapalgo" type="char*256" category="datasets"
+       group="popd_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+Mapping method from human population density input file to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- DATM Namelists                                                                            -->
 <!-- ========================================================================================  -->
 

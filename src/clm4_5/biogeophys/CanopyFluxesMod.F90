@@ -122,7 +122,7 @@ contains
 ! 27 February 2008: Keith Oleson; Sparse/dense aerodynamic parameters from
 ! X. Zeng
 ! 6 March 2009: Peter Thornton; Daylength control on Vcmax, from Bill Bauerle
-!
+!F. Li and S. Levis (11/06/12)
 ! !LOCAL VARIABLES:
 !
 ! local pointers to implicit in variables
@@ -182,6 +182,7 @@ contains
    real(r8), pointer :: watopt(:,:)    ! btran parameter for btran = 1
    real(r8), pointer :: h2osoi_ice(:,:)! ice lens (kg/m2)
    real(r8), pointer :: h2osoi_liq(:,:)! liquid water (kg/m2)
+   real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] by F. Li and S. Levis
    real(r8), pointer :: dz(:,:)        ! layer depth (m)
    real(r8), pointer :: t_soisno(:,:)  ! soil temperature (Kelvin)
    real(r8), pointer :: sucsat(:,:)    ! minimum soil suction (mm)
@@ -220,6 +221,7 @@ contains
    real(r8), pointer :: ulrad(:)           ! upward longwave radiation above the canopy [W/m2]
    real(r8), pointer :: ram1(:)            ! aerodynamical resistance (s/m)
    real(r8), pointer :: btran(:)           ! transpiration wetness factor (0 to 1)
+   real(r8), pointer :: btran2(:)           !F. Li and S. Levis
    real(r8), pointer :: rssun(:)           ! sunlit stomatal resistance (s/m)
    real(r8), pointer :: rssha(:)           ! shaded stomatal resistance (s/m)
    real(r8), pointer :: rhal(:)
@@ -384,6 +386,7 @@ contains
    real(r8) :: eah(lbp:ubp)          ! canopy air vapor pressure (pa)
    real(r8) :: s_node                ! vol_liq/eff_porosity
    real(r8) :: smp_node              ! matrix potential
+   real(r8) :: smp_node_lf           ! F. Li and S. Levis
    real(r8) :: vol_ice               ! partial volume of ice lens in layer
    real(r8) :: eff_porosity          ! effective porosity in layer
    real(r8) :: vol_liq               ! partial volume of liquid water in layer
@@ -485,6 +488,7 @@ contains
    watdry         => clm3%g%l%c%cps%watdry 
    watopt         => clm3%g%l%c%cps%watopt 
    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
+   h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
    dz             => clm3%g%l%c%cps%dz
    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
    sucsat         => clm3%g%l%c%cps%sucsat
@@ -511,6 +515,7 @@ contains
    pgridcell      => clm3%g%l%c%p%gridcell
    frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
    btran          => clm3%g%l%c%p%pps%btran
+   btran2          => clm3%g%l%c%p%pps%btran2
    rootfr         => clm3%g%l%c%p%pps%rootfr
    rootr          => clm3%g%l%c%p%pps%rootr
    rresis         => clm3%g%l%c%p%pps%rresis
@@ -626,6 +631,7 @@ contains
       wtaq0(p)  = 0._r8
       obuold(p) = 0._r8
       btran(p)  = btran0
+      btran2(p)  = btran0
    end do
    
    ! calculate daylength control for Vcmax
@@ -728,10 +734,13 @@ contains
             else
                rootr(p,j) = rootfr_unf(p,j)*rresis(p,j)
             end if
-            btran(p) = btran(p) + rootr(p,j)
+            btran(p)    = btran(p) + rootr(p,j)
+            smp_node_lf = max(smpsc(ivt(p)), -sucsat(c,j)*(h2osoi_vol(c,j)/watsat(c,j))**(-bsw(c,j))) 
+            btran2(p)   = btran2(p) +rootfr(p,j)*min((smp_node_lf - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
          endif 
       end do
    end do
+
 
    ! Normalize root resistances to get layer contribution to ET
 

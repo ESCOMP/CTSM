@@ -116,7 +116,7 @@ In <xref linkend="special_cases"></xref>, again for the expert user, we give det
 difficult special cases. For example, we give the protocol for spinning up both the &clmcn; model and &clm; with dynamic
 vegetation active (<acronym>CNDV</acronym>). We give instructions to do a spinup case
 from a previous case with Coupler history output for atmospheric forcing. We also give 
-instructions on running both the prognostic crop and irrigation models. We also review 
+instructions on running the prognostic crop model and its irrigation option. We also review 
 how to validate a port to a new machine using the Perturbation error
 growth technique. Lastly we tell the user how to use the DATM model to send historical &CO2; data to &clm;.
 </para>
@@ -345,11 +345,10 @@ or tested. The model manages these by modeling both planting and harvesting. See
 linkend="CROP"></xref> for an example of running with it.
 </para>
 <para>
-Also an irrigation model was added from work by Samuel Levis and Bill Sacks. This
-model takes water from runoff and adds it to the generic crop for those areas equipped
+An irrigation model was added from work by Samuel Levis and Bill Sacks. This
+model takes water from runoff and adds it to the crop pfts for areas equipped
 for irrigation. See <xref linkend="IRRIG"></xref> for an example of running with it.
-Please note that the irrigation model does not currently work with the new crop model
-described above, but rather only works with the generic crop
+Please note that the irrigation model only works with the crop model active.
 </para>
 </sect2>
 
@@ -380,7 +379,6 @@ Configuration options removed:
 <para>
 New build-namelist options:
 <simplelist>
-<member>-irrig</member>
 <member>-co2_ppmv</member>
 <member>-rtm_res</member>
 <member>-rtm_tstep</member>
@@ -400,7 +398,7 @@ New precedence for build-namelist options is...
 <para>
 Namelist options renamed:
 <simplelist>
-<member>carbon_only => suplnitro (can be set to NONE, PROG_CROP_ONLY, or ALL)</member>
+<member>carbon_only => suplnitro (can be set to NONE or ALL)</member>
 </simplelist>
 </para>
 <para>
@@ -781,7 +779,6 @@ items.</member>
     <member>Only output static 3D fields on first h0 history file to save space.</member>
     <member>Add new fields for VOC (Volatile Organic Compounds) on surface datasets, 
     needed for the new MEGAN VOC model.</member>
-    <member>Add irrigation area to mksurfdata tool (NOT used in &clm; yet).</member>
     <member>Add multiple elevation class option for glaciers in mksurfdata tool (NOT used
 in &clm; yet).</member>
     <member>Add ascale field to land model in support of model running on it's own

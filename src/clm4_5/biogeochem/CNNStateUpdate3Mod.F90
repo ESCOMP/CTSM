@@ -22,7 +22,7 @@ module CNNStateUpdate3Mod
 !
 ! !REVISION HISTORY:
 ! 7/27/2004: Created by Peter Thornton
-!
+! F. Li and S. Levis (11/06/12)
 !EOP
 !-----------------------------------------------------------------------
 
@@ -44,7 +44,7 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
    use clmtype
    use clm_time_manager, only: get_step_size
    use clm_varctl  , only: iulog
-   use clm_varpar   , only: i_cwd
+   use clm_varpar   , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
 !
 ! !ARGUMENTS:
    implicit none
@@ -69,30 +69,56 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: smin_no3_vr(:,:) 
    real(r8), pointer :: smin_nh4_vr(:,:) 
 #endif
-   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:)                ! vertically-resolved decomposing N fire loss (gN/m3/s)
-   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_deadcrootn_storage_to_fire(:)
-   real(r8), pointer :: m_deadcrootn_to_fire(:)
-   real(r8), pointer :: m_deadcrootn_to_litter_fire(:)
-   real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)
-   real(r8), pointer :: m_deadstemn_storage_to_fire(:)
-   real(r8), pointer :: m_deadstemn_to_fire(:)
-   real(r8), pointer :: m_deadstemn_to_litter_fire(:)
-   real(r8), pointer :: m_deadstemn_xfer_to_fire(:)
-   real(r8), pointer :: m_frootn_storage_to_fire(:)
-   real(r8), pointer :: m_frootn_to_fire(:)
-   real(r8), pointer :: m_frootn_xfer_to_fire(:)
-   real(r8), pointer :: m_leafn_storage_to_fire(:)
-   real(r8), pointer :: m_leafn_to_fire(:)
-   real(r8), pointer :: m_leafn_xfer_to_fire(:)
+   real(r8), pointer :: m_leafn_to_fire(:)             
+   real(r8), pointer :: m_leafn_storage_to_fire(:)     
+   real(r8), pointer :: m_leafn_xfer_to_fire(:)       
+   real(r8), pointer :: m_livestemn_to_fire(:)         
+   real(r8), pointer :: m_livestemn_storage_to_fire(:) 
+   real(r8), pointer :: m_livestemn_xfer_to_fire(:)    
+   real(r8), pointer :: m_deadstemn_to_fire(:)         
+   real(r8), pointer :: m_deadstemn_storage_to_fire(:) 
+   real(r8), pointer :: m_deadstemn_xfer_to_fire(:)    
+   real(r8), pointer :: m_frootn_to_fire(:)            
+   real(r8), pointer :: m_frootn_storage_to_fire(:)    
+   real(r8), pointer :: m_frootn_xfer_to_fire(:)       
+   real(r8), pointer :: m_livecrootn_to_fire(:)       
    real(r8), pointer :: m_livecrootn_storage_to_fire(:)
-   real(r8), pointer :: m_livecrootn_to_fire(:)
-   real(r8), pointer :: m_livecrootn_xfer_to_fire(:)
-   real(r8), pointer :: m_livestemn_storage_to_fire(:)
-   real(r8), pointer :: m_livestemn_to_fire(:)
-   real(r8), pointer :: m_livestemn_xfer_to_fire(:)
-   real(r8), pointer :: m_retransn_to_fire(:)
+   real(r8), pointer :: m_livecrootn_xfer_to_fire(:)  
+   real(r8), pointer :: m_deadcrootn_to_fire(:)  
+   real(r8), pointer :: m_deadcrootn_storage_to_fire(:)
+   real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)   
+   real(r8), pointer :: m_retransn_to_fire(:)          
+   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:) 
+ 
+   real(r8), pointer :: m_leafn_to_litter_fire(:)   
+   real(r8), pointer :: m_leafn_storage_to_litter_fire(:)                
+   real(r8), pointer :: m_leafn_xfer_to_litter_fire(:)  
+   real(r8), pointer :: m_livestemn_to_litter_fire(:)    
+   real(r8), pointer :: m_livestemn_storage_to_litter_fire(:)        
+   real(r8), pointer :: m_livestemn_xfer_to_litter_fire(:) 
+   real(r8), pointer :: m_livestemn_to_deadstemn_fire(:)    
+   real(r8), pointer :: m_deadstemn_to_litter_fire(:) 
+   real(r8), pointer :: m_deadstemn_storage_to_litter_fire(:)           
+   real(r8), pointer :: m_deadstemn_xfer_to_litter_fire(:) 
+   real(r8), pointer :: m_frootn_to_litter_fire(:)        
+   real(r8), pointer :: m_frootn_storage_to_litter_fire(:)  
+   real(r8), pointer :: m_frootn_xfer_to_litter_fire(:)
+   real(r8), pointer :: m_livecrootn_to_litter_fire(:)    
+   real(r8), pointer :: m_livecrootn_storage_to_litter_fire(:)      
+   real(r8), pointer :: m_livecrootn_xfer_to_litter_fire(:)
+   real(r8), pointer :: m_livecrootn_to_deadcrootn_fire(:)    
+   real(r8), pointer :: m_deadcrootn_to_litter_fire(:)        
+   real(r8), pointer :: m_deadcrootn_storage_to_litter_fire(:)  
+   real(r8), pointer :: m_deadcrootn_xfer_to_litter_fire(:)
+   real(r8), pointer :: m_retransn_to_litter_fire(:)      
+   real(r8), pointer :: m_n_to_litr_met_fire(:,:)
+   real(r8), pointer :: m_n_to_litr_cel_fire(:,:)
+   real(r8), pointer :: m_n_to_litr_lig_fire(:,:)
+   real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)
+   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)
+   real(r8), pointer :: m_livestemn_to_cwdn_fire(:,:)
+   real(r8), pointer :: m_livecrootn_to_cwdn_fire(:,:)
+   
 !
 ! local pointers to implicit in/out scalars
    real(r8), pointer :: sminn_vr(:,:)              ! (gN/m3) soil mineral N
@@ -138,32 +164,60 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
     smin_no3_vr                       => clm3%g%l%c%cns%smin_no3_vr
     smin_nh4_vr                       => clm3%g%l%c%cns%smin_nh4_vr
 #endif
-    m_decomp_npools_to_fire_vr                 => clm3%g%l%c%cnf%m_decomp_npools_to_fire_vr
+    m_decomp_npools_to_fire_vr            => clm3%g%l%c%cnf%m_decomp_npools_to_fire_vr
+    m_deadcrootn_to_cwdn_fire             => clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire
+    m_deadstemn_to_cwdn_fire              => clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire
+    m_livecrootn_to_cwdn_fire             => clm3%g%l%c%cnf%m_livecrootn_to_cwdn_fire
+    m_livestemn_to_cwdn_fire              => clm3%g%l%c%cnf%m_livestemn_to_cwdn_fire
+    m_n_to_litr_met_fire                  => clm3%g%l%c%cnf%m_n_to_litr_met_fire
+    m_n_to_litr_cel_fire                  => clm3%g%l%c%cnf%m_n_to_litr_cel_fire
+    m_n_to_litr_lig_fire                  => clm3%g%l%c%cnf%m_n_to_litr_lig_fire
+   
     decomp_npools_vr                           => clm3%g%l%c%cns%decomp_npools_vr
     sminn_vr                          => clm3%g%l%c%cns%sminn_vr
 
     ! assign local pointers at the pft level
-    m_deadcrootn_storage_to_fire   => clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_fire
-    m_deadcrootn_to_fire           => clm3%g%l%c%p%pnf%m_deadcrootn_to_fire
-    m_deadcrootn_to_litter_fire    => clm3%g%l%c%p%pnf%m_deadcrootn_to_litter_fire
-    m_deadcrootn_xfer_to_fire      => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_fire
-    m_deadstemn_storage_to_fire    => clm3%g%l%c%p%pnf%m_deadstemn_storage_to_fire
-    m_deadstemn_to_fire            => clm3%g%l%c%p%pnf%m_deadstemn_to_fire
-    m_deadstemn_to_litter_fire     => clm3%g%l%c%p%pnf%m_deadstemn_to_litter_fire
-    m_deadstemn_xfer_to_fire       => clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_fire
-    m_frootn_storage_to_fire       => clm3%g%l%c%p%pnf%m_frootn_storage_to_fire
-    m_frootn_to_fire               => clm3%g%l%c%p%pnf%m_frootn_to_fire
-    m_frootn_xfer_to_fire          => clm3%g%l%c%p%pnf%m_frootn_xfer_to_fire
+   m_leafn_to_fire                => clm3%g%l%c%p%pnf%m_leafn_to_fire
     m_leafn_storage_to_fire        => clm3%g%l%c%p%pnf%m_leafn_storage_to_fire
-    m_leafn_to_fire                => clm3%g%l%c%p%pnf%m_leafn_to_fire
     m_leafn_xfer_to_fire           => clm3%g%l%c%p%pnf%m_leafn_xfer_to_fire
-    m_livecrootn_storage_to_fire   => clm3%g%l%c%p%pnf%m_livecrootn_storage_to_fire
-    m_livecrootn_to_fire           => clm3%g%l%c%p%pnf%m_livecrootn_to_fire
-    m_livecrootn_xfer_to_fire      => clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_fire
-    m_livestemn_storage_to_fire    => clm3%g%l%c%p%pnf%m_livestemn_storage_to_fire
     m_livestemn_to_fire            => clm3%g%l%c%p%pnf%m_livestemn_to_fire
+    m_livestemn_storage_to_fire    => clm3%g%l%c%p%pnf%m_livestemn_storage_to_fire
     m_livestemn_xfer_to_fire       => clm3%g%l%c%p%pnf%m_livestemn_xfer_to_fire
+    m_deadstemn_to_fire            => clm3%g%l%c%p%pnf%m_deadstemn_to_fire
+    m_deadstemn_storage_to_fire    => clm3%g%l%c%p%pnf%m_deadstemn_storage_to_fire
+    m_deadstemn_xfer_to_fire       => clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_fire
+    m_frootn_to_fire               => clm3%g%l%c%p%pnf%m_frootn_to_fire
+    m_frootn_storage_to_fire       => clm3%g%l%c%p%pnf%m_frootn_storage_to_fire
+    m_frootn_xfer_to_fire          => clm3%g%l%c%p%pnf%m_frootn_xfer_to_fire
+    m_livecrootn_to_fire           => clm3%g%l%c%p%pnf%m_livecrootn_to_fire
+    m_livecrootn_storage_to_fire   => clm3%g%l%c%p%pnf%m_livecrootn_storage_to_fire
+    m_livecrootn_xfer_to_fire      => clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_fire
+    m_deadcrootn_to_fire           => clm3%g%l%c%p%pnf%m_deadcrootn_to_fire
+    m_deadcrootn_storage_to_fire   => clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_fire
+    m_deadcrootn_xfer_to_fire      => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_fire
     m_retransn_to_fire             => clm3%g%l%c%p%pnf%m_retransn_to_fire
+    m_leafn_to_litter_fire                => clm3%g%l%c%p%pnf%m_leafn_to_litter_fire
+    m_leafn_storage_to_litter_fire        => clm3%g%l%c%p%pnf%m_leafn_storage_to_litter_fire
+    m_leafn_xfer_to_litter_fire           => clm3%g%l%c%p%pnf%m_leafn_xfer_to_litter_fire
+    m_livestemn_to_litter_fire            => clm3%g%l%c%p%pnf%m_livestemn_to_litter_fire
+    m_livestemn_storage_to_litter_fire    => clm3%g%l%c%p%pnf%m_livestemn_storage_to_litter_fire
+    m_livestemn_xfer_to_litter_fire       => clm3%g%l%c%p%pnf%m_livestemn_xfer_to_litter_fire
+    m_livestemn_to_deadstemn_fire         => clm3%g%l%c%p%pnf%m_livestemn_to_deadstemn_fire
+    m_deadstemn_to_litter_fire            => clm3%g%l%c%p%pnf%m_deadstemn_to_litter_fire
+    m_deadstemn_storage_to_litter_fire    => clm3%g%l%c%p%pnf%m_deadstemn_storage_to_litter_fire
+    m_deadstemn_xfer_to_litter_fire       =>clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_litter_fire
+    m_frootn_to_litter_fire               => clm3%g%l%c%p%pnf%m_frootn_to_litter_fire
+    m_frootn_storage_to_litter_fire       => clm3%g%l%c%p%pnf%m_frootn_storage_to_litter_fire
+    m_frootn_xfer_to_litter_fire          => clm3%g%l%c%p%pnf%m_frootn_xfer_to_litter_fire
+    m_livecrootn_to_litter_fire           => clm3%g%l%c%p%pnf%m_livecrootn_to_litter_fire
+    m_livecrootn_storage_to_litter_fire   => clm3%g%l%c%p%pnf%m_livecrootn_storage_to_litter_fire
+    m_livecrootn_xfer_to_litter_fire      => clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_litter_fire
+    m_livecrootn_to_deadcrootn_fire       => clm3%g%l%c%p%pnf%m_livecrootn_to_deadcrootn_fire
+    m_deadcrootn_to_litter_fire           => clm3%g%l%c%p%pnf%m_deadcrootn_to_litter_fire
+    m_deadcrootn_storage_to_litter_fire   => clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_litter_fire
+    m_deadcrootn_xfer_to_litter_fire      => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_litter_fire
+    m_retransn_to_litter_fire             => clm3%g%l%c%p%pnf%m_retransn_to_litter_fire
+
     deadcrootn                     => clm3%g%l%c%p%pns%deadcrootn
     deadcrootn_storage             => clm3%g%l%c%p%pns%deadcrootn_storage
     deadcrootn_xfer                => clm3%g%l%c%p%pns%deadcrootn_xfer
@@ -203,8 +257,13 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
          ! column level nitrogen fluxes from fire
          ! pft-level wood to column-level CWD (uncombusted wood)
-         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + m_deadstemn_to_cwdn_fire(c,j) * dt
-         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + m_deadcrootn_to_cwdn_fire(c,j) * dt
+         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + (m_deadstemn_to_cwdn_fire(c,j)+m_livestemn_to_cwdn_fire(c,j))* dt
+         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + (m_deadcrootn_to_cwdn_fire(c,j)+m_livecrootn_to_cwdn_fire(c,j)) * dt
+      
+          ! pft-level wood to column-level litter (uncombusted wood)
+           decomp_npools_vr(c,j,i_met_lit) = decomp_npools_vr(c,j,i_met_lit) + m_n_to_litr_met_fire(c,j)* dt
+           decomp_npools_vr(c,j,i_cel_lit) = decomp_npools_vr(c,j,i_cel_lit) + m_n_to_litr_cel_fire(c,j)* dt
+           decomp_npools_vr(c,j,i_lig_lit) = decomp_npools_vr(c,j,i_lig_lit) + m_n_to_litr_lig_fire(c,j)* dt
       end do ! end of column loop
    end do
 
@@ -229,11 +288,16 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
       frootn(p)     = frootn(p)     - m_frootn_to_fire(p)            * dt
       livestemn(p)  = livestemn(p)  - m_livestemn_to_fire(p)         * dt
       deadstemn(p)  = deadstemn(p)  - m_deadstemn_to_fire(p)         * dt
-      deadstemn(p)  = deadstemn(p)  - m_deadstemn_to_litter_fire(p)  * dt
       livecrootn(p) = livecrootn(p) - m_livecrootn_to_fire(p)        * dt
       deadcrootn(p) = deadcrootn(p) - m_deadcrootn_to_fire(p)        * dt
-      deadcrootn(p) = deadcrootn(p) - m_deadcrootn_to_litter_fire(p) * dt
-
+      
+      leafn(p)      = leafn(p)      - m_leafn_to_litter_fire(p)           * dt
+      frootn(p)     = frootn(p)     - m_frootn_to_litter_fire(p)          * dt
+      livestemn(p)  = livestemn(p)  - m_livestemn_to_litter_fire(p)       * dt
+      deadstemn(p)  = deadstemn(p)  - m_deadstemn_to_litter_fire(p)       * dt
+      livecrootn(p) = livecrootn(p) - m_livecrootn_to_litter_fire(p)      * dt
+      deadcrootn(p) = deadcrootn(p) - m_deadcrootn_to_litter_fire(p)      * dt
+     
       ! storage pools
       leafn_storage(p)      = leafn_storage(p)      - m_leafn_storage_to_fire(p)      * dt
       frootn_storage(p)     = frootn_storage(p)     - m_frootn_storage_to_fire(p)     * dt
@@ -242,6 +306,14 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
       livecrootn_storage(p) = livecrootn_storage(p) - m_livecrootn_storage_to_fire(p) * dt
       deadcrootn_storage(p) = deadcrootn_storage(p) - m_deadcrootn_storage_to_fire(p) * dt
 
+      leafn_storage(p)      = leafn_storage(p)      - m_leafn_storage_to_litter_fire(p)      * dt
+      frootn_storage(p)     = frootn_storage(p)     - m_frootn_storage_to_litter_fire(p)     * dt
+      livestemn_storage(p)  = livestemn_storage(p)  - m_livestemn_storage_to_litter_fire(p)  * dt
+      deadstemn_storage(p)  = deadstemn_storage(p)  - m_deadstemn_storage_to_litter_fire(p)  * dt
+      livecrootn_storage(p) = livecrootn_storage(p) - m_livecrootn_storage_to_litter_fire(p) * dt
+      deadcrootn_storage(p) = deadcrootn_storage(p) - m_deadcrootn_storage_to_litter_fire(p) * dt
+
+
       ! transfer pools
       leafn_xfer(p)      = leafn_xfer(p)      - m_leafn_xfer_to_fire(p)      * dt
       frootn_xfer(p)     = frootn_xfer(p)     - m_frootn_xfer_to_fire(p)     * dt
@@ -249,9 +321,17 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
       deadstemn_xfer(p)  = deadstemn_xfer(p)  - m_deadstemn_xfer_to_fire(p)  * dt
       livecrootn_xfer(p) = livecrootn_xfer(p) - m_livecrootn_xfer_to_fire(p) * dt
       deadcrootn_xfer(p) = deadcrootn_xfer(p) - m_deadcrootn_xfer_to_fire(p) * dt
+  
+      leafn_xfer(p)      = leafn_xfer(p)      - m_leafn_xfer_to_litter_fire(p)      * dt
+      frootn_xfer(p)     = frootn_xfer(p)     - m_frootn_xfer_to_litter_fire(p)     * dt
+      livestemn_xfer(p)  = livestemn_xfer(p)  - m_livestemn_xfer_to_litter_fire(p)  * dt
+      deadstemn_xfer(p)  = deadstemn_xfer(p)  - m_deadstemn_xfer_to_litter_fire(p)  * dt
+      livecrootn_xfer(p) = livecrootn_xfer(p) - m_livecrootn_xfer_to_litter_fire(p) * dt
+      deadcrootn_xfer(p) = deadcrootn_xfer(p) - m_deadcrootn_xfer_to_litter_fire(p) * dt
 
       ! retranslocated N pool
-      retransn(p) = retransn(p) - m_retransn_to_fire(p) * dt
+      retransn(p) = retransn(p) - m_retransn_to_fire(p)        * dt
+      retransn(p) = retransn(p) - m_retransn_to_litter_fire(p) * dt
 
    end do
 

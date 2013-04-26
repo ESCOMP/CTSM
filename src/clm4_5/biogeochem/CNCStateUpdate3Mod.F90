@@ -20,6 +20,7 @@ module CNCStateUpdate3Mod
 !
 ! !REVISION HISTORY:
 ! 7/27/2004: Created by Peter Thornton
+! F. Li and S. Levis (11/06/12)
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -42,7 +43,7 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    use clmtype
    use clm_time_manager, only: get_step_size
    use clm_varpar   , only: nlevdecomp, ndecomp_pools
-   use clm_varpar   , only: i_cwd
+   use clm_varpar   , only: i_cwd, i_met_lit, i_cel_lit, i_lig_lit
    use abortutils  , only: endrun
 !
 ! !ARGUMENTS:
@@ -61,32 +62,57 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in arrays
-   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)               ! vertically-resolved decomposing C fire loss (gC/m3/s)
+   real(r8), pointer :: m_leafc_to_fire(:)             
+   real(r8), pointer :: m_leafc_storage_to_fire(:)                
+   real(r8), pointer :: m_leafc_xfer_to_fire(:)        
+   real(r8), pointer :: m_livestemc_to_fire(:)         
+   real(r8), pointer :: m_livestemc_storage_to_fire(:)       
+   real(r8), pointer :: m_livestemc_xfer_to_fire(:)    
+   real(r8), pointer :: m_deadstemc_to_fire(:)         
+   real(r8), pointer :: m_deadstemc_storage_to_fire(:)          
+   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)    
+   real(r8), pointer :: m_frootc_to_fire(:)            
+   real(r8), pointer :: m_frootc_storage_to_fire(:)    
+   real(r8), pointer :: m_frootc_xfer_to_fire(:)       
+   real(r8), pointer :: m_livecrootc_to_fire(:)        
+   real(r8), pointer :: m_livecrootc_storage_to_fire(:)     
+   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)   
+   real(r8), pointer :: m_deadcrootc_to_fire(:)        
    real(r8), pointer :: m_deadcrootc_storage_to_fire(:)
-   real(r8), pointer :: m_deadcrootc_to_fire(:)
-   real(r8), pointer :: m_deadcrootc_to_litter_fire(:)
-   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)
-   real(r8), pointer :: m_deadstemc_storage_to_fire(:)
-   real(r8), pointer :: m_deadstemc_to_fire(:)
-   real(r8), pointer :: m_deadstemc_to_litter_fire(:)
-   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)
-   real(r8), pointer :: m_frootc_storage_to_fire(:)
-   real(r8), pointer :: m_frootc_to_fire(:)
-   real(r8), pointer :: m_frootc_xfer_to_fire(:)
-   real(r8), pointer :: m_gresp_storage_to_fire(:)
-   real(r8), pointer :: m_gresp_xfer_to_fire(:)
-   real(r8), pointer :: m_leafc_storage_to_fire(:)
-   real(r8), pointer :: m_leafc_to_fire(:)
-   real(r8), pointer :: m_leafc_xfer_to_fire(:)
-   real(r8), pointer :: m_livecrootc_storage_to_fire(:)
-   real(r8), pointer :: m_livecrootc_to_fire(:)
-   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)
-   real(r8), pointer :: m_livestemc_storage_to_fire(:)
-   real(r8), pointer :: m_livestemc_to_fire(:)
-   real(r8), pointer :: m_livestemc_xfer_to_fire(:)
-!
+   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)  
+   real(r8), pointer :: m_gresp_storage_to_fire(:)     
+   real(r8), pointer :: m_gresp_xfer_to_fire(:)       
+   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:) 
+   real(r8), pointer :: m_leafc_to_litter_fire(:)   
+   real(r8), pointer :: m_leafc_storage_to_litter_fire(:)                
+   real(r8), pointer :: m_leafc_xfer_to_litter_fire(:)  
+   real(r8), pointer :: m_livestemc_to_litter_fire(:)    
+   real(r8), pointer :: m_livestemc_storage_to_litter_fire(:)        
+   real(r8), pointer :: m_livestemc_xfer_to_litter_fire(:) 
+   real(r8), pointer :: m_livestemc_to_deadstemc_fire(:)    
+   real(r8), pointer :: m_deadstemc_to_litter_fire(:) 
+   real(r8), pointer :: m_deadstemc_storage_to_litter_fire(:)           
+   real(r8), pointer :: m_deadstemc_xfer_to_litter_fire(:) 
+   real(r8), pointer :: m_frootc_to_litter_fire(:)        
+   real(r8), pointer :: m_frootc_storage_to_litter_fire(:)  
+   real(r8), pointer :: m_frootc_xfer_to_litter_fire(:)
+   real(r8), pointer :: m_livecrootc_to_litter_fire(:)    
+   real(r8), pointer :: m_livecrootc_storage_to_litter_fire(:)      
+   real(r8), pointer :: m_livecrootc_xfer_to_litter_fire(:)
+   real(r8), pointer :: m_livecrootc_to_deadcrootc_fire(:)    
+   real(r8), pointer :: m_deadcrootc_to_litter_fire(:)        
+   real(r8), pointer :: m_deadcrootc_storage_to_litter_fire(:)  
+   real(r8), pointer :: m_deadcrootc_xfer_to_litter_fire(:)
+   real(r8), pointer :: m_gresp_storage_to_litter_fire(:)      
+   real(r8), pointer :: m_gresp_xfer_to_litter_fire(:) 
+   real(r8), pointer :: m_c_to_litr_met_fire(:,:)
+   real(r8), pointer :: m_c_to_litr_cel_fire(:,:)
+   real(r8), pointer :: m_c_to_litr_lig_fire(:,:)
+   real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)
+   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)
+   real(r8), pointer :: m_livestemc_to_cwdc_fire(:,:)
+   real(r8), pointer :: m_livecrootc_to_cwdc_fire(:,:)
+ 
 ! local pointers to implicit in/out arrays
    real(r8), pointer :: decomp_cpools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
@@ -145,34 +171,62 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    end select
 
     ! assign local pointers at the column level
-    m_deadcrootc_to_cwdc_fire      => ccisof%m_deadcrootc_to_cwdc_fire
-    m_deadstemc_to_cwdc_fire       => ccisof%m_deadstemc_to_cwdc_fire
-    m_decomp_cpools_to_fire_vr     => ccisof%m_decomp_cpools_to_fire_vr
-    decomp_cpools_vr               => ccisos%decomp_cpools_vr
+    m_decomp_cpools_to_fire_vr            => ccisof%m_decomp_cpools_to_fire_vr
+    m_deadcrootc_to_cwdc_fire             => ccisof%m_deadcrootc_to_cwdc_fire
+    m_deadstemc_to_cwdc_fire              => ccisof%m_deadstemc_to_cwdc_fire
+    m_livecrootc_to_cwdc_fire             => ccisof%m_livecrootc_to_cwdc_fire
+    m_livestemc_to_cwdc_fire              => ccisof%m_livestemc_to_cwdc_fire
+    m_c_to_litr_met_fire                  => ccisof%m_c_to_litr_met_fire
+    m_c_to_litr_cel_fire                  => ccisof%m_c_to_litr_cel_fire
+    m_c_to_litr_lig_fire                  => ccisof%m_c_to_litr_lig_fire
+    decomp_cpools_vr                      => ccisos%decomp_cpools_vr
 
-    ! assign local pointers at the column level
-    m_deadcrootc_storage_to_fire   => pcisof%m_deadcrootc_storage_to_fire
-    m_deadcrootc_to_fire           => pcisof%m_deadcrootc_to_fire
-    m_deadcrootc_to_litter_fire    => pcisof%m_deadcrootc_to_litter_fire
-    m_deadcrootc_xfer_to_fire      => pcisof%m_deadcrootc_xfer_to_fire
-    m_deadstemc_storage_to_fire    => pcisof%m_deadstemc_storage_to_fire
+    ! assign local pointers at the pft level
+    m_leafc_to_fire                => pcisof%m_leafc_to_fire
+    m_leafc_storage_to_fire        => pcisof%m_leafc_storage_to_fire
+    m_leafc_xfer_to_fire           => pcisof%m_leafc_xfer_to_fire
+    m_livestemc_to_fire            => pcisof%m_livestemc_to_fire
+    m_livestemc_storage_to_fire    => pcisof%m_livestemc_storage_to_fire
+    m_livestemc_xfer_to_fire       => pcisof%m_livestemc_xfer_to_fire
     m_deadstemc_to_fire            => pcisof%m_deadstemc_to_fire
-    m_deadstemc_to_litter_fire     => pcisof%m_deadstemc_to_litter_fire
+    m_deadstemc_storage_to_fire    => pcisof%m_deadstemc_storage_to_fire
     m_deadstemc_xfer_to_fire       => pcisof%m_deadstemc_xfer_to_fire
-    m_frootc_storage_to_fire       => pcisof%m_frootc_storage_to_fire
     m_frootc_to_fire               => pcisof%m_frootc_to_fire
+    m_frootc_storage_to_fire       => pcisof%m_frootc_storage_to_fire
     m_frootc_xfer_to_fire          => pcisof%m_frootc_xfer_to_fire
+    m_livecrootc_to_fire           => pcisof%m_livecrootc_to_fire
+    m_livecrootc_storage_to_fire   => pcisof%m_livecrootc_storage_to_fire
+    m_livecrootc_xfer_to_fire      => pcisof%m_livecrootc_xfer_to_fire
+    m_deadcrootc_to_fire           => pcisof%m_deadcrootc_to_fire
+    m_deadcrootc_storage_to_fire   => pcisof%m_deadcrootc_storage_to_fire
+    m_deadcrootc_xfer_to_fire      => pcisof%m_deadcrootc_xfer_to_fire
     m_gresp_storage_to_fire        => pcisof%m_gresp_storage_to_fire
     m_gresp_xfer_to_fire           => pcisof%m_gresp_xfer_to_fire
-    m_leafc_storage_to_fire        => pcisof%m_leafc_storage_to_fire
-    m_leafc_to_fire                => pcisof%m_leafc_to_fire
-    m_leafc_xfer_to_fire           => pcisof%m_leafc_xfer_to_fire
-    m_livecrootc_storage_to_fire   => pcisof%m_livecrootc_storage_to_fire
-    m_livecrootc_to_fire           => pcisof%m_livecrootc_to_fire
-    m_livecrootc_xfer_to_fire      => pcisof%m_livecrootc_xfer_to_fire
-    m_livestemc_storage_to_fire    => pcisof%m_livestemc_storage_to_fire
-    m_livestemc_to_fire            => pcisof%m_livestemc_to_fire
-    m_livestemc_xfer_to_fire       => pcisof%m_livestemc_xfer_to_fire
+
+    m_leafc_to_litter_fire               => pcisof%m_leafc_to_litter_fire
+    m_leafc_storage_to_litter_fire      => pcisof%m_leafc_storage_to_litter_fire
+    m_leafc_xfer_to_litter_fire         => pcisof%m_leafc_xfer_to_litter_fire
+    m_livestemc_to_litter_fire          => pcisof%m_livestemc_to_litter_fire
+    m_livestemc_storage_to_litter_fire  => pcisof%m_livestemc_storage_to_litter_fire
+    m_livestemc_xfer_to_litter_fire     => pcisof%m_livestemc_xfer_to_litter_fire
+    m_livestemc_to_deadstemc_fire       => pcisof%m_livestemc_to_deadstemc_fire
+    m_deadstemc_to_litter_fire          => pcisof%m_deadstemc_to_litter_fire
+    m_deadstemc_storage_to_litter_fire  => pcisof%m_deadstemc_storage_to_litter_fire
+    m_deadstemc_xfer_to_litter_fire     => pcisof%m_deadstemc_xfer_to_litter_fire
+    m_frootc_to_litter_fire             => pcisof%m_frootc_to_litter_fire
+    m_frootc_storage_to_litter_fire     => pcisof%m_frootc_storage_to_litter_fire
+    m_frootc_xfer_to_litter_fire        => pcisof%m_frootc_xfer_to_litter_fire
+    m_livecrootc_to_litter_fire         => pcisof%m_livecrootc_to_litter_fire
+    m_livecrootc_storage_to_litter_fire => pcisof%m_livecrootc_storage_to_litter_fire
+    m_livecrootc_xfer_to_litter_fire    => pcisof%m_livecrootc_xfer_to_litter_fire
+    m_livecrootc_to_deadcrootc_fire     => pcisof%m_livecrootc_to_deadcrootc_fire
+    m_deadcrootc_to_litter_fire         => pcisof%m_deadcrootc_to_litter_fire
+    m_deadcrootc_storage_to_litter_fire => pcisof%m_deadcrootc_storage_to_litter_fire
+    m_deadcrootc_xfer_to_litter_fire    => pcisof%m_deadcrootc_xfer_to_litter_fire
+    m_gresp_storage_to_litter_fire      => pcisof%m_gresp_storage_to_litter_fire
+    m_gresp_xfer_to_litter_fire         => pcisof%m_gresp_xfer_to_litter_fire
+    
+
     deadcrootc                     => pcisos%deadcrootc
     deadcrootc_storage             => pcisos%deadcrootc_storage
     deadcrootc_xfer                => pcisos%deadcrootc_xfer
@@ -203,8 +257,13 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
        do fc = 1,num_soilc
           c = filter_soilc(fc)
           ! pft-level wood to column-level CWD (uncombusted wood)
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + m_deadstemc_to_cwdc_fire(c,j) * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + m_deadcrootc_to_cwdc_fire(c,j) * dt
+          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + (m_deadstemc_to_cwdc_fire(c,j)+m_livestemc_to_cwdc_fire(c,j)) * dt
+          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + (m_deadcrootc_to_cwdc_fire(c,j)+m_livecrootc_to_cwdc_fire(c,j)) * dt
+
+         ! pft-level wood to column-level litter (uncombusted wood)
+           decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_c_to_litr_met_fire(c,j)* dt
+           decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + m_c_to_litr_cel_fire(c,j)* dt
+           decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + m_c_to_litr_lig_fire(c,j)* dt
        end do
     end do
     
@@ -224,32 +283,50 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 
        ! pft-level carbon fluxes from fire
        ! displayed pools
-       leafc(p)               = leafc(p)               - m_leafc_to_fire(p)               * dt
-       frootc(p)              = frootc(p)              - m_frootc_to_fire(p)              * dt
-       livestemc(p)           = livestemc(p)           - m_livestemc_to_fire(p)           * dt
-       deadstemc(p)           = deadstemc(p)           - m_deadstemc_to_fire(p)           * dt
-       deadstemc(p)           = deadstemc(p)           - m_deadstemc_to_litter_fire(p)    * dt
-       livecrootc(p)          = livecrootc(p)          - m_livecrootc_to_fire(p)          * dt
-       deadcrootc(p)          = deadcrootc(p)          - m_deadcrootc_to_fire(p)          * dt
-       deadcrootc(p)          = deadcrootc(p)          - m_deadcrootc_to_litter_fire(p)   * dt
+       leafc(p)               = leafc(p)               - m_leafc_to_fire(p)            * dt
+       leafc(p)               = leafc(p)               - m_leafc_to_litter_fire(p)     * dt
+       frootc(p)              = frootc(p)              - m_frootc_to_fire(p)           * dt
+       frootc(p)              = frootc(p)              - m_frootc_to_litter_fire(p)    * dt
+       livestemc(p)           = livestemc(p)           - m_livestemc_to_fire(p)        * dt
+       livestemc(p)           = livestemc(p)           - m_livestemc_to_litter_fire(p) * dt
+       deadstemc(p)           = deadstemc(p)           - m_deadstemc_to_fire(p)        * dt
+       deadstemc(p)           = deadstemc(p)           - m_deadstemc_to_litter_fire(p) * dt
+       livecrootc(p)          = livecrootc(p)          - m_livecrootc_to_fire(p)       * dt
+       livecrootc(p)          = livecrootc(p)          - m_livecrootc_to_litter_fire(p)* dt
+       deadcrootc(p)          = deadcrootc(p)          - m_deadcrootc_to_fire(p)       * dt
+       deadcrootc(p)          = deadcrootc(p)          - m_deadcrootc_to_litter_fire(p)* dt
 
        ! storage pools
-       leafc_storage(p)       = leafc_storage(p)       - m_leafc_storage_to_fire(p)       * dt
-       frootc_storage(p)      = frootc_storage(p)      - m_frootc_storage_to_fire(p)      * dt
-       livestemc_storage(p)   = livestemc_storage(p)   - m_livestemc_storage_to_fire(p)   * dt
-       deadstemc_storage(p)   = deadstemc_storage(p)   - m_deadstemc_storage_to_fire(p)   * dt
-       livecrootc_storage(p)  = livecrootc_storage(p)  - m_livecrootc_storage_to_fire(p)  * dt
-       deadcrootc_storage(p)  = deadcrootc_storage(p)  - m_deadcrootc_storage_to_fire(p)  * dt
-       gresp_storage(p)       = gresp_storage(p)       - m_gresp_storage_to_fire(p)       * dt
+       leafc_storage(p)       = leafc_storage(p)       - m_leafc_storage_to_fire(p)            * dt
+       leafc_storage(p)       = leafc_storage(p)       - m_leafc_storage_to_litter_fire(p)     * dt
+       frootc_storage(p)      = frootc_storage(p)      - m_frootc_storage_to_fire(p)           * dt
+       frootc_storage(p)      = frootc_storage(p)      - m_frootc_storage_to_litter_fire(p)    * dt
+       livestemc_storage(p)   = livestemc_storage(p)   - m_livestemc_storage_to_fire(p)        * dt
+       livestemc_storage(p)   = livestemc_storage(p)   - m_livestemc_storage_to_litter_fire(p) * dt
+       deadstemc_storage(p)   = deadstemc_storage(p)   - m_deadstemc_storage_to_fire(p)        * dt
+       deadstemc_storage(p)   = deadstemc_storage(p)   - m_deadstemc_storage_to_litter_fire(p) * dt
+       livecrootc_storage(p)  = livecrootc_storage(p)  - m_livecrootc_storage_to_fire(p)       * dt
+       livecrootc_storage(p)  = livecrootc_storage(p)  - m_livecrootc_storage_to_litter_fire(p)* dt
+       deadcrootc_storage(p)  = deadcrootc_storage(p)  - m_deadcrootc_storage_to_fire(p)       * dt
+       deadcrootc_storage(p)  = deadcrootc_storage(p)  - m_deadcrootc_storage_to_litter_fire(p)* dt
+       gresp_storage(p)       = gresp_storage(p)       - m_gresp_storage_to_fire(p)            * dt
+       gresp_storage(p)       = gresp_storage(p)       - m_gresp_storage_to_litter_fire(p)     * dt
 
        ! transfer pools
-       leafc_xfer(p)      = leafc_xfer(p)      - m_leafc_xfer_to_fire(p)      * dt
-       frootc_xfer(p)     = frootc_xfer(p)     - m_frootc_xfer_to_fire(p)     * dt
-       livestemc_xfer(p)  = livestemc_xfer(p)  - m_livestemc_xfer_to_fire(p)  * dt
-       deadstemc_xfer(p)  = deadstemc_xfer(p)  - m_deadstemc_xfer_to_fire(p)  * dt
-       livecrootc_xfer(p) = livecrootc_xfer(p) - m_livecrootc_xfer_to_fire(p) * dt
-       deadcrootc_xfer(p) = deadcrootc_xfer(p) - m_deadcrootc_xfer_to_fire(p) * dt
-       gresp_xfer(p)      = gresp_xfer(p)      - m_gresp_xfer_to_fire(p)      * dt
+       leafc_xfer(p)      = leafc_xfer(p)      - m_leafc_xfer_to_fire(p)            * dt
+       leafc_xfer(p)      = leafc_xfer(p)      - m_leafc_xfer_to_litter_fire(p)     * dt
+       frootc_xfer(p)     = frootc_xfer(p)     - m_frootc_xfer_to_fire(p)           * dt
+       frootc_xfer(p)     = frootc_xfer(p)     - m_frootc_xfer_to_litter_fire(p)    * dt
+       livestemc_xfer(p)  = livestemc_xfer(p)  - m_livestemc_xfer_to_fire(p)        * dt
+       livestemc_xfer(p)  = livestemc_xfer(p)  - m_livestemc_xfer_to_litter_fire(p) * dt
+       deadstemc_xfer(p)  = deadstemc_xfer(p)  - m_deadstemc_xfer_to_fire(p)        * dt
+       deadstemc_xfer(p)  = deadstemc_xfer(p)  - m_deadstemc_xfer_to_litter_fire(p) * dt
+       livecrootc_xfer(p) = livecrootc_xfer(p) - m_livecrootc_xfer_to_fire(p)       * dt
+       livecrootc_xfer(p) = livecrootc_xfer(p) - m_livecrootc_xfer_to_litter_fire(p)* dt
+       deadcrootc_xfer(p) = deadcrootc_xfer(p) - m_deadcrootc_xfer_to_fire(p)       * dt
+       deadcrootc_xfer(p) = deadcrootc_xfer(p) - m_deadcrootc_xfer_to_litter_fire(p)* dt
+       gresp_xfer(p)      = gresp_xfer(p)      - m_gresp_xfer_to_fire(p)            * dt
+       gresp_xfer(p)      = gresp_xfer(p)      - m_gresp_xfer_to_litter_fire(p)     * dt
 
     end do ! end of pft loop
 

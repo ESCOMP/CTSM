@@ -42,7 +42,7 @@ module CNSetValueMod
 !
 ! !REVISION HISTORY:
 ! 9/04/03: Created by Peter Thornton
-!
+! F. Li and S. Levis (11/06/12)
 !EOP
 !-----------------------------------------------------------------------
 
@@ -160,6 +160,7 @@ subroutine CNZeroFluxes_dwt( begc, endc, begp, endp )
        cptr%ccf%dwt_seedc_to_leaf(c) = 0._r8
        cptr%ccf%dwt_seedc_to_deadstem(c) = 0._r8
        cptr%ccf%dwt_conv_cflux(c) = 0._r8
+       cptr%ccf%lf_conv_cflux(c) = 0._r8
        cptr%ccf%dwt_prod10c_gain(c) = 0._r8
        cptr%ccf%dwt_prod100c_gain(c) = 0._r8
 
@@ -608,29 +609,54 @@ subroutine CNSetPcf(num, filter, val, pcf)
       pcf%hrv_deadcrootc_xfer_to_litter(i) = val   
       pcf%hrv_gresp_storage_to_litter(i) = val     
       pcf%hrv_gresp_xfer_to_litter(i) = val        
-      pcf%hrv_xsmrpool_to_atm(i) = val                 
+      pcf%hrv_xsmrpool_to_atm(i) = val
+   
+! fire-related variables changed by F. Li and S. Levis           
       pcf%m_leafc_to_fire(i) = val
-      pcf%m_frootc_to_fire(i) = val
       pcf%m_leafc_storage_to_fire(i) = val
-      pcf%m_frootc_storage_to_fire(i) = val
-      pcf%m_livestemc_storage_to_fire(i) = val
-      pcf%m_deadstemc_storage_to_fire(i) = val
-      pcf%m_livecrootc_storage_to_fire(i) = val
-      pcf%m_deadcrootc_storage_to_fire(i) = val
       pcf%m_leafc_xfer_to_fire(i) = val
-      pcf%m_frootc_xfer_to_fire(i) = val
-      pcf%m_livestemc_xfer_to_fire(i) = val
-      pcf%m_deadstemc_xfer_to_fire(i) = val
-      pcf%m_livecrootc_xfer_to_fire(i) = val
-      pcf%m_deadcrootc_xfer_to_fire(i) = val
       pcf%m_livestemc_to_fire(i) = val
+      pcf%m_livestemc_storage_to_fire(i) = val
+      pcf%m_livestemc_xfer_to_fire(i) = val
       pcf%m_deadstemc_to_fire(i) = val
-      pcf%m_deadstemc_to_litter_fire(i) = val
+      pcf%m_deadstemc_storage_to_fire(i) = val
+      pcf%m_deadstemc_xfer_to_fire(i) = val
+      pcf%m_frootc_to_fire(i) = val
+      pcf%m_frootc_storage_to_fire(i) = val
+      pcf%m_frootc_xfer_to_fire(i) = val
       pcf%m_livecrootc_to_fire(i) = val
+      pcf%m_livecrootc_storage_to_fire(i) = val
+      pcf%m_livecrootc_xfer_to_fire(i) = val
       pcf%m_deadcrootc_to_fire(i) = val
-      pcf%m_deadcrootc_to_litter_fire(i) = val
+      pcf%m_deadcrootc_storage_to_fire(i) = val
+      pcf%m_deadcrootc_xfer_to_fire(i) = val
       pcf%m_gresp_storage_to_fire(i) = val
       pcf%m_gresp_xfer_to_fire(i) = val
+
+      pcf%m_leafc_to_litter_fire(i) = val
+      pcf%m_leafc_storage_to_litter_fire(i) = val
+      pcf%m_leafc_xfer_to_litter_fire(i) = val
+      pcf%m_livestemc_to_litter_fire(i) = val
+      pcf%m_livestemc_storage_to_litter_fire(i) = val
+      pcf%m_livestemc_xfer_to_litter_fire(i) = val
+      pcf%m_livestemc_to_deadstemc_fire(i) = val
+      pcf%m_deadstemc_to_litter_fire(i) = val
+      pcf%m_deadstemc_storage_to_litter_fire(i) = val
+      pcf%m_deadstemc_xfer_to_litter_fire(i) = val
+      pcf%m_frootc_to_litter_fire(i) = val
+      pcf%m_frootc_storage_to_litter_fire(i) = val
+      pcf%m_frootc_xfer_to_litter_fire(i) = val
+      pcf%m_livecrootc_to_litter_fire(i) = val
+      pcf%m_livecrootc_storage_to_litter_fire(i) = val
+      pcf%m_livecrootc_xfer_to_litter_fire(i) = val
+      pcf%m_livecrootc_to_deadcrootc_fire(i) = val
+      pcf%m_deadcrootc_to_litter_fire(i) = val
+      pcf%m_deadcrootc_storage_to_litter_fire(i) = val
+      pcf%m_deadcrootc_xfer_to_litter_fire(i) = val
+      pcf%m_gresp_storage_to_litter_fire(i) = val
+      pcf%m_gresp_xfer_to_litter_fire(i) = val
+
+
       pcf%leafc_xfer_to_leafc(i) = val
       pcf%frootc_xfer_to_frootc(i) = val
       pcf%livestemc_xfer_to_livestemc(i) = val
@@ -811,28 +837,52 @@ subroutine CNSetPnf(num, filter, val, pnf)
       pnf%hrv_deadstemn_to_prod100n(i) = val       
       pnf%hrv_livecrootn_to_litter(i) = val        
       pnf%hrv_deadcrootn_to_litter(i) = val        
-      pnf%hrv_retransn_to_litter(i) = val           
+      pnf%hrv_retransn_to_litter(i) = val    
+
+! fire-related variables changed by F. Li and S. Levis                  
       pnf%m_leafn_to_fire(i) = val
-      pnf%m_frootn_to_fire(i) = val
       pnf%m_leafn_storage_to_fire(i) = val
-      pnf%m_frootn_storage_to_fire(i) = val
-      pnf%m_livestemn_storage_to_fire(i) = val
-      pnf%m_deadstemn_storage_to_fire(i) = val
-      pnf%m_livecrootn_storage_to_fire(i) = val
-      pnf%m_deadcrootn_storage_to_fire(i) = val
       pnf%m_leafn_xfer_to_fire(i) = val
-      pnf%m_frootn_xfer_to_fire(i) = val
-      pnf%m_livestemn_xfer_to_fire(i) = val
-      pnf%m_deadstemn_xfer_to_fire(i) = val
-      pnf%m_livecrootn_xfer_to_fire(i) = val
-      pnf%m_deadcrootn_xfer_to_fire(i) = val
       pnf%m_livestemn_to_fire(i) = val
+      pnf%m_livestemn_storage_to_fire(i) = val
+      pnf%m_livestemn_xfer_to_fire(i) = val
       pnf%m_deadstemn_to_fire(i) = val
-      pnf%m_deadstemn_to_litter_fire(i) = val
+      pnf%m_deadstemn_storage_to_fire(i) = val
+      pnf%m_deadstemn_xfer_to_fire(i) = val
+      pnf%m_frootn_to_fire(i) = val
+      pnf%m_frootn_storage_to_fire(i) = val
+      pnf%m_frootn_xfer_to_fire(i) = val
       pnf%m_livecrootn_to_fire(i) = val
+      pnf%m_livecrootn_storage_to_fire(i) = val
+      pnf%m_livecrootn_xfer_to_fire(i) = val
       pnf%m_deadcrootn_to_fire(i) = val
-      pnf%m_deadcrootn_to_litter_fire(i) = val
+      pnf%m_deadcrootn_storage_to_fire(i) = val
+      pnf%m_deadcrootn_xfer_to_fire(i) = val
       pnf%m_retransn_to_fire(i) = val
+      
+      
+      pnf%m_leafn_to_litter_fire(i) = val
+      pnf%m_leafn_storage_to_litter_fire(i) = val
+      pnf%m_leafn_xfer_to_litter_fire(i) = val
+      pnf%m_livestemn_to_litter_fire(i) = val
+      pnf%m_livestemn_storage_to_litter_fire(i) = val
+      pnf%m_livestemn_xfer_to_litter_fire(i) = val
+      pnf%m_livestemn_to_deadstemn_fire(i) = val
+      pnf%m_deadstemn_to_litter_fire(i) = val
+      pnf%m_deadstemn_storage_to_litter_fire(i) = val
+      pnf%m_deadstemn_xfer_to_litter_fire(i) = val
+      pnf%m_frootn_to_litter_fire(i) = val
+      pnf%m_frootn_storage_to_litter_fire(i) = val
+      pnf%m_frootn_xfer_to_litter_fire(i) = val
+      pnf%m_livecrootn_to_litter_fire(i) = val
+      pnf%m_livecrootn_storage_to_litter_fire(i) = val
+      pnf%m_livecrootn_xfer_to_litter_fire(i) = val
+      pnf%m_livecrootn_to_deadcrootn_fire(i) = val
+      pnf%m_deadcrootn_to_litter_fire(i) = val
+      pnf%m_deadcrootn_storage_to_litter_fire(i) = val
+      pnf%m_deadcrootn_xfer_to_litter_fire(i) = val
+      pnf%m_retransn_to_litter_fire(i) = val
+
       pnf%leafn_xfer_to_leafn(i) = val
       pnf%frootn_xfer_to_frootn(i) = val
       pnf%livestemn_xfer_to_livestemn(i) = val
@@ -927,13 +977,16 @@ subroutine CNSetCps(num, filter, val, cps)
       cps%annsum_counter(i) = val
       cps%cannsum_npp(i) = val
       cps%cannavg_t2m(i) = val
+      
+  ! fire related variables changed by F. Li and S. Levis
       cps%wf(i) = val
-      cps%me(i) = val
-      cps%fire_prob(i) = val
-      cps%mean_fire_prob(i) = val
-      cps%fireseasonl(i) = val
+      cps%wf2(i) = val
+      cps%nfire(i) = val
+      cps%baf_crop(i) = val
+      cps%baf_peatf(i) = val
+      cps%fbac(i) = val
+      cps%fbac1(i) = val
       cps%farea_burned(i) = val
-      cps%ann_farea_burned(i) = val
    end do
 
    do j = 1,nlevdecomp_full
@@ -998,6 +1051,11 @@ subroutine CNSetCcs(num, filter, val, ccs)
       ccs%totsomc(i) = val
       ccs%totecosysc(i) = val
       ccs%totcolc(i) = val
+      ccs%rootc_col(i) = val
+      ccs%totvegc_col(i) = val
+      ccs%leafc_col(i) = val
+      ccs%fuelc(i) = val
+      ccs%fuelc_crop(i) = val
       ccs%totlitc_1m(i) = val
       ccs%totsomc_1m(i) = val
    end do
@@ -1212,8 +1270,16 @@ subroutine CNSetCcf(num, filter, val, ccf)
          ccf%hrv_livecrootc_xfer_to_litr_met_c(i,j)    = val
          ccf%hrv_deadcrootc_xfer_to_litr_met_c(i,j)    = val
          ccf%hrv_gresp_xfer_to_litr_met_c(i,j)         = val
+
+! fire variables changed by F. Li and S. Levis
          ccf%m_deadstemc_to_cwdc_fire(i,j)         = val
          ccf%m_deadcrootc_to_cwdc_fire(i,j)        = val
+         ccf%m_livestemc_to_cwdc_fire(i,j)         = val
+         ccf%m_livecrootc_to_cwdc_fire(i,j)        = val
+         ccf%m_c_to_litr_met_fire(i,j)             = val
+         ccf%m_c_to_litr_cel_fire(i,j)             = val  
+         ccf%m_c_to_litr_lig_fire(i,j)             = val
+
          ccf%leafc_to_litr_met_c(i,j)                  = val
          ccf%leafc_to_litr_cel_c(i,j)                  = val
          ccf%leafc_to_litr_lig_c(i,j)                  = val
@@ -1265,7 +1331,8 @@ subroutine CNSetCcf(num, filter, val, ccf)
    do fi = 1,num
       i = filter(fi)
       ccf%hrv_deadstemc_to_prod10c(i)         = val        
-      ccf%hrv_deadstemc_to_prod100c(i)        = val       
+      ccf%hrv_deadstemc_to_prod100c(i)        = val  
+      ccf%somc_fire(i)                        = val     ! F. Li and S.Levis
       ccf%prod10c_loss(i)                     = val
       ccf%prod100c_loss(i)                    = val
       ccf%product_closs(i)                    = val
@@ -1384,9 +1451,18 @@ subroutine CNSetCnf(num, filter, val, cnf)
          cnf%hrv_livestemn_xfer_to_litr_met_n(i,j) = val    
          cnf%hrv_deadstemn_xfer_to_litr_met_n(i,j) = val    
          cnf%hrv_livecrootn_xfer_to_litr_met_n(i,j) = val   
-         cnf%hrv_deadcrootn_xfer_to_litr_met_n(i,j) = val   
-         cnf%m_deadstemn_to_cwdn_fire(i,j) = val
-         cnf%m_deadcrootn_to_cwdn_fire(i,j) = val
+         cnf%hrv_deadcrootn_xfer_to_litr_met_n(i,j) = val  
+
+ ! fire variables changed by F. Li and S. Levis
+         cnf%m_deadstemn_to_cwdn_fire(i,j)         = val
+         cnf%m_deadcrootn_to_cwdn_fire(i,j)        = val
+         cnf%m_livestemn_to_cwdn_fire(i,j)         = val
+         cnf%m_livecrootn_to_cwdn_fire(i,j)        = val
+         cnf%m_n_to_litr_met_fire(i,j)             = val
+         cnf%m_n_to_litr_cel_fire(i,j)             = val  
+         cnf%m_n_to_litr_lig_fire(i,j)             = val
+
+        
          cnf%leafn_to_litr_met_n(i,j) = val
          cnf%leafn_to_litr_cel_n(i,j) = val
          cnf%leafn_to_litr_lig_n(i,j) = val

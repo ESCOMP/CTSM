@@ -1104,7 +1104,7 @@ if (not defined $nl->get_value('finidat')) {
 			   'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
 	   } else {
 	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn,   'vsoilc_centbgc'=>$vsoilc,
 			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
 			   'glc_nec'=>$glc_nec );
 	   }
@@ -1116,7 +1116,7 @@ if (not defined $nl->get_value('finidat')) {
 			'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
 	} else {
 	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
 			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
 			'glc_nec'=>$glc_nec );
 	}
@@ -1128,7 +1128,7 @@ if (not defined $nl->get_value('finidat')) {
 			'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
 	} else {
 	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
-		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
+		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
 		       'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
 		       'glc_nec'=>$glc_nec );
 	}
@@ -1324,7 +1324,61 @@ if ( defined($suplnitro) ) {
       }
    }
 }
-
+#
+# Other streams data needed when CN is on and it's CLM4_5
+#
+if ( $phys eq "clm4_5" ) {
+   if ( $bgc =~ /^cn/ ) {
+      #################################
+      # namelist group: popd_streams  #
+      #################################
+      # Population density
+      add_default($nl, 'popdensmapalgo', 'hgrid'=>$res );
+      add_default($nl, 'stream_year_first_popdens',   'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'stream_year_last_popdens',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_popdens') != $nl->get_value('stream_year_last_popdens') ) {
+         add_default($nl, 'model_year_align_popdens',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      }
+      add_default($nl, 'stream_fldfilename_popdens', 'hgrid'=>"0.5x0.5" );
+   
+      ##################################
+      # namelist group: light_streams  #
+      ##################################
+      # Lightning
+      add_default($nl, 'lightngmapalgo', 'hgrid'=>$res );
+      add_default($nl, 'stream_year_first_lightng',   'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      add_default($nl, 'stream_year_last_lightng',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_lightng') != $nl->get_value('stream_year_last_lightng') ) {
+         add_default($nl, 'model_year_align_lightng',    'sim_year'=>$sim_year, 'sim_year_range'=>$sim_year_range);
+      }
+      add_default($nl, 'stream_fldfilename_lightng', 'hgrid'=>"94x192" );
+   #
+   # If bgc is NOT CN/CNDV then make sure none of the popdens or Lightng settings are set
+   #
+   } else {
+     if ( defined($nl->get_value('stream_year_first_popdens')) ||
+          defined($nl->get_value('stream_year_last_popdens'))  ||
+          defined($nl->get_value('model_year_align_popdens'))  ||
+          defined($nl->get_value('stream_fldfilename_popdens'))
+     ) {
+        die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_popdens," .
+             "stream_year_last_popdens, model_year_align_popdens, nor stream_fldfilename_popdens" . 
+             " can be set!\n";
+     }
+     if ( defined($nl->get_value('stream_year_first_lightng')) ||
+          defined($nl->get_value('stream_year_last_lightng'))  ||
+          defined($nl->get_value('model_year_align_lightng'))  ||
+          defined($nl->get_value('stream_fldfilename_lightng'))
+     ) {
+        die "$ProgName ERROR:: When bgc is NOT CN or CNDV none of: stream_year_first_lightng," .
+             "stream_year_last_lightng, model_year_align_lightng, nor stream_fldfilename_lightng" . 
+             " can be set!\n";
+     }
+   }
+}
+ 
 #################################
 # namelist group: drydep_inparm #
 #################################
@@ -1359,9 +1413,6 @@ if ($opts{'megan'} ) {
 #
 $definition->validate($nl);
 
-# Groups to go through for clm namelists
-my @groups = qw(clm_inparm ndepdyn_nml);
-
 #-----------------------------------------------------------------------------------------------
 # Write output files
 
@@ -1383,7 +1434,7 @@ my @groups;
 if ($phys eq "clm4_0") {
     @groups = qw(clm_inparm ndepdyn_nml);
 } else {
-    @groups = qw(clm_inparm ndepdyn_nml clm_hydrology1_inparm clm_soilhydrology_inparm);
+    @groups = qw(clm_inparm ndepdyn_nml popd_streams light_streams clm_hydrology1_inparm clm_soilhydrology_inparm);
     if ( $clm4me  eq "on" ) {
 	push @groups, "ch4par_in";
     }

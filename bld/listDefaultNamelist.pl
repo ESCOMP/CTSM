@@ -63,7 +63,6 @@ my $drvblddir   = "$cfgdir/../../../../models/drv/bld";
 
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
-                          "$cfgdir/namelist_files/namelist_defaults_clm.xml",
                           "$drvblddir/namelist_files/namelist_defaults_drv.xml",
                           "$datmblddir/namelist_files/namelist_defaults_datm.xml" );
 my $list = "clm.input_data_list";
@@ -203,7 +202,7 @@ sub GetListofNeededFiles {
   my $datmblddir             = "$cfgdir/../../../../models/atm/datm/bld";
   my @nl_definition_files    = (
                                  "$datmblddir/namelist_files/namelist_definition_datm.xml",
-                                 "$cfgdir/namelist_files/namelist_definition.xml"
+                                 "$cfgdir/namelist_files/namelist_definition_$opts{'phys'}.xml"
                                );
   $inputopts{'nldef_files'}    = \@nl_definition_files;
   $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition.xml";
@@ -223,6 +222,7 @@ sub GetListofNeededFiles {
   }
 
   # Input options
+  push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_$opts{'phys'}.xml";
   if ( defined($opts{'usrdat'}) ) {
       push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
   }

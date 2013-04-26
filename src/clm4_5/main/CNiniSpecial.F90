@@ -29,7 +29,7 @@ subroutine CNiniSpecial ()
 !
 ! !REVISION HISTORY:
 ! 11/13/03: Created by Peter Thornton
-!
+!F. Li and S. Levis (11/06/12)
 !
 ! local pointers to implicit in arguments
 !
@@ -203,6 +203,7 @@ subroutine CNiniSpecial ()
       clm3%g%l%c%ccf%dwt_seedc_to_leaf(c) = 0._r8
       clm3%g%l%c%ccf%dwt_seedc_to_deadstem(c) = 0._r8
       clm3%g%l%c%ccf%dwt_conv_cflux(c) = 0._r8
+      clm3%g%l%c%ccf%lf_conv_cflux(c) = 0._r8    ! F. Li and S. Levis
       clm3%g%l%c%ccf%dwt_prod10c_gain(c) = 0._r8
       clm3%g%l%c%ccf%prod10c_loss(c) = 0._r8
       clm3%g%l%c%ccf%dwt_prod100c_gain(c) = 0._r8

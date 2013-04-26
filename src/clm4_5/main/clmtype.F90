@@ -79,7 +79,7 @@ module clmtype
 !                              
 ! !REVISION HISTORY:
 ! Created by Peter Thornton and Mariana Vertenstein
-!
+!F. Li and S. Levis (11/06/12)
 !*******************************************************************************
 !----------------------------------------------------
 ! Begin definition of conservation check structures
@@ -132,6 +132,8 @@ end type nitrogen_balance_type
 ! pft physical state variables structure
 !----------------------------------------------------
 type, public :: pft_pstate_type
+   real(r8), pointer :: prec60(:)              !60-day running mean of tot. precipitation (mm/s) added by F. Li and S. Levis
+   real(r8), pointer :: prec10(:)              !10-day running mean of tot. precipitation (mm/s) added by F. Li and S. Levis
    integer , pointer :: frac_veg_nosno(:)       !fraction of vegetation not covered by snow (0 OR 1) [-] 
    integer , pointer :: frac_veg_nosno_alb(:)   !fraction of vegetation not covered by snow (0 OR 1) [-] 
    real(r8), pointer :: emv(:)                  !vegetation emissivity
@@ -153,6 +155,7 @@ type, public :: pft_pstate_type
    real(r8), pointer :: laisun_z(:,:)           !sunlit leaf area for canopy layer
    real(r8), pointer :: laisha_z(:,:)           !shaded leaf area for canopy layer
    real(r8), pointer :: btran(:)                !transpiration wetness factor (0 to 1)
+   real(r8), pointer :: btran2(:)               ! root zone soil wetness factor (0 to 1) added by F. Li and S. Levis
    real(r8), pointer :: fsun(:)                 !sunlit fraction of canopy
    real(r8), pointer :: tlai(:)                 !one-sided leaf area index, no burying by snow
    real(r8), pointer :: tsai(:)                 !one-sided stem area index, no burying by snow
@@ -192,12 +195,14 @@ type, public :: pft_pstate_type
    real(r8), pointer :: va(:)                   !atmospheric wind speed plus convective velocity (m/s)
    real(r8), pointer :: ram1(:)                 !aerodynamical resistance (s/m)
    real(r8), pointer :: ram1_lake(:)            !aerodynamical resistance (s/m)
+   integer , pointer :: burndate(:)             ! crop burn date
    real(r8), pointer :: rh_leaf(:)              !fractional humidity at leaf surface (dimensionless)
    real(r8), pointer :: rhaf(:)                 !fractional humidity of canopy air (dimensionless)
    real(r8), pointer :: fv(:)                   !friction velocity (m/s) (for dust model)
    real(r8), pointer :: forc_hgt_u_pft(:)       !wind forcing height (10m+z0m+d) (m)
    real(r8), pointer :: forc_hgt_t_pft(:)       !temperature forcing height (10m+z0m+d) (m)
    real(r8), pointer :: forc_hgt_q_pft(:)       !specific humidity forcing height (10m+z0m+d) (m)
+   real(r8), pointer :: lfpftd(:)               ! decrease of pft weight (0-1) on the column for the timestep added by F. Li and S. Levis
    ! Variables for prognostic crop model
    real(r8), pointer :: hdidx(:)                ! cold hardening index?
    real(r8), pointer :: cumvd(:)                ! cumulative vernalization d?ependence?
@@ -314,8 +319,23 @@ type, public :: pft_epc_type
    real(r8), pointer :: evergreen(:)    !binary flag for evergreen leaf habit (0 or 1)
    real(r8), pointer :: stress_decid(:) !binary flag for stress-deciduous leaf habit (0 or 1)
    real(r8), pointer :: season_decid(:) !binary flag for seasonal-deciduous leaf habit (0 or 1)
-   ! new variables for fire code
-   real(r8), pointer :: resist(:)       !resistance to fire (no units)
+
+!  fire variables added by F. Li and S. Levis
+    
+  ! combustion completeness factors (0 to 1)
+   real(r8), pointer :: cc_leaf(:)        !combustion completeness factor for leaf
+   real(r8), pointer :: cc_lstem(:)       !combustion completeness factor for live stem
+   real(r8), pointer :: cc_dstem(:)       !combustion completeness factor for dead stem
+   real(r8), pointer :: cc_other(:)       !combustion completeness factor for other plant tissues
+ !  mortality factors (0 to 1)
+   real(r8), pointer :: fm_leaf(:)        !fire-related mortality factor for leaf
+   real(r8), pointer :: fm_lstem(:)       !fire-related mortality factor for live stem
+   real(r8), pointer :: fm_dstem(:)       !fire-related mortality factor for dead stem
+   real(r8), pointer :: fm_other(:)       !fire-related mortality factor for other plant tissues
+   real(r8), pointer :: fm_root(:)        !fire-related mortality factor for fine roots 
+   real(r8), pointer :: fm_lroot(:)       !fire-related mortality factor for live roots
+   real(r8), pointer :: fm_droot(:)       !fire-related mortality factor for dead roots
+
    real(r8), pointer :: rootprof_beta(:)            !CLM rooting distribution parameter for C and N inputs [unitless]
    ! new variables for crop code
    real(r8), pointer :: fertnitro(:)    ! fertilizer applied
@@ -762,29 +782,51 @@ type, public :: pft_cflux_type
    real(r8), pointer :: hrv_gresp_storage_to_litter(:)       ! growth respiration storage harvest mortality (gC/m2/s)
    real(r8), pointer :: hrv_gresp_xfer_to_litter(:)          ! growth respiration transfer harvest mortality (gC/m2/s)
    real(r8), pointer :: hrv_xsmrpool_to_atm(:)               ! excess MR pool harvest mortality (gC/m2/s)
-   ! PFT-level fire fluxes
-   real(r8), pointer :: m_leafc_to_fire(:)                   ! leaf C fire loss (gC/m2/s)
-   real(r8), pointer :: m_leafc_storage_to_fire(:)           ! leaf C storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_leafc_xfer_to_fire(:)              ! leaf C transfer fire loss (gC/m2/s)
-   real(r8), pointer :: m_frootc_to_fire(:)                  ! fine root C fire loss (gC/m2/s)
-   real(r8), pointer :: m_frootc_storage_to_fire(:)          ! fine root C storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_frootc_xfer_to_fire(:)             ! fine root C transfer fire loss (gC/m2/s)
-   real(r8), pointer :: m_livestemc_to_fire(:)               ! live stem C fire loss (gC/m2/s)
-   real(r8), pointer :: m_livestemc_storage_to_fire(:)       ! live stem C storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_livestemc_xfer_to_fire(:)          ! live stem C transfer fire loss (gC/m2/s)
-   real(r8), pointer :: m_deadstemc_to_fire(:)               ! dead stem C fire loss (gC/m2/s)
-   real(r8), pointer :: m_deadstemc_to_litter_fire(:)        ! dead stem C fire mortality to litter (gC/m2/s)
-   real(r8), pointer :: m_deadstemc_storage_to_fire(:)       ! dead stem C storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)          ! dead stem C transfer fire loss (gC/m2/s)
-   real(r8), pointer :: m_livecrootc_to_fire(:)              ! live coarse root C fire loss (gC/m2/s)
-   real(r8), pointer :: m_livecrootc_storage_to_fire(:)      ! live coarse root C storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)         ! live coarse root C transfer fire loss (gC/m2/s)
-   real(r8), pointer :: m_deadcrootc_to_fire(:)              ! dead coarse root C fire loss (gC/m2/s)
-   real(r8), pointer :: m_deadcrootc_to_litter_fire(:)       ! dead coarse root C fire mortality to litter (gC/m2/s)
-   real(r8), pointer :: m_deadcrootc_storage_to_fire(:)      ! dead coarse root C storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)         ! dead coarse root C transfer fire loss (gC/m2/s)
-   real(r8), pointer :: m_gresp_storage_to_fire(:)           ! growth respiration storage fire loss (gC/m2/s)
-   real(r8), pointer :: m_gresp_xfer_to_fire(:)              ! growth respiration transfer fire loss (gC/m2/s)
+
+   ! PFT-level fire C fluxes added by F. Li and S. Levis
+   real(r8), pointer :: m_leafc_to_fire(:)             ! (gC/m2/s) fire C emissions from leafc 
+   real(r8), pointer :: m_leafc_storage_to_fire(:)     ! (gC/m2/s) fire C emissions from leafc_storage             
+   real(r8), pointer :: m_leafc_xfer_to_fire(:)        ! (gC/m2/s) fire C emissions from leafc_xfer
+   real(r8), pointer :: m_livestemc_to_fire(:)         ! (gC/m2/s) fire C emissions from livestemc
+   real(r8), pointer :: m_livestemc_storage_to_fire(:) ! (gC/m2/s) fire C emissions from livestemc_storage       
+   real(r8), pointer :: m_livestemc_xfer_to_fire(:)    ! (gC/m2/s) fire C emissions from livestemc_xfer
+   real(r8), pointer :: m_deadstemc_to_fire(:)         ! (gC/m2/s) fire C emissions from deadstemc_xfer
+   real(r8), pointer :: m_deadstemc_storage_to_fire(:) ! (gC/m2/s) fire C emissions from deadstemc_storage         
+   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)    ! (gC/m2/s) fire C emissions from deadstemc_xfer
+   real(r8), pointer :: m_frootc_to_fire(:)            ! (gC/m2/s) fire C emissions from frootc
+   real(r8), pointer :: m_frootc_storage_to_fire(:)    ! (gC/m2/s) fire C emissions from frootc_storage
+   real(r8), pointer :: m_frootc_xfer_to_fire(:)       ! (gC/m2/s) fire C emissions from frootc_xfer
+   real(r8), pointer :: m_livecrootc_to_fire(:)        ! (gC/m2/s) fire C emissions from livecrootc
+   real(r8), pointer :: m_livecrootc_storage_to_fire(:)! (gC/m2/s) fire C emissions from livecrootc_storage     
+   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)   ! (gC/m2/s) fire C emissions from livecrootc_xfer
+   real(r8), pointer :: m_deadcrootc_to_fire(:)        ! (gC/m2/s) fire C emissions from deadcrootc
+   real(r8), pointer :: m_deadcrootc_storage_to_fire(:)! (gC/m2/s) fire C emissions from deadcrootc_storage 
+   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)   ! (gC/m2/s) fire C emissions from deadcrootc_xfer
+   real(r8), pointer :: m_gresp_storage_to_fire(:)     ! (gC/m2/s) fire C emissions from gresp_storage 
+   real(r8), pointer :: m_gresp_xfer_to_fire(:)        ! (gC/m2/s) fire C emissions from gresp_xfer
+   real(r8), pointer :: m_leafc_to_litter_fire(:)      ! (gC/m2/s) from leafc to litter c due to fire
+   real(r8), pointer :: m_leafc_storage_to_litter_fire(:)  ! (gC/m2/s) from leafc_storage to litter C  due to fire               
+   real(r8), pointer :: m_leafc_xfer_to_litter_fire(:)     ! (gC/m2/s) from leafc_xfer to litter C  due to fire               
+   real(r8), pointer :: m_livestemc_to_litter_fire(:)      ! (gC/m2/s) from livestemc to litter C  due to fire               
+   real(r8), pointer :: m_livestemc_storage_to_litter_fire(:)  ! (gC/m2/s) from livestemc_storage to litter C due to fire      
+   real(r8), pointer :: m_livestemc_xfer_to_litter_fire(:) !(gC/m2/s) from livestemc_xfer to litter C due to fire      
+   real(r8), pointer :: m_livestemc_to_deadstemc_fire(:)   !(gC/m2/s) from livestemc to deadstemc due to fire       
+   real(r8), pointer :: m_deadstemc_to_litter_fire(:)      !(gC/m2/s) from deadstemc to litter C due to fire      
+   real(r8), pointer :: m_deadstemc_storage_to_litter_fire(:)  !(gC/m2/s) from deadstemc_storage to litter C due to fire               
+   real(r8), pointer :: m_deadstemc_xfer_to_litter_fire(:)     !(gC/m2/s) from deadstemc_xfer to litter C due to fire               
+   real(r8), pointer :: m_frootc_to_litter_fire(:)             !(gC/m2/s) from frootc to litter C due to fire               
+   real(r8), pointer :: m_frootc_storage_to_litter_fire(:)     !(gC/m2/s) from frootc_storage to litter C due to fire               
+   real(r8), pointer :: m_frootc_xfer_to_litter_fire(:)        !(gC/m2/s) from frootc_xfer to litter C due to fire               
+   real(r8), pointer :: m_livecrootc_to_litter_fire(:)         !(gC/m2/s) from livecrootc to litter C due to fire                     
+   real(r8), pointer :: m_livecrootc_storage_to_litter_fire(:) !(gC/m2/s) from livecrootc_storage to litter C due to fire                     
+   real(r8), pointer :: m_livecrootc_xfer_to_litter_fire(:)    !(gC/m2/s) from livecrootc_xfer to litter C due to fire                     
+   real(r8), pointer :: m_livecrootc_to_deadcrootc_fire(:)     !(gC/m2/s) from livecrootc to deadstemc due to fire        
+   real(r8), pointer :: m_deadcrootc_to_litter_fire(:)         !(gC/m2/s) from deadcrootc to litter C due to fire                       
+   real(r8), pointer :: m_deadcrootc_storage_to_litter_fire(:) !(gC/m2/s) from deadcrootc_storage to litter C due to fire                       
+   real(r8), pointer :: m_deadcrootc_xfer_to_litter_fire(:)    !(gC/m2/s) from deadcrootc_xfer to litter C due to fire                       
+   real(r8), pointer :: m_gresp_storage_to_litter_fire(:)      !(gC/m2/s) from gresp_storage to litter C due to fire                       
+   real(r8), pointer :: m_gresp_xfer_to_litter_fire(:)          !(gC/m2/s) from gresp_xfer to litter C due to fire                       
+ 
    ! phenology fluxes from transfer pools                     
    real(r8), pointer :: grainc_xfer_to_grainc(:)             ! grain C growth from storage for prognostic crop(gC/m2/s)
    real(r8), pointer :: leafc_xfer_to_leafc(:)               ! leaf C growth from storage (gC/m2/s)
@@ -953,29 +995,51 @@ type, public :: pft_nflux_type
    real(r8), pointer :: hrv_livecrootn_to_litter(:)           ! live coarse root N harvest mortality (gN/m2/s)
    real(r8), pointer :: hrv_deadcrootn_to_litter(:)           ! dead coarse root N harvest mortality (gN/m2/s)
    real(r8), pointer :: hrv_retransn_to_litter(:)             ! retranslocated N pool harvest mortality (gN/m2/s)
-   ! fire mortality fluxes
-   real(r8), pointer :: m_leafn_to_fire(:)                  ! leaf N fire loss (gN/m2/s)
-   real(r8), pointer :: m_leafn_storage_to_fire(:)          ! leaf N storage fire loss (gN/m2/s)
-   real(r8), pointer :: m_leafn_xfer_to_fire(:)             ! leaf N transfer fire loss (gN/m2/s)
-   real(r8), pointer :: m_frootn_to_fire(:)                 ! fine root N fire loss (gN/m2/s)
-   real(r8), pointer :: m_frootn_storage_to_fire(:)         ! fine root N storage fire loss (gN/m2/s)
-   real(r8), pointer :: m_frootn_xfer_to_fire(:)            ! fine root N transfer fire loss (gN/m2/s)
-   real(r8), pointer :: m_livestemn_to_fire(:)              ! live stem N fire loss (gN/m2/s)
-   real(r8), pointer :: m_livestemn_storage_to_fire(:)      ! live stem N storage fire loss (gN/m2/s)
-   real(r8), pointer :: m_livestemn_xfer_to_fire(:)         ! live stem N transfer fire loss (gN/m2/s)
-   real(r8), pointer :: m_deadstemn_to_fire(:)              ! dead stem N fire loss (gN/m2/s)
-   real(r8), pointer :: m_deadstemn_to_litter_fire(:)       ! dead stem N fire mortality to litter (gN/m2/s)
-   real(r8), pointer :: m_deadstemn_storage_to_fire(:)      ! dead stem N storage fire loss (gN/m2/s)
-   real(r8), pointer :: m_deadstemn_xfer_to_fire(:)         ! dead stem N transfer fire loss (gN/m2/s)
-   real(r8), pointer :: m_livecrootn_to_fire(:)             ! live coarse root N fire loss (gN/m2/s)
-   real(r8), pointer :: m_livecrootn_storage_to_fire(:)     ! live coarse root N storage fire loss (gN/m2/s)
-   real(r8), pointer :: m_livecrootn_xfer_to_fire(:)        ! live coarse root N transfer fire loss (gN/m2/s)
-   real(r8), pointer :: m_deadcrootn_to_fire(:)             ! dead coarse root N fire loss (gN/m2/s)
-   real(r8), pointer :: m_deadcrootn_to_litter_fire(:)      ! dead coarse root N fire mortality to litter (gN/m2/s)
-   real(r8), pointer :: m_deadcrootn_storage_to_fire(:)     ! dead coarse root N storage fire loss (gN/m2/s)
-   real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)        ! dead coarse root N transfer fire loss (gN/m2/s)
-   real(r8), pointer :: m_retransn_to_fire(:)               ! retranslocated N pool fire loss (gN/m2/s)
-   ! phenology fluxes from transfer pool                     
+
+  ! PFT-level fire N fluxes added by F. Li and S. Levis
+    real(r8), pointer :: m_leafn_to_fire(:)             ! (gN/m2/s) fire N emissions from leafn 
+   real(r8), pointer :: m_leafn_storage_to_fire(:)     ! (gN/m2/s) fire N emissions from leafn_storage            
+   real(r8), pointer :: m_leafn_xfer_to_fire(:)        ! (gN/m2/s) fire N emissions from leafn_xfer     
+   real(r8), pointer :: m_livestemn_to_fire(:)         ! (gN/m2/s) fire N emissions from livestemn 
+   real(r8), pointer :: m_livestemn_storage_to_fire(:) ! (gN/m2/s) fire N emissions from livestemn_storage      
+   real(r8), pointer :: m_livestemn_xfer_to_fire(:)    ! (gN/m2/s) fire N emissions from livestemn_xfer
+   real(r8), pointer :: m_deadstemn_to_fire(:)         ! (gN/m2/s) fire N emissions from deadstemn
+   real(r8), pointer :: m_deadstemn_storage_to_fire(:) ! (gN/m2/s) fire N emissions from deadstemn_storage         
+   real(r8), pointer :: m_deadstemn_xfer_to_fire(:)    ! (gN/m2/s) fire N emissions from deadstemn_xfer
+   real(r8), pointer :: m_frootn_to_fire(:)            ! (gN/m2/s) fire N emissions from frootn
+   real(r8), pointer :: m_frootn_storage_to_fire(:)    ! (gN/m2/s) fire N emissions from frootn_storage
+   real(r8), pointer :: m_frootn_xfer_to_fire(:)       ! (gN/m2/s) fire N emissions from frootn_xfer
+   real(r8), pointer :: m_livecrootn_to_fire(:)        ! (gN/m2/s) fire N emissions from m_livecrootn_to_fire
+   real(r8), pointer :: m_livecrootn_storage_to_fire(:)! (gN/m2/s) fire N emissions from livecrootn_storage     
+   real(r8), pointer :: m_livecrootn_xfer_to_fire(:)   ! (gN/m2/s) fire N emissions from livecrootn_xfer
+   real(r8), pointer :: m_deadcrootn_to_fire(:)        ! (gN/m2/s) fire N emissions from deadcrootn
+   real(r8), pointer :: m_deadcrootn_storage_to_fire(:)! (gN/m2/s) fire N emissions from deadcrootn_storage  
+   real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)   ! (gN/m2/s) fire N emissions from deadcrootn_xfer
+   real(r8), pointer :: m_retransn_to_fire(:)          ! (gN/m2/s) fire N emissions from retransn
+  real(r8), pointer :: m_leafn_to_litter_fire(:)       ! (gN/m2/s) from leafn to litter N  due to fire               
+   real(r8), pointer :: m_leafn_storage_to_litter_fire(:) ! (gN/m2/s) from leafn_storage to litter N  due to fire                              
+   real(r8), pointer :: m_leafn_xfer_to_litter_fire(:)    ! (gN/m2/s) from leafn_xfer to litter N  due to fire                              
+   real(r8), pointer :: m_livestemn_to_litter_fire(:)      ! (gN/m2/s) from livestemn to litter N  due to fire                              
+   real(r8), pointer :: m_livestemn_storage_to_litter_fire(:) ! (gN/m2/s) from livestemn_storage to litter N  due to fire                                     
+   real(r8), pointer :: m_livestemn_xfer_to_litter_fire(:)    ! (gN/m2/s) from livestemn_xfer to litter N  due to fire                                     
+   real(r8), pointer :: m_livestemn_to_deadstemn_fire(:)      ! (gN/m2/s) from livestemn to deadstemn N  due to fire                                     
+   real(r8), pointer :: m_deadstemn_to_litter_fire(:)         ! (gN/m2/s) from deadstemn to litter N  due to fire                                     
+   real(r8), pointer :: m_deadstemn_storage_to_litter_fire(:) ! (gN/m2/s) from deadstemn_storage to litter N  due to fire                                               
+   real(r8), pointer :: m_deadstemn_xfer_to_litter_fire(:)    ! (gN/m2/s) from deadstemn_xfer to litter N  due to fire                                               
+   real(r8), pointer :: m_frootn_to_litter_fire(:)            ! (gN/m2/s) from frootn to litter N  due to fire                                               
+   real(r8), pointer :: m_frootn_storage_to_litter_fire(:)    ! (gN/m2/s) from frootn_storage to litter N  due to fire                                               
+   real(r8), pointer :: m_frootn_xfer_to_litter_fire(:)       ! (gN/m2/s) from frootn_xfer to litter N  due to fire                                               
+   real(r8), pointer :: m_livecrootn_to_litter_fire(:)        ! (gN/m2/s) from livecrootn to litter N  due to fire                                               
+   real(r8), pointer :: m_livecrootn_storage_to_litter_fire(:)! (gN/m2/s) from livecrootn_storage to litter N  due to fire                                                     
+   real(r8), pointer :: m_livecrootn_xfer_to_litter_fire(:)   ! (gN/m2/s) from livecrootn_xfer to litter N  due to fire                                                     
+   real(r8), pointer :: m_livecrootn_to_deadcrootn_fire(:)    ! (gN/m2/s) from livecrootn_xfer to deadcrootn due to fire                                                     
+   real(r8), pointer :: m_deadcrootn_to_litter_fire(:)        ! (gN/m2/s) from deadcrootn to deadcrootn due to fire                                                       
+   real(r8), pointer :: m_deadcrootn_storage_to_litter_fire(:)! (gN/m2/s) from deadcrootn_storage to deadcrootn due to fire                                                        
+   real(r8), pointer :: m_deadcrootn_xfer_to_litter_fire(:)   ! (gN/m2/s) from deadcrootn_xfer to deadcrootn due to fire                                                         
+   real(r8), pointer :: m_retransn_to_litter_fire(:)          ! (gN/m2/s) from retransn to deadcrootn due to fire                                                         
+   
+
+   ! phenology fluxes from transfer pool
    real(r8), pointer :: grainn_xfer_to_grainn(:)            ! grain N growth from storage for prognostic crop model (gN/m2/s)
    real(r8), pointer :: leafn_xfer_to_leafn(:)              ! leaf N growth from storage (gN/m2/s)
    real(r8), pointer :: frootn_xfer_to_frootn(:)            ! fine root N growth from storage (gN/m2/s)
@@ -1100,6 +1164,15 @@ type, public :: column_pstate_type
    type(pft_pstate_type) :: pps_a            !pft-level pstate variables averaged to the column
    integer , pointer :: snl(:)                !number of snow layers
    integer , pointer :: isoicol(:)            !soil color class
+
+   !F. Li and S. Levis
+   real(r8), pointer :: gdp_lf(:)             ! global real gdp data (k US$/capita)
+   real(r8), pointer :: peatf_lf(:)           ! global peatland fraction data (0-1)
+   integer, pointer :: abm_lf(:)             ! global peak month of crop fire emissions 
+   real(r8), pointer :: lgdp_col(:)           !gdp limitation factor for fire occurrence (0-1)
+   real(r8), pointer :: lgdp1_col(:)          !gdp limitation factor for fire spreading (0-1)
+   real(r8), pointer :: lpop_col(:)           !pop limitation factor for fire spreading (0-1)
+
    real(r8), pointer :: bsw(:,:)              !Clapp and Hornberger "b" (nlevgrnd)  
    real(r8), pointer :: watsat(:,:)           !volumetric soil water at saturation (porosity) (nlevgrnd) 
    real(r8), pointer :: watdry(:,:)           !btran parameter for btran=0
@@ -1151,7 +1224,10 @@ type, public :: column_pstate_type
    real(r8), pointer :: rootr_column(:,:)     !effective fraction of roots in each soil layer (nlevgrnd)  
    real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
    real(r8), pointer :: rootr_road_perv(:,:)  !effective fraction of roots in each soil layer of urban pervious road
-   real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.5 m
+
+   real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.05 m (0-1) (only comment changed by F. Li and S. Levis)
+   real(r8), pointer :: wf2(:)                !soil water as frac. of whc for top 0.17 m (0-1) added by F. Li and S. Levis
+
 !  real(r8), pointer :: xirrig(:)             !irrigation rate
    real(r8), pointer :: max_dayl(:)           !maximum daylength for this column (s)
 #if (defined VICHYDRO)
@@ -1203,13 +1279,31 @@ type, public :: column_pstate_type
    real(r8), pointer :: col_lag_npp(:)        ! (gC/m2/s) lagged net primary production
    real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
    real(r8), pointer :: watfc(:,:)        !volumetric soil water at field capacity (nlevsoi)
-   ! new variables for fire code
-   real(r8), pointer :: me(:)                 !moisture of extinction (proportion) 
-   real(r8), pointer :: fire_prob(:)          !daily fire probability (0-1) 
-   real(r8), pointer :: mean_fire_prob(:)     !e-folding mean of daily fire probability (0-1) 
-   real(r8), pointer :: fireseasonl(:)        !annual fire season length (days, <= days/year) 
-   real(r8), pointer :: farea_burned(:)       !timestep fractional area burned (proportion) 
-   real(r8), pointer :: ann_farea_burned(:)   !annual total fractional area burned (proportion)
+
+   ! F. Li and S. Levis
+   real(r8), pointer :: nfire(:)        ! fire counts (count/km2/timestep), valid only in Reg. C
+   real(r8), pointer :: fsr_pft(:)      ! fire spread rate in pft level (m/s)
+   real(r8), pointer :: fsr_col(:)      ! fire spread rate at column level (m/s)
+   real(r8), pointer :: fd_col(:)       ! fire duration at column level (hr)
+   real(r8), pointer :: fd_pft(:)       ! fire duration in pft level    (hr)
+   real(r8), pointer :: prec60_col(:)              !60-day running mean of tot. precipitation (mm/s)
+   real(r8), pointer :: prec10_col(:)              !10-day running mean of tot. precipitation (mm/s)
+   real(r8), pointer :: lfc(:)         ! conversion area fraction of BET and BDT that haven't burned before (0-1)
+   real(r8), pointer :: lfc2(:)        ! conversion area fraction of BET and BDT that burned in this timestep ((timestep)-1)
+   real(r8), pointer :: dtrotr_col(:)   ! annual decreased fraction coverage of BET on the gridcell (0-1)
+   real(r8), pointer :: trotr1_col(:)   ! pft weight of BET and BDT on the gridcell(0-1)
+   real(r8), pointer :: trotr2_col(:)   ! pft weight of BDT on the gridcell (0-1)
+   real(r8), pointer :: cropf_col(:)    ! crop fraction in veg column (0-1)
+   real(r8), pointer :: baf_crop(:)     ! baf for cropland per time step(0-1)
+   real(r8), pointer :: baf_peatf(:)    ! baf for peatland per time step (0-1)
+   real(r8), pointer :: fbac(:)         ! total burned area out of conversion (0-1)
+   real(r8), pointer :: fbac1(:)        ! burned area out of conversion region due to land use fire (0-1)
+   real(r8), pointer :: btran_col(:)    ! btran2 at column level (0-1)
+   real(r8), pointer :: wtlf(:)         ! fractional coverage of non-crop PFTs (0-1)
+   real(r8), pointer :: lfwt(:)         ! fractional coverage of non-crop and non-bare-soil PFTs (0-1)
+   real(r8), pointer :: farea_burned(:)       !timestep fractional area burned (0-1) 
+
+
    real(r8), pointer :: albsnd_hst(:,:)       ! snow albedo, direct, for history files (col,bnd) [frc]
    real(r8), pointer :: albsni_hst(:,:)       ! snow albedo, diffuse, for history files (col,bnd) [frc]
    real(r8), pointer :: albsod(:,:)           ! soil albedo: direct (col,bnd) [frc]
@@ -1299,6 +1393,7 @@ type, public :: column_estate_type
    real(r8), pointer :: dt_grnd(:)            !change in t_grnd, last iteration (Kelvin)
    real(r8), pointer :: t_soisno(:,:)         !soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: t_soi_10cm(:)         !soil temperature in top 10cm of soil (Kelvin)
+   real(r8), pointer :: tsoi17(:)            !soil temperature in top 17cm of soil (Kelvin) by F. Li and S. Levis
    real(r8), pointer :: t_lake(:,:)           !lake temperature (Kelvin)  (1:nlevlak)          
    real(r8), pointer :: tssbef(:,:)           !soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
@@ -1374,7 +1469,15 @@ type, public :: column_cstate_type
    ! all c pools involved in decomposition
    real(r8), pointer :: decomp_cpools_vr(:,:,:)         ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: col_ctrunc_vr(:,:)              ! (gC/m3) vertically-resolved column-level sink for C truncation
-   ! pools for dynamic landcover
+
+   !fire-related variables added by F. Li and S. Levis
+   real(r8), pointer :: rootc_col(:)     !root carbon at column level (gC/m2)
+   real(r8), pointer :: totvegc_col(:)   !column-level totvegc (gC/m2)  
+   real(r8), pointer :: leafc_col(:)     !column-level leafc (gC/m2)       
+   real(r8), pointer :: fuelc(:)         ! fuel avalability factor for Reg.C (0-1)
+   real(r8), pointer :: fuelc_crop(:)    ! fuel avalability factor for Reg.A (0-1)
+
+  ! pools for dynamic landcover
    real(r8), pointer :: seedc(:)                        ! (gC/m2) column-level pool for seeding new PFTs
    real(r8), pointer :: prod10c(:)                      ! (gC/m2) wood product C pool, 10-year lifespan
    real(r8), pointer :: prod100c(:)                     ! (gC/m2) wood product C pool, 100-year lifespan
@@ -1662,12 +1765,21 @@ type, public :: column_cflux_type
    real(r8), pointer :: hrv_deadstemc_xfer_to_litr_met_c(:,:)      ! dead stem C transfer harvest mortality to litter labile C (gC/m3/s)          
    real(r8), pointer :: hrv_livecrootc_xfer_to_litr_met_c(:,:)     ! live coarse root C transfer harvest mortality to litter labile C (gC/m3/s)   
    real(r8), pointer :: hrv_deadcrootc_xfer_to_litr_met_c(:,:)     ! dead coarse root C transfer harvest mortality to litter labile C (gC/m3/s)   
-   real(r8), pointer :: hrv_gresp_xfer_to_litr_met_c(:,:)          ! growth respiration transfer harvest mortality to litter labile C (gC/m3/s)   
-   ! column-level fire fluxes
-   real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)              ! dead stem C to coarse woody debris C by fire (gC/m3/s)
-   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)             ! dead coarse root C to to woody debris C by fire (gC/m3/s)
-   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)          ! vertically-resolved decomposing C fire loss (gC/m3/s)
-   real(r8), pointer :: m_decomp_cpools_to_fire(:,:)               ! vertically-integrated (diagnostic) decomposing C fire loss (gC/m2/s)
+   real(r8), pointer :: hrv_gresp_xfer_to_litr_met_c(:,:)          ! growth respiration transfer harvest mortality to litter labile C (gC/m3/s) 
+  
+   ! column-level fire C fluxes added by F. Li and S. Levis
+    real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)   ! dead stem C to coarse woody debris C by fire (gC/m3/s)
+   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)   ! dead coarse root C to to woody debris C by fire (gC/m3/s)
+    real(r8), pointer :: m_livestemc_to_cwdc_fire(:,:)   ! live stem C to coarse woody debris C by fire (gC/m3/s)
+   real(r8), pointer :: m_livecrootc_to_cwdc_fire(:,:)   ! live coarse root C to to woody debris C by fire (gC/m3/s) 
+   real(r8), pointer :: m_c_to_litr_met_fire(:,:)        ! C from leaf, froot, xfer and storage C to litter labile C by fire (gC/m3/s) 
+   real(r8), pointer :: m_c_to_litr_cel_fire(:,:)        ! C from leaf, froot, xfer and storage C to litter cellulose C by fire (gC/m3/s) 
+   real(r8), pointer :: m_c_to_litr_lig_fire(:,:)        ! C from leaf, froot, xfer and storage C to litter lignin C by fire (gC/m3/s) 
+   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)!(gC/m3/s) vertically-resolved decomposing C fire loss 
+   real(r8), pointer :: m_decomp_cpools_to_fire(:,:)     ! vertically-integrated (diagnostic) decomposing C fire loss (gC/m2/s)
+   real(r8), pointer :: lf_conv_cflux(:)                ! (gC/m2/s) conversion C flux due to BET and BDT area decreasing (immediate loss to atm)
+   real(r8), pointer :: somc_fire(:)                     ! (gC/m2/s) carbon emissions due to peat burning
+
    ! litterfall fluxes
    real(r8), pointer :: leafc_to_litr_met_c(:,:)                ! leaf C litterfall to litter labile C (gC/m3/s)
    real(r8), pointer :: leafc_to_litr_cel_c(:,:)                ! leaf C litterfall to litter cellulose C (gC/m3/s)
@@ -1805,12 +1917,20 @@ type, public :: column_nflux_type
    real(r8), pointer :: hrv_deadstemn_xfer_to_litr_met_n(:,:)      ! dead stem N transfer harvest mortality to litter labile N (gN/m3/s)
    real(r8), pointer :: hrv_livecrootn_xfer_to_litr_met_n(:,:)     ! live coarse root N transfer harvest mortality to litter labile N (gN/m3/s)
    real(r8), pointer :: hrv_deadcrootn_xfer_to_litr_met_n(:,:)     ! dead coarse root N transfer harvest mortality to litter labile N (gN/m3/s)
-   ! column-level fire fluxes
-   real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)              ! dead stem N to coarse woody debris N by fire (gN/m3/s)
-   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)             ! dead coarse root N to to woody debris N by fire (gN/m3/s)
-   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:)          ! vertically-resolved decomposing N fire loss (gN/m3/s)
-   real(r8), pointer :: m_decomp_npools_to_fire(:,:)               ! vertically-integrated (diagnostic) decomposing N fire loss (gN/m2/s)
-   ! litterfall fluxes
+
+! column-level fire N fluxes added by F. Li and S. Levis
+    real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)   ! dead stem N to coarse woody debris N by fire (gN/m3/s)
+   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)   ! dead coarse root N to to woody debris N by fire (gN/m3/s)
+    real(r8), pointer :: m_livestemn_to_cwdn_fire(:,:)   ! live stem N to coarse woody debris N by fire (gN/m3/s)
+   real(r8), pointer :: m_livecrootn_to_cwdn_fire(:,:)   ! live coarse root N to to woody debris N by fire (gN/m3/s) 
+   real(r8), pointer :: m_n_to_litr_met_fire(:,:)        ! N from leaf, froot, xfer and storage N to litter labile N by fire (gN/m3/s) 
+   real(r8), pointer :: m_n_to_litr_cel_fire(:,:)        ! N from leaf, froot, xfer and storage N to litter cellulose N by fire (gN/m3/s) 
+   real(r8), pointer :: m_n_to_litr_lig_fire(:,:)        ! N from leaf, froot, xfer and storage N to litter lignin N by fire (gN/m3/s) 
+   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:)! (gN/m3/s) vertically-resolved decomposing N fire loss 
+   real(r8), pointer :: m_decomp_npools_to_fire(:,:)     ! vertically-integrated (diagnostic) decomposing N fire loss (gN/m2/s)            
+    
+
+ ! litterfall fluxes
    real(r8), pointer :: leafn_to_litr_met_n(:,:)       ! leaf N litterfall to litter labile N (gN/m3/s)
    real(r8), pointer :: leafn_to_litr_cel_n(:,:)       ! leaf N litterfall to litter cellulose N (gN/m3/s)
    real(r8), pointer :: leafn_to_litr_lig_n(:,:)       ! leaf N litterfall to litter lignin N (gN/m3/s)
@@ -1926,6 +2046,7 @@ type, public :: column_nflux_type
    real(r8), pointer :: col_noutputs(:)                 ! column-level N outputs (gN/m2/s)
    ! new variables for fire
    real(r8), pointer :: col_fire_nloss(:)               ! total column-level fire N loss (gN/m2/s)
+
    real(r8), pointer :: som_n_leached(:)                           ! total SOM N loss from vertical transport (gN/m^2/s)
    real(r8), pointer :: decomp_npools_leached(:,:)                 ! N loss from vertical transport from each decomposing N pool (gN/m^2/s)
    real(r8), pointer :: decomp_npools_transport_tendency(:,:,:)    ! N tendency due to vertical transport in decomposing N pools (gN/m^3/s)

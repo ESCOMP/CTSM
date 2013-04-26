@@ -213,38 +213,44 @@ sub XML_Footer {
 
 my $pwd = `pwd`;
 chomp( $pwd );
-my $filename = "$pwd/histFldsMod.F90";
+my @megcmpds  =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
+my @filenames = ( "$pwd/histFldsMod.F90", "$pwd/../biogeochem/CNFireMod.F90" );
 
-my $fh = IO::File->new($filename, '<') or die "** $ProgName - can't open history Fields file: $filename\n";
-my @megcmpds =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
 #
-# Read in the list of fields from the source file
+# Loop over all files that have hist_addfld calls in them
 #
-while (my $line = <$fh>) {
+foreach my $filename ( @filenames ) {
 
-   # Comments
-   if ($line =~ /(.*)\!/) {
-     $line = $1;
-   }
-   if ($line =~ /end subroutine/) {
-     last;
-   }
-   my $format = "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n";
-   if ($line =~ /call\s*hist_addfld/i ) {
-      (my $name, my $longn, my $units) = &getFieldInfo( $fh, $line );
-      if ( $name ne "MEG_megancmpd" ) {
-         &setField( $name, $longn, $units );
-         printf( <STDERR>, $format, $name, $units, $longn );
-      } else {
-         foreach my $megcmpd ( @megcmpds ) {
-            my $name = "MEG_${megcmpd}";
+   my $fh = IO::File->new($filename, '<') or die "** $ProgName - can't open history Fields file: $filename\n";
+   #
+   # Read in the list of fields from the source file
+   #
+   while (my $line = <$fh>) {
+   
+      # Comments
+      if ($line =~ /(.*)\!/) {
+        $line = $1;
+      }
+      if ($line =~ /end subroutine/) {
+        last;
+      }
+      my $format = "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n";
+      if ($line =~ /call\s*hist_addfld/i ) {
+         (my $name, my $longn, my $units) = &getFieldInfo( $fh, $line );
+         if ( $name ne "MEG_megancmpd" ) {
             &setField( $name, $longn, $units );
             printf( <STDERR>, $format, $name, $units, $longn );
+         } else {
+            foreach my $megcmpd ( @megcmpds ) {
+               my $name = "MEG_${megcmpd}";
+               &setField( $name, $longn, $units );
+               printf( $outfh $format, $name, $units, $longn );
+            }
          }
       }
    }
+   close( $fh );
 }
-close( $fh );
 print STDERR " mxname  = $mxname\n";
 print STDERR " mxlongn = $mxlongn\n";
 my %pool_name = ( 

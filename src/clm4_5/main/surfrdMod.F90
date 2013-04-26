@@ -766,11 +766,11 @@ contains
        ! (and there are arguments for putting it here anyway).
 
        do nl = begg,endg
-          ! We need to use a fairly high threshold for equality (1.0e-5) because pctgla
+          ! We need to use a fairly high threshold for equality (2.0e-5) because pctgla
           ! and pctglc_mec are computed using single precision inputs. Note that this
           ! threshold agrees with the threshold in the error checks in mkglcmecMod:
           ! mkglcmec in mksurfdata_map. 
-          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-5) then
+          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 2.0e-5) then
              write(iulog,*) ' '
              write(iulog,*) 'surfrd error: pctgla not equal to sum of pctglc_mec for nl=', nl
              write(iulog,*) 'pctgla =', pctgla(nl)
@@ -805,7 +805,7 @@ contains
        ! If pctglc_mec_tot is very close to 100%, round to 100%
 
        do nl = begg,endg
-          ! The inequality here ( <= 1.0e-5 ) is designed to be the complement of the
+          ! The inequality here ( <= 2.0e-5 ) is designed to be the complement of the
           ! above check that makes sure pctglc_mec_tot is close to pctgla: so if pctglc=
           ! 100 (exactly), then exactly one of these conditionals will be triggered.
           ! Update 9-28-12: Now that there is a rescaling of pctglc_mec to bring it more
@@ -814,7 +814,7 @@ contains
           ! - or perhaps even get rid of this whole block of code. But I'm keeping this as
           ! is for now because that's how I tested it, and I don't think it will hurt
           ! anything to use this larger tolerance.
-          if (abs(pctglc_mec_tot(nl) - 100._r8) <= 1.0e-5) then
+          if (abs(pctglc_mec_tot(nl) - 100._r8) <= 2.0e-5) then
              pctglc_mec(nl,:) = pctglc_mec(nl,:) * 100._r8 / pctglc_mec_tot(nl)
              pctglc_mec_tot(nl) = 100._r8
           endif
@@ -1078,6 +1078,7 @@ contains
           ! (convert pctpft from percent with respect to gridcel to percent with 
           ! respect to vegetated landunit)
 
+          ! THESE CHECKS NEEDS TO BE THE SAME AS IN pftdynMod.F90!
           if (pctspec(nl) < 100._r8 * (1._r8 - eps_fact*epsilon(1._r8))) then  ! pctspec not within eps_fact*epsilon of 100
              sumpct = 0._r8
              do m = 0,numpft
@@ -1133,20 +1134,20 @@ contains
     do nl = begg,endg
        if (pftm(nl) >= 0) then
           if (pctspec(nl) < 100._r8 * (1._r8 - eps_fact*epsilon(1._r8))) then  ! pctspec not within eps_fact*epsilon of 100
-             if (.not. crop_prog .and. pctpft(nl,nc3irrig) > 0._r8) then
+             if (.not. crop_prog .and. wtxy(nl,nc3irrig+1) > 0._r8) then
                 call endrun( trim(subname)//' ERROR surfrdMod: irrigated crop PFT requires CROP model active.' )
              end if
              if (crop_prog .and. .not. irrigate) then
-                pctpft(nl,nc3crop) = pctpft(nl,nc3crop) + pctpft(nl,nc3irrig)
-                pctpft(nl,nc3irrig) = 0._r8
-                pctpft(nl,ncorn) = pctpft(nl,ncorn) + pctpft(nl,ncornirrig)
-                pctpft(nl,ncornirrig) = 0._r8
-                pctpft(nl,nsoybean) = pctpft(nl,nsoybean) + pctpft(nl,nsoybeanirrig)
-                pctpft(nl,nsoybeanirrig) = 0._r8
-                pctpft(nl,nscereal) = pctpft(nl,nscereal) + pctpft(nl,nscerealirrig)
-                pctpft(nl,nscerealirrig) = 0._r8
-                pctpft(nl,nwcereal) = pctpft(nl,nwcereal) + pctpft(nl,nwcerealirrig)
-                pctpft(nl,nwcerealirrig) = 0._r8
+                wtxy(nl,nc3crop+1)       = wtxy(nl,nc3crop+1)  + wtxy(nl,nc3irrig+1)
+                wtxy(nl,nc3irrig+1)      = 0._r8
+                wtxy(nl,ncorn+1)         = wtxy(nl,ncorn+1)    + wtxy(nl,ncornirrig+1)
+                wtxy(nl,ncornirrig+1)    = 0._r8
+                wtxy(nl,nscereal+1)      = wtxy(nl,nscereal+1) + wtxy(nl,nscerealirrig+1)
+                wtxy(nl,nscerealirrig+1) = 0._r8
+                wtxy(nl,nwcereal+1)      = wtxy(nl,nwcereal+1) + wtxy(nl,nwcerealirrig+1)
+                wtxy(nl,nwcerealirrig+1) = 0._r8
+                wtxy(nl,nsoybean+1)      = wtxy(nl,nsoybean+1) + wtxy(nl,nsoybeanirrig+1)
+                wtxy(nl,nsoybeanirrig+1) = 0._r8
              end if
           end if
        end if

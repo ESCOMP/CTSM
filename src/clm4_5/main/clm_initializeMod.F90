@@ -422,7 +422,7 @@ contains
     ! Initialize CN Ecosystem Dynamics (must be after time-manager initialization)
     ! ------------------------------------------------------------------------
 #if (defined CN) || (defined CNDV)
-    call CNEcosystemDynInit( begc, endc, begp, endp )
+    call CNEcosystemDynInit( begg, endg, begc, endc, begp, endp )
 #endif
 
     ! ------------------------------------------------------------------------

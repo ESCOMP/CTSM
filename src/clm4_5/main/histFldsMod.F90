@@ -24,7 +24,7 @@ module histFldsMod
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 03/2003
 ! heald (11/28/06)
-!
+! F. Li and S. Levis (11/06/12)
 !EOP
 !------------------------------------------------------------------------
 
@@ -1901,7 +1901,11 @@ contains
     call hist_addfld1d (fname='TOTPRODC', units='gC/m^2', &
          avgflag='A', long_name='total wood product C', &
          ptr_col=clm3%g%l%c%ccs%totprodc)
-
+    
+     call hist_addfld1d (fname='FUELC', units='gC/m^2', &
+         avgflag='A', long_name='fuel load', &
+         ptr_col=clm3%g%l%c%ccs%fuelc)
+    
     
     if ( use_c13 ) then
        !-------------------------------
@@ -2427,85 +2431,77 @@ contains
          avgflag='A', long_name='growth respiration transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_litter, default='inactive')
 
-    call hist_addfld1d (fname='M_LEAFC_TO_FIRE', units='gC/m^2/s', &
+     call hist_addfld1d (fname='M_LEAFC_TO_FIRE', units='gC/m^2/s', &
          avgflag='A', long_name='leaf C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_FROOTC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='fine root C fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_LEAFC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+ 
+   call hist_addfld1d (fname='M_LEAFC_STORAGE_TO_FIRE', units='gC/m^2/s', &
          avgflag='A', long_name='leaf C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_storage_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_FROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='fine root C storage fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='live stem C storage fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_DEADSTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead stem C storage fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_LIVECROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='live coarse root C storage fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_DEADCROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead coarse root C storage fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_fire,  default='inactive')
 
     call hist_addfld1d (fname='M_LEAFC_XFER_TO_FIRE', units='gC/m^2/s', &
          avgflag='A', long_name='leaf C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_xfer_to_fire, default='inactive')
 
+   call hist_addfld1d (fname='M_LIVESTEMC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_fire, default='inactive')
+ 
+    call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C storage fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_LIVESTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C transfer fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_DEADSTEMC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_fire, default='inactive')
+ 
+  call hist_addfld1d (fname='M_DEADSTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C storage fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_DEADSTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C transfer fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_FROOTC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root C fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_FROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root C storage fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_fire, default='inactive')
+
     call hist_addfld1d (fname='M_FROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
          avgflag='A', long_name='fine root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_xfer_to_fire, default='inactive')
 
-    call hist_addfld1d (fname='M_LIVESTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='live stem C transfer fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_DEADSTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead stem C transfer fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_LIVECROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='live coarse root C transfer fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_DEADCROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead coarse root C transfer fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_LIVESTEMC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='live stem C fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_DEADSTEMC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead stem C fire loss', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_DEADSTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead stem C fire mortality to litter', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_litter_fire, default='inactive')
-
-    call hist_addfld1d (fname='M_LIVECROOTC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='live coarse root C fire loss', &
+   call hist_addfld1d (fname='M_LIVEROOTC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_fire, default='inactive')
 
-    call hist_addfld1d (fname='M_DEADCROOTC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead coarse root C fire loss', &
+   call hist_addfld1d (fname='M_LIVEROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C storage fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_LIVEROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C transfer fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_DEADROOTC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_fire, default='inactive')
 
-    call hist_addfld1d (fname='M_DEADCROOTC_TO_LITTER_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='dead coarse root C fire mortality to litter', &
-         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_litter_fire, default='inactive')
+   call hist_addfld1d (fname='M_DEADROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead root C storage fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_DEADROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead root C transfer fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_fire, default='inactive')
 
     call hist_addfld1d (fname='M_GRESP_STORAGE_TO_FIRE', units='gC/m^2/s', &
          avgflag='A', long_name='growth respiration storage fire loss', &
@@ -2514,6 +2510,112 @@ contains
     call hist_addfld1d (fname='M_GRESP_XFER_TO_FIRE', units='gC/m^2/s', &
          avgflag='A', long_name='growth respiration transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_fire, default='inactive')
+  
+    call hist_addfld1d (fname='M_LEAFC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='leaf C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_to_litter_fire, default='inactive')
+
+! add by F. Li and S. Levis
+   call hist_addfld1d (fname='M_LEAFC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='leaf C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_LEAFC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='leaf C transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_xfer_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_LIVESTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_litter_fire, default='inactive')
+ 
+    call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_LIVESTEMC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_litter_fire, default='inactive')
+	 
+ call hist_addfld1d (fname='M_LIVESTEMC_TO_DEADSTEMC_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C fire mortality to dead stem C', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_deadstemc_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_DEADSTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_litter_fire, default='inactive')
+ 
+  call hist_addfld1d (fname='M_DEADSTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_DEADSTEMC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_FROOTC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_FROOTC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_FROOTC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root C transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_xfer_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_LIVEROOTC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_LIVEROOTC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_litter_fire, default='inactive')
+	 
+    call hist_addfld1d (fname='M_LIVEROOTC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_litter_fire, default='inactive')
+	 
+   call hist_addfld1d (fname='M_LIVEROOTC_TO_DEADROOTC_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live root C fire mortality to dead root C', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_deadcrootc_fire, default='inactive')
+
+
+    call hist_addfld1d (fname='M_DEADROOTC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead root C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_litter_fire, default='inactive')
+
+   call hist_addfld1d (fname='M_DEADROOTC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead root C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_DEADROOTC_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead root C transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_litter_fire, default='inactive')
+
+ call hist_addfld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live stem C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_DEADSTEMC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead stem C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_LIVECROOTC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='live coarse root C fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_DEADCROOTC_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='dead coarse root C storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_litter_fire,  default='inactive')
+
+    call hist_addfld1d (fname='M_GRESP_STORAGE_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='growth respiration storage fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_gresp_storage_to_litter_fire, default='inactive')
+
+    call hist_addfld1d (fname='M_GRESP_XFER_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='growth respiration transfer fire mortality to litter', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_litter_fire, default='inactive')   
 
     call hist_addfld1d (fname='LEAFC_XFER_TO_LEAFC', units='gC/m^2/s', &
          avgflag='A', long_name='leaf C growth from storage', &
@@ -2788,7 +2890,7 @@ contains
          ptr_pft=clm3%g%l%c%p%pcf%wood_harvestc)
 
     call hist_addfld1d (fname='PFT_FIRE_CLOSS', units='gC/m^2/s', &
-         avgflag='A', long_name='total pft-level fire C loss', &
+         avgflag='A', long_name='total pft-level fire C loss for non-peat fires outside land-type converted region', &
          ptr_pft=clm3%g%l%c%p%pcf%pft_fire_closs)
 
     if ( use_c13 ) then
@@ -3832,6 +3934,26 @@ contains
          avgflag='A', long_name='dead coarse root C to to woody debris C by fire', &
          ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc_fire, default='inactive')
 
+ call hist_addfld_decomp (fname='M_LIVESTEMC_TO_CWDC_FIRE', units='gC/m^2/s',  type2d='levdcmp', &
+         avgflag='A', long_name='live stem C to coarse woody debris C by fire', &
+         ptr_col=clm3%g%l%c%ccf%m_livestemc_to_cwdc_fire, default='inactive')
+
+    call hist_addfld_decomp (fname='M_LIVECROOTC_TO_CWDC_FIRE', units='gC/m^2/s',  type2d='levdcmp', &
+         avgflag='A', long_name='live coarse root C to to woody debris C by fire', &
+         ptr_col=clm3%g%l%c%ccf%m_livecrootc_to_cwdc_fire, default='inactive')
+   
+! F. Li and S. Levis
+   call hist_addfld1d (fname='LF_CONV_CFLUX', units='gC/m^2/s', &
+         avgflag='A', long_name='conversion carbon due to BET and BDT area decreasing', &
+         ptr_col=clm3%g%l%c%ccf%lf_conv_cflux)   
+   
+   call hist_addfld1d (fname='SOMC_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='C loss due to peat burning', &
+         ptr_col=clm3%g%l%c%ccf%somc_fire)
+
+ 
+
+  
     do k = 1, ndecomp_pools
        if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
           data1dptr => clm3%g%l%c%ccf%m_decomp_cpools_to_fire(:,k)
@@ -4038,7 +4160,7 @@ contains
          ptr_col=clm3%g%l%c%ccf%nee)
 
     call hist_addfld1d (fname='COL_FIRE_CLOSS', units='gC/m^2/s', &
-         avgflag='A', long_name='total column-level fire C loss', &
+         avgflag='A', long_name='total column-level fire C loss for non-peat fires outside land-type converted region', &
          ptr_col=clm3%g%l%c%ccf%col_fire_closs)
 
     call hist_addfld1d (fname='DWT_SEEDC_TO_LEAF', units='gC/m^2/s', &
@@ -5943,8 +6065,13 @@ contains
          ptr_col=clm3%g%l%c%cps%zii, default='inactive')
 
     call hist_addfld1d (fname='WF', units='proportion', &
-         avgflag='A', long_name='soil water as frac. of whc for top 0.5 m', &
-         ptr_col=clm3%g%l%c%cps%wf, default='inactive')
+         avgflag='A', long_name='soil water as frac. of whc for top 0.05 m', &
+         ptr_col=clm3%g%l%c%cps%wf)
+  
+   ! add by F. Li and S. Levis  
+     call hist_addfld1d (fname='LFC2', units='per timestep', &
+         avgflag='A', long_name='conversion area fraction of BET and BDT that burned in this timestep', &
+         ptr_col=clm3%g%l%c%cps%lfc2)
 
     if ( nlevdecomp_full .gt. 1 ) then
        call hist_addfld1d (fname='FPI', units='proportion', &
@@ -5992,29 +6119,21 @@ contains
          avgflag='A', long_name='ground albedo (indirect)', &
          ptr_col=clm3%g%l%c%cps%albgri, default='inactive')
 
-    call hist_addfld1d (fname='ME',  units='proportion', &
-         avgflag='A', long_name='moisture of extinction', &
-         ptr_col=clm3%g%l%c%cps%me, default='inactive')
-
-    call hist_addfld1d (fname='FIRE_PROB',  units='0-1', &
-         avgflag='A', long_name='daily fire probability', &
-         ptr_col=clm3%g%l%c%cps%fire_prob, default='inactive')
-
-    call hist_addfld1d (fname='MEAN_FIRE_PROB',  units='0-1', &
-         avgflag='A', long_name='e-folding mean of daily fire probability', &
-         ptr_col=clm3%g%l%c%cps%mean_fire_prob)
-
-    call hist_addfld1d (fname='FIRESEASONL',  units='days', &
-         avgflag='A', long_name='annual fire season length', &
-         ptr_col=clm3%g%l%c%cps%fireseasonl)
-
-    call hist_addfld1d (fname='FAREA_BURNED',  units='proportion', &
+   call hist_addfld1d (fname='NFIRE',  units='counts/km2/timestep', &
+         avgflag='A', long_name='timestep fire counts valid only in Reg.C', &
+         ptr_col=clm3%g%l%c%cps%nfire)
+    
+   call hist_addfld1d (fname='FAREA_BURNED',  units='proportion', &
          avgflag='A', long_name='timestep fractional area burned', &
-         ptr_col=clm3%g%l%c%cps%farea_burned, default='inactive')
+         ptr_col=clm3%g%l%c%cps%farea_burned)
 
-    call hist_addfld1d (fname='ANN_FAREA_BURNED',  units='proportion', &
-         avgflag='A', long_name='annual total fractional area burned', &
-         ptr_col=clm3%g%l%c%cps%ann_farea_burned)
+   call hist_addfld1d (fname='BAF_CROP',  units='proportion', &
+         avgflag='A', long_name='timestep fractional area burned for crop', &
+         ptr_col=clm3%g%l%c%cps%baf_crop)
+         
+    call hist_addfld1d (fname='BAF_PEATF',  units='proportion', &
+         avgflag='A', long_name='timestep fractional area burned in peatland', &
+         ptr_col=clm3%g%l%c%cps%baf_peatf)
 
     !-------------------------------
     ! Energy flux variables not already defined by default - native PFT 

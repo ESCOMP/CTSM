@@ -26,7 +26,7 @@ module Hydrology2Mod
 ! 11/05/03 Peter Thornton: Added calculation of soil water potential
 !   for use in CN phenology code.
 ! 04/25/07 Keith Oleson: CLM3.5 Hydrology
-!
+!F. Li and S. Levis (11/06/12) for wf2 and tsoi17
 !EOP
 !-----------------------------------------------------------------------
 
@@ -153,7 +153,8 @@ contains
 ! local pointers to implicit out arguments
 !
     real(r8), pointer :: endwb(:)         ! water mass end of the time step
-    real(r8), pointer :: wf(:)            ! soil water as frac. of whc for top 0.5 m
+    real(r8), pointer :: wf(:)            ! soil water as frac. of whc for top 0.05 m  !F. Li and S. Levis
+    real(r8), pointer :: wf2(:)           ! soil water as frac. of whc for top 0.17 m added by F. Li and S. Levis 
     real(r8), pointer :: snowice(:)       ! average snow ice lens
     real(r8), pointer :: snowliq(:)       ! average snow liquid water
     real(r8), pointer :: t_grnd(:)        ! ground temperature (Kelvin)
@@ -161,7 +162,8 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
     real(r8), pointer :: t_soi_10cm(:)         ! soil temperature in top 10cm of soil (Kelvin)
-    real(r8), pointer :: h2osoi_liqice_10cm(:) ! liquid water + ice lens in top 10cm of soil (kg/m2)
+    real(r8), pointer :: tsoi17(:)         ! soil temperature in top 17cm of soil (Kelvin) added by F. Li and S. Levis
+   real(r8), pointer :: h2osoi_liqice_10cm(:) ! liquid water + ice lens in top 10cm of soil (kg/m2)
     real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
     real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
@@ -272,6 +274,7 @@ contains
     h2ocan            => clm3%g%l%c%cws%pws_a%h2ocan
     h2osno            => clm3%g%l%c%cws%h2osno
     wf                => clm3%g%l%c%cps%wf
+    wf2               => clm3%g%l%c%cps%wf2
     snowice           => clm3%g%l%c%cws%snowice
     snowliq           => clm3%g%l%c%cws%snowliq
     zwt               => clm3%g%l%c%cws%zwt
@@ -290,6 +293,7 @@ contains
     h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_vol        => clm3%g%l%c%cws%h2osoi_vol
     t_soi_10cm         => clm3%g%l%c%ces%t_soi_10cm
+    tsoi17             => clm3%g%l%c%ces%tsoi17
     h2osoi_liqice_10cm => clm3%g%l%c%cws%h2osoi_liqice_10cm
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
@@ -468,11 +472,13 @@ contains
 
    ! Determine ground temperature, ending water balance and volumetric soil water
     ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
+    ! Calculate soil temperature and total water (liq+ice) in top 17cm of soil
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
        if (ityplun(l) /= isturb) then
           t_soi_10cm(c) = 0._r8
+          tsoi17(c) = 0._r8
           h2osoi_liqice_10cm(c) = 0._r8
        end if
     end do
@@ -481,6 +487,17 @@ contains
           c = filter_nolakec(fc)
           l = clandunit(c)
           if (ityplun(l) /= isturb) then
+    ! soil T at top 17 cm added by F. Li and S. Levis
+            if (zi(c,j) <= 0.17_r8) then
+              fracl = 1._r8
+              tsoi17(c) = tsoi17(c) + t_soisno(c,j)*dz(c,j)*fracl
+            else
+              if (zi(c,j) > 0.17_r8 .and. zi(c,j-1) .lt. 0.17_r8) then 
+                fracl = (0.17_r8 - zi(c,j-1))/dz(c,j)
+                tsoi17(c) = tsoi17(c) + t_soisno(c,j)*dz(c,j)*fracl
+               end if
+            end if
+
             if (zi(c,j) <= 0.1_r8) then
               fracl = 1._r8
               t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
@@ -518,6 +535,7 @@ contains
           t_grnd_u(c) = t_soisno(c,snl(c)+1)
        else
           t_soi_10cm(c) = t_soi_10cm(c)/0.1_r8
+           tsoi17(c) =  tsoi17(c)/0.17_r8         ! F. Li and S. Levis
        end if
        if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          t_grnd_r(c) = t_soisno(c,snl(c)+1)
@@ -665,9 +683,9 @@ contains
     end do
 
 #if (defined CN)
-    ! Available soil water up to a depth of 0.5 m.
-    ! Potentially available soil water (=whc) up to a depth of 0.5 m.
-    ! Water content as fraction of whc up to a depth of 0.5 m.
+    ! Available soil water up to a depth of 0.05 m.
+    ! Potentially available soil water (=whc) up to a depth of 0.05 m.
+    ! Water content as fraction of whc up to a depth of 0.05 m.
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
@@ -701,8 +719,32 @@ contains
        end if
        wf(c) = tsw/stsw
     end do
+    
+      do j = 1, nlevgrnd
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if (z(c,j)+0.5_r8*dz(c,j) <= 0.17_r8) then
+             watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
+             rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
+             swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
+             rz(c) = rz(c) + dz(c,j)
+          end if
+       end do
+    end do
+ 
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       if (rz(c) /= 0._r8) then
+          tsw  = rwat(c)/rz(c)
+          stsw = swat(c)/rz(c)
+       else
+          watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
+          tsw = h2osoi_vol(c,1) - watdry
+          stsw = watsat(c,1) - watdry
+       end if
+       wf2(c) = tsw/stsw
+    end do
 #endif
-
 
     !  Calculate column-integrated aerosol masses, and
     !  mass concentrations for radiative calculations and output

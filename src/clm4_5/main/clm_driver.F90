@@ -126,6 +126,7 @@ module clm_driver
                                    CBalanceCheck, NBalanceCheck
   use ndepStreamMod       , only : ndep_interp
   use CNVerticalProfileMod, only: decomp_vertprofiles
+  use CNFireMod           , only : CNFireInterp
   use CNrestMod           , only : bypass_CN_balance_check_on_restart
 #else
   use STATICEcosysDynMod  , only : EcosystemDyn
@@ -431,6 +432,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! ============================================================================
   ! PET: switching CN timestep
   call ndep_interp()
+  call CNFireInterp()
 #endif
   call t_stopf('pftdynwts')
 

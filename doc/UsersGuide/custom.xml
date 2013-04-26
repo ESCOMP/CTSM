@@ -245,17 +245,12 @@ with a "datm_" or "drv_" prefix. Hence there are then only five different option
 </para>
 <para>
 <orderedlist>
-<listitem><para>-irrig</para></listitem>
 <listitem><para>-lnd_res</para></listitem>
 <listitem><para>-sim_year</para></listitem>
 <listitem><para>-rcp</para></listitem>
 <listitem><para>-clm_demand</para></listitem>
 <listitem><para>-verbose</para></listitem>
 </orderedlist>
-</para>
-<para>
-When "-irrig" is used &buildnml; will try to find surface datasets that have the
-irrigation model enabled.
 </para>
 <para>
 "-lnd_res" is used to run &clm; in fine-mesh mode at a higher resolution than the atmospheric model. This can

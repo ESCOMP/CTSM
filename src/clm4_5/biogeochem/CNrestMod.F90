@@ -27,7 +27,7 @@ module CNrestMod
 !
 ! !REVISION HISTORY:
 ! 11/05/03: Module created by Peter Thornton
-!
+!F. Li and S. Levis (11/06/12)
 !EOP
 !----------------------------------------------------------------------- 
 
@@ -985,6 +985,7 @@ contains
   	  if (is_restart()) call endrun
        end if	
     end if
+
 
     ! ! leaf_prof
     ! call cnrest_addfld_decomp(ncid=ncid, varname='leaf_prof', longname='', units='', flag=flag, data_rl=pptr%pps%leaf_prof, readvar=readvar)
@@ -2372,7 +2373,32 @@ contains
        end if	
     end if
 
-    ! wf
+  ! for fire model changed by F. Li and S. Levis
+  !  burndate
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='burndate', xtype=ncd_int,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_io(varname='burndate', data=pptr%pps%burndate, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+      
+   !lfc
+     if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='lfc', xtype=ncd_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_io(varname='lfc', data=cptr%cps%lfc, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if  
+   
+    !wf
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='wf', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
@@ -2384,78 +2410,22 @@ contains
        end if	
     end if
 
-    ! me
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='me', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
+    
+    !btran2
+      if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='btran2', xtype=ncd_double,  &
+            dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='me', data=cptr%cps%me, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       call ncd_io(varname='btran2', data=pptr%pps%btran2, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
     end if
 
-    ! fire_prob
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fire_prob', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fire_prob', data=cptr%cps%fire_prob, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
 
-    ! mean_fire_prob
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='mean_fire_prob', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='mean_fire_prob', data=cptr%cps%mean_fire_prob, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
-    ! fireseasonl
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fireseasonl', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fireseasonl', data=cptr%cps%fireseasonl, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
-    ! farea_burned
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='farea_burned', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='farea_burned', data=cptr%cps%farea_burned, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
-    ! ann_farea_burned
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='ann_farea_burned', xtype=ncd_double,  &
-            dim1name='column',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='ann_farea_burned', data=cptr%cps%ann_farea_burned, &
-            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
-
+     
+   
     !--------------------------------
     ! column carbon state variables
     !--------------------------------
@@ -2464,10 +2434,17 @@ contains
        ptr2d => cptr%ccs%decomp_cpools_vr(:,:,k)
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
        call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=ptr2d, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+       end if
     end do
 
     ! col_ctrunc
-    call cnrest_addfld_decomp(ncid=ncid, varname='col_ctrunc', longname='', units='', flag=flag, data_rl=cptr%ccs%col_ctrunc_vr, readvar=readvar)
+    varname = 'col_ctrunc'
+    call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=cptr%ccs%col_ctrunc_vr, readvar=readvar)
+    if (flag=='read' .and. .not. readvar) then
+       call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+    end if
 
     ! ! nfixation_prof
     ! call cnrest_addfld_decomp(ncid=ncid, varname='nfixation_prof', longname='', units='', flag=flag, data_rl=cptr%cps%nfixation_prof, readvar=readvar)
@@ -2585,6 +2562,19 @@ contains
        end if	
     end if
     
+    ! totsomc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totsomc', xtype=ncd_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_io(varname='totsomc', data=cptr%ccs%totsomc, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+
     if ( use_c13 ) then
        !--------------------------------
        ! C13 column carbon state variables
@@ -2845,13 +2835,20 @@ contains
     !--------------------------------
     
     ! sminn
-    call cnrest_addfld_decomp(ncid=ncid, varname='sminn', longname='', units='', flag=flag, data_rl=cptr%cns%sminn_vr, readvar=readvar)
+    varname='sminn'
+    call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=cptr%cns%sminn_vr, readvar=readvar)
+    if (flag=='read' .and. .not. readvar) then
+       call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+    end if
     
     ! decomposing N pools
     do k = 1, ndecomp_pools
        ptr2d => cptr%cns%decomp_npools_vr(:,:,k)
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
        call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=ptr2d, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+       end if
     end do
     
     
@@ -2861,21 +2858,29 @@ contains
 #ifdef NITRIF_DENITRIF
     ! f_nit_vr
     call cnrest_addfld_decomp(ncid=ncid, varname='f_nit_vr', &
-                              longname='soil nitrificatio n flux', &
+                              longname='soil nitrification flux', &
                               units='gN/m3/s', &
                               flag=flag, data_rl=cptr%cnf%f_nit_vr, readvar=readvar)
 
     ! pot_f_nit_vr
     call cnrest_addfld_decomp(ncid=ncid, varname='pot_f_nit_vr', &
-                              longname='potential soil nitrificatio n flux', &
+                              longname='potential soil nitrification flux', &
                               units='gN/m3/s', &
                               flag=flag, data_rl=cptr%cnf%pot_f_nit_vr, readvar=readvar)
 
     ! smin_no3_vr
-    call cnrest_addfld_decomp(ncid=ncid, varname='smin_no3', longname='', units='', flag=flag, data_rl=cptr%cns%smin_no3_vr, readvar=readvar)
+    varname = 'smin_no3'
+    call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=cptr%cns%smin_no3_vr, readvar=readvar)
+    if (flag=='read' .and. .not. readvar) then
+       call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+    end if
 
     ! smin_nh4
-    call cnrest_addfld_decomp(ncid=ncid, varname='smin_nh4', longname='', units='', flag=flag, data_rl=cptr%cns%smin_nh4_vr, readvar=readvar)
+    varname = 'smin_nh4'
+    call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=cptr%cns%smin_nh4_vr, readvar=readvar)
+    if (flag=='read' .and. .not. readvar) then
+       call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
+    end if
 
 #endif
 
@@ -3029,7 +3034,6 @@ contains
        end do
     end if
 
- 
     if ( .not. is_restart() .and. nstep .eq. 1 ) then
        do i = begp, endp
           if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then

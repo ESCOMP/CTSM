@@ -29,20 +29,22 @@ module ndepStreamMod
 
 ! !PUBLIC TYPES:
   implicit none
-  integer, public :: stream_year_first_ndep   ! first year in stream to use
-  integer, public :: stream_year_last_ndep    ! last year in stream to use
-  integer, public :: model_year_align_ndep    ! align stream_year_firstndep with 
+  private
   save
 
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: ndep_init   ! position datasets for dynamic ndep
-  public :: ndep_interp ! interpolates between two years of ndep file data
+  public :: ndep_init      ! position datasets for dynamic ndep
+  public :: ndep_interp    ! interpolates between two years of ndep file data
+  public :: clm_domain_mct ! Sets up MCT domain for this resolution
 !
 !EOP
 
 ! ! PRIVATE TYPES
 
   type(shr_strdata_type)  :: sdat         ! input data stream
+  integer :: stream_year_first_ndep       ! first year in stream to use
+  integer :: stream_year_last_ndep        ! last year in stream to use
+  integer :: model_year_align_ndep        ! align stream_year_firstndep with 
 
 !=======================================================================
 contains

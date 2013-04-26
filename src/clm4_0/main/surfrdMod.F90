@@ -742,11 +742,11 @@ contains
        ! (and there are arguments for putting it here anyway).
 
        do nl = begg,endg
-          ! We need to use a fairly high threshold for equality (1.0e-5) because pctgla
+          ! We need to use a fairly high threshold for equality (2.0e-5) because pctgla
           ! and pctglc_mec are computed using single precision inputs. Note that this
           ! threshold agrees with the threshold in the error checks in mkglcmecMod:
           ! mkglcmec in mksurfdata_map. 
-          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-5) then
+          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 2.0e-5) then
              write(iulog,*) ' '
              write(iulog,*) 'surfrd error: pctgla not equal to sum of pctglc_mec for nl=', nl
              write(iulog,*) 'pctgla =', pctgla(nl)
@@ -781,7 +781,7 @@ contains
        ! If pctglc_mec_tot is very close to 100%, round to 100%
 
        do nl = begg,endg
-          ! The inequality here ( <= 1.0e-5 ) is designed to be the complement of the
+          ! The inequality here ( <= 2.0e-5 ) is designed to be the complement of the
           ! above check that makes sure pctglc_mec_tot is close to pctgla: so if pctglc=
           ! 100 (exactly), then exactly one of these conditionals will be triggered.
           ! Update 9-28-12: Now that there is a rescaling of pctglc_mec to bring it more
@@ -790,7 +790,7 @@ contains
           ! - or perhaps even get rid of this whole block of code. But I'm keeping this as
           ! is for now because that's how I tested it, and I don't think it will hurt
           ! anything to use this larger tolerance.
-          if (abs(pctglc_mec_tot(nl) - 100._r8) <= 1.0e-5) then
+          if (abs(pctglc_mec_tot(nl) - 100._r8) <= 2.0e-5) then
              pctglc_mec(nl,:) = pctglc_mec(nl,:) * 100._r8 / pctglc_mec_tot(nl)
              pctglc_mec_tot(nl) = 100._r8
           endif

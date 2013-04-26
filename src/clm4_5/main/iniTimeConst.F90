@@ -42,7 +42,7 @@ subroutine iniTimeConst
                            lflitcn, frootcn, livewdcn, deadwdcn, froot_leaf, stem_leaf, croot_stem, &
                            flivewd, fcur, lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig, &
                            leaf_long, evergreen, stress_decid, season_decid, &
-                           resist, pftpar20, pftpar28, pftpar29, pftpar30, pftpar31, &
+                           pftpar20, pftpar28, pftpar29, pftpar30, pftpar31, &
                            allom1s, allom2s, &
                            allom1 , allom2 , allom3  , reinickerp, dwood
 
@@ -90,13 +90,13 @@ subroutine iniTimeConst
 ! 18 March 2008: David Lawrence; nlevgrnd changes
 ! 03/28/08 Mark Flanner, read in netcdf files for SNICAR parameters
 ! 2010: Edits by Zack Subin & Charlie Koven...
-!
+!F. Li and S. Levis (11/06/12)
+
 ! !LOCAL VARIABLES:
 !
 ! local pointers to implicit in arguments
 !
   real(r8), pointer :: topo_std(:)        ! gridcell elevation standard deviation
-  real(r8), pointer :: topo_ndx(:)        ! gridcell topographic index
   real(r8), pointer :: topo_slope(:)      ! gridcell topographic slope
   real(r8), pointer :: micro_sigma(:)     ! microtopography pdf sigma (m)
   real(r8), pointer :: h2osfc_thresh(:)   ! level at which h2osfc "percolates"
@@ -152,6 +152,12 @@ subroutine iniTimeConst
   real(r8), pointer :: smpmin(:)          ! restriction for min of soil potential (mm) (new)
   real(r8), pointer :: hkdepth(:)         ! decay factor (m)
   integer , pointer :: isoicol(:)         ! soil color class
+
+!added by F. Li and S. Levis
+  real(r8), pointer :: gdp_lf(:)          ! global gdp data
+  real(r8), pointer :: peatf_lf(:)        ! global peatf data
+  integer, pointer :: abm_lf(:)          ! global abm data
+
   real(r8), pointer :: gwc_thr(:)         ! threshold soil moisture based on clay content
   real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
   real(r8), pointer :: efisop(:,:)        ! emission factors for isoprene (ug isoprene m-2 h-1)
@@ -221,6 +227,12 @@ subroutine iniTimeConst
   real(r8),pointer :: arrayl(:)      ! generic global array
   integer ,pointer :: irrayg(:)      ! generic global array
   integer ,pointer :: soic2d(:)      ! read in - soil color
+
+  ! added by F. Li and S. Levis
+  real(r8),pointer :: gdp(:)         ! global gdp data
+  real(r8),pointer :: peatf(:)       ! global peatf data
+  integer,pointer :: abm(:)         ! global abm data
+
   real(r8),pointer :: sand3d(:,:)    ! read in - soil texture: percent sand
   real(r8),pointer :: clay3d(:,:)    ! read in - soil texture: percent clay
   real(r8),pointer :: organic3d(:,:) ! read in - organic matter: kg/m3
@@ -274,7 +286,6 @@ subroutine iniTimeConst
   integer :: nzero_slope               ! Number of points to zero out slope
 
   real(r8),pointer :: std(:)           ! read in - topo_std
-  real(r8),pointer :: cti(:)           ! read in - topo_ndx
   real(r8),pointer :: tslope(:)        ! read in - topo_slope
   real(r8) :: maxslope, slopemax, minslope, d, fd, dfdd, slope0,slopebeta
   real(r8) :: derf
@@ -284,6 +295,11 @@ subroutine iniTimeConst
 
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
   call get_proc_global(numg, numl, numc, nump)
+ 
+! added by F. Li and S. Levis
+  allocate(gdp(begg:endg))
+  allocate(peatf(begg:endg))
+  allocate(abm(begg:endg))
 
   allocate(soic2d(begg:endg), gti(begg:endg))
 #ifdef LCH4
@@ -317,7 +333,6 @@ subroutine iniTimeConst
   ! Assign local pointers to derived subtypes components (column-level)
 
   topo_std        => clm3%g%l%c%cps%topo_std
-  topo_ndx        => clm3%g%l%c%cps%topo_ndx
   topo_slope      => clm3%g%l%c%cps%topo_slope
   micro_sigma     => clm3%g%l%c%cps%micro_sigma
   h2osfc_thresh   => clm3%g%l%c%cps%h2osfc_thresh
@@ -357,6 +372,12 @@ subroutine iniTimeConst
   pH              => clm3%g%l%c%cps%pH
 #endif
   isoicol         => clm3%g%l%c%cps%isoicol
+  
+  ! added by F. Li and S. Levis
+  gdp_lf          => clm3%g%l%c%cps%gdp_lf
+  peatf_lf        => clm3%g%l%c%cps%peatf_lf
+  abm_lf          => clm3%g%l%c%cps%abm_lf
+
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
   max_dayl        => clm3%g%l%c%cps%max_dayl
@@ -440,21 +461,15 @@ subroutine iniTimeConst
 #ifdef LCH4
   if (.not. fin_use_fsat) then
      call ncd_io(ncid=ncid, varname='ZWT0', flag='read', data=zwt0_in, dim1name=grlnd, readvar=readvar)
-     if (.not. readvar) then
-        call endrun( trim(subname)//' ERROR: Running with CH4 Model but ZWT0 not on surfdata file')
-     end if
+     if (.not. readvar) call endrun( trim(subname)//' ERROR: Running with CH4 Model but ZWT0 not on surfdata file')
      call ncd_io(ncid=ncid, varname='F0', flag='read', data=f0_in, dim1name=grlnd, readvar=readvar)
-     if (.not. readvar) then
-        call endrun( trim(subname)//' ERROR: Running with CH4 Model but F0 not on surfdata file')
-     end if
+     if (.not. readvar) call endrun( trim(subname)//' ERROR: Running with CH4 Model but F0 not on surfdata file')
      call ncd_io(ncid=ncid, varname='P3', flag='read', data=p3_in, dim1name=grlnd, readvar=readvar)
-     if (.not. readvar) then
-        call endrun( trim(subname)//' ERROR: Running with CH4 Model but P3 not on surfdata file')
-     end if
+     if (.not. readvar) call endrun( trim(subname)//' ERROR: Running with CH4 Model but P3 not on surfdata file')
   end if
  ! pH factor for methane model
   if (usephfact) then
-  call ncd_io(ncid=ncid, varname='PH', flag='read', data=ph_in, dim1name=grlnd, readvar=readvar)
+     call ncd_io(ncid=ncid, varname='PH', flag='read', data=ph_in, dim1name=grlnd, readvar=readvar)
      if (.not. readvar) then
         call endrun( trim(subname)//' ERROR: CH4 pH production factor activated in ch4par_in, but pH is not on surfdata file')
      end if
@@ -465,7 +480,7 @@ subroutine iniTimeConst
   ! Read lakedepth
   call ncd_io(ncid=ncid, varname='LAKEDEPTH', flag='read', data=lakedepth_in, dim1name=grlnd, readvar=readvar)
   if (.not. readvar) then
-     if (masterproc) write(iulog,*) 'LAKEDEPTH not found on surface data set. All lake columns will have lake depth', &
+     if (masterproc) write(iulog,*) 'WARNING:: LAKEDEPTH not found on surface data set. All lake columns will have lake depth', &
                     ' set equal to default value.'
      lakedepth_in(:) = spval
   end if
@@ -473,7 +488,7 @@ subroutine iniTimeConst
   ! Read lake eta
   call ncd_io(ncid=ncid, varname='ETALAKE', flag='read', data=etal_in, dim1name=grlnd, readvar=readvar)
   if (.not. readvar) then
-     if (masterproc) write(iulog,*) 'ETALAKE not found on surface data set. All lake columns will have eta', &
+     if (masterproc) write(iulog,*) 'WARNING:: ETALAKE not found on surface data set. All lake columns will have eta', &
                     ' set equal to default value as a function of depth.'
      etal_in(:) = -1._r8
   end if
@@ -481,36 +496,18 @@ subroutine iniTimeConst
   ! Read lake fetch
   call ncd_io(ncid=ncid, varname='LAKEFETCH', flag='read', data=lakefetch_in, dim1name=grlnd, readvar=readvar)
   if (.not. readvar) then
-     if (masterproc) write(iulog,*) 'LAKEFETCH not found on surface data set. All lake columns will have fetch', &
+     if (masterproc) write(iulog,*) 'WARNING:: LAKEFETCH not found on surface data set. All lake columns will have fetch', &
                     ' set equal to default value as a function of depth.'
      lakefetch_in(:) = -1._r8
   end if
 
   ! Read in topographic index and slope
-  allocate(cti(begg:endg))
   allocate(tslope(begg:endg))
   allocate(std(begg:endg))
-  call ncd_io(ncid=ncid, varname='CTI', flag='read', data=cti, dim1name=grlnd, readvar=readvar)
-  if (.not. readvar)then
-      write(iulog,*) trim(subname)//' WARNING:  TOPOGRAPHIC INDEX (CTI) NOT on surfdata file'
-      cti = 2.929641   ! Set CTI to global average from surfdata_0.9x1.25_simyr2000_c120107.nc file
-      if ( masterproc ) write(iulog,*) ' Set CTI to ', cti(begg)
-!!!!  call endrun( trim(subname)//' ERROR:  TOPOGRAPHIC INDEX NOT on surfdata file') 
-  end if
   call ncd_io(ncid=ncid, varname='SLOPE', flag='read', data=tslope, dim1name=grlnd, readvar=readvar)
-  if (.not. readvar)then
-      write(iulog,*) trim(subname)//' WARNING: TOPOGRAPHIC SLOPE NOT on surfdata file'
-      tslope = 0.4210327  ! Set SLOPE to global average from surfdata_0.9x1.25_simyr2000_c120107.nc file
-      if ( masterproc ) write(iulog,*) ' Set SLOPE to ', tslope(begg)
-!!!!   call endrun( trim(subname)//' ERROR: TOPOGRAPHIC SLOPE NOT on surfdata file') 
-  end if
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: TOPOGRAPHIC SLOPE NOT on surfdata file') 
   call ncd_io(ncid=ncid, varname='STD_ELEV', flag='read', data=std, dim1name=grlnd, readvar=readvar)
-  if (.not. readvar)then
-      write(iulog,*) trim(subname)//' WARNING: TOPOGRAPHIC STD-dev (STD_ELEV) NOT on surfdata file'
-      std = 45.07004   ! Set STD_ELEV to global average from surfdata_0.9x1.25_simyr2000_c120319.nc file
-      if ( masterproc ) write(iulog,*) ' Set STD_ELEV to ', std(begg)
-!!!!   call endrun( trim(subname)//' ERROR: TOPOGRAPHIC STD NOT on surfdata file') 
-  end if
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: TOPOGRAPHIC STDdev (STD_ELEV) NOT on surfdata file') 
 
   ! Read fmax
 
@@ -531,6 +528,21 @@ subroutine iniTimeConst
 
   call ncd_io(ncid=ncid, varname='SOIL_COLOR', flag='read', data=soic2d, dim1name=grlnd, readvar=readvar)
   if (.not. readvar) call endrun( trim(subname)//' ERROR: SOIL_COLOR NOT on surfdata file' ) 
+
+  ! Read in GDP data added by F. Li and S. Levis
+
+  call ncd_io(ncid=ncid, varname='gdp', flag='read', data=gdp, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: gdp NOT on surfdata file' ) 
+
+  ! Read in peatf data added by F. Li and S. Levis
+
+  call ncd_io(ncid=ncid, varname='peatf', flag='read', data=peatf, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: peatf NOT on surfdata file' ) 
+
+  ! Read in ABM data added by F. Li and S. Levis
+
+  call ncd_io(ncid=ncid, varname='abm', flag='read', data=abm, dim1name=grlnd, readvar=readvar)
+  if (.not. readvar) call endrun( trim(subname)//' ERROR: abm NOT on surfdata file' ) 
 
   ! Read in emission factors
 
@@ -672,7 +684,6 @@ subroutine iniTimeConst
       pftcon%evergreen(m) = evergreen(m)
       pftcon%stress_decid(m) = stress_decid(m)
       pftcon%season_decid(m) = season_decid(m)
-      pftcon%resist(m) = resist(m)
       pftcon%dwood(m) = dwood
       pftcon%fertnitro(m) = fertnitro(m)
       pftcon%fleafcn(m)   = fleafcn(m)
@@ -953,6 +964,16 @@ subroutine iniTimeConst
       Wsvic(c)   = ws2d(g)
 #endif
 
+       ! GDP data added by F. Li and S. Levis
+      gdp_lf(c) = gdp(g)
+
+      ! peatf data added by F. Li and S. Levis
+      peatf_lf(c) = peatf(g)
+
+       ! abm data added by F. Li and S. Levis
+      abm_lf(c) = abm(g)
+
+
       ! Parameters for calculation of finundated
 #ifdef LCH4
       if (.not. fin_use_fsat) then
@@ -971,7 +992,6 @@ subroutine iniTimeConst
 
       ! Topographic variables
       topo_std(c) = std(g)
-      topo_ndx(c) = cti(g)
       if ( pctspec(g) >= 100.0_r8-mach_eps )then
          ! Zero out slope over ALL special land-units
          topo_slope(c) = 0.0_r8
@@ -1408,7 +1428,7 @@ subroutine iniTimeConst
    ! initialize the CN variables for special landunits, including lake points
    call CNiniSpecial()
 #endif
-
+   deallocate(gdp,peatf,abm) ! F. Li and S. Levis
    deallocate(soic2d,sand3d,clay3d,gti,organic3d)
    deallocate(zisoifl,zsoifl,dzsoifl)
    deallocate(temp_ef,efisop2d)
@@ -1423,7 +1443,6 @@ subroutine iniTimeConst
      deallocate(zurb_wall, zurb_roof, dzurb_wall, dzurb_roof, ziurb_wall, ziurb_roof)
    end if
 
-   deallocate(cti)
    deallocate(tslope)
 #if (defined VICHYDRO)
    deallocate(b2d, ds2d, dsmax2d,ws2d)
