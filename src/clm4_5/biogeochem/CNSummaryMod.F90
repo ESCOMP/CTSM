@@ -86,8 +86,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    
    real(r8), pointer :: decomp_cpools(:,:)             ! (gC/m2)  decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_cpools_1m(:,:)          ! (gC/m2)  decomposing (litter, cwd, soil) c pools to 1 meter
-   real(r8), pointer :: decomp_cpools_30cm(:,:)        ! (gC/m2)  decomposing (litter, cwd, soil) c pools to 30 cm
-   real(r8), pointer :: decomp_cpools_activelayer(:,:) ! (gC/m2)  decomposing (litter, cwd, soil) c pools of active layer (max of this and prior year)
    real(r8), pointer :: decomp_cpools_vr(:,:,:)        ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
    integer, pointer :: altmax_indx(:)                  ! maximum annual depth of thaw
    integer, pointer :: altmax_lastyear_indx(:)         ! prior year maximum annual depth of thaw
@@ -403,8 +401,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
     decomp_cpools_vr                  => ccisos%decomp_cpools_vr
     decomp_cpools                     => ccisos%decomp_cpools
     decomp_cpools_1m                  => ccisos%decomp_cpools_1m
-    decomp_cpools_30cm                => ccisos%decomp_cpools_30cm
-    decomp_cpools_activelayer         => ccisos%decomp_cpools_activelayer
     altmax_indx                       => clm3%g%l%c%cps%altmax_indx
     altmax_lastyear_indx              => clm3%g%l%c%cps%altmax_lastyear_indx
     col_ctrunc_vr                     => ccisos%col_ctrunc_vr
@@ -1034,41 +1030,77 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
-      ! vertically integrate HR and decomposition cascade fluxes
-      do k = 1, ndecomp_cascade_transitions
-            do j = 1,nlevdecomp
-               decomp_cascade_hr(c,k) = decomp_cascade_hr(c,k) + decomp_cascade_hr_vr(c,j,k)*dzsoi_decomp(j) 
-               decomp_cascade_ctransfer(c,k) = decomp_cascade_ctransfer(c,k) + decomp_cascade_ctransfer_vr(c,j,k) * dzsoi_decomp(j) 
-            end do
-      end do
-
+      ! some zeroing
       lithr(c) = 0._r8
-      ! litter heterotrophic respiration (LITHR)
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_litter(cascade_donor_pool(k)) ) then
-               lithr(c) = lithr(c) + decomp_cascade_hr(c,k)
-         end if
-      end do
-
       somhr(c) = 0._r8
-      ! soil organic matter heterotrophic respiration (SOMHR)
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_soil(cascade_donor_pool(k)) ) then
-               somhr(c) = somhr(c) + decomp_cascade_hr(c,k)
-         end if
+      totlitc(c) = 0._r8
+      totsomc(c) = 0._r8
+      cwdc(c) = 0._r8
+      col_ctrunc(c) = 0._r8
+      cwdc_loss(c) = 0._r8
+      som_c_leached(c) = 0._r8
+      do l = 1, ndecomp_pools
+         decomp_cpools(c,l) = 0._r8
       end do
-      
-      ! total heterotrophic respiration (HR)
+      totlitc_1m(c) = 0._r8
+      totsomc_1m(c) = 0._r8
+   end do
+
+   ! vertically integrate HR and decomposition cascade fluxes
+   do k = 1, ndecomp_cascade_transitions
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            decomp_cascade_hr(c,k) = decomp_cascade_hr(c,k) + decomp_cascade_hr_vr(c,j,k)*dzsoi_decomp(j) 
+            decomp_cascade_ctransfer(c,k) = decomp_cascade_ctransfer(c,k) + decomp_cascade_ctransfer_vr(c,j,k) * dzsoi_decomp(j) 
+         end do
+      end do
+   end do
+
+   ! litter heterotrophic respiration (LITHR)
+   do k = 1, ndecomp_cascade_transitions
+      if ( is_litter(cascade_donor_pool(k)) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            lithr(c) = lithr(c) + decomp_cascade_hr(c,k)
+         end do
+      end if
+   end do
+
+   ! soil organic matter heterotrophic respiration (SOMHR)
+   do k = 1, ndecomp_cascade_transitions
+      if ( is_soil(cascade_donor_pool(k)) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            somhr(c) = somhr(c) + decomp_cascade_hr(c,k)
+         end do
+      end if
+   end do
+   
+   ! total heterotrophic respiration (HR)
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       hr(c) = lithr(c) + somhr(c)
-      
-      ! total heterotrophic respiration, vertically resolved (HR)
-      hr_vr(c,:) = 0._r8
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
+   end do
+   
+   ! total heterotrophic respiration, vertically resolved (HR)
+   do j = 1,nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
+         hr_vr(c,j) = 0._r8
+      end do
+   end do
+   do k = 1, ndecomp_cascade_transitions
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             hr_vr(c,j) = hr_vr(c,j) + decomp_cascade_hr_vr(c,j,k)
          end do
       end do
+   end do
 
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       ! total soil respiration, heterotrophic + root respiration (SR)
       sr(c) = col_rr(c) + hr(c)
 
@@ -1091,16 +1123,22 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
          litfire(c) + &
          somfire(c) + &
          col_vegfire(c)
+   end do
 
-      ! vertically integrate column-level carbon fire losses
-      do l = 1, ndecomp_pools
-         do j = 1,nlevdecomp
+   ! vertically integrate column-level carbon fire losses
+   do l = 1, ndecomp_pools
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             m_decomp_cpools_to_fire(c,l) = m_decomp_cpools_to_fire(c,l) + &
                  m_decomp_cpools_to_fire_vr(c,j,l)*dzsoi_decomp(j)
          end do
       end do
+   end do
 
-      ! column-level carbon losses to fire, including pft losses
+   ! column-level carbon losses to fire, including pft losses
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       col_fire_closs(c) = col_pft_fire_closs(c)
       do l = 1, ndecomp_pools
             col_fire_closs(c) = col_fire_closs(c) + m_decomp_cpools_to_fire(c,l)
@@ -1123,179 +1161,208 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
       ! land use flux and land uptake
       landuseflux(c) = dwt_closs(c) + product_closs(c)
       landuptake(c) = nee(c) - landuseflux(c)
+   end do
 
-      ! vertically integrate each of the decomposing C pools
-      do l = 1, ndecomp_pools
-         decomp_cpools(c,l) = 0._r8
-         do j = 1, nlevdecomp
+   ! vertically integrate each of the decomposing C pools
+   do l = 1, ndecomp_pools
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             decomp_cpools(c,l) = decomp_cpools(c,l) + &
                  decomp_cpools_vr(c,j,l) * dzsoi_decomp(j)
          end do
       end do
+   end do
 
-      ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
-      if ( nlevdecomp .gt. 1) then
-
-         ! vertically integrate each of the decomposing C pools to 1 meter
-         maxdepth = 1._r8
-         do l = 1, ndecomp_pools
-            decomp_cpools_1m(c,l) = 0._r8
-            do j = 1, nlevdecomp
-               if ( zisoi(j) .le. maxdepth ) then
-                  decomp_cpools_1m(c,l) = decomp_cpools_1m(c,l) + &
-                       decomp_cpools_vr(c,j,l) * dzsoi_decomp(j)
-               elseif ( zisoi(j-1) .lt. maxdepth ) then
-                  decomp_cpools_1m(c,l) = decomp_cpools_1m(c,l) + &
-                       decomp_cpools_vr(c,j,l) * (maxdepth - zisoi(j-1))
-               endif
-            end do
-         end do
-
-         ! vertically integrate each of the decomposing C pools to 30 cm
-         maxdepth = 0.3_r8
-         do l = 1, ndecomp_pools
-            decomp_cpools_30cm(c,l) = 0._r8
-            do j = 1, nlevdecomp
-               if ( zisoi(j) .le. maxdepth ) then
-                  decomp_cpools_30cm(c,l) = decomp_cpools_30cm(c,l) + &
-                       decomp_cpools_vr(c,j,l) * dzsoi_decomp(j)
-               elseif ( zisoi(j-1) .lt. maxdepth ) then
-                  decomp_cpools_30cm(c,l) = decomp_cpools_30cm(c,l) + &
-                       decomp_cpools_vr(c,j,l) * (maxdepth - zisoi(j-1))
-               endif
-            end do
-         end do
+   ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
+   if ( nlevdecomp .gt. 1) then
       
-         ! vertically integrate each of the decomposing C pools over active layer for permafrost soils (over all layers for non-permafrost)
-         do l = 1, ndecomp_pools
-            decomp_cpools_activelayer(c,l) = 0._r8
-            do j = 1, min(max(altmax_indx(c), altmax_lastyear_indx(c), 1), nlevdecomp)
-               decomp_cpools_activelayer(c,l) = decomp_cpools_activelayer(c,l) + &
-                    decomp_cpools_vr(c,j,l) * dzsoi_decomp(j)
-            end do
+      ! zero some pools
+      do l = 1, ndecomp_pools
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            decomp_cpools_1m(c,l) = 0._r8
          end do
+      end do
 
-         ! total litter carbon in the top meter (TOTLITC_1m)
-         totlitc_1m(c) = 0._r8
-         do l = 1, ndecomp_pools
-            if ( is_litter(l) ) then
-               totlitc_1m(c) = totlitc_1m(c) + &
-                    decomp_cpools_1m(c,l)
+      ! vertically integrate each of the decomposing C pools to 1 meter
+      maxdepth = 1._r8
+      do l = 1, ndecomp_pools
+         do j = 1, nlevdecomp
+            if ( zisoi(j) .le. maxdepth ) then
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  decomp_cpools_1m(c,l) = decomp_cpools_1m(c,l) + &
+                       decomp_cpools_vr(c,j,l) * dzsoi_decomp(j)
+               end do
+            elseif ( zisoi(j-1) .lt. maxdepth ) then
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  decomp_cpools_1m(c,l) = decomp_cpools_1m(c,l) + &
+                       decomp_cpools_vr(c,j,l) * (maxdepth - zisoi(j-1))
+               end do
             endif
          end do
-         
-         ! total soil organic matter carbon in the top meter (TOTSOMC_1m)
-         totsomc_1m(c) = 0._r8
-         do l = 1, ndecomp_pools
-            if ( is_soil(l) ) then
-               totsomc_1m(c) = totsomc_1m(c) + &
-                    decomp_cpools_1m(c,l)
-            end if
-         end do
-         
-      endif
-
-      totlitc(c) = 0._r8
-      ! total litter carbon (TOTLITC)
+      end do
+      
+      ! total litter carbon in the top meter (TOTLITC_1m)
       do l = 1, ndecomp_pools
          if ( is_litter(l) ) then
-            totlitc(c) = totlitc(c) + &
-                 decomp_cpools(c,l)
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               totlitc_1m(c) = totlitc_1m(c) + &
+                    decomp_cpools_1m(c,l)
+            end do
          endif
       end do
-
-      totsomc(c) = 0._r8
+      
+      ! total soil organic matter carbon in the top meter (TOTSOMC_1m)
       do l = 1, ndecomp_pools
          if ( is_soil(l) ) then
-            ! total soil organic matter carbon (TOTSOMC)
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               totsomc_1m(c) = totsomc_1m(c) + &
+                    decomp_cpools_1m(c,l)
+            end do
+         end if
+      end do
+      
+   endif
+   
+   ! total litter carbon (TOTLITC)
+   do l = 1, ndecomp_pools
+      if ( is_litter(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            totlitc(c) = totlitc(c) + &
+                 decomp_cpools(c,l)
+         end do
+      endif
+   end do
+
+   ! total soil organic matter carbon (TOTSOMC)
+   do l = 1, ndecomp_pools
+      if ( is_soil(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             totsomc(c) = totsomc(c) + &
                  decomp_cpools(c,l)
-         end if
-      end do
+         end do
+      end if
+   end do
 
-      cwdc(c) = 0._r8
-      do l = 1, ndecomp_pools
-         if ( is_cwd(l) ) then
-            ! coarse woody debris carbon
+   ! coarse woody debris carbon
+   do l = 1, ndecomp_pools
+      if ( is_cwd(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             cwdc(c) = cwdc(c) + &
                  decomp_cpools(c,l)
-         end if
-      end do
+         end do
+      end if
+   end do
 
-      col_ctrunc(c) = 0._r8
-      do j = 1, nlevdecomp
-         ! truncation carbon
+   ! truncation carbon
+   do j = 1, nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          col_ctrunc(c) = col_ctrunc(c) + &
               col_ctrunc_vr(c,j) * dzsoi_decomp(j)
       end do
+   end do
       
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       ! total wood product carbon
       totprodc(c) = &
-         prod10c(c) + &
-	      prod100c(c)	 
-
+           prod10c(c) + &
+           prod100c(c)	 
+      
       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
       totecosysc(c) = &
-         cwdc(c) + &
-         totlitc(c) + &
-         totsomc(c) + &
-	      totprodc(c) + &
-         col_totvegc(c)
-
+           cwdc(c) + &
+           totlitc(c) + &
+           totsomc(c) + &
+           totprodc(c) + &
+           col_totvegc(c)
+      
       ! total column carbon, including veg and cpool (TOTCOLC)
-	  ! adding col_ctrunc, seedc
+      ! adding col_ctrunc, seedc
       totcolc(c) = &
          col_totpftc(c) + &
          cwdc(c) + &
          totlitc(c) + &
          totsomc(c) + &
-	      totprodc(c) + &
-		   seedc(c) + &
-		   col_ctrunc(c)
-
+         totprodc(c) + &
+         seedc(c) + &
+         col_ctrunc(c)
+      
       ! new summary variables for CLAMP
       
       ! (CWDC_HR) - coarse woody debris heterotrophic respiration
       cwdc_hr(c) = 0._r8
+   end do
 
-      ! (CWDC_LOSS) - coarse woody debris C loss
-      cwdc_loss(c) = 0._r8
-      do l = 1, ndecomp_pools
-         if ( is_cwd(l) ) then
+   ! (CWDC_LOSS) - coarse woody debris C loss
+   do l = 1, ndecomp_pools
+      if ( is_cwd(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             cwdc_loss(c) = cwdc_loss(c) + m_decomp_cpools_to_fire(c,l)
-         end if
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_cwd(cascade_donor_pool(k)) ) then
+         end do
+      end if
+   end do
+
+   do k = 1, ndecomp_cascade_transitions
+      if ( is_cwd(cascade_donor_pool(k)) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             cwdc_loss(c) = cwdc_loss(c) + decomp_cascade_ctransfer(c,k)
-         end if
-      end do
-
-      ! (LITTERC_LOSS) - litter C loss      
+         end do
+      end if
+   end do
+   
+   ! (LITTERC_LOSS) - litter C loss      
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       litterc_loss(c) = lithr(c)  
-      do l = 1, ndecomp_pools
-         if ( is_litter(l) ) then
+   end do
+   do l = 1, ndecomp_pools
+      if ( is_litter(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             litterc_loss(c) = litterc_loss(c) + m_decomp_cpools_to_fire(c,l)
-         end if
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_litter(cascade_donor_pool(k)) ) then
+         end do
+      end if
+   end do
+   do k = 1, ndecomp_cascade_transitions
+      if ( is_litter(cascade_donor_pool(k)) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             litterc_loss(c) = litterc_loss(c) + decomp_cascade_ctransfer(c,k)
-         end if
-      end do
+         end do
+      end if
+   end do
 
 
-      ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
-      som_c_leached(c) = 0._r8
-      do l = 1, ndecomp_pools
+   ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
+   do l = 1, ndecomp_pools
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          decomp_cpools_leached(c,l) = 0._r8
-         do j = 1, nlevdecomp
+      end do
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             decomp_cpools_leached(c,l) = decomp_cpools_leached(c,l) + decomp_cpools_transport_tendency(c,j,l) * dzsoi_decomp(j)
          end do
+      end do
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          som_c_leached(c) = som_c_leached(c) + decomp_cpools_leached(c,l)
       end do
+   end do
 
-   end do ! end of columns loop
 
 
 end subroutine CSummary
@@ -1380,8 +1447,6 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: decomp_npools(:,:)         ! (gN/m2)  decomposing (litter, cwd, soil) N pools
    real(r8), pointer :: decomp_npools_vr(:,:,:)    ! (gN/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
    real(r8), pointer :: decomp_npools_1m(:,:)           ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
-   real(r8), pointer :: decomp_npools_30cm(:,:)         ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 30 cm
-   real(r8), pointer :: decomp_npools_activelayer(:,:)  ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools of active layer (max of this and prior year)
    integer, pointer :: altmax_indx(:)                  ! maximum annual depth of thaw
    integer, pointer :: altmax_lastyear_indx(:)         ! prior year maximum annual depth of thaw
    real(r8), pointer :: sminn_vr(:,:)              ! (gN/m3) soil mineral N
@@ -1528,8 +1593,6 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     decomp_npools                     => clm3%g%l%c%cns%decomp_npools
     decomp_npools_vr                  => clm3%g%l%c%cns%decomp_npools_vr
     decomp_npools_1m                  => clm3%g%l%c%cns%decomp_npools_1m
-    decomp_npools_30cm                => clm3%g%l%c%cns%decomp_npools_30cm
-    decomp_npools_activelayer         => clm3%g%l%c%cns%decomp_npools_activelayer
     altmax_indx                       => clm3%g%l%c%cps%altmax_indx
     altmax_lastyear_indx              => clm3%g%l%c%cps%altmax_lastyear_indx
     sminn_vr                          => clm3%g%l%c%cns%sminn_vr
@@ -1709,46 +1772,78 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    call p2c(num_soilc, filter_soilc, totvegn, col_totvegn)
    call p2c(num_soilc, filter_soilc, totpftn, col_totpftn)
 
-   ! column loop
+   ! column loops
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
-      ! vertically integrate decomposing N cascade fluxes and soil mineral N fluxes associated with decomposition cascade
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
+      ! some zeroing
+      denit(c) = 0._r8
+#ifdef NITRIF_DENITRIF
+      smin_no3(c) = 0._r8
+      smin_nh4(c) = 0._r8
+#endif
+      totlitn(c) = 0._r8
+      totsomn(c) = 0._r8
+      cwdn(c) = 0._r8
+      sminn(c) = 0._r8
+      col_ntrunc(c) = 0._r8
+      supplement_to_sminn(c) = 0._r8
+      som_n_leached(c) = 0._r8
+      totlitn_1m(c) = 0._r8
+      totsomn_1m(c) = 0._r8
+   end do
+
+   ! vertically integrate decomposing N cascade fluxes and soil mineral N fluxes associated with decomposition cascade
+   do k = 1, ndecomp_cascade_transitions
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             decomp_cascade_ntransfer(c,k) = decomp_cascade_ntransfer(c,k) + decomp_cascade_ntransfer_vr(c,j,k) * dzsoi_decomp(j) 
             decomp_cascade_sminn_flux(c,k) = decomp_cascade_sminn_flux(c,k) + decomp_cascade_sminn_flux_vr(c,j,k) * dzsoi_decomp(j) 
          end do
       end do
-
+   end do
+   
 #ifndef NITRIF_DENITRIF
-      ! vertically integrate each denitrification flux
-      do l = 1, ndecomp_cascade_transitions
-         do j = 1, nlevdecomp
+   ! vertically integrate each denitrification flux
+   do l = 1, ndecomp_cascade_transitions
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             sminn_to_denit_decomp_cascade(c,l) = sminn_to_denit_decomp_cascade(c,l) + &
                  sminn_to_denit_decomp_cascade_vr(c,j,l) * dzsoi_decomp(j)
          end do
       end do
+   end do
 
-      ! vertically integrate bulk denitrification and  leaching flux
-      do j = 1, nlevdecomp
+   ! vertically integrate bulk denitrification and  leaching flux
+   do j = 1, nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          sminn_to_denit_excess(c) = sminn_to_denit_excess(c) + sminn_to_denit_excess_vr(c,j) * dzsoi_decomp(j)
          sminn_leached(c) = sminn_leached(c) + sminn_leached_vr(c,j) * dzsoi_decomp(j)
       end do
+   end do
 
-      ! total N denitrification (DENIT)
-      denit(c) = 0._r8
-      do l = 1, ndecomp_cascade_transitions
+   ! total N denitrification (DENIT)
+   do l = 1, ndecomp_cascade_transitions
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          denit(c) = denit(c) + sminn_to_denit_decomp_cascade(c,l)
       end do
+   end do
+
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       denit(c) =  denit(c) + sminn_to_denit_excess(c)
+   end do
 
 #else
-      ! vertically integrate NO3 NH4 N2O fluxes and pools
 
-      smin_no3(c) = 0._r8
-      smin_nh4(c) = 0._r8
-      do j = 1, nlevdecomp
+   ! vertically integrate NO3 NH4 N2O fluxes and pools
+   do j = 1, nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          ! nitrification and denitrification fluxes
          f_nit(c) = f_nit(c) + f_nit_vr(c,j) * dzsoi_decomp(j)
          f_denit(c) = f_denit(c) + f_denit_vr(c,j) * dzsoi_decomp(j)
@@ -1756,7 +1851,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          pot_f_denit(c) = pot_f_denit(c) + pot_f_denit_vr(c,j) * dzsoi_decomp(j)
          f_n2o_nit(c) = f_n2o_nit(c) + f_n2o_nit_vr(c,j) * dzsoi_decomp(j)
          f_n2o_denit(c) = f_n2o_denit(c) + f_n2o_denit_vr(c,j) * dzsoi_decomp(j)
-
+         
          ! leaching/runoff flux
          smin_no3_leached(c) = smin_no3_leached(c) + smin_no3_leached_vr(c,j) * dzsoi_decomp(j)
          smin_no3_runoff(c) = smin_no3_runoff(c) + smin_no3_runoff_vr(c,j) * dzsoi_decomp(j)
@@ -1765,145 +1860,173 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          smin_no3(c) = smin_no3(c) + smin_no3_vr(c,j) * dzsoi_decomp(j)
          smin_nh4(c) = smin_nh4(c) + smin_nh4_vr(c,j) * dzsoi_decomp(j)
       end do
+   end do
 
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       denit(c) = f_denit(c)
+   end do
 
 #endif
 
-      ! vertically integrate column-level fire N losses
-      do k = 1, ndecomp_pools
-         do j = 1, nlevdecomp
+   ! vertically integrate column-level fire N losses
+   do k = 1, ndecomp_pools
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             m_decomp_npools_to_fire(c,k) = m_decomp_npools_to_fire(c,k) + &
                  m_decomp_npools_to_fire_vr(c,j,k) * dzsoi_decomp(j)
          end do
       end do
-
-      ! total column-level fire N losses
+   end do
+   
+   ! total column-level fire N losses
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
       col_fire_nloss(c) = col_pft_fire_nloss(c)
-      do k = 1, ndecomp_pools
-            col_fire_nloss(c) = col_fire_nloss(c) + &
-                 m_decomp_npools_to_fire(c,k)
+   end do
+   do k = 1, ndecomp_pools
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
+         col_fire_nloss(c) = col_fire_nloss(c) + &
+              m_decomp_npools_to_fire(c,k)
       end do
-
-      ! vertically integrate each of the decomposing N pools
-      do l = 1, ndecomp_pools
+   end do
+   
+   
+   ! vertically integrate each of the decomposing N pools
+   do l = 1, ndecomp_pools
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          decomp_npools(c,l) = 0._r8
-         do j = 1, nlevdecomp
+      end do
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             decomp_npools(c,l) = decomp_npools(c,l) + &
                  decomp_npools_vr(c,j,l) * dzsoi_decomp(j)
          end do
       end do
+   end do
 
-      ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
-      if ( nlevdecomp .gt. 1) then
+   ! for vertically-resolved soil biogeochemistry, calculate some diagnostics of carbon pools to a given depth
+   if ( nlevdecomp .gt. 1) then
 
-         ! vertically integrate each of the decomposing n pools to 1 meter
-         maxdepth = 1._r8
-         do l = 1, ndecomp_pools
+      do l = 1, ndecomp_pools
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             decomp_npools_1m(c,l) = 0._r8
-            do j = 1, nlevdecomp
-               if ( zisoi(j) .le. maxdepth ) then
+         end do
+      end do
+
+      ! vertically integrate each of the decomposing n pools to 1 meter
+      maxdepth = 1._r8
+      do l = 1, ndecomp_pools
+         do j = 1, nlevdecomp
+            if ( zisoi(j) .le. maxdepth ) then
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
                   decomp_npools_1m(c,l) = decomp_npools_1m(c,l) + &
                        decomp_npools_vr(c,j,l) * dzsoi_decomp(j)
-               elseif ( zisoi(j-1) .lt. maxdepth ) then
+               end do
+            elseif ( zisoi(j-1) .lt. maxdepth ) then
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
                   decomp_npools_1m(c,l) = decomp_npools_1m(c,l) + &
                        decomp_npools_vr(c,j,l) * (maxdepth - zisoi(j-1))
-               endif
-            end do
+               end do
+            endif
          end do
-
-         ! vertically integrate each of the decomposing n pools to 30 cm
-         maxdepth = 0.3_r8
-         do l = 1, ndecomp_pools
-            decomp_npools_30cm(c,l) = 0._r8
-            do j = 1, nlevdecomp
-               if ( zisoi(j) .le. maxdepth ) then
-                  decomp_npools_30cm(c,l) = decomp_npools_30cm(c,l) + &
-                       decomp_npools_vr(c,j,l) * dzsoi_decomp(j)
-               elseif ( zisoi(j-1) .lt. maxdepth ) then
-                  decomp_npools_30cm(c,l) = decomp_npools_30cm(c,l) + &
-                       decomp_npools_vr(c,j,l) * (maxdepth - zisoi(j-1))
-               endif
-            end do
-         end do
+      end do
       
-         ! vertically integrate each of the decomposing n pools over active layer for permafrost soils (over all layers for non-permafrost)
-         do l = 1, ndecomp_pools
-            decomp_npools_activelayer(c,l) = 0._r8
-            do j = 1, min(max(altmax_indx(c), altmax_lastyear_indx(c), 1), nlevdecomp)
-               decomp_npools_activelayer(c,l) = decomp_npools_activelayer(c,l) + &
-                    decomp_npools_vr(c,j,l) * dzsoi_decomp(j)
-            end do
-         end do
-
-         ! total litter nitrogen to 1 meter (TOTLITN_1m)
-         totlitn_1m(c) = 0._r8
-         do l = 1, ndecomp_pools
-            if ( is_litter(l) ) then
-               totlitn_1m(c) = totlitn_1m(c) + &
-                    decomp_npools_1m(c,l)
-            end if
-         end do
-         
-         ! total soil organic matter nitrogen to 1 meter (TOTSOMN_1m)
-         totsomn_1m(c) = 0._r8
-         do l = 1, ndecomp_pools
-            if ( is_soil(l) ) then
-               totsomn_1m(c) = totsomn_1m(c) + &
-                    decomp_npools_1m(c,l)
-            end if
-         end do
-         
-      endif
       
-      ! total litter nitrogen (TOTLITN)
-      totlitn(c) = 0._r8
+      ! total litter nitrogen to 1 meter (TOTLITN_1m)
       do l = 1, ndecomp_pools
          if ( is_litter(l) ) then
-            totlitn(c) = totlitn(c) + &
-                 decomp_npools(c,l)
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               totlitn_1m(c) = totlitn_1m(c) + &
+                    decomp_npools_1m(c,l)
+            end do
          end if
       end do
-
-      ! total soil organic matter nitrogen (TOTSOMN)
-      totsomn(c) = 0._r8
+      
+      ! total soil organic matter nitrogen to 1 meter (TOTSOMN_1m)
       do l = 1, ndecomp_pools
          if ( is_soil(l) ) then
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               totsomn_1m(c) = totsomn_1m(c) + &
+                    decomp_npools_1m(c,l)
+            end do
+         end if
+      end do
+      
+   endif
+   
+   ! total litter nitrogen (TOTLITN)
+   do l = 1, ndecomp_pools
+      if ( is_litter(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            totlitn(c) = totlitn(c) + &
+                 decomp_npools(c,l)
+         end do
+      end if
+   end do
+   
+   ! total soil organic matter nitrogen (TOTSOMN)
+   do l = 1, ndecomp_pools
+      if ( is_soil(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             totsomn(c) = totsomn(c) + &
-                    decomp_npools(c,l)
-         end if
-      end do
-
-      ! total cwdn
-      cwdn(c) = 0._r8
-      do l = 1, ndecomp_pools
-         if ( is_cwd(l) ) then
+                 decomp_npools(c,l)
+         end do
+      end if
+   end do
+   
+   ! total cwdn
+   do l = 1, ndecomp_pools
+      if ( is_cwd(l) ) then
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             cwdn(c) = cwdn(c) + &
-                    decomp_npools(c,l)
-         end if
-      end do
-
-      ! total sminn
-      sminn(c) = 0._r8
-      do j = 1, nlevdecomp
+                 decomp_npools(c,l)
+         end do
+      end if
+   end do
+   
+   ! total sminn
+   do j = 1, nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          sminn(c) = sminn(c) + &
               sminn_vr(c,j) * dzsoi_decomp(j)
       end do
+   end do
 
-      ! total col_ntrunc
-      col_ntrunc(c) = 0._r8
-      do j = 1, nlevdecomp
+   ! total col_ntrunc
+   do j = 1, nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          col_ntrunc(c) = col_ntrunc(c) + &
               col_ntrunc_vr(c,j) * dzsoi_decomp(j)
       end do
+   end do
 
-      ! supplementary N supplement_to_sminn
-      supplement_to_sminn(c) = 0._r8
-      do j = 1, nlevdecomp
+   ! supplementary N supplement_to_sminn
+   do j = 1, nlevdecomp
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          supplement_to_sminn(c) = supplement_to_sminn(c) + &
               supplement_to_sminn_vr(c,j) * dzsoi_decomp(j)
       end do
+   end do
 
+   do fc = 1,num_soilc
+      c = filter_soilc(fc)
+      
       ! column-level N losses due to landcover change
       dwt_nloss(c) = &
          dwt_conv_nflux(c)
@@ -1937,19 +2060,26 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 	     totprodn(c) + &
 		 seedn(c) + &
 		 col_ntrunc(c)
-
-      ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
-      som_n_leached(c) = 0._r8
-      do l = 1, ndecomp_pools
+   end do
+   
+   ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
+   do l = 1, ndecomp_pools
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          decomp_npools_leached(c,l) = 0._r8
-         do j = 1, nlevdecomp
+      end do
+      do j = 1, nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
             decomp_npools_leached(c,l) = decomp_npools_leached(c,l) + decomp_npools_transport_tendency(c,j,l) * dzsoi_decomp(j)
          end do
+      end do
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
          som_n_leached(c) = som_n_leached(c) + decomp_npools_leached(c,l)
       end do
+   end do
 
-
-   end do ! end of columns loop
 
 
 end subroutine NSummary

@@ -123,11 +123,6 @@ subroutine iniTimeConst
   real(r8), pointer :: rresis(:,:)        !root resistance by layer (0-1)  (nlevgrnd)	
   real(r8), pointer :: dewmx(:)           ! maximum allowed dew [mm]
   real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevgrnd)  
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-  real(r8), pointer :: bsw2(:,:)          ! Clapp and Hornberger "b" for CN code
-  real(r8), pointer :: psisat(:,:)        ! soil water potential at saturation for CN code (MPa)
-  real(r8), pointer :: vwcsat(:,:)        ! volumetric water content at saturation for CN code (m3/m3)
-#endif
   real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity) (nlevgrnd) 
   real(r8), pointer :: watfc(:,:)         ! volumetric soil water at field capacity (nlevsoi)
   real(r8), pointer :: watdry(:,:)        ! btran parameter for btran=0
@@ -345,11 +340,6 @@ subroutine iniTimeConst
   dz              => clm3%g%l%c%cps%dz
   zi              => clm3%g%l%c%cps%zi
   bsw             => clm3%g%l%c%cps%bsw
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-  bsw2            => clm3%g%l%c%cps%bsw2
-  psisat          => clm3%g%l%c%cps%psisat
-  vwcsat          => clm3%g%l%c%cps%vwcsat
-#endif
   watsat          => clm3%g%l%c%cps%watsat
   watfc           => clm3%g%l%c%cps%watfc
   watdry          => clm3%g%l%c%cps%watdry  
@@ -1059,11 +1049,6 @@ subroutine iniTimeConst
       if (ltype(l)==istwet .or. ltype(l)==istice .or. ltype(l)==istice_mec) then
          do lev = 1,nlevgrnd
             bsw(c,lev)    = spval
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-            bsw2(c,lev)   = spval
-            psisat(c,lev) = spval
-            vwcsat(c,lev) = spval
-#endif
             watsat(c,lev) = spval
             watfc(c,lev)  = spval
             hksat(c,lev)  = spval
@@ -1104,11 +1089,6 @@ subroutine iniTimeConst
             watsat(c,lev) = spval
             watfc(c,lev)  = spval
             bsw(c,lev)    = spval
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-            bsw2(c,lev)   = spval
-            psisat(c,lev) = spval
-            vwcsat(c,lev) = spval
-#endif
             hksat(c,lev)  = spval
             sucsat(c,lev) = spval
             tkmg(c,lev)   = spval
@@ -1207,11 +1187,6 @@ subroutine iniTimeConst
             watsat(c,lev) = (1._r8 - om_frac)*watsat(c,lev) + om_watsat*om_frac
             tkm           = (1._r8-om_frac)*(8.80_r8*sand+2.92_r8*clay)/(sand+clay)+om_tkm*om_frac ! W/(m K)
             bsw(c,lev)    = (1._r8-om_frac)*(2.91_r8 + 0.159_r8*clay) + om_frac*om_b   
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-            bsw2(c,lev)   = -(3.10_r8 + 0.157_r8*clay - 0.003_r8*sand)
-            psisat(c,lev) = -(exp((1.54_r8 - 0.0095_r8*sand + 0.0063_r8*(100.0_r8-sand-clay))*log(10.0_r8))*9.8e-5_r8)
-            vwcsat(c,lev) = (50.5_r8 - 0.142_r8*sand - 0.037_r8*clay)/100.0_r8
-#endif
             sucsat(c,lev) = (1._r8-om_frac)*sucsat(c,lev) + om_sucsat*om_frac  
             xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
             hksat_min(c,lev)=xksat

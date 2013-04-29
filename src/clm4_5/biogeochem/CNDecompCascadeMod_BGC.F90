@@ -425,11 +425,7 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 
    real(r8), pointer :: dz(:,:)             ! soil layer thickness (m)
    real(r8), pointer :: t_soisno(:,:)       ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-   real(r8), pointer :: psisat(:,:)         ! soil water potential at saturation for CN code (MPa)
-#else
     real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm)
-#endif
    real(r8), pointer :: soilpsi(:,:)        ! soil water potential in each soil layer (MPa)
 #ifdef LCH4
    real(r8), pointer :: o2stress_unsat(:,:) ! Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
@@ -486,11 +482,7 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 
    ! Assign local pointers to derived type arrays
    t_soisno              => clm3%g%l%c%ces%t_soisno
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-   psisat                => clm3%g%l%c%cps%psisat
-#else
    sucsat                => clm3%g%l%c%cps%sucsat
-#endif
    soilpsi               => clm3%g%l%c%cps%soilpsi
    dz                    => clm3%g%l%c%cps%dz
    t_scalar              => clm3%g%l%c%ccf%t_scalar
@@ -630,12 +622,7 @@ endif
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             if (j==1) w_scalar(c,:) = 0._r8
-
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-            maxpsi = psisat(c,j)
-#else
             maxpsi = sucsat(c,j) * (-9.8e-6_r8)
-#endif
             psi = min(soilpsi(c,j),maxpsi)
             ! decomp only if soilpsi is higher than minpsi
             if (psi > minpsi) then
@@ -721,11 +708,7 @@ endif
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-            maxpsi = psisat(c,j)
-#else
             maxpsi = sucsat(c,j) * (-9.8e-6_r8)
-#endif
             psi = min(soilpsi(c,j),maxpsi)
             ! decomp only if soilpsi is higher than minpsi
             if (psi > minpsi) then

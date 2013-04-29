@@ -3441,53 +3441,16 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
    real(r8), pointer :: hrv_deadstemn_xfer_to_litter(:)
    real(r8), pointer :: hrv_livecrootn_xfer_to_litter(:)
    real(r8), pointer :: hrv_deadcrootn_xfer_to_litter(:)
+   real(r8), pointer :: harvest_c_to_litr_met_c(:,:)               ! C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_litr_cel_c(:,:)               ! C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_litr_lig_c(:,:)               ! C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_cwdc(:,:)                     ! C fluxes associated with harvest to CWD pool (gC/m3/s)
+   real(r8), pointer :: harvest_n_to_litr_met_n(:,:)               ! N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
+   real(r8), pointer :: harvest_n_to_litr_cel_n(:,:)               ! N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
+   real(r8), pointer :: harvest_n_to_litr_lig_n(:,:)               ! N fluxes associated with harvest to litter lignin pool (gN/m3/s)
+   real(r8), pointer :: harvest_n_to_cwdn(:,:)                     ! N fluxes associated with harvest to CWD pool (gN/m3/s)
 !
 ! local pointers to implicit in/out arrays
-   real(r8), pointer :: hrv_leafc_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_leafc_to_litr_cel_c(:,:)
-   real(r8), pointer :: hrv_leafc_to_litr_lig_c(:,:)
-   real(r8), pointer :: hrv_frootc_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_frootc_to_litr_cel_c(:,:)
-   real(r8), pointer :: hrv_frootc_to_litr_lig_c(:,:)
-   real(r8), pointer :: hrv_livestemc_to_cwdc(:,:)
-   real(r8), pointer :: hrv_livecrootc_to_cwdc(:,:)
-   real(r8), pointer :: hrv_deadcrootc_to_cwdc(:,:)
-   real(r8), pointer :: hrv_leafc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_frootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livestemc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadstemc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livecrootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadcrootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_gresp_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_leafc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_frootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livestemc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadstemc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livecrootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadcrootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_gresp_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_leafn_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_leafn_to_litr_cel_n(:,:)
-   real(r8), pointer :: hrv_leafn_to_litr_lig_n(:,:)
-   real(r8), pointer :: hrv_frootn_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_frootn_to_litr_cel_n(:,:)
-   real(r8), pointer :: hrv_frootn_to_litr_lig_n(:,:)
-   real(r8), pointer :: hrv_livestemn_to_cwdn(:,:)
-   real(r8), pointer :: hrv_livecrootn_to_cwdn(:,:)
-   real(r8), pointer :: hrv_deadcrootn_to_cwdn(:,:)
-   real(r8), pointer :: hrv_retransn_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_leafn_storage_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_frootn_storage_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_livestemn_storage_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_deadstemn_storage_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_livecrootn_storage_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_deadcrootn_storage_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_leafn_xfer_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_frootn_xfer_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_livestemn_xfer_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_deadstemn_xfer_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_livecrootn_xfer_to_litr_met_n(:,:)
-   real(r8), pointer :: hrv_deadcrootn_xfer_to_litr_met_n(:,:)
    real(r8), pointer :: chrv_deadstemc_to_prod10c(:)
    real(r8), pointer :: chrv_deadstemc_to_prod100c(:)
    real(r8), pointer :: chrv_deadstemn_to_prod10n(:)
@@ -3516,55 +3479,19 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
    ! assign local pointers to column-level arrays
    npfts                          => clm3%g%l%c%npfts
    pfti                           => clm3%g%l%c%pfti
-   hrv_leafc_to_litr_met_c              => clm3%g%l%c%ccf%hrv_leafc_to_litr_met_c
-   hrv_leafc_to_litr_cel_c              => clm3%g%l%c%ccf%hrv_leafc_to_litr_cel_c
-   hrv_leafc_to_litr_lig_c              => clm3%g%l%c%ccf%hrv_leafc_to_litr_lig_c
-   hrv_frootc_to_litr_met_c             => clm3%g%l%c%ccf%hrv_frootc_to_litr_met_c
-   hrv_frootc_to_litr_cel_c             => clm3%g%l%c%ccf%hrv_frootc_to_litr_cel_c
-   hrv_frootc_to_litr_lig_c             => clm3%g%l%c%ccf%hrv_frootc_to_litr_lig_c
-   hrv_livestemc_to_cwdc            => clm3%g%l%c%ccf%hrv_livestemc_to_cwdc
    chrv_deadstemc_to_prod10c        => clm3%g%l%c%ccf%hrv_deadstemc_to_prod10c
    chrv_deadstemc_to_prod100c       => clm3%g%l%c%ccf%hrv_deadstemc_to_prod100c
-   hrv_livecrootc_to_cwdc           => clm3%g%l%c%ccf%hrv_livecrootc_to_cwdc
-   hrv_deadcrootc_to_cwdc           => clm3%g%l%c%ccf%hrv_deadcrootc_to_cwdc
-   hrv_leafc_storage_to_litr_met_c      => clm3%g%l%c%ccf%hrv_leafc_storage_to_litr_met_c
-   hrv_frootc_storage_to_litr_met_c     => clm3%g%l%c%ccf%hrv_frootc_storage_to_litr_met_c
-   hrv_livestemc_storage_to_litr_met_c  => clm3%g%l%c%ccf%hrv_livestemc_storage_to_litr_met_c
-   hrv_deadstemc_storage_to_litr_met_c  => clm3%g%l%c%ccf%hrv_deadstemc_storage_to_litr_met_c
-   hrv_livecrootc_storage_to_litr_met_c => clm3%g%l%c%ccf%hrv_livecrootc_storage_to_litr_met_c
-   hrv_deadcrootc_storage_to_litr_met_c => clm3%g%l%c%ccf%hrv_deadcrootc_storage_to_litr_met_c
-   hrv_gresp_storage_to_litr_met_c      => clm3%g%l%c%ccf%hrv_gresp_storage_to_litr_met_c
-   hrv_leafc_xfer_to_litr_met_c         => clm3%g%l%c%ccf%hrv_leafc_xfer_to_litr_met_c
-   hrv_frootc_xfer_to_litr_met_c        => clm3%g%l%c%ccf%hrv_frootc_xfer_to_litr_met_c
-   hrv_livestemc_xfer_to_litr_met_c     => clm3%g%l%c%ccf%hrv_livestemc_xfer_to_litr_met_c
-   hrv_deadstemc_xfer_to_litr_met_c     => clm3%g%l%c%ccf%hrv_deadstemc_xfer_to_litr_met_c
-   hrv_livecrootc_xfer_to_litr_met_c    => clm3%g%l%c%ccf%hrv_livecrootc_xfer_to_litr_met_c
-   hrv_deadcrootc_xfer_to_litr_met_c    => clm3%g%l%c%ccf%hrv_deadcrootc_xfer_to_litr_met_c
-   hrv_gresp_xfer_to_litr_met_c         => clm3%g%l%c%ccf%hrv_gresp_xfer_to_litr_met_c
-   hrv_leafn_to_litr_met_n              => clm3%g%l%c%cnf%hrv_leafn_to_litr_met_n
-   hrv_leafn_to_litr_cel_n              => clm3%g%l%c%cnf%hrv_leafn_to_litr_cel_n
-   hrv_leafn_to_litr_lig_n              => clm3%g%l%c%cnf%hrv_leafn_to_litr_lig_n
-   hrv_frootn_to_litr_met_n             => clm3%g%l%c%cnf%hrv_frootn_to_litr_met_n
-   hrv_frootn_to_litr_cel_n             => clm3%g%l%c%cnf%hrv_frootn_to_litr_cel_n
-   hrv_frootn_to_litr_lig_n             => clm3%g%l%c%cnf%hrv_frootn_to_litr_lig_n
-   hrv_livestemn_to_cwdn            => clm3%g%l%c%cnf%hrv_livestemn_to_cwdn
    chrv_deadstemn_to_prod10n        => clm3%g%l%c%cnf%hrv_deadstemn_to_prod10n
    chrv_deadstemn_to_prod100n       => clm3%g%l%c%cnf%hrv_deadstemn_to_prod100n
-   hrv_livecrootn_to_cwdn           => clm3%g%l%c%cnf%hrv_livecrootn_to_cwdn
-   hrv_deadcrootn_to_cwdn           => clm3%g%l%c%cnf%hrv_deadcrootn_to_cwdn
-   hrv_retransn_to_litr_met_n           => clm3%g%l%c%cnf%hrv_retransn_to_litr_met_n
-   hrv_leafn_storage_to_litr_met_n      => clm3%g%l%c%cnf%hrv_leafn_storage_to_litr_met_n
-   hrv_frootn_storage_to_litr_met_n     => clm3%g%l%c%cnf%hrv_frootn_storage_to_litr_met_n
-   hrv_livestemn_storage_to_litr_met_n  => clm3%g%l%c%cnf%hrv_livestemn_storage_to_litr_met_n
-   hrv_deadstemn_storage_to_litr_met_n  => clm3%g%l%c%cnf%hrv_deadstemn_storage_to_litr_met_n
-   hrv_livecrootn_storage_to_litr_met_n => clm3%g%l%c%cnf%hrv_livecrootn_storage_to_litr_met_n
-   hrv_deadcrootn_storage_to_litr_met_n => clm3%g%l%c%cnf%hrv_deadcrootn_storage_to_litr_met_n
-   hrv_leafn_xfer_to_litr_met_n         => clm3%g%l%c%cnf%hrv_leafn_xfer_to_litr_met_n
-   hrv_frootn_xfer_to_litr_met_n        => clm3%g%l%c%cnf%hrv_frootn_xfer_to_litr_met_n
-   hrv_livestemn_xfer_to_litr_met_n     => clm3%g%l%c%cnf%hrv_livestemn_xfer_to_litr_met_n
-   hrv_deadstemn_xfer_to_litr_met_n     => clm3%g%l%c%cnf%hrv_deadstemn_xfer_to_litr_met_n
-   hrv_livecrootn_xfer_to_litr_met_n    => clm3%g%l%c%cnf%hrv_livecrootn_xfer_to_litr_met_n
-   hrv_deadcrootn_xfer_to_litr_met_n    => clm3%g%l%c%cnf%hrv_deadcrootn_xfer_to_litr_met_n
+   harvest_c_to_litr_met_c          => clm3%g%l%c%ccf%harvest_c_to_litr_met_c
+   harvest_c_to_litr_cel_c          => clm3%g%l%c%ccf%harvest_c_to_litr_cel_c
+   harvest_c_to_litr_lig_c          => clm3%g%l%c%ccf%harvest_c_to_litr_lig_c
+   harvest_c_to_cwdc                => clm3%g%l%c%ccf%harvest_c_to_cwdc
+   harvest_n_to_litr_met_n          => clm3%g%l%c%cnf%harvest_n_to_litr_met_n
+   harvest_n_to_litr_cel_n          => clm3%g%l%c%cnf%harvest_n_to_litr_cel_n
+   harvest_n_to_litr_lig_n          => clm3%g%l%c%cnf%harvest_n_to_litr_lig_n
+   harvest_n_to_cwdn                => clm3%g%l%c%cnf%harvest_n_to_cwdn
+
 
    ! assign local pointers to pft-level arrays
    pactive                        => clm3%g%l%c%p%active
@@ -3628,115 +3555,115 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
                   
                   
                   ! leaf harvest mortality carbon fluxes
-                  hrv_leafc_to_litr_met_c(c,j) = hrv_leafc_to_litr_met_c(c,j) + &
+                  harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                        hrv_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                  hrv_leafc_to_litr_cel_c(c,j) = hrv_leafc_to_litr_cel_c(c,j) + &
+                  harvest_c_to_litr_cel_c(c,j) = harvest_c_to_litr_cel_c(c,j) + &
                        hrv_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                  hrv_leafc_to_litr_lig_c(c,j) = hrv_leafc_to_litr_lig_c(c,j) + &
+                  harvest_c_to_litr_lig_c(c,j) = harvest_c_to_litr_lig_c(c,j) + &
                        hrv_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                   
                   ! fine root harvest mortality carbon fluxes
-                  hrv_frootc_to_litr_met_c(c,j) = hrv_frootc_to_litr_met_c(c,j) + &
+                  harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                        hrv_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                  hrv_frootc_to_litr_cel_c(c,j) = hrv_frootc_to_litr_cel_c(c,j) + &
+                  harvest_c_to_litr_cel_c(c,j) = harvest_c_to_litr_cel_c(c,j) + &
                        hrv_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                  hrv_frootc_to_litr_lig_c(c,j) = hrv_frootc_to_litr_lig_c(c,j) + &
+                  harvest_c_to_litr_lig_c(c,j) = harvest_c_to_litr_lig_c(c,j) + &
                        hrv_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
                   
                   ! wood harvest mortality carbon fluxes
-                  hrv_livestemc_to_cwdc(c,j)  = hrv_livestemc_to_cwdc(c,j)  + &
+                  harvest_c_to_cwdc(c,j)  = harvest_c_to_cwdc(c,j)  + &
                        hrv_livestemc_to_litter(p)  * wtcol(p) * stem_prof(p,j) 
-                  hrv_livecrootc_to_cwdc(c,j) = hrv_livecrootc_to_cwdc(c,j) + &
+                  harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
                        hrv_livecrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_deadcrootc_to_cwdc(c,j) = hrv_deadcrootc_to_cwdc(c,j) + &
+                  harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
                        hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
                   
                   ! storage harvest mortality carbon fluxes
-                  hrv_leafc_storage_to_litr_met_c(c,j)      = hrv_leafc_storage_to_litr_met_c(c,j)      + &
+                  harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
                        hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                  hrv_frootc_storage_to_litr_met_c(c,j)     = hrv_frootc_storage_to_litr_met_c(c,j)     + &
+                  harvest_c_to_litr_met_c(c,j)     = harvest_c_to_litr_met_c(c,j)     + &
                        hrv_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                  hrv_livestemc_storage_to_litr_met_c(c,j)  = hrv_livestemc_storage_to_litr_met_c(c,j)  + &
+                  harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
                        hrv_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_deadstemc_storage_to_litr_met_c(c,j)  = hrv_deadstemc_storage_to_litr_met_c(c,j)  + &
+                  harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
                        hrv_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_livecrootc_storage_to_litr_met_c(c,j) = hrv_livecrootc_storage_to_litr_met_c(c,j) + &
+                  harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                        hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_deadcrootc_storage_to_litr_met_c(c,j) = hrv_deadcrootc_storage_to_litr_met_c(c,j) + &
+                  harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                        hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_gresp_storage_to_litr_met_c(c,j)      = hrv_gresp_storage_to_litr_met_c(c,j)      + &
+                  harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
                        hrv_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
                   
                   ! transfer harvest mortality carbon fluxes
-                  hrv_leafc_xfer_to_litr_met_c(c,j)      = hrv_leafc_xfer_to_litr_met_c(c,j)      + &
+                  harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
                        hrv_leafc_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                  hrv_frootc_xfer_to_litr_met_c(c,j)     = hrv_frootc_xfer_to_litr_met_c(c,j)     + &
+                  harvest_c_to_litr_met_c(c,j)     = harvest_c_to_litr_met_c(c,j)     + &
                        hrv_frootc_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                  hrv_livestemc_xfer_to_litr_met_c(c,j)  = hrv_livestemc_xfer_to_litr_met_c(c,j)  + &
+                  harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
                        hrv_livestemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_deadstemc_xfer_to_litr_met_c(c,j)  = hrv_deadstemc_xfer_to_litr_met_c(c,j)  + &
+                  harvest_c_to_litr_met_c(c,j)  = harvest_c_to_litr_met_c(c,j)  + &
                        hrv_deadstemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_livecrootc_xfer_to_litr_met_c(c,j) = hrv_livecrootc_xfer_to_litr_met_c(c,j) + &
+                  harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                        hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_deadcrootc_xfer_to_litr_met_c(c,j) = hrv_deadcrootc_xfer_to_litr_met_c(c,j) + &
+                  harvest_c_to_litr_met_c(c,j) = harvest_c_to_litr_met_c(c,j) + &
                        hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_gresp_xfer_to_litr_met_c(c,j)      = hrv_gresp_xfer_to_litr_met_c(c,j)      + &
+                  harvest_c_to_litr_met_c(c,j)      = harvest_c_to_litr_met_c(c,j)      + &
                        hrv_gresp_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
                   
                   ! leaf harvest mortality nitrogen fluxes
-                  hrv_leafn_to_litr_met_n(c,j) = hrv_leafn_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_leafn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                  hrv_leafn_to_litr_cel_n(c,j) = hrv_leafn_to_litr_cel_n(c,j) + &
+                  harvest_n_to_litr_cel_n(c,j) = harvest_n_to_litr_cel_n(c,j) + &
                        hrv_leafn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                  hrv_leafn_to_litr_lig_n(c,j) = hrv_leafn_to_litr_lig_n(c,j) + &
+                  harvest_n_to_litr_lig_n(c,j) = harvest_n_to_litr_lig_n(c,j) + &
                        hrv_leafn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                   
                   ! fine root litter nitrogen fluxes
-                  hrv_frootn_to_litr_met_n(c,j) = hrv_frootn_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_frootn_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                  hrv_frootn_to_litr_cel_n(c,j) = hrv_frootn_to_litr_cel_n(c,j) + &
+                  harvest_n_to_litr_cel_n(c,j) = harvest_n_to_litr_cel_n(c,j) + &
                        hrv_frootn_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                  hrv_frootn_to_litr_lig_n(c,j) = hrv_frootn_to_litr_lig_n(c,j) + &
+                  harvest_n_to_litr_lig_n(c,j) = harvest_n_to_litr_lig_n(c,j) + &
                        hrv_frootn_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
                   
                   ! wood harvest mortality nitrogen fluxes
-                  hrv_livestemn_to_cwdn(c,j)  = hrv_livestemn_to_cwdn(c,j)  + &
+                  harvest_n_to_cwdn(c,j)  = harvest_n_to_cwdn(c,j)  + &
                        hrv_livestemn_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_livecrootn_to_cwdn(c,j) = hrv_livecrootn_to_cwdn(c,j) + &
+                  harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
                        hrv_livecrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_deadcrootn_to_cwdn(c,j) = hrv_deadcrootn_to_cwdn(c,j) + &
+                  harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
                        hrv_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
                   
                   ! retranslocated N pool harvest mortality fluxes
-                  hrv_retransn_to_litr_met_n(c,j) = hrv_retransn_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j)
                   
                   ! storage harvest mortality nitrogen fluxes
-                  hrv_leafn_storage_to_litr_met_n(c,j)      = hrv_leafn_storage_to_litr_met_n(c,j)      + &
+                  harvest_n_to_litr_met_n(c,j)      = harvest_n_to_litr_met_n(c,j)      + &
                        hrv_leafn_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                  hrv_frootn_storage_to_litr_met_n(c,j)     = hrv_frootn_storage_to_litr_met_n(c,j)     + &
+                  harvest_n_to_litr_met_n(c,j)     = harvest_n_to_litr_met_n(c,j)     + &
                        hrv_frootn_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                  hrv_livestemn_storage_to_litr_met_n(c,j)  = hrv_livestemn_storage_to_litr_met_n(c,j)  + &
+                  harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j)  + &
                        hrv_livestemn_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_deadstemn_storage_to_litr_met_n(c,j)  = hrv_deadstemn_storage_to_litr_met_n(c,j)  + &
+                  harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j)  + &
                        hrv_deadstemn_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_livecrootn_storage_to_litr_met_n(c,j) = hrv_livecrootn_storage_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_livecrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_deadcrootn_storage_to_litr_met_n(c,j) = hrv_deadcrootn_storage_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_deadcrootn_storage_to_litter(p) * wtcol(p) * croot_prof(p,j)
                   
                   ! transfer harvest mortality nitrogen fluxes
-                  hrv_leafn_xfer_to_litr_met_n(c,j)      = hrv_leafn_xfer_to_litr_met_n(c,j)      + &
+                  harvest_n_to_litr_met_n(c,j)      = harvest_n_to_litr_met_n(c,j)      + &
                        hrv_leafn_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
-                  hrv_frootn_xfer_to_litr_met_n(c,j)     = hrv_frootn_xfer_to_litr_met_n(c,j)     + &
+                  harvest_n_to_litr_met_n(c,j)     = harvest_n_to_litr_met_n(c,j)     + &
                        hrv_frootn_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j)
-                  hrv_livestemn_xfer_to_litr_met_n(c,j)  = hrv_livestemn_xfer_to_litr_met_n(c,j)  + &
+                  harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j)  + &
                        hrv_livestemn_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_deadstemn_xfer_to_litr_met_n(c,j)  = hrv_deadstemn_xfer_to_litr_met_n(c,j)  + &
+                  harvest_n_to_litr_met_n(c,j)  = harvest_n_to_litr_met_n(c,j)  + &
                        hrv_deadstemn_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j)
-                  hrv_livecrootn_xfer_to_litr_met_n(c,j) = hrv_livecrootn_xfer_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_livecrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
-                  hrv_deadcrootn_xfer_to_litr_met_n(c,j) = hrv_deadcrootn_xfer_to_litr_met_n(c,j) + &
+                  harvest_n_to_litr_met_n(c,j) = harvest_n_to_litr_met_n(c,j) + &
                        hrv_deadcrootn_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j)
                   
                end if

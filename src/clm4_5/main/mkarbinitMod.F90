@@ -88,14 +88,8 @@ contains
     real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity)
     real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2)
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-    real(r8), pointer :: bsw2(:,:)          ! Clapp and Hornberger "b" for CN code
-    real(r8), pointer :: psisat(:,:)        ! soil water potential at saturation for CN code (MPa)
-    real(r8), pointer :: vwcsat(:,:)        ! volumetric water content at saturation for CN code (m3/m3)
-#else
     real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b"
     real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm)
-#endif
     real(r8), pointer :: zi(:,:)            ! interface level below a "z" level (m)
     real(r8), pointer :: wa(:)              ! water in the unconfined aquifer (mm)
     real(r8), pointer :: zwt(:)             ! water table depth (m)
@@ -198,14 +192,8 @@ contains
     snl              => clm3%g%l%c%cps%snl
     dz               => clm3%g%l%c%cps%dz
     watsat            => clm3%g%l%c%cps%watsat
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-    bsw2             => clm3%g%l%c%cps%bsw2
-    vwcsat           => clm3%g%l%c%cps%vwcsat
-    psisat           => clm3%g%l%c%cps%psisat
-#else
     sucsat            => clm3%g%l%c%cps%sucsat
     bsw               => clm3%g%l%c%cps%bsw
-#endif
     soilpsi          => clm3%g%l%c%cps%soilpsi
     h2osoi_ice       => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
@@ -587,11 +575,7 @@ contains
              do j = 1, nlevs
                 if (h2osoi_liq(c,j) > 0._r8) then
                    vwc = h2osoi_liq(c,j)/(dz(c,j)*denh2o)
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-                   psi = psisat(c,j) * (vwc/vwcsat(c,j))**bsw2(c,j)
-#else
                    psi = sucsat(c,j) * (-9.8e-6_r8) * (vwc/watsat(c,j))**(-bsw(c,j))  ! Mpa
-#endif
                    soilpsi(c,j) = max(psi, -15.0_r8)
                    soilpsi(c,j) = min(soilpsi(c,j),0.0_r8)
                 end if

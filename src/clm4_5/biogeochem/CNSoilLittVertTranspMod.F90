@@ -26,11 +26,8 @@ module CNSoilLittVertTranspMod
 ! !PUBLIC DATA MEMBERS:
    real(r8), public :: som_diffus = 1e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 1 cm^2 / yr
    real(r8), public :: som_adv_flux =  0._r8
-   integer, public :: shape_fluxprof = 5
-   real(r8), public :: shape_fluxprof_param1 = 1.e10_r8
    real(r8), public :: cryoturb_diffusion_k =  5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
-   real(r8), public :: max_altmultiplier_cryoturb = 3._r8  ! (unitless) this is the ratio of the maximum extent of 
-                                                           ! cryoturbation to the active layer thickness
+   real(r8), public :: max_depth_cryoturb = 3._r8          ! (m) this is the maximum depth of cryoturbation
    real(r8), public :: max_altdepth_cryoturbation = 2._r8  ! (m) maximum active layer thickness for cryoturbation to occur
 ! !REVISION HISTORY:
 !
@@ -152,85 +149,35 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    
 #ifdef VERTSOILC
    !------ first get diffusivity / advection terms -------!
-
-   select case (shape_fluxprof)
-   case(0)  ! default -- flat profile of diffusion/advection terms
-      som_adv_coef(:,:) =  som_adv_flux
-      som_diffus_coef(:,:) = som_diffus
-   case(1) ! exponential curve -- also requires an e-folding depth
-      do j = 1,nlevdecomp+1
-         do fc = 1, num_soilc
-            c = filter_soilc (fc)
-            som_adv_coef(c,j) = som_adv_flux * exp(-zsoi(j) / shape_fluxprof_param1)
-            som_diffus_coef(c,j) = som_diffus * exp(-zsoi(j) / shape_fluxprof_param1)
+   ! use different mixing rates for bioturbation and cryoturbation, with fixed bioturbation and cryoturbation set to a maximum depth
+   do fc = 1, num_soilc
+      c = filter_soilc (fc)
+      if  ( ( max(altmax(c), altmax_lastyear(c)) .le. max_altdepth_cryoturbation ) .and. ( max(altmax(c), altmax_lastyear(c)) .gt. 0._r8) ) then
+         ! use mixing profile modified slightly from Koven et al. (2009): constant through active layer, linear decrease from base of active layer to zero at a fixed depth
+         do j = 1,nlevdecomp+1
+            if ( zisoi(j) .lt. max(altmax(c), altmax_lastyear(c)) ) then
+               som_diffus_coef(c,j) = cryoturb_diffusion_k 
+               som_adv_coef(c,j) = 0._r8
+            else
+               som_diffus_coef(c,j) = max(cryoturb_diffusion_k * ( 1._r8 - ( zisoi(j) - max(altmax(c), altmax_lastyear(c)) ) / &
+                    ( max_depth_cryoturb - max(altmax(c), altmax_lastyear(c)) ) ), 0._r8)  ! go linearly to zero between ALT and max_depth_cryoturb
+               som_adv_coef(c,j) = 0._r8
+            endif
          end do
-      end do
-   case(2) ! linear dropoff to zero at some depth
-      do j = 1,nlevdecomp+1
-         do fc = 1, num_soilc
-            c = filter_soilc (fc)
-            som_adv_coef(c,j) = som_adv_flux * min(max((1._r8 - zsoi(j)/shape_fluxprof_param1), 0._r8),1._r8)
-            som_diffus_coef(c,j) = som_diffus * min(max((1._r8 - zsoi(j)/shape_fluxprof_param1), 0._r8),1._r8)
-         end do
-      end do
-   case(3) ! zero the top and bottom levels
-      do j = 2,nlevdecomp-1
-         do fc = 1, num_soilc
-            c = filter_soilc (fc)
-            som_adv_coef(c,j) = som_adv_flux
+      elseif (  max(altmax(c), altmax_lastyear(c)) .gt. 0._r8 ) then
+         ! constant advection, constant diffusion
+         do j = 1,nlevdecomp+1
+            som_adv_coef(c,j) = som_adv_flux 
             som_diffus_coef(c,j) = som_diffus
          end do
-      end do
-      do fc = 1, num_soilc
-         c = filter_soilc (fc)
-         som_adv_coef(c,1) = 0._r8
-         som_diffus_coef(c,1) = 0._r8
-         som_adv_coef(c,nlevdecomp) = 0._r8
-         som_diffus_coef(c,nlevdecomp) = 0._r8
-         som_adv_coef(c,nlevdecomp+1) = 0._r8
-         som_diffus_coef(c,nlevdecomp+1) = 0._r8
-      end do   
-   case(4) ! constant advection, exponential profile in diffusion
-      do j = 1,nlevdecomp+1
-         do fc = 1, num_soilc
-            c = filter_soilc (fc)
-            som_adv_coef(c,j) = som_adv_flux 
-            som_diffus_coef(c,j) = som_diffus * exp(-zsoi(j) / shape_fluxprof_param1)
+      else
+         ! completely frozen soils--no mixing
+         do j = 1,nlevdecomp+1
+            som_adv_coef(c,j) = 0._r8
+            som_diffus_coef(c,j) = 0._r8
          end do
-      end do
-   case(5) ! use different mixing rates for bioturbation and cryoturbation
-      do fc = 1, num_soilc
-         c = filter_soilc (fc)
-         if  ( ( max(altmax(c), altmax_lastyear(c)) .le. max_altdepth_cryoturbation ) .and. ( max(altmax(c), altmax_lastyear(c)) .gt. 0._r8) ) then
-            ! use mixing profile from Koven et al. (2009): constant through active layer, linear decrease from base of active layer to zero at depth of a given multiple of active layer
-            do j = 1,nlevdecomp+1
-               if ( zisoi(j) .lt. max(altmax(c), altmax_lastyear(c)) ) then
-                  som_diffus_coef(c,j) = cryoturb_diffusion_k 
-                  som_adv_coef(c,j) = 0._r8
-               else
-                  som_diffus_coef(c,j) = max(cryoturb_diffusion_k * ( 1._r8 - ( zisoi(j) - max(altmax(c), altmax_lastyear(c)) ) / &
-                       ((max_altmultiplier_cryoturb - 1._r8)*max(altmax(c), altmax_lastyear(c)) ) ), 0._r8)
-                  som_adv_coef(c,j) = 0._r8
-               endif
-            end do
-         elseif (  max(altmax(c), altmax_lastyear(c)) .gt. 0._r8 ) then
-            ! constant advection, exponential profile in diffusion
-            do j = 1,nlevdecomp+1
-               som_adv_coef(c,j) = som_adv_flux 
-               som_diffus_coef(c,j) = som_diffus * exp(-zsoi(j) / shape_fluxprof_param1)
-            end do
-         else
-            ! completely frozen soils--no mixing
-            do j = 1,nlevdecomp+1
-               som_adv_coef(c,j) = 0._r8
-               som_diffus_coef(c,j) = 0._r8
-            end do
-         endif
-      end do
-   case default
-      write(iulog,*) 'no vertical transport profile corresponds to shape_fluxprof: ', shape_fluxprof
-      call endrun()
-   end select
+      endif
+   end do
    
    ! Set the distance between the node and the one ABOVE it   
    dz_node(1) = zsoi(1)

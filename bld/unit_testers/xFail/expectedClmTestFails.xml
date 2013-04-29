@@ -38,6 +38,13 @@
                <entry testId="ERS_Lm3.1x1_vancouverCAN.I1PTCLM45"              failType="RUN">Missing dataset</entry>
                <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"              failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
                <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                  failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
+               <entry testId="ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set2_ciso"   failType="CFAIL">test needs to be updated to remove shape_fluxprof from namelist</entry>
+               <entry testId="ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set3_pftroot" failType="CFAIL">test needs to be updated to remove shape_fluxprof from namelist</entry>
+               <entry testId="PET_D_P1x30.ne30_g16.ICN"                        failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
+               <entry testId="SMS_RLA.f45_f45.I"                               failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
+               <entry testId="SMS_RLA.f45_f45.ICLM45"                          failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
+               <entry testId="SMS_ROA.f45_f45.I"                               failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
+               <entry testId="SMS_ROA.f45_f45.ICLM45"                          failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
             </INTEL>
             <PGI>
                <entry testId="SMS.1x1_mexicocityMEX.I1PTCLM45"                   failType="FAIL" >missing datasets</entry>
@@ -52,6 +59,8 @@
                <entry testId="PET_D_P1x30.ne30_g16.ICN"                          failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="PET_PT.f19_g16.ICLM451850"                         failType="TFAIL">scripts issue with ocean not threaded</entry>
                <entry testId="PET_PT.f10_f10.I20TRCLM45CN"                       failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="SMS_RLB.f45_f45.I"                                 failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
+               <entry testId="SMS_RLB.f45_f45.ICLM45"                            failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
             </PGI>
          </yellowstone>
          <frankfurt>

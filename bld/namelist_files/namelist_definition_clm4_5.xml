@@ -1167,7 +1167,7 @@ Flag for setting the state of the Accelerated decomposition spinup state for the
 <!-- vertical mixing switches    -->
 <entry id="som_diffus" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
-Base diffusivity of SOM associated with bioturbation mixing
+Base diffusivity of SOM associated with bioturbation mixing.
 </entry>
 
 <entry id="som_adv_flux" type="real" category="clm_vertcn"
@@ -1175,35 +1175,19 @@ Base diffusivity of SOM associated with bioturbation mixing
 Base advective flux (downwards) for SOM.
 </entry>
 
-<entry id="shape_fluxprof" type="integer" category="clm_vertcn"
-       group="clm_inparm" valid_values="0,1,2,3,4,5" >
-Flag for choosing which scheme to use for mixing profiles. Default uses separate profiles and values for permafrost vs non-permafrost soils.
-  0) flat profile of diffusion/advection terms
-  1) exponential curve -- also requires an e-folding depth
-  2) linear dropoff to zero at some depth
-  3) zero the top and bottom levels
-  4) constant advection, exponential profile in diffusion
-  5) use different mixing rates for bioturbation and cryoturbation (default)
-</entry>
-
-<entry id="shape_fluxprof_param1" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-Parameter used in vertical profile of SOM diffusivity
-</entry>
-
 <entry id="cryoturb_diffusion_k" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
-Diffusion constant for SOM in frozen soils by cryoturbation
-</entry>
-
-<entry id="max_altmultiplier_cryoturb" type="real" category="clm_vertcn"
-       group="clm_inparm" valid_values="" >
-Depth to mix soils to by croturbation, in permafrost soils, as a function of the active layer thickness
+Diffusion constant for SOM in frozen soils by cryoturbation.
 </entry>
 
 <entry id="max_altdepth_cryoturbation" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
-maximum active layer thickness in which cryoturbation occurs
+Maximum ALT depth at which soil mixing is assumed to be cryoturbation rather than bioturbation.
+</entry>
+
+<entry id="max_depth_cryoturb" type="real" category="clm_vertcn"
+       group="clm_inparm" valid_values="" >
+Maximum depth to mix soils to by croturbation, in permafrost soils.
 </entry>
 
 <!-- turnover time modifications    -->

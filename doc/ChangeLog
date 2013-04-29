@@ -1,4 +1,179 @@
 ===============================================================
+Tag name:  clm4_0_81
+Originator(s):  bandre (Benjamin Andre)
+Date: Mon Apr 29 12:12:42 MDT 2013
+One-line Summary: Charlie Koven's variable consolidation, cryoturbation and BSW CPP changes
+
+Purpose of changes:
+    1) variable consolidation -- these are all things like adding up
+    the leafc_to_litr1c, stemc_tolitr1c, frootc_to_litr1c, etc. into a
+    single set of fluxes, e.g. phenology_c_to_litr_met_c. this
+    introduces roundoff-level differences in every calculation of C
+    and N from plants to litter, so it will propagate quickly to
+    everywhere in the CN and CN4Me code.
+
+    2) cryoturbation - the changes to the active layer profiles.  This
+    should have a real but minor effect everywhere where there is
+    permafrost, because it will change the mixing rates of all soil
+    material into and out of the permafrost.  However, this is so slow
+    that it should only really matter during spinup.
+
+    3) BSW bugfix - Remove the STNDRD_BSW_FOR_SOILPSI_CALC CPP
+    token. This had already been set in the CN4Me code, but will cause
+    real changes to both the drought phenology and frozen temperature
+    sensitivity of the CN code.
+
+
+Requirements for tag:
+
+Test level of tag: std-test
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+    remove the CPP flag for STNDRD_BSW_FOR_SOILPSI_CALC
+
+Describe any changes made to the namelist:
+    remove: shape_fluxprof, max_altmultiplier_cryoturb, max_altdepth_cryoturbation
+    add: max_altdepth_cryoturbation, max_depth_cryoturb
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: variable consolidation should decrease runtime
+
+Code reviewed by: Charlie Koven
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+    - remove configure option for BSW
+        M  models/lnd/clm/bld/configure
+        M  models/lnd/clm/bld/config_files/config_definition.xml
+    - remove of BSW ifdef
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeMod_BGC.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeMod_CENTURY.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+        M  models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+        M  models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+        M  models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+
+    - add/remove nl options for cryoturbation
+        M  models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
+
+    - cryoturbation
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+        M  models/lnd/clm/src/clm4_5/main/controlMod.F90
+
+    - variable consolidation
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate2Mod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate3Mod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate2Mod.F90
+        M  models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+        M  models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90
+        M  models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+        M  models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+        M  models/lnd/clm/src/clm4_5/main/clmtype.F90
+        M  models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes, two unexpected fails on comparison, should pass next time.
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       yes
+      New expected failures:
+        all compare_hist tests with CLM45CN test should fail, but be ok next time (answer changes)
+        ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set2_ciso - CFAIL - test needs to be updated to remove shape_fluxprof from namelist
+        ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set3_pftroot - CFAIL - test needs to be updated to remove shape_fluxprof from namelist
+        PET_D_P1x30.ne30_g16.ICN - FAIL - runtime mpi abort from pio. fixed in pio-1.6.8?
+        SMS_RLA.f45_f45.I - FAIL - runtime mpi abort from pio. fixed in pio-1.6.8?
+        SMS_RLA.f45_f45.ICLM45 - FAIL - runtime mpi abort from pio. fixed in pio-1.6.8?
+        SMS_ROA.f45_f45.I - FAIL - runtime mpi abort from pio. fixed in pio-1.6.8?
+        SMS_ROA.f45_f45.ICLM45 - FAIL - runtime mpi abort from pio. fixed in pio-1.6.8?
+
+    yellowstone/aux_clm     pgi         yes
+      New expected failures:
+        all compare_hist tests with CLM45CN test should fail, but be ok next time (answer changes)
+        SMS_RLB.f45_f45.I - FAIL- runtime mpi abort from pio. fixed in pio-1.6.8?
+        SMS_RLB.f45_f45.ICLM45 - FAIL - runtime mpi abort from pio. fixed in pio-1.6.8?
+
+    frankfurt/aux_clm_int   intel       no
+    frankfurt/aux_clm       intel       no
+
+  test_driver.sh tools testing:
+
+    lynx interactive:           no
+    yellowstone interactive:    no
+
+  yellowstone/PTCLM:            no
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_80
+
+Changes answers relative to baseline: yes
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CLM45, all CN and CN4Me compsets
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+        variable consolidation - roundoff
+        cryoturbation - larger than roundoff/same climate
+        BSW - climate changing
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database):
+
+    This will change climate only in CN (not CN4Me mode), because of
+    the changed BSW (removal of incorrect second BSW formulation)
+    leading to slight differences in phenology.  This has been fixed
+    in CN4Me for some time, and has not been observed to detrimentally
+    effect the climate in that configuration.
+
+    I (Charlie Koven) ran trunk tag 80 and the branch synced to tag 80 for
+    30 years at f19 resolution in I1850CLM45CN4Me compset, with AD spinup
+    turned on.  I did not find sytematic differences in GPP or NEE.  The
+    difference is that there was somewhat less passive pool carbon
+    mixed to the ~3m soil layer, and somewhat more accumulatin gin the
+    ~2m layer; this is consistent with the changes to the
+    crypoturbation code, which sets a fixed depth of cryoturbation
+    throughout the permafrost region, instead of making it
+    proportional to active layer thickness.
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_80
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Apr 26 02:28:39 MDT 2013

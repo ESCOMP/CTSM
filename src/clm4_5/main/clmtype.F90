@@ -1245,11 +1245,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: vic_clm_fract(:,:,:)!fraction of VIC layers in CLM layers
 #endif
    ! new variables for CN code
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-   real(r8), pointer :: bsw2(:,:)        !Clapp and Hornberger "b" for CN code
-   real(r8), pointer :: psisat(:,:)        !soil water potential at saturation for CN code (MPa)
-   real(r8), pointer :: vwcsat(:,:)        !volumetric water content at saturation for CN code (m3/m3)
-#endif
    real(r8), pointer :: decl(:)               ! solar declination angle (radians)
    real(r8), pointer :: coszen(:)             ! cosine of solar zenith angle
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
@@ -1485,8 +1480,6 @@ type, public :: column_cstate_type
    ! summary (diagnostic) state variables, not involved in mass balance
    real(r8), pointer :: decomp_cpools(:,:)              ! (gC/m2)  decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_cpools_1m(:,:)           ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
-   real(r8), pointer :: decomp_cpools_30cm(:,:)         ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 30 cm
-   real(r8), pointer :: decomp_cpools_activelayer(:,:)  ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools of active layer
    real(r8), pointer :: cwdc(:)                         ! (gC/m2) Diagnostic: coarse woody debris C
    real(r8), pointer :: col_ctrunc(:)                   ! (gC/m2) column-level sink for C truncation
    real(r8), pointer :: totlitc(:)                      ! (gC/m2) total litter carbon
@@ -1594,8 +1587,6 @@ type, public :: column_nstate_type
    ! summary (diagnostic) state variables, not involved in mass balance
    real(r8), pointer :: decomp_npools(:,:)         ! (gN/m2)  decomposing (litter, cwd, soil) N pools
    real(r8), pointer :: decomp_npools_1m(:,:)           ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
-   real(r8), pointer :: decomp_npools_30cm(:,:)         ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 30 cm
-   real(r8), pointer :: decomp_npools_activelayer(:,:)  ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools of active layer (max of this and prior year)
    real(r8), pointer :: sminn(:)                   ! (gN/m2) soil mineral N
    real(r8), pointer :: col_ntrunc(:)              ! (gN/m2) column-level sink for N truncation
    real(r8), pointer :: cwdn(:)                    ! (gN/m2) Diagnostic: coarse woody debris N
@@ -1713,87 +1704,35 @@ end type column_wflux_type
 ! column carbon flux variables structure
 !----------------------------------------------------
 type, public :: column_cflux_type
-   type(pft_cflux_type):: pcf_a                           !pft-level carbon flux variables averaged to the column
+   type(pft_cflux_type):: pcf_a                           ! pft-level carbon flux variables averaged to the column
+   ! phenology: litterfall and crop fluxes
+   real(r8), pointer :: phenology_c_to_litr_met_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
+   real(r8), pointer :: phenology_c_to_litr_cel_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
+   real(r8), pointer :: phenology_c_to_litr_lig_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+   ! gap mortality
+   real(r8), pointer :: gap_mortality_c_to_litr_met_c(:,:)         ! C fluxes associated with gap mortality to litter metabolic pool (gC/m3/s)
+   real(r8), pointer :: gap_mortality_c_to_litr_cel_c(:,:)         ! C fluxes associated with gap mortality to litter cellulose pool (gC/m3/s)
+   real(r8), pointer :: gap_mortality_c_to_litr_lig_c(:,:)         ! C fluxes associated with gap mortality to litter lignin pool (gC/m3/s)
+   real(r8), pointer :: gap_mortality_c_to_cwdc(:,:)               ! C fluxes associated with gap mortality to CWD pool (gC/m3/s)
+   ! fire
+   real(r8), pointer :: fire_mortality_c_to_cwdc(:,:)              ! C fluxes associated with fire mortality to CWD pool (gC/m3/s)
+   ! harvest
+   real(r8), pointer :: harvest_c_to_litr_met_c(:,:)               ! C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_litr_cel_c(:,:)               ! C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_litr_lig_c(:,:)               ! C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_cwdc(:,:)                     ! C fluxes associated with harvest to CWD pool (gC/m3/s)
    ! new variables for CN code
-   ! column-level gap mortality fluxes
-   real(r8), pointer :: m_leafc_to_litr_met_c(:,:)              ! leaf C mortality to litter labile C (gC/m3/s) 
-   real(r8), pointer :: m_leafc_to_litr_cel_c(:,:)              ! leaf C mortality to litter cellulose C (gC/m3/s)
-   real(r8), pointer :: m_leafc_to_litr_lig_c(:,:)              ! leaf C mortality to litter lignin C (gC/m3/s)
-   real(r8), pointer :: m_frootc_to_litr_met_c(:,:)             ! fine root C mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_frootc_to_litr_cel_c(:,:)             ! fine root C mortality to litter cellulose C (gC/m3/s)
-   real(r8), pointer :: m_frootc_to_litr_lig_c(:,:)             ! fine root C mortality to litter lignin C (gC/m3/s)
-   real(r8), pointer :: m_livestemc_to_cwdc(:,:)                ! live stem C mortality to coarse woody debris C (gC/m3/s)
-   real(r8), pointer :: m_deadstemc_to_cwdc(:,:)                ! dead stem C mortality to coarse woody debris C (gC/m3/s)
-   real(r8), pointer :: m_livecrootc_to_cwdc(:,:)               ! live coarse root C mortality to coarse woody debris C (gC/m3/s)
-   real(r8), pointer :: m_deadcrootc_to_cwdc(:,:)               ! dead coarse root C mortality to coarse woody debris C (gC/m3/s)
-   real(r8), pointer :: m_leafc_storage_to_litr_met_c(:,:)      ! leaf C storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_frootc_storage_to_litr_met_c(:,:)     ! fine root C storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_livestemc_storage_to_litr_met_c(:,:)  ! live stem C storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_deadstemc_storage_to_litr_met_c(:,:)  ! dead stem C storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_livecrootc_storage_to_litr_met_c(:,:) ! live coarse root C storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_deadcrootc_storage_to_litr_met_c(:,:) ! dead coarse root C storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_gresp_storage_to_litr_met_c(:,:)      ! growth respiration storage mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_leafc_xfer_to_litr_met_c(:,:)         ! leaf C transfer mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_frootc_xfer_to_litr_met_c(:,:)        ! fine root C transfer mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_livestemc_xfer_to_litr_met_c(:,:)     ! live stem C transfer mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_deadstemc_xfer_to_litr_met_c(:,:)     ! dead stem C transfer mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_livecrootc_xfer_to_litr_met_c(:,:)    ! live coarse root C transfer mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_deadcrootc_xfer_to_litr_met_c(:,:)    ! dead coarse root C transfer mortality to litter labile C (gC/m3/s)
-   real(r8), pointer :: m_gresp_xfer_to_litr_met_c(:,:)         ! growth respiration transfer mortality to litter labile C (gC/m3/s)
-   ! column-level harvest mortality fluxes
-   real(r8), pointer :: hrv_leafc_to_litr_met_c(:,:)               ! leaf C harvest mortality to litter labile C (gC/m3/s)                         
-   real(r8), pointer :: hrv_leafc_to_litr_cel_c(:,:)               ! leaf C harvest mortality to litter cellulose C (gC/m3/s)                        
-   real(r8), pointer :: hrv_leafc_to_litr_lig_c(:,:)               ! leaf C harvest mortality to litter lignin C (gC/m3/s)                        
-   real(r8), pointer :: hrv_frootc_to_litr_met_c(:,:)              ! fine root C harvest mortality to litter labile C (gC/m3/s)                   
-   real(r8), pointer :: hrv_frootc_to_litr_cel_c(:,:)              ! fine root C harvest mortality to litter cellulose C (gC/m3/s)                   
-   real(r8), pointer :: hrv_frootc_to_litr_lig_c(:,:)              ! fine root C harvest mortality to litter lignin C (gC/m3/s)                   
-   real(r8), pointer :: hrv_livestemc_to_cwdc(:,:)                 ! live stem C harvest mortality to coarse woody debris C (gC/m3/s)        
    real(r8), pointer :: hrv_deadstemc_to_prod10c(:)                ! dead stem C harvest mortality to 10-year product pool (gC/m2/s)        
    real(r8), pointer :: hrv_deadstemc_to_prod100c(:)               ! dead stem C harvest mortality to 100-year product pool (gC/m2/s)        
-   real(r8), pointer :: hrv_livecrootc_to_cwdc(:,:)                ! live coarse root C harvest mortality to coarse woody debris C (gC/m3/s) 
-   real(r8), pointer :: hrv_deadcrootc_to_cwdc(:,:)                ! dead coarse root C harvest mortality to coarse woody debris C (gC/m3/s) 
-   real(r8), pointer :: hrv_leafc_storage_to_litr_met_c(:,:)       ! leaf C storage harvest mortality to litter labile C (gC/m3/s)                
-   real(r8), pointer :: hrv_frootc_storage_to_litr_met_c(:,:)      ! fine root C storage harvest mortality to litter labile C (gC/m3/s)           
-   real(r8), pointer :: hrv_livestemc_storage_to_litr_met_c(:,:)   ! live stem C storage harvest mortality to litter labile C (gC/m3/s)           
-   real(r8), pointer :: hrv_deadstemc_storage_to_litr_met_c(:,:)   ! dead stem C storage harvest mortality to litter labile C (gC/m3/s)           
-   real(r8), pointer :: hrv_livecrootc_storage_to_litr_met_c(:,:)  ! live coarse root C storage harvest mortality to litter labile C (gC/m3/s)    
-   real(r8), pointer :: hrv_deadcrootc_storage_to_litr_met_c(:,:)  ! dead coarse root C storage harvest mortality to litter labile C (gC/m3/s)    
-   real(r8), pointer :: hrv_gresp_storage_to_litr_met_c(:,:)       ! growth respiration storage harvest mortality to litter labile C (gC/m3/s)    
-   real(r8), pointer :: hrv_leafc_xfer_to_litr_met_c(:,:)          ! leaf C transfer harvest mortality to litter labile C (gC/m3/s)               
-   real(r8), pointer :: hrv_frootc_xfer_to_litr_met_c(:,:)         ! fine root C transfer harvest mortality to litter labile C (gC/m3/s)          
-   real(r8), pointer :: hrv_livestemc_xfer_to_litr_met_c(:,:)      ! live stem C transfer harvest mortality to litter labile C (gC/m3/s)          
-   real(r8), pointer :: hrv_deadstemc_xfer_to_litr_met_c(:,:)      ! dead stem C transfer harvest mortality to litter labile C (gC/m3/s)          
-   real(r8), pointer :: hrv_livecrootc_xfer_to_litr_met_c(:,:)     ! live coarse root C transfer harvest mortality to litter labile C (gC/m3/s)   
-   real(r8), pointer :: hrv_deadcrootc_xfer_to_litr_met_c(:,:)     ! dead coarse root C transfer harvest mortality to litter labile C (gC/m3/s)   
-   real(r8), pointer :: hrv_gresp_xfer_to_litr_met_c(:,:)          ! growth respiration transfer harvest mortality to litter labile C (gC/m3/s) 
-  
-   ! column-level fire C fluxes added by F. Li and S. Levis
-    real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)   ! dead stem C to coarse woody debris C by fire (gC/m3/s)
-   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)   ! dead coarse root C to to woody debris C by fire (gC/m3/s)
-    real(r8), pointer :: m_livestemc_to_cwdc_fire(:,:)   ! live stem C to coarse woody debris C by fire (gC/m3/s)
-   real(r8), pointer :: m_livecrootc_to_cwdc_fire(:,:)   ! live coarse root C to to woody debris C by fire (gC/m3/s) 
+   ! column-level fire fluxes
+   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)          ! vertically-resolved decomposing C fire loss (gC/m3/s)
+   real(r8), pointer :: m_decomp_cpools_to_fire(:,:)               ! vertically-integrated (diagnostic) decomposing C fire loss (gC/m2/s)
    real(r8), pointer :: m_c_to_litr_met_fire(:,:)        ! C from leaf, froot, xfer and storage C to litter labile C by fire (gC/m3/s) 
    real(r8), pointer :: m_c_to_litr_cel_fire(:,:)        ! C from leaf, froot, xfer and storage C to litter cellulose C by fire (gC/m3/s) 
    real(r8), pointer :: m_c_to_litr_lig_fire(:,:)        ! C from leaf, froot, xfer and storage C to litter lignin C by fire (gC/m3/s) 
-   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)!(gC/m3/s) vertically-resolved decomposing C fire loss 
-   real(r8), pointer :: m_decomp_cpools_to_fire(:,:)     ! vertically-integrated (diagnostic) decomposing C fire loss (gC/m2/s)
    real(r8), pointer :: lf_conv_cflux(:)                ! (gC/m2/s) conversion C flux due to BET and BDT area decreasing (immediate loss to atm)
    real(r8), pointer :: somc_fire(:)                     ! (gC/m2/s) carbon emissions due to peat burning
 
-   ! litterfall fluxes
-   real(r8), pointer :: leafc_to_litr_met_c(:,:)                ! leaf C litterfall to litter labile C (gC/m3/s)
-   real(r8), pointer :: leafc_to_litr_cel_c(:,:)                ! leaf C litterfall to litter cellulose C (gC/m3/s)
-   real(r8), pointer :: leafc_to_litr_lig_c(:,:)                ! leaf C litterfall to litter lignin C (gC/m3/s)
-   real(r8), pointer :: frootc_to_litr_met_c(:,:)               ! fine root C litterfall to litter labile C (gC/m3/s)
-   real(r8), pointer :: frootc_to_litr_cel_c(:,:)               ! fine root C litterfall to litter cellulose C (gC/m3/s)
-   real(r8), pointer :: frootc_to_litr_lig_c(:,:)               ! fine root C litterfall to litter lignin C (gC/m3/s)
-   real(r8), pointer :: livestemc_to_litr_met_c(:,:)            ! livestem C litterfall to litter 1 C (gC/m3/s)
-   real(r8), pointer :: livestemc_to_litr_cel_c(:,:)            ! livestem C litterfall to litter 2 C (gC/m3/s)
-   real(r8), pointer :: livestemc_to_litr_lig_c(:,:)            ! livestem C litterfall to litter 3 C (gC/m3/s)
-   ! litterfall fluxes for prognostic crop model
-   real(r8), pointer :: grainc_to_litr_met_c(:,:)               ! grain C litterfall to litter 1 C (gC/m3/s)
-   real(r8), pointer :: grainc_to_litr_cel_c(:,:)               ! grain C litterfall to litter 2 C (gC/m3/s)
-   real(r8), pointer :: grainc_to_litr_lig_c(:,:)               ! grain C litterfall to litter 3 C (gC/m3/s)
    ! decomposition fluxes
    real(r8), pointer :: decomp_cascade_hr_vr(:,:,:)            ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
    real(r8), pointer :: decomp_cascade_hr(:,:)                 ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
@@ -1868,82 +1807,32 @@ type, public :: column_nflux_type
    real(r8), pointer :: nfix_to_sminn(:)                   ! symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s) 
    real(r8), pointer :: fert_to_sminn(:)                   ! fertilizer N to soil mineral N (gN/m2/s)
    real(r8), pointer :: soyfixn_to_sminn(:)                ! soybean fixation to soil mineral N (gN/m2/s)
-   ! column-level gap mortality fluxes
-   real(r8), pointer :: m_leafn_to_litr_met_n(:,:)               ! leaf N mortality to litter labile N (gC/m3/s)
-   real(r8), pointer :: m_leafn_to_litr_cel_n(:,:)               ! leaf N mortality to litter cellulose N (gC/m3/s)
-   real(r8), pointer :: m_leafn_to_litr_lig_n(:,:)               ! leaf N mortality to litter lignin N (gC/m3/s)
-   real(r8), pointer :: m_frootn_to_litr_met_n(:,:)              ! fine root N mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_frootn_to_litr_cel_n(:,:)              ! fine root N mortality to litter cellulose N (gN/m3/s)
-   real(r8), pointer :: m_frootn_to_litr_lig_n(:,:)              ! fine root N mortality to litter lignin N (gN/m3/s)
-   real(r8), pointer :: m_livestemn_to_cwdn(:,:)                 ! live stem N mortality to coarse woody debris N (gN/m3/s)
-   real(r8), pointer :: m_deadstemn_to_cwdn(:,:)                 ! dead stem N mortality to coarse woody debris N (gN/m3/s)
-   real(r8), pointer :: m_livecrootn_to_cwdn(:,:)                ! live coarse root N mortality to coarse woody debris N (gN/m3/s)
-   real(r8), pointer :: m_deadcrootn_to_cwdn(:,:)                ! dead coarse root N mortality to coarse woody debris N (gN/m3/s)
-   real(r8), pointer :: m_retransn_to_litr_met_n(:,:)            ! retranslocated N pool mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_leafn_storage_to_litr_met_n(:,:)       ! leaf N storage mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_frootn_storage_to_litr_met_n(:,:)      ! fine root N storage mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_livestemn_storage_to_litr_met_n(:,:)   ! live stem N storage mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_deadstemn_storage_to_litr_met_n(:,:)   ! dead stem N storage mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_livecrootn_storage_to_litr_met_n(:,:)  ! live coarse root N storage mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_deadcrootn_storage_to_litr_met_n(:,:)  ! dead coarse root N storage mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_leafn_xfer_to_litr_met_n(:,:)          ! leaf N transfer mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_frootn_xfer_to_litr_met_n(:,:)         ! fine root N transfer mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_livestemn_xfer_to_litr_met_n(:,:)      ! live stem N transfer mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_deadstemn_xfer_to_litr_met_n(:,:)      ! dead stem N transfer mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_livecrootn_xfer_to_litr_met_n(:,:)     ! live coarse root N transfer mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: m_deadcrootn_xfer_to_litr_met_n(:,:)     ! dead coarse root N transfer mortality to litter labile N (gN/m3/s)
-   ! column-level harvest fluxes
-   real(r8), pointer :: hrv_leafn_to_litr_met_n(:,:)               ! leaf N harvest mortality to litter labile N (gC/m3/s)
-   real(r8), pointer :: hrv_leafn_to_litr_cel_n(:,:)               ! leaf N harvest mortality to litter cellulose N (gC/m3/s)
-   real(r8), pointer :: hrv_leafn_to_litr_lig_n(:,:)               ! leaf N harvest mortality to litter lignin N (gC/m3/s)
-   real(r8), pointer :: hrv_frootn_to_litr_met_n(:,:)              ! fine root N harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_frootn_to_litr_cel_n(:,:)              ! fine root N harvest mortality to litter cellulose N (gN/m3/s)
-   real(r8), pointer :: hrv_frootn_to_litr_lig_n(:,:)              ! fine root N harvest mortality to litter lignin N (gN/m3/s)
-   real(r8), pointer :: hrv_livestemn_to_cwdn(:,:)                 ! live stem N harvest mortality to coarse woody debris N (gN/m3/s)
+   ! phenology: litterfall and crop fluxes
+   real(r8), pointer :: phenology_n_to_litr_met_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
+   real(r8), pointer :: phenology_n_to_litr_cel_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
+   real(r8), pointer :: phenology_n_to_litr_lig_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
+   ! gap mortality
+   real(r8), pointer :: gap_mortality_n_to_litr_met_n(:,:)         ! N fluxes associated with gap mortality to litter metabolic pool (gN/m3/s)
+   real(r8), pointer :: gap_mortality_n_to_litr_cel_n(:,:)         ! N fluxes associated with gap mortality to litter cellulose pool (gN/m3/s)
+   real(r8), pointer :: gap_mortality_n_to_litr_lig_n(:,:)         ! N fluxes associated with gap mortality to litter lignin pool (gN/m3/s)
+   real(r8), pointer :: gap_mortality_n_to_cwdn(:,:)               ! N fluxes associated with gap mortality to CWD pool (gN/m3/s)
+   ! fire
+   real(r8), pointer :: fire_mortality_n_to_cwdn(:,:)              ! N fluxes associated with fire mortality to CWD pool (gN/m3/s)
+   ! harvest
+   real(r8), pointer :: harvest_n_to_litr_met_n(:,:)               ! N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
+   real(r8), pointer :: harvest_n_to_litr_cel_n(:,:)               ! N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
+   real(r8), pointer :: harvest_n_to_litr_lig_n(:,:)               ! N fluxes associated with harvest to litter lignin pool (gN/m3/s)
+   real(r8), pointer :: harvest_n_to_cwdn(:,:)                     ! N fluxes associated with harvest to CWD pool (gN/m3/s)
+   !
    real(r8), pointer :: hrv_deadstemn_to_prod10n(:)                ! dead stem N harvest mortality to 10-year product pool (gN/m2/s)
    real(r8), pointer :: hrv_deadstemn_to_prod100n(:)               ! dead stem N harvest mortality to 100-year product pool (gN/m2/s)
-   real(r8), pointer :: hrv_livecrootn_to_cwdn(:,:)                ! live coarse root N harvest mortality to coarse woody debris N (gN/m3/s)
-   real(r8), pointer :: hrv_deadcrootn_to_cwdn(:,:)                ! dead coarse root N harvest mortality to coarse woody debris N (gN/m3/s)
-   real(r8), pointer :: hrv_retransn_to_litr_met_n(:,:)            ! retranslocated N pool harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_leafn_storage_to_litr_met_n(:,:)       ! leaf N storage harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_frootn_storage_to_litr_met_n(:,:)      ! fine root N storage harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_livestemn_storage_to_litr_met_n(:,:)   ! live stem N storage harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_deadstemn_storage_to_litr_met_n(:,:)   ! dead stem N storage harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_livecrootn_storage_to_litr_met_n(:,:)  ! live coarse root N storage harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_deadcrootn_storage_to_litr_met_n(:,:)  ! dead coarse root N storage harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_leafn_xfer_to_litr_met_n(:,:)          ! leaf N transfer harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_frootn_xfer_to_litr_met_n(:,:)         ! fine root N transfer harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_livestemn_xfer_to_litr_met_n(:,:)      ! live stem N transfer harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_deadstemn_xfer_to_litr_met_n(:,:)      ! dead stem N transfer harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_livecrootn_xfer_to_litr_met_n(:,:)     ! live coarse root N transfer harvest mortality to litter labile N (gN/m3/s)
-   real(r8), pointer :: hrv_deadcrootn_xfer_to_litr_met_n(:,:)     ! dead coarse root N transfer harvest mortality to litter labile N (gN/m3/s)
-
-! column-level fire N fluxes added by F. Li and S. Levis
-    real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)   ! dead stem N to coarse woody debris N by fire (gN/m3/s)
-   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)   ! dead coarse root N to to woody debris N by fire (gN/m3/s)
-    real(r8), pointer :: m_livestemn_to_cwdn_fire(:,:)   ! live stem N to coarse woody debris N by fire (gN/m3/s)
-   real(r8), pointer :: m_livecrootn_to_cwdn_fire(:,:)   ! live coarse root N to to woody debris N by fire (gN/m3/s) 
+   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:)          ! vertically-resolved decomposing N fire loss (gN/m3/s)
+   real(r8), pointer :: m_decomp_npools_to_fire(:,:)               ! vertically-integrated (diagnostic) decomposing N fire loss (gN/m2/s)
+   ! column-level fire N fluxes added by F. Li and S. Levis
    real(r8), pointer :: m_n_to_litr_met_fire(:,:)        ! N from leaf, froot, xfer and storage N to litter labile N by fire (gN/m3/s) 
    real(r8), pointer :: m_n_to_litr_cel_fire(:,:)        ! N from leaf, froot, xfer and storage N to litter cellulose N by fire (gN/m3/s) 
    real(r8), pointer :: m_n_to_litr_lig_fire(:,:)        ! N from leaf, froot, xfer and storage N to litter lignin N by fire (gN/m3/s) 
-   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:)! (gN/m3/s) vertically-resolved decomposing N fire loss 
-   real(r8), pointer :: m_decomp_npools_to_fire(:,:)     ! vertically-integrated (diagnostic) decomposing N fire loss (gN/m2/s)            
-    
 
- ! litterfall fluxes
-   real(r8), pointer :: leafn_to_litr_met_n(:,:)       ! leaf N litterfall to litter labile N (gN/m3/s)
-   real(r8), pointer :: leafn_to_litr_cel_n(:,:)       ! leaf N litterfall to litter cellulose N (gN/m3/s)
-   real(r8), pointer :: leafn_to_litr_lig_n(:,:)       ! leaf N litterfall to litter lignin N (gN/m3/s)
-   real(r8), pointer :: frootn_to_litr_met_n(:,:)      ! fine root N litterfall to litter labile N (gN/m3/s)
-   real(r8), pointer :: frootn_to_litr_cel_n(:,:)      ! fine root N litterfall to litter cellulose N (gN/m3/s)
-   real(r8), pointer :: frootn_to_litr_lig_n(:,:)      ! fine root N litterfall to litter lignin N (gN/m3/s)
-   real(r8), pointer :: livestemn_to_litr_met_n(:,:)   ! livestem N litterfall to litter 1 N (gN/m3/s)
-   real(r8), pointer :: livestemn_to_litr_cel_n(:,:)   ! livestem N litterfall to litter 2 N (gN/m3/s)
-   real(r8), pointer :: livestemn_to_litr_lig_n(:,:)   ! livestem N litterfall to litter 3 N (gN/m3/s)
-   ! litterfall fluxes for prognostic crop model
-   real(r8), pointer :: grainn_to_litr_met_n(:,:)      ! grain N litterfall to litter 1 N (gN/m3/s)
-   real(r8), pointer :: grainn_to_litr_cel_n(:,:)      ! grain N litterfall to litter 2 N (gN/m3/s)
-   real(r8), pointer :: grainn_to_litr_lig_n(:,:)      ! grain N litterfall to litter 3 N (gN/m3/s)
    ! decomposition fluxes
    real(r8), pointer :: decomp_cascade_ntransfer_vr(:,:,:)    ! vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
    real(r8), pointer :: decomp_cascade_ntransfer(:,:)         ! vert-int (diagnostic) transfer of N from donor to receiver pool along decomp. cascade (gN/m2/s)

@@ -189,7 +189,6 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
    real(r8), pointer :: deadstemc_xfer(:)     ! (gC/m2) dead stem C transfer
    integer , pointer :: burndate(:)           ! burn date for crop
-   real(r8), pointer :: woody(:)              ! woody lifeform (1=woody, 0=not woody)
 
 
    ! column-level
@@ -283,7 +282,6 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
   ivt                => clm3%g%l%c%p%itype 
   prec60             => clm3%g%l%c%p%pps%prec60
   prec10             => clm3%g%l%c%p%pps%prec10
-  woody              => pftcon%woody
   deadcrootc         => clm3%g%l%c%p%pcs%deadcrootc
   deadcrootc_storage => clm3%g%l%c%p%pcs%deadcrootc_storage
   deadcrootc_xfer    => clm3%g%l%c%p%pcs%deadcrootc_xfer
@@ -731,7 +729,8 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use pftvarcon 
+   use pftvarcon, only: cc_leaf,cc_lstem,cc_dstem,cc_other,fm_leaf,fm_lstem,fm_dstem,fm_other,fm_root,fm_lroot,fm_droot
+   use pftvarcon, only: nc3crop,lf_flab,lf_fcel,lf_flig,fr_flab,fr_fcel,fr_flig
    use clm_time_manager, only: get_step_size,get_days_per_year,get_curr_date
    use clm_varpar, only : maxpatch_pft,max_pft_per_col
    use surfrdMod   , only: crop_prog
@@ -756,7 +755,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 #if (defined CNDV)
    real(r8), pointer :: nind(:)         ! number of individuals (#/m2)
 #endif
-   
+   real(r8), pointer :: woody(:)              ! woody lifeform (1=woody, 0=not woody) 
    logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: wtcol(:)        ! pft weight relative to column 
@@ -766,6 +765,10 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer , pointer :: pfti(:)         ! beginning pft index for each column
    integer , pointer :: pcolumn(:)      ! pft's column index
    real(r8), pointer :: farea_burned(:) ! timestep fractional area burned (proportion)
+   real(r8), pointer :: fire_mortality_c_to_cwdc(:,:)              ! C fluxes associated with fire mortality to CWD pool (gC/m3/s)
+   real(r8), pointer :: decomp_cpools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
+   real(r8), pointer :: decomp_npools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
+   real(r8), pointer :: fire_mortality_n_to_cwdn(:,:)              ! N fluxes associated with fire mortality to CWD pool (gN/m3/s)
    real(r8), pointer :: lfc(:)          ! conversion area frac. of BET+BDT that haven't burned before
    real(r8), pointer :: lfc2(:)         ! conversion area frac. of BET+BDT that burned this timestep
    real(r8), pointer :: fbac1(:)        ! burned area out of conversion region due to land use fire
@@ -778,8 +781,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: trotr1_col(:)   ! pft weight of BET on the gridcell (0-1)
    real(r8), pointer :: trotr2_col(:)   ! pft weight of BDT on the gridcell (0-1)
 
-   real(r8), pointer :: decomp_cpools_vr(:,:,:) ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
-   real(r8), pointer :: decomp_npools_vr(:,:,:) ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon 
    real(r8), pointer :: somc_fire(:)          ! (gC/m2/s)fire carbon emissions due to peat burning
    
@@ -789,6 +790,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: livestemc(:)          ! (gC/m2) live stem C
    real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
    real(r8), pointer :: livestemc_xfer(:)     ! (gC/m2) live stem C transfer
+
    real(r8), pointer :: deadstemc(:)          ! (gC/m2) dead stem C
    real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
    real(r8), pointer :: deadstemc_xfer(:)     ! (gC/m2) dead stem C transfer
@@ -893,10 +895,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_c_to_litr_met_fire(:,:)
    real(r8), pointer :: m_c_to_litr_cel_fire(:,:)
    real(r8), pointer :: m_c_to_litr_lig_fire(:,:)
-   real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_livestemc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_livecrootc_to_cwdc_fire(:,:)
 
 !  (gN/m2/s) N transfers from various C pools to litter and cwd pools due to fire mortality   
    real(r8), pointer :: m_leafn_to_litter_fire(:)   
@@ -923,11 +921,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_n_to_litr_met_fire(:,:)
    real(r8), pointer :: m_n_to_litr_cel_fire(:,:)
    real(r8), pointer :: m_n_to_litr_lig_fire(:,:)
-   real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_livestemn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_livecrootn_to_cwdn_fire(:,:)
-   
   
    logical, pointer  :: is_cwd(:)               ! TRUE => pool is a cwd pool
    logical, pointer  :: is_litter(:)            ! TRUE => pool is a litter pool
@@ -950,15 +943,13 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 #if (defined CNDV)
    nind                           => clm3%g%l%c%p%pdgvs%nind
 #endif
-  
-   latdeg                         => clm3%g%latdeg
-   ivt                            => clm3%g%l%c%p%itype
-   wtcol                          => clm3%g%l%c%p%wtcol   
-   npfts                          => clm3%g%l%c%npfts
-   pfti                           => clm3%g%l%c%pfti 
-   cgridcell                      => clm3%g%l%c%gridcell
    pcolumn                        => clm3%g%l%c%p%column
+   cgridcell                      => clm3%g%l%c%gridcell
    farea_burned                   => clm3%g%l%c%cps%farea_burned
+   woody                          => pftcon%woody
+   fire_mortality_c_to_cwdc       => clm3%g%l%c%ccf%fire_mortality_c_to_cwdc
+   fire_mortality_n_to_cwdn       => clm3%g%l%c%cnf%fire_mortality_n_to_cwdn
+   
    lfc                            => clm3%g%l%c%cps%lfc
    lfc2                           => clm3%g%l%c%cps%lfc2
    fbac1                          => clm3%g%l%c%cps%fbac1
@@ -966,11 +957,17 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    baf_crop                       => clm3%g%l%c%cps%baf_crop
    baf_peatf                      => clm3%g%l%c%cps%baf_peatf
    leafcmax                       => clm3%g%l%c%p%pcs%leafcmax
-
+   latdeg                         => clm3%g%latdeg
+   wtcol                          => clm3%g%l%c%p%wtcol   
+   pfti                           => clm3%g%l%c%pfti 
+   
+   ivt                            => clm3%g%l%c%p%itype
+   npfts                          => clm3%g%l%c%npfts
+   
    trotr1_col                     => clm3%g%l%c%cps%trotr1_col
    trotr2_col                     => clm3%g%l%c%cps%trotr2_col
    dtrotr_col                     => clm3%g%l%c%cps%dtrotr_col
-
+   
    
    somc_fire                      => clm3%g%l%c%ccf%somc_fire
    totsomc                        => clm3%g%l%c%ccs%totsomc
@@ -1083,10 +1080,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    m_gresp_storage_to_litter_fire        => clm3%g%l%c%p%pcf%m_gresp_storage_to_litter_fire
    m_gresp_xfer_to_litter_fire           => clm3%g%l%c%p%pcf%m_gresp_xfer_to_litter_fire
    m_decomp_cpools_to_fire_vr            => clm3%g%l%c%ccf%m_decomp_cpools_to_fire_vr
-   m_deadcrootc_to_cwdc_fire             => clm3%g%l%c%ccf%m_deadcrootc_to_cwdc_fire
-   m_deadstemc_to_cwdc_fire              => clm3%g%l%c%ccf%m_deadstemc_to_cwdc_fire
-   m_livecrootc_to_cwdc_fire             => clm3%g%l%c%ccf%m_livecrootc_to_cwdc_fire
-   m_livestemc_to_cwdc_fire              => clm3%g%l%c%ccf%m_livestemc_to_cwdc_fire
    m_c_to_litr_met_fire                  => clm3%g%l%c%ccf%m_c_to_litr_met_fire
    m_c_to_litr_cel_fire                  => clm3%g%l%c%ccf%m_c_to_litr_cel_fire
    m_c_to_litr_lig_fire                  => clm3%g%l%c%ccf%m_c_to_litr_lig_fire
@@ -1113,10 +1106,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    m_deadcrootn_xfer_to_litter_fire      => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_litter_fire
    m_retransn_to_litter_fire             => clm3%g%l%c%p%pnf%m_retransn_to_litter_fire
    m_decomp_npools_to_fire_vr            => clm3%g%l%c%cnf%m_decomp_npools_to_fire_vr
-   m_deadcrootn_to_cwdn_fire             => clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire
-   m_deadstemn_to_cwdn_fire              => clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire
-   m_livecrootn_to_cwdn_fire             => clm3%g%l%c%cnf%m_livecrootn_to_cwdn_fire
-   m_livestemn_to_cwdn_fire              => clm3%g%l%c%cnf%m_livestemn_to_cwdn_fire
    m_n_to_litr_met_fire                  => clm3%g%l%c%cnf%m_n_to_litr_met_fire
    m_n_to_litr_cel_fire                  => clm3%g%l%c%cnf%m_n_to_litr_cel_fire
    m_n_to_litr_lig_fire                  => clm3%g%l%c%cnf%m_n_to_litr_lig_fire
@@ -1330,23 +1319,23 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
                p = pfti(c) + pi - 1
                if ( pactive(p) ) then
                   
-                  m_deadstemc_to_cwdc_fire(c,j) = m_deadstemc_to_cwdc_fire(c,j) + &
+                  fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
                         m_deadstemc_to_litter_fire(p) * wtcol(p) * stem_prof(p,j)
-                  m_deadcrootc_to_cwdc_fire(c,j) = m_deadcrootc_to_cwdc_fire(c,j) + &
+                  fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
                         m_deadcrootc_to_litter_fire(p) * wtcol(p) * croot_prof(p,j)
-                  m_deadstemn_to_cwdn_fire(c,j) = m_deadstemn_to_cwdn_fire(c,j) + &
+                  fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
                         m_deadstemn_to_litter_fire(p) * wtcol(p) * stem_prof(p,j)
-                  m_deadcrootn_to_cwdn_fire(c,j) = m_deadcrootn_to_cwdn_fire(c,j) + &
+                  fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
                         m_deadcrootn_to_litter_fire(p) * wtcol(p) * croot_prof(p,j)
                   
 
-                  m_livestemc_to_cwdc_fire(c,j) = m_livestemc_to_cwdc_fire(c,j) + &
+                  fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
                         m_livestemc_to_litter_fire(p) * wtcol(p) * stem_prof(p,j)
-                  m_livecrootc_to_cwdc_fire(c,j) = m_livecrootc_to_cwdc_fire(c,j) + &
+                  fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
                         m_livecrootc_to_litter_fire(p) * wtcol(p) * croot_prof(p,j)
-                  m_livestemn_to_cwdn_fire(c,j) = m_livestemn_to_cwdn_fire(c,j) + &
+                  fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
                         m_livestemn_to_litter_fire(p) * wtcol(p) * stem_prof(p,j)
-                  m_livecrootn_to_cwdn_fire(c,j) = m_livecrootn_to_cwdn_fire(c,j) + &
+                  fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
                         m_livecrootn_to_litter_fire(p) * wtcol(p) * croot_prof(p,j)
                
                   

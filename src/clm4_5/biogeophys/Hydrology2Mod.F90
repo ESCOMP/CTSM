@@ -130,11 +130,6 @@ contains
     real(r8), pointer :: forc_snow(:)     ! snow rate [mm/s]
     real(r8), pointer :: begwb(:)         ! water mass begining of the time step
     real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-    real(r8), pointer :: bsw2(:,:)        ! Clapp and Hornberger "b" for CN code
-    real(r8), pointer :: psisat(:,:)      ! soil water potential at saturation for CN code (MPa)
-    real(r8), pointer :: vwcsat(:,:)      ! volumetric water content at saturation for CN code (m3/m3)
-#endif
     real(r8), pointer :: smpmin(:)        ! restriction for min of soil potential (mm)
 !
 ! local pointers to implicit inout arguments
@@ -303,11 +298,6 @@ contains
     qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-    bsw2              => clm3%g%l%c%cps%bsw2
-    psisat            => clm3%g%l%c%cps%psisat
-    vwcsat            => clm3%g%l%c%cps%vwcsat
-#endif
     soilpsi           => clm3%g%l%c%cps%soilpsi
     smp_l             => clm3%g%l%c%cws%smp_l
     hk_l              => clm3%g%l%c%cws%hk_l
@@ -650,13 +640,8 @@ contains
              ! fractional saturation that can crash the calculation of psi
 
              ! use the same contants used in the supercool so that psi for frozen soils is consistent
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-             fsattmp = max(vwc/vwcsat(c,j), 0.001_r8)
-             psi = psisat(c,j) * (fsattmp)**bsw2(c,j)
-#else
              fsattmp = max(vwc/watsat(c,j), 0.001_r8)
              psi = sucsat(c,j) * (-9.8e-6_r8) * (fsattmp)**(-bsw(c,j))  ! Mpa
-#endif
              soilpsi(c,j) = min(max(psi,-15.0_r8),0._r8)
              
           else 

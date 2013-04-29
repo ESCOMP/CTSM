@@ -67,18 +67,6 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
    integer , pointer :: ivt(:)         ! pft vegetation type
    real(r8), pointer :: woody(:)       ! binary flag for woody lifeform (1=woody, 0=not woody)
-   real(r8), pointer :: frootn_to_litr_met_n(:,:)
-   real(r8), pointer :: frootn_to_litr_cel_n(:,:)
-   real(r8), pointer :: frootn_to_litr_lig_n(:,:)
-   real(r8), pointer :: leafn_to_litr_met_n(:,:)
-   real(r8), pointer :: leafn_to_litr_cel_n(:,:)
-   real(r8), pointer :: leafn_to_litr_lig_n(:,:)
-   real(r8), pointer :: grainn_to_litr_met_n(:,:)     ! grain N litterfall to litter 1 N (gN/m2/s)
-   real(r8), pointer :: grainn_to_litr_cel_n(:,:)     ! grain N litterfall to litter 2 N (gN/m2/s)
-   real(r8), pointer :: grainn_to_litr_lig_n(:,:)     ! grain N litterfall to litter 3 N (gN/m2/s)
-   real(r8), pointer :: livestemn_to_litr_met_n(:,:)  ! livestem N litterfall to litter 1 N (gN/m2/s)
-   real(r8), pointer :: livestemn_to_litr_cel_n(:,:)  ! livestem N litterfall to litter 2 N (gN/m2/s)
-   real(r8), pointer :: livestemn_to_litr_lig_n(:,:)  ! livestem N litterfall to litter 3 N (gN/m2/s)
    real(r8), pointer :: ndep_to_sminn(:)
    real(r8), pointer :: nfix_to_sminn(:)        ! symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s) 
    real(r8), pointer :: fert_to_sminn(:)
@@ -172,6 +160,9 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: deadstemn_xfer(:)     ! (gN/m2) dead stem N transfer
    real(r8), pointer :: retransn(:)           ! (gN/m2) plant pool of retranslocated N
    real(r8), pointer :: npool(:)              ! (gN/m2) temporary plant N pool
+   real(r8), pointer :: phenology_n_to_litr_met_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
+   real(r8), pointer :: phenology_n_to_litr_cel_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
+   real(r8), pointer :: phenology_n_to_litr_lig_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
 
 
 ! local pointers for dynamic landcover fluxes and states
@@ -200,12 +191,6 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    woody                          => pftcon%woody
 
    ! assign local pointers at the column level
-   frootn_to_litr_met_n               => clm3%g%l%c%cnf%frootn_to_litr_met_n
-   frootn_to_litr_cel_n               => clm3%g%l%c%cnf%frootn_to_litr_cel_n
-   frootn_to_litr_lig_n               => clm3%g%l%c%cnf%frootn_to_litr_lig_n
-   leafn_to_litr_met_n                => clm3%g%l%c%cnf%leafn_to_litr_met_n
-   leafn_to_litr_cel_n                => clm3%g%l%c%cnf%leafn_to_litr_cel_n
-   leafn_to_litr_lig_n                => clm3%g%l%c%cnf%leafn_to_litr_lig_n
    ndep_to_sminn                     => clm3%g%l%c%cnf%ndep_to_sminn
    nfix_to_sminn                     => clm3%g%l%c%cnf%nfix_to_sminn
    fert_to_sminn                     => clm3%g%l%c%cnf%fert_to_sminn
@@ -235,12 +220,9 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    sminn_vr                          => clm3%g%l%c%cns%sminn_vr
    ndep_prof                         => clm3%g%l%c%cps%ndep_prof
    nfixation_prof                    => clm3%g%l%c%cps%nfixation_prof
-   livestemn_to_litr_met_n            => clm3%g%l%c%cnf%livestemn_to_litr_met_n
-   livestemn_to_litr_cel_n            => clm3%g%l%c%cnf%livestemn_to_litr_cel_n
-   livestemn_to_litr_lig_n            => clm3%g%l%c%cnf%livestemn_to_litr_lig_n
-   grainn_to_litr_met_n               => clm3%g%l%c%cnf%grainn_to_litr_met_n
-   grainn_to_litr_cel_n               => clm3%g%l%c%cnf%grainn_to_litr_cel_n
-   grainn_to_litr_lig_n               => clm3%g%l%c%cnf%grainn_to_litr_lig_n
+   phenology_n_to_litr_met_n      => clm3%g%l%c%cnf%phenology_n_to_litr_met_n
+   phenology_n_to_litr_cel_n      => clm3%g%l%c%cnf%phenology_n_to_litr_cel_n
+   phenology_n_to_litr_lig_n      => clm3%g%l%c%cnf%phenology_n_to_litr_lig_n
 
    ! new pointers for dynamic landcover
    dwt_seedn_to_leaf              => clm3%g%l%c%cnf%dwt_seedn_to_leaf
@@ -347,33 +329,12 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 #endif
 
          ! plant to litter fluxes
-         ! leaf litter
-         decomp_npools_sourcesink(c,j,i_met_lit) = decomp_npools_sourcesink(c,j,i_met_lit) + leafn_to_litr_met_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_cel_lit) = decomp_npools_sourcesink(c,j,i_cel_lit) + leafn_to_litr_cel_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_lig_lit) = decomp_npools_sourcesink(c,j,i_lig_lit) + leafn_to_litr_lig_n(c,j)*dt
-         ! fine root litter
-         decomp_npools_sourcesink(c,j,i_met_lit) = decomp_npools_sourcesink(c,j,i_met_lit) + frootn_to_litr_met_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_cel_lit) = decomp_npools_sourcesink(c,j,i_cel_lit) + frootn_to_litr_cel_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_lig_lit) = decomp_npools_sourcesink(c,j,i_lig_lit) + frootn_to_litr_lig_n(c,j)*dt
-         
-         ! fluxes into litter and CWD, from dynamic landcover
-         decomp_npools_sourcesink(c,j,i_met_lit) = decomp_npools_sourcesink(c,j,i_met_lit) + dwt_frootn_to_litr_met_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_cel_lit) = decomp_npools_sourcesink(c,j,i_cel_lit) + dwt_frootn_to_litr_cel_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_lig_lit) = decomp_npools_sourcesink(c,j,i_lig_lit) + dwt_frootn_to_litr_lig_n(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_cwd)	= decomp_npools_sourcesink(c,j,i_cwd)   + dwt_livecrootn_to_cwdn(c,j)*dt
-         decomp_npools_sourcesink(c,j,i_cwd)	= decomp_npools_sourcesink(c,j,i_cwd)   + dwt_deadcrootn_to_cwdn(c,j)*dt
-                  
-         if ( crop_prog )then
-            ! livestem litter
-            decomp_npools_sourcesink(c,j,i_met_lit) = decomp_npools_sourcesink(c,j,i_met_lit) + livestemn_to_litr_met_n(c,j)*dt
-            decomp_npools_sourcesink(c,j,i_cel_lit) = decomp_npools_sourcesink(c,j,i_cel_lit) + livestemn_to_litr_cel_n(c,j)*dt
-            decomp_npools_sourcesink(c,j,i_lig_lit) = decomp_npools_sourcesink(c,j,i_lig_lit) + livestemn_to_litr_lig_n(c,j)*dt
-            ! grain litter
-            decomp_npools_sourcesink(c,j,i_met_lit) = decomp_npools_sourcesink(c,j,i_met_lit) + grainn_to_litr_met_n(c,j)*dt
-            decomp_npools_sourcesink(c,j,i_cel_lit) = decomp_npools_sourcesink(c,j,i_cel_lit) + grainn_to_litr_cel_n(c,j)*dt
-            decomp_npools_sourcesink(c,j,i_lig_lit) = decomp_npools_sourcesink(c,j,i_lig_lit) + grainn_to_litr_lig_n(c,j)*dt
-         end if
-         
+         ! phenology and dynamic landcover fluxes
+         decomp_npools_sourcesink(c,j,i_met_lit) = ( phenology_n_to_litr_met_n(c,j) + dwt_frootn_to_litr_met_n(c,j) ) *dt
+         decomp_npools_sourcesink(c,j,i_cel_lit) = ( phenology_n_to_litr_cel_n(c,j) + dwt_frootn_to_litr_cel_n(c,j) ) *dt
+         decomp_npools_sourcesink(c,j,i_lig_lit) = ( phenology_n_to_litr_lig_n(c,j) + dwt_frootn_to_litr_lig_n(c,j) ) *dt
+         decomp_npools_sourcesink(c,j,i_cwd)	=  ( dwt_livecrootn_to_cwdn(c,j) + dwt_deadcrootn_to_cwdn(c,j) )*dt
+
       end do
    end do
    
@@ -404,15 +365,29 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
             c = filter_soilc(fc)
             decomp_npools_sourcesink(c,j,cascade_donor_pool(k)) = decomp_npools_sourcesink(c,j,cascade_donor_pool(k)) - &
                  decomp_cascade_ntransfer_vr(c,j,k) * dt
-            if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
-               decomp_npools_sourcesink(c,j,cascade_receiver_pool(k)) = decomp_npools_sourcesink(c,j,cascade_receiver_pool(k)) + &
-                    (decomp_cascade_ntransfer_vr(c,j,k) + decomp_cascade_sminn_flux_vr(c,j,k)) * dt
-            else  ! terminal transitions
-               decomp_npools_sourcesink(c,j,cascade_donor_pool(k)) = decomp_npools_sourcesink(c,j,cascade_donor_pool(k)) - &
-                    decomp_cascade_sminn_flux_vr(c,j,k) * dt
-            end if
          end do
       end do
+   end do
+   do k = 1, ndecomp_cascade_transitions
+      if ( cascade_receiver_pool(k) .ne. 0 ) then  ! skip terminal transitions
+         do j = 1, nlevdecomp
+            ! column loop
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               decomp_npools_sourcesink(c,j,cascade_receiver_pool(k)) = decomp_npools_sourcesink(c,j,cascade_receiver_pool(k)) + &
+                    (decomp_cascade_ntransfer_vr(c,j,k) + decomp_cascade_sminn_flux_vr(c,j,k)) * dt
+            end do
+         end do
+      else  ! terminal transitions
+         do j = 1, nlevdecomp
+            ! column loop
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               decomp_npools_sourcesink(c,j,cascade_donor_pool(k)) = decomp_npools_sourcesink(c,j,cascade_donor_pool(k)) - &
+                    decomp_cascade_sminn_flux_vr(c,j,k) * dt
+            end do
+         end do
+      end if
    end do
    
 #ifndef NITRIF_DENITRIF         

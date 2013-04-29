@@ -114,11 +114,7 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_n_to_litr_met_fire(:,:)
    real(r8), pointer :: m_n_to_litr_cel_fire(:,:)
    real(r8), pointer :: m_n_to_litr_lig_fire(:,:)
-   real(r8), pointer :: m_deadstemn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_deadcrootn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_livestemn_to_cwdn_fire(:,:)
-   real(r8), pointer :: m_livecrootn_to_cwdn_fire(:,:)
-   
+   real(r8), pointer :: fire_mortality_n_to_cwdn(:,:)              ! N fluxes associated with fire mortality to CWD pool (gN/m3/s)
 !
 ! local pointers to implicit in/out scalars
    real(r8), pointer :: sminn_vr(:,:)              ! (gN/m3) soil mineral N
@@ -154,8 +150,7 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !-----------------------------------------------------------------------
 
     ! assign local pointers at the column level
-    m_deadcrootn_to_cwdn_fire      => clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire
-    m_deadstemn_to_cwdn_fire       => clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire
+    fire_mortality_n_to_cwdn       => clm3%g%l%c%cnf%fire_mortality_n_to_cwdn
 #ifndef NITRIF_DENITRIF
     sminn_leached_vr                  => clm3%g%l%c%cnf%sminn_leached_vr
 #else
@@ -165,10 +160,6 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
     smin_nh4_vr                       => clm3%g%l%c%cns%smin_nh4_vr
 #endif
     m_decomp_npools_to_fire_vr            => clm3%g%l%c%cnf%m_decomp_npools_to_fire_vr
-    m_deadcrootn_to_cwdn_fire             => clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire
-    m_deadstemn_to_cwdn_fire              => clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire
-    m_livecrootn_to_cwdn_fire             => clm3%g%l%c%cnf%m_livecrootn_to_cwdn_fire
-    m_livestemn_to_cwdn_fire              => clm3%g%l%c%cnf%m_livestemn_to_cwdn_fire
     m_n_to_litr_met_fire                  => clm3%g%l%c%cnf%m_n_to_litr_met_fire
     m_n_to_litr_cel_fire                  => clm3%g%l%c%cnf%m_n_to_litr_cel_fire
     m_n_to_litr_lig_fire                  => clm3%g%l%c%cnf%m_n_to_litr_lig_fire
@@ -254,19 +245,18 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
          smin_no3_vr(c,j) = max(smin_no3_vr(c,j) - ( smin_no3_leached_vr(c,j) + smin_no3_runoff_vr(c,j) ) * dt, 0._r8)
          sminn_vr(c,j) = smin_no3_vr(c,j) + smin_nh4_vr(c,j)
 #endif         
-
+         
          ! column level nitrogen fluxes from fire
          ! pft-level wood to column-level CWD (uncombusted wood)
-         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + (m_deadstemn_to_cwdn_fire(c,j)+m_livestemn_to_cwdn_fire(c,j))* dt
-         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + (m_deadcrootn_to_cwdn_fire(c,j)+m_livecrootn_to_cwdn_fire(c,j)) * dt
-      
-          ! pft-level wood to column-level litter (uncombusted wood)
-           decomp_npools_vr(c,j,i_met_lit) = decomp_npools_vr(c,j,i_met_lit) + m_n_to_litr_met_fire(c,j)* dt
-           decomp_npools_vr(c,j,i_cel_lit) = decomp_npools_vr(c,j,i_cel_lit) + m_n_to_litr_cel_fire(c,j)* dt
-           decomp_npools_vr(c,j,i_lig_lit) = decomp_npools_vr(c,j,i_lig_lit) + m_n_to_litr_lig_fire(c,j)* dt
+         decomp_npools_vr(c,j,i_cwd) = decomp_npools_vr(c,j,i_cwd) + fire_mortality_n_to_cwdn(c,j) * dt
+         
+         ! pft-level wood to column-level litter (uncombusted wood)
+         decomp_npools_vr(c,j,i_met_lit) = decomp_npools_vr(c,j,i_met_lit) + m_n_to_litr_met_fire(c,j)* dt
+         decomp_npools_vr(c,j,i_cel_lit) = decomp_npools_vr(c,j,i_cel_lit) + m_n_to_litr_cel_fire(c,j)* dt
+         decomp_npools_vr(c,j,i_lig_lit) = decomp_npools_vr(c,j,i_lig_lit) + m_n_to_litr_lig_fire(c,j)* dt
       end do ! end of column loop
    end do
-
+   
    ! litter and CWD losses to fire
    do l = 1, ndecomp_pools
       do j = 1, nlevdecomp

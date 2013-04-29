@@ -45,7 +45,7 @@ Toggle to activate the CLM4 Methane model (requires bgc=cn/cndv Carbon Nitrogen 
 </entry>
 
 <entry id="vsoilc_centbgc" 
-       valid_values="on,no-vert,no-cent,no-nitrif,no-stnd-bsw,no-vert:no-cent,no-nitrif:no-stnd-bsw,no-vert:no-cent:no-stnd-bsw,off" 
+       valid_values="on,no-vert,no-cent,no-nitrif,no-vert:no-cent,off" 
        value="off" 
        category="bgc">
 Turn on the following features important for permafrost Carbon:
@@ -55,8 +55,7 @@ Turn on the following features important for permafrost Carbon:
    mineral N pools: NO3 and NH4, and includes the transformations between them.
 * Elimination of inconsistent duplicate soil hydraulic parameters used in soil biogeochem.
 Requires the CN model to work (either CN or CNDV).
-This turns on the CPP tokens: VERTSOILC, CENTURY_DECOMP, NITRIF_DENITRIF, and
-STNDRD_BSW_FOR_SOILPSI_CALC
+This turns on the CPP tokens: VERTSOILC, CENTURY_DECOMP, and NITRIF_DENITRIF
 (the "no" options turn one or more of the above features OFF. They are neither
 Scientifically validated or supported and NOT recommended for use)
 </entry>

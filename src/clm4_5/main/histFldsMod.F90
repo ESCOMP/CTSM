@@ -1810,20 +1810,6 @@ contains
           call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                avgflag='A', long_name=longname, &
                ptr_col=data1dptr, default = 'inactive')
-
-          data1dptr => clm3%g%l%c%ccs%decomp_cpools_30cm(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_30cm'
-          longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 30 cm'
-          call hist_addfld1d (fname=fieldname, units='gC/m^2', &
-               avgflag='A', long_name=longname, &
-               ptr_col=data1dptr, default = 'inactive')
-
-          data1dptr => clm3%g%l%c%ccs%decomp_cpools_activelayer(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_activelayer'
-          longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C in active layer'
-          call hist_addfld1d (fname=fieldname, units='gC/m^2', &
-               avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)    
        endif
 
     end do
@@ -2006,20 +1992,6 @@ contains
              call hist_addfld1d (fname=fieldname, units='gC/m^2', &
                   avgflag='A', long_name=longname, &
                   ptr_col=data1dptr, default='inactive')
-             
-             data1dptr => clm3%g%l%c%cc14s%decomp_cpools_30cm(:,l)
-             fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_30cm'
-             longname =  'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C to 30 cm'
-             call hist_addfld1d (fname=fieldname, units='gC/m^2', &
-                  avgflag='A', long_name=longname, &
-                  ptr_col=data1dptr, default='inactive')
-             
-             data1dptr => clm3%g%l%c%cc14s%decomp_cpools_activelayer(:,l)
-             fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_activelayer'
-             longname =  'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C in active layer'
-             call hist_addfld1d (fname=fieldname, units='gC/m^2', &
-                  avgflag='A', long_name=longname, &
-                  ptr_col=data1dptr)
           endif
           
        end do
@@ -2208,20 +2180,6 @@ contains
           call hist_addfld1d (fname=fieldname, units='gN/m^2', &
                avgflag='A', long_name=longname, &
                ptr_col=data1dptr, default = 'inactive')
-
-          data1dptr => clm3%g%l%c%cns%decomp_npools_30cm(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_30cm'
-          longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N to 30 cm'
-          call hist_addfld1d (fname=fieldname, units='gN/m^2', &
-               avgflag='A', long_name=longname, &
-               ptr_col=data1dptr, default = 'inactive')
-
-          data1dptr => clm3%g%l%c%cns%decomp_npools_activelayer(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_activelayer'
-          longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N in active layer'
-          call hist_addfld1d (fname=fieldname, units='gN/m^2', &
-               avgflag='A', long_name=longname, &
-               ptr_col=data1dptr)
        endif
     end do
 
@@ -3829,118 +3787,6 @@ contains
     call hist_addfld1d (fname='SOILC_LOSS', units='gC/m^2/s', &
          avgflag='A', long_name='soil C loss', &
          ptr_col=clm3%g%l%c%ccf%somhr)
-
-    call hist_addfld_decomp (fname='M_LEAFC_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFC_TO_LITR_CEL_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C mortality to litter 2 C', &
-         ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr_cel_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFC_TO_LITR_LIG_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C mortality to litter 3 C', &
-         ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr_lig_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTC_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTC_TO_LITR_CEL_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C mortality to litter 2 C', &
-         ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr_cel_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTC_TO_LITR_LIG_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C mortality to litter 3 C', &
-         ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr_lig_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFC_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_leafc_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTC_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_frootc_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVESTEMC_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem C storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_livestemc_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMC_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem C storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_deadstemc_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTC_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root C storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_livecrootc_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTC_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root C storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFC_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_leafc_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTC_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_frootc_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVESTEMC_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem C transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_livestemc_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMC_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem C transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_deadstemc_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTC_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root C transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_livecrootc_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTC_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root C transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVESTEMC_TO_CWDC', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem C mortality to coarse woody debris C', &
-         ptr_col=clm3%g%l%c%ccf%m_livestemc_to_cwdc, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMC_TO_CWDC', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem C mortality to coarse woody debris C', &
-         ptr_col=clm3%g%l%c%ccf%m_deadstemc_to_cwdc, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTC_TO_CWDC', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root C mortality to coarse woody debris C', &
-         ptr_col=clm3%g%l%c%ccf%m_livecrootc_to_cwdc, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTC_TO_CWDC', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root C mortality to coarse woody debris C', &
-         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc, default='inactive')
-
-    call hist_addfld_decomp (fname='M_GRESP_STORAGE_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='growth respiration storage mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_gresp_storage_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_GRESP_XFER_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='growth respiration transfer mortality to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%m_gresp_xfer_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMC_TO_CWDC_FIRE', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem C to coarse woody debris C by fire', &
-         ptr_col=clm3%g%l%c%ccf%m_deadstemc_to_cwdc_fire, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTC_TO_CWDC_FIRE', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root C to to woody debris C by fire', &
-         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc_fire, default='inactive')
-
- call hist_addfld_decomp (fname='M_LIVESTEMC_TO_CWDC_FIRE', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem C to coarse woody debris C by fire', &
-         ptr_col=clm3%g%l%c%ccf%m_livestemc_to_cwdc_fire, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTC_TO_CWDC_FIRE', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root C to to woody debris C by fire', &
-         ptr_col=clm3%g%l%c%ccf%m_livecrootc_to_cwdc_fire, default='inactive')
    
 ! F. Li and S. Levis
    call hist_addfld1d (fname='LF_CONV_CFLUX', units='gC/m^2/s', &
@@ -4085,30 +3931,6 @@ contains
     end do
 
 
-    call hist_addfld_decomp (fname='LEAFC_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C litterfall to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%leafc_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='LEAFC_TO_LITR_CEL_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C litterfall to litter 2 C', &
-         ptr_col=clm3%g%l%c%ccf%leafc_to_litr_cel_c, default='inactive')
-
-    call hist_addfld_decomp (fname='LEAFC_TO_LITR_LIG_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf C litterfall to litter 3 C', &
-         ptr_col=clm3%g%l%c%ccf%leafc_to_litr_lig_c, default='inactive')
-
-    call hist_addfld_decomp (fname='FROOTC_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C litterfall to litter 1 C', &
-         ptr_col=clm3%g%l%c%ccf%frootc_to_litr_met_c, default='inactive')
-
-    call hist_addfld_decomp (fname='FROOTC_TO_LITR_CEL_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C litterfall to litter 2 C', &
-         ptr_col=clm3%g%l%c%ccf%frootc_to_litr_cel_c, default='inactive')
-
-    call hist_addfld_decomp (fname='FROOTC_TO_LITR_LIG_C', units='gC/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root C litterfall to litter 3 C', &
-         ptr_col=clm3%g%l%c%ccf%frootc_to_litr_lig_c, default='inactive')
-
     call hist_addfld1d (fname='LITHR', units='gC/m^2/s', &
          avgflag='A', long_name='litter heterotrophic respiration', &
          ptr_col=clm3%g%l%c%ccf%lithr)
@@ -4232,109 +4054,6 @@ contains
        ! C13 flux variables - native to column 
        !-------------------------------
        
-       call hist_addfld_decomp (fname='C13_M_LEAFC_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LEAFC_TO_LITR_CEL_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C mortality to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LEAFC_TO_LITR_LIG_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C mortality to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr_lig_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_FROOTC_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_FROOTC_TO_LITR_CEL_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C mortality to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_FROOTC_TO_LITR_LIG_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C mortality to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr_lig_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LEAFC_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_leafc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_FROOTC_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_frootc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LIVESTEMC_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 live stem C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_livestemc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADSTEMC_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead stem C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadstemc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LIVECROOTC_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 live coarse root C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_livecrootc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADCROOTC_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead coarse root C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LEAFC_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_leafc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_FROOTC_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_frootc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LIVESTEMC_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 live stem C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_livestemc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADSTEMC_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead stem C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadstemc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LIVECROOTC_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 live coarse root C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_livecrootc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADCROOTC_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead coarse root C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LIVESTEMC_TO_CWDC', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 live stem C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc13f%m_livestemc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADSTEMC_TO_CWDC', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead stem C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadstemc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_LIVECROOTC_TO_CWDC', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 live coarse root C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc13f%m_livecrootc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADCROOTC_TO_CWDC', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead coarse root C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_GRESP_STORAGE_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 growth respiration storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_gresp_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_GRESP_XFER_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 growth respiration transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%m_gresp_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADSTEMC_TO_CWDC_FIRE', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead stem C to coarse woody debris C by fire', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadstemc_to_cwdc_fire, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_M_DEADCROOTC_TO_CWDC_FIRE', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 dead coarse root C to to woody debris C by fire', &
-            ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_to_cwdc_fire, default='inactive')
        
        do k = 1, ndecomp_pools
           if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
@@ -4356,30 +4075,6 @@ contains
           endif
           
        end do
-       
-       call hist_addfld_decomp (fname='C13_LEAFC_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C litterfall to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%leafc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_LEAFC_TO_LITR_CEL_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C litterfall to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc13f%leafc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_LEAFC_TO_LITR_LIG_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 leaf C litterfall to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc13f%leafc_to_litr_lig_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_FROOTC_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C litterfall to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc13f%frootc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_FROOTC_TO_LITR_CEL_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C litterfall to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc13f%frootc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C13_FROOTC_TO_LITR_LIG_C', units='gC13/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C13 fine root C litterfall to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc13f%frootc_to_litr_lig_c, default='inactive')
        
        do l = 1, ndecomp_cascade_transitions
           !-- HR fluxes (none from CWD)
@@ -4521,109 +4216,7 @@ contains
        ! C14 flux variables - native to column 
        !-------------------------------
        
-       call hist_addfld_decomp (fname='C14_M_LEAFC_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_leafc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LEAFC_TO_LITR_CEL_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C mortality to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_leafc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LEAFC_TO_LITR_LIG_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C mortality to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_leafc_to_litr_lig_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_FROOTC_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_frootc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_FROOTC_TO_LITR_CEL_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C mortality to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_frootc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_FROOTC_TO_LITR_LIG_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C mortality to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_frootc_to_litr_lig_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LEAFC_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_leafc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_FROOTC_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_frootc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LIVESTEMC_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 live stem C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_livestemc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADSTEMC_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead stem C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadstemc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LIVECROOTC_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 live coarse root C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_livecrootc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADCROOTC_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead coarse root C storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadcrootc_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LEAFC_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_leafc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_FROOTC_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_frootc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LIVESTEMC_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 live stem C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_livestemc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADSTEMC_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead stem C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadstemc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LIVECROOTC_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 live coarse root C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_livecrootc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADCROOTC_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead coarse root C transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadcrootc_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LIVESTEMC_TO_CWDC', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 live stem C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc14f%m_livestemc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADSTEMC_TO_CWDC', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead stem C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadstemc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_LIVECROOTC_TO_CWDC', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 live coarse root C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc14f%m_livecrootc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADCROOTC_TO_CWDC', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead coarse root C mortality to coarse woody debris C', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadcrootc_to_cwdc, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_GRESP_STORAGE_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 growth respiration storage mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_gresp_storage_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_GRESP_XFER_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 growth respiration transfer mortality to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%m_gresp_xfer_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADSTEMC_TO_CWDC_FIRE', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead stem C to coarse woody debris C by fire', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadstemc_to_cwdc_fire, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_M_DEADCROOTC_TO_CWDC_FIRE', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 dead coarse root C to to woody debris C by fire', &
-            ptr_col=clm3%g%l%c%cc14f%m_deadcrootc_to_cwdc_fire, default='inactive')
+
        
        do k = 1, ndecomp_pools
           if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
@@ -4645,30 +4238,6 @@ contains
           endif
           
        end do
-       
-       call hist_addfld_decomp (fname='C14_LEAFC_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C litterfall to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%leafc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_LEAFC_TO_LITR_CEL_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C litterfall to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc14f%leafc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_LEAFC_TO_LITR_LIG_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 leaf C litterfall to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc14f%leafc_to_litr_lig_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_FROOTC_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C litterfall to litter 1 C', &
-            ptr_col=clm3%g%l%c%cc14f%frootc_to_litr_met_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_FROOTC_TO_LITR_CEL_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C litterfall to litter 2 C', &
-            ptr_col=clm3%g%l%c%cc14f%frootc_to_litr_cel_c, default='inactive')
-       
-       call hist_addfld_decomp (fname='C14_FROOTC_TO_LITR_LIG_C', units='gC14/m^2/s',  type2d='levdcmp', &
-            avgflag='A', long_name='C14 fine root C litterfall to litter 3 C', &
-            ptr_col=clm3%g%l%c%cc14f%frootc_to_litr_lig_c, default='inactive')
        
        do l = 1, ndecomp_cascade_transitions
           !-- HR fluxes (none from CWD)
@@ -5135,106 +4704,6 @@ contains
          avgflag='A', long_name='symbiotic/asymbiotic N fixation to soil mineral N', &
          ptr_col=clm3%g%l%c%cnf%nfix_to_sminn)
 
-    call hist_addfld_decomp (fname='M_LEAFN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFN_TO_LITR_CEL_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N mortality to litter 2 N', &
-         ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr_cel_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFN_TO_LITR_LIG_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N mortality to litter 3 N', &
-         ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr_lig_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTN_TO_LITR_CEL_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N mortality to litter 2 N', &
-         ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr_cel_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTN_TO_LITR_LIG_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N mortality to litter 3 N', &
-         ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr_lig_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFN_STORAGE_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N storage mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_leafn_storage_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTN_STORAGE_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N storage mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_frootn_storage_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVESTEMN_STORAGE_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem N storage mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_livestemn_storage_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMN_STORAGE_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem N storage mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_deadstemn_storage_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTN_STORAGE_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root N storage mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_livecrootn_storage_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTN_STORAGE_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root N storage mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_storage_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LEAFN_XFER_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N transfer mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_leafn_xfer_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_FROOTN_XFER_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N transfer mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_frootn_xfer_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVESTEMN_XFER_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem N transfer mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_livestemn_xfer_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMN_XFER_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem N transfer mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_deadstemn_xfer_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTN_XFER_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root N transfer mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_livecrootn_xfer_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTN_XFER_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root N transfer mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_xfer_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVESTEMN_TO_CWDN', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live stem N mortality to coarse woody debris N', &
-         ptr_col=clm3%g%l%c%cnf%m_livestemn_to_cwdn, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMN_TO_CWDN', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem N mortality to coarse woody debris N', &
-         ptr_col=clm3%g%l%c%cnf%m_deadstemn_to_cwdn, default='inactive')
-
-    call hist_addfld_decomp (fname='M_LIVECROOTN_TO_CWDN', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='live coarse root N mortality to coarse woody debris N', &
-         ptr_col=clm3%g%l%c%cnf%m_livecrootn_to_cwdn, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTN_TO_CWDN', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root N mortality to coarse woody debris N', &
-         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_to_cwdn, default='inactive')
-
-    call hist_addfld_decomp (fname='M_RETRANSN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='retranslocated N pool mortality to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%m_retransn_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADSTEMN_TO_CWDN_FIRE', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead stem N to coarse woody debris N by fire', &
-         ptr_col=clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire, default='inactive')
-
-    call hist_addfld_decomp (fname='M_DEADCROOTN_TO_CWDN_FIRE', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='dead coarse root N to to woody debris N by fire', &
-         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire, default='inactive')
-
     do k = 1, ndecomp_pools
        if ( decomp_cascade_con%is_litter(k) .or. decomp_cascade_con%is_cwd(k) ) then
           data1dptr => clm3%g%l%c%cnf%m_decomp_npools_to_fire(:,k)
@@ -5319,30 +4788,6 @@ contains
        endif
 
     end do
-
-    call hist_addfld_decomp (fname='LEAFN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N litterfall to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%leafn_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='LEAFN_TO_LITR_CEL_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N litterfall to litter 2 N', &
-         ptr_col=clm3%g%l%c%cnf%leafn_to_litr_cel_n, default='inactive')
-
-    call hist_addfld_decomp (fname='LEAFN_TO_LITR_LIG_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='leaf N litterfall to litter 3 N', &
-         ptr_col=clm3%g%l%c%cnf%leafn_to_litr_lig_n, default='inactive')
-
-    call hist_addfld_decomp (fname='FROOTN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N litterfall to litter 1 N', &
-         ptr_col=clm3%g%l%c%cnf%frootn_to_litr_met_n, default='inactive')
-
-    call hist_addfld_decomp (fname='FROOTN_TO_LITR_CEL_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N litterfall to litter 2 N', &
-         ptr_col=clm3%g%l%c%cnf%frootn_to_litr_cel_n, default='inactive')
-
-    call hist_addfld_decomp (fname='FROOTN_TO_LITR_LIG_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root N litterfall to litter 3 N ', &
-         ptr_col=clm3%g%l%c%cnf%frootn_to_litr_lig_n, default='inactive')
 
     call hist_addfld1d (fname='DENIT', units='gN/m^2/s', &
          avgflag='A', long_name='total rate of denitrification', &

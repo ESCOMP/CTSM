@@ -3070,11 +3070,6 @@ contains
     allocate(cps%wf2(beg:end))
 !   allocate(cps%xirrig(beg:end))
     allocate(cps%max_dayl(beg:end))
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-    allocate(cps%bsw2(beg:end,nlevgrnd))
-    allocate(cps%psisat(beg:end,nlevgrnd))
-    allocate(cps%vwcsat(beg:end,nlevgrnd))
-#endif
     allocate(cps%soilpsi(beg:end,nlevgrnd))
     allocate(cps%decl(beg:end))
     allocate(cps%coszen(beg:end))
@@ -3264,11 +3259,6 @@ contains
     cps%rootr_road_perv(beg:end,1:nlevgrnd) = nan
     cps%wf(beg:end) = nan
 !   cps%xirrig(beg:end) = 0._r8
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-    cps%bsw2(beg:end,1:nlevgrnd) = nan
-    cps%psisat(beg:end,1:nlevgrnd) = nan
-    cps%vwcsat(beg:end,1:nlevgrnd) = nan
-#endif
     cps%soilpsi(beg:end,1:nlevgrnd) = spval
     cps%decl(beg:end) = nan
     cps%coszen(beg:end) = nan
@@ -3647,8 +3637,6 @@ contains
     allocate(ccs%decomp_cpools_vr(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
     allocate(ccs%decomp_cpools(beg:end,1:ndecomp_pools))
     allocate(ccs%decomp_cpools_1m(beg:end,1:ndecomp_pools))
-    allocate(ccs%decomp_cpools_30cm(beg:end,1:ndecomp_pools))
-    allocate(ccs%decomp_cpools_activelayer(beg:end,1:ndecomp_pools))
     allocate(ccs%col_ctrunc_vr(beg:end,1:nlevdecomp_full))
     allocate(ccs%seedc(beg:end))
     allocate(ccs%prod10c(beg:end))
@@ -3673,8 +3661,6 @@ contains
     ccs%decomp_cpools_vr(beg:end,1:nlevdecomp_full,1:ndecomp_pools) = nan
     ccs%decomp_cpools(beg:end,1:ndecomp_pools) = nan
     ccs%decomp_cpools_1m(beg:end,1:ndecomp_pools) = nan
-    ccs%decomp_cpools_30cm(beg:end,1:ndecomp_pools) = nan
-    ccs%decomp_cpools_activelayer(beg:end,1:ndecomp_pools) = nan
     ccs%col_ctrunc(beg:end) = nan
     ccs%col_ctrunc_vr(beg:end,1:nlevdecomp_full) = nan
     ccs%seedc(beg:end) = nan
@@ -3724,8 +3710,6 @@ contains
 
     allocate(cns%decomp_npools(beg:end,1:ndecomp_pools))
     allocate(cns%decomp_npools_1m(beg:end,1:ndecomp_pools))
-    allocate(cns%decomp_npools_30cm(beg:end,1:ndecomp_pools))
-    allocate(cns%decomp_npools_activelayer(beg:end,1:ndecomp_pools))
     allocate(cns%decomp_npools_vr(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
     allocate(cns%sminn_vr(beg:end,1:nlevdecomp_full))
     allocate(cns%col_ntrunc_vr(beg:end,1:nlevdecomp_full))
@@ -3751,8 +3735,6 @@ contains
 
     cns%decomp_npools(beg:end,1:ndecomp_pools) = nan
     cns%decomp_npools_1m(beg:end,1:ndecomp_pools) = nan
-    cns%decomp_npools_30cm(beg:end,1:ndecomp_pools) = nan
-    cns%decomp_npools_activelayer(beg:end,1:ndecomp_pools) = nan
     cns%decomp_npools_vr(beg:end,1:nlevdecomp_full,1:ndecomp_pools) = nan
     cns%sminn_vr(beg:end,1:nlevdecomp_full) = nan
     cns%col_ntrunc_vr(beg:end,1:nlevdecomp_full) = nan
@@ -3975,80 +3957,8 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(ccf%m_leafc_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_leafc_to_litr_cel_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_leafc_to_litr_lig_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_frootc_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_frootc_to_litr_cel_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_frootc_to_litr_lig_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_leafc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_frootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livestemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadstemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livecrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadcrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_leafc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_frootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livestemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadstemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livecrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadcrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livestemc_to_cwdc(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadstemc_to_cwdc(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livecrootc_to_cwdc(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadcrootc_to_cwdc(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_gresp_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_gresp_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))
-
-    ! fire variables changed by F. Li and S. Levis
-    allocate(ccf%m_deadstemc_to_cwdc_fire(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_deadcrootc_to_cwdc_fire(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livestemc_to_cwdc_fire(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_livecrootc_to_cwdc_fire(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_c_to_litr_met_fire(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_c_to_litr_cel_fire(beg:end,1:nlevdecomp_full))
-    allocate(ccf%m_c_to_litr_lig_fire(beg:end,1:nlevdecomp_full))
-
-
-    allocate(ccf%hrv_leafc_to_litr_met_c(beg:end,1:nlevdecomp_full))             
-    allocate(ccf%hrv_leafc_to_litr_cel_c(beg:end,1:nlevdecomp_full))             
-    allocate(ccf%hrv_leafc_to_litr_lig_c(beg:end,1:nlevdecomp_full))             
-    allocate(ccf%hrv_frootc_to_litr_met_c(beg:end,1:nlevdecomp_full))            
-    allocate(ccf%hrv_frootc_to_litr_cel_c(beg:end,1:nlevdecomp_full))            
-    allocate(ccf%hrv_frootc_to_litr_lig_c(beg:end,1:nlevdecomp_full))            
-    allocate(ccf%hrv_livestemc_to_cwdc(beg:end,1:nlevdecomp_full))           
     allocate(ccf%hrv_deadstemc_to_prod10c(beg:end))        
     allocate(ccf%hrv_deadstemc_to_prod100c(beg:end))       
-    allocate(ccf%hrv_livecrootc_to_cwdc(beg:end,1:nlevdecomp_full))          
-    allocate(ccf%hrv_deadcrootc_to_cwdc(beg:end,1:nlevdecomp_full))          
-    allocate(ccf%hrv_leafc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))     
-    allocate(ccf%hrv_frootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))    
-    allocate(ccf%hrv_livestemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)) 
-    allocate(ccf%hrv_deadstemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)) 
-    allocate(ccf%hrv_livecrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%hrv_deadcrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%hrv_gresp_storage_to_litr_met_c(beg:end,1:nlevdecomp_full))     
-    allocate(ccf%hrv_leafc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))        
-    allocate(ccf%hrv_frootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))       
-    allocate(ccf%hrv_livestemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))    
-    allocate(ccf%hrv_deadstemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))    
-    allocate(ccf%hrv_livecrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))   
-    allocate(ccf%hrv_deadcrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))   
-    allocate(ccf%hrv_gresp_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full))        
-    allocate(ccf%leafc_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%leafc_to_litr_cel_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%leafc_to_litr_lig_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%frootc_to_litr_met_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%frootc_to_litr_cel_c(beg:end,1:nlevdecomp_full))
-    allocate(ccf%frootc_to_litr_lig_c(beg:end,1:nlevdecomp_full))
-    if ( crop_prog )then
-       allocate(ccf%grainc_to_litr_met_c(beg:end,1:nlevdecomp_full))
-       allocate(ccf%grainc_to_litr_cel_c(beg:end,1:nlevdecomp_full))
-       allocate(ccf%grainc_to_litr_lig_c(beg:end,1:nlevdecomp_full))
-       allocate(ccf%livestemc_to_litr_met_c(beg:end,1:nlevdecomp_full))
-       allocate(ccf%livestemc_to_litr_cel_c(beg:end,1:nlevdecomp_full))
-       allocate(ccf%livestemc_to_litr_lig_c(beg:end,1:nlevdecomp_full))
-    end if
     allocate(ccf%m_decomp_cpools_to_fire_vr(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
     allocate(ccf%m_decomp_cpools_to_fire(beg:end,1:ndecomp_pools))
     allocate(ccf%decomp_cascade_hr_vr(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
@@ -4061,9 +3971,25 @@ contains
     allocate(ccf%w_scalar(beg:end,1:nlevdecomp_full))
     allocate(ccf%hr_vr(beg:end,1:nlevdecomp_full))
     allocate(ccf%o_scalar(beg:end,1:nlevdecomp_full))
-   allocate(ccf%som_c_leached(beg:end))
-   allocate(ccf%decomp_cpools_leached(beg:end,1:ndecomp_pools))
-   allocate(ccf%decomp_cpools_transport_tendency(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
+    allocate(ccf%som_c_leached(beg:end))
+    allocate(ccf%decomp_cpools_leached(beg:end,1:ndecomp_pools))
+    allocate(ccf%decomp_cpools_transport_tendency(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
+
+    allocate(ccf%phenology_c_to_litr_met_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%phenology_c_to_litr_cel_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%phenology_c_to_litr_lig_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%gap_mortality_c_to_litr_met_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%gap_mortality_c_to_litr_cel_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%gap_mortality_c_to_litr_lig_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%gap_mortality_c_to_cwdc(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%fire_mortality_c_to_cwdc(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%m_c_to_litr_met_fire(beg:end,1:nlevdecomp_full))
+    allocate(ccf%m_c_to_litr_cel_fire(beg:end,1:nlevdecomp_full))
+    allocate(ccf%m_c_to_litr_lig_fire(beg:end,1:nlevdecomp_full))
+    allocate(ccf%harvest_c_to_litr_met_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%harvest_c_to_litr_cel_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%harvest_c_to_litr_lig_c(beg:end, 1:nlevdecomp_full))
+    allocate(ccf%harvest_c_to_cwdc(beg:end, 1:nlevdecomp_full))
 
 #ifdef NITRIF_DENITRIF
     allocate(ccf%phr_vr(beg:end,1:nlevdecomp_full))
@@ -4111,79 +4037,11 @@ contains
     allocate(ccf%litterc_loss(beg:end))
 #endif
 
-    ccf%m_leafc_to_litr_met_c(beg:end,1:nlevdecomp_full)                = nan
-    ccf%m_leafc_to_litr_cel_c(beg:end,1:nlevdecomp_full)                = nan
-    ccf%m_leafc_to_litr_lig_c(beg:end,1:nlevdecomp_full)                = nan
-    ccf%m_frootc_to_litr_met_c(beg:end,1:nlevdecomp_full)               = nan
-    ccf%m_frootc_to_litr_cel_c(beg:end,1:nlevdecomp_full)               = nan
-    ccf%m_frootc_to_litr_lig_c(beg:end,1:nlevdecomp_full)               = nan
-    ccf%m_leafc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)        = nan
-    ccf%m_frootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)       = nan
-    ccf%m_livestemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)    = nan
-    ccf%m_deadstemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)    = nan
-    ccf%m_livecrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)   = nan
-    ccf%m_deadcrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)   = nan
-    ccf%m_leafc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)           = nan
-    ccf%m_frootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)          = nan
-    ccf%m_livestemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)       = nan
-    ccf%m_deadstemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)       = nan
-    ccf%m_livecrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)      = nan
-    ccf%m_deadcrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)      = nan
-    ccf%m_livestemc_to_cwdc(beg:end,1:nlevdecomp_full)              = nan
-    ccf%m_deadstemc_to_cwdc(beg:end,1:nlevdecomp_full)              = nan
-    ccf%m_livecrootc_to_cwdc(beg:end,1:nlevdecomp_full)             = nan
-    ccf%m_deadcrootc_to_cwdc(beg:end,1:nlevdecomp_full)             = nan
-    ccf%m_gresp_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)        = nan
-    ccf%m_gresp_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)           = nan
-
-    ! fire variables changed by F. Li and S. Levis
-    ccf%m_deadstemc_to_cwdc_fire(beg:end,1:nlevdecomp_full)         = nan
-    ccf%m_deadcrootc_to_cwdc_fire(beg:end,1:nlevdecomp_full)        = nan
-    ccf%m_livestemc_to_cwdc_fire(beg:end,1:nlevdecomp_full)         = nan
-    ccf%m_livecrootc_to_cwdc_fire(beg:end,1:nlevdecomp_full)        = nan
     ccf%m_c_to_litr_met_fire(beg:end,1:nlevdecomp_full)             = nan
     ccf%m_c_to_litr_cel_fire(beg:end,1:nlevdecomp_full)             = nan
     ccf%m_c_to_litr_lig_fire(beg:end,1:nlevdecomp_full)             = nan
-
-    ccf%hrv_leafc_to_litr_met_c(beg:end,1:nlevdecomp_full)              = nan             
-    ccf%hrv_leafc_to_litr_cel_c(beg:end,1:nlevdecomp_full)              = nan             
-    ccf%hrv_leafc_to_litr_lig_c(beg:end,1:nlevdecomp_full)              = nan             
-    ccf%hrv_frootc_to_litr_met_c(beg:end,1:nlevdecomp_full)             = nan            
-    ccf%hrv_frootc_to_litr_cel_c(beg:end,1:nlevdecomp_full)             = nan            
-    ccf%hrv_frootc_to_litr_lig_c(beg:end,1:nlevdecomp_full)             = nan            
-    ccf%hrv_livestemc_to_cwdc(beg:end,1:nlevdecomp_full)            = nan           
     ccf%hrv_deadstemc_to_prod10c(beg:end)         = nan        
     ccf%hrv_deadstemc_to_prod100c(beg:end)        = nan       
-    ccf%hrv_livecrootc_to_cwdc(beg:end,1:nlevdecomp_full)           = nan          
-    ccf%hrv_deadcrootc_to_cwdc(beg:end,1:nlevdecomp_full)           = nan          
-    ccf%hrv_leafc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)      = nan     
-    ccf%hrv_frootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)     = nan    
-    ccf%hrv_livestemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)  = nan 
-    ccf%hrv_deadstemc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)  = nan 
-    ccf%hrv_livecrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full) = nan
-    ccf%hrv_deadcrootc_storage_to_litr_met_c(beg:end,1:nlevdecomp_full) = nan
-    ccf%hrv_gresp_storage_to_litr_met_c(beg:end,1:nlevdecomp_full)      = nan     
-    ccf%hrv_leafc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)         = nan        
-    ccf%hrv_frootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)        = nan       
-    ccf%hrv_livestemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)     = nan    
-    ccf%hrv_deadstemc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)     = nan    
-    ccf%hrv_livecrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)    = nan   
-    ccf%hrv_deadcrootc_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)    = nan   
-    ccf%hrv_gresp_xfer_to_litr_met_c(beg:end,1:nlevdecomp_full)         = nan        
-    ccf%leafc_to_litr_met_c(beg:end,1:nlevdecomp_full)                  = nan
-    ccf%leafc_to_litr_cel_c(beg:end,1:nlevdecomp_full)                  = nan
-    ccf%leafc_to_litr_lig_c(beg:end,1:nlevdecomp_full)                  = nan
-    ccf%frootc_to_litr_met_c(beg:end,1:nlevdecomp_full)                 = nan
-    ccf%frootc_to_litr_cel_c(beg:end,1:nlevdecomp_full)                 = nan
-    ccf%frootc_to_litr_lig_c(beg:end,1:nlevdecomp_full)                 = nan
-    if ( crop_prog )then
-       ccf%grainc_to_litr_met_c(beg:end,1:nlevdecomp_full)    = nan
-       ccf%grainc_to_litr_cel_c(beg:end,1:nlevdecomp_full)    = nan
-       ccf%grainc_to_litr_lig_c(beg:end,1:nlevdecomp_full)    = nan
-       ccf%livestemc_to_litr_met_c(beg:end,1:nlevdecomp_full) = nan
-       ccf%livestemc_to_litr_cel_c(beg:end,1:nlevdecomp_full) = nan
-       ccf%livestemc_to_litr_lig_c(beg:end,1:nlevdecomp_full) = nan
-    end if
     ccf%m_decomp_cpools_to_fire_vr(beg:end,1:nlevdecomp_full,1:ndecomp_pools)                = nan
     ccf%m_decomp_cpools_to_fire(beg:end,1:ndecomp_pools)                                     = nan
     ccf%decomp_cascade_hr_vr(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions)        = nan
@@ -4200,6 +4058,19 @@ contains
     ccf%som_c_leached(beg:end)                                                      = nan 
     ccf%decomp_cpools_leached(beg:end,1:ndecomp_pools)                              = nan
     ccf%decomp_cpools_transport_tendency(beg:end,1:nlevdecomp_full,1:ndecomp_pools) = nan
+
+    ccf%phenology_c_to_litr_met_c(beg:end, 1:nlevdecomp_full)                     = nan
+    ccf%phenology_c_to_litr_cel_c(beg:end, 1:nlevdecomp_full)                     = nan
+    ccf%phenology_c_to_litr_lig_c(beg:end, 1:nlevdecomp_full)                     = nan
+    ccf%gap_mortality_c_to_litr_met_c(beg:end, 1:nlevdecomp_full)                 = nan
+    ccf%gap_mortality_c_to_litr_cel_c(beg:end, 1:nlevdecomp_full)                 = nan
+    ccf%gap_mortality_c_to_litr_lig_c(beg:end, 1:nlevdecomp_full)                 = nan
+    ccf%gap_mortality_c_to_cwdc(beg:end, 1:nlevdecomp_full)                       = nan
+    ccf%fire_mortality_c_to_cwdc(beg:end, 1:nlevdecomp_full)                      = nan
+    ccf%harvest_c_to_litr_met_c(beg:end, 1:nlevdecomp_full)                       = nan
+    ccf%harvest_c_to_litr_cel_c(beg:end, 1:nlevdecomp_full)                       = nan
+    ccf%harvest_c_to_litr_lig_c(beg:end, 1:nlevdecomp_full)                       = nan
+    ccf%harvest_c_to_cwdc(beg:end, 1:nlevdecomp_full)                             = nan
 
 #ifdef NITRIF_DENITRIF
     ccf%phr_vr(beg:end,1:nlevdecomp_full)                              = nan
@@ -4430,79 +4301,13 @@ contains
     allocate(cnf%ndep_to_sminn(beg:end))
     allocate(cnf%nfix_to_sminn(beg:end))
     allocate(cnf%fert_to_sminn(beg:end))
-    allocate(cnf%soyfixn_to_sminn(beg:end))
-    allocate(cnf%m_leafn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_leafn_to_litr_cel_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_leafn_to_litr_lig_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_frootn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_frootn_to_litr_cel_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_frootn_to_litr_lig_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_leafn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_frootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livestemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadstemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livecrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadcrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_leafn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_frootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livestemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadstemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livecrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadcrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livestemn_to_cwdn(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadstemn_to_cwdn(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livecrootn_to_cwdn(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadcrootn_to_cwdn(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_retransn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%hrv_leafn_to_litr_met_n(beg:end,1:nlevdecomp_full))             
-    allocate(cnf%hrv_leafn_to_litr_cel_n(beg:end,1:nlevdecomp_full))             
-    allocate(cnf%hrv_leafn_to_litr_lig_n(beg:end,1:nlevdecomp_full))             
-    allocate(cnf%hrv_frootn_to_litr_met_n(beg:end,1:nlevdecomp_full))            
-    allocate(cnf%hrv_frootn_to_litr_cel_n(beg:end,1:nlevdecomp_full))            
-    allocate(cnf%hrv_frootn_to_litr_lig_n(beg:end,1:nlevdecomp_full))            
-    allocate(cnf%hrv_livestemn_to_cwdn(beg:end,1:nlevdecomp_full))           
+    allocate(cnf%soyfixn_to_sminn(beg:end))    
     allocate(cnf%hrv_deadstemn_to_prod10n(beg:end))        
     allocate(cnf%hrv_deadstemn_to_prod100n(beg:end))       
-    allocate(cnf%hrv_livecrootn_to_cwdn(beg:end,1:nlevdecomp_full))          
-    allocate(cnf%hrv_deadcrootn_to_cwdn(beg:end,1:nlevdecomp_full))          
-    allocate(cnf%hrv_retransn_to_litr_met_n(beg:end,1:nlevdecomp_full))          
-    allocate(cnf%hrv_leafn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))     
-    allocate(cnf%hrv_frootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))    
-    allocate(cnf%hrv_livestemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full)) 
-    allocate(cnf%hrv_deadstemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full)) 
-    allocate(cnf%hrv_livecrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%hrv_deadcrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%hrv_leafn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))        
-    allocate(cnf%hrv_frootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))       
-    allocate(cnf%hrv_livestemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))    
-    allocate(cnf%hrv_deadstemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))    
-    allocate(cnf%hrv_livecrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))   
-    allocate(cnf%hrv_deadcrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full))
-   
-    ! fire variables changed by F. Li and S. Levis
-    allocate(cnf%m_deadstemn_to_cwdn_fire(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_deadcrootn_to_cwdn_fire(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livestemn_to_cwdn_fire(beg:end,1:nlevdecomp_full))
-    allocate(cnf%m_livecrootn_to_cwdn_fire(beg:end,1:nlevdecomp_full))
+
     allocate(cnf%m_n_to_litr_met_fire(beg:end,1:nlevdecomp_full))
     allocate(cnf%m_n_to_litr_cel_fire(beg:end,1:nlevdecomp_full))
     allocate(cnf%m_n_to_litr_lig_fire(beg:end,1:nlevdecomp_full))
-
-
-    allocate(cnf%leafn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%leafn_to_litr_cel_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%leafn_to_litr_lig_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%frootn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%frootn_to_litr_cel_n(beg:end,1:nlevdecomp_full))
-    allocate(cnf%frootn_to_litr_lig_n(beg:end,1:nlevdecomp_full))
-    if ( crop_prog )then
-       allocate(cnf%grainn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-       allocate(cnf%grainn_to_litr_cel_n(beg:end,1:nlevdecomp_full))
-       allocate(cnf%grainn_to_litr_lig_n(beg:end,1:nlevdecomp_full))
-       allocate(cnf%livestemn_to_litr_met_n(beg:end,1:nlevdecomp_full))
-       allocate(cnf%livestemn_to_litr_cel_n(beg:end,1:nlevdecomp_full))
-       allocate(cnf%livestemn_to_litr_lig_n(beg:end,1:nlevdecomp_full))
-    end if
     allocate(cnf%sminn_to_plant(beg:end))
     allocate(cnf%potential_immob(beg:end))
     allocate(cnf%actual_immob(beg:end))
@@ -4517,6 +4322,20 @@ contains
     allocate(cnf%decomp_cascade_sminn_flux_vr(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
     allocate(cnf%decomp_cascade_sminn_flux(beg:end,1:ndecomp_cascade_transitions))
     allocate(cnf%decomp_npools_sourcesink(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
+
+    allocate(cnf%phenology_n_to_litr_met_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%phenology_n_to_litr_cel_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%phenology_n_to_litr_lig_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%gap_mortality_n_to_litr_met_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%gap_mortality_n_to_litr_cel_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%gap_mortality_n_to_litr_lig_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%gap_mortality_n_to_cwdn(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%fire_mortality_n_to_cwdn(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%harvest_n_to_litr_met_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%harvest_n_to_litr_cel_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%harvest_n_to_litr_lig_n(beg:end, 1:nlevdecomp_full))
+    allocate(cnf%harvest_n_to_cwdn(beg:end, 1:nlevdecomp_full))
+
 #ifndef NITRIF_DENITRIF
     allocate(cnf%sminn_to_denit_decomp_cascade_vr(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
     allocate(cnf%sminn_to_denit_decomp_cascade(beg:end,1:ndecomp_cascade_transitions))
@@ -4589,85 +4408,19 @@ contains
     allocate(cnf%col_ninputs(beg:end))
     allocate(cnf%col_noutputs(beg:end))
     allocate(cnf%col_fire_nloss(beg:end))
-   allocate(cnf%som_n_leached(beg:end))
-   allocate(cnf%decomp_npools_leached(beg:end,1:ndecomp_pools))
-   allocate(cnf%decomp_npools_transport_tendency(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
-
+    allocate(cnf%som_n_leached(beg:end))
+    allocate(cnf%decomp_npools_leached(beg:end,1:ndecomp_pools))
+    allocate(cnf%decomp_npools_transport_tendency(beg:end,1:nlevdecomp_full,1:ndecomp_pools))
+    
     cnf%ndep_to_sminn(beg:end) = nan
     cnf%nfix_to_sminn(beg:end) = nan
     cnf%fert_to_sminn(beg:end) = nan
     cnf%soyfixn_to_sminn(beg:end) = nan
-    cnf%m_leafn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_leafn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_leafn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_frootn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_frootn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_frootn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_leafn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_frootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livestemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadstemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livecrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadcrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_leafn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_frootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livestemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadstemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livecrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadcrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livestemn_to_cwdn(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadstemn_to_cwdn(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livecrootn_to_cwdn(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadcrootn_to_cwdn(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_retransn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%hrv_leafn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan             
-    cnf%hrv_leafn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan             
-    cnf%hrv_leafn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan             
-    cnf%hrv_frootn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan            
-    cnf%hrv_frootn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan            
-    cnf%hrv_frootn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan            
-    cnf%hrv_livestemn_to_cwdn(beg:end,1:nlevdecomp_full) = nan           
     cnf%hrv_deadstemn_to_prod10n(beg:end) = nan        
     cnf%hrv_deadstemn_to_prod100n(beg:end) = nan       
-    cnf%hrv_livecrootn_to_cwdn(beg:end,1:nlevdecomp_full) = nan          
-    cnf%hrv_deadcrootn_to_cwdn(beg:end,1:nlevdecomp_full) = nan          
-    cnf%hrv_retransn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan          
-    cnf%hrv_leafn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan     
-    cnf%hrv_frootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan    
-    cnf%hrv_livestemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan 
-    cnf%hrv_deadstemn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan 
-    cnf%hrv_livecrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%hrv_deadcrootn_storage_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%hrv_leafn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan        
-    cnf%hrv_frootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan       
-    cnf%hrv_livestemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan    
-    cnf%hrv_deadstemn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan    
-    cnf%hrv_livecrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan   
-    cnf%hrv_deadcrootn_xfer_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan 
-  
-    ! fire variables changed by F. Li and S. Levis  
-    cnf%m_deadcrootn_to_cwdn_fire(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_deadstemn_to_cwdn_fire(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livecrootn_to_cwdn_fire(beg:end,1:nlevdecomp_full) = nan
-    cnf%m_livestemn_to_cwdn_fire(beg:end,1:nlevdecomp_full) = nan
     cnf%m_n_to_litr_met_fire(beg:end,1:nlevdecomp_full) = nan
     cnf%m_n_to_litr_cel_fire(beg:end,1:nlevdecomp_full) = nan
     cnf%m_n_to_litr_lig_fire(beg:end,1:nlevdecomp_full) = nan
-
-    cnf%leafn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%leafn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%leafn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%frootn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%frootn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan
-    cnf%frootn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan
-    if ( crop_prog )then
-       cnf%grainn_to_litr_met_n(beg:end,1:nlevdecomp_full)    = nan
-       cnf%grainn_to_litr_cel_n(beg:end,1:nlevdecomp_full)    = nan
-       cnf%grainn_to_litr_lig_n(beg:end,1:nlevdecomp_full)    = nan
-       cnf%livestemn_to_litr_met_n(beg:end,1:nlevdecomp_full) = nan
-       cnf%livestemn_to_litr_cel_n(beg:end,1:nlevdecomp_full) = nan
-       cnf%livestemn_to_litr_lig_n(beg:end,1:nlevdecomp_full) = nan
-    end if
     cnf%sminn_to_plant(beg:end) = nan
     cnf%potential_immob(beg:end) = nan
     cnf%actual_immob(beg:end) = nan
@@ -4682,6 +4435,20 @@ contains
     cnf%decomp_cascade_sminn_flux_vr(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions) = nan
     cnf%decomp_cascade_sminn_flux(beg:end,1:ndecomp_cascade_transitions)                      = nan
     cnf%decomp_npools_sourcesink(beg:end,1:nlevdecomp_full,1:ndecomp_pools)                   = nan
+    
+    cnf%phenology_n_to_litr_met_n(beg:end, 1:nlevdecomp_full)                     = nan
+    cnf%phenology_n_to_litr_cel_n(beg:end, 1:nlevdecomp_full)                     = nan
+    cnf%phenology_n_to_litr_lig_n(beg:end, 1:nlevdecomp_full)                     = nan
+    cnf%gap_mortality_n_to_litr_met_n(beg:end, 1:nlevdecomp_full)                 = nan
+    cnf%gap_mortality_n_to_litr_cel_n(beg:end, 1:nlevdecomp_full)                 = nan
+    cnf%gap_mortality_n_to_litr_lig_n(beg:end, 1:nlevdecomp_full)                 = nan
+    cnf%gap_mortality_n_to_cwdn(beg:end, 1:nlevdecomp_full)                       = nan
+    cnf%fire_mortality_n_to_cwdn(beg:end, 1:nlevdecomp_full)                      = nan
+    cnf%harvest_n_to_litr_met_n(beg:end, 1:nlevdecomp_full)                       = nan
+    cnf%harvest_n_to_litr_cel_n(beg:end, 1:nlevdecomp_full)                       = nan
+    cnf%harvest_n_to_litr_lig_n(beg:end, 1:nlevdecomp_full)                       = nan
+    cnf%harvest_n_to_cwdn(beg:end, 1:nlevdecomp_full)                             = nan
+
 #ifndef NITRIF_DENITRIF
     cnf%sminn_to_denit_decomp_cascade_vr(beg:end,1:nlevdecomp_full,1:ndecomp_cascade_transitions) = nan
     cnf%sminn_to_denit_decomp_cascade(beg:end,1:ndecomp_cascade_transitions) = nan

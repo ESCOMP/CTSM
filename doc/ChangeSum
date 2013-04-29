@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_0_81       bandre 04/29/2013 Charlie Koven's variable consolidation, cryoturbation and BSW CPP changes
    clm4_0_80         erik 04/26/2013 Bring Fang Li. Fire model into CLM4.5 science, update ALL CLM4.5 surface datasets, 
                                      provide a working initial condition file for CLM45BGC@f19_g16-1850
    clm4_0_79      muszala 04/24/2013 pftdyn, pft-phys*.nc and datm8 update

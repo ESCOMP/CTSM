@@ -64,8 +64,7 @@ module controlMod
   use UrbanMod     , only : urban_hac, urban_traffic
 
 #if (defined CN) && (defined VERTSOILC)
-  use CNSoilLittVertTranspMod, only: som_diffus, som_adv_flux, shape_fluxprof, shape_fluxprof_param1, &
-                                     cryoturb_diffusion_k, max_altmultiplier_cryoturb, max_altdepth_cryoturbation
+  use CNSoilLittVertTranspMod, only: som_diffus, som_adv_flux, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
 
   use CNVerticalProfileMod, only: exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
 
@@ -278,8 +277,7 @@ contains
 #if (defined CN) && (defined VERTSOILC)
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
-         som_diffus, som_adv_flux, shape_fluxprof, shape_fluxprof_param1, cryoturb_diffusion_k, &
-         max_altmultiplier_cryoturb, max_altdepth_cryoturbation
+         som_diffus, som_adv_flux, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
 
     ! depth inhibition of decomposition paramters
     namelist /clm_inparm/  &
@@ -505,11 +503,9 @@ contains
     ! vertical soil mixing variables
     call mpi_bcast (som_diffus,                 1, MPI_REAL8,     0, mpicom, ier)
     call mpi_bcast (som_adv_flux,               1, MPI_REAL8,     0, mpicom, ier)
-    call mpi_bcast (shape_fluxprof,             1, MPI_INTEGER,   0, mpicom, ier)
-    call mpi_bcast (shape_fluxprof_param1,      1, MPI_REAL8,     0, mpicom, ier)
     call mpi_bcast (cryoturb_diffusion_k,       1, MPI_REAL8,     0, mpicom, ier)
-    call mpi_bcast (max_altmultiplier_cryoturb, 1, MPI_REAL8,     0, mpicom, ier)
     call mpi_bcast (max_altdepth_cryoturbation, 1, MPI_REAL8,     0, mpicom, ier)
+    call mpi_bcast (max_depth_cryoturb,         1, MPI_REAL8,     0, mpicom, ier)
 
     ! depth inhibition of decomposition paramters
     call mpi_bcast (decomp_depth_efolding,          1, MPI_REAL8,     0, mpicom, ier)
@@ -691,35 +687,32 @@ contains
 #endif
 
 #if (defined CN) && (defined VERTSOILC)
-    write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s): ', som_adv_flux
-    write(iulog, *) '   som_diffus, the diffusion term in soil mixing (m/s^2): ', som_diffus
-    write(iulog, *) '   shape_fluxprof: ' , shape_fluxprof
-    write(iulog, *) '   shape_fluxprof_param1: ',shape_fluxprof_param1
-    write(iulog, *) '   cryoturb_diffusion_k  (m/s^2) : ',cryoturb_diffusion_k
-    write(iulog, *) '   max_altmultiplier_cryoturb: ',max_altmultiplier_cryoturb
-    write(iulog, *) '   max_altdepth_cryoturbation (m) : ',max_altdepth_cryoturbation
+    write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s) : ', som_adv_flux
+    write(iulog, *) '   som_diffus, the diffusion term in soil mixing (m/s^2) : ', som_diffus
+    write(iulog, *) '   cryoturb_diffusion_k  (m/s^2)                         : ', cryoturb_diffusion_k
+    write(iulog, *) '   max_altdepth_cryoturbation (m)                        : ', max_altdepth_cryoturbation
+    write(iulog, *) '   max_depth_cryoturb (m)                                : ', max_depth_cryoturb
 
-    write(iulog, *) '   decomp_depth_efolding: ', decomp_depth_efolding
-    write(iulog, *) '   froz_q10: ', froz_q10
+    write(iulog, *) '   decomp_depth_efolding                                 : ', decomp_depth_efolding
+    write(iulog, *) '   froz_q10                                              : ', froz_q10
 
-    write(iulog, *) '   exponential_rooting_profile: ', exponential_rooting_profile
-    write(iulog, *) '   rootprof_exp: ', rootprof_exp
-    write(iulog, *) '   surfprof_exp: ', surfprof_exp
-    write(iulog, *) '   pftspecific_rootingprofile: ', pftspecific_rootingprofile
+    write(iulog, *) '   exponential_rooting_profile                           : ', exponential_rooting_profile
+    write(iulog, *) '   rootprof_exp                                          : ', rootprof_exp
+    write(iulog, *) '   surfprof_exp                                          : ', surfprof_exp
+    write(iulog, *) '   pftspecific_rootingprofile                            : ', pftspecific_rootingprofile
 #endif
 
 #if (defined CN) && (defined NITRIF_DENITRIF)
-    write(iulog, *) '   no_frozen_nitrif_denitrif: ', no_frozen_nitrif_denitrif
+    write(iulog, *) '   no_frozen_nitrif_denitrif                             : ', no_frozen_nitrif_denitrif
 #endif
 
 #if (defined CN)
-    write(iulog, *) '  use_c13: ', use_c13
-    write(iulog, *) '  use_c14: ', use_c14
+    write(iulog, *) '  use_c13                                                : ', use_c13
+    write(iulog, *) '  use_c14                                                : ', use_c14
     !!! C14
-    write(iulog, *) '  use_c14_bombspike: ', use_c14_bombspike
-    write(iulog, *) '  atm_c14_filename: ', atm_c14_filename
+    write(iulog, *) '  use_c14_bombspike                                      : ', use_c14_bombspike
+    write(iulog, *) '  atm_c14_filename                                       : ', atm_c14_filename
 #endif
-
 
     if (fsnowoptics == ' ') then
        write(iulog,*) '   snow optical properties file NOT set'

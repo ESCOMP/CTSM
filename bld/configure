@@ -103,10 +103,7 @@ OPTIONS
                               no-vert     Turn vertical soil Carbon profile off
                               no-cent     Turn CENTURY off
                               no-nitrif   Turn the Nitrification/denitrification off
-                              no-stnd-bsw Turn the standard BSW for soil psi off
-                            [no-vert,no-cent,no-nitrif,no-stnd-bsw,
-                             no-vert:no-cent,no-nitrif:no-stnd-bsw,
-                             no-vert:no-cent:no-stnd-bsw]
+                            [no-vert,no-cent,no-nitrif,no-vert:no-cent]
 
 EOF
 }
@@ -657,10 +654,6 @@ if ($vsoilc_centbgc eq 'on' ||
 if ($vsoilc_centbgc eq 'on' || 
    ($vsoilc_centbgc ne "off" && $vsoilc_centbgc !~ /no-nitrif/)) { 
     $cfg_cppdefs .= " -DNITRIF_DENITRIF"
-}
-if ($vsoilc_centbgc eq 'on' || 
-   ($vsoilc_centbgc ne "off" && $vsoilc_centbgc !~ /no-stnd-bsw/)) { 
-    $cfg_cppdefs .= " -DSTNDRD_BSW_FOR_SOILPSI_CALC";
 }
 if ($clm4me eq 'on') { 
     $cfg_cppdefs .= " -DLCH4"

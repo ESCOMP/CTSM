@@ -201,18 +201,23 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    
 !!! calculate c:n ratios of applicable pools
    do l = 1, ndecomp_pools
-      do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if ( floating_cn_ratio_decomp_pools(l) ) then
+      if ( floating_cn_ratio_decomp_pools(l) ) then
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
                if ( decomp_npools_vr(c,j,l) .gt. 0._r8 ) then
                   cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                end if
-            else
-               cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
-            end if
+            end do
          end do
-      end do
+      else
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
+            end do
+         end do
+      end if
    end do
    
    
@@ -320,18 +325,23 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    
    ! calculate c:n ratios of applicable pools
    do l = 1, ndecomp_pools
-      do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if ( floating_cn_ratio_decomp_pools(l) ) then
+      if ( floating_cn_ratio_decomp_pools(l) ) then
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
                if ( decomp_npools_vr(c,j,l) .gt. 0._r8 ) then
                   cn_decomp_pools(c,j,l) = decomp_cpools_vr(c,j,l) / decomp_npools_vr(c,j,l)
                end if
-            else
-               cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
-            end if
+            end do
          end do
-      end do
+      else
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
+            end do
+         end do
+      end if
    end do
    
    ! upon return from CNAllocation, the fraction of potential immobilization

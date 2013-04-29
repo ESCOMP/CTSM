@@ -59,13 +59,9 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: decomp_cpools(:,:)         ! (gC/m2)  decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_cpools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_cpools_1m(:,:)           ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
-   real(r8), pointer :: decomp_cpools_30cm(:,:)         ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 30 cm
-   real(r8), pointer :: decomp_cpools_activelayer(:,:)  ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools of active layer (max of this and prior year)
    real(r8), pointer :: decomp_npools(:,:)         ! (gC/m2)  decomposing (litter, cwd, soil) N pools
    real(r8), pointer :: decomp_npools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
    real(r8), pointer :: decomp_npools_1m(:,:)           ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 1 meter
-   real(r8), pointer :: decomp_npools_30cm(:,:)         ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools to 30 cm
-   real(r8), pointer :: decomp_npools_activelayer(:,:)  ! (gN/m2)  diagnostic: decomposing (litter, cwd, soil) N pools of active layer (max of this and prior year)
    real(r8), pointer :: sminn_vr(:,:)              ! (gN/m3) soil mineral N
    real(r8), pointer :: col_ctrunc(:)              ! (gC/m2) column-level sink for C truncation (diagnostic)
    real(r8), pointer :: col_ctrunc_vr(:,:)         ! (gC/m3) column-level sink for C truncation (prognostic)
@@ -237,8 +233,6 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: decomp_c13pools(:,:)              ! (gC/m2)  decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_c13pools_vr(:,:,:)         ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_c13pools_1m(:,:)           ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
-   real(r8), pointer :: decomp_c13pools_30cm(:,:)         ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 30 cm
-   real(r8), pointer :: decomp_c13pools_activelayer(:,:)  ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools of active layer (max of this and prior year)
    real(r8), pointer :: c13_col_ctrunc_vr(:,:)            ! (gC/m3) C truncation term
    real(r8), pointer :: leafc13(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc13_storage(:)      ! (gC/m2) leaf C storage
@@ -270,8 +264,6 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: decomp_c14pools(:,:)              ! (gC/m2)  decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_c14pools_vr(:,:,:)         ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: decomp_c14pools_1m(:,:)           ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
-   real(r8), pointer :: decomp_c14pools_30cm(:,:)         ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 30 cm
-   real(r8), pointer :: decomp_c14pools_activelayer(:,:)  ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools of active layer (max of this and prior year)
    real(r8), pointer :: c14_col_ctrunc_vr(:,:)            ! (gC/m3) C truncation term
    real(r8), pointer :: leafc14(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc14_storage(:)      ! (gC/m2) leaf C storage
@@ -365,14 +357,10 @@ subroutine CNiniTimeVar()
     qflx_surf                      => clm3%g%l%c%cwf%qflx_surf
     decomp_cpools                  => clm3%g%l%c%ccs%decomp_cpools
     decomp_cpools_1m               => clm3%g%l%c%ccs%decomp_cpools_1m
-    decomp_cpools_30cm             => clm3%g%l%c%ccs%decomp_cpools_30cm
-    decomp_cpools_activelayer      => clm3%g%l%c%ccs%decomp_cpools_activelayer
     decomp_cpools_vr               => clm3%g%l%c%ccs%decomp_cpools_vr
     decomp_npools                  => clm3%g%l%c%cns%decomp_npools
     decomp_npools_vr               => clm3%g%l%c%cns%decomp_npools_vr
     decomp_npools_1m               => clm3%g%l%c%cns%decomp_npools_1m
-    decomp_npools_30cm             => clm3%g%l%c%cns%decomp_npools_30cm
-    decomp_npools_activelayer      => clm3%g%l%c%cns%decomp_npools_activelayer
     nfixation_prof                    => clm3%g%l%c%cps%nfixation_prof
     ndep_prof                         => clm3%g%l%c%cps%ndep_prof
     qflx_irrig                     => clm3%g%l%c%cwf%qflx_irrig
@@ -433,8 +421,6 @@ subroutine CNiniTimeVar()
        decomp_c13pools_vr               => clm3%g%l%c%cc13s%decomp_cpools_vr
        c13_col_ctrunc_vr                => clm3%g%l%c%cc13s%col_ctrunc_vr
        decomp_c13pools_1m               => clm3%g%l%c%cc13s%decomp_cpools_1m
-       decomp_c13pools_30cm             => clm3%g%l%c%cc13s%decomp_cpools_30cm
-       decomp_c13pools_activelayer      => clm3%g%l%c%cc13s%decomp_cpools_activelayer
        c13_psnsun                       => clm3%g%l%c%p%pc13f%psnsun
        c13_psnsha                       => clm3%g%l%c%p%pc13f%psnsha
        xsmrpool_c13ratio                => clm3%g%l%c%p%pepv%xsmrpool_c13ratio
@@ -478,8 +464,6 @@ subroutine CNiniTimeVar()
        decomp_c14pools_vr               => clm3%g%l%c%cc14s%decomp_cpools_vr
        c14_col_ctrunc_vr                => clm3%g%l%c%cc14s%col_ctrunc_vr
        decomp_c14pools_1m               => clm3%g%l%c%cc14s%decomp_cpools_1m
-       decomp_c14pools_30cm             => clm3%g%l%c%cc14s%decomp_cpools_30cm
-       decomp_c14pools_activelayer      => clm3%g%l%c%cc14s%decomp_cpools_activelayer
        c14_psnsun                       => clm3%g%l%c%p%pc14f%psnsun
        c14_psnsha                       => clm3%g%l%c%p%pc14f%psnsha
        leafc14                          => clm3%g%l%c%p%pc14s%leafc
@@ -693,8 +677,6 @@ subroutine CNiniTimeVar()
          do k = 1, ndecomp_pools
             decomp_cpools(c,k) = initial_stock(k)
             decomp_cpools_1m(c,k) = initial_stock(k)
-            decomp_cpools_30cm(c,k) = initial_stock(k)
-            decomp_cpools_activelayer(c,k) = initial_stock(k)
          end do
 
          do j = 1, nlevdecomp_full
@@ -743,8 +725,6 @@ subroutine CNiniTimeVar()
             do k = 1, ndecomp_pools
                decomp_c13pools(c,k) = decomp_cpools(c,k) * c13ratio
                decomp_c13pools_1m(c,k) = decomp_cpools_1m(c,k) * c13ratio
-               decomp_c13pools_30cm(c,k) = decomp_cpools_30cm(c,k) * c13ratio
-               decomp_c13pools_activelayer(c,k) = decomp_cpools_activelayer(c,k) * c13ratio
             end do
          endif
 
@@ -767,8 +747,6 @@ subroutine CNiniTimeVar()
             do k = 1, ndecomp_pools
                decomp_c14pools(c,k) = decomp_cpools(c,k) * c14ratio
                decomp_c14pools_1m(c,k) = decomp_cpools_1m(c,k) * c14ratio
-               decomp_c14pools_30cm(c,k) = decomp_cpools_30cm(c,k) * c14ratio
-               decomp_c14pools_activelayer(c,k) = decomp_cpools_activelayer(c,k) * c14ratio
             end do
          endif
 
@@ -793,8 +771,6 @@ subroutine CNiniTimeVar()
          do k = 1, ndecomp_pools
             decomp_npools(c,k) = decomp_cpools(c,k) / initial_cn_ratio(k)
             decomp_npools_1m(c,k) = decomp_cpools_1m(c,k) / initial_cn_ratio(k)
-            decomp_npools_30cm(c,k) = decomp_cpools_30cm(c,k) / initial_cn_ratio(k)
-            decomp_npools_activelayer(c,k) = decomp_cpools_activelayer(c,k) / initial_cn_ratio(k)
          end do
 
 #ifdef NITRIF_DENITRIF

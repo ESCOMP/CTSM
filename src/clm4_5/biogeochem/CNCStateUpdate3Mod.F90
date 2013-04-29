@@ -62,27 +62,29 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in arrays
-   real(r8), pointer :: m_leafc_to_fire(:)             
-   real(r8), pointer :: m_leafc_storage_to_fire(:)                
-   real(r8), pointer :: m_leafc_xfer_to_fire(:)        
-   real(r8), pointer :: m_livestemc_to_fire(:)         
-   real(r8), pointer :: m_livestemc_storage_to_fire(:)       
-   real(r8), pointer :: m_livestemc_xfer_to_fire(:)    
-   real(r8), pointer :: m_deadstemc_to_fire(:)         
-   real(r8), pointer :: m_deadstemc_storage_to_fire(:)          
-   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)    
-   real(r8), pointer :: m_frootc_to_fire(:)            
-   real(r8), pointer :: m_frootc_storage_to_fire(:)    
-   real(r8), pointer :: m_frootc_xfer_to_fire(:)       
-   real(r8), pointer :: m_livecrootc_to_fire(:)        
-   real(r8), pointer :: m_livecrootc_storage_to_fire(:)     
-   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)   
-   real(r8), pointer :: m_deadcrootc_to_fire(:)        
+   real(r8), pointer :: fire_mortality_c_to_cwdc(:,:)                   ! C fluxes associated with fire mortality to CWD pool (gC/m3/s)
+   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)               ! vertically-resolved decomposing C fire loss (gC/m3/s)
    real(r8), pointer :: m_deadcrootc_storage_to_fire(:)
-   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)  
-   real(r8), pointer :: m_gresp_storage_to_fire(:)     
-   real(r8), pointer :: m_gresp_xfer_to_fire(:)       
-   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:) 
+   real(r8), pointer :: m_deadcrootc_to_fire(:)
+   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)
+   real(r8), pointer :: m_deadstemc_storage_to_fire(:)
+   real(r8), pointer :: m_deadstemc_to_fire(:)
+   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)
+   real(r8), pointer :: m_frootc_storage_to_fire(:)
+   real(r8), pointer :: m_frootc_to_fire(:)
+   real(r8), pointer :: m_frootc_xfer_to_fire(:)
+   real(r8), pointer :: m_gresp_storage_to_fire(:)
+   real(r8), pointer :: m_gresp_xfer_to_fire(:)
+   real(r8), pointer :: m_leafc_storage_to_fire(:)
+   real(r8), pointer :: m_leafc_to_fire(:)
+   real(r8), pointer :: m_leafc_xfer_to_fire(:)
+   real(r8), pointer :: m_livecrootc_storage_to_fire(:)
+   real(r8), pointer :: m_livecrootc_to_fire(:)
+   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)
+   real(r8), pointer :: m_livestemc_storage_to_fire(:)
+   real(r8), pointer :: m_livestemc_to_fire(:)
+   real(r8), pointer :: m_livestemc_xfer_to_fire(:)
+   !
    real(r8), pointer :: m_leafc_to_litter_fire(:)   
    real(r8), pointer :: m_leafc_storage_to_litter_fire(:)                
    real(r8), pointer :: m_leafc_xfer_to_litter_fire(:)  
@@ -105,14 +107,10 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    real(r8), pointer :: m_deadcrootc_xfer_to_litter_fire(:)
    real(r8), pointer :: m_gresp_storage_to_litter_fire(:)      
    real(r8), pointer :: m_gresp_xfer_to_litter_fire(:) 
+   !
    real(r8), pointer :: m_c_to_litr_met_fire(:,:)
    real(r8), pointer :: m_c_to_litr_cel_fire(:,:)
    real(r8), pointer :: m_c_to_litr_lig_fire(:,:)
-   real(r8), pointer :: m_deadstemc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_deadcrootc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_livestemc_to_cwdc_fire(:,:)
-   real(r8), pointer :: m_livecrootc_to_cwdc_fire(:,:)
- 
 ! local pointers to implicit in/out arrays
    real(r8), pointer :: decomp_cpools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
@@ -171,15 +169,12 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    end select
 
     ! assign local pointers at the column level
-    m_decomp_cpools_to_fire_vr            => ccisof%m_decomp_cpools_to_fire_vr
-    m_deadcrootc_to_cwdc_fire             => ccisof%m_deadcrootc_to_cwdc_fire
-    m_deadstemc_to_cwdc_fire              => ccisof%m_deadstemc_to_cwdc_fire
-    m_livecrootc_to_cwdc_fire             => ccisof%m_livecrootc_to_cwdc_fire
-    m_livestemc_to_cwdc_fire              => ccisof%m_livestemc_to_cwdc_fire
-    m_c_to_litr_met_fire                  => ccisof%m_c_to_litr_met_fire
-    m_c_to_litr_cel_fire                  => ccisof%m_c_to_litr_cel_fire
-    m_c_to_litr_lig_fire                  => ccisof%m_c_to_litr_lig_fire
-    decomp_cpools_vr                      => ccisos%decomp_cpools_vr
+    fire_mortality_c_to_cwdc       => ccisof%fire_mortality_c_to_cwdc
+    m_decomp_cpools_to_fire_vr     => ccisof%m_decomp_cpools_to_fire_vr
+    decomp_cpools_vr               => ccisos%decomp_cpools_vr
+    m_c_to_litr_met_fire           => ccisof%m_c_to_litr_met_fire
+    m_c_to_litr_cel_fire           => ccisof%m_c_to_litr_cel_fire
+    m_c_to_litr_lig_fire           => ccisof%m_c_to_litr_lig_fire
 
     ! assign local pointers at the pft level
     m_leafc_to_fire                => pcisof%m_leafc_to_fire
@@ -257,13 +252,12 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
        do fc = 1,num_soilc
           c = filter_soilc(fc)
           ! pft-level wood to column-level CWD (uncombusted wood)
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + (m_deadstemc_to_cwdc_fire(c,j)+m_livestemc_to_cwdc_fire(c,j)) * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + (m_deadcrootc_to_cwdc_fire(c,j)+m_livecrootc_to_cwdc_fire(c,j)) * dt
-
-         ! pft-level wood to column-level litter (uncombusted wood)
-           decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_c_to_litr_met_fire(c,j)* dt
-           decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + m_c_to_litr_cel_fire(c,j)* dt
-           decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + m_c_to_litr_lig_fire(c,j)* dt
+          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + fire_mortality_c_to_cwdc(c,j) * dt
+          
+          ! pft-level wood to column-level litter (uncombusted wood)
+          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_c_to_litr_met_fire(c,j)* dt
+          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + m_c_to_litr_cel_fire(c,j)* dt
+          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + m_c_to_litr_lig_fire(c,j)* dt
        end do
     end do
     

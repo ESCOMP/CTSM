@@ -18,7 +18,7 @@ module CNSetValueMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar  , only: nlevgrnd, nlevdecomp_full, ndecomp_pools, ndecomp_cascade_transitions
+    use clm_varpar  , only: nlevgrnd, nlevdecomp_full, ndecomp_pools, ndecomp_cascade_transitions, nlevdecomp
     use clm_varctl  , only: iulog, use_c13, use_c14
     use clmtype
     implicit none
@@ -999,11 +999,6 @@ subroutine CNSetCps(num, filter, val, cps)
    do j = 1,nlevgrnd
       do fi = 1,num
          i = filter(fi)
-#ifndef STNDRD_BSW_FOR_SOILPSI_CALC
-         cps%bsw2(i,j) = val
-         cps%psisat(i,j) = val
-         cps%vwcsat(i,j) = val
-#endif
          cps%soilpsi(i,j) = val
       end do
    end do
@@ -1074,8 +1069,6 @@ subroutine CNSetCcs(num, filter, val, ccs)
          i = filter(fi)
          ccs%decomp_cpools(i,k) = val
          ccs%decomp_cpools_1m(i,k) = val
-         ccs%decomp_cpools_30cm(i,k) = val
-         ccs%decomp_cpools_activelayer(i,k) = val
       end do
    end do
 
@@ -1158,8 +1151,6 @@ subroutine CNSetCns(num, filter, val, cns)
          i = filter(fi)
          cns%decomp_npools(i,k) = val
          cns%decomp_npools_1m(i,k) = val
-         cns%decomp_npools_30cm(i,k) = val
-         cns%decomp_npools_activelayer(i,k) = val
       end do
    end do
    
@@ -1207,85 +1198,29 @@ subroutine CNSetCcf(num, filter, val, ccf)
 !EOP
 !------------------------------------------------------------------------
 
-   if ( crop_prog )then
-      do j = 1, nlevdecomp_full
-         do fi = 1,num
-            i = filter(fi)
-            ccf%livestemc_to_litr_met_c(i,j) = val
-            ccf%livestemc_to_litr_cel_c(i,j) = val
-            ccf%livestemc_to_litr_lig_c(i,j) = val
-            ccf%grainc_to_litr_met_c(i,j)    = val
-            ccf%grainc_to_litr_cel_c(i,j)    = val
-            ccf%grainc_to_litr_lig_c(i,j)    = val
-         end do
-      end do
-   end if
    do j = 1, nlevdecomp_full
       do fi = 1,num
          i = filter(fi)
-         ccf%m_leafc_to_litr_met_c(i,j)                = val
-         ccf%m_leafc_to_litr_cel_c(i,j)                = val
-         ccf%m_leafc_to_litr_lig_c(i,j)                = val
-         ccf%m_frootc_to_litr_met_c(i,j)               = val
-         ccf%m_frootc_to_litr_cel_c(i,j)               = val
-         ccf%m_frootc_to_litr_lig_c(i,j)               = val
-         ccf%m_leafc_storage_to_litr_met_c(i,j)        = val
-         ccf%m_frootc_storage_to_litr_met_c(i,j)       = val
-         ccf%m_livestemc_storage_to_litr_met_c(i,j)    = val
-         ccf%m_deadstemc_storage_to_litr_met_c(i,j)    = val
-         ccf%m_livecrootc_storage_to_litr_met_c(i,j)   = val
-         ccf%m_deadcrootc_storage_to_litr_met_c(i,j)   = val
-         ccf%m_leafc_xfer_to_litr_met_c(i,j)           = val
-         ccf%m_frootc_xfer_to_litr_met_c(i,j)          = val
-         ccf%m_livestemc_xfer_to_litr_met_c(i,j)       = val
-         ccf%m_deadstemc_xfer_to_litr_met_c(i,j)       = val
-         ccf%m_livecrootc_xfer_to_litr_met_c(i,j)      = val
-         ccf%m_deadcrootc_xfer_to_litr_met_c(i,j)      = val
-         ccf%m_livestemc_to_cwdc(i,j)              = val
-         ccf%m_deadstemc_to_cwdc(i,j)              = val
-         ccf%m_livecrootc_to_cwdc(i,j)             = val
-         ccf%m_deadcrootc_to_cwdc(i,j)             = val
-         ccf%m_gresp_storage_to_litr_met_c(i,j)        = val
-         ccf%m_gresp_xfer_to_litr_met_c(i,j)           = val
-         ccf%hrv_leafc_to_litr_met_c(i,j)              = val             
-         ccf%hrv_leafc_to_litr_cel_c(i,j)              = val             
-         ccf%hrv_leafc_to_litr_lig_c(i,j)              = val             
-         ccf%hrv_frootc_to_litr_met_c(i,j)             = val            
-         ccf%hrv_frootc_to_litr_cel_c(i,j)             = val            
-         ccf%hrv_frootc_to_litr_lig_c(i,j)             = val            
-         ccf%hrv_livestemc_to_cwdc(i,j)            = val           
-         ccf%hrv_livecrootc_to_cwdc(i,j)           = val          
-         ccf%hrv_deadcrootc_to_cwdc(i,j)           = val          
-         ccf%hrv_leafc_storage_to_litr_met_c(i,j)      = val     
-         ccf%hrv_frootc_storage_to_litr_met_c(i,j)     = val    
-         ccf%hrv_livestemc_storage_to_litr_met_c(i,j)  = val 
-         ccf%hrv_deadstemc_storage_to_litr_met_c(i,j)  = val 
-         ccf%hrv_livecrootc_storage_to_litr_met_c(i,j) = val
-         ccf%hrv_deadcrootc_storage_to_litr_met_c(i,j) = val
-         ccf%hrv_gresp_storage_to_litr_met_c(i,j)      = val
-         ccf%hrv_leafc_xfer_to_litr_met_c(i,j)         = val
-         ccf%hrv_frootc_xfer_to_litr_met_c(i,j)        = val
-         ccf%hrv_livestemc_xfer_to_litr_met_c(i,j)     = val
-         ccf%hrv_deadstemc_xfer_to_litr_met_c(i,j)     = val
-         ccf%hrv_livecrootc_xfer_to_litr_met_c(i,j)    = val
-         ccf%hrv_deadcrootc_xfer_to_litr_met_c(i,j)    = val
-         ccf%hrv_gresp_xfer_to_litr_met_c(i,j)         = val
-
-! fire variables changed by F. Li and S. Levis
-         ccf%m_deadstemc_to_cwdc_fire(i,j)         = val
-         ccf%m_deadcrootc_to_cwdc_fire(i,j)        = val
-         ccf%m_livestemc_to_cwdc_fire(i,j)         = val
-         ccf%m_livecrootc_to_cwdc_fire(i,j)        = val
+         ! phenology: litterfall and crop fluxes associated wit
+         ccf%phenology_c_to_litr_met_c(i,j)                = val
+         ccf%phenology_c_to_litr_cel_c(i,j)                = val
+         ccf%phenology_c_to_litr_lig_c(i,j)                = val
+         ! gap mortality
+         ccf%gap_mortality_c_to_litr_met_c(i,j)                = val
+         ccf%gap_mortality_c_to_litr_cel_c(i,j)                = val
+         ccf%gap_mortality_c_to_litr_lig_c(i,j)                = val
+         ccf%gap_mortality_c_to_cwdc(i,j)                      = val
+         ! fire
+         ccf%fire_mortality_c_to_cwdc(i,j)                 = val
          ccf%m_c_to_litr_met_fire(i,j)             = val
          ccf%m_c_to_litr_cel_fire(i,j)             = val  
          ccf%m_c_to_litr_lig_fire(i,j)             = val
-
-         ccf%leafc_to_litr_met_c(i,j)                  = val
-         ccf%leafc_to_litr_cel_c(i,j)                  = val
-         ccf%leafc_to_litr_lig_c(i,j)                  = val
-         ccf%frootc_to_litr_met_c(i,j)                 = val
-         ccf%frootc_to_litr_cel_c(i,j)                 = val
-         ccf%frootc_to_litr_lig_c(i,j)                 = val
+         ! harvest
+         ccf%harvest_c_to_litr_met_c(i,j)                  = val             
+         ccf%harvest_c_to_litr_cel_c(i,j)                  = val             
+         ccf%harvest_c_to_litr_lig_c(i,j)                  = val             
+         ccf%harvest_c_to_cwdc(i,j)                        = val          
+         ! hr
          ccf%hr_vr(i,j) = val
       end do
    end do
@@ -1391,84 +1326,28 @@ subroutine CNSetCnf(num, filter, val, cnf)
 !------------------------------------------------------------------------
 
 
-   if ( crop_prog )then
-      do j = 1, nlevdecomp_full
-         do fi = 1,num
-            i = filter(fi)
-            cnf%grainn_to_litr_met_n(i,j)    = val
-            cnf%grainn_to_litr_cel_n(i,j)    = val
-            cnf%grainn_to_litr_lig_n(i,j)    = val
-            cnf%livestemn_to_litr_met_n(i,j) = val
-            cnf%livestemn_to_litr_cel_n(i,j) = val
-            cnf%livestemn_to_litr_lig_n(i,j) = val
-         end do
-      end do
-   end if
    do j = 1, nlevdecomp_full
       do fi = 1,num
          i = filter(fi)
-         cnf%m_leafn_to_litr_met_n(i,j) = val
-         cnf%m_leafn_to_litr_cel_n(i,j) = val
-         cnf%m_leafn_to_litr_lig_n(i,j) = val
-         cnf%m_frootn_to_litr_met_n(i,j) = val
-         cnf%m_frootn_to_litr_cel_n(i,j) = val
-         cnf%m_frootn_to_litr_lig_n(i,j) = val
-         cnf%m_leafn_storage_to_litr_met_n(i,j) = val
-         cnf%m_frootn_storage_to_litr_met_n(i,j) = val
-         cnf%m_livestemn_storage_to_litr_met_n(i,j) = val
-         cnf%m_deadstemn_storage_to_litr_met_n(i,j) = val
-         cnf%m_livecrootn_storage_to_litr_met_n(i,j) = val
-         cnf%m_deadcrootn_storage_to_litr_met_n(i,j) = val
-         cnf%m_leafn_xfer_to_litr_met_n(i,j) = val
-         cnf%m_frootn_xfer_to_litr_met_n(i,j) = val
-         cnf%m_livestemn_xfer_to_litr_met_n(i,j) = val
-         cnf%m_deadstemn_xfer_to_litr_met_n(i,j) = val
-         cnf%m_livecrootn_xfer_to_litr_met_n(i,j) = val
-         cnf%m_deadcrootn_xfer_to_litr_met_n(i,j) = val
-         cnf%m_livestemn_to_cwdn(i,j) = val
-         cnf%m_deadstemn_to_cwdn(i,j) = val
-         cnf%m_livecrootn_to_cwdn(i,j) = val
-         cnf%m_deadcrootn_to_cwdn(i,j) = val
-         cnf%m_retransn_to_litr_met_n(i,j) = val
-         cnf%hrv_leafn_to_litr_met_n(i,j) = val             
-         cnf%hrv_leafn_to_litr_cel_n(i,j) = val             
-         cnf%hrv_leafn_to_litr_lig_n(i,j) = val             
-         cnf%hrv_frootn_to_litr_met_n(i,j) = val            
-         cnf%hrv_frootn_to_litr_cel_n(i,j) = val            
-         cnf%hrv_frootn_to_litr_lig_n(i,j) = val            
-         cnf%hrv_livestemn_to_cwdn(i,j) = val            
-         cnf%hrv_livecrootn_to_cwdn(i,j) = val          
-         cnf%hrv_deadcrootn_to_cwdn(i,j) = val          
-         cnf%hrv_retransn_to_litr_met_n(i,j) = val          
-         cnf%hrv_leafn_storage_to_litr_met_n(i,j) = val     
-         cnf%hrv_frootn_storage_to_litr_met_n(i,j) = val    
-         cnf%hrv_livestemn_storage_to_litr_met_n(i,j) = val 
-         cnf%hrv_deadstemn_storage_to_litr_met_n(i,j) = val 
-         cnf%hrv_livecrootn_storage_to_litr_met_n(i,j) = val
-         cnf%hrv_deadcrootn_storage_to_litr_met_n(i,j) = val
-         cnf%hrv_leafn_xfer_to_litr_met_n(i,j) = val        
-         cnf%hrv_frootn_xfer_to_litr_met_n(i,j) = val       
-         cnf%hrv_livestemn_xfer_to_litr_met_n(i,j) = val    
-         cnf%hrv_deadstemn_xfer_to_litr_met_n(i,j) = val    
-         cnf%hrv_livecrootn_xfer_to_litr_met_n(i,j) = val   
-         cnf%hrv_deadcrootn_xfer_to_litr_met_n(i,j) = val  
-
- ! fire variables changed by F. Li and S. Levis
-         cnf%m_deadstemn_to_cwdn_fire(i,j)         = val
-         cnf%m_deadcrootn_to_cwdn_fire(i,j)        = val
-         cnf%m_livestemn_to_cwdn_fire(i,j)         = val
-         cnf%m_livecrootn_to_cwdn_fire(i,j)        = val
+         ! phenology: litterfall and crop fluxes associated wit
+         cnf%phenology_n_to_litr_met_n(i,j)                = val
+         cnf%phenology_n_to_litr_cel_n(i,j)                = val
+         cnf%phenology_n_to_litr_lig_n(i,j)                = val
+         ! gap mortality
+         cnf%gap_mortality_n_to_litr_met_n(i,j)                = val
+         cnf%gap_mortality_n_to_litr_cel_n(i,j)                = val
+         cnf%gap_mortality_n_to_litr_lig_n(i,j)                = val
+         cnf%gap_mortality_n_to_cwdn(i,j)                      = val
+         ! fire
+         cnf%fire_mortality_n_to_cwdn(i,j)                 = val
          cnf%m_n_to_litr_met_fire(i,j)             = val
          cnf%m_n_to_litr_cel_fire(i,j)             = val  
          cnf%m_n_to_litr_lig_fire(i,j)             = val
-
-        
-         cnf%leafn_to_litr_met_n(i,j) = val
-         cnf%leafn_to_litr_cel_n(i,j) = val
-         cnf%leafn_to_litr_lig_n(i,j) = val
-         cnf%frootn_to_litr_met_n(i,j) = val
-         cnf%frootn_to_litr_cel_n(i,j) = val
-         cnf%frootn_to_litr_lig_n(i,j) = val
+         ! harvest
+         cnf%harvest_n_to_litr_met_n(i,j)                  = val             
+         cnf%harvest_n_to_litr_cel_n(i,j)                  = val             
+         cnf%harvest_n_to_litr_lig_n(i,j)                  = val             
+         cnf%harvest_n_to_cwdn(i,j)                        = val  
 #ifndef NITRIF_DENITRIF
          cnf%sminn_to_denit_excess_vr(i,j) = val
          cnf%sminn_leached_vr(i,j) = val

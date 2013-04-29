@@ -62,30 +62,10 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in arrays
-   real(r8), pointer :: m_deadcrootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_deadcrootc_to_cwdc(:,:)
-   real(r8), pointer :: m_deadcrootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: m_deadstemc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_deadstemc_to_cwdc(:,:)
-   real(r8), pointer :: m_deadstemc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: m_frootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_frootc_to_litr_met_c(:,:)
-   real(r8), pointer :: m_frootc_to_litr_cel_c(:,:)
-   real(r8), pointer :: m_frootc_to_litr_lig_c(:,:)
-   real(r8), pointer :: m_frootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: m_gresp_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_gresp_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: m_leafc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_leafc_to_litr_met_c(:,:)
-   real(r8), pointer :: m_leafc_to_litr_cel_c(:,:)
-   real(r8), pointer :: m_leafc_to_litr_lig_c(:,:)
-   real(r8), pointer :: m_leafc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: m_livecrootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_livecrootc_to_cwdc(:,:)
-   real(r8), pointer :: m_livecrootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: m_livestemc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: m_livestemc_to_cwdc(:,:)
-   real(r8), pointer :: m_livestemc_xfer_to_litr_met_c(:,:)
+   real(r8), pointer :: gap_mortality_c_to_litr_met_c(:,:)         ! C fluxes associated with gap mortality to litter metabolic pool (gC/m3/s)
+   real(r8), pointer :: gap_mortality_c_to_litr_cel_c(:,:)         ! C fluxes associated with gap mortality to litter cellulose pool (gC/m3/s)
+   real(r8), pointer :: gap_mortality_c_to_litr_lig_c(:,:)         ! C fluxes associated with gap mortality to litter lignin pool (gC/m3/s)
+   real(r8), pointer :: gap_mortality_c_to_cwdc(:,:)               ! C fluxes associated with gap mortality to CWD pool (gC/m3/s)
    real(r8), pointer :: m_deadcrootc_storage_to_litter(:)
    real(r8), pointer :: m_deadcrootc_to_litter(:)
    real(r8), pointer :: m_deadcrootc_xfer_to_litter(:)
@@ -167,30 +147,10 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    end select
 
     ! assign local pointers at the column level
-    m_deadcrootc_storage_to_litr_met_c => ccisof%m_deadcrootc_storage_to_litr_met_c
-    m_deadcrootc_to_cwdc               => ccisof%m_deadcrootc_to_cwdc
-    m_deadcrootc_xfer_to_litr_met_c    => ccisof%m_deadcrootc_xfer_to_litr_met_c
-    m_deadstemc_storage_to_litr_met_c  => ccisof%m_deadstemc_storage_to_litr_met_c
-    m_deadstemc_to_cwdc                => ccisof%m_deadstemc_to_cwdc
-    m_deadstemc_xfer_to_litr_met_c     => ccisof%m_deadstemc_xfer_to_litr_met_c
-    m_frootc_storage_to_litr_met_c     => ccisof%m_frootc_storage_to_litr_met_c
-    m_frootc_to_litr_met_c             => ccisof%m_frootc_to_litr_met_c
-    m_frootc_to_litr_cel_c             => ccisof%m_frootc_to_litr_cel_c
-    m_frootc_to_litr_lig_c             => ccisof%m_frootc_to_litr_lig_c
-    m_frootc_xfer_to_litr_met_c        => ccisof%m_frootc_xfer_to_litr_met_c
-    m_gresp_storage_to_litr_met_c      => ccisof%m_gresp_storage_to_litr_met_c
-    m_gresp_xfer_to_litr_met_c         => ccisof%m_gresp_xfer_to_litr_met_c
-    m_leafc_storage_to_litr_met_c      => ccisof%m_leafc_storage_to_litr_met_c
-    m_leafc_to_litr_met_c              => ccisof%m_leafc_to_litr_met_c
-    m_leafc_to_litr_cel_c              => ccisof%m_leafc_to_litr_cel_c
-    m_leafc_to_litr_lig_c              => ccisof%m_leafc_to_litr_lig_c
-    m_leafc_xfer_to_litr_met_c         => ccisof%m_leafc_xfer_to_litr_met_c
-    m_livecrootc_storage_to_litr_met_c => ccisof%m_livecrootc_storage_to_litr_met_c
-    m_livecrootc_to_cwdc               => ccisof%m_livecrootc_to_cwdc
-    m_livecrootc_xfer_to_litr_met_c    => ccisof%m_livecrootc_xfer_to_litr_met_c
-    m_livestemc_storage_to_litr_met_c  => ccisof%m_livestemc_storage_to_litr_met_c
-    m_livestemc_to_cwdc                => ccisof%m_livestemc_to_cwdc
-    m_livestemc_xfer_to_litr_met_c     => ccisof%m_livestemc_xfer_to_litr_met_c
+    gap_mortality_c_to_litr_met_c  => ccisof%gap_mortality_c_to_litr_met_c
+    gap_mortality_c_to_litr_cel_c  => ccisof%gap_mortality_c_to_litr_cel_c
+    gap_mortality_c_to_litr_lig_c  => ccisof%gap_mortality_c_to_litr_lig_c
+    gap_mortality_c_to_cwdc        => ccisof%gap_mortality_c_to_cwdc
     decomp_cpools_vr                   => ccisos%decomp_cpools_vr
 
 
@@ -245,39 +205,12 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
        do fc = 1,num_soilc
           c = filter_soilc(fc)
           
-          ! leaf to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_leafc_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + m_leafc_to_litr_cel_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + m_leafc_to_litr_lig_c(c,j) * dt
+          ! column gap mortality fluxes
+          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + gap_mortality_c_to_litr_met_c(c,j) * dt
+          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + gap_mortality_c_to_litr_cel_c(c,j) * dt
+          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + gap_mortality_c_to_litr_lig_c(c,j) * dt
+          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + gap_mortality_c_to_cwdc(c,j) * dt
           
-          ! fine root to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_frootc_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + m_frootc_to_litr_cel_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + m_frootc_to_litr_lig_c(c,j) * dt
-          
-          ! wood to CWD
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + m_livestemc_to_cwdc(c,j)  * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + m_deadstemc_to_cwdc(c,j)  * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + m_livecrootc_to_cwdc(c,j) * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + m_deadcrootc_to_cwdc(c,j) * dt
-          
-          ! storage pools to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_leafc_storage_to_litr_met_c(c,j)      * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_frootc_storage_to_litr_met_c(c,j)     * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_livestemc_storage_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_deadstemc_storage_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_livecrootc_storage_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_deadcrootc_storage_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_gresp_storage_to_litr_met_c(c,j)      * dt
-          
-          ! transfer pools to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_leafc_xfer_to_litr_met_c(c,j)      * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_frootc_xfer_to_litr_met_c(c,j)     * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_livestemc_xfer_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_deadstemc_xfer_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_livecrootc_xfer_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_deadcrootc_xfer_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + m_gresp_xfer_to_litr_met_c(c,j)      * dt
        end do
     end do 
 
@@ -350,29 +283,10 @@ subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isot
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in arrays
-   real(r8), pointer :: hrv_deadcrootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadcrootc_to_cwdc(:,:)
-   real(r8), pointer :: hrv_deadcrootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadstemc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_deadstemc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_frootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_frootc_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_frootc_to_litr_cel_c(:,:)
-   real(r8), pointer :: hrv_frootc_to_litr_lig_c(:,:)
-   real(r8), pointer :: hrv_frootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_gresp_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_gresp_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_leafc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_leafc_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_leafc_to_litr_cel_c(:,:)
-   real(r8), pointer :: hrv_leafc_to_litr_lig_c(:,:)
-   real(r8), pointer :: hrv_leafc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livecrootc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livecrootc_to_cwdc(:,:)
-   real(r8), pointer :: hrv_livecrootc_xfer_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livestemc_storage_to_litr_met_c(:,:)
-   real(r8), pointer :: hrv_livestemc_to_cwdc(:,:)
-   real(r8), pointer :: hrv_livestemc_xfer_to_litr_met_c(:,:)
+   real(r8), pointer :: harvest_c_to_litr_met_c(:,:)               ! C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_litr_cel_c(:,:)               ! C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_litr_lig_c(:,:)               ! C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+   real(r8), pointer :: harvest_c_to_cwdc(:,:)                     ! C fluxes associated with harvest to CWD pool (gC/m3/s)
    real(r8), pointer :: hrv_deadcrootc_storage_to_litter(:)
    real(r8), pointer :: hrv_deadcrootc_to_litter(:)
    real(r8), pointer :: hrv_deadcrootc_xfer_to_litter(:)
@@ -457,29 +371,10 @@ subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isot
    end select
 
     ! assign local pointers at the column level    ! assign local pointers at the column level
-    hrv_deadcrootc_storage_to_litr_met_c => ccisof%hrv_deadcrootc_storage_to_litr_met_c
-    hrv_deadcrootc_to_cwdc               => ccisof%hrv_deadcrootc_to_cwdc
-    hrv_deadcrootc_xfer_to_litr_met_c    => ccisof%hrv_deadcrootc_xfer_to_litr_met_c
-    hrv_deadstemc_storage_to_litr_met_c  => ccisof%hrv_deadstemc_storage_to_litr_met_c
-    hrv_deadstemc_xfer_to_litr_met_c     => ccisof%hrv_deadstemc_xfer_to_litr_met_c
-    hrv_frootc_storage_to_litr_met_c     => ccisof%hrv_frootc_storage_to_litr_met_c
-    hrv_frootc_to_litr_met_c             => ccisof%hrv_frootc_to_litr_met_c
-    hrv_frootc_to_litr_cel_c             => ccisof%hrv_frootc_to_litr_cel_c
-    hrv_frootc_to_litr_lig_c             => ccisof%hrv_frootc_to_litr_lig_c
-    hrv_frootc_xfer_to_litr_met_c        => ccisof%hrv_frootc_xfer_to_litr_met_c
-    hrv_gresp_storage_to_litr_met_c      => ccisof%hrv_gresp_storage_to_litr_met_c
-    hrv_gresp_xfer_to_litr_met_c         => ccisof%hrv_gresp_xfer_to_litr_met_c
-    hrv_leafc_storage_to_litr_met_c      => ccisof%hrv_leafc_storage_to_litr_met_c
-    hrv_leafc_to_litr_met_c              => ccisof%hrv_leafc_to_litr_met_c
-    hrv_leafc_to_litr_cel_c              => ccisof%hrv_leafc_to_litr_cel_c
-    hrv_leafc_to_litr_lig_c              => ccisof%hrv_leafc_to_litr_lig_c
-    hrv_leafc_xfer_to_litr_met_c         => ccisof%hrv_leafc_xfer_to_litr_met_c
-    hrv_livecrootc_storage_to_litr_met_c => ccisof%hrv_livecrootc_storage_to_litr_met_c
-    hrv_livecrootc_to_cwdc               => ccisof%hrv_livecrootc_to_cwdc
-    hrv_livecrootc_xfer_to_litr_met_c    => ccisof%hrv_livecrootc_xfer_to_litr_met_c
-    hrv_livestemc_storage_to_litr_met_c  => ccisof%hrv_livestemc_storage_to_litr_met_c
-    hrv_livestemc_to_cwdc                => ccisof%hrv_livestemc_to_cwdc
-    hrv_livestemc_xfer_to_litr_met_c     => ccisof%hrv_livestemc_xfer_to_litr_met_c
+    harvest_c_to_litr_met_c          => ccisof%harvest_c_to_litr_met_c
+    harvest_c_to_litr_cel_c          => ccisof%harvest_c_to_litr_cel_c
+    harvest_c_to_litr_lig_c          => ccisof%harvest_c_to_litr_lig_c
+    harvest_c_to_cwdc                => ccisof%harvest_c_to_cwdc
     decomp_cpools_vr                     => ccisos%decomp_cpools_vr
 
     ! assign local pointers at the pft level
@@ -536,40 +431,13 @@ subroutine CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp, isot
        do fc = 1,num_soilc
           c = filter_soilc(fc)
 
-          ! leaf to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_leafc_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + hrv_leafc_to_litr_cel_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + hrv_leafc_to_litr_lig_c(c,j) * dt
-          
-          ! fine root to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_frootc_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + hrv_frootc_to_litr_cel_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + hrv_frootc_to_litr_lig_c(c,j) * dt
-          
-          ! wood to CWD
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + hrv_livestemc_to_cwdc(c,j)  * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + hrv_livecrootc_to_cwdc(c,j) * dt
-          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + hrv_deadcrootc_to_cwdc(c,j) * dt
-          
+          ! column harvest fluxes
+          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + harvest_c_to_litr_met_c(c,j) * dt
+          decomp_cpools_vr(c,j,i_cel_lit) = decomp_cpools_vr(c,j,i_cel_lit) + harvest_c_to_litr_cel_c(c,j) * dt
+          decomp_cpools_vr(c,j,i_lig_lit) = decomp_cpools_vr(c,j,i_lig_lit) + harvest_c_to_litr_lig_c(c,j) * dt
+          decomp_cpools_vr(c,j,i_cwd) = decomp_cpools_vr(c,j,i_cwd) + harvest_c_to_cwdc(c,j)  * dt
+
           ! wood to product pools - states updated in CNWoodProducts()
-          
-          ! storage pools to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_leafc_storage_to_litr_met_c(c,j)      * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_frootc_storage_to_litr_met_c(c,j)     * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_livestemc_storage_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_deadstemc_storage_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_livecrootc_storage_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_deadcrootc_storage_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_gresp_storage_to_litr_met_c(c,j)      * dt
-          
-          ! transfer pools to litter
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_leafc_xfer_to_litr_met_c(c,j)      * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_frootc_xfer_to_litr_met_c(c,j)     * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_livestemc_xfer_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_deadstemc_xfer_to_litr_met_c(c,j)  * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_livecrootc_xfer_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_deadcrootc_xfer_to_litr_met_c(c,j) * dt
-          decomp_cpools_vr(c,j,i_met_lit) = decomp_cpools_vr(c,j,i_met_lit) + hrv_gresp_xfer_to_litr_met_c(c,j)      * dt
        end do
     end do
     
