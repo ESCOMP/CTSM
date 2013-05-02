@@ -1,4 +1,150 @@
 ===============================================================
+Tag name:  clm4_5_00
+Originator(s):  erik (Erik Kluzek)
+Date: Thu May  2 00:20:17 MDT 2013
+One-line Summary: Official end to CLM4.5 development for CLM offline
+
+Purpose of changes: Changes from clm4_0_54 to now...
+
+Compsets and Scripts Changes:
+
+Remove ability to set compset file on command line, and use a new expanded compset file definition that
+allows user to create many compsets on the fly by defining a long name with the "-user_compset" option
+to "create_newcase". "-user_compset" is in the form of...
+
+TIME_DATM[%phys]_CLM[40|45][%phys]_SICE_SOCN_RTM[%phys]_GLC[%phys]_SWAV[_BGC%phys]
+
+Where
+   TIME = Time period (e.g. 2000, 20TR, RCP8...)
+   GLC  = [CISM1, SGLC]
+   BGC  = optional BGC scenario
+The OPTIONAL %phys attributes specify submodes of the given system
+
+So for example 
+
+./create_newcase -user_compset 1850_DATM%CRU_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV -case cru1850 -res f19_g16 -mach yellowstone -compiler intel
+
+will setup a 1850 case at f19 resolution with CRUNCEP forcing with CLM4.5-BGC.
+
+Changes for both clm4.0 and clm4.5:
+
+* Bug fixes in MEGAN VOC emission fluxes and dry deposition velocities
+* CRUNCEP is now an option for atmospheric forcing
+* Change from Sam Levis for CROP to pft-physiology file so that CROP parameter is in Kelvin rather than Celsius.
+* Don't re-weight pftdyn if weights are essentially identical.
+
+CLM4.5 includes the following:
+
+* Bring in flood capability to RTM.
+* Bring LBNL-merge branch on with: vertical soil, Methane, CENTURY, split nitrification, new-lake model.
+* Modifications to GPP, on gppdev branch, multilayer canopy and then single-layer version that reproduces it.
+* Crop model updates. Irrigation included with crop model as an option. Fix CNDV-CROP.
+* Urban model updates, multi-density, urban depth seperate from soil depth, wasteheat to zero.
+* Bring in permafrostsims09 branch with Sean Swensons's flooding changes.
+* Update pft-physiology file, change some CN defaults, change min flow slightly in RTM.
+* Set ponding to zero, acclimation mods from Keith Oleson, a hydrology change from Sean Swenson.
+* Add active flags, change subgrid weighting convention.
+* Turn off subgrid topography snow parameterization for glc_mec landunits.
+* Jinyun photosynthesis change impacting arid regions.
+* Keith Oleson's photosynthesis change, changes canopy top: triose phosphate util. rate to be dependent on vcmax.
+* VIC hydrology is an option.
+* Update mksurfdata_map for CLM4.5 (also add support for glc_nec=36 although we have no datasets for this).
+* Snow depth averaged over grid-cell (SNOWDP) on history file changed in favor of SNOW_DEPTH (averaged only over snow covered area).
+* Spinup changes from Charlie Koven from build-time to run-time (spinup now option added to CLM_BLDNML_OPTS as "-spinup on|off").
+* Bring the F. Li and S. Levis Fire model for CLMCN and CLMBGC based on Li et al. (2012a,b; 2013).
+* BSW calculation changed affecting drought phenology and frozen temperature sensitivity (SP, CN, and BGC as well as DV)
+
+Test level of tag: doc
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system:
+   Changes to CLM configure:
+     -phys option to specify clm4_0 or clm4_5
+     -pergro and -c13 option removed 
+     -spinup option removed for CLM4_0
+     New options for clm4_5: -clm4me, -vichydro, -exlaklayers, -vsoilc_centbgc
+
+Describe any changes made to the namelist:
+   For CLM4.0: WRF and 360x720cru resolutions added
+   For CLM4.5: new namelists: popd_streams light_streams clm_hydrology1_inparm clm_soilhydrology_inparm
+               irrigate is a namelist option rather than using different surface datasets
+       New namelist items for clm_inparm:
+           anoxia			no_frozen_nitrif_denitrif
+           atm_c14_filename		override_bgc_restart_mismatch_dump
+           cryoturb_diffusion_k		perchroot
+           decomp_depth_efolding	perchroot_altk
+           deepmixing_depthcrit		pftspecific_rootingprofile
+           deepmixing_mixfact		rootprof_exp
+           exponential_rooting_profile	rootprof_exp
+           froz_q10			som_adv_flux
+           hist_wrtch4diag		som_diffus
+           lake_melt_icealb		spinup_state
+           max_altdepth_cryoturbation	surfprof_exp
+           max_depth_cryoturb		use_c13
+           more_vertlayers		use_c14
+           nfix_timeconst		use_c14_bombspike
+
+
+List any changes to the defaults for the boundary datasets: 
+   All CLM4.5 datasets are new.
+   For CLM4.0, new ne120, ne240, and 360x720cru surface datasets (ne120 ne120 finidat files)
+   new pft-physiology file
+
+New history fields:
+  Dozens of new fields for clm4_5.
+  Three new fields for clm4_0:
++ <field name='QICE_FORC' units='mm/s' long_name='qice forcing sent to GLC'
++ <field name='TSRF_FORC' units='K'    long_name='surface temperature sent to GLC'
++ <field name='TOPO_FORC' units='m'    long_name='topographic height sent to GLC'
+
+List any svn externals directories updated (csm_share, mct, etc.):
+ Most of the externals are the same as in the cesm1_2_alpha08a tag:
+
+   scripts     to scripts4_130422  (same as in cesm1_2_alpha07a)
+   Machines    to Machines_130412  (same as in cesm1_2_beta06)
+   datm        to datm8_130424
+   stubs       to stubs1_4_02
+   rtm         to rtm1_0_22
+   cism        to cism1_130405      (same as in cesm1_2_beta06)
+   csm_share   to share3_130226     (same as in cesm1_2_beta06)
+   esmf_wrf    to esmf_wrf_timemgr_130213
+   timing      to timing_130214     (same as in cesm1_2_beta06)
+   MCT         to MCT_2.8.3
+   pio         to pio_1_6_7         (older than in cesm1_2_alpha07b)
+   cprnc       to cprnc_130411      (same as cesm1_2_beta07)
+   mapping     to mapping_130403    (same as in cesm1_2_beta06)
+
+CLM tag used for the baseline comparison tests if applicable: clm4_0_54 (in cesm1_1_1)
+
+Changes answers relative to baseline:  Yes
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change CLM4.0 are similar climate, CLM4.5 is of course new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+
+     /glade/scratch/erik/archive/clm4079_NewFire10f19_CRU_20TR_CN4Me
+
+===============================================================
+===============================================================
 Tag name:  clm4_0_81
 Originator(s):  bandre (Benjamin Andre)
 Date: Mon Apr 29 12:12:42 MDT 2013

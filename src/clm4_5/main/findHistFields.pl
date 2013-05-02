@@ -35,7 +35,7 @@ if ($ProgDir) {
 }
 # The namelist definition file contains entries for all namelist variables that
 # can be output by build-namelist.
-my $nl_definition_file = "$cfgdir/../../bld/namelist_files/namelist_definition.xml";
+my $nl_definition_file = "$cfgdir/../../../bld/namelist_files/namelist_definition_clm4_5.xml";
 (-f "$nl_definition_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
 EOF
@@ -45,7 +45,7 @@ print "Using namelist definition file $nl_definition_file\n";
 # megan compounds
 
 #The root directory to cesm utils Tools
-my $cesm_tools = "$cfgdir/../../../../../scripts/ccsm_utils/Tools";
+my $cesm_tools = "$cfgdir/../../../../../../scripts/ccsm_utils/Tools";
 
 (-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
@@ -244,7 +244,7 @@ foreach my $filename ( @filenames ) {
             foreach my $megcmpd ( @megcmpds ) {
                my $name = "MEG_${megcmpd}";
                &setField( $name, $longn, $units );
-               printf( $outfh $format, $name, $units, $longn );
+               printf( <STDERR>, $format, $name, $units, $longn );
             }
          }
       }
@@ -480,9 +480,10 @@ $rcvr\n";
 # List the fields in a neatly ordered list
 # And Output to an XML file
 #
-my $outfilename = "$pwd/../../bld/namelist_files/history_fields.xml";
+my $outfilename = "$pwd/../../../bld/namelist_files/history_fields_clm4_5.xml";
 
 my $outfh = IO::File->new($outfilename, '>') or die "** $ProgName - can't open output history Fields XML file: $outfilename\n";
+foreach my $filename ( @filenames ) {
 &XML_Header( $outfh, $outfilename, $filename );
 foreach my $name ( sort(keys(%fields)) ) {
    my $len;
@@ -494,6 +495,7 @@ foreach my $name ( sort(keys(%fields)) ) {
    printf( "%-${len}s = %s\n", $name, $fields{$name}{'field'} );
    printf( $outfh "\n<field name='%s' units='%s'\n long_name='%s'\n/>\n", 
            $name, $fields{$name}{'units'}, $fields{$name}{'longn'} );
+}
 }
 
 &XML_Footer( $outfh );

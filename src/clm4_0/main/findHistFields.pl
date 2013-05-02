@@ -35,7 +35,7 @@ if ($ProgDir) {
 }
 # The namelist definition file contains entries for all namelist variables that
 # can be output by build-namelist.
-my $nl_definition_file = "$cfgdir/../../bld/namelist_files/namelist_definition.xml";
+my $nl_definition_file = "$cfgdir/../../../bld/namelist_files/namelist_definition_clm4_0.xml";
 (-f "$nl_definition_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
 EOF
@@ -45,7 +45,7 @@ print "Using namelist definition file $nl_definition_file\n";
 # megan compounds
 
 #The root directory to cesm utils Tools
-my $cesm_tools = "$cfgdir/../../../../../scripts/ccsm_utils/Tools";
+my $cesm_tools = "$cfgdir/../../../../../../scripts/ccsm_utils/Tools";
 
 (-f "$cesm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
@@ -219,7 +219,7 @@ my @megcmpds =  $definition->get_valid_values( "megan_cmpds", 'noquotes'=>1 );
 # Read in the list of fields from the source file
 # And output to an XML file
 #
-my $outfilename = "$pwd/../../bld/namelist_files/history_fields.xml";
+my $outfilename = "$pwd/../../../bld/namelist_files/history_fields_clm4_0.xml";
 
 my $outfh = IO::File->new($outfilename, '>') or die "** $ProgName - can't open output history Fields XML file: $outfilename\n";
 &XML_Header( $outfh, $outfilename, $filename );
