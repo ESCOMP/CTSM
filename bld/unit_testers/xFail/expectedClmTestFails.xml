@@ -7,71 +7,53 @@
             <compare>
                <entry testId="211" failType="xFail"> missing datasets for us20 </entry>
                <entry testId="291" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="298" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="301" failType="xFail"> ne120 transient problem?</entry>
-               <entry testId="303" failType="xFail"> ne120 transient problem?</entry>
-               <entry testId="313" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
-               <!-- 418, 423, 428, 433, 438, 443 FAIL in clm4_0_80 compared to clm4_0_79, because of new namelists -->
             </compare>
             <generate>
-               <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
-               <entry testId="189" failType="xFail"> ne60 missing finidat file for 1850</entry>
-               <entry testId="192" failType="xFail"> ne120 problem</entry>
-               <entry testId="198" failType="xFail"> 1x1_tropicAtl missing finidat file for 1850</entry>
             </generate>
          </INTEL>
       </yellowstone>
+      <frankfurt>
+         <INTEL>
+            <compare>
+               <entry testId="211" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="291" failType="xFail"> ne16 missing finidat file for 1850</entry>
+            </compare>
+            <generate>
+            </generate>
+         </INTEL>
+      </frankfurt>
    </namelistTest>
 
    <cesm> 
       <auxTests>
          <yellowstone>
             <INTEL>
-               <entry testId="PET_PT.f19_g16.I1850CLM45CN"                     failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="SMS.1x1_mexicocityMEX.I1PTCLM45"                 failType="FAIL">missing dataset</entry>
-               <entry testId="ERB.ne30_g16.I_1948-2004"                        failType="FAIL"></entry>
-               <entry testId="SMS_D.f10_f10.ICLM45CN4Me.nldir_anoxia_wtsat"    failType="FAIL">Floating point exception</entry>
-               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN"                  failType="RUN"  >Soil balance error on restart</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"                     failType="TFAIL">scripts issue component not threaded</entry>
-               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP.nldir_crop"   failType="FAIL"></entry>
-               <entry testId="ERS_Lm3.1x1_vancouverCAN.I1PTCLM45"              failType="RUN">Missing dataset</entry>
-               <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"              failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
-               <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                  failType="FAIL">restart difference due to RTM coupler freq. error.</entry>
-               <entry testId="ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set2_ciso"   failType="CFAIL">test needs to be updated to remove shape_fluxprof from namelist</entry>
+               <entry testId="ERB.ne30_g16.I_1948-2004"                         failType="FAIL"></entry>
+               <entry testId="ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set2_ciso"    failType="CFAIL">test needs to be updated to remove shape_fluxprof from namelist</entry>
                <entry testId="ERS_D.f10_f10.ICLM45CN4Me.nldir_ch4_set3_pftroot" failType="CFAIL">test needs to be updated to remove shape_fluxprof from namelist</entry>
-               <entry testId="PET_D_P1x30.ne30_g16.ICN"                        failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
-               <entry testId="SMS_RLA.f45_f45.I"                               failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
-               <entry testId="SMS_RLA.f45_f45.ICLM45"                          failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
-               <entry testId="SMS_ROA.f45_f45.I"                               failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
-               <entry testId="SMS_ROA.f45_f45.ICLM45"                          failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
+               <entry testId="ERS_D.f10_f10.ICLM45CN4MeNoVS.nldir_rootlit"      failType="SFAIL">Could not find definition for part NoVS of compset name at ... create_newcase</entry>
+               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP.nldir_crop"    failType="FAIL"></entry>
+               <entry testId="ERS_Lm3.1x1_vancouverCAN.I1PTCLM45"               failType="RUN">Missing dataset</entry>
+               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN"                   failType="RUN"  >Soil balance error on restart</entry>
+               <entry testId="ERS_Ly5.f10_f10.I20TRCLM45CN4Me.nldir_monthly_noinitial" failType="SFAIL">set_compset: no match for compset I20TRCLM45CN4Me</entry>
+               <entry testId="PET_PT.f19_g16.I1850CLM45CN"                      failType="TFAIL">scripts issue with ocean not threaded</entry>
+               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"                      failType="TFAIL">scripts issue component not threaded</entry>
+               <entry testId="SMS.1x1_mexicocityMEX.I1PTCLM45"                  failType="FAIL">missing dataset</entry>
             </INTEL>
             <PGI>
-               <entry testId="SMS.1x1_mexicocityMEX.I1PTCLM45"                   failType="FAIL" >missing datasets</entry>
-               <entry testId="ERS_Lm3.1x1_vancouverCAN.I1PTCLM45"                failType="FAIL" >missing datasets</entry>
-               <entry testId="ERS_D.f10_f10.ICLM45CN4MeNoVS.nldir_rootlit"       failType="RUN"  >subscript bounds issue</entry>
-               <entry testId="CME.f10_f10.ICN"                                   failType="PEND" >Machines tag missing ESMF_LIBDIR</entry>
-               <entry testId="ERS_D_E.f19_g16.I1850CLM45CN4Me.nldir_rtmOnIceOff" failType="CFAIL" >Machines tag missing ESMF_LIBDIR</entry>
-               <entry testId="ERS_E.f19_g16.I1850"                               failType="CFAIL" >Machines tag missing ESMF_LIBDIR</entry>
-               <entry testId="ERS_E.f19_g16.I1850CRUCLM45CN"                     failType="CFAIL" >Machines tag missing ESMF_LIBDIR</entry>
-               <entry testId="ERS_Ln48_D_P64x1.ne30_g16.ICLM45CN"                failType="FAIL" >restart difference due to RTM coupler freq. error</entry>
-               <entry testId="ERS_Ln48_D_P64x16.ne30_g16.ICN"                    failType="FAIL" >restart difference due to RTM coupler freq. error</entry>
-               <entry testId="PET_D_P1x30.ne30_g16.ICN"                          failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="PET_PT.f19_g16.ICLM451850"                         failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="PET_PT.f10_f10.I20TRCLM45CN"                       failType="TFAIL">scripts issue with ocean not threaded</entry>
-               <entry testId="SMS_RLB.f45_f45.I"                                 failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
-               <entry testId="SMS_RLB.f45_f45.ICLM45"                            failType="FAIL">runtime mpi abort from pio. fixed in pio-1.6.8?</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
             <INTEL>
-               <entry testId="ERS_Ln48_D_P1x1_Mmpi-serial.f10_f10.ICLM45CNCROP" failType="RUN" >restart difference due to RTM coupler freq. error.</entry>
-               <entry testId="ERS_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45"      failType="RUN" >Missing datasets.</entry>
-               <entry testId="SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45"     failType="FAIL">Missing datasets.</entry>
+               <entry testId="SMS_D.1x1_mexicocityMEX.ICLM45"                  failType="FAIL" > ENDRUN:iniTimeConst ERROR: TOPOGRAPHIC SLOPE NOT on surfdata file</entry>
             </INTEL>
+            <NAG>
+               <entry testId="SMS_D_Mmpi-serial.1x1_vancouverCAN.I1PTCLM45"    failType="FAIL" >ENDRUN:iniTimeConst ERROR: TOPOGRAPHIC SLOPE NOT on surfdata file</entry>
+               <entry testId="ERS_Mmpi-serial.1x1_mexicocityMEX.I1PTCLM45"     failType="RUN"  >ENDRUN:iniTimeConst ERROR: TOPOGRAPHIC SLOPE NOT on surfdata file</entry>
+            </NAG>
             <PGI>
-               <entry testId="ERS_Lm3.1x1_smallvilleIA.ICLM45CN"                failType="SFAIL" >Missing datasets</entry>
-               <entry testId="SMS_D.1x1_vancouverCAN.ICLM45"                    failType="GEN"   >Missing datasets</entry>
+               <entry testId="ERS_Lm3.1x1_smallvilleIA.ICLM45CN"               failType="SFAIL" >Missing datasets</entry>
+               <entry testId="SMS_D.1x1_vancouverCAN.ICLM45"                   failType="GEN"   >Missing datasets</entry>
             </PGI>
          </frankfurt>
       </auxTests>
