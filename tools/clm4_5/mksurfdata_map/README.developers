@@ -143,10 +143,10 @@ laid out here.
   bld/namelist_files/checkmapfiles.ncl
 
 - Add the new grid-landmask combo to the 'grids' list in
-  tools/clm4_5/mkmapdata/mkmapdata.sh (in the clm4_5 branch of the
+  tools/shared/mkmapdata/mkmapdata.sh (in the clm4_5 branch of the
   conditional)
 
-- Make mapping files, from tools/clm4_5/mkmapdata
+- Make mapping files, from tools/shared/mkmapdata
     - Modify mkmapdata.sh:
         - edit the grids list so it only contains your new grid
     - Modify regridbatch.sh as desired, e.g.:
@@ -161,14 +161,14 @@ laid out here.
     - Submit regridbatch.sh
 
 - When mapping files have all been created, run createXMLEntries.pl from
-  tools/clm4_5/mkmapdata (usage: just run the script with no arguments)
+  tools/shared/mkmapdata (usage: just run the script with no arguments)
 
 - Cut and paste the xml entries from mapping_entries.txt (created by
   createXMLEntries.pl) into bld/namelist_files/namelist_defaults_clm4_5.xml,
   in the correct locations
 
 - Move mapping files to correct location, either using mv_cmds.sh created by
-  createXMLEntries.pl, or using tools/clm4_5/mkmapdata/mvNimport.sh. 
+  createXMLEntries.pl, or using tools/shared/mkmapdata/mvNimport.sh. 
     - Note that the latter also imports to the inputdata directory; if you
       don't use that, you'll need to add the files to the inputdata
       directory yourself

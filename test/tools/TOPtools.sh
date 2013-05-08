@@ -88,7 +88,7 @@ do
   files_to_compare=`cd $rundir/$threads; ls *.nc`
   for compare_file in ${files_to_compare}; do
 
-      env CPRNC_EXE=${CLM_SCRIPTDIR}/../../tools/clm4_5/ncl_scripts/cprnc.pl \
+      env CPRNC_EXE=${CLM_SCRIPTDIR}/../../tools/shared/ncl_scripts/cprnc.pl \
           ${CLM_SCRIPTDIR}/CLM_compare.sh \
           $rundir/$CLM_THREADS/${compare_file} \
           $rundir/$threads/${compare_file}

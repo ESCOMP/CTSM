@@ -204,7 +204,7 @@ sub check_pft {
   my $sumfrc = 0.0;
   for( my $i = 0; $i <= $#pft_idx; $i++ ) {
      # check index in range
-     if ( $pft_idx[$i] < 0 || $pft_idx[$i] > 16 ) {
+     if ( $pft_idx[$i] < 0 || $pft_idx[$i] > $numpft ) {
          die "ERROR: pft_idx out of range = ".$opts{'pft_idx'}."\n";
      }
      # make sure there are no duplicates
@@ -418,7 +418,7 @@ EOF
          $hgrd{$typ} = $hgrid;
          $lmsk{$typ} = $lmask;
 	 if ( $opts{'hgrid'} eq "usrspec" ) {
-	     $map{$typ} = "../../clm4_5/mkmapdata/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
+	     $map{$typ} = "../../shared/mkmapdata/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
 	 } else {
 	     $map{$typ} = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts -namelist clmexp -options frm_hgrid=$hgrid,frm_lmask=$lmask,to_hgrid=$res,to_lmask=nomask -var map`;
 	 }	     

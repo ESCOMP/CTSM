@@ -22,4 +22,4 @@ models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/
 # Mapping tools:
 tools/cprnc                            https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_130425
 tools/mapping                          https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130426a
-models/lnd/clm/tools/clm4_5/gen_domain https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130426a/gen_domain_files
+models/lnd/clm/tools/shared/gen_domain https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_130426a/gen_domain_files

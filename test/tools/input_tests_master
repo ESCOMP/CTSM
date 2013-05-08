@@ -1,15 +1,15 @@
 <id>  <run command>
 
-smc#4 TSMscript_tools.sh clm4_5 mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
-blc#4 TBLscript_tools.sh clm4_5 mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
+smc#4 TSMscript_tools.sh shared mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
+blc#4 TBLscript_tools.sh shared mkprocdata_map mkprocdata_map_wrap mkprocdata_ne30_to_f19_I2000^tools__ds
 
-smd54 TSMtools.sh clm4_5 mkmapgrids   tools__ds namelist
-bld54 TBLtools.sh clm4_5 mkmapgrids   tools__ds namelist
+smd54 TSMtools.sh shared mkmapgrids   tools__ds namelist
+bld54 TBLtools.sh shared mkmapgrids   tools__ds namelist
 
-sme14 TSMCFGtools.sh clm4_5 gen_domain   CFGtools__ds T31.runoptions
-ble14 TBLCFGtools.sh clm4_5 gen_domain   CFGtools__ds T31.runoptions
-sme@4 TSMCFGtools.sh clm4_5 gen_domain   CFGtools__ds ne30.runoptions
-ble@4 TBLCFGtools.sh clm4_5 gen_domain   CFGtools__ds ne30.runoptions
+sme14 TSMCFGtools.sh shared gen_domain   CFGtools__ds T31.runoptions
+ble14 TBLCFGtools.sh shared gen_domain   CFGtools__ds T31.runoptions
+sme@4 TSMCFGtools.sh shared gen_domain   CFGtools__ds ne30.runoptions
+ble@4 TBLCFGtools.sh shared gen_domain   CFGtools__ds ne30.runoptions
 
 sm754 TSMtools.sh clm4_0 mksurfdata_map   tools__s  namelist
 bl754 TBLtools.sh clm4_0 mksurfdata_map   tools__s  namelist
@@ -75,10 +75,12 @@ bli78 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_brazil_
 smiT4 TSMscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools__ds
 bliT4 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools__ds
 
-smi#2 TSMscript_tools.sh clm4_5 mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
-bli#2 TBLscript_tools.sh clm4_5 mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
-smi59 TSMscript_tools.sh clm4_5 mkmapdata   mkmapdata.sh            mkmapdata_if10
-bli59 TBLscript_tools.sh clm4_5 mkmapdata   mkmapdata.sh            mkmapdata_if10
+sm9#2 TSMscript_tools.sh shared mkmapdata   mkmapdata.sh            mkmapdata_ne30np4_clm4_0
+bl9#2 TBLscript_tools.sh shared mkmapdata   mkmapdata.sh            mkmapdata_ne30np4_clm4_0
+smi#2 TSMscript_tools.sh shared mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
+bli#2 TBLscript_tools.sh shared mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
+smi59 TSMscript_tools.sh shared mkmapdata   mkmapdata.sh            mkmapdata_if10
+bli59 TBLscript_tools.sh shared mkmapdata   mkmapdata.sh            mkmapdata_if10
 
-smiS4 TSMscript_tools.sh clm4_5 ncl_scripts getregional_datasets.pl getregional
-bliS4 TBLscript_tools.sh clm4_5 ncl_scripts getregional_datasets.pl getregional
+smiS4 TSMscript_tools.sh shared ncl_scripts getregional_datasets.pl getregional
+bliS4 TBLscript_tools.sh shared ncl_scripts getregional_datasets.pl getregional

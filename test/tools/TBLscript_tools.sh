@@ -87,7 +87,7 @@ fi
 all_comparisons_good="TRUE"
 for compare_file in ${files_to_compare}; do
 
-    env CPRNC_EXE=${CLM_SCRIPTDIR}/../../tools/clm4_5/ncl_scripts/cprnc.pl \
+    env CPRNC_EXE=${CLM_SCRIPTDIR}/../../tools/shared/ncl_scripts/cprnc.pl \
         ${CLM_SCRIPTDIR}/CLM_compare.sh \
         ${BL_TESTDIR}/TSMscript_tools.$1.$2.$3.$4/${compare_file} \
         ${CLM_TESTDIR}/TSMscript_tools.$1.$2.$3.$4/${compare_file}

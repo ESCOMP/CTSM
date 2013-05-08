@@ -233,8 +233,8 @@ endif
 
 ifeq ($(UNAMES),Linux)
   ifeq ($(USER_FC),$(null))
-    FC    := pgf90
-    FCTYP   := pgf90
+    FC    := ifort
+    FCTYP   := ifort
   else 
   ifeq ($(USER_FC),ftn)
       ifneq ($(USER_FCTYP),$(null))
