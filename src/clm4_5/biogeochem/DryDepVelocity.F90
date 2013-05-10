@@ -433,12 +433,12 @@ CONTAINS
                 end if
              end if
 
+             rs=ri(index_season,wesveg)*crs 
              if(wesveg.eq.7) then ! over water
                 rclx(ispec)=1.e36_r8
                 rsmx(ispec)=1.e36_r8
                 rlux(ispec)=1.e36_r8
              else 
-                rs=ri(index_season,wesveg)*crs 
                 ! ??? fvitt   rs=(fsun(pi)*rssun(pi))+(rssha(pi)*(1.-fsun(pi))) -- made the same as mo_drydep
                 rsmx(ispec) = (dewm*rs*drat(ispec)+rmx) 
              endif

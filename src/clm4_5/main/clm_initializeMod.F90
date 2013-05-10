@@ -277,7 +277,7 @@ contains
     use filterMod       , only : allocFilters
     use reweightMod     , only : reweightWrapup
     use histFldsMod     , only : hist_initFlds
-    use histFileMod     , only : hist_htapes_build
+    use histFileMod     , only : hist_htapes_build, htapes_fieldlist
     use restFileMod     , only : restFile_getfile, &
                                  restFile_open, restFile_close, restFile_read 
     use accFldsMod      , only : initAccFlds, initAccClmtype
@@ -405,6 +405,18 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
+    ! Initialize master history list. 
+    ! ------------------------------------------------------------------------
+    call t_startf('hist_initFlds')
+
+    call hist_initFlds()
+    ! On restart process the history namelist. Later the namelist from the restart file
+    ! will be used. But, this allows some basic checking to make sure you didn't
+    ! try to change the history namelist on restart.
+    if (nsrest == nsrContinue ) call htapes_fieldlist()
+
+    call t_stopf('hist_initFlds')
+    ! ------------------------------------------------------------------------
     ! Initialize time manager
     ! ------------------------------------------------------------------------
 
@@ -526,11 +538,6 @@ contains
     ! ------------------------------------------------------------------------
     ! Initialize history and accumator buffers
     ! ------------------------------------------------------------------------
-
-    call t_startf('init_hist1')
-    ! Initialize master history list. 
-
-    call hist_initFlds()
 
     ! Initialize active history fields. This is only done if not a restart run. 
     ! If a restart run, then this information has already been obtained from the 

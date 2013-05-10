@@ -103,6 +103,7 @@ module histFileMod
   public :: hist_update_hbuf     ! Updates history buffer for all fields and tapes
   public :: hist_htapes_wrapup   ! Write history tape(s)
   public :: hist_restart_ncd     ! Read/write history file restart data
+  public :: htapes_fieldlist     ! Define the contents of each history file based on namelist
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -112,7 +113,6 @@ module histFileMod
   private :: masterlist_make_active    ! Add a field to a history file default "on" list
   private :: masterlist_addfld         ! Add a field to the master field list
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
-  private :: htapes_fieldlist          ! Define the contents of each history file based on namelist
   private :: htape_addfld              ! Add a field to the active list for a history tape
   private :: htape_create              ! Define contents of history file t
   private :: htape_timeconst           ! Write time constant values to history tape
@@ -459,29 +459,6 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    ! Override averaging flag for all fields on a particular tape
-    ! if namelist input so specifies
-
-    do t=1,max_tapes
-       if (hist_avgflag_pertape(t) /= ' ') then
-          call masterlist_change_timeavg (t)
-       end if
-    end do
-
-    fincl(:,1) = hist_fincl1(:)
-    fincl(:,2) = hist_fincl2(:)
-    fincl(:,3) = hist_fincl3(:)
-    fincl(:,4) = hist_fincl4(:)
-    fincl(:,5) = hist_fincl5(:)
-    fincl(:,6) = hist_fincl6(:)
-
-    fexcl(:,1) = hist_fexcl1(:)
-    fexcl(:,2) = hist_fexcl2(:)
-    fexcl(:,3) = hist_fexcl3(:)
-    fexcl(:,4) = hist_fexcl4(:)
-    fexcl(:,5) = hist_fexcl5(:)
-    fexcl(:,6) = hist_fexcl6(:)
-
     ! Define field list information for all history files.
     ! Update ntapes to reflect number of active history files
     ! Note - branch runs can have additional auxiliary history files
@@ -680,6 +657,30 @@ contains
     type (history_entry) :: tmp     ! temporary used for swapping
     character(len=*),parameter :: subname = 'htapes_fieldlist'
 !-----------------------------------------------------------------------
+
+    ! Override averaging flag for all fields on a particular tape
+    ! if namelist input so specifies
+
+    do t=1,max_tapes
+       if (hist_avgflag_pertape(t) /= ' ') then
+          call masterlist_change_timeavg (t)
+       end if
+    end do
+
+    fincl(:,1) = hist_fincl1(:)
+    fincl(:,2) = hist_fincl2(:)
+    fincl(:,3) = hist_fincl3(:)
+    fincl(:,4) = hist_fincl4(:)
+    fincl(:,5) = hist_fincl5(:)
+    fincl(:,6) = hist_fincl6(:)
+
+    fexcl(:,1) = hist_fexcl1(:)
+    fexcl(:,2) = hist_fexcl2(:)
+    fexcl(:,3) = hist_fexcl3(:)
+    fexcl(:,4) = hist_fexcl4(:)
+    fexcl(:,5) = hist_fexcl5(:)
+    fexcl(:,6) = hist_fexcl6(:)
+
 
     ! First ensure contents of fincl and fexcl are valid names
 
@@ -2140,7 +2141,7 @@ contains
     use clm_varcon   , only : zsoi, zlak, secspday
     use domainMod    , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
-    use clm_time_manager, only : get_ref_date
+    use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
 !
 ! !ARGUMENTS:
     implicit none
@@ -2178,6 +2179,8 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
+    character(len=max_namlen):: cal       ! calendar from the time-manager
+    character(len=max_namlen):: caldesc   ! calendar description to put on file
     character(len=256):: str              ! global attribute string
     real(r8), pointer :: histo(:,:)       ! temporary
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
@@ -2234,7 +2237,13 @@ contains
        str = 'days since ' // basedate // " " // basesec
        call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
             long_name='time',units=str) 
-       call ncd_putatt(nfid(t), varid, 'calendar', 'noleap')
+       cal = get_calendar()
+       if (      trim(cal) == NO_LEAP_C   )then
+          caldesc = "noleap"
+       else if ( trim(cal) == GREGORIAN_C )then
+          caldesc = "gregorian"
+       end if
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
 
        dim1id(1) = time_dimid
@@ -3112,11 +3121,12 @@ contains
 ! A new history file is used on a branch run.
 !
 ! !USES:
-    use clm_varctl, only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
-    use fileutils , only : getfil
-    use clmtype   , only : grlnd, nameg, namel, namec, namep
-    use domainMod , only : ldomain
-    use clm_varpar, only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
+    use clm_varctl      , only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
+    use fileutils       , only : getfil
+    use clmtype         , only : grlnd, nameg, namel, namec, namep
+    use domainMod       , only : ldomain
+    use clm_varpar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
+    use clm_time_manager, only : is_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -3177,6 +3187,8 @@ contains
     integer :: status                            ! error status
     integer :: dimid                             ! dimension ID
     integer :: k                                 ! 1d index
+    integer :: ntapes_onfile                     ! number of history tapes on the restart file
+    integer :: nflds_onfile                      ! number of history fields on the restart file
     integer :: t                                 ! tape index
     integer :: f                                 ! field index
     integer :: varid                             ! variable id
@@ -3510,13 +3522,19 @@ contains
     else if (flag == 'read') then
     !================================================
 
-       call ncd_inqdlen(ncid,dimid,ntapes,   name='ntapes')
-       call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
-       call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
-       do t = 1,ntapes
-          call strip_null(locrest(t))
-          call strip_null(locfnh(t))
-       end do
+       call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
+       if ( is_restart() .and. ntapes_onfile /= ntapes )then
+          write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
+          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!, you can NOT change history options on restart!' )
+       end if
+       if ( is_restart() .and. ntapes > 0 )then
+          call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
+          call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
+          do t = 1,ntapes
+             call strip_null(locrest(t))
+             call strip_null(locfnh(t))
+          end do
+       end if
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
        
@@ -3525,181 +3543,188 @@ contains
        
        start(1)=1
 
-       do t = 1,ntapes
+       if ( is_restart() )then
+          do t = 1,ntapes
 
-          call getfil( locrest(t), locfnhr(t), 0 )
-          call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), ncd_nowrite)
+             call getfil( locrest(t), locfnhr(t), 0 )
+             call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), ncd_nowrite)
 
-          if ( t == 1 )then
+             if ( t == 1 )then
 
-             call ncd_inqdlen(ncid_hist(1),dimid,max_nflds,name='max_nflds')
+                call ncd_inqdlen(ncid_hist(1),dimid,max_nflds,name='max_nflds')
+   
+                allocate(itemp2d(max_nflds,ntapes))
+             end if
 
-             allocate(itemp2d(max_nflds,ntapes))
-          end if
+             call ncd_inqvid(ncid_hist(t), 'name',           varid, name_desc)
+             call ncd_inqvid(ncid_hist(t), 'long_name',      varid, longname_desc)
+             call ncd_inqvid(ncid_hist(t), 'units',          varid, units_desc)
+             call ncd_inqvid(ncid_hist(t), 'type1d',         varid, type1d_desc)
+             call ncd_inqvid(ncid_hist(t), 'type1d_out',     varid, type1d_out_desc)
+             call ncd_inqvid(ncid_hist(t), 'type2d',         varid, type2d_desc)
+             call ncd_inqvid(ncid_hist(t), 'avgflag',        varid, avgflag_desc)
+             call ncd_inqvid(ncid_hist(t), 'p2c_scale_type', varid, p2c_scale_type_desc)
+             call ncd_inqvid(ncid_hist(t), 'c2l_scale_type', varid, c2l_scale_type_desc)
+             call ncd_inqvid(ncid_hist(t), 'l2g_scale_type', varid, l2g_scale_type_desc)
 
-          call ncd_inqvid(ncid_hist(t), 'name',           varid, name_desc)
-          call ncd_inqvid(ncid_hist(t), 'long_name',      varid, longname_desc)
-          call ncd_inqvid(ncid_hist(t), 'units',          varid, units_desc)
-          call ncd_inqvid(ncid_hist(t), 'type1d',         varid, type1d_desc)
-          call ncd_inqvid(ncid_hist(t), 'type1d_out',     varid, type1d_out_desc)
-          call ncd_inqvid(ncid_hist(t), 'type2d',         varid, type2d_desc)
-          call ncd_inqvid(ncid_hist(t), 'avgflag',        varid, avgflag_desc)
-          call ncd_inqvid(ncid_hist(t), 'p2c_scale_type', varid, p2c_scale_type_desc)
-          call ncd_inqvid(ncid_hist(t), 'c2l_scale_type', varid, c2l_scale_type_desc)
-          call ncd_inqvid(ncid_hist(t), 'l2g_scale_type', varid, l2g_scale_type_desc)
+             call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='read')
 
-          call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='read')
+             call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='read')
 
-          call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='read')
+             call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t) )
+             if ( nflds_onfile /= tape(t)%nflds )then
+                write(iulog,*) 'nflds = ', tape(t)%nflds, ' nflds_onfile = ', nflds_onfile
+                call endrun( trim(subname)//' ERROR: number of fields different than on restart file!, you can NOT change history options on restart!' )
+             end if
+             call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t) )
+             call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t) )
+             call ncd_io('mfilt',   tape(t)%mfilt, 'read', ncid_hist(t) )
+             call ncd_io('ncprec',  tape(t)%ncprec, 'read', ncid_hist(t) )
+             call ncd_io('begtime', tape(t)%begtime, 'read', ncid_hist(t) )
 
-          call ncd_io('nflds',   tape(t)%nflds, 'read', ncid_hist(t) )
-          call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t) )
-          call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t) )
-          call ncd_io('mfilt',   tape(t)%mfilt, 'read', ncid_hist(t) )
-          call ncd_io('ncprec',  tape(t)%ncprec, 'read', ncid_hist(t) )
-          call ncd_io('begtime', tape(t)%begtime, 'read', ncid_hist(t) )
+             call ncd_io(varname='is_endhist', data=tape(t)%is_endhist, ncid=ncid_hist(t), flag='read')
+             call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t), flag='read')
+             call ncd_io(varname='num2d', data=itemp2d(:,t), ncid=ncid_hist(t), flag='read')
+             do f=1,tape(t)%nflds
+                tape(t)%hlist(f)%field%num2d = itemp2d(f,t)
+             end do
 
-          call ncd_io(varname='is_endhist', data=tape(t)%is_endhist, ncid=ncid_hist(t), flag='read')
-          call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t), flag='read')
-          call ncd_io(varname='num2d', data=itemp2d(:,t), ncid=ncid_hist(t), flag='read')
-          do f=1,tape(t)%nflds
-             tape(t)%hlist(f)%field%num2d = itemp2d(f,t)
-          end do
+             call ncd_io(varname='hpindex', data=itemp2d(:,t), ncid=ncid_hist(t), flag='read')
+             do f=1,tape(t)%nflds
+                tape(t)%hlist(f)%field%hpindex = itemp2d(f,t)
+             end do
 
-          call ncd_io(varname='hpindex', data=itemp2d(:,t), ncid=ncid_hist(t), flag='read')
-          do f=1,tape(t)%nflds
-             tape(t)%hlist(f)%field%hpindex = itemp2d(f,t)
-          end do
+             do f=1,tape(t)%nflds
+                start(2) = f
+                call ncd_io( name_desc,           tape(t)%hlist(f)%field%name,       &
+                             'read', ncid_hist(t), start )
+                call ncd_io( longname_desc,       tape(t)%hlist(f)%field%long_name,  &
+                             'read', ncid_hist(t), start )
+                call ncd_io( units_desc,          tape(t)%hlist(f)%field%units,      &
+                             'read', ncid_hist(t), start )
+                call ncd_io( type1d_desc,         tape(t)%hlist(f)%field%type1d,     &
+                             'read', ncid_hist(t), start )
+                call ncd_io( type1d_out_desc,     tape(t)%hlist(f)%field%type1d_out, &
+                             'read', ncid_hist(t), start )
+                call ncd_io( type2d_desc,         tape(t)%hlist(f)%field%type2d,     &
+                             'read', ncid_hist(t), start )
+                call ncd_io( avgflag_desc,        tape(t)%hlist(f)%avgflag,          &
+                             'read', ncid_hist(t), start )
+                call ncd_io( p2c_scale_type_desc, tape(t)%hlist(f)%field%p2c_scale_type,   &
+                             'read', ncid_hist(t), start )
+                call ncd_io( c2l_scale_type_desc, tape(t)%hlist(f)%field%c2l_scale_type,   &
+                             'read', ncid_hist(t), start )
+                call ncd_io( l2g_scale_type_desc, tape(t)%hlist(f)%field%l2g_scale_type,   &
+                             'read', ncid_hist(t), start )
+                call strip_null(tape(t)%hlist(f)%field%name)
+                call strip_null(tape(t)%hlist(f)%field%long_name)
+                call strip_null(tape(t)%hlist(f)%field%units)
+                call strip_null(tape(t)%hlist(f)%field%type1d)
+                call strip_null(tape(t)%hlist(f)%field%type1d_out)
+                call strip_null(tape(t)%hlist(f)%field%type2d)
+                call strip_null(tape(t)%hlist(f)%field%p2c_scale_type)
+                call strip_null(tape(t)%hlist(f)%field%c2l_scale_type)
+                call strip_null(tape(t)%hlist(f)%field%l2g_scale_type)
+                call strip_null(tape(t)%hlist(f)%avgflag)
 
-          do f=1,tape(t)%nflds
-             start(2) = f
-             call ncd_io( name_desc,           tape(t)%hlist(f)%field%name,       &
-                          'read', ncid_hist(t), start )
-             call ncd_io( longname_desc,       tape(t)%hlist(f)%field%long_name,  &
-                          'read', ncid_hist(t), start )
-             call ncd_io( units_desc,          tape(t)%hlist(f)%field%units,      &
-                          'read', ncid_hist(t), start )
-             call ncd_io( type1d_desc,         tape(t)%hlist(f)%field%type1d,     &
-                          'read', ncid_hist(t), start )
-             call ncd_io( type1d_out_desc,     tape(t)%hlist(f)%field%type1d_out, &
-                          'read', ncid_hist(t), start )
-             call ncd_io( type2d_desc,         tape(t)%hlist(f)%field%type2d,     &
-                          'read', ncid_hist(t), start )
-             call ncd_io( avgflag_desc,        tape(t)%hlist(f)%avgflag,          &
-                          'read', ncid_hist(t), start )
-             call ncd_io( p2c_scale_type_desc, tape(t)%hlist(f)%field%p2c_scale_type,   &
-                          'read', ncid_hist(t), start )
-             call ncd_io( c2l_scale_type_desc, tape(t)%hlist(f)%field%c2l_scale_type,   &
-                          'read', ncid_hist(t), start )
-             call ncd_io( l2g_scale_type_desc, tape(t)%hlist(f)%field%l2g_scale_type,   &
-                          'read', ncid_hist(t), start )
-             call strip_null(tape(t)%hlist(f)%field%name)
-             call strip_null(tape(t)%hlist(f)%field%long_name)
-             call strip_null(tape(t)%hlist(f)%field%units)
-             call strip_null(tape(t)%hlist(f)%field%type1d)
-             call strip_null(tape(t)%hlist(f)%field%type1d_out)
-             call strip_null(tape(t)%hlist(f)%field%type2d)
-             call strip_null(tape(t)%hlist(f)%field%p2c_scale_type)
-             call strip_null(tape(t)%hlist(f)%field%c2l_scale_type)
-             call strip_null(tape(t)%hlist(f)%field%l2g_scale_type)
-             call strip_null(tape(t)%hlist(f)%avgflag)
+                type1d_out = trim(tape(t)%hlist(f)%field%type1d_out)
+                select case (trim(type1d_out))
+                case (grlnd)
+                   num1d_out = numg
+                   beg1d_out = begg
+                   end1d_out = endg
+                case (nameg)
+                   num1d_out = numg
+                   beg1d_out = begg
+                   end1d_out = endg
+                case (namel)
+                   num1d_out = numl
+                   beg1d_out = begl
+                   end1d_out = endl
+                case (namec)
+                   num1d_out = numc
+                   beg1d_out = begc
+                   end1d_out = endc
+                case (namep)
+                   num1d_out = nump
+                   beg1d_out = begp
+                   end1d_out = endp
+                case default
+                   write(iulog,*) trim(subname),' ERROR: read unknown 1d output type=',trim(type1d_out)
+                   call endrun ()
+                end select
 
-             type1d_out = trim(tape(t)%hlist(f)%field%type1d_out)
-             select case (trim(type1d_out))
-             case (grlnd)
-                num1d_out = numg
-                beg1d_out = begg
-                end1d_out = endg
-             case (nameg)
-                num1d_out = numg
-                beg1d_out = begg
-                end1d_out = endg
-             case (namel)
-                num1d_out = numl
-                beg1d_out = begl
-                end1d_out = endl
-             case (namec)
-                num1d_out = numc
-                beg1d_out = begc
-                end1d_out = endc
-             case (namep)
-                num1d_out = nump
-                beg1d_out = begp
-                end1d_out = endp
-             case default
-                write(iulog,*) trim(subname),' ERROR: read unknown 1d output type=',trim(type1d_out)
-                call endrun ()
-             end select
+                tape(t)%hlist(f)%field%num1d_out = num1d_out
+                tape(t)%hlist(f)%field%beg1d_out = beg1d_out
+                tape(t)%hlist(f)%field%end1d_out = end1d_out
 
-             tape(t)%hlist(f)%field%num1d_out = num1d_out
-             tape(t)%hlist(f)%field%beg1d_out = beg1d_out
-             tape(t)%hlist(f)%field%end1d_out = end1d_out
+                num2d  = tape(t)%hlist(f)%field%num2d
+                allocate (tape(t)%hlist(f)%hbuf(beg1d_out:end1d_out,num2d), &
+                          tape(t)%hlist(f)%nacs(beg1d_out:end1d_out,num2d), &
+                          stat=status)
+                if (status /= 0) then
+                   write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
+                   call endrun()
+                endif
+                tape(t)%hlist(f)%hbuf(:,:) = 0._r8
+                tape(t)%hlist(f)%nacs(:,:) = 0
 
-             num2d  = tape(t)%hlist(f)%field%num2d
-             allocate (tape(t)%hlist(f)%hbuf(beg1d_out:end1d_out,num2d), &
-                       tape(t)%hlist(f)%nacs(beg1d_out:end1d_out,num2d), &
-                       stat=status)
-             if (status /= 0) then
-                write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
-                call endrun()
-             endif
-             tape(t)%hlist(f)%hbuf(:,:) = 0._r8
-             tape(t)%hlist(f)%nacs(:,:) = 0
+                type1d = tape(t)%hlist(f)%field%type1d
+                select case (type1d)
+                case (grlnd)
+                   num1d = numg
+                   beg1d = begg
+                   end1d = endg
+                case (nameg)
+                   num1d = numg
+                   beg1d = begg
+                   end1d = endg
+                case (namel)
+                   num1d = numl
+                   beg1d = begl
+                   end1d = endl
+                case (namec)
+                   num1d = numc
+                   beg1d = begc
+                   end1d = endc
+                case (namep)
+                   num1d = nump
+                   beg1d = begp
+                   end1d = endp
+                case default
+                   write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
+                   call endrun ()
+                end select
 
-             type1d = tape(t)%hlist(f)%field%type1d
-             select case (type1d)
-             case (grlnd)
-                num1d = numg
-                beg1d = begg
-                end1d = endg
-             case (nameg)
-                num1d = numg
-                beg1d = begg
-                end1d = endg
-             case (namel)
-                num1d = numl
-                beg1d = begl
-                end1d = endl
-             case (namec)
-                num1d = numc
-                beg1d = begc
-                end1d = endc
-             case (namep)
-                num1d = nump
-                beg1d = begp
-                end1d = endp
-             case default
-                write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
-                call endrun ()
-             end select
+                tape(t)%hlist(f)%field%num1d = num1d
+                tape(t)%hlist(f)%field%beg1d = beg1d
+                tape(t)%hlist(f)%field%end1d = end1d
 
-             tape(t)%hlist(f)%field%num1d = num1d
-             tape(t)%hlist(f)%field%beg1d = beg1d
-             tape(t)%hlist(f)%field%end1d = end1d
+             end do   ! end of flds loop
 
-          end do   ! end of flds loop
+             ! If history file is not full, open it
 
-          ! If history file is not full, open it
+             if (tape(t)%ntimes /= 0) then
+                call ncd_pio_openfile (nfid(t), trim(locfnh(t)), ncd_write)
+             end if
 
-          if (tape(t)%ntimes /= 0) then
-             call ncd_pio_openfile (nfid(t), trim(locfnh(t)), ncd_write)
-          end if
+          end do  ! end of tapes loop
 
-       end do  ! end of tapes loop
+          hist_fincl1(:) = fincl(:,1)
+          hist_fincl2(:) = fincl(:,2)
+          hist_fincl3(:) = fincl(:,3)
+          hist_fincl4(:) = fincl(:,4)
+          hist_fincl5(:) = fincl(:,5)
+          hist_fincl6(:) = fincl(:,6)
 
-       hist_fincl1(:) = fincl(:,1)
-       hist_fincl2(:) = fincl(:,2)
-       hist_fincl3(:) = fincl(:,3)
-       hist_fincl4(:) = fincl(:,4)
-       hist_fincl5(:) = fincl(:,5)
-       hist_fincl6(:) = fincl(:,6)
+          hist_fexcl1(:) = fexcl(:,1)
+          hist_fexcl2(:) = fexcl(:,2)
+          hist_fexcl3(:) = fexcl(:,3)
+          hist_fexcl4(:) = fexcl(:,4)
+          hist_fexcl5(:) = fexcl(:,5)
+          hist_fexcl6(:) = fexcl(:,6)
 
-       hist_fexcl1(:) = fexcl(:,1)
-       hist_fexcl2(:) = fexcl(:,2)
-       hist_fexcl3(:) = fexcl(:,3)
-       hist_fexcl4(:) = fexcl(:,4)
-       hist_fexcl5(:) = fexcl(:,5)
-       hist_fexcl6(:) = fexcl(:,6)
+       end if
        
        if ( allocated(itemp2d) ) deallocate(itemp2d)
 

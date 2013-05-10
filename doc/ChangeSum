@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_03         erik 05/10/2013 Several bug fixes for release, urban and test single point surface datasets
    clm4_5_02        sacks 05/07/2013 make 'shared' tools directory, and other minor tools fixes
    clm4_5_01      muszala 05/06/2013 update externals
    clm4_5_00         erik 05/02/2013 Official end to CLM4.5 development for CLM offline

@@ -23,7 +23,6 @@ module CNrestMod
   public :: CNrest
 
 ! !PUBLIC DATA MEMBERS:
-  logical, public :: bypass_CN_balance_check_on_restart = .false.  ! option to bypass the CN balance check when performing a non-conservative restart
 !
 ! !REVISION HISTORY:
 ! 11/05/03: Module created by Peter Thornton
@@ -3009,7 +3008,6 @@ contains
        if (nstep .ge. 2) then
           call endrun(' CNRest: error in entering/exiting spinup. this should occur only when nstep = 1 ')
        endif
-       bypass_CN_balance_check_on_restart = .true.
        do k = 1, ndecomp_pools
           if ( exit_spinup ) then
              m = decomp_cascade_con%spinup_factor(k)

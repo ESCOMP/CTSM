@@ -665,14 +665,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <!-- =========================================  -->
 
 <nsegspc                   >20</nsegspc>
-<nsegspc hgrid="ne4np4"    >1</nsegspc>
-<nsegspc hgrid="ne16np4"   >1</nsegspc>
-<nsegspc hgrid="ne30np4"   >1</nsegspc>
-<nsegspc hgrid="ne60np4"   >1</nsegspc>
-<nsegspc hgrid="ne120np4"  >1</nsegspc>
-<nsegspc hgrid="ne240np4"  >1</nsegspc>
-<nsegspc hgrid="0.47x0.63" >1</nsegspc>
-<nsegspc hgrid="0.23x0.31" >1</nsegspc>
 
 <!-- =========================================  -->
 <!-- Mapping Data                               -->

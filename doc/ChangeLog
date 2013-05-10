@@ -1,4 +1,128 @@
 ===============================================================
+Tag name:  clm4_5_03
+Originator(s):  erik (Erik Kluzek)
+Date: Fri May 10 17:29:56 MDT 2013
+One-line Summary: Several bug fixes for release, urban and test single point surface datasets
+
+Purpose of changes:
+
+  Some work on IMPORTANT_NOTES file.
+  Fix PTS_MODE restarts from John Truesdale. (implimented, but there are still issues)
+  Fix history change number of tapes on startup issue.
+  Bring in urban single pt surface datasets and single pt test: mexicocityMEX, vancouverCAN , urbanc_alpha, 1x1_tropicAtl, 1x1_smallvilleIA
+  Drydep use before defined problem.
+  Always bypass first two time-steps for CN/BGC.
+  Fix gregorian calendar on history files.
+  Remove two fields on clm45 fpftdata file as per Gordon Bonan.
+  ncd_pio fix from Jim Edwards/Mariana V.
+  set nsegspc=20 for HOMME and high resolution grids.
+  Change documentation on CLM build-namelist -drydep, but keep it default on (will change to off in next tag)
+  Remove a bunch of datm/drv fields in namelist_definition.
+  Fix some issues with Crop and DV that Sam found.
+  Fix a scripts issue with multi-instance.
+  Update RTM (multi-instance fix, allow null grid).
+  Update test list so that CLM45/DV/CROP are exercised.
+  Update scripts/machines tag because of multiple problems.
+
+Requirements for tag: fix bug 1488, 1673, 1677, 1682, 1653, 1689, 1690, 1687, 1688, 1685, 1691
+
+Test level of tag: limited!
+
+Bugs fixed (include bugzilla ID):
+
+                                 1025  (partial -- implement changes from John Truesdale so SCAM can read global IC files)
+                                 1488  (HOMME grids can not use nsegspc=20)
+                                 1653  (Calls to PIO are not properly done)
+                                 1673  (B compset gregorian calendar not reflected in CLM history)
+                                 1677  (Remove bypass_CN_balance_check_on_restart in CLM45)
+                                 1682  (Problem starting up CLM with no history files)
+                                 1685  (use before define issue in DryDeposition)
+                                 1687  (SBN scripts bug)
+                                 1688  (misc. issues with new create_test)
+                                 1689  (CLM45 dgvm does not build)
+                                 1690  (CLM45 CNDV lightning namelist is missing)
+                                 1691  (Scripts issue for multi-instance)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist:
+   Set nsegspc=20 for HOMME and f05/f02 resolutions
+   Set stream_fldfilename_lightng for CLM45/CNDV
+
+List any changes to the defaults for the boundary datasets: New single-point test and urban datasets
+   New surface datsets for: mexicocityMEX, vancouverCAN, urbanc_alpha, 1x1_tropicAtl, 1x1_smallvilleIA
+   New fpftdyn for: 1x1_tropicAtl 1850-2005
+   New pft-physiology file for CLM45 with three fields removed that were NOT being read in (qe25, mp, and resist)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, jedwards/mvertens (fix for bug 1653), jet (fix for bug 1025), slevis (fixes for DV)
+
+List any svn externals directories updated (csm_share, mct, etc.): Machines, scripts, rtm
+   Machines to Machines_130509
+   scripts  to scripts4_130510
+   rtm      to rtm1_0_25
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M  models/lnd/clm/bld/build-namelist ---- Document drydep as if it's off (will actually become off in next tag)
+   M  models/lnd/clm/bld/clm.buildnml.csh -- Multi-instance bug fix.
+
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_0.xml ----- nsegspc for ALL grids is 20
+   M  models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml --- Remove datm/drv namelist crap
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml ----- nsegspc for ALL grids is 20
+            New pft-physiology file, new surface/fpftdyn datasets for single point test and urban
+            Set stream_fldfilename_lightng for CNDV.
+   M  models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml --- Remove datm/drv namelist crap
+
+   M  models/lnd/clm/doc/IMPORTANT_NOTES -- updates
+
+   M  models/lnd/clm/src/util_share/clm_time_manager.F90 - Set parameters for calendar type.
+   M  models/lnd/clm/src/util_share/ncdio_pio.F90 -------- Fix so that type of data output on read is based
+            on the variable type of the data rather than the type of data on the input file. (from mvertens/jedwards)
+
+   M  models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90 ------ Fix so CNDV can build.
+   M  models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90 ------ Remove bypass_CN_balance_check_on_restart
+   M  models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90 - Fix use before define error.
+   M  models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90 ---- On restart set fieldlist and later compare to make sure 
+                                                                not screwed up.
+   M  models/lnd/clm/src/clm4_5/main/histFileMod.F90 ---------- Make htapes_fieldlist public, check calendar for output files, 
+                check that namelist didn't change number of tapes or fields on restart
+   M  models/lnd/clm/src/clm4_5/main/clm_driver.F90 ----------- Remove bypass_CN_balance_check_on_restart, NEVER do balance check
+                on first time-step
+
+   M  models/lnd/clm/src/clm4_0/biogeochem/DryDepVelocity.F90 - Fix use before define error.
+   M  models/lnd/clm/src/clm4_0/main/histFileMod.F90 ---------- Make htapes_fieldlist public, check calendar for output files, 
+                check that namelist didn't change number of tapes or fields on restart
+   M  models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90 ---- On restart set fieldlist and later compare to make sure 
+                                                                not screwed up.
+
+Machines testing ran on:  Limited! (watch out for this tag!)
+
+  I ran preliminary testing, with versions on the cbugfixclm450 ranch. We will fix other issues with the entire
+  package as we find them.
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_02
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_02
 Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
 Date: Tue May  7 21:04:35 MDT 2013

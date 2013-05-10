@@ -59,7 +59,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon           >lnd/clm2/pftdata/pft-physiology.c130424.nc</fpftcon>
+<fpftcon           >lnd/clm2/pftdata/pft-physiology.c130503.nc</fpftcon>
 
 <!-- Initial condition file wtih BGC -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
@@ -114,21 +114,25 @@ lnd/clm2/surfdata_map/surfdata_1.9x2.5_mp24_simyr2000_c130419.nc</fsurdat>
 lnd/clm2/surfdata_map/surfdata_10x15_mp24_simyr2000_c130419.nc</fsurdat>
 <fsurdat hgrid="1x1_numaIA"       sim_year="2000" crop="on" >
 lnd/clm2/surfdata_map/surfdata_1x1_numaIA_mp24_simyr2000_c130419.nc</fsurdat>
+<fsurdat hgrid="1x1_smallvilleIA" sim_year="2000" crop="on" >
+lnd/clm2/surfdata_map/surfdata_1x1_smallvilleIA_mp24_simyr2000_c130508.nc</fsurdat>
 
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" crop="off" >
 lnd/clm2/surfdata_map/surfdata_5x5_amazon_simyr2000_c130419.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" crop="off" >
 lnd/clm2/surfdata_map/surfdata_1x1_brazil_simyr2000_c130419.nc</fsurdat>
+<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" crop="off" >
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr2000_c130509.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" crop="off" >
 lnd/clm2/surfdata_map/surfdata_1x1_camdenNJ_simyr2000_c130419.nc</fsurdat>
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" crop="off" >
-lnd/clm2/surfdata/surfdata_1x1_vancouverCAN_simyr2000_c120626.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_vancouverCAN_simyr2000_c130506.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" crop="off" >
-lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c120626.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_mexicocityMEX_simyr2000_c130506.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" crop="off" >
-lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c120625.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_urbanc_alpha_simyr2000_c130506.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 <fsurdat hgrid="360x720cru"   sim_year="1850" crop="off"                           >
@@ -143,6 +147,9 @@ lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr1850_c130421.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="1850" crop="off" >
 lnd/clm2/surfdata_map/surfdata_10x15_simyr1850_c130422.nc</fsurdat>
 
+<fsurdat hgrid="1x1_tropicAtl" sim_year="1850" crop="off" >
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr1850_c130509.nc</fsurdat>
+
 <fsurdat hgrid="ne30np4"      sim_year="1850" crop="off" >
 lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130415.nc</fsurdat>
 
@@ -156,6 +163,9 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130415.nc</fsurdat>
  crop="off" >lnd/clm2/surfdata_map/surfdata.pftdyn_10x15_hist_simyr1850-2005_c130422.nc</fpftdyn>
 <fpftdyn hgrid="48x96"         sim_year_range="1850-2000"
  crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_48x96_rcp8.5_simyr1850-2100_c130415.nc</fpftdyn>
+
+<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000"
+ crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2100_c130509.nc</fpftdyn>
 
 <fpftdyn hgrid="ne30np4"       sim_year_range="1850-2000" 
  crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp8.5_simyr1850-2100_c130415.nc</fpftdyn>
@@ -316,6 +326,7 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130415.nc</fsurdat>
 <stream_year_last_lightng  bgc="cndv" >0001</stream_year_last_lightng>
 
 <stream_fldfilename_lightng hgrid="94x192"    bgc="cn"   >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_c130327.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="94x192"    bgc="cndv" >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_c130327.nc</stream_fldfilename_lightng>
 
 <lightngmapalgo bgc="cn"                               >bilinear</lightngmapalgo>
 <lightngmapalgo bgc="cndv"                             >bilinear</lightngmapalgo>
@@ -410,13 +421,6 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130415.nc</fsurdat>
 <!-- =========================================  -->
 
 <nsegspc                   >20</nsegspc>
-<nsegspc hgrid="ne4np4"    >1</nsegspc>
-<nsegspc hgrid="ne16np4"   >1</nsegspc>
-<nsegspc hgrid="ne30np4"   >1</nsegspc>
-<nsegspc hgrid="ne60np4"   >1</nsegspc>
-<nsegspc hgrid="ne120np4"  >1</nsegspc>
-<nsegspc hgrid="ne240np4"  >1</nsegspc>
-<nsegspc hgrid="0.23x0.31" >1</nsegspc>
 
 <!-- =========================================  -->
 <!-- Mapping Data                               -->

@@ -1969,7 +1969,6 @@ contains
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids)
-             status = pio_inq_vartype (ncid, vardesc, xtype)
              status = pio_inq_dimname(ncid,dids(ndims),dimname)
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -1980,7 +1979,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  xtype, iodnum)
+                  PIO_INT, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -1995,7 +1994,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc, dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
           ndims_iod = ndims - 1
@@ -2006,7 +2004,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            xtype, iodnum)
+            PIO_INT, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2066,7 +2064,6 @@ contains
     integer           :: status     ! error code  
     integer, pointer :: idata(:)    ! Temporary integer data to send to file
     logical           :: varpresent ! if true, variable is on tape
-    integer           :: xtype      ! netcdf data type
     integer                , pointer  :: compDOF(:)
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
@@ -2103,7 +2100,6 @@ contains
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids)
-             status = pio_inq_vartype (ncid, vardesc, xtype)
              status = pio_inq_dimname(ncid,dids(ndims),dimname)
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -2114,7 +2110,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  xtype, iodnum)
+                  PIO_INT, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2135,7 +2131,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc, dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
           ndims_iod = ndims - 1
@@ -2146,7 +2141,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            xtype, iodnum)
+            PIO_INT, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2215,7 +2210,6 @@ contains
     integer           :: count(3)   ! netcdf count index
     integer           :: status     ! error code  
     logical           :: varpresent ! if true, variable is on tape
-    integer           :: xtype      ! netcdf data type
     integer                , pointer  :: compDOF(:)
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
@@ -2257,7 +2251,6 @@ contains
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid,vardesc, dids)
-             status = pio_inq_vartype(ncid, vardesc, xtype)
              status = pio_inq_dimname(ncid,dids(ndims),dimname)
              if ('time' == trim(dimname)) then
                 ndims_iod = ndims - 1
@@ -2268,7 +2261,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  xtype, iodnum)
+                  PIO_DOUBLE, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2290,7 +2283,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc, dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        status = pio_inq_dimname(ncid,dids(ndims),dimname)
        if ('time' == trim(dimname)) then
           ndims_iod = ndims - 1
@@ -2301,7 +2293,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            xtype, iodnum)
+            PIO_DOUBLE, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2370,7 +2362,6 @@ contains
     integer           :: start(4)   ! netcdf start index
     integer           :: count(4)   ! netcdf count index
     logical           :: varpresent ! if true, variable is on tape
-    integer           :: xtype      ! netcdf data type
     integer           :: lb1,lb2
     integer           :: ub1,ub2
     type(iodesc_plus_type) , pointer  :: iodesc_plus
@@ -2409,7 +2400,6 @@ contains
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids)
-             status = pio_inq_vartype (ncid, vardesc, xtype)
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
@@ -2424,7 +2414,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum)
+                     PIO_INT, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2439,7 +2429,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc , dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
           call endrun()
@@ -2454,7 +2443,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-               xtype, iodnum)
+               PIO_INT, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2513,6 +2502,7 @@ contains
     integer           :: ndims      ! ndims total for var
     integer           :: ndims_iod  ! ndims iodesc for var
     integer           :: varid      ! varid
+    integer           :: dimid      ! dimension id
     integer           :: n          ! index      
     integer           :: dims(4)    ! dim sizes       
     integer           :: dids(4)    ! dim ids
@@ -2520,7 +2510,6 @@ contains
     integer           :: start(4)   ! netcdf start index
     integer           :: count(4)   ! netcdf count index
     logical           :: varpresent ! if true, variable is on tape
-    integer           :: xtype      ! netcdf data type
     integer           :: i,j      
     integer           :: lb1,lb2
     integer           :: ub1,ub2
@@ -2528,6 +2517,7 @@ contains
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
     character(len=*),parameter :: subname='ncd_io_real_var2' ! subroutine name
+    logical           :: found = .false.
 !-----------------------------------------------------------------------
 
     clmlevel = dim1name      
@@ -2560,39 +2550,34 @@ contains
              start(:) = 1
              count(:) = 1
              call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
-             if (trim(clmlevel) == grlnd) then
-                count(3) = size(data,dim=2)
-                if (present(switchdim)) then
-                   itemp    = count(1)
-                   count(1) = count(3)
-                   count(3) = itemp
-                   itemp    = start(1)
-                   start(1) = start(3)
-                   start(3) = itemp
-                end if
                 if (present(nt)) then 
-                   start(4) = nt
-                   count(4) = 1
+                status = pio_inq_varndims(ncid, vardesc, ndims)
+                status = pio_inq_vardimid(ncid,vardesc, dids)
+                do i=1,ndims
+                   status = pio_inq_dimname(ncid, dids(i), dimname)
+                   if ('time' == trim(dimname)) then
+                      start(ndims) = nt
+                      count(ndims) = 1
+                      found=.true.
                 end if
-             else
-                count(2) = size(data,dim=2)
-                if (present(switchdim)) then
-                   itemp    = count(1)
-                   count(1) = count(2)
-                   count(2) = itemp
-                   itemp    = start(1)
-                   start(1) = start(2)
-                   start(2) = itemp
-                end if
-                if (present(nt)) then 
-                   start(3) = nt
-                   count(3) = 1
+                end do
+                if (.not.found) then 
+                   write(iulog,*) trim(subname),' ERROR: time dimension not present for var', varname
+                   call endrun()
                 end if
              end if
+             if (present(switchdim)) then
+                status = pio_get_var(ncid, vardesc, start, count, temp)
+                do j = lb2,ub2
+                   do i = lb1,ub1
+                      data(i,j) = temp(j,i) 
+                   end do
+                end do
+             else
              status = pio_get_var(ncid, vardesc, start, count, data)
+             endif
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
-             status = pio_inq_vartype(ncid, vardesc, xtype)
              status = pio_inq_vardimid(ncid,vardesc, dids)
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
@@ -2609,10 +2594,10 @@ contains
              enddo
              if (present(switchdim)) then
                 call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum, switchdim=.true.)
+                     PIO_DOUBLE, iodnum, switchdim=.true.)
              else
                 call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum)
+                     PIO_DOUBLE, iodnum)
              end if
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
@@ -2646,7 +2631,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc , dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
           call endrun()
@@ -2662,10 +2646,10 @@ contains
        enddo
        if (present(switchdim)) then
           call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-               xtype, iodnum, switchdim=.true.)
+               PIO_DOUBLE, iodnum, switchdim=.true.)
        else
           call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-               xtype, iodnum)
+               PIO_DOUBLE, iodnum)
        end if
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
@@ -2749,7 +2733,6 @@ contains
     integer           :: start(5)   ! netcdf start index
     integer           :: count(5)   ! netcdf count index
     logical           :: varpresent ! if true, variable is on tape
-    integer           :: xtype      ! netcdf data type
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
     character(len=*),parameter :: subname='ncd_io_int_var3' ! subroutine name
@@ -2788,7 +2771,6 @@ contains
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid,vardesc, dids)
-             status = pio_inq_vartype(ncid, vardesc, xtype)
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
@@ -2803,7 +2785,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  xtype, iodnum)
+                  PIO_INT, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2818,7 +2800,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc , dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
           call endrun()
@@ -2833,7 +2814,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            xtype, iodnum)
+            PIO_INT, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2895,7 +2876,6 @@ contains
     integer           :: start(5)   ! netcdf start index
     integer           :: count(5)   ! netcdf count index
     logical           :: varpresent ! if true, variable is on tape
-    integer           :: xtype      ! netcdf data type
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
     character(len=*),parameter :: subname='ncd_io_real_var3' ! subroutine name
@@ -2934,7 +2914,6 @@ contains
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids)
-             status = pio_inq_vartype(ncid, vardesc, xtype)
              status = pio_inq_dimname(ncid, dids(ndims), dimname)
              if (ndims == 0) then
                 write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
@@ -2949,7 +2928,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                  xtype, iodnum)
+                  PIO_DOUBLE, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -2964,7 +2943,6 @@ contains
        call ncd_inqvid(ncid, varname ,varid, vardesc)
        status = pio_inq_varndims(ncid, vardesc, ndims)
        status = pio_inq_vardimid(ncid, vardesc , dids)
-       status = pio_inq_vartype (ncid, vardesc, xtype)
        if (ndims == 0) then
           write(iulog,*) trim(subname),' ERROR: ndims must be greater than 0'
           call endrun()
@@ -2979,7 +2957,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-            xtype, iodnum)
+            PIO_DOUBLE, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
           call pio_setframe(vardesc, int(nt,kind=PIO_Offset))
@@ -3126,12 +3104,11 @@ contains
     integer :: cols(maxpatch)                ! grid cell columns for scam
     integer :: pfts(maxpatch)                ! grid cell pfts for scam
     integer :: landunits(maxpatch)           ! grid cell landunits for scam
-    integer :: cc,i                          ! index variable
+    integer :: cc,i,ii                       ! index variable
     integer :: totpfts                       ! total number of pfts
     integer :: totcols                       ! total number of columns
     integer :: totlandunits                  ! total number of landunits
     integer, allocatable :: dids(:)                       ! dim ids
-    integer :: dimid                         ! netCDF dimension id
     integer :: varid                         ! netCDF variable id
     integer :: status                        ! return code
     integer :: latidx,lonidx                 ! latitude/longitude indices
@@ -3162,13 +3139,24 @@ contains
     end if
      
     call ncd_inqvdims(ncid,ndims,vardesc)
-    if (dim1name == 'column') then
 
-       status = pio_inq_dimid(ncid, 'column', dimid)
-       status = pio_inq_dimlen(ncid, dimid, totcols)
 
-       allocate (cols1dlon(totcols))
-       allocate (cols1dlat(totcols))
+    allocate(dids(ndims))
+    status = pio_inq_vardimid(ncid, vardesc, dids)
+    do i = 1,ndims
+       status = pio_inq_dimname(ncid,dids(i),dimname)
+       dimname=shr_string_toLower(dimname)
+       status = pio_inq_dimlen(ncid,dids(i),dimlen)
+       if ( trim(dimname)=='nj'.or. trim(dimname)=='lat'.or. trim(dimname)=='lsmlat') then
+          start(i)=latidx
+          count(i)=1
+       else if ( trim(dimname)=='ni'.or. trim(dimname)=='lon'.or. trim(dimname)=='lsmlon') then
+          start(i)=lonidx
+          count(i)=1
+       else if ( trim(dimname)=='column') then
+
+          allocate (cols1dlon(dimlen))
+          allocate (cols1dlat(dimlen))
        
        status = pio_inq_varid(ncid, 'cols1d_lon', varid)
        status = pio_get_var(ncid, varid, cols1dlon)
@@ -3177,13 +3165,13 @@ contains
        
        cols(:)     = bigint
        data_offset = bigint
-       i = 1
+          ii = 1
        ndata = 0
-       do cc = 1, totcols
+          do cc = 1, dimlen
           if (cols1dlon(cc) == closelon.and.cols1dlat(cc) == closelat) then
-             cols(i)=cc
-             ndata  =i
-             i=i+1
+                cols(ii)=cc
+                ndata  =ii
+                ii=ii+1
           end if
        end do
        if (ndata == 0) then
@@ -3196,16 +3184,12 @@ contains
        deallocate (cols1dlon)
        deallocate (cols1dlat)
        
-       start(ndims) = data_offset
-       count(ndims) = ndata
+          start(i) = data_offset
+          count(i) = ndata
+       else if ( trim(dimname)=='pft') then
        
-    else if (dim1name == 'pft') then
-       
-       status = pio_inq_dimid(ncid, 'pft', dimid)
-       status = pio_inq_dimlen(ncid, dimid, totpfts)
-
-       allocate (pfts1dlon(totpfts))
-       allocate (pfts1dlat(totpfts))
+          allocate (pfts1dlon(dimlen))
+          allocate (pfts1dlat(dimlen))
 
        status = pio_inq_varid(ncid, 'pfts1d_lon', varid)
        status = pio_get_var(ncid, varid, pfts1dlon)
@@ -3215,13 +3199,13 @@ contains
        
        pfts(:)     = bigint
        data_offset = bigint
-       i     = 1
+          ii     = 1
        ndata = 0
-       do cc = 1, totpfts
+          do cc = 1, dimlen
           if (pfts1dlon(cc) == closelon.and.pfts1dlat(cc) == closelat) then
-             pfts(i)=cc
-             ndata  =i
-             i=i+1
+                pfts(ii)=cc
+                ndata  =ii
+                ii=ii+1
           end if
        end do
        if (ndata == 0) then
@@ -3234,16 +3218,12 @@ contains
        deallocate (pfts1dlon)
        deallocate (pfts1dlat)
        
-       start(ndims) = data_offset
-       count(ndims) = ndata
+          start(i) = data_offset
+          count(i) = ndata
+       else if ( trim(dimname)=='landunit') then
        
-    else if (dim1name == 'landunit') then
-       
-       status = pio_inq_dimid(ncid, 'landunit', dimid)
-       status = pio_inq_dimlen(ncid, dimid, totlandunits)
-
-       allocate (land1dlon(totlandunits))
-       allocate (land1dlat(totlandunits))
+          allocate (land1dlon(dimlen))
+          allocate (land1dlat(dimlen))
 
        status = pio_inq_varid(ncid, 'land1d_lon', varid)
        status = pio_get_var(ncid, varid, land1dlon)
@@ -3253,13 +3233,13 @@ contains
        
        landunits(:) = bigint
        data_offset  = bigint
-       i     = 1
+          ii     = 1
        ndata = 0
-       do cc = 1, totlandunits
+          do cc = 1, dimlen
           if (land1dlon(cc) == closelon.and.land1dlat(cc) == closelat) then
-             landunits(i)=cc
-             ndata  =i
-             i=i+1
+                landunits(ii)=cc
+                ndata  =ii
+                ii=ii+1
           end if
        end do
        if (ndata == 0) then
@@ -3272,30 +3252,14 @@ contains
        deallocate (land1dlon)
        deallocate (land1dlat)
        
-       start(ndims) = data_offset
-       count(ndims) = ndata
-       
-    else
-       status = pio_inq_varndims(ncid, vardesc, ndims)
-       allocate(dids(ndims))
-       status = pio_inq_vardimid(ncid, vardesc, dids)
-       do i = 1,ndims
-          status = pio_inq_dimname(ncid,dids(i),dimname)
-	  dimname=shr_string_toLower(dimname)
-          status = pio_inq_dimlen(ncid,dids(i),dimlen)
-          if ( trim(dimname)=='nj'.or. trim(dimname)=='lat'.or. trim(dimname)=='lsmlat') then
-	     start(i)=latidx
-             count(i)=1
-          else if ( trim(dimname)=='ni'.or. trim(dimname)=='lon'.or. trim(dimname)=='lsmlon') then
-             start(i)=lonidx
-             count(i)=1
+          start(i) = data_offset
+          count(i) = ndata
           else
              start(i)=1
              count(i)=dimlen
           end if
        enddo
        deallocate(dids)
-    endif
 
   end subroutine scam_field_offsets
 

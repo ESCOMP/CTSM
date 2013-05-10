@@ -98,6 +98,7 @@ module histFileMod
   public :: hist_update_hbuf     ! Updates history buffer for all fields and tapes
   public :: hist_htapes_wrapup   ! Write history tape(s)
   public :: hist_restart_ncd     ! Read/write history file restart data
+  public :: htapes_fieldlist     ! Define the contents of each history file based on namelist
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -107,7 +108,6 @@ module histFileMod
   private :: masterlist_make_active    ! Add a field to a history file default "on" list
   private :: masterlist_addfld         ! Add a field to the master field list
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
-  private :: htapes_fieldlist          ! Define the contents of each history file based on namelist
   private :: htape_addfld              ! Add a field to the active list for a history tape
   private :: htape_create              ! Define contents of history file t
   private :: htape_timeconst           ! Write time constant values to history tape
@@ -454,29 +454,6 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    ! Override averaging flag for all fields on a particular tape
-    ! if namelist input so specifies
-
-    do t=1,max_tapes
-       if (hist_avgflag_pertape(t) /= ' ') then
-          call masterlist_change_timeavg (t)
-       end if
-    end do
-
-    fincl(:,1) = hist_fincl1(:)
-    fincl(:,2) = hist_fincl2(:)
-    fincl(:,3) = hist_fincl3(:)
-    fincl(:,4) = hist_fincl4(:)
-    fincl(:,5) = hist_fincl5(:)
-    fincl(:,6) = hist_fincl6(:)
-
-    fexcl(:,1) = hist_fexcl1(:)
-    fexcl(:,2) = hist_fexcl2(:)
-    fexcl(:,3) = hist_fexcl3(:)
-    fexcl(:,4) = hist_fexcl4(:)
-    fexcl(:,5) = hist_fexcl5(:)
-    fexcl(:,6) = hist_fexcl6(:)
-
     ! Define field list information for all history files.
     ! Update ntapes to reflect number of active history files
     ! Note - branch runs can have additional auxiliary history files
@@ -675,6 +652,30 @@ contains
     type (history_entry) :: tmp     ! temporary used for swapping
     character(len=*),parameter :: subname = 'htapes_fieldlist'
 !-----------------------------------------------------------------------
+
+    ! Override averaging flag for all fields on a particular tape
+    ! if namelist input so specifies
+
+    do t=1,max_tapes
+       if (hist_avgflag_pertape(t) /= ' ') then
+          call masterlist_change_timeavg (t)
+       end if
+    end do
+
+    fincl(:,1) = hist_fincl1(:)
+    fincl(:,2) = hist_fincl2(:)
+    fincl(:,3) = hist_fincl3(:)
+    fincl(:,4) = hist_fincl4(:)
+    fincl(:,5) = hist_fincl5(:)
+    fincl(:,6) = hist_fincl6(:)
+
+    fexcl(:,1) = hist_fexcl1(:)
+    fexcl(:,2) = hist_fexcl2(:)
+    fexcl(:,3) = hist_fexcl3(:)
+    fexcl(:,4) = hist_fexcl4(:)
+    fexcl(:,5) = hist_fexcl5(:)
+    fexcl(:,6) = hist_fexcl6(:)
+
 
     ! First ensure contents of fincl and fexcl are valid names
 
@@ -2031,7 +2032,7 @@ contains
     use clm_varcon   , only : zsoi, zlak, secspday
     use domainMod    , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
-    use clm_time_manager, only : get_ref_date
+    use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
 !
 ! !ARGUMENTS:
     implicit none
@@ -2069,6 +2070,8 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
+    character(len=max_namlen):: cal       ! calendar from the time-manager
+    character(len=max_namlen):: caldesc   ! calendar description to put on file
     character(len=256):: str              ! global attribute string
     real(r8), pointer :: histo(:,:)       ! temporary
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
@@ -2115,7 +2118,13 @@ contains
        str = 'days since ' // basedate // " " // basesec
        call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
             long_name='time',units=str) 
-       call ncd_putatt(nfid(t), varid, 'calendar', 'noleap')
+       cal = get_calendar()
+       if (      trim(cal) == NO_LEAP_C   )then
+          caldesc = "noleap"
+       else if ( trim(cal) == GREGORIAN_C )then
+          caldesc = "gregorian"
+       end if
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds')
 
        dim1id(1) = time_dimid
@@ -2973,11 +2982,12 @@ contains
 ! A new history file is used on a branch run.
 !
 ! !USES:
-    use clm_varctl, only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
-    use fileutils , only : getfil
+    use clm_varctl      , only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
+    use fileutils       , only : getfil
     use clmtype 
-    use domainMod , only : ldomain
-    use clm_varpar, only : nlevgrnd, nlevlak, numrad
+    use domainMod       , only : ldomain
+    use clm_varpar      , only : nlevgrnd, nlevlak, numrad
+    use clm_time_manager, only : is_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -3038,6 +3048,8 @@ contains
     integer :: status                            ! error status
     integer :: dimid                             ! dimension ID
     integer :: k                                 ! 1d index
+    integer :: ntapes_onfile                     ! number of history tapes on the restart file
+    integer :: nflds_onfile                      ! number of history fields on the restart file
     integer :: t                                 ! tape index
     integer :: f                                 ! field index
     integer :: varid                             ! variable id
@@ -3371,13 +3383,19 @@ contains
     else if (flag == 'read') then
     !================================================
 
-       call ncd_inqdlen(ncid,dimid,ntapes,   name='ntapes')
-       call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
-       call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
-       do t = 1,ntapes
-          call strip_null(locrest(t))
-          call strip_null(locfnh(t))
-       end do
+       call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
+       if ( is_restart() .and. ntapes_onfile /= ntapes )then
+          write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
+          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!, you can NOT change history options on restart!' )
+       end if
+       if ( is_restart() .and. ntapes > 0 )then
+          call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
+          call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
+          do t = 1,ntapes
+             call strip_null(locrest(t))
+             call strip_null(locfnh(t))
+          end do
+       end if
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
        

@@ -25,7 +25,7 @@ module CNFireMod
   use clm_varctl     , only: iulog
   use clm_varpar     , only: nlevdecomp, ndecomp_pools
   use clm_varcon     , only: dzsoi_decomp
-  use pftvarcon      , only: fsr_pft, fd_pft
+  use pftvarcon      , only: fsr_pft, fd_pft, noveg
   use spmdMod        , only: masterproc, mpicom, comp_id
   use fileutils      , only: getavu, relavu
   use controlMod     , only: NLFilename
@@ -142,7 +142,7 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
    use clm_atmlnd      , only: clm_a2l
    use shr_infnan_mod  , only: shr_infnan_isnan
    use clm_varctl      , only: fpftdyn
-   use pftvarcon       , only: noveg, nc4_grass, nc3crop, ndllf_evr_tmp_tree, &
+   use pftvarcon       , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree, &
                                nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree,      &
                                nbrdlf_evr_shrub
 !  use shr_sys_mod  , only: shr_sys_flush

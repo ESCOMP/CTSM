@@ -1,15 +1,10 @@
-IMPORTANT_NOTES							Nov/07/2012
+IMPORTANT_NOTES							May/07/2013
 								Erik Kluzek
 
+I.) For clm4_0:
+
 Configure Modes NOT scientifically validated, documented, supported or even advised to be used:
-
-   C13 		(-c13) (deprecated)
-       The C13 mode for bgc=cn is NOT scientifically validated or documented and NOT recommended to be used.
-       It will be removed in the next relase. CLM4.5 will have namelist options to activate C13 and/or C14 isotopes
-
-   PERGRO       (-pergro) (deprecated)
-       The perturbation growth mode is no longer supported and will be removed in the next release. CESM
-       has developed a new validation procedure that doesn't rely on this method for CLM.
+(options to CLM_CONFIG_OPTS)
 
    SNICAR_FRC 	(-snicar_frc)
        This mode is tested and functional, but is NOT constantly scientifcally validated, and should be 
@@ -21,6 +16,20 @@ Namelist items that should NOT be exercised:
                          The suplemental Nitrogen mode of the CN model is known 
                          to be too productive.
   urban_traffic:         Not currently functional
+
+II.) For clm4_5:
+
+Configure Modes NOT scientifically validated, documented, supported or even advised to be used:
+(options to CLM_CONFIG_OPTS)
+
+    VIC		      (-vichydro)
+        VIC hydrology has just been added, and this mode is experimental.
+
+    EXTRALAKELAYERS   (-exlaklayers)
+
+    (-vsoilc_centbgc no-cent,no-nitrif) 
+
+Namelist items that should NOT be exercised:
 
 See KnownBugs/KnownLimitations files for Known Problems:
 

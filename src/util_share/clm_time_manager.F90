@@ -47,14 +47,17 @@ module clm_time_manager
       is_restart,               &! return true if this is a restart run
       update_rad_dtime           ! track radiation interval via nstep
 
+! Public parameter data
+   character(len=*), public, parameter :: NO_LEAP_C   = 'NO_LEAP'
+   character(len=*), public, parameter :: GREGORIAN_C = 'GREGORIAN'
+
 ! Private module data
 
 
 ! Private data for input
 
    character(len=ESMF_MAXSTR), save ::&
-      calendar   = 'NO_LEAP'     ! Calendar to use in date calculations.
-                                 ! 'NO_LEAP' or 'GREGORIAN'
+      calendar   = NO_LEAP_C        ! Calendar to use in date calculations.
    integer,  parameter :: uninit_int = -999999999
    real(r8), parameter :: uninit_r8  = -999999999.0
 
@@ -474,9 +477,9 @@ subroutine timemgr_restart_io( ncid, flag )
   else if (flag == 'read' .or. flag == 'write') then
      if (flag== 'write') then
         cal = to_upper(calendar)
-        if ( trim(cal) == 'NO_LEAP' ) then
+        if ( trim(cal) == NO_LEAP_C ) then
            rst_caltype = noleap
-        else if ( trim(cal) == 'GREGORIAN' ) then
+        else if ( trim(cal) == GREGORIAN_C ) then
            rst_caltype = gregorian
         else
            call endrun(sub//'ERROR: unrecognized calendar specified= '//trim(calendar))
@@ -491,9 +494,9 @@ subroutine timemgr_restart_io( ncid, flag )
      end if
      if (flag == 'read') then
         if ( rst_caltype == noleap ) then
-           calendar = 'NO_LEAP'
+           calendar = NO_LEAP_C
         else if ( rst_caltype == gregorian ) then
-           calendar = 'GREGORIAN'
+           calendar = GREGORIAN_C
         else
            write(iulog,*)sub,': unrecognized calendar type in restart file: ',rst_caltype
            call endrun( sub//'ERROR: bad calendar type in restart file')
@@ -781,9 +784,9 @@ subroutine init_calendar( )
   !---------------------------------------------------------------------------------
 
   caltmp = to_upper(calendar)
-  if ( trim(caltmp) == 'NO_LEAP' ) then
+  if ( trim(caltmp) == NO_LEAP_C ) then
      cal_type = ESMF_CALKIND_NOLEAP
-  else if ( trim(caltmp) == 'GREGORIAN' ) then
+  else if ( trim(caltmp) == GREGORIAN_C ) then
      cal_type = ESMF_CALKIND_GREGORIAN
   else
      write(iulog,*)sub,': unrecognized calendar specified: ',calendar
@@ -1320,7 +1323,7 @@ function get_curr_calday(offset)
    !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
-        (trim(calendar) == 'GREGORIAN') )then
+        (trim(calendar) == GREGORIAN_C) )then
        get_curr_calday = get_curr_calday - 1.0_r8
    end if
    !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
@@ -1364,7 +1367,7 @@ function get_calday(ymd, tod)
    !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
-        (trim(calendar) == 'GREGORIAN') )then
+        (trim(calendar) == GREGORIAN_C) )then
        get_calday = get_calday - 1.0_r8
    end if
    !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!

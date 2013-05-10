@@ -66,6 +66,10 @@ OPTIONS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
+     -drydep                  Produce a drydep_inparm namelist that will go into the
+                              "drv_flds_in" file for the driver to pass dry-deposition to the atm.
+                              Default: -no-drydep
+                              (Note: buildnml.csh copies the file for use by the driver)
      -glc_grid "grid"         Glacier model grid and resolution when glacier model, 
                               Only used if glc_nec > 0 for determining fglcmask 
                               Default:  gland5UM
@@ -106,9 +110,6 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -no-drydep               DO NOT PRODUCE a drydep_inparm namelist that will go into the
-                              "drv_flds_in" file for the driver to pass dry-deposition to the atm.
-                              (Note: buildnml.csh copies the file for use by the driver)
      -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
                               "drv_flds_in" file for the driver to pass VOCs to the atm.
                               MEGAN (Model of Emissions of Gases and Aerosols from Nature)
