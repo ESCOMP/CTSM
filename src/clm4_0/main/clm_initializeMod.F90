@@ -494,9 +494,6 @@ contains
     ! ------------------------------------------------------------------------
 
     call t_startf('init_hist1')
-    ! Initialize master history list. 
-
-    call hist_initFlds()
 
     ! Initialize active history fields. This is only done if not a restart run. 
     ! If a restart run, then this information has already been obtained from the 

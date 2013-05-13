@@ -1,4 +1,72 @@
 ===============================================================
+Tag name:  clm4_5_04
+Originator(s):  erik (Erik Kluzek)
+Date: Mon May 13 12:25:14 MDT 2013
+One-line Summary: Fix the previous broken tag
+
+Purpose of changes:
+
+Fix the problems in the clm4_5_03 untested tag.
+
+Requirements for tag: Fix bug 1692, 1693
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+                                 1693 (Misc. issues with clm4_5_03)
+                                 1692 (externals screwed up in clm4_5_03)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): externals updated to those in SVN_EXTERNAL_DIRECTORIES
+
+List all files eliminated:  Remove test/system as replaced by CESM testing
+
+  models/lnd/clm/test/system -- Delete the whole directory tree
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes: 
+
+   M  models/lnd/clm/src/clm4_0/main/clm_initializeMod.F90 -- fixed screwed up code
+
+Machines testing ran on:  (Tests in priority order)
+  Standard Tag Pretag ***                    Standard Tag Posttag **
+
+  build-namelist unit tester:           yes
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       yes
+    yellowstone/aux_clm     pgi         yes
+    frankfurt/aux_clm       intel       yes
+    frankfurt/aux_clm       pgi         yes
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_01
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_03
 Originator(s):  erik (Erik Kluzek)
 Date: Fri May 10 17:29:56 MDT 2013

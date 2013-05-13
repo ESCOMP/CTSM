@@ -56,7 +56,7 @@ OPTIONS
 
      -cfgfile [or -c]     Configure file to query (default is $opts{'config_file'}).
      -help [or -h]        Print usage to STDOUT.
-     -id <variable>       Variable ID to view (default opts{'id'}).
+     -id <variable>       Variable ID to view (default $opts{'id'}).
                           If "-id list" is given will list all attributes.
      -justvalue           Just display the values (NOT key = value).
      -silent [or -s]      Turns on silent mode - only return the value.
@@ -145,10 +145,10 @@ require XML::Lite;
 
 #-----------------------------------------------------------------------------------------------
 # Names for entries in the different files
-my %root  = ( 'config_grid.xml'=>"config_horiz_grid", 'config_compsets.xml'=>"config_compset", 'config_definition.xml'=>"config_definition" );
-my %entry = ( 'config_grid.xml'=>"horiz_grid",        'config_compsets.xml'=>"compset",        'config_definition.xml'=>"entry"             );
-my %lname = ( 'config_grid.xml'=>"GRID",              'config_compsets.xml'=>"NAME",           'config_definition.xml'=>"id"                );
-my %sname = ( 'config_grid.xml'=>"SHORTNAME",         'config_compsets.xml'=>"SHORTNAME",      'config_definition.xml'=>"sdesc"             );
+my %root  = ( 'config_grid.xml'=>"config_compset", 'config_compsets.xml'=>"config_compset", 'config_definition.xml'=>"config_definition" );
+my %entry = ( 'config_grid.xml'=>"GRID",           'config_compsets.xml'=>"COMPSET",        'config_definition.xml'=>"entry"             );
+my %lname = ( 'config_grid.xml'=>"alias",          'config_compsets.xml'=>"alias",          'config_definition.xml'=>"id"                );
+my %sname = ( 'config_grid.xml'=>"sname",          'config_compsets.xml'=>"sname",          'config_definition.xml'=>"sdesc"             );
 
 my $found = 0;
 foreach my $file ( keys(%root) ) {
@@ -184,6 +184,7 @@ while ( my $e = shift @e ) {
     %a = $e->get_attributes();
     if ( ! defined($a{$lname}) ) { next; }
     if ( ! defined($a{$sname}) ) { next; }
+    if ($print>=2) { print "Read entry: $a{$lname} ($a{$sname}) $eol"; }
     if ( ($entry eq $a{$lname}) || ($entry eq $a{$sname})) {
         $found = 1;
         last ELEMENTS;
@@ -192,7 +193,7 @@ while ( my $e = shift @e ) {
 
 # Die unless search was successful.
 unless ($found) {
-   die "ERROR:: no match for $entry{$opts{'config_file'}} entry\n";
+   die "ERROR:: no match for $entry{$opts{'config_file'}} entry $entry\n";
 }
 
 if ( $opts{'id'} eq "list" ) {

@@ -28,13 +28,15 @@
       <auxTests>
          <yellowstone>
             <INTEL>
-               <entry testId="ERB.ne30_g16.I_1948-2004"                         failType="FAIL"></entry>
-               <entry testId="ERS.hcru_hcru.I_2000_CRUFRC_CLM45_CN"             failType="FAIL">PIO issue and restart issue</entry>
-               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP.nldir_crop"    failType="FAIL"></entry>
-               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN"                   failType="RUN"  >Soil balance error on restart</entry>
+               <entry testId="ERB.ne30_g16.I_1948-2004"                                 failType="FAIL" bugz="1658" ></entry>
+               <entry testId="ERS.hcru_hcru.I_2000_CRUFRC_CLM45_CN"                     failType="FAIL"             >PIO issue and restart issue (see muszala)</entry>
+               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP.nldir_crop"            failType="FAIL" bugz="1696" >use before define in history</entry>
+               <entry testId="ERS_Ly5.f10_f10.I20TRCRUCLM45BGC.nldir_monthly_noinitial" failType="FAIL" bugz="1339" ></entry>
+               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN"                           failType="RUN"  bugz="1339" >Soil balance error on restart</entry>
+               <entry testId="SSP.f19_g16.I1850CLM45BGC.nldir_default"                  failType="RUN"  bugz="1694" >SSP test NOT working completely yet</entry>
             </INTEL>
             <PGI>
-               <entry testId="ERS_D.f10_f10.ICLM45CN4MeNoVS"                    failType="RUN"  >Subscript overflow issue</entry>
+               <entry testId="ERS_D.f10_f10.ICLM45CN4MeNoVS"                            failType="RUN"  bugz="1672" >Subscript overflow issue</entry>
             </PGI>
          </yellowstone>
          <frankfurt>
@@ -43,6 +45,7 @@
             <NAG>
             </NAG>
             <PGI>
+               <entry testId="ERI_D.f19_g16.ICLM45"                                     failType="FAIL" bugz="1695" >Fails due to a mpi-init problem</entry>
             </PGI>
          </frankfurt>
       </auxTests>
