@@ -3273,7 +3273,7 @@ contains
 
 
     ! fire-related varibles changed by F. Li and S. Levis
-    cps%nfire(beg:end) = nan
+    cps%nfire(beg:end) = spval
     cps%farea_burned(beg:end) = nan
     cps%btran_col(beg:end) = nan
     cps%wtlf(beg:end) = nan
