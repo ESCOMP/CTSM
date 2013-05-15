@@ -1,11 +1,11 @@
-          Quick-Start to Using cpl7 Scripts for clm4
-          ===========================================
+          Quick-Start to Using cpl7 Scripts for clm4_5
+          ============================================
 
-Assumptions: You want to use bluefire with clm4
+Assumptions: You want to use yellowstone with clm4_5 BGC
              to do a clm simulation with data atmosphere and the
-             latest atm forcing files and settings. You also want to cycle
-             the atm data between 1948 to 2004 and you want to run at
-             1.9x2.5 degree resolution.
+             latest CRUNCEP atm forcing files and settings. You also want to cycle
+             the CRUNCEP atm data between 1950 to 2010 and you want to run at
+             0.9x1.25 degree resolution.
 
 Process:
 
@@ -13,9 +13,8 @@ Process:
 
    cd scripts
 
-   ./create_newcase -case <testcase> -mach bluefire_ibm -res f19_g16 -compset I4804 
+   ./create_newcase -case <testcase> -mach yellowstone_intel -res f09_g16 -compset I4804 
    (./create_newcase -help -- to get help on the script)
-TRUE
 
    # Setup the case
 

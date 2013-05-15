@@ -26,8 +26,13 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
         VIC hydrology has just been added, and this mode is experimental.
 
     EXTRALAKELAYERS   (-exlaklayers)
+        Experimental and not normally exercised.
 
     (-vsoilc_centbgc no-cent,no-nitrif) 
+        CLM4.5 BGC is normally exercised with vertical soil carbon, Century pools, and 
+        Nitrification/Denitrification with the CLM4Me Methane model. Turning Century pools
+        off and/or Nitrification/Denitrification off is experimental and NOT normally exercised.
+        We do limited testing with CLM4.5 BGC without vertically resolved Carbon pools.
 
 Namelist items that should NOT be exercised:
 

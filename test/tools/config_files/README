@@ -1,5 +1,3 @@
-config_CLMtestCompsets.xml ---- compset file for CLM specific testing
-
 _do   => debug on, omp only on
 _ds   => debug on, serial mode (neither mpi nor omp)
 

@@ -919,7 +919,10 @@ Flag for overriding the crash that should occur if user tries to start the model
 
 <entry id="spinup_state" type="integer" category="clm_vertcn"
        group="clm_inparm" valid_values="0,1" >
-Flag for setting the state of the Accelerated decomposition spinup state for the model.  0 = normal model behavior; 1 = AD spinup.  Entering and exiting spinup mode occurs automatically by comparing the namelist and restart file values for this variable.
+Flag for setting the state of the Accelerated decomposition spinup state for the model.  
+   0 = normal model behavior; 
+   1 = AD spinup.  
+Entering and exiting spinup mode occurs automatically by comparing the namelist and restart file values for this variable.
 </entry>
 
 <!-- vertical mixing switches    -->
@@ -963,6 +966,8 @@ If TRUE, reduce heterotrophic respiration according to available oxygen predicte
        group="clm_inparm" valid_values="" >
 If TRUE, weight calculation of oxygen limitation by the inundated fraction and diagnostic saturated column gas
 concentration profile calculated in the CH4 submodel. Only applies if anoxia = TRUE.
+(EXPERIMENTAL AND NOT FUNCTIONAL!)
+(deprecated -- will be removed)
 </entry>
 
 <entry id="froz_q10" type="real" category="clm_vertcn"
@@ -980,6 +985,7 @@ If TRUE, rooting profile depends on specific PFT
 <entry id="exponential_rooting_profile" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If true, use a single exponential function to define the profile for distributing C and N from belowground components (following Jackson et al., 1999). If False, use the default CLM rootfrac double exponential for distributing C and N from belowground components.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="rootprof_exp" type="real" category="clm_vertcn"
@@ -1001,6 +1007,7 @@ Profile over which to distribute C and N coming from surface pools (leaves, stem
 <entry id="no_frozen_nitrif_denitrif" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 If true, no denitrification or nitrification in frozen soil layers.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="nfix_timeconst" type="real" category="clm_vertcn"
@@ -1022,11 +1029,13 @@ Enable C14 model
 <entry id="use_c14_bombspike" type="logical" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Flag to use the atmospheric time series of C14 concentrations from bomb fallout, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="atm_c14_filename" type="char*256" category="clm_isotope"
        group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "atm_delta_c14".  time variable is in format 1950.0, and time values must be monotonically increasing for interpolation, however spacing can be unequal. atm_delta_c14 variable has units of permil.  
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 
@@ -1036,11 +1045,13 @@ Filename with time series of atmospheric Delta C14 data.  variables in file are 
        group="clm_inparm" valid_values="" >
 If TRUE, weight btran (vegetation soil moisture availability) by unfrozen layers only, assuming that vegetation
 will allocate roots preferentially to the active layer.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="perchroot_alt" type="logical" category="clm_permafrost"
        group="clm_inparm" valid_values="" >
 If TRUE, weight btran (vegetation soil moisture availability) by the active layer, as defined by the greatest thaw depth over the current and prior years.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 
@@ -1074,16 +1085,19 @@ Set to alblak values (0.6, 0.4) to keep albedo constant for ice-covered lakes wi
 <entry id="oldfflag" type="integer" category="clm_physics"
        group="clm_hydrology1_inparm" valid_values="0,1" >
 Use old snow cover fraction from Niu et al. 2007
+(deprecated -- will be removed)
 </entry>
 
 <entry id="h2osfcflag" type="integer" category="clm_physics"
        group="clm_soilhydrology_inparm" valid_values="0,1" >
 If surface water is active or not
+(deprecated -- will be removed)
 </entry>
 
 <entry id="origflag" type="integer" category="clm_physics"
        group="clm_soilhydrology_inparm" valid_values="0,1" >
 Use original CLM4 soil hydraulic properties
+(deprecated -- will be removed)
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1190,11 +1204,13 @@ Ratio of aerenchyma porosity of non-grass (i.e., woody) PFTs compared to grass P
 <entry id="allowlakeprod" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, turn on methane biogeochemistry model for lake columns, using a simplified version of the CH4 submodel.
+(EXPERIMENTAL)
 </entry>
 
 <entry id="lake_decomp_fact" type="real" category="clm_methane"
        group="ch4par_in" valid_values="" >
 Base lake soil carbon decomposition rate (1/s) applying at 25 C.  Used if allowlakeprod = TRUE.
+(EXPERIMENTAL)
 </entry>
 
 <entry id="usephfact" type="logical" category="clm_methane"
@@ -1218,6 +1234,7 @@ If TRUE, maintain constant soil carbon under lakes, and use the methane submodel
 CO2 (via biological assimilation, decomposition, and methanogenesis) to CH4. If FALSE, transiently decompose initial
 soil carbon stock based on soil carbon dataset.  NOTE: if FALSE, a new transient source of C is added to the climate system,
 so the coupled system will NOT conserve carbon in this mode if the methane model is coupled to the atmosphere.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="scale_factor_gasdiff" type="real" category="clm_methane"
@@ -1243,6 +1260,7 @@ of alternative electron acceptors. A value of 0 indicates no inhibition.
 If TRUE, use the saturated fraction (fsat) calculated in Soil Hydrology to diagnose the inundated fraction (finundated)
 for the CH4 submodel (possibly affecting soil heterotrophic respiration and denitrification depending on the configuration),
 rather than using the inversion to satellite-observed inundated fraction, which requires additional surface data.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="unsat_aere_ratio" type="real" category="clm_methane"
@@ -1255,6 +1273,7 @@ value defined in ch4Mod.
        group="ch4par_in" valid_values="" >
 If TRUE, use the fine root carbon predicted by CN when calculating the aerenchyma area, rather than the parametrization
 based on annual NPP, aboveground NPP fraction, and LAI.
+(EXPERIMENTAL and NOT tested)
 </entry>
 
 <entry id="ch4offline" type="logical" category="clm_methane"
@@ -1262,6 +1281,7 @@ based on annual NPP, aboveground NPP fraction, and LAI.
 If TRUE, run the methane submodel decoupled from the atmosphere. The atmospheric methane concentration is prescribed by
 atmch4, the methane flux is not passed to the atmosphere, and the CO2 flux to the atmosphere is not adjusted for
 net methane production. NOTE: Currently this must be TRUE.
+(EXPERIMENTAL and NOT functional)
 </entry>
 
 <entry id="redoxlag_vertical" type="real" category="clm_methane"

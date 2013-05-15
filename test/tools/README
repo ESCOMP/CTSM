@@ -1,46 +1,21 @@
-clm/test/system/README					10/24/2012
+clm/test/tools/README					05/15/2013
 
-Scripts for testing CLM and the CLM support tools with many different 
+Scripts for testing the CLM support tools with many different 
 configurations and run-time options.
 
 I.   MAIN SCRIPTS:
 
-test_system ---- Run tests of the model specific for CLM
 test_driver.sh - Test the CLM offline tools
 
 To use...
 
-./test_system
 ./test_driver.sh -i
 
-Intended for use on NCAR machines: yellowstone, frankfurt.cgd, lynx, mirage, bluefire, 
+Intended for use on NCAR machines: yellowstone, frankfurt.cgd, lynx, mirage, 
 and ORNL machine titan. And works on the MacBook laptop yongi.cgd. For most machines 
 more than one compiler is supported.
 
-II.  RUNNING test_system TESTING:
-
-Basic use:
-
-./test_system
-./test_system --help # to get help on options
-
-To generate files for a new tag and compare to a previous tag
-
-./test_system --compare clm4_0_60 --generate clm4_0_61
-
-Important files for test_system testing:
-
-user_nl_dirs ---------------------------- Directories with namelist changes for testing
-
-lynx.batch ------------------------------ Batch test runs for lynx
-shortlist.batch ------------------------- Shortlist batch test runs for any machine
-yellowstone.batch ----------------------- Batch test runs for yellowstone
-lynx.interactive ------------------------ Interactive test runs for lynx
-mirage.interactive ---------------------- Interactive test runs for mirage
-shortlist.interactive ------------------- Shortlist Interactive test runs for any machine
-yellowstone.interactive ----------------- Interactive test runs for yellowstone
-
-III. RUNNING test_driver.sh TOOLS TESTING:
+II. RUNNING test_driver.sh TOOLS TESTING:
 
 Basic use:
 

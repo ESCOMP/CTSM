@@ -1,4 +1,104 @@
 ===============================================================
+Tag name:  clm4_5_06
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May 15 13:52:43 MDT 2013
+One-line Summary: A few small bug fixes, more updates to README files
+
+Purpose of changes:
+   More work on README files and documentation.
+   Fix from Danica/Bill for transient simulations.
+   Fix from Zack for Lake output variables
+   Another multi-instance script fix.
+   Fix tropixAtl pftdyn filename.
+   Remove models/lnd/clm/bld/config_query as doesn't work with new CESM scripts.
+
+Requirements for tag:
+   Requirements: Fix bug: 1697, 1691, 1675, fix tropicAtl fpftdyn file, minimal testing on frankfurt
+
+Test level of tag: critical
+
+Bugs fixed (include bugzilla ID):
+                                 1675  (need to relax error tolerance in reweightMod: weightsOkay)
+                                 1691  (Scripts issue for multi-instance for CLM/RTM)
+                                 1697  (ZLAKE and DZLAKE are NOT set)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Fix 1x1_tropicAtl fpftdyn file
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, sacks (transient fix), dlawren/subin (lake fix), jedwards (multi-instance scripts)
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: testing namelist files for old CLM standalone
+
+   D   models/lnd/clm/bld/config_query --- no longer works with new CESM scripts
+
+   D   models/lnd/clm/test/tools/nl_files/nl_ch4_set2_ciso
+   D   models/lnd/clm/test/tools/nl_files/nl_ch4_set3_pftroot
+   D   models/lnd/clm/test/tools/nl_files/nl_rootlit
+   D   models/lnd/clm/test/tools/nl_files/nl_ciso
+   D   models/lnd/clm/test/tools/nl_files/nl_anoxia_wtsat
+   D   models/lnd/clm/test/tools/nl_files/nl_vrtlay
+   D   models/lnd/clm/test/tools/nl_files/nl_oldhyd
+
+List all files added and what they do:
+
+   A   models/lnd/clm/tools/clm4_5/interpinic/addmetadata --- Add script to add important meta-data to finidat files.
+
+List all existing files that have been modified, and describe the changes:
+
+---------------- Work on README files documentation
+   M   models/lnd/clm/test/tools/config_files/README
+   M   models/lnd/clm/test/tools/README
+   M   models/lnd/clm/test/tools/README.testnames
+   M   models/lnd/clm/tools/README
+   M   models/lnd/clm/doc/IMPORTANT_NOTES
+   M   models/lnd/clm/doc/Quickstart.GUIDE
+   M   models/lnd/clm/doc/README
+
+---------------- 
+   M   models/lnd/clm/bld/config_files/config_definition.xml ------------ Document experimental settings / fix syntax error
+   M   models/lnd/clm/bld/clm.buildnml.csh ------------------------------ Multi-instance fix
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml --- Fix 1x1_tropicAtl fpftdyn filename
+   M   models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml - Document experimental settings
+
+---------------- 
+   M   models/lnd/clm/src/clm4_5/main/histFileMod.F90 ---- ZLAKE/DZLAKE fix
+   M   models/lnd/clm/src/clm4_5/main/subgridAveMod.F90 -- ZLAKE/DZLAKE fix
+   M   models/lnd/clm/src/clm4_5/main/reweightMod.F90 ---- Increase tolerance to 1.e-7 so transient
+             simulations can run their full course.
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes
+
+  CESM test lists: (limited testing on yellowstone/aux_clm/intel)
+
+    frankfurt/aux_clm       pgi         yes
+    frankfurt/aux_clm       intel       yes
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_04
+
+Changes answers relative to baseline: no (bit-for-bit)
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_05
 Originator(s):  muszala (Stefan Muszala,UCAR/CGD,303-497-1320)
 Date:  Tue May 14 13:15:12 MDT 2013

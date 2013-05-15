@@ -84,7 +84,12 @@ if ($CLM_NML_USE_CASE != "UNSET") set usecase = "-use_case $CLM_NML_USE_CASE"
 
 set clm_startfile = " "
 if ( $RUN_TYPE == "hybrid" || $RUN_TYPE == "branch" ) then
-   set clm_startfile = "-clm_startfile ${RUN_REFCASE}.clm2${inst_string}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc"
+    set clm_startfile = "${RUN_REFCASE}.clm2${inst_string}.r.${RUN_REFDATE}-${RUN_REFTOD}.nc"
+    if ( -e "$RUNDIR/$clm_startfile") then
+      set clm_startfile = "-clm_startfile $clm_startfile"
+    else
+      set clm_startfile = "-clm_startfile ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-${RUN_REFTOD}.nc"
+    endif
 endif
 
 $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \

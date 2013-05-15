@@ -573,7 +573,7 @@ contains
 !
 ! LOCAL VARIABLES:
     logical :: weights_equal_1
-    real(r8), parameter :: tolerance = 1.e-10_r8  ! tolerance for checking whether weights sum to 1
+    real(r8), parameter :: tolerance = 1.e-7_r8  ! tolerance for checking whether weights sum to 1
 !------------------------------------------------------------------------
 
     weights_equal_1 = (abs(sumwts - 1._r8) <= tolerance)

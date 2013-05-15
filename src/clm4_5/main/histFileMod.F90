@@ -2100,8 +2100,7 @@ contains
           if (tape(t)%dov2xy) then
              histol(:,:) = spval
              call c2g(begc, endc, begl, endl, begg, endg, nlevlak, histil, histol, &
-                  c2l_scale_type='unity', l2g_scale_type='veg')
-
+                  c2l_scale_type='unity', l2g_scale_type='lake')
              if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnamesl(ifld)), dim1name=grlnd, &
                      data=histol, ncid=nfid(t), flag='write')

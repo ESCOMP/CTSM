@@ -1704,6 +1704,8 @@ contains
      else if (l2g_scale_type == 'nonurb') then
         scale_lookup(:) = 1.0_r8
         scale_lookup(isturb) = spval
+     else if (l2g_scale_type == 'lake') then
+        scale_lookup(istdlak) = 1.0_r8
      else
         write(iulog,*)'scale_l2g_lookup_array error: scale type ',l2g_scale_type,' not supported'
         call endrun()

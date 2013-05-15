@@ -165,7 +165,7 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130415.nc</fsurdat>
  crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_48x96_rcp8.5_simyr1850-2100_c130415.nc</fpftdyn>
 
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000"
- crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2100_c130509.nc</fpftdyn>
+ crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_hist_simyr1850-2005_c130509.nc</fpftdyn>
 
 <fpftdyn hgrid="ne30np4"       sim_year_range="1850-2000" 
  crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp8.5_simyr1850-2100_c130415.nc</fpftdyn>

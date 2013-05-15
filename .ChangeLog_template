@@ -49,14 +49,15 @@ Machines testing ran on:  (Tests in priority order)
   CESM test lists:
 
     yellowstone/aux_clm     intel       yes ***
-    frankfurt/aux_clm_int   intel       yes ***
     yellowstone/aux_clm     pgi         yes **
     frankfurt/aux_clm       intel       yes **
+    frankfurt/aux_clm       pgi         yes
+    frankfurt/aux_clm       nag         yes
 
   test_driver.sh tools testing:
 
-    lynx interactive:           yes/no
     yellowstone interactive:    yes/no
+    frankfurt interactive:      yes/no
 
   yellowstone/PTCLM:            yes/no
 
@@ -65,7 +66,7 @@ CLM tag used for the baseline comparison tests if applicable:
 Changes answers relative to baseline:
 
 IF tag changes answers relative to baseline comparison the
-following should be filled in:
+following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations:

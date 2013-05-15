@@ -130,8 +130,7 @@ use CLM4.0, you will need to do the following:
        c.) To convert from CLM or CAM grid files
 
         To convert CLM grid files or CAM grid files to SCRIP grid files use
-        the deprecated mkgriddata program if you have to. This is also a required
-        step if you want to run fine-mesh as it's the only way to get CLM topo files.
+        the deprecated mkgriddata program if you have to.
 
        d.) General case
 
@@ -305,17 +304,8 @@ IV. Example of creating single-point datasets without entering into XML database
 
 V.  Notes on which input datasets are needed for CLM
 
-       Fine mesh is when you are running CLM at a finer resolution than you are
-       coupling it to the atmosphere. So the course resolution is the "atm" grid
-       and the fine mesh is the "lnd" grid.
-
-       global or regional/single-point grids (NO fine mesh)
+       global or regional/single-point grids
          - need fsurdata and fatmlndfrc
-       global grids (with fine mesh)
-         - assume lat/lon grids only 
-           (can't use unstructured grids for either atm or lnd grid)
-         - need fsurdata, fatmgrid, fatmlndfrc and fatmtopo 
-           (use deprecated mkgriddata to get fatmgrid, fatmlndfrc and fatmtopo)
 
       fsurdata ---- from mksurfdata_map in step (III.7)
       fatmlndfrc -- use the domain.lnd file from gen_domain in step (III.6)

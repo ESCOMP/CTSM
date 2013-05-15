@@ -6,8 +6,8 @@
 
 <entry id="phys" 
        valid_values="clm4_0,clm4_5"
-       value="clm4_0", 
-       category"physics">
+       value="clm4_0"
+       category="physics">
 Specifies either clm4_0 or clm4_5 physics
 </entry>
 
@@ -35,6 +35,7 @@ Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) r
        value="off" 
        category="physics">
 Toggle to use 25 lake layers instead of 10
+(exlaklayers="on" is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
 </entry>
 
 <entry id="clm4me" 
@@ -42,6 +43,7 @@ Toggle to use 25 lake layers instead of 10
        value="off" 
        category="physics">
 Toggle to activate the CLM4 Methane model (requires bgc=cn/cndv Carbon Nitrogen model)
+Standard part of CLM45BGC model.
 </entry>
 
 <entry id="vsoilc_centbgc" 
@@ -58,6 +60,7 @@ Requires the CN model to work (either CN or CNDV).
 This turns on the CPP tokens: VERTSOILC, CENTURY_DECOMP, and NITRIF_DENITRIF
 (the "no" options turn one or more of the above features OFF. They are neither
 Scientifically validated or supported and NOT recommended for use)
+(Setting this to "on" with clm4me "on" constitutes the CLM45BGC model.)
 </entry>
 
 <entry id="sitespf_pt" 
@@ -75,11 +78,14 @@ settings that are set for a particular site.
        category="bgc">
 CLM Biogeochemistry mode
    none = Satellite Phenology (SP)
-   cn   = Carbon Nitrogen model
-   cndv = Carbon Nitrogen with Dynamic Global Vegetation Model
+   cn   = Carbon Nitrogen model (CN) 
+          (or CLM45BGC if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+   cndv = Carbon Nitrogen with Dynamic Global Vegetation Model (CNDV)
+          (or CLM45BGCDV if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
 </entry>
 <entry id="vichydro" valid_values="on,off" value="off">
 Toggle to turn on the VIC hydrologic parameterizations
+(vichydro="on" is EXPERIMENTAL NOT SUPPORTED!)
 </entry>
 <entry id="crop" 
        valid_values="on,off" 

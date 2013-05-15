@@ -8,6 +8,7 @@ example:
 
    ERS_D_PT.T31_g37.I_2000_VOC_SNCRFRC_CN.yellowstone_intel
 
+Tests for test_driver are for the CLM tools only.
 
 Test naming conventions for the test_driver.sh script:
 
