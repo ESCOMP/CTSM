@@ -71,6 +71,7 @@ my %opts = (
 	       outnc_double=>undef,
 	       outnc_dims=>"2",     
                usrname=>"",
+               usr_mapdir=>"../../shared/mkmapdata",
                dynpft=>undef,
                csmdata=>$CSMDATA,
            );
@@ -96,6 +97,8 @@ SYNOPSIS
                                    NOTE: all mapping files are assumed to be in mkmapdata
                                     - and the user needs to have invoked mkmapdata in 
                                       that directory first
+        -usr_mapdir "mapdirectory" Directory where the user-supplied mapping files are
+                                   Default: $opts{'usr_mapdir'}
 
 OPTIONS
      -allownofile                  Allow the script to run even if one of the input files
@@ -114,7 +117,7 @@ OPTIONS
                                    used only if consistency with CISM is important)
      -hirespft                     If you want to use the high-resolution pft dataset rather 
                                    than the default lower resolution dataset
-                                   (low resolution is at half-degree, high resolution at 3')
+                                   (low resolution is at half-degree, high resolution at 3minute)
                                    (hires only available for present-day [2000])
      -exedir "directory"           Directory where mksurfdata_map program is
                                    (by default assume it is in the current directory)
@@ -243,6 +246,7 @@ sub trim($)
         "r|res=s"      => \$opts{'hgrid'},
         "usr_gname=s"  => \$opts{'usr_gname'},
         "usr_gdate=s"  => \$opts{'usr_gdate'},
+        "usr_mapdir=s" => \$opts{'usr_mapdir'},
         "crop"         => \$opts{'crop'},
         "hirespft"     => \$opts{'hirespft'},
         "c|rcp=s"      => \$opts{'rcp'},
@@ -426,7 +430,7 @@ EOF
          $hgrd{$typ} = $hgrid;
          $lmsk{$typ} = $lmask;
 	 if ( $opts{'hgrid'} eq "usrspec" ) {
-	     $map{$typ} = "../../shared/mkmapdata/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
+	     $map{$typ} = $opts{'usr_mapdir'}."/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
 	 } else {
 	     $map{$typ} = `$scrdir/../../../bld/queryDefaultNamelist.pl $queryfilopts -namelist clmexp -options frm_hgrid=$hgrid,frm_lmask=$lmask,to_hgrid=$res,to_lmask=nomask -var map`;
 	 }	     

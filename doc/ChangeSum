@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_07         erik 05/31/2013 New spinup files for CLM45 AND RTM, work on PTCLM, turn drydep off by default, update externals
    clm4_5_06         erik 05/15/2013 A few small bug fixes, more updates to README files
    clm4_5_05      muszala 05/14/2013 hcru bug fixes
    clm4_5_04         erik 05/13/2013 Fix the previous broken tag

@@ -91,11 +91,16 @@ if ( $RUN_TYPE == "hybrid" || $RUN_TYPE == "branch" ) then
       set clm_startfile = "-clm_startfile ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-${RUN_REFTOD}.nc"
     endif
 endif
+set start_ymd = `echo $RUN_STARTDATE | sed s/-//g`
+set ignore = "-ignore_ic_date"
+if ($RUN_STARTDATE =~ *-01-01* || $RUN_STARTDATE =~ *-09-01*) then
+  set ignore = "-ignore_ic_year"
+endif
 
 $CODEROOT/lnd/clm/bld/build-namelist -infile $CASEBUILD/clmconf/cesm_namelist \
     -csmdata $DIN_LOC_ROOT  \
-    -inputdata $CASEBUILD/clm.input_data_list \
-    -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" $usecase $glc_opts \
+    -inputdata $CASEBUILD/clm.input_data_list $ignore \
+    -namelist "&clm_inparm start_ymd = $start_ymd $CLM_NAMELIST_OPTS /" $usecase $glc_opts \
     -res $RESOLUTION $clmusr -clm_start_type $START_TYPE $clm_startfile \
     -l_ncpl $LND_NCPL -lnd_frac "${LND_DOMAIN_PATH}/${LND_DOMAIN_FILE}" \
     -glc_nec $GLC_NEC -co2_ppmv $CCSM_CO2_PPMV -co2_type $CLM_CO2_TYPE \

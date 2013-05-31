@@ -267,9 +267,6 @@ if ( $printlev > 0 ) {
    print "Create land SCRIP gridfile\n";
    print "Execute: $cmd\n";
 }
-if ( $printlev < 2 ) {
-   $cmd .= " > /dev/null";
-}
 system( $cmd );
 
 # ocean grid...
@@ -278,9 +275,6 @@ my $cmd    = "$cmdenv GRIDFILE=$grid2 IMASK=0 ncl mkscripgrid.ncl";
 if ( $printlev > 0 ) {
    print "Create ocean SCRIP gridfile\n";
    print "Execute: $cmd\n";
-}
-if ( $printlev < 2 ) {
-   $cmd .= " > /dev/null";
 }
 system( $cmd );
 
@@ -295,9 +289,6 @@ my $cmd = "env GRIDFILE1=$grid2 GRIDFILE2=$grid1 MAPFILE=$mapfile " .
 if ( $printlev > 0 ) {
   print "Create unity mapping file between the two gridfile\n";
   print "Execute: $cmd\n";
-}
-if ( $printlev < 2 ) {
-   $cmd .= " > /dev/null";
 }
 system( $cmd );
 

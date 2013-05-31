@@ -1,4 +1,151 @@
 ===============================================================
+Tag name:  clm4_5_07
+Originator(s):  erik (Erik Kluzek)
+Date: Fri May 31 02:49:45 MDT 2013
+One-line Summary: New spinup files for CLM45 AND RTM, work on PTCLM, turn drydep off by default, update externals
+
+Purpose of changes:
+
+    Bring in new spinup finidat files (f09_g16@1850 for SP and BGC). interpinic to 2deg, hcru_hcru and ne30.
+    New spinup finidat files for BGCCROP and BGCDV (f19 and f09 respectively)
+    New spinup finidat files for 2000 (f09_g16 for SP and BGC)
+    Update RTM to bring in finidat_rtm files for either 1850 or 2000.
+    Update scripts, Machines, pio
+    scripts includes update for CLM40CRU hybrid startup
+    Turn drydep namelist off by default
+    Do a lot of work on getting PTCLM working and tools working for single-point.
+
+Requirements for tag:
+    New spinup files, fix bugs: 1708, 1700
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+                                 1715 (rmdups.ncl fails for no-overlap case)
+                                 1714 (mkscripgrid.ncl doesn't calculate corners correctly.)
+                                 1708 (Need Initial conditions for RTM)
+                                 1706 (VIC tests fail)
+                                 1700 (Memory leak in MPI layer on yellowstone)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: drydep namelist now OFF by default
+
+List any changes to the defaults for the boundary datasets: New initial conditions
+          Native initial conditions for f09 for:
+             I1850CLM45SP, I1850CLM45BGC, ICLM45SP, ICLM45BGC
+          Interpinic for:
+             I1850CLM45 & I1850CLM45BGC: f19, hcru_hcru, ne30
+             ICLM45BGCCROP @ f19
+             ICLM45BGCDB   @ f09
+
+    ALSO NOTE THAT NOW RTM HAS INITIAL CONDITIONS FOR R05 -- SO RIVERFLOW CHANGES 
+    FOR BOTH CLM45 AND CLM40
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): many
+   csm_share, pio, scripts, Machines, RTM, cprnc, mapping
+      
+
+    scripts   to scripts4_130529 (update PTCLM, send simyr to RTM, new IC for CLM40CRUCN)
+    csm_share to share3_130528
+    rtm       to rtm1_0_27       (Set startup initial condition files by -simyr flag)
+    Machines  to Machines_130529 (Set hcru_hcru PE-layout, and PE-layout on yellowstone for f09 I cases)
+    pio       to pio1_7_1
+    cprnc     to cprnc_130425
+    mapping   to mapping_130509
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+    M  models/lnd/clm/test/tools/TBLCFGtools.sh --- Correctly point to TSMCFGtools rather than TSMtools.sh.
+
+    M  models/lnd/clm/tools/clm4_5/mksurfdata_map/mksurfdata.pl - Add -usr_mapdir option
+
+    M  models/lnd/clm/tools/shared/mkmapdata/rmdups.ncl ------ Exit early if n_s==0
+    M  models/lnd/clm/tools/shared/mkmapdata/mkmapdata.sh ---- Skip if file already exists, give 
+          directory for rmdups.ncl
+    M  models/lnd/clm/tools/shared/mkmapdata/mknoocnmap.pl --- Don't hide NCL output
+    M  models/lnd/clm/tools/shared/mkmapgrids/mkscripgrid.ncl  Explicitly calculate corners
+
+    M  models/lnd/clm/bld/build-namelist - Set drydep to off by default, check crop setting for finidat files
+
+    M  models/lnd/clm/bld/clm.buildnml.csh - Add back logic in about ignoring IC year or date
+
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml - New initial conditions for:
+          Native initial conditions for f09 for:
+             I1850CLM45SP, I1850CLM45BGC, ICLM45SP, ICLM45BGC
+          Interpinic for:
+             I1850CLM45SP & I1850CLM45BGC: f19, hcru_hcru, ne30
+             ICLM45BGCCROP @ f19
+             ICLM45BGCDB   @ f09
+    M  models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml - Use surfdata_map rather than surfdata
+          for CLM_USRDAT_NAME fsurdat files
+
+    M  models/lnd/clm/bld/namelist_files/use_cases/stdurbpt_pd.xml - Remove setting of dtime, adjust hist output
+
+      More work on readme files...
+
+    M  README
+    M  models/lnd/clm/doc/IMPORTANT_NOTES
+    M  models/lnd/clm/doc/Quickstart.GUIDE
+    M  models/lnd/clm/doc/Quickstart.userdatasets
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       yes
+    yellowstone/aux_clm     pgi         yes
+    frankfurt/aux_clm       intel       yes
+    frankfurt/aux_clm       pgi         yes
+
+  CESM history file comparison:
+  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $GLDCSEG/ccsm_baselines/ -model clm2)
+
+    yellowstone/aux_clm     intel       yes
+
+  test_driver.sh tools testing:
+
+    yellowstone interactive:    yes
+    frankfurt interactive:      yes
+
+  yellowstone/PTCLM:            yes!
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_06
+
+Changes answers relative to baseline:  Yes -- due to new initial condition files
+     for I1850CLM45SP and I1850CLM45BGC      @ f09, f19, hcru, ne30
+         ICLM45SP     and ICLM45BGC          @ f09
+         ICLM45BGCCROP @ f19 and ICLM45BGCDB @ f09
+     and ICLM40CRUCN   @ f09
+
+   AND new initial conditions for RTM for ALL R05 grids
+
+   And turning drydep namelist off in the driver causes answers to appear to be different
+   when comparing coupler history files.
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_06
 Originator(s):  erik (Erik Kluzek)
 Date: Wed May 15 13:52:43 MDT 2013

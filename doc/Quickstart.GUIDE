@@ -38,10 +38,11 @@ Process:
 Information on Compsets:
 
      "I" compsets are the ones with clm and datm7 without ice and ocean.
-     Most of the "I" compsets use the CLM_QIAN data with solar following
+     Most of the "I" compsets for CLM4.0 use the CLM_QIAN data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
-     the date). Some of the I compsets are:
+     the date). 
+     Some of the I compsets are:
 
      Name		  (short-name): Description
      --------------------------------------------------------------------------

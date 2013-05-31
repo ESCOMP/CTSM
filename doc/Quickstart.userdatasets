@@ -7,7 +7,7 @@ Assumptions: You are already familiar with the use of the cpl7 scripts
              the scripts directory for more information on this process.
              We also assume that the env variable $CSMDATA points to the
              location of the standard datasets for your machine 
-             (/fis/cgd/cseg/csm/inputdata on bluefire). We also assume that the
+             ($CESMDATAROOT/inputdata on yellowstone). We also assume that the
              following variables are used to point to the appropriate
              values that you want to use for your case. Mask is included
              as part of your resolution for your case, and SIM_YEAR and
@@ -102,7 +102,7 @@ Process:
         for the exact syntax for all files).
 
        surfdata:    copy files into: 
-             $MYCSMDATA/lnd/clm2/surfdata/surfdata_${MYDATAID}_simyr${SIM_YEAR}.nc
+             $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${MYDATAID}_simyr${SIM_YEAR}.nc
        domainfile:  copy files into:
              $MYCSMDATA/atm/datm7/domain.clm/domain.lnd.${MYDATAID}_${MASK}.nc
 
@@ -127,7 +127,7 @@ Process:
        i.e.
 
        		./create_newcase -case my_userdataset_test -res pt1_pt1 -compset I1850 \
-                -mach bluefire
+                -mach yellowstone_intel
 
        The above example implies that: MASK=gx1v6, SIM_YEAR=1850, and SIM_YEAR_RANGE=constant.
        5.) Edit the env_run.xml in the case to point to your new dataset area
@@ -142,10 +142,9 @@ Process:
        Edit CLM_USRDAT_NAME  to point to $MYDATAID
 
        		./xmlchange CLM_USRDAT_NAME=$MYDATAID
-       		./xmlchange CLM_PT1_NAME=$MYDATAID
 
        7.) Setup the case as normal
 
-       		./setup
+       		./cesm_setup
 
        8.) Run your case as normal

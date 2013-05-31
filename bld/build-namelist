@@ -222,7 +222,7 @@ my %opts = ( config                => $cfg_cache,
              bgc_spinup            => "off",
              chk_res               => undef,
              note                  => undef,
-	     drydep                => 1,
+	     drydep                => 0,
 	     megan                 => 1,
              irrig                 => ".false.",
 	     res                   => "default",
@@ -1102,36 +1102,36 @@ if (not defined $nl->get_value('finidat')) {
 	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
 			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-			   'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+			   'irrig'=>$irrig, 'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	   } else {
 	       add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			   'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn,   'vsoilc_centbgc'=>$vsoilc,
 			   'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-			   'glc_nec'=>$glc_nec );
+			   'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	   }
     } elsif ($opts{'ignore_ic_year'}) {
 	if ($phys eq "clm4_0") {
 	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
 			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-			'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+			'irrig'=>$irrig, 'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	} else {
 	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
 			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-			'glc_nec'=>$glc_nec );
+			'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	}
     } else {
 	if ($phys eq "clm4_0") {
 	    add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 			'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
 			'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 
-			'irrig'=>$irrig, 'glc_nec'=>$glc_nec );
+			'irrig'=>$irrig, 'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	} else {
 	   add_default($nl, $var, 'hgrid'=>$res, 'mask'=>$mask, 
 		       'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'vsoilc_centbgc'=>$vsoilc,
 		       'sim_year'=>$sim_year, 'maxpft'=>$maxpft, 'more_vertlayers'=>$more_vert,
-		       'glc_nec'=>$glc_nec );
+		       'glc_nec'=>$glc_nec, 'crop'=>$crop );
 	}
     }
     my $finidat = $nl->get_value($var);

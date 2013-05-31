@@ -23,7 +23,7 @@ begin
 
   if ( ismissing(mapfile) )then
      print( "You did NOT enter an input mapping file to convert" )
-     exit
+     status_exit( -1 )
   end if
   if ( ismissing(newmapfile) )then
      sdate      = systemfunc( "date +%y%m%d" );
@@ -33,13 +33,18 @@ begin
 
   if ( systemfunc("test -f "+mapfile+"; echo $?" ) .ne. 0 )then
      print( "Input file does not exist or not found: "+mapfile );
-     exit
+     status_exit( -1 )
   end if
   print("map file: "+mapfile)
   f      = addfile(mapfile,"r")       ; Open netCDF files.	
 
 
   n_s = dimsizes(f->col)
+  if ( n_s .eq. 0 )then
+     print( "n_s is size zero, so no overlap points just return: " );
+     exit
+  end if
+
   n_b = dimsizes(f->area_b)
   n_a = dimsizes(f->area_a)
   print("n_s = "+n_s+" max(row)="+max(f->row)+" max(col)="+max(f->col))

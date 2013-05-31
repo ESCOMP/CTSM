@@ -61,30 +61,116 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Plant function types (relative to {csmdata}) -->
 <fpftcon           >lnd/clm2/pftdata/pft-physiology.c130503.nc</fpftcon>
 
-<!-- Initial condition file wtih BGC -->
-<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
-ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.IBGC.0051-01-01_1.9x2.5_gx1v6_simyr1850_c130414.nc
+<!--
+
+     Original initial condition file at 1 degree resolution
+
+-->
+<!-- Original Initial condition file with SP and BGC - at 1 degree resolution -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="off"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45SP.0521-01-01.0.9x1.25_g1v6_simyr1850_c130506.nc
+</finidat>
+
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.0.9x1.25_g1v6_simyr1850_c130515.nc
+</finidat>
+
+<!-- (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.0.9x1.25_g1v6_simyr1850_c130515.nc
+</finidat>
+
+<!-- And for year 2000 from a transient simulation -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="20000101" more_vertlayers=".false." vsoilc_centbgc="off"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.ICRUCLM45SP.2000-01-01.0.9x1.25_g1v6_simyr2000_c130521.nc
+</finidat>
+
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c130517.nc
+</finidat>
+
+<!-- (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I2000CLM45CRUBGC.2000-01-01.0.9x1.25_gx1v6_simyr2000_c130517.nc
+</finidat>
+
+<!--
+
+     Files interpolated to other resolutions using interpinic
+
+-->
+
+<!-- 2 degree resolution -->
+
+<!-- Initial condition file with CLM45BGC -->
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="off"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c130515.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
-ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.IBGC.0051-01-01_1.9x2.5_gx1v6_simyr1850_c130414.nc
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c130515.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
-ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.IBGC.0051-01-01_1.9x2.5_gx1v6_simyr1850_c130414.nc
-</finidat>
-
-<!-- Initial condition file wtih BGC (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
-<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
-ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.IBGC.0051-01-01_1.9x2.5_gx1v6_simyr1850_c130414.nc
-</finidat>
-
+<!-- Initial condition file with CLM45BGC (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
-ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.IBGC.0051-01-01_1.9x2.5_gx1v6_simyr1850_c130414.nc
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.1.9x2.5_g1v6_simyr1850_c130515.nc
 </finidat>
 
-<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
-ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.IBGC.0051-01-01_1.9x2.5_gx1v6_simyr1850_c130414.nc
+<!-- CRUNCEP half-degree resolution -->
+
+<!-- Initial condition file with CLM45BGC -->
+<finidat hgrid="360x720cru" maxpft="17"  mask="cruncep" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="off"
+ic_tod="0" sim_year="1850"  glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c130515.nc
+</finidat>
+
+<finidat hgrid="360x720cru" maxpft="17"  mask="cruncep" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="1850"  glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c130515.nc
+</finidat>
+
+<!-- Initial condition file with CLM45BGC (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
+<finidat hgrid="360x720cru" maxpft="17"  mask="cruncep" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="1850"  glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.360x720cru_hcru_simyr1850_c130515.nc
+</finidat>
+
+<!-- HOMME grid ne30 resolution -->
+
+<!-- Initial condition file with CLM45BGC -->
+<finidat hgrid="ne30np4"   maxpft="17"  mask="gx1v6" bgc="none" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="off"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c130515.nc
+</finidat>
+
+<finidat hgrid="ne30np4"   maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c130515.nc
+</finidat>
+
+<!-- Initial condition file with CLM45BGC (also works for no-cent, Vertical layers and Nitrification/Denitrification NEED to be on) -->
+<finidat hgrid="ne30np4"   maxpft="17"  mask="gx1v6" bgc="cn"   ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGC.0241-01-01.ne30np4_g1v6_simyr1850_c130515.nc
+</finidat>
+
+
+<!-- Initial condition files with CLM45BGCDV -->
+
+<!-- 1 degree resolution -->
+
+<finidat hgrid="0.9x1.25"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGCDV.0241-01-01.0.9x1.25_g1v6_simyr1850_c130515.nc
+</finidat>
+
+<finidat hgrid="0.9x1.25"   maxpft="17"  mask="gx1v6" bgc="cndv" ic_ymd="18500101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="1850" glc_nec="0" crop="off" >lnd/clm2/initdata_map/clmi.I1850CRUCLM45BGCDV.0241-01-01.0.9x1.25_g1v6_simyr1850_c130515.nc
+</finidat>
+
+<!-- Initial condition files with CLM45BGCCROP -->
+
+<!-- 2 degree resolution -->
+
+<finidat hgrid="1.9x2.5"    maxpft="25"  mask="gx1v6" bgc="cn"   ic_ymd="00010101" more_vertlayers=".false." vsoilc_centbgc="on"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130515.nc
+</finidat>
+
+<finidat hgrid="1.9x2.5"    maxpft="25"  mask="gx1v6" bgc="cn"   ic_ymd="00010101" more_vertlayers=".false." vsoilc_centbgc="no-cent"
+ic_tod="0" sim_year="2000" glc_nec="0" crop="on"  >lnd/clm2/initdata_map/clmi.ICRUCLM45BGCCROPmp24.0241-01-01.1.9x2.5_g1v6_simyr2000_c130515.nc
 </finidat>
 
 

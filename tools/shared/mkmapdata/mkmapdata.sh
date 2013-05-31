@@ -492,34 +492,40 @@ until ((nfile>${#INGRID[*]})); do
        esac
    fi
 
-   cmd="$mpirun $MY_ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
-   cmd="$cmd -d $GRIDFILE -m conserve -w ${OUTFILE[nfile]}"
-   if [ $type = "regional" ]; then
-     cmd="$cmd --dst_regional"
-   fi
+   # Skip if file already exists
+   if [ -f "${OUTFILE[nfile]}" ]; then
+      echo "Skipping creation of ${OUTFILE[nfile]} as already exists"
+   else
 
-   cmd="$cmd --src_type ${SRC_TYPE[nfile]} ${SRC_EXTRA_ARGS[nfile]} --dst_type $DST_TYPE $DST_EXTRA_ARGS"
-   cmd="$cmd $lrgfil"
+      cmd="$mpirun $MY_ESMF_REGRID --ignore_unmapped -s ${INGRID[nfile]} "
+      cmd="$cmd -d $GRIDFILE -m conserve -w ${OUTFILE[nfile]}"
+      if [ $type = "regional" ]; then
+        cmd="$cmd --dst_regional"
+      fi
 
-   runcmd $cmd
+      cmd="$cmd --src_type ${SRC_TYPE[nfile]} ${SRC_EXTRA_ARGS[nfile]} --dst_type $DST_TYPE $DST_EXTRA_ARGS"
+      cmd="$cmd $lrgfil"
 
-   if [ "$debug" != "YES" ] && [ ! -f "${OUTFILE[nfile]}" ]; then
-      echo "Output mapping file was NOT created: ${OUTFILE[nfile]}"
-      exit 6
-   fi
-   # add some metadata to the file
-   HOST=`hostname`
-   history="$MY_ESMF_REGRID"
-   runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
-   runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
-   runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
+      runcmd $cmd
 
-   # check for duplicate mapping weights
-   newfile="rmdups_${OUTFILE[nfile]}"
-   runcmd "rm -f $newfile"
-   runcmd "env MAPFILE=${OUTFILE[nfile]} NEWMAPFILE=$newfile ncl rmdups.ncl"
-   if [ -f "$newfile" ]; then
-      runcmd "mv $newfile ${OUTFILE[nfile]}"
+      if [ "$debug" != "YES" ] && [ ! -f "${OUTFILE[nfile]}" ]; then
+         echo "Output mapping file was NOT created: ${OUTFILE[nfile]}"
+         exit 6
+      fi
+      # add some metadata to the file
+      HOST=`hostname`
+      history="$MY_ESMF_REGRID"
+      runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
+      runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
+      runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
+
+      # check for duplicate mapping weights
+      newfile="rmdups_${OUTFILE[nfile]}"
+      runcmd "rm -f $newfile"
+      runcmd "env MAPFILE=${OUTFILE[nfile]} NEWMAPFILE=$newfile ncl $dir/rmdups.ncl"
+      if [ -f "$newfile" ]; then
+         runcmd "mv $newfile ${OUTFILE[nfile]}"
+      fi
    fi
 
    nfile=nfile+1

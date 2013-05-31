@@ -1,8 +1,8 @@
-clm/README                                          10/05/2011
+clm/README                                          05/15/2013
 
-Community Land Surface Model (CLM) version 4.0.53 -- source code, tools, 
+Community Land Surface Model (CLM) version 4.5.06 -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
-to run CLM with CESM with datm8 to provide NCEP forcing data in 
+to run CLM with CESM with datm8 to provide Qian or CRU NCEP forcing data in 
 place of a modeled atmosphere.
 
 What is new in this version of CLM (compared to previous CESM and CCSM releases)?
@@ -17,7 +17,7 @@ General directory structure:
 models/lnd/clm/doc ---- Documentation of CLM.
 models/lnd/clm/bld ---- Template, configure and build-namelist scripts for clm.
 models/lnd/clm/src ---- CLM Source code.
-models/lnd/clm/test --- CLM Testing scripts.
+models/lnd/clm/test --- CLM Testing scripts for CLM offline tools.
 models/lnd/clm/tools -- CLM Offline tools to prepare input datasets and process output.
 
 scripts --------------- CPL7 scripts
@@ -74,19 +74,18 @@ models/lnd/clm/doc/CodeReference ----------- CLM Code Reference Guide
 
 models/lnd/clm/bld/configure --------------- Script to prepare CLM to be built.
 
-models/lnd/clm/test/system/test_system ----- Script for system testing of stand-alone CLM I cases.
-models/lnd/clm/test/system/test_driver.sh -- Script for general software testing of 
+models/lnd/clm/test/tools/test_driver.sh -- Script for general software testing of 
                                              CLM's offline tools.
 
-models/lnd/clm/tools/mksurfdata_map --- Directory to build program to create surface dataset 
+models/lnd/clm/tools/clm4_5/mksurfdata_map --- Directory to build program to create surface dataset 
                                         at any resolution.
-models/lnd/clm/tools/interpinic ------- Directory to build program to interpolate initial 
+models/lnd/clm/tools/clm4_5/interpinic ------- Directory to build program to interpolate initial 
                                         conditions to any resolution.
-models/lnd/clm/tools/mkdatadomain ----- Directory to build program to create datm7 or docn7 
+models/lnd/clm/tools/shared/mkdatadomain ----- Directory to build program to create datm7 or docn7 
                                         domain files from clm files.
-models/lnd/clm/tools/mkprocdata_map --- Process history data from unstructed grids to a gridded 
+models/lnd/clm/tools/shared/mkprocdata_map --- Process history data from unstructed grids to a gridded 
                                         format.
-models/lnd/clm/tools/ncl_scripts  ----- Directory of NCL and perl scripts to do various
+models/lnd/clm/tools/shared/ncl_scripts  ----- Directory of NCL and perl scripts to do various
                                         tasks. Most notably to plot perturbation error growth
                                         testing and to extract regional information from
                                         global datasets for single-point/regional simulations.
@@ -98,12 +97,12 @@ models/lnd/clm/bld/README ------------- Description of how to use the configure 
 Source code directory structure:
 =============================================================================================
 
-models/lnd/clm/src/biogeochem -- Biogeochemisty
-models/lnd/clm/src/main -------- Main control and high level code
-models/lnd/clm/src/cpl_mct ----- Land model high level MCT driver
-models/lnd/clm/src/cpl_esmf ---- Land model high level ESMF driver
-models/lnd/clm/src/cpl_share --- Land model high level driver code shared between MCT/ESMF
-models/lnd/clm/src/biogeophys -- Biogeophysics (Hydrology)
+models/lnd/clm/src/clm4_5/biogeochem -- Biogeochemisty
+models/lnd/clm/src/clm4_5/main -------- Main control and high level code
+models/lnd/clm/src/cpl_mct ------------ Land model high level MCT driver
+models/lnd/clm/src/cpl_esmf ----------- Land model high level ESMF driver
+models/lnd/clm/src/cpl_share ---------- Land model high level driver code shared between MCT/ESMF
+models/lnd/clm/src/clm4_5/biogeophys -- Biogeophysics (Hydrology)
 
 =============================================================================================
     QUICKSTART: using the CPL7 scripts:

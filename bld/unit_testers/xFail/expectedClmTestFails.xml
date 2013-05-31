@@ -30,13 +30,11 @@
             <INTEL>
                <entry testId="ERB.ne30_g16.I_1948-2004"                                  failType="FAIL" bugz="1658" >Differences found</entry>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP.nldir_crop"             failType="FAIL" bugz="1696" >use before define in history</entry>
-               <entry testId="ERS_Ly5.f10_f10.I20TRCRUCLM45BGC.nldir_monthly_noinitial"  failType="FAIL" bugz="1339" >limit on number of files</entry>
-               <entry testId="ERI_D.f10_f10.ICLM45CNCROP"                                failType="FAIL" bugz="1699" >Scripts problem in testing?</entry>
-               <entry testId="ERS.f19_g16_r01.I1850CLM45BGC.nldir_rtmOnFloodOnEffvelOff" failType="FAIL" bugz="1698" >RTM problem reading restart file</entry>
-               <entry testId="ERS_Lm3.f19_g16.IGRCP60CLM45CN"                            failType="RUN"  bugz="1339" >Soil balance error on restart</entry>
-               <entry testId="SSP.f19_g16.I1850CLM45BGC.nldir_default"                   failType="RUN"  bugz="1694" >SSP test NOT working completely yet</entry>
+               <entry testId="ERS.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"        failType="FAIL" bugz="1722" >floating point exception</entry>
+               <entry testId="ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"      failType="FAIL" bugz="1722" >floating point exception</entry>
             </INTEL>
             <PGI>
+               <entry testId="ERS_D.hcru_hcru.I_2000_CRUFRC_CLM45_CN"                    failType="RUN"  bugz="1721" >Subscript overflow issue in pio</entry>
                <entry testId="ERS_D.f10_f10.ICLM45CN4MeNoVS"                             failType="RUN"  bugz="1672" >Subscript overflow issue</entry>
             </PGI>
          </yellowstone>
@@ -46,10 +44,25 @@
             <NAG>
             </NAG>
             <PGI>
-               <entry testId="ERI_D.f19_g16.ICLM45"                                      failType="FAIL" bugz="1695" >Fails due to a mpi-init problem</entry>
             </PGI>
          </frankfurt>
       </auxTests>
    </cesm>
+
+   <PTCLM>
+         <yellowstone>
+            <INTEL>
+               <entry testId="0_US-UMB_I_1850_CLM45"          failType="FAIL"              ></entry>
+               <entry testId="0_US-UMB_I20TRCLM45"            failType="FAIL"              ></entry>
+               <entry testId="0_US-UMB_ICLM45CN"              failType="FAIL"              ></entry>
+               <entry testId="0_US-UMB_I1850CLM45BGC"         failType="FAIL"              ></entry>
+               <entry testId="0_US-UMB_ICLM45BGC"             failType="FAIL"              ></entry>
+            </INTEL>
+         </yellowstone>
+         <frankfurt>
+            <PGI>
+            </PGI>
+         </frankfurt>
+   </PTCLM>
 
 </expectedFails> 
