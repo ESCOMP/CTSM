@@ -2699,8 +2699,12 @@ contains
          if (par_z(p,iv) <= 0._r8) then           ! night time
             alphapsn(p) = 1._r8
          else                                     ! day time
-            ci = co2(p) - ((an(p,iv) * (1._r8-downreg(p)) )* forc_pbot(g) * (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv)))
-            alphapsn(p) = 1._r8 + (((c3psn(ivt(p)) * (4.4_r8 + (22.6_r8*(ci/co2(p))))) + ((1._r8 - c3psn(ivt(p))) * 4.4_r8))/1000._r8)
+            ci = co2(p) - ((an(p,iv) * (1._r8-downreg(p)) ) * &
+               forc_pbot(g) * &
+               (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv)))
+            alphapsn(p) = 1._r8 + (((c3psn(ivt(p)) * &
+               (4.4_r8 + (22.6_r8*(ci/co2(p))))) + &
+               ((1._r8 - c3psn(ivt(p))) * 4.4_r8))/1000._r8)
          end if
       end do        
    end do

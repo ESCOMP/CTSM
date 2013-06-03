@@ -3524,7 +3524,8 @@ contains
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
        if ( is_restart() .and. ntapes_onfile /= ntapes )then
           write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
-          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!, you can NOT change history options on restart!' )
+          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!,'// &
+            ' you can NOT change history options on restart!' )
        end if
        if ( is_restart() .and. ntapes > 0 )then
           call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )
@@ -3573,7 +3574,8 @@ contains
              call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t) )
              if ( nflds_onfile /= tape(t)%nflds )then
                 write(iulog,*) 'nflds = ', tape(t)%nflds, ' nflds_onfile = ', nflds_onfile
-                call endrun( trim(subname)//' ERROR: number of fields different than on restart file!, you can NOT change history options on restart!' )
+                call endrun( trim(subname)//' ERROR: number of fields different than on restart file!,'// &
+                  ' you can NOT change history options on restart!' )
              end if
              call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t) )
              call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t) )

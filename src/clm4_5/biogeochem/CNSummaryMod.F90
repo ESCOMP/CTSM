@@ -1798,8 +1798,10 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            decomp_cascade_ntransfer(c,k) = decomp_cascade_ntransfer(c,k) + decomp_cascade_ntransfer_vr(c,j,k) * dzsoi_decomp(j) 
-            decomp_cascade_sminn_flux(c,k) = decomp_cascade_sminn_flux(c,k) + decomp_cascade_sminn_flux_vr(c,j,k) * dzsoi_decomp(j) 
+            decomp_cascade_ntransfer(c,k) = decomp_cascade_ntransfer(c,k) &
+               + decomp_cascade_ntransfer_vr(c,j,k) * dzsoi_decomp(j) 
+            decomp_cascade_sminn_flux(c,k) = decomp_cascade_sminn_flux(c,k) &
+               + decomp_cascade_sminn_flux_vr(c,j,k) * dzsoi_decomp(j) 
          end do
       end do
    end do

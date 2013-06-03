@@ -195,7 +195,6 @@ contains
     use clm_varctl, only : fpftcon
     use clm_varcon, only : tfrz
     use spmdMod   , only : masterproc
-    use nanMod    , only : nan
 !
 ! !ARGUMENTS:
     implicit none

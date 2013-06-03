@@ -9,11 +9,11 @@ module clmtypeInitMod
 ! Allocate clmtype components and initialize them to signaling NaN.
 !
 ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod      , only : nan, bigint
+  use shr_kind_mod  , only : r8 => shr_kind_r8
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use clmtype
-  use clm_varpar  , only : maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
-                           numpft, ndst, nlevurb, nlevsoi
+  use clm_varpar    , only : maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
+                             numpft, ndst, nlevurb, nlevsoi
   use clm_varctl  , only : use_c13, use_cn, use_cndv, use_crop
 !
 ! !PUBLIC TYPES:
@@ -700,8 +700,8 @@ contains
     allocate(pftcon%resist(0:numpft))
     allocate(pftcon%dwood(0:numpft))
 
-    pftcon%noveg(:) = bigint
-    pftcon%tree(:) = bigint
+    pftcon%noveg(:) = huge(1)
+    pftcon%tree(:) = huge(1)
     pftcon%smpso(:) = nan
     pftcon%smpsc(:) = nan
     pftcon%fnitr(:) = nan
@@ -918,7 +918,7 @@ contains
     pps%rb1(beg:end) = nan
     pps%annlai(:,:) = nan
     
-    pps%frac_veg_nosno(beg:end) = bigint
+    pps%frac_veg_nosno(beg:end) = huge(1)
     pps%frac_veg_nosno_alb(beg:end) = 0
     pps%emv(beg:end) = nan
     pps%z0mv(beg:end) = nan
@@ -979,8 +979,8 @@ contains
        pps%astem(beg:end)       = nan
        pps%croplive(beg:end)    = .false.
        pps%cropplant(beg:end)   = .false.
-       pps%harvdate(beg:end)    = bigint
-       pps%idop(beg:end)        = bigint
+       pps%harvdate(beg:end)    = huge(1)
+       pps%idop(beg:end)        = huge(1)
        pps%peaklai(beg:end)     = 0
     end if
     pps%vds(beg:end) = nan
@@ -2695,7 +2695,7 @@ contains
     allocate(cps%forc_pbot(beg:end))
     allocate(cps%forc_rho(beg:end))
     allocate(cps%glc_topo(beg:end))
-    cps%isoicol(beg:end) = bigint
+    cps%isoicol(beg:end) = huge(1)
     cps%bsw(beg:end,1:nlevgrnd) = nan
     cps%watsat(beg:end,1:nlevgrnd) = nan
     cps%watfc(beg:end,1:nlevgrnd) = nan
@@ -2721,7 +2721,7 @@ contains
     cps%dz(beg:end,-nlevsno+1:nlevgrnd) = nan
     cps%z (beg:end,-nlevsno+1:nlevgrnd) = nan
     cps%frac_iceold(beg:end,-nlevsno+1:nlevgrnd) = spval
-    cps%imelt(beg:end,-nlevsno+1:nlevgrnd) = bigint
+    cps%imelt(beg:end,-nlevsno+1:nlevgrnd) = huge(1)
     cps%eff_porosity(beg:end,1:nlevgrnd) = spval
     cps%emg(beg:end) = nan
     cps%z0mg(beg:end) = nan
@@ -3818,7 +3818,7 @@ contains
     lps%cv_improad(beg:end,1:5) = nan
     lps%thick_wall(beg:end) = nan
     lps%thick_roof(beg:end) = nan
-    lps%nlev_improad(beg:end) = bigint
+    lps%nlev_improad(beg:end) = huge(1)
     lps%vf_sr(beg:end) = nan
     lps%vf_wr(beg:end) = nan
     lps%vf_sw(beg:end) = nan

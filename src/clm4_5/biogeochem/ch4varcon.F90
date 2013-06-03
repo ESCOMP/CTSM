@@ -191,9 +191,9 @@ contains
 ! Read and initialize CH4 constants
 !
 ! !USES:
-    use fileutils     , only : relavu, getavu
-    use spmdMod       , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
-    use clm_nlUtilsMod, only : find_nlgroup_name
+    use fileutils   , only : relavu, getavu
+    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
+    use shr_nl_mod  , only : shr_nl_find_group_name
     !use controlMod  , only: NLFilename
 
 !
@@ -260,7 +260,7 @@ contains
        unitn = getavu()
        write(iulog,*) 'Read in ch4par_in namelist from: ', trim(NLFilename_in)
        open( unitn, file=trim(NLFilename_in), status='old' )
-       call find_nlgroup_name(unitn, 'ch4par_in', status=ierr)
+       call shr_nl_find_group_name(unitn, 'ch4par_in', status=ierr)
        if (ierr == 0) then
           read(unitn, ch4par_in, iostat=ierr)
           if (ierr /= 0) then

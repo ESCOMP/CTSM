@@ -134,7 +134,6 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! Computes column-level burned area in each timestep
 !
 ! !USES:
-   use shr_sys_mod     , only: shr_sys_flush
    use clmtype
    use clm_time_manager, only: get_step_size, get_days_per_year, get_curr_date, get_nstep
    use clm_varpar      , only: max_pft_per_col
@@ -145,7 +144,6 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
    use pftvarcon       , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree, &
                                nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree,      &
                                nbrdlf_evr_shrub
-!  use shr_sys_mod  , only: shr_sys_flush
 !
 ! !ARGUMENTS:
    implicit none
@@ -178,16 +176,9 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: livecrootc_xfer(:)    ! (gC/m2) live coarse root C transfer
    real(r8), pointer :: totvegc(:)            ! (gC/m2) total vegetation carbon, excluding cpool 
    real(r8), pointer :: btran2(:)             ! root zone soil wetness
-   integer , pointer :: pcolumn(:)            ! pft's column index
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
    real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
-   real(r8), pointer :: livestemc(:)          ! (gC/m2) live stem C
-   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
-   real(r8), pointer :: livestemc_xfer(:)     ! (gC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc(:)          ! (gC/m2) dead stem C
-   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
-   real(r8), pointer :: deadstemc_xfer(:)     ! (gC/m2) dead stem C transfer
    integer , pointer :: burndate(:)           ! burn date for crop
 
 
@@ -257,7 +248,7 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
    ! non-boreal peat fires (was different in paper)
    real(r8), parameter :: non_boreal_peatfire_c = 0.0005d00
 
-   integer :: g,l,c,p,pi,j,fc,fp,jday,kyr, kmo, kda, mcsec   ! index variables
+   integer :: g,l,c,p,pi,j,fc,fp,kyr, kmo, kda, mcsec   ! index variables
    real(r8):: dt        ! time step variable (s)
    real(r8):: m         ! top-layer soil moisture (proportion)
    real(r8):: dayspyr   ! days per year
@@ -293,16 +284,9 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
   livecrootc_xfer    => clm3%g%l%c%p%pcs%livecrootc_xfer
   totvegc            => clm3%g%l%c%p%pcs%totvegc
   btran2             => clm3%g%l%c%p%pps%btran2
-  pcolumn            => clm3%g%l%c%p%column
   leafc              => clm3%g%l%c%p%pcs%leafc
   leafc_storage      => clm3%g%l%c%p%pcs%leafc_storage
   leafc_xfer         => clm3%g%l%c%p%pcs%leafc_xfer
-  livestemc          => clm3%g%l%c%p%pcs%livestemc
-  livestemc_storage  => clm3%g%l%c%p%pcs%livestemc_storage
-  livestemc_xfer     => clm3%g%l%c%p%pcs%livestemc_xfer
-  deadstemc          => clm3%g%l%c%p%pcs%deadstemc
-  deadstemc_storage  => clm3%g%l%c%p%pcs%deadstemc_storage
-  deadstemc_xfer     => clm3%g%l%c%p%pcs%deadstemc_xfer
   lfpftd             => clm3%g%l%c%p%pps%lfpftd
   burndate           => clm3%g%l%c%p%pps%burndate
 
@@ -729,13 +713,11 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use pftvarcon, only: cc_leaf,cc_lstem,cc_dstem,cc_other,fm_leaf,fm_lstem,fm_dstem,fm_other,fm_root,fm_lroot,fm_droot
+   use pftvarcon, only: cc_leaf,cc_lstem,cc_dstem,cc_other,fm_leaf,fm_lstem,fm_other,fm_root,fm_lroot,fm_droot
    use pftvarcon, only: nc3crop,lf_flab,lf_fcel,lf_flig,fr_flab,fr_fcel,fr_flig
    use clm_time_manager, only: get_step_size,get_days_per_year,get_curr_date
-   use clm_varpar, only : maxpatch_pft,max_pft_per_col
-   use surfrdMod   , only: crop_prog
+   use clm_varpar, only : max_pft_per_col
    use clm_varctl  , only: fpftdyn
-   use shr_sys_mod , only: shr_sys_flush
    use clm_varcon  , only: secspday
 !
 ! !ARGUMENTS:
@@ -755,7 +737,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 #if (defined CNDV)
    real(r8), pointer :: nind(:)         ! number of individuals (#/m2)
 #endif
-   real(r8), pointer :: woody(:)              ! woody lifeform (1=woody, 0=not woody) 
+   real(r8), pointer :: woody(:)        ! woody lifeform (1=woody, 0=not woody) 
    logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: wtcol(:)        ! pft weight relative to column 
@@ -930,7 +912,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
 !
 ! !OTHER LOCAL VARIABLES:
-   integer :: g,c,p,j,l,k,pi,kyr, kmo, kda, mcsec   ! indices
+   integer :: g,c,p,j,l,pi,kyr, kmo, kda, mcsec   ! indices
    integer :: fp,fc                ! filter indices
    real(r8):: f                    ! rate for fire effects (1/s)
    real(r8):: dt                   ! time step variable (s)

@@ -343,7 +343,8 @@ subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
          do l = 1, ndecomp_cascade_transitions
             if ( c%ccs%decomp_cpools_vr(cc,j,cascade_donor_pool(l)) /= 0._r8) then
                ccisof%decomp_cascade_hr_vr(cc,j,l)  =  c%ccf%decomp_cascade_hr_vr(cc,j,l) * &
-                    (ccisos%decomp_cpools_vr(cc,j,cascade_donor_pool(l)) / c%ccs%decomp_cpools_vr(cc,j,cascade_donor_pool(l))) * 1._r8
+                    (ccisos%decomp_cpools_vr(cc,j,cascade_donor_pool(l)) &
+                       / c%ccs%decomp_cpools_vr(cc,j,cascade_donor_pool(l))) * 1._r8
             else
                ccisof%decomp_cascade_hr_vr(cc,j,l) = 0._r8
             end if
@@ -357,7 +358,8 @@ subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
          do l = 1, ndecomp_cascade_transitions
             if ( c%ccs%decomp_cpools_vr(cc,j,cascade_donor_pool(l)) /= 0._r8) then
                ccisof%decomp_cascade_ctransfer_vr(cc,j,l)  =  c%ccf%decomp_cascade_ctransfer_vr(cc,j,l) * &
-                    (ccisos%decomp_cpools_vr(cc,j,cascade_donor_pool(l)) / c%ccs%decomp_cpools_vr(cc,j,cascade_donor_pool(l))) * 1._r8
+                    (ccisos%decomp_cpools_vr(cc,j,cascade_donor_pool(l)) &
+                       / c%ccs%decomp_cpools_vr(cc,j,cascade_donor_pool(l))) * 1._r8
             else
                ccisof%decomp_cascade_ctransfer_vr(cc,j,l) = 0._r8
             end if
@@ -968,14 +970,20 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
                 p = pfti(c) + pi - 1
                 if (pactive(p)) then
                    ! leaf litter carbon fluxes
-                   phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                   phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) + leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                   phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) + leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                   phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
+                      + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                   phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
+                      + leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                   phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
+                      + leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
                    
                    ! fine root litter carbon fluxes
-                   phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) + frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                   phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                   phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                   phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
+                      + frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                   phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
+                      + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                   phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
+                      + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
                 end if
              end if
              

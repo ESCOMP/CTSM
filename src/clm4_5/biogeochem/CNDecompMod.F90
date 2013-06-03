@@ -231,8 +231,10 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             
-            if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. decomp_k(c,j,cascade_donor_pool(k)) .gt. 0._r8 ) then
-               p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+            if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
+               decomp_k(c,j,cascade_donor_pool(k)) .gt. 0._r8 ) then
+                  p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
+                     * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
                
                if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
                   

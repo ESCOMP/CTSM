@@ -66,7 +66,7 @@ contains
     use clm_atmlnd    , only : clm_a2l
     use clm_time_manager  , only : get_step_size
     use clm_varctl    , only : iulog
-    use nanMod        , only : nan
+    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
                                icol_roof, icol_sunwall, icol_shadewall, &
                                icol_road_perv, icol_road_imperv, istwet, &

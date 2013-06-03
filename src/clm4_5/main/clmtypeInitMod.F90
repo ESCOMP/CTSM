@@ -10,7 +10,7 @@ module clmtypeInitMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod      , only : nan, bigint
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use clmtype
   use clm_varpar  , only : maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
                            numpft, ndst, nlevurb, nlevsoi, nlevdecomp, nlevdecomp_full, &
@@ -759,8 +759,8 @@ contains
     allocate(pftcon%ffrootcn(0:numpft))
     allocate(pftcon%fstemcn(0:numpft))
 
-    pftcon%noveg(:) = bigint
-    pftcon%tree(:) = bigint
+    pftcon%noveg(:) = huge(1)
+    pftcon%tree(:) = huge(1)
     pftcon%smpso(:) = nan
     pftcon%smpsc(:) = nan
     pftcon%fnitr(:) = nan
@@ -1069,7 +1069,7 @@ contains
     allocate(pps%stem_prof(beg:end,1:nlevdecomp_full))
     pps%prec10(beg:end) = nan   ! F. Li and S. Levis
     pps%prec60(beg:end) = nan   ! F. Li and S. Levis
-    pps%frac_veg_nosno(beg:end) = bigint
+    pps%frac_veg_nosno(beg:end) = huge(1)
     pps%frac_veg_nosno_alb(beg:end) = 0
     pps%emv(beg:end) = nan
     pps%z0mv(beg:end) = nan
@@ -1156,8 +1156,8 @@ contains
        pps%astem(beg:end)       = nan
        pps%croplive(beg:end)    = .false.
        pps%cropplant(beg:end)   = .false.
-       pps%harvdate(beg:end)    = bigint
-       pps%idop(beg:end)        = bigint
+       pps%harvdate(beg:end)    = huge(1)
+       pps%idop(beg:end)        = huge(1)
        pps%peaklai(beg:end)     = 0
     end if
     pps%vds(beg:end) = nan
@@ -3207,7 +3207,7 @@ contains
     allocate(cps%som_adv_coef(beg:end,1:nlevdecomp_full))
     allocate(cps%som_diffus_coef(beg:end,1:nlevdecomp_full))
 
-    cps%isoicol(beg:end) = bigint
+    cps%isoicol(beg:end) = huge(1)
 
     !F. Li and S. Levis
     cps%gdp_lf(beg:end) = nan
@@ -3243,7 +3243,7 @@ contains
     cps%dz(beg:end,-nlevsno+1:nlevgrnd) = nan
     cps%z (beg:end,-nlevsno+1:nlevgrnd) = nan
     cps%frac_iceold(beg:end,-nlevsno+1:nlevgrnd) = spval
-    cps%imelt(beg:end,-nlevsno+1:nlevgrnd) = bigint
+    cps%imelt(beg:end,-nlevsno+1:nlevgrnd) = huge(1)
     cps%eff_porosity(beg:end,1:nlevgrnd) = spval
     cps%emg(beg:end) = nan
     cps%z0mg(beg:end) = nan
@@ -3376,9 +3376,9 @@ contains
     cps%alt(beg:end) = spval
     cps%altmax(beg:end) = spval
     cps%altmax_lastyear(beg:end) = spval
-    cps%alt_indx(beg:end) = bigint
-    cps%altmax_indx(beg:end) = bigint
-    cps%altmax_lastyear_indx(beg:end) = bigint
+    cps%alt_indx(beg:end) = huge(1)
+    cps%altmax_indx(beg:end) = huge(1)
+    cps%altmax_lastyear_indx(beg:end) = huge(1)
     cps%som_adv_coef(beg:end,1:nlevdecomp_full) = spval
     cps%som_diffus_coef(beg:end,1:nlevdecomp_full) = spval
 
@@ -3920,14 +3920,12 @@ contains
     allocate(cwf%qflx_h2osfc_surf(beg:end))
     allocate(cwf%qflx_snow_h2osfc(beg:end))
     allocate(cwf%qflx_drain_perched(beg:end))
-    allocate(cwf%qflx_floodc(beg:end))
     allocate(cwf%qflx_snow_melt(beg:end))
 
     cwf%qflx_h2osfc_to_ice(beg:end) = spval
     cwf%qflx_h2osfc_surf(beg:end) = spval
     cwf%qflx_snow_h2osfc(beg:end) = nan
     cwf%qflx_drain_perched(beg:end) = spval
-    cwf%qflx_floodc(beg:end) = spval
     cwf%qflx_snow_melt(beg:end) = spval
   end subroutine init_column_wflux_type
 
@@ -4595,7 +4593,7 @@ contains
     lps%cv_improad(beg:end,1:nlevurb) = nan
     lps%thick_wall(beg:end) = nan
     lps%thick_roof(beg:end) = nan
-    lps%nlev_improad(beg:end) = bigint
+    lps%nlev_improad(beg:end) = huge(1)
     lps%vf_sr(beg:end) = nan
     lps%vf_wr(beg:end) = nan
     lps%vf_sw(beg:end) = nan

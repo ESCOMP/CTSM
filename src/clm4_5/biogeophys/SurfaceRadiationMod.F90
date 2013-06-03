@@ -582,7 +582,8 @@ contains
            ! This situation should not happen:
            if (abs(sum(sabg_lyr(p,:))-sabg_snow(p)) > 0.00001_r8) then
               write(iulog,*) "SNICAR ERROR: Absorbed ground radiation not equal to summed snow layer radiation. pft = ",   &
-                             p," Col= ", c, " Diff= ",sum(sabg_lyr(p,:))-sabg_snow(p), " sabg_snow(p)= ", sabg_snow(p), " sabg_sum(p)= ", &
+                             p," Col= ", c, " Diff= ",sum(sabg_lyr(p,:))-sabg_snow(p), &
+                             " sabg_snow(p)= ", sabg_snow(p), " sabg_sum(p)= ", &
                              sum(sabg_lyr(p,:)), " snl(c)= ", snl(c)
               write(iulog,*) "flx_absdv1= ", trd(p,1)*(1.-albgrd(c,1)), "flx_absdv2= ", sum(flx_absdv(c,:))*trd(p,1)
               write(iulog,*) "flx_absiv1= ", tri(p,1)*(1.-albgri(c,1))," flx_absiv2= ", sum(flx_absiv(c,:))*tri(p,1)

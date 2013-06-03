@@ -27,8 +27,8 @@ module CNC14DecayMod
     character(len=256), public :: atm_c14_filename = ' '   ! file name of C14 input data
     
 ! !PRIVATE TYPES:
-    real(r8), allocatable, private, save :: atm_c14file_time(:)
-    real(r8), allocatable, private, save :: atm_delta_c14(:)
+    real(r8), allocatable, private :: atm_c14file_time(:)
+    real(r8), allocatable, private :: atm_delta_c14(:)
 
 ! !REVISION HISTORY:
 ! 2/15/2011 by C. Koven
@@ -238,6 +238,7 @@ subroutine C14BombSpike(num_soilp, filter_soilp)
    integer :: ind_below
    integer :: ntim_atm_ts
    real(r8) :: twt_1, twt_2                     ! weighting fractions for interpolating
+   real(r8) :: min, max
 
    rc14_atm       => clm3%g%l%c%p%pepv%rc14_atm
 
@@ -263,7 +264,8 @@ subroutine C14BombSpike(num_soilp, filter_soilp)
       elseif (ind_below .eq. ntim_atm_ts ) then
          delc14o2_atm = atm_delta_c14(ntim_atm_ts)
       else
-         twt_2 = min(1._r8, max(0._r8,(dateyear-atm_c14file_time(ind_below))/(atm_c14file_time(ind_below+1)-atm_c14file_time(ind_below))))
+         twt_2 = min(1._r8, max(0._r8,(dateyear-atm_c14file_time(ind_below)) &
+             / (atm_c14file_time(ind_below+1)-atm_c14file_time(ind_below))))
          twt_1 = 1._r8 - twt_2
          delc14o2_atm = atm_delta_c14(ind_below) * twt_1 +  atm_delta_c14(ind_below+1) * twt_2
       endif

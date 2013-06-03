@@ -22,7 +22,7 @@ module ncdio_pio
   use decompMod      , only : get_clmlevel_gsize,get_clmlevel_gsmap
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
-  use nanMod         , only : nan
+  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use mct_mod
   use pio
 !
@@ -2179,7 +2179,7 @@ contains
 ! I/O for 1d real field
 !
 ! !USES:
-    use shr_infnan_mod  , only : shr_infnan_isnan
+    use shr_infnan_mod, only : isnan => shr_infnan_isnan
 !
 ! !ARGUMENTS:
     implicit none
@@ -2300,7 +2300,7 @@ contains
        end if
        if ( present(cnvrtnan2fill) )then
           do n = lbound(data,dim=1), ubound(data,dim=1)
-             if ( shr_infnan_isnan( data(n) ) )then
+             if ( isnan( data(n) ) )then
                 data(n) = spval
              end if
           end do
@@ -2474,7 +2474,7 @@ contains
 ! Netcdf i/o of 2d initial integer field out to netCDF file
 !
 ! !USES:
-    use shr_infnan_mod  , only : shr_infnan_isnan
+    use shr_infnan_mod, only : isnan => shr_infnan_isnan
 !
 ! !ARGUMENTS:
     implicit none
@@ -2668,7 +2668,7 @@ contains
        if ( present(cnvrtnan2fill) )then
           do j = lb2,ub2
           do i = lb1,ub1
-             if ( shr_infnan_isnan(data(i,j)) )then
+             if ( isnan(data(i,j)) )then
                 data(i,j) = spval
              end if
           end do
@@ -3069,7 +3069,6 @@ contains
 ! !USES:
     use clm_varpar  , only : maxpatch
     use clm_varctl  , only : scmlon,scmlat,single_column
-    use nanMod      , only : nan, bigint
     use shr_scam_mod, only : shr_scam_getCloseLatLon
     use shr_string_mod, only: shr_string_toLower
 !
@@ -3163,8 +3162,8 @@ contains
        status = pio_inq_varid(ncid, 'cols1d_lat', varid)
        status = pio_get_var(ncid, varid, cols1dlat)
        
-       cols(:)     = bigint
-       data_offset = bigint
+       cols(:)     = huge(1)
+       data_offset = huge(1)
           ii = 1
        ndata = 0
           do cc = 1, dimlen
@@ -3197,8 +3196,8 @@ contains
        status = pio_inq_varid(ncid, 'pfts1d_lat', varid)
        status = pio_get_var(ncid, varid, pfts1dlat)
        
-       pfts(:)     = bigint
-       data_offset = bigint
+       pfts(:)     = huge(1)
+       data_offset = huge(1)
           ii     = 1
        ndata = 0
           do cc = 1, dimlen
@@ -3231,8 +3230,8 @@ contains
        status = pio_inq_varid(ncid, 'land1d_lat', varid)
        status = pio_get_var(ncid, varid, land1dlat)
        
-       landunits(:) = bigint
-       data_offset  = bigint
+       landunits(:) = huge(1)
+       data_offset  = huge(1)
           ii     = 1
        ndata = 0
           do cc = 1, dimlen

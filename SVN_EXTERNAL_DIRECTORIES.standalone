@@ -17,7 +17,7 @@ models/csm_share                https://svn-ccsm-models.cgd.ucar.edu/csm_share/t
 models/utils/esmf_wrf_timemgr   https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_130213
 models/utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_130417
 models/utils/mct                https://github.com/MCSclimate/MCT/tags/MCT_2.8.3
-models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_7_1/pio
+models/utils/pio                http://parallelio.googlecode.com/svn/trunk_tags/pio1_7_2/pio
 
 # Mapping tools:
 tools/cprnc                            https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_130529

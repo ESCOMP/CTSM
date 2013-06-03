@@ -452,7 +452,8 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
           do fc = 1,num_soilc
              c = filter_soilc(fc)
              decomp_cpools_sourcesink(c,j,cascade_donor_pool(k)) = &
-                  decomp_cpools_sourcesink(c,j,cascade_donor_pool(k)) - ( decomp_cascade_hr_vr(c,j,k) + decomp_cascade_ctransfer_vr(c,j,k)) *dt
+                  decomp_cpools_sourcesink(c,j,cascade_donor_pool(k)) &
+                    - ( decomp_cascade_hr_vr(c,j,k) + decomp_cascade_ctransfer_vr(c,j,k)) *dt
           end do
        end do
     end do
@@ -463,7 +464,8 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
              do fc = 1,num_soilc
                 c = filter_soilc(fc)
                 decomp_cpools_sourcesink(c,j,cascade_receiver_pool(k)) = &
-                     decomp_cpools_sourcesink(c,j,cascade_receiver_pool(k)) + decomp_cascade_ctransfer_vr(c,j,k)*dt
+                     decomp_cpools_sourcesink(c,j,cascade_receiver_pool(k)) &
+                        + decomp_cascade_ctransfer_vr(c,j,k)*dt
              end do
           end do
        end if

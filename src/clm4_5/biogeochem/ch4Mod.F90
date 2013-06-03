@@ -68,7 +68,7 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    use ch4varcon,  only : replenishlakec, redoxlag, allowlakeprod, redoxlag_vertical
    use clm_varcon, only : secspday
    use ch4varcon,  only : ch4offline, fin_use_fsat, atmch4
-   use nanmod   ,  only : nan, bigint
+   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
 !
 ! !ARGUMENTS:
    implicit none
@@ -258,7 +258,7 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    redoxlags_vertical = redoxlag_vertical*secspday ! days --> s
    rgasm = rgas / 1000._r8
 
-   jwt(:)            = bigint
+   jwt(:)            = huge(1)
    totcolch4_bef(:)  = nan
 
    ! Initialize local fluxes to zero: necessary for columns outside the filters because averaging up to gridcell will be done
@@ -681,7 +681,7 @@ subroutine ch4_prod (lbc, ubc, lbp, ubp, num_methc, filter_methc, num_methp, &
    use CNDecompCascadeMod_BGC, only : nlev_soildecomp_standard
 #endif
    use pftvarcon, only  : noveg
-   use nanmod,    only  : nan
+   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
 !
 ! !ARGUMENTS:
    implicit none

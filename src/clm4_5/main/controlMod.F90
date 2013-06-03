@@ -90,7 +90,7 @@ module controlMod
 #ifdef CN
   use CNAllocationMod , only : suplnitro
 #endif
-  use clm_nlUtilsMod  , only : find_nlgroup_name
+  use shr_nl_mod      , only : shr_nl_find_group_name
   use Hydrology1Mod   , only : Hydrology1_readnl
   use SoilHydrologyMod, only : SoilHydrology_readnl
  
@@ -336,7 +336,7 @@ contains
        unitn = getavu()
        write(iulog,*) 'Read in clm_inparm namelist from: ', trim(NLFilename)
        open( unitn, file=trim(NLFilename), status='old' )
-       call find_nlgroup_name(unitn, 'clm_inparm', status=ierr)
+       call shr_nl_find_group_name(unitn, 'clm_inparm', status=ierr)
        if (ierr == 0) then
           read(unitn, clm_inparm, iostat=ierr)
           if (ierr /= 0) then

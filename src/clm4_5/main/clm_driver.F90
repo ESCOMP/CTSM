@@ -334,7 +334,8 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
       call alt_calc(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
 
 #if (defined CN)
-      call decomp_vertprofiles(begp, endp, begc, endc, filter(nc)%num_soilc, filter(nc)%soilc, filter(nc)%num_soilp, filter(nc)%soilp)
+      call decomp_vertprofiles(begp, endp, begc, endc, filter(nc)%num_soilc, filter(nc)%soilc, &
+         filter(nc)%num_soilp, filter(nc)%soilp)
 #endif
 
       call t_stopf("decomp_vert")

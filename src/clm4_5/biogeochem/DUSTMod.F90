@@ -571,6 +571,7 @@ contains
 !
 ! !USES
     use shr_const_mod, only: SHR_CONST_PI, SHR_CONST_RDAIR
+    use shr_spfn_mod,  only: erf => shr_spfn_erf
     use decompMod, only : get_proc_bounds
 !
 ! !ARGUMENTS:
@@ -641,14 +642,6 @@ contains
     real(r8), parameter :: dmt_slt_opt = 75.0e-6_r8    ! [m] Optim diam for saltation
     real(r8), parameter :: dns_slt = 2650.0_r8         ! [kg m-3] Density of optimal saltation particles
 
-    ! declare erf intrinsic function
-    real(r8) :: dum     ! dummy variable for erf test
-#if (defined AIX) 
-#define ERF erf
-#else
-#define ERF derf
-    real(r8) derf
-#endif
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices 
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
@@ -658,21 +651,6 @@ contains
     ! Assign local pointers to derived type scalar members (column-level)
 
     mbl_bsn_fct => clm3%g%l%c%cps%mbl_bsn_fct
-
-    ! Sanity check on erf: erf() in SGI /usr/lib64/mips4/libftn.so is bogus
-
-    dum = 1.0_r8
-    if (abs(0.8427_r8-ERF(dum))/0.8427_r8>0.001_r8) then
-       write(iulog,*) 'erf(1.0) = ',ERF(dum)
-       write(iulog,*) 'Dustini: Error function error'
-       call endrun
-    end if
-    dum = 0.0_r8
-    if (ERF(dum) /= 0.0_r8) then
-       write(iulog,*) 'erf(0.0) = ',ERF(dum)
-       write(iulog,*) 'Dustini: Error function error'
-       call endrun
-    end if
 
     ! the following comes from (1) szdstlgn.F subroutine ovr_src_snk_frc_get
     !                      and (2) dstszdst.F subroutine dst_szdst_ini
@@ -686,8 +664,8 @@ contains
        do n = 1, ndst
           lndmaxjovrdmdni = log(dmt_grd(n+1)/dmt_vma_src(m))
           lndminjovrdmdni = log(dmt_grd(n  )/dmt_vma_src(m))
-          ovr_src_snk_frc = 0.5_r8 * (ERF(lndmaxjovrdmdni/sqrt2lngsdi) - &
-                                   ERF(lndminjovrdmdni/sqrt2lngsdi))
+          ovr_src_snk_frc = 0.5_r8 * (erf(lndmaxjovrdmdni/sqrt2lngsdi) - &
+                                   erf(lndminjovrdmdni/sqrt2lngsdi))
           ovr_src_snk_mss(m,n) = ovr_src_snk_frc * mss_frc_src(m)
        end do
     end do

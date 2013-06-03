@@ -26,7 +26,6 @@ module accumulMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils  , only: endrun
   use clm_varctl  , only: iulog
-  use nanMod      , only: bigint
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -239,7 +238,7 @@ contains
        write(iulog,1002)
        write(iulog,'(72a1)') ("_",i=1,71)
        do nf = 1, naccflds
-          if (accum(nf)%period /= bigint) then
+          if (accum(nf)%period /= huge(1)) then
              write(iulog,1003) nf,accum(nf)%name,accum(nf)%units,&
                   accum(nf)%acctype, accum(nf)%period, accum(nf)%initval, &
                   accum(nf)%desc
@@ -718,8 +717,8 @@ contains
        varname = trim(accum(nf)%name) // '_PERIOD'
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname=varname, xtype=ncd_int,  &
-               long_name='', units='time steps', imissing_value=bigint, &
-               ifill_value=bigint)
+               long_name='', units='time steps', imissing_value=huge(1), &
+               ifill_value=huge(1))
        else if (flag == 'read' .or. flag == 'write') then
           call ncd_io(varname=varname, data=accum(nf)%period, &
                ncid=ncid, flag=flag, readvar=readvar)

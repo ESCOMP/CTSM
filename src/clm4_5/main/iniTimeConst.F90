@@ -15,7 +15,6 @@ subroutine iniTimeConst
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod      , only : nan
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global
   use decompMod   , only : gsMap_lnd_gdc2glo
@@ -68,6 +67,7 @@ subroutine iniTimeConst
 #endif
   use clm_varcon      , only : pc, mu
   use shr_const_mod   , only : shr_const_pi
+  use shr_spfn_mod    , only : shr_spfn_erf
   use SoilHydrologyMod, only : h2osfcflag
 !
 !
@@ -283,7 +283,6 @@ subroutine iniTimeConst
   real(r8),pointer :: std(:)           ! read in - topo_std
   real(r8),pointer :: tslope(:)        ! read in - topo_slope
   real(r8) :: maxslope, slopemax, minslope, d, fd, dfdd, slope0,slopebeta
-  real(r8) :: derf
 !------------------------------------------------------------------------
 
   if (masterproc) write(iulog,*) 'Attempting to initialize time invariant variables'
@@ -1017,11 +1016,11 @@ subroutine iniTimeConst
       if (micro_sigma(c) > 1.e-6_r8) then
          d=0.0
          do p=1,4
-            fd = 0.5*(1.0_r8+derf(d/(micro_sigma(c)*sqrt(2.0)))) - pc
+            fd = 0.5*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0)))) - pc
             dfdd = exp(-d**2/(2.0*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0*shr_const_pi))
             d = d - fd/dfdd
          enddo
-         h2osfc_thresh(c) = 0.5*d*(1.0_r8+derf(d/(micro_sigma(c)*sqrt(2.0)))) &
+         h2osfc_thresh(c) = 0.5*d*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0)))) &
               +micro_sigma(c)/sqrt(2.0*shr_const_pi)*exp(-d**2/(2.0*micro_sigma(c)**2))         
          h2osfc_thresh(c) = 1.e3_r8 * h2osfc_thresh(c) !convert to mm from meters
       else

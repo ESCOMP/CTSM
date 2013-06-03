@@ -52,7 +52,7 @@ contains
 ! !USES:
     use spmdMod       , only : masterproc, mpicom
     use fileutils     , only : getavu, relavu, opnfil
-    use clm_nlUtilsMod, only : find_nlgroup_name
+    use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
 ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename ! Namelist filename
@@ -73,7 +73,7 @@ contains
        unitn = getavu()
        write(iulog,*) 'Read in clm_hydrology1_inparm  namelist'
        call opnfil (NLFilename, unitn, 'F')
-       call find_nlgroup_name(unitn, 'clm_hydrology1_inparm', status=ierr)
+       call shr_nl_find_group_name(unitn, 'clm_hydrology1_inparm', status=ierr)
        if (ierr == 0) then
           read(unitn, clm_hydrology1_inparm, iostat=ierr)
           if (ierr /= 0) then
@@ -124,7 +124,6 @@ contains
     use clm_time_manager , only : get_step_size
     use subgridAveMod, only : p2c
     use SNICARMod    , only : snw_rds_min
-    use nanMod       , only : nan
 
 !
 ! !ARGUMENTS:

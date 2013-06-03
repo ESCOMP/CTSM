@@ -3386,7 +3386,8 @@ contains
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
        if ( is_restart() .and. ntapes_onfile /= ntapes )then
           write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
-          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!, you can NOT change history options on restart!' )
+          call endrun( trim(subname)//' ERROR: number of ntapes different than on restart file!, '// &
+            ' you can NOT change history options on restart!' )
        end if
        if ( is_restart() .and. ntapes > 0 )then
           call ncd_io('locfnh',  locfnh(1:ntapes),  'read', ncid )

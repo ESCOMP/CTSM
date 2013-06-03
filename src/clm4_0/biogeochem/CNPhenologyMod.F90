@@ -1826,7 +1826,6 @@ subroutine CropPhenologyInit( begp, endp )
                                mnSHplantdate, mxNHplantdate,         &
                                mxSHplantdate
    use clm_time_manager, only: get_calday
-   use nanmod          , only: bigint
 !
 ! !ARGUMENTS:
    implicit none
@@ -1852,8 +1851,8 @@ subroutine CropPhenologyInit( begp, endp )
    jdayyrstart(inSH) = 182
 
    ! Convert planting dates into julian day
-   minplantjday(:,:) = bigint
-   maxplantjday(:,:) = bigint
+   minplantjday(:,:) = huge(1)
+   maxplantjday(:,:) = huge(1)
    do n = npcropmin, npcropmax
       minplantjday(n,inNH) = int( get_calday( mnNHplantdate(n), 0 ) )
       maxplantjday(n,inNH) = int( get_calday( mxNHplantdate(n), 0 ) )

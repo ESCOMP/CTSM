@@ -392,7 +392,6 @@ contains
          isturb,istsoil,pc,mu,tfrz, istcrop
     use clmtype
     use clm_varctl      , only: iulog
-    use nanMod          , only : nan
     use clm_time_manager, only : get_step_size
     use clm_varpar      , only : nlevsoi
     use H2OSfcMod       , only : FracH2oSfc

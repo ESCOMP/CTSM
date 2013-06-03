@@ -59,8 +59,8 @@ contains
    use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
-   use shr_pio_mod       , only : shr_pio_getiotype
-   use clm_nlUtilsMod   , only : find_nlgroup_name
+   use shr_pio_mod      , only : shr_pio_getiotype
+   use shr_nl_mod       , only : shr_nl_find_group_name
    ! arguments
    implicit none
 
@@ -92,7 +92,7 @@ contains
    if (masterproc) then
       nu_nml = getavu()
       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-      call find_nlgroup_name(nu_nml, 'ndepdyn_nml', status=nml_error)
+      call shr_nl_find_group_name(nu_nml, 'ndepdyn_nml', status=nml_error)
       if (nml_error == 0) then
          read(nu_nml, nml=ndepdyn_nml,iostat=nml_error)
          if (nml_error /= 0) then

@@ -21,7 +21,7 @@ module clm_glclnd
 ! !USES:
   use decompMod   , only : get_proc_bounds
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod      , only : nan
+  use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use spmdMod     , only : masterproc
   use clm_varpar  , only : maxpatch_glcmec
   use clm_varctl  , only : iulog, glc_smb
@@ -32,25 +32,27 @@ module clm_glclnd
 !
 ! !PUBLIC TYPES:
   implicit none
+  private
+  save
 
 !----------------------------------------------------
 ! glc -> land variables structure
 !----------------------------------------------------
-  type glc2lnd_type
-     real(r8), pointer :: frac(:,:) 
-     real(r8), pointer :: topo(:,:) 
-     real(r8), pointer :: rofi(:,:) 
-     real(r8), pointer :: rofl(:,:) 
-     real(r8), pointer :: hflx(:,:) 
+  type, public :: glc2lnd_type
+     real(r8), pointer :: frac(:,:) => null()
+     real(r8), pointer :: topo(:,:) => null()
+     real(r8), pointer :: rofi(:,:) => null()
+     real(r8), pointer :: rofl(:,:) => null()
+     real(r8), pointer :: hflx(:,:) => null()
   end type glc2lnd_type
 
 !----------------------------------------------------
 ! land -> glc variables structure
 !----------------------------------------------------
-  type lnd2glc_type
-     real(r8), pointer :: tsrf(:,:) 
-     real(r8), pointer :: topo(:,:)
-     real(r8), pointer :: qice(:,:)
+  type, public :: lnd2glc_type
+     real(r8), pointer :: tsrf(:,:) => null()
+     real(r8), pointer :: topo(:,:) => null()
+     real(r8), pointer :: qice(:,:) => null()
   end type lnd2glc_type
 
   type (lnd2glc_type), public, target :: clm_s2x  ! s2x fields on clm grid
@@ -59,6 +61,8 @@ module clm_glclnd
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_glc2lnd_type
   public :: init_lnd2glc_type
+  public :: create_clm_s2x
+  public :: unpack_clm_x2s
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 

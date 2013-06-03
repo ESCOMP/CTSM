@@ -9,7 +9,6 @@ module domainMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
@@ -67,6 +66,7 @@ contains
 !
 ! !INTERFACE:
   subroutine domain_init(domain,isgrid2d,ni,nj,nbeg,nend,clmlevel)
+    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
 !
 ! !DESCRIPTION:
 ! This subroutine allocates and nans the domain type
@@ -151,8 +151,6 @@ end subroutine domain_init
 ! !DESCRIPTION:
 ! This subroutine deallocates the domain type
 !
-! !USES:
-!
 ! !ARGUMENTS:
     implicit none
     type(domain_type) :: domain        ! domain datatype
@@ -184,11 +182,11 @@ end subroutine domain_init
     endif
 
     domain%clmlevel   = unset
-    domain%ns         = bigint
-    domain%ni         = bigint
-    domain%nj         = bigint
-    domain%nbeg       = bigint
-    domain%nend       = bigint
+    domain%ns         = huge(1)
+    domain%ni         = huge(1)
+    domain%nj         = huge(1)
+    domain%nbeg       = huge(1)
+    domain%nend       = huge(1)
     domain%set        = unset
     domain%decomped   = .true.
 

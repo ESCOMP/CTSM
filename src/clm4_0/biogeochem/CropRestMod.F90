@@ -710,7 +710,7 @@ contains
     integer :: rsmon       ! Restart month from restart file
     integer :: rsday       ! Restart day from restart file
     integer :: tod         ! Restart time of day from restart file
-    character(len=*), parameter :: formDate = '(A,i4.4,"/"i2.2,"/",i2.2)' ! log output format
+    character(len=*), parameter :: formDate = '(A,i4.4,"/",i2.2,"/",i2.2)' ! log output format
     character(len=32) :: subname = 'CropRest::checkDates'
     !
     ! If branch or startup make sure the startdate is compatible with the date
