@@ -917,6 +917,7 @@ contains
     use mct_mod         , only: mct_aVect
     use clm_cpl_indices
     use clmtype
+    use domainMod        , only : ldomain
     implicit none
 ! !ARGUMENTS:
     type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
@@ -995,7 +996,8 @@ contains
 
         a2l%forc_flood(g)   = -x2l_l%rattr(index_x2l_Flrr_flood,i)  
 
-        a2l%volr(g)   = x2l_l%rattr(index_x2l_Slrr_volr,i)
+        a2l%volr(g)   = x2l_l%rattr(index_x2l_Slrr_volr,i) &
+                      * (ldomain%area(g) * 1.e6_r8)
 
         ! Determine required receive fields
 

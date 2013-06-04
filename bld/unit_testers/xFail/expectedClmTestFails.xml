@@ -31,10 +31,10 @@
          <yellowstone>
             <INTEL>
                <entry testId="ERB.ne30_g16.I_1948-2004"                                  failType="FAIL"  bugz="1658" >Differences found</entry>
-               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP.nldir_crop"             failType="FAIL"  bugz="1696" >use before define in history</entry>
+               <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                        failType="FAIL"  bugz="1696" >use before define in history</entry>
                <entry testId="ERS.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"        failType="FAIL"  bugz="1722" >floating point exception</entry>
                <entry testId="ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"      failType="FAIL"  bugz="1722" >floating point exception</entry>
-               <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default"   failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is NOT being copied on a generate like it should.</entry>
+               <entry testId="SSP.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default"   failType="BFAIL" bugz="1728" >starting in clm4_5_07--The cpl.hi.nc file is not being copied on a generate like it should.</entry>
             </INTEL>
             <PGI>
             </PGI>

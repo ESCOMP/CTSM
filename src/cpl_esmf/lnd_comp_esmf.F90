@@ -545,14 +545,6 @@ end subroutine
     call ESMF_AttributeSet(comp, "ModelType", "Land", &
                            convention=convCIM, purpose=purpComp, rc=rc)
 
-!    call ESMF_AttributeSet(comp, "Name", "Sam Levis", &
-!                           convention=convCIM, purpose=purpComp, rc=rc)
-!    call ESMF_AttributeSet(comp, "EmailAddress", &
-!                           "slevis@ucar.edu", &
-!                           convention=convCIM, purpose=purpComp, rc=rc)
-!    call ESMF_AttributeSet(comp, "ResponsiblePartyRole", "contact", &
-!                           convention=convCIM, purpose=purpComp, rc=rc)
-
   end subroutine lnd_init_esmf
 
 !---------------------------------------------------------------------------
@@ -1121,6 +1113,7 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use clm_varctl      , only: iulog
     use clm_cpl_indices
+    use domainMod       , only : ldomain
     implicit none
 ! !ARGUMENTS:
     real(r8)          , pointer       :: fptr(:,:)
@@ -1196,7 +1189,8 @@ subroutine lnd_final_esmf(comp, import_state, export_state, EClock, rc)
 
         a2l%forc_flood(g)   = -fptr(index_x2l_Flrr_flood,i)  
 
-        a2l%volr(g)   = fptr(index_x2l_Slrr_volr,i)
+        a2l%volr(g)   = fptr(index_x2l_Slrr_volr,i) &
+                      * (ldomain%area(g) * 1.e6_r8)
 
         ! Determine required receive fields
 

@@ -202,8 +202,6 @@ contains
     real(r8) :: top_moist(lbc:ubc)         !temporary, soil moisture in top VIC layers
     real(r8) :: top_max_moist(lbc:ubc)     !temporary, maximum soil moisture in top VIC layers
     real(r8) :: top_ice(lbc:ubc)           !temporary, ice len in top VIC layers
-    real(r8) :: top_icefrac                !temporary, ice fraction in top VIC layers
-    real(r8) :: top_fracice                !temporary, fraction covered by ice for runoff calculations
     character(len=32) :: subname = 'SurfaceRunoff'  ! subroutine name
 #endif
 
@@ -291,8 +289,6 @@ contains
        A(c)           = 1._r8 - (1._r8 - top_moist(c) / top_max_moist(c))**ex(c)
        i_0(c)         = max_infil(c) * (1._r8 - (1._r8 - A(c))**(1._r8/b_infil(c)))
        fsat(c)        = A(c)  !for output
-       top_icefrac    = min(1._r8,top_ice(c)/top_moist(c))
-       top_fracice    = max(0._r8,exp(-3._r8*(1._r8-top_icefrac))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
 #else
        fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
 #endif
@@ -511,7 +507,6 @@ contains
     real(r8) :: top_max_moist(lbc:ubc)     ! temporary, maximum soil moisture in top VIC layers
     real(r8) :: top_ice(lbc:ubc)           ! temporary, ice len in top VIC layers
     real(r8) :: top_icefrac                ! temporary, ice fraction in top VIC layers
-    real(r8) :: top_fracice                ! temporary, fraction covered by ice for runoff calculations
 #endif
 !-----------------------------------------------------------------------
 
@@ -611,7 +606,7 @@ contains
              top_moist(c) =  top_moist(c) + moist(c,j) + ice(c,j)
              top_max_moist(c) = top_max_moist(c) + max_moist(c,j)
           end do
-          top_icefrac = min(1._r8,top_ice(c)/top_moist(c))
+          top_icefrac = min(1._r8,top_ice(c)/top_max_moist(c))
           if(qflx_in_soil(c) <= 0._r8) then
              rsurf_vic = 0._r8
           else if(max_infil(c) <= 0._r8) then
@@ -1831,7 +1826,7 @@ contains
 #endif
        else
 #if (defined VICHYDRO)
-          imped=10._r8**(-e_ice*ice(c,nlayer)/(depth(c,nlayer)*1000.0_r8))
+          imped=10._r8**(-e_ice*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
           dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
           rsub_top_max = dsmax_tmp(c)
 #else
@@ -1847,8 +1842,9 @@ contains
        rsub_tmp = (frac * rel_moist)/dtime
        if(rel_moist > Wsvic(c))then
           frac = (rel_moist - Wsvic(c))/(1.0_r8 - Wsvic(c))
-          rsub_top(c) = imped * (rsub_tmp + (rsub_top_max * (1.0_r8 - Ds(c)/Wsvic(c)) *frac**c_param(c))/dtime)
+          rsub_tmp = rsub_tmp + (rsub_top_max * (1.0_r8 - Ds(c)/Wsvic(c)) *frac**c_param(c))/dtime
        end if
+       rsub_top(c) = imped * rsub_tmp
        ! make sure baseflow isn't negative
        rsub_top(c) = max(0._r8, rsub_top(c))
 #else
