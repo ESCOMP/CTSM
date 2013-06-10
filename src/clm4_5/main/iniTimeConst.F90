@@ -9,7 +9,7 @@ subroutine iniTimeConst
 ! !DESCRIPTION:
 ! Initialize time invariant clm variables
 ! 1) removed references to shallow lake - since it is not used
-! 2) ***Make c%z, c%zi and c%dz allocatable depending on if you
+! 2) ***Make z, zi and dz allocatable depending on if you
 !    have lake or soil
 ! 3) rootfr only initialized for soil points
 !
@@ -313,92 +313,92 @@ subroutine iniTimeConst
   allocate(sandcol(begc:endc,1:nlevgrnd), claycol(begc:endc,1:nlevgrnd), om_fraccol(begc:endc,1:nlevgrnd)) ! allocation for local variables
 #endif
 
-  efisop          => clm3%g%gve%efisop
+  efisop          => gve%efisop
 
   ! Assign local pointers to derived subtypes components (gridcell-level)
-  lat             => clm3%g%lat
+  lat             =>  grc%lat
      
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  ltype               => clm3%g%l%itype
-  thick_wall          => clm3%g%l%lps%thick_wall
-  thick_roof          => clm3%g%l%lps%thick_roof
+  ltype               => lun%itype
+  thick_wall          => lps%thick_wall
+  thick_roof          => lps%thick_roof
 
   ! Assign local pointers to derived subtypes components (column-level)
 
-  topo_std        => clm3%g%l%c%cps%topo_std
-  topo_slope      => clm3%g%l%c%cps%topo_slope
-  micro_sigma     => clm3%g%l%c%cps%micro_sigma
-  h2osfc_thresh   => clm3%g%l%c%cps%h2osfc_thresh
-  hksat_min       => clm3%g%l%c%cps%hksat_min
-  n_melt          => clm3%g%l%c%cps%n_melt
-  ctype           => clm3%g%l%c%itype
-  clandunit       => clm3%g%l%c%landunit
-  cgridcell       => clm3%g%l%c%gridcell
-  z               => clm3%g%l%c%cps%z
-  dz              => clm3%g%l%c%cps%dz
-  zi              => clm3%g%l%c%cps%zi
-  bsw             => clm3%g%l%c%cps%bsw
-  watsat          => clm3%g%l%c%cps%watsat
-  watfc           => clm3%g%l%c%cps%watfc
-  watdry          => clm3%g%l%c%cps%watdry  
-  watopt          => clm3%g%l%c%cps%watopt  
-  rootfr_road_perv => clm3%g%l%c%cps%rootfr_road_perv
-  hksat           => clm3%g%l%c%cps%hksat
-  sucsat          => clm3%g%l%c%cps%sucsat
-  tkmg            => clm3%g%l%c%cps%tkmg
-  tksatu          => clm3%g%l%c%cps%tksatu
-  tkdry           => clm3%g%l%c%cps%tkdry
-  csol            => clm3%g%l%c%cps%csol
-  smpmin          => clm3%g%l%c%cps%smpmin
-  hkdepth         => clm3%g%l%c%cps%hkdepth
-  wtfact          => clm3%g%l%c%cps%wtfact
-  bd              => clm3%g%l%c%cps%bd
+  topo_std        => cps%topo_std
+  topo_slope      => cps%topo_slope
+  micro_sigma     => cps%micro_sigma
+  h2osfc_thresh   => cps%h2osfc_thresh
+  hksat_min       => cps%hksat_min
+  n_melt          => cps%n_melt
+  ctype           => col%itype
+  clandunit       =>col%landunit
+  cgridcell       =>col%gridcell
+  z               => cps%z
+  dz              => cps%dz
+  zi              => cps%zi
+  bsw             => cps%bsw
+  watsat          => cps%watsat
+  watfc           => cps%watfc
+  watdry          => cps%watdry  
+  watopt          => cps%watopt  
+  rootfr_road_perv => cps%rootfr_road_perv
+  hksat           => cps%hksat
+  sucsat          => cps%sucsat
+  tkmg            => cps%tkmg
+  tksatu          => cps%tksatu
+  tkdry           => cps%tkdry
+  csol            => cps%csol
+  smpmin          => cps%smpmin
+  hkdepth         => cps%hkdepth
+  wtfact          => cps%wtfact
+  bd              => cps%bd
 #ifdef LCH4
-  zwt0            => clm3%g%l%c%cps%zwt0
-  f0              => clm3%g%l%c%cps%f0
-  p3              => clm3%g%l%c%cps%p3
-  pH              => clm3%g%l%c%cps%pH
+  zwt0            => cps%zwt0
+  f0              => cps%f0
+  p3              => cps%p3
+  pH              => cps%pH
 #endif
-  isoicol         => clm3%g%l%c%cps%isoicol
+  isoicol         => cps%isoicol
   
   ! added by F. Li and S. Levis
-  gdp_lf          => clm3%g%l%c%cps%gdp_lf
-  peatf_lf        => clm3%g%l%c%cps%peatf_lf
-  abm_lf          => clm3%g%l%c%cps%abm_lf
+  gdp_lf          => cps%gdp_lf
+  peatf_lf        => cps%peatf_lf
+  abm_lf          => cps%abm_lf
 
-  gwc_thr         => clm3%g%l%c%cps%gwc_thr
-  mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
-  max_dayl        => clm3%g%l%c%cps%max_dayl
-  cellsand        => clm3%g%l%c%cps%cellsand
-  cellclay        => clm3%g%l%c%cps%cellclay
-  cellorg         => clm3%g%l%c%cps%cellorg
-  lakedepth       => clm3%g%l%c%cps%lakedepth
-  etal            => clm3%g%l%c%cps%etal
-  lakefetch       => clm3%g%l%c%cps%lakefetch
+  gwc_thr         => cps%gwc_thr
+  mss_frc_cly_vld => cps%mss_frc_cly_vld
+  max_dayl        => cps%max_dayl
+  cellsand        => cps%cellsand
+  cellclay        => cps%cellclay
+  cellorg         => cps%cellorg
+  lakedepth       => cps%lakedepth
+  etal            => cps%etal
+  lakefetch       => cps%lakefetch
 #if (defined VICHYDRO)
-  b_infil        => clm3%g%l%c%cps%b_infil
-  dsmax          => clm3%g%l%c%cps%dsmax
-  ds             => clm3%g%l%c%cps%ds
-  Wsvic          => clm3%g%l%c%cps%Wsvic
-  expt           => clm3%g%l%c%cps%expt
-  ksat           => clm3%g%l%c%cps%ksat
-  phi_s          => clm3%g%l%c%cps%phi_s
-  depth          => clm3%g%l%c%cps%depth
-  porosity       => clm3%g%l%c%cps%porosity
-  max_moist      => clm3%g%l%c%cps%max_moist
+  b_infil        => cps%b_infil
+  dsmax          => cps%dsmax
+  ds             => cps%ds
+  Wsvic          => cps%Wsvic
+  expt           => cps%expt
+  ksat           => cps%ksat
+  phi_s          => cps%phi_s
+  depth          => cps%depth
+  porosity       => cps%porosity
+  max_moist      => cps%max_moist
 #endif
 
   ! Assign local pointers to derived subtypes components (pft-level)
 
-  ivt             => clm3%g%l%c%p%itype
-  pgridcell       => clm3%g%l%c%p%gridcell
-  pcolumn         => clm3%g%l%c%p%column
-  dewmx           => clm3%g%l%c%p%pps%dewmx
-  rootfr          => clm3%g%l%c%p%pps%rootfr
-  rresis          => clm3%g%l%c%p%pps%rresis
-  sandfrac        => clm3%g%l%c%p%pps%sandfrac
-  clayfrac        => clm3%g%l%c%p%pps%clayfrac
+  ivt             =>pft%itype
+  pgridcell       =>pft%gridcell
+  pcolumn         =>pft%column
+  dewmx           => pps%dewmx
+  rootfr          => pps%rootfr
+  rresis          => pps%rresis
+  sandfrac        => pps%sandfrac
+  clayfrac        => pps%clayfrac
 
   if (nlevurb > 0) then
     allocate(zurb_wall(begl:endl,nlevurb),    &

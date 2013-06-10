@@ -130,35 +130,35 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 #if (defined CNDV)
     allom2                         => dgv_pftcon%allom2
     allom3                         => dgv_pftcon%allom3
-    nind                           => clm3%g%l%c%p%pdgvs%nind
-    fpcgrid                        => clm3%g%l%c%p%pdgvs%fpcgrid
+    nind                           => pdgvs%nind
+    fpcgrid                        => pdgvs%fpcgrid
 #endif
-    ivt                            => clm3%g%l%c%p%itype
-    pcolumn                        => clm3%g%l%c%p%column
-    pgridcell                      => clm3%g%l%c%p%gridcell
-    leafc                          => clm3%g%l%c%p%pcs%leafc
-    deadstemc                      => clm3%g%l%c%p%pcs%deadstemc
-    snow_depth                         => clm3%g%l%c%cps%snow_depth
+    ivt                            =>pft%itype
+    pcolumn                        =>pft%column
+    pgridcell                      =>pft%gridcell
+    leafc                          => pcs%leafc
+    deadstemc                      => pcs%deadstemc
+    snow_depth                         => cps%snow_depth
     woody                          => pftcon%woody
     slatop                         => pftcon%slatop
     dsladlai                       => pftcon%dsladlai
     z0mr                           => pftcon%z0mr
     displar                        => pftcon%displar
     dwood                          => pftcon%dwood
-    farea_burned                   => clm3%g%l%c%cps%farea_burned
+    farea_burned                   => cps%farea_burned
 
    ! assign local pointers to derived type arrays (out)
-    tlai                           => clm3%g%l%c%p%pps%tlai
-    tsai                           => clm3%g%l%c%p%pps%tsai
-    htop                           => clm3%g%l%c%p%pps%htop
-    hbot                           => clm3%g%l%c%p%pps%hbot
-    elai                           => clm3%g%l%c%p%pps%elai
-    esai                           => clm3%g%l%c%p%pps%esai
-    frac_veg_nosno_alb             => clm3%g%l%c%p%pps%frac_veg_nosno_alb
-    htmx                           => clm3%g%l%c%p%pps%htmx
-    peaklai                        => clm3%g%l%c%p%pps%peaklai
-    harvdate                       => clm3%g%l%c%p%pps%harvdate
-    forc_hgt_u_pft                 => clm3%g%l%c%p%pps%forc_hgt_u_pft
+    tlai                           => pps%tlai
+    tsai                           => pps%tsai
+    htop                           => pps%htop
+    hbot                           => pps%hbot
+    elai                           => pps%elai
+    esai                           => pps%esai
+    frac_veg_nosno_alb             => pps%frac_veg_nosno_alb
+    htmx                           => pps%htmx
+    peaklai                        => pps%peaklai
+    harvdate                       => pps%harvdate
+    forc_hgt_u_pft                 => pps%forc_hgt_u_pft
 
    dt = real( get_rad_step_size(), r8 )
 

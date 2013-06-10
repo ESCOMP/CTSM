@@ -239,68 +239,68 @@ contains
     forc_lwrad     => clm_a2l%forc_lwrad
     forc_snow      => clm_a2l%forc_snow
     forc_rain      => clm_a2l%forc_rain
-    lat            => clm3%g%lat
+    lat            =>  grc%lat
 
     ! Assign local pointers to derived type members (column-level)
 
-    cgridcell      => clm3%g%l%c%gridcell
-    dz             => clm3%g%l%c%cps%dz
-    dz_lake        => clm3%g%l%c%cps%dz_lake
-    t_soisno       => clm3%g%l%c%ces%t_soisno
-    t_lake         => clm3%g%l%c%ces%t_lake
-    snl            => clm3%g%l%c%cps%snl
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-    t_grnd         => clm3%g%l%c%ces%t_grnd
-    ws             => clm3%g%l%c%cps%ws
-    ks             => clm3%g%l%c%cps%ks
-    savedtke1      => clm3%g%l%c%cps%savedtke1
-    ust_lake       => clm3%g%l%c%cps%ust_lake
-    z0mg_col       => clm3%g%l%c%cps%z0mg
-    z0hg_col       => clm3%g%l%c%cps%z0hg
-    z0qg_col       => clm3%g%l%c%cps%z0qg
-    lakedepth      => clm3%g%l%c%cps%lakedepth
-    lakefetch      => clm3%g%l%c%cps%lakefetch
+    cgridcell      =>col%gridcell
+    dz             => cps%dz
+    dz_lake        => cps%dz_lake
+    t_soisno       => ces%t_soisno
+    t_lake         => ces%t_lake
+    snl            => cps%snl
+    h2osoi_liq     => cws%h2osoi_liq
+    h2osoi_ice     => cws%h2osoi_ice
+    t_grnd         => ces%t_grnd
+    ws             => cps%ws
+    ks             => cps%ks
+    savedtke1      => cps%savedtke1
+    ust_lake       => cps%ust_lake
+    z0mg_col       => cps%z0mg
+    z0hg_col       => cps%z0hg
+    z0qg_col       => cps%z0qg
+    lakedepth      => cps%lakedepth
+    lakefetch      => cps%lakefetch
 #ifdef LCH4
-    lake_raw       => clm3%g%l%c%cch4%lake_raw
+    lake_raw       => cch4%lake_raw
 #endif
-    sabg_chk       => clm3%g%l%c%p%pef%sabg_chk
+    sabg_chk       => pef%sabg_chk
 
     ! Assign local pointers to derived type members (pft-level)
 
-    pcolumn        => clm3%g%l%c%p%column
-    pgridcell      => clm3%g%l%c%p%gridcell
-    sabg           => clm3%g%l%c%p%pef%sabg
-    t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
-    q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
-    t_veg          => clm3%g%l%c%p%pes%t_veg
-    eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out
-    eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
-    eflx_soil_grnd => clm3%g%l%c%p%pef%eflx_soil_grnd
-    eflx_lh_tot    => clm3%g%l%c%p%pef%eflx_lh_tot
-    eflx_lh_grnd   => clm3%g%l%c%p%pef%eflx_lh_grnd
-    eflx_sh_grnd   => clm3%g%l%c%p%pef%eflx_sh_grnd
-    eflx_sh_tot    => clm3%g%l%c%p%pef%eflx_sh_tot
-    ram1           => clm3%g%l%c%p%pps%ram1
-    ram1_lake      => clm3%g%l%c%p%pps%ram1_lake
-    taux           => clm3%g%l%c%p%pmf%taux
-    tauy           => clm3%g%l%c%p%pmf%tauy
-    qflx_prec_grnd => clm3%g%l%c%p%pwf%qflx_prec_grnd
-    qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
-    qflx_evap_tot  => clm3%g%l%c%p%pwf%qflx_evap_tot
-    eflx_gnet      => clm3%g%l%c%p%pef%eflx_gnet
-    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
-    forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
-    forc_hgt_q_pft => clm3%g%l%c%p%pps%forc_hgt_q_pft
-    rh_ref2m       => clm3%g%l%c%p%pes%rh_ref2m
-    sabg_lyr       => clm3%g%l%c%p%pef%sabg_lyr
+    pcolumn        =>pft%column
+    pgridcell      =>pft%gridcell
+    sabg           => pef%sabg
+    t_ref2m        => pes%t_ref2m
+    q_ref2m        => pes%q_ref2m
+    t_veg          => pes%t_veg
+    eflx_lwrad_out => pef%eflx_lwrad_out
+    eflx_lwrad_net => pef%eflx_lwrad_net
+    eflx_soil_grnd => pef%eflx_soil_grnd
+    eflx_lh_tot    => pef%eflx_lh_tot
+    eflx_lh_grnd   => pef%eflx_lh_grnd
+    eflx_sh_grnd   => pef%eflx_sh_grnd
+    eflx_sh_tot    => pef%eflx_sh_tot
+    ram1           => pps%ram1
+    ram1_lake      => pps%ram1_lake
+    taux           => pmf%taux
+    tauy           => pmf%tauy
+    qflx_prec_grnd => pwf%qflx_prec_grnd
+    qflx_evap_soi  => pwf%qflx_evap_soi
+    qflx_evap_tot  => pwf%qflx_evap_tot
+    eflx_gnet      => pef%eflx_gnet
+    forc_hgt_u_pft => pps%forc_hgt_u_pft
+    forc_hgt_t_pft => pps%forc_hgt_t_pft
+    forc_hgt_q_pft => pps%forc_hgt_q_pft
+    rh_ref2m       => pes%rh_ref2m
+    sabg_lyr       => pef%sabg_lyr
     ! For calculation of NIR fraction of sabg
-    fsds_nir_d    => clm3%g%l%c%p%pef%fsds_nir_d
-    fsds_nir_i    => clm3%g%l%c%p%pef%fsds_nir_i
-    fsr_nir_d     => clm3%g%l%c%p%pef%fsr_nir_d
-    fsr_nir_i     => clm3%g%l%c%p%pef%fsr_nir_i
-    qflx_snwcp_ice => clm3%g%l%c%p%pwf%qflx_snwcp_ice
-    qflx_snwcp_liq => clm3%g%l%c%p%pwf%qflx_snwcp_liq
+    fsds_nir_d    => pef%fsds_nir_d
+    fsds_nir_i    => pef%fsds_nir_i
+    fsr_nir_d     => pef%fsr_nir_d
+    fsr_nir_i     => pef%fsr_nir_i
+    qflx_snwcp_ice => pwf%qflx_snwcp_ice
+    qflx_snwcp_liq => pwf%qflx_snwcp_liq
 
 
     ! Determine step size

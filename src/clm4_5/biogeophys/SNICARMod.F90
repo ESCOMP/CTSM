@@ -375,18 +375,18 @@ contains
     ! Assign local pointers to derived subtypes components (column-level)
     ! (CLM-specific)
     if (flg_snw_ice == 1) then
-       snl            => clm3%g%l%c%cps%snl
-       h2osno         => clm3%g%l%c%cws%h2osno
-       clandunit      => clm3%g%l%c%landunit  ! (debug only)
-       cgridcell      => clm3%g%l%c%gridcell  ! (debug only)
-       ltype          => clm3%g%l%itype       ! (debug only)
-       londeg         => clm3%g%londeg        ! (debug only)
-       latdeg         => clm3%g%latdeg        ! (debug only)
+       snl            => cps%snl
+       h2osno         => cws%h2osno
+       clandunit      =>col%landunit  ! (debug only)
+       cgridcell      =>col%gridcell  ! (debug only)
+       ltype          => lun%itype       ! (debug only)
+       londeg         =>  grc%londeg        ! (debug only)
+       latdeg         =>  grc%latdeg        ! (debug only)
     endif
 
-    frac_sno           => clm3%g%l%c%cps%frac_sno_eff
-    clandunit      => clm3%g%l%c%landunit  
-    ltype          => clm3%g%l%itype      
+    frac_sno           => cps%frac_sno_eff
+    clandunit      =>col%landunit  
+    ltype          => lun%itype      
 
     ! Define constants
     pi = SHR_CONST_PI
@@ -449,8 +449,8 @@ contains
              l_idx     = clandunit(c_idx)
              g_idx     = cgridcell(c_idx)
              sfctype   = ltype(l_idx)
-             lat_coord = latdeg(g_idx)
-             lon_coord = londeg(g_idx)
+             lat_coord = grc%latdeg(g_idx)
+             lon_coord = grc%londeg(g_idx)
 
 
           ! Set variables specific to CSIM
@@ -1164,23 +1164,23 @@ contains
     real(r8) :: cdz(-nlevsno+1:0)           ! column average layer thickness [m]
 !--------------------------------------------------------------------------!
     ! Assign local pointers to derived subtypes components (column-level)
-    t_soisno           => clm3%g%l%c%ces%t_soisno
-    snl                => clm3%g%l%c%cps%snl
-    t_grnd             => clm3%g%l%c%ces%t_grnd
-    dz                 => clm3%g%l%c%cps%dz
-    h2osno             => clm3%g%l%c%cws%h2osno
-    snw_rds            => clm3%g%l%c%cps%snw_rds
-    h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice         => clm3%g%l%c%cws%h2osoi_ice
-    snot_top           => clm3%g%l%c%cps%snot_top
-    dTdz_top           => clm3%g%l%c%cps%dTdz_top
-    snw_rds_top        => clm3%g%l%c%cps%snw_rds_top
-    sno_liq_top        => clm3%g%l%c%cps%sno_liq_top
-    qflx_snow_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
-    qflx_snwcp_ice     => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
-    qflx_snofrz_lyr    => clm3%g%l%c%cwf%qflx_snofrz_lyr
-    do_capsnow         => clm3%g%l%c%cps%do_capsnow
-    frac_sno           => clm3%g%l%c%cps%frac_sno_eff 
+    t_soisno           => ces%t_soisno
+    snl                => cps%snl
+    t_grnd             => ces%t_grnd
+    dz                 => cps%dz
+    h2osno             => cws%h2osno
+    snw_rds            => cps%snw_rds
+    h2osoi_liq         => cws%h2osoi_liq
+    h2osoi_ice         => cws%h2osoi_ice
+    snot_top           => cps%snot_top
+    dTdz_top           => cps%dTdz_top
+    snw_rds_top        => cps%snw_rds_top
+    sno_liq_top        => cps%sno_liq_top
+    qflx_snow_grnd_col => pwf_a%qflx_snow_grnd
+    qflx_snwcp_ice     => pwf_a%qflx_snwcp_ice
+    qflx_snofrz_lyr    => cwf%qflx_snofrz_lyr
+    do_capsnow         => cps%do_capsnow
+    frac_sno           => cps%frac_sno_eff 
   
 
     ! set timestep and step interval

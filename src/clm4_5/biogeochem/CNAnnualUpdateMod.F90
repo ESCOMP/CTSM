@@ -93,22 +93,22 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays
-   annsum_counter        => clm3%g%l%c%cps%annsum_counter
-   tempsum_potential_gpp => clm3%g%l%c%p%pepv%tempsum_potential_gpp
-   annsum_potential_gpp  => clm3%g%l%c%p%pepv%annsum_potential_gpp
-   tempmax_retransn      => clm3%g%l%c%p%pepv%tempmax_retransn
-   annmax_retransn       => clm3%g%l%c%p%pepv%annmax_retransn
-   tempavg_t2m           => clm3%g%l%c%p%pepv%tempavg_t2m
-   annavg_t2m            => clm3%g%l%c%p%pepv%annavg_t2m
-   tempsum_npp           => clm3%g%l%c%p%pepv%tempsum_npp
-   annsum_npp            => clm3%g%l%c%p%pepv%annsum_npp
-   cannsum_npp           => clm3%g%l%c%cps%cannsum_npp
-   cannavg_t2m           => clm3%g%l%c%cps%cannavg_t2m
+   annsum_counter        => cps%annsum_counter
+   tempsum_potential_gpp => pepv%tempsum_potential_gpp
+   annsum_potential_gpp  => pepv%annsum_potential_gpp
+   tempmax_retransn      => pepv%tempmax_retransn
+   annmax_retransn       => pepv%annmax_retransn
+   tempavg_t2m           => pepv%tempavg_t2m
+   annavg_t2m            => pepv%annavg_t2m
+   tempsum_npp           => pepv%tempsum_npp
+   annsum_npp            => pepv%annsum_npp
+   cannsum_npp           => cps%cannsum_npp
+   cannavg_t2m           => cps%cannavg_t2m
 #if (defined CNDV)
-   tempsum_litfall       => clm3%g%l%c%p%pepv%tempsum_litfall
-   annsum_litfall        => clm3%g%l%c%p%pepv%annsum_litfall
+   tempsum_litfall       => pepv%tempsum_litfall
+   annsum_litfall        => pepv%annsum_litfall
 #endif
-   pcolumn               => clm3%g%l%c%p%column
+   pcolumn               =>pft%column
 
    ! set time steps
    dt = real( get_step_size(), r8 )

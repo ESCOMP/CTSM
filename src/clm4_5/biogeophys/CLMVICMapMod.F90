@@ -82,11 +82,11 @@ subroutine initCLMVICMap(c)
  ! h2osoi_ice is actually water equavlent ice content.
  ! Assign local pointers to derived subtypes components (column-level)
 
-    dz         => clm3%g%l%c%cps%dz
-    zi         => clm3%g%l%c%cps%zi
-    z          => clm3%g%l%c%cps%z
-    depth      => clm3%g%l%c%cps%depth
-    vic_clm_fract => clm3%g%l%c%cps%vic_clm_fract
+    dz         => cps%dz
+    zi         => cps%zi
+    z          => cps%z
+    depth      => cps%depth
+    vic_clm_fract => cps%vic_clm_fract
 !************************************************************************  
 
 !  set fraction of VIC layer in each CLM layer
@@ -178,19 +178,19 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
  ! note: in CLM3 h2osoil_liq unit is kg/m2, in VIC moist is mm
  ! h2osoi_ice is actually water equavlent ice content.
  ! Assign local pointers to derived subtypes components (column-level)
-    dz            => clm3%g%l%c%cps%dz
-    zi            => clm3%g%l%c%cps%zi
-    z             => clm3%g%l%c%cps%z
-    h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
-    moist         => clm3%g%l%c%cws%moist
-    ice           => clm3%g%l%c%cws%ice
-    h2osoi_vol    => clm3%g%l%c%cws%h2osoi_vol
-    moist_vol     => clm3%g%l%c%cws%moist_vol
-    porosity      => clm3%g%l%c%cps%porosity
-    depth         => clm3%g%l%c%cps%depth
-    max_moist     => clm3%g%l%c%cps%max_moist
-    vic_clm_fract => clm3%g%l%c%cps%vic_clm_fract
+    dz            => cps%dz
+    zi            => cps%zi
+    z             => cps%z
+    h2osoi_liq    => cws%h2osoi_liq
+    h2osoi_ice    => cws%h2osoi_ice
+    moist         => cws%moist
+    ice           => cws%ice
+    h2osoi_vol    => cws%h2osoi_vol
+    moist_vol     => cws%moist_vol
+    porosity      => cps%porosity
+    depth         => cps%depth
+    max_moist     => cps%max_moist
+    vic_clm_fract => cps%vic_clm_fract
 
    ! map CLM to VIC
    do fc = 1, numf

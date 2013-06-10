@@ -91,10 +91,6 @@ contains
     real(r8):: m            ! multiplier for the exit_spinup code
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
     integer , pointer :: iptemp(:) ! pointer to memory to be allocated
     integer :: ier                 ! error status
     real(r8), pointer :: ptr1d(:), ptr2d(:,:) !temporary arrays for slicing larger arrays
@@ -107,15 +103,11 @@ contains
 
 !-----------------------------------------------------------------------
     if ( use_c13 ) then
-       pcisos => clm3%g%l%c%p%pc13s
-       pcbulks => clm3%g%l%c%p%pcs
+       pcisos =>  pc13s
+       pcbulks =>pcs
     endif
     ! Set pointers into derived type
 
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
 
 
     ! Determine necessary subgrid bounds
@@ -140,7 +132,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='dormant_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='dormancy flag',units='unitless' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='dormant_flag', data=pptr%pepv%dormant_flag, &
+       call ncd_io(varname='dormant_flag', data=pepv%dormant_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -152,7 +144,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='days_active', xtype=ncd_double,  &
             dim1name='pft',long_name='number of days since last dormancy',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='days_active', data=pptr%pepv%days_active, &
+       call ncd_io(varname='days_active', data=pepv%days_active, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -164,7 +156,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='onset_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='flag if critical growing degree-day sum is exceeded',units='unitless' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='onset_flag', data=pptr%pepv%onset_flag, &
+       call ncd_io(varname='onset_flag', data=pepv%onset_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -176,7 +168,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='onset_counter', xtype=ncd_double,  &
             dim1name='pft',long_name='onset days counter',units='sec' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='onset_counter', data=pptr%pepv%onset_counter, &
+       call ncd_io(varname='onset_counter', data=pepv%onset_counter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -188,7 +180,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='onset_gddflag', xtype=ncd_double,  &
             dim1name='pft',long_name='onset flag for growing degree day sum',units='' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='onset_gddflag', data=pptr%pepv%onset_gddflag, &
+       call ncd_io(varname='onset_gddflag', data=pepv%onset_gddflag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -200,7 +192,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='onset_fdd', xtype=ncd_double,  &
             dim1name='pft',long_name='onset freezing degree days counter',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='onset_fdd', data=pptr%pepv%onset_fdd, &
+       call ncd_io(varname='onset_fdd', data=pepv%onset_fdd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -212,7 +204,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='onset_gdd', xtype=ncd_double,  &
             dim1name='pft',long_name='onset growing degree days',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='onset_gdd', data=pptr%pepv%onset_gdd, &
+       call ncd_io(varname='onset_gdd', data=pepv%onset_gdd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -224,7 +216,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='onset_swi', xtype=ncd_double,  &
             dim1name='pft',long_name='onset soil water index',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='onset_swi', data=pptr%pepv%onset_swi, &
+       call ncd_io(varname='onset_swi', data=pepv%onset_swi, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -236,7 +228,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='offset_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='offset flag',units='unitless' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='offset_flag', data=pptr%pepv%offset_flag, &
+       call ncd_io(varname='offset_flag', data=pepv%offset_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -248,7 +240,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='offset_counter', xtype=ncd_double,  &
             dim1name='pft',long_name='offset days counter',units='sec' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='offset_counter', data=pptr%pepv%offset_counter, &
+       call ncd_io(varname='offset_counter', data=pepv%offset_counter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -260,7 +252,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='offset_fdd', xtype=ncd_double,  &
             dim1name='pft',long_name='offset freezing degree days counter',units='days' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='offset_fdd', data=pptr%pepv%offset_fdd, &
+       call ncd_io(varname='offset_fdd', data=pepv%offset_fdd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -272,7 +264,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='offset_swi', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='offset_swi', data=pptr%pepv%offset_swi, &
+       call ncd_io(varname='offset_swi', data=pepv%offset_swi, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -285,7 +277,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='fert_counter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fert_counter', data=pptr%pepv%fert_counter, &
+       call ncd_io(varname='fert_counter', data=pepv%fert_counter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -297,7 +289,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='fert', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fert', data=pptr%pnf%fert, &
+       call ncd_io(varname='fert', data=pnf%fert, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -310,7 +302,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='lgsf', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='lgsf', data=pptr%pepv%lgsf, &
+       call ncd_io(varname='lgsf', data=pepv%lgsf, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -322,7 +314,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='bglfr', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='bglfr', data=pptr%pepv%bglfr, &
+       call ncd_io(varname='bglfr', data=pepv%bglfr, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -334,7 +326,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='bgtr', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='bgtr', data=pptr%pepv%bgtr, &
+       call ncd_io(varname='bgtr', data=pepv%bgtr, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -346,7 +338,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='dayl', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='dayl', data=pptr%pepv%dayl, &
+       call ncd_io(varname='dayl', data=pepv%dayl, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -358,7 +350,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prev_dayl', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prev_dayl', data=pptr%pepv%prev_dayl, &
+       call ncd_io(varname='prev_dayl', data=pepv%prev_dayl, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -370,7 +362,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annavg_t2m', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_t2m', data=pptr%pepv%annavg_t2m, &
+       call ncd_io(varname='annavg_t2m', data=pepv%annavg_t2m, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -382,7 +374,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempavg_t2m', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_t2m', data=pptr%pepv%tempavg_t2m, &
+       call ncd_io(varname='tempavg_t2m', data=pepv%tempavg_t2m, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -394,7 +386,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='gpp_pepv', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gpp_pepv', data=pptr%pepv%gpp, &
+       call ncd_io(varname='gpp_pepv', data=pepv%gpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -406,7 +398,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='availc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='availc', data=pptr%pepv%availc, &
+       call ncd_io(varname='availc', data=pepv%availc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -418,7 +410,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='xsmrpool_recover', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='xsmrpool_recover', data=pptr%pepv%xsmrpool_recover, &
+       call ncd_io(varname='xsmrpool_recover', data=pepv%xsmrpool_recover, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -431,7 +423,7 @@ contains
           call ncd_defvar(ncid=ncid, varname='xsmrpool_c13ratio', xtype=ncd_double,  &
                dim1name='pft',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='xsmrpool_c13ratio', data=pptr%pepv%xsmrpool_c13ratio, &
+          call ncd_io(varname='xsmrpool_c13ratio', data=pepv%xsmrpool_c13ratio, &
                dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun
@@ -444,7 +436,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='alloc_pnow', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='alloc_pnow', data=pptr%pepv%alloc_pnow, &
+       call ncd_io(varname='alloc_pnow', data=pepv%alloc_pnow, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -456,7 +448,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='c_allometry', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='c_allometry', data=pptr%pepv%c_allometry, &
+       call ncd_io(varname='c_allometry', data=pepv%c_allometry, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -468,7 +460,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='n_allometry', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='n_allometry', data=pptr%pepv%n_allometry, &
+       call ncd_io(varname='n_allometry', data=pepv%n_allometry, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -480,7 +472,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='plant_ndemand', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='plant_ndemand', data=pptr%pepv%plant_ndemand, &
+       call ncd_io(varname='plant_ndemand', data=pepv%plant_ndemand, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -492,7 +484,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempsum_potential_gpp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempsum_potential_gpp', data=pptr%pepv%tempsum_potential_gpp, &
+       call ncd_io(varname='tempsum_potential_gpp', data=pepv%tempsum_potential_gpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -504,7 +496,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annsum_potential_gpp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annsum_potential_gpp', data=pptr%pepv%annsum_potential_gpp, &
+       call ncd_io(varname='annsum_potential_gpp', data=pepv%annsum_potential_gpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -516,7 +508,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempmax_retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempmax_retransn', data=pptr%pepv%tempmax_retransn, &
+       call ncd_io(varname='tempmax_retransn', data=pepv%tempmax_retransn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -528,7 +520,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annmax_retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annmax_retransn', data=pptr%pepv%annmax_retransn, &
+       call ncd_io(varname='annmax_retransn', data=pepv%annmax_retransn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -540,7 +532,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='avail_retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='avail_retransn', data=pptr%pepv%avail_retransn, &
+       call ncd_io(varname='avail_retransn', data=pepv%avail_retransn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
         if (is_restart()) call endrun
@@ -552,7 +544,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='plant_nalloc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='plant_nalloc', data=pptr%pepv%plant_nalloc, &
+       call ncd_io(varname='plant_nalloc', data=pepv%plant_nalloc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -564,7 +556,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='plant_calloc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='plant_calloc', data=pptr%pepv%plant_calloc, &
+       call ncd_io(varname='plant_calloc', data=pepv%plant_calloc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -576,7 +568,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='excess_cflux', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='excess_cflux', data=pptr%pepv%excess_cflux, &
+       call ncd_io(varname='excess_cflux', data=pepv%excess_cflux, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -588,7 +580,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='downreg', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='downreg', data=pptr%pepv%downreg, &
+       call ncd_io(varname='downreg', data=pepv%downreg, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -600,7 +592,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prev_leafc_to_litter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prev_leafc_to_litter', data=pptr%pepv%prev_leafc_to_litter, &
+       call ncd_io(varname='prev_leafc_to_litter', data=pepv%prev_leafc_to_litter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -612,7 +604,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prev_frootc_to_litter', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prev_frootc_to_litter', data=pptr%pepv%prev_frootc_to_litter, &
+       call ncd_io(varname='prev_frootc_to_litter', data=pepv%prev_frootc_to_litter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -624,7 +616,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempsum_npp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempsum_npp', data=pptr%pepv%tempsum_npp, &
+       call ncd_io(varname='tempsum_npp', data=pepv%tempsum_npp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -636,7 +628,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annsum_npp', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annsum_npp', data=pptr%pepv%annsum_npp, &
+       call ncd_io(varname='annsum_npp', data=pepv%annsum_npp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -649,7 +641,7 @@ contains
           call ncd_defvar(ncid=ncid, varname='rc13_canair', xtype=ncd_double,  &
                dim1name='pft',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='rc13_canair', data=pptr%pepv%rc13_canair, &
+          call ncd_io(varname='rc13_canair', data=pepv%rc13_canair, &
                dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun
@@ -661,7 +653,7 @@ contains
           call ncd_defvar(ncid=ncid, varname='rc13_psnsun', xtype=ncd_double,  &
                dim1name='pft',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='rc13_psnsun', data=pptr%pepv%rc13_psnsun, &
+          call ncd_io(varname='rc13_psnsun', data=pepv%rc13_psnsun, &
                dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun
@@ -673,7 +665,7 @@ contains
           call ncd_defvar(ncid=ncid, varname='rc13_psnsha', xtype=ncd_double,  &
                dim1name='pft',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='rc13_psnsha', data=pptr%pepv%rc13_psnsha, &
+          call ncd_io(varname='rc13_psnsha', data=pepv%rc13_psnsha, &
                dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun
@@ -687,7 +679,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grain_flag', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grain_flag', data=pptr%pepv%grain_flag, &
+       call ncd_io(varname='grain_flag', data=pepv%grain_flag, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -704,7 +696,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafc', data=pptr%pcs%leafc, &
+       call ncd_io(varname='leafc', data=pcs%leafc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -716,7 +708,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafc_storage', data=pptr%pcs%leafc_storage, &
+       call ncd_io(varname='leafc_storage', data=pcs%leafc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -728,7 +720,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafc_xfer', data=pptr%pcs%leafc_xfer, &
+       call ncd_io(varname='leafc_xfer', data=pcs%leafc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -740,7 +732,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='frootc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='frootc', data=pptr%pcs%frootc, &
+       call ncd_io(varname='frootc', data=pcs%frootc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -752,7 +744,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='frootc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='frootc_storage', data=pptr%pcs%frootc_storage, &
+       call ncd_io(varname='frootc_storage', data=pcs%frootc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -764,7 +756,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='frootc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='frootc_xfer', data=pptr%pcs%frootc_xfer, &
+       call ncd_io(varname='frootc_xfer', data=pcs%frootc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -776,7 +768,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemc', data=pptr%pcs%livestemc, &
+       call ncd_io(varname='livestemc', data=pcs%livestemc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -788,7 +780,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemc_storage', data=pptr%pcs%livestemc_storage, &
+       call ncd_io(varname='livestemc_storage', data=pcs%livestemc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -800,7 +792,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemc_xfer', data=pptr%pcs%livestemc_xfer, &
+       call ncd_io(varname='livestemc_xfer', data=pcs%livestemc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -812,7 +804,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadstemc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadstemc', data=pptr%pcs%deadstemc, &
+       call ncd_io(varname='deadstemc', data=pcs%deadstemc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -824,7 +816,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadstemc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadstemc_storage', data=pptr%pcs%deadstemc_storage, &
+       call ncd_io(varname='deadstemc_storage', data=pcs%deadstemc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -836,7 +828,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadstemc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadstemc_xfer', data=pptr%pcs%deadstemc_xfer, &
+       call ncd_io(varname='deadstemc_xfer', data=pcs%deadstemc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -848,7 +840,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livecrootc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livecrootc', data=pptr%pcs%livecrootc, &
+       call ncd_io(varname='livecrootc', data=pcs%livecrootc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -860,7 +852,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livecrootc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livecrootc_storage', data=pptr%pcs%livecrootc_storage, &
+       call ncd_io(varname='livecrootc_storage', data=pcs%livecrootc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -872,7 +864,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livecrootc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livecrootc_xfer', data=pptr%pcs%livecrootc_xfer, &
+       call ncd_io(varname='livecrootc_xfer', data=pcs%livecrootc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -884,7 +876,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadcrootc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadcrootc', data=pptr%pcs%deadcrootc, &
+       call ncd_io(varname='deadcrootc', data=pcs%deadcrootc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -896,7 +888,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadcrootc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadcrootc_storage', data=pptr%pcs%deadcrootc_storage, &
+       call ncd_io(varname='deadcrootc_storage', data=pcs%deadcrootc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -908,7 +900,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadcrootc_xfer', data=pptr%pcs%deadcrootc_xfer, &
+       call ncd_io(varname='deadcrootc_xfer', data=pcs%deadcrootc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -920,7 +912,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='gresp_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gresp_storage', data=pptr%pcs%gresp_storage, &
+       call ncd_io(varname='gresp_storage', data=pcs%gresp_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -932,7 +924,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='gresp_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gresp_xfer', data=pptr%pcs%gresp_xfer, &
+       call ncd_io(varname='gresp_xfer', data=pcs%gresp_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -944,7 +936,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cpool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cpool', data=pptr%pcs%cpool, &
+       call ncd_io(varname='cpool', data=pcs%cpool, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -956,7 +948,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='xsmrpool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='xsmrpool', data=pptr%pcs%xsmrpool, &
+       call ncd_io(varname='xsmrpool', data=pcs%xsmrpool, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -968,7 +960,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='pft_ctrunc', data=pptr%pcs%pft_ctrunc, &
+       call ncd_io(varname='pft_ctrunc', data=pcs%pft_ctrunc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -980,7 +972,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='totvegc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='totvegc', data=pptr%pcs%totvegc, &
+       call ncd_io(varname='totvegc', data=pcs%totvegc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -997,12 +989,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='leafc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='leafc_13', data=pptr%pc13s%leafc, &
+           call ncd_io(varname='leafc_13', data=pc13s%leafc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%leafc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%leafc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%leafc(i) = pcbulks%leafc(i) * c3_r2
                  else
                     pcisos%leafc(i) = pcbulks%leafc(i) * c4_r2
@@ -1017,12 +1009,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='leafc_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='leafc_storage_13', data=pptr%pc13s%leafc_storage, &
+           call ncd_io(varname='leafc_storage_13', data=pc13s%leafc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%leafc_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%leafc_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%leafc_storage(i) = pcbulks%leafc_storage(i) * c3_r2
                  else
                     pcisos%leafc_storage(i) = pcbulks%leafc_storage(i) * c4_r2
@@ -1037,12 +1029,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='leafc_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='leafc_xfer_13', data=pptr%pc13s%leafc_xfer, &
+           call ncd_io(varname='leafc_xfer_13', data=pc13s%leafc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%leafc_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%leafc_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%leafc_xfer(i) = pcbulks%leafc_xfer(i) * c3_r2
                  else
                     pcisos%leafc_xfer(i) = pcbulks%leafc_xfer(i) * c4_r2
@@ -1057,12 +1049,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='frootc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='frootc_13', data=pptr%pc13s%frootc, &
+           call ncd_io(varname='frootc_13', data=pc13s%frootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%frootc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%frootc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%frootc(i) = pcbulks%frootc(i) * c3_r2
                  else
                     pcisos%frootc(i) = pcbulks%frootc(i) * c4_r2
@@ -1077,12 +1069,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='frootc_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='frootc_storage_13', data=pptr%pc13s%frootc_storage, &
+           call ncd_io(varname='frootc_storage_13', data=pc13s%frootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%frootc_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%frootc_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%frootc_storage(i) = pcbulks%frootc_storage(i) * c3_r2
                  else
                     pcisos%frootc_storage(i) = pcbulks%frootc_storage(i) * c4_r2
@@ -1097,12 +1089,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='frootc_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='frootc_xfer_13', data=pptr%pc13s%frootc_xfer, &
+           call ncd_io(varname='frootc_xfer_13', data=pc13s%frootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%frootc_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%frootc_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%frootc_xfer(i) = pcbulks%frootc_xfer(i) * c3_r2
                  else
                     pcisos%frootc_xfer(i) = pcbulks%frootc_xfer(i) * c4_r2
@@ -1117,12 +1109,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='livestemc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livestemc_13', data=pptr%pc13s%livestemc, &
+           call ncd_io(varname='livestemc_13', data=pc13s%livestemc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%livestemc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%livestemc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%livestemc(i) = pcbulks%livestemc(i) * c3_r2
                  else
                     pcisos%livestemc(i) = pcbulks%livestemc(i) * c4_r2
@@ -1137,12 +1129,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='livestemc_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livestemc_storage_13', data=pptr%pc13s%livestemc_storage, &
+           call ncd_io(varname='livestemc_storage_13', data=pc13s%livestemc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%livestemc_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%livestemc_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%livestemc_storage(i) = pcbulks%livestemc_storage(i) * c3_r2
                  else
                     pcisos%livestemc_storage(i) = pcbulks%livestemc_storage(i) * c4_r2
@@ -1157,12 +1149,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='livestemc_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livestemc_xfer_13', data=pptr%pc13s%livestemc_xfer, &
+           call ncd_io(varname='livestemc_xfer_13', data=pc13s%livestemc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%livestemc_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%livestemc_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%livestemc_xfer(i) = pcbulks%livestemc_xfer(i) * c3_r2
                  else
                     pcisos%livestemc_xfer(i) = pcbulks%livestemc_xfer(i) * c4_r2
@@ -1177,12 +1169,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadstemc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadstemc_13', data=pptr%pc13s%deadstemc, &
+           call ncd_io(varname='deadstemc_13', data=pc13s%deadstemc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%deadstemc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%deadstemc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%deadstemc(i) = pcbulks%deadstemc(i) * c3_r2
                  else
                     pcisos%deadstemc(i) = pcbulks%deadstemc(i) * c4_r2
@@ -1197,12 +1189,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadstemc_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadstemc_storage_13', data=pptr%pc13s%deadstemc_storage, &
+           call ncd_io(varname='deadstemc_storage_13', data=pc13s%deadstemc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%deadstemc_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%deadstemc_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%deadstemc_storage(i) = pcbulks%deadstemc_storage(i) * c3_r2
                  else
                     pcisos%deadstemc_storage(i) = pcbulks%deadstemc_storage(i) * c4_r2
@@ -1217,12 +1209,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadstemc_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadstemc_xfer_13', data=pptr%pc13s%deadstemc_xfer, &
+           call ncd_io(varname='deadstemc_xfer_13', data=pc13s%deadstemc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%deadstemc_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%deadstemc_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%deadstemc_xfer(i) = pcbulks%deadstemc_xfer(i) * c3_r2
                  else
                     pcisos%deadstemc_xfer(i) = pcbulks%deadstemc_xfer(i) * c4_r2
@@ -1237,12 +1229,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='livecrootc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livecrootc_13', data=pptr%pc13s%livecrootc, &
+           call ncd_io(varname='livecrootc_13', data=pc13s%livecrootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%livecrootc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%livecrootc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%livecrootc(i) = pcbulks%livecrootc(i) * c3_r2
                  else
                     pcisos%livecrootc(i) = pcbulks%livecrootc(i) * c4_r2
@@ -1257,12 +1249,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='livecrootc_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livecrootc_storage_13', data=pptr%pc13s%livecrootc_storage, &
+           call ncd_io(varname='livecrootc_storage_13', data=pc13s%livecrootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%livecrootc_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%livecrootc_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%livecrootc_storage(i) = pcbulks%livecrootc_storage(i) * c3_r2
                  else
                     pcisos%livecrootc_storage(i) = pcbulks%livecrootc_storage(i) * c4_r2
@@ -1277,12 +1269,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='livecrootc_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livecrootc_xfer_13', data=pptr%pc13s%livecrootc_xfer, &
+           call ncd_io(varname='livecrootc_xfer_13', data=pc13s%livecrootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%livecrootc_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%livecrootc_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%livecrootc_xfer(i) = pcbulks%livecrootc_xfer(i) * c3_r2
                  else
                     pcisos%livecrootc_xfer(i) = pcbulks%livecrootc_xfer(i) * c4_r2
@@ -1297,12 +1289,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadcrootc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadcrootc_13', data=pptr%pc13s%deadcrootc, &
+           call ncd_io(varname='deadcrootc_13', data=pc13s%deadcrootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%deadcrootc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%deadcrootc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%deadcrootc(i) = pcbulks%deadcrootc(i) * c3_r2
                  else
                     pcisos%deadcrootc(i) = pcbulks%deadcrootc(i) * c4_r2
@@ -1317,12 +1309,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadcrootc_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadcrootc_storage_13', data=pptr%pc13s%deadcrootc_storage, &
+           call ncd_io(varname='deadcrootc_storage_13', data=pc13s%deadcrootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%deadcrootc_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%deadcrootc_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%deadcrootc_storage(i) = pcbulks%deadcrootc_storage(i) * c3_r2
                  else
                     pcisos%deadcrootc_storage(i) = pcbulks%deadcrootc_storage(i) * c4_r2
@@ -1337,12 +1329,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadcrootc_xfer_13', data=pptr%pc13s%deadcrootc_xfer, &
+           call ncd_io(varname='deadcrootc_xfer_13', data=pc13s%deadcrootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%deadcrootc_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%deadcrootc_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%deadcrootc_xfer(i) = pcbulks%deadcrootc_xfer(i) * c3_r2
                  else
                     pcisos%deadcrootc_xfer(i) = pcbulks%deadcrootc_xfer(i) * c4_r2
@@ -1357,12 +1349,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='gresp_storage_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='gresp_storage_13', data=pptr%pc13s%gresp_storage, &
+           call ncd_io(varname='gresp_storage_13', data=pc13s%gresp_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%gresp_storage with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%gresp_storage with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%gresp_storage(i) = pcbulks%gresp_storage(i) * c3_r2
                  else
                     pcisos%gresp_storage(i) = pcbulks%gresp_storage(i) * c4_r2
@@ -1377,12 +1369,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='gresp_xfer_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='gresp_xfer_13', data=pptr%pc13s%gresp_xfer, &
+           call ncd_io(varname='gresp_xfer_13', data=pc13s%gresp_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%gresp_xfer with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%gresp_xfer with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%gresp_xfer(i) = pcbulks%gresp_xfer(i) * c3_r2
                  else
                     pcisos%gresp_xfer(i) = pcbulks%gresp_xfer(i) * c4_r2
@@ -1397,12 +1389,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='cpool_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='cpool_13', data=pptr%pc13s%cpool, &
+           call ncd_io(varname='cpool_13', data=pc13s%cpool, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%cpool with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%cpool with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%cpool(i) = pcbulks%cpool(i) * c3_r2
                  else
                     pcisos%cpool(i) = pcbulks%cpool(i) * c4_r2
@@ -1417,12 +1409,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='xsmrpool_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='xsmrpool_13', data=pptr%pc13s%xsmrpool, &
+           call ncd_io(varname='xsmrpool_13', data=pc13s%xsmrpool, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%xsmrpool with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%xsmrpool with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%xsmrpool(i) = pcbulks%xsmrpool(i) * c3_r2
                  else
                     pcisos%xsmrpool(i) = pcbulks%xsmrpool(i) * c4_r2
@@ -1437,12 +1429,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='pft_ctrunc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='pft_ctrunc_13', data=pptr%pc13s%pft_ctrunc, &
+           call ncd_io(varname='pft_ctrunc_13', data=pc13s%pft_ctrunc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%pft_ctrunc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%pft_ctrunc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%pft_ctrunc(i) = pcbulks%pft_ctrunc(i) * c3_r2
                  else
                     pcisos%pft_ctrunc(i) = pcbulks%pft_ctrunc(i) * c4_r2
@@ -1457,12 +1449,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='totvegc_13', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='totvegc_13', data=pptr%pc13s%totvegc, &
+           call ncd_io(varname='totvegc_13', data=pc13s%totvegc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc13s%totvegc with atmospheric c13 value'
+              write(iulog,*) 'initializing pc13s%totvegc with atmospheric c13 value'
               do i = begp,endp
-                 if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+                 if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
                     pcisos%totvegc(i) = pcbulks%totvegc(i) * c3_r2
                  else
                     pcisos%totvegc(i) = pcbulks%totvegc(i) * c4_r2
@@ -1483,14 +1475,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='leafc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='leafc_14', data=pptr%pc14s%leafc, &
+           call ncd_io(varname='leafc_14', data=pc14s%leafc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%leafc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%leafc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%leafc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%leafc(i)) ) then
-                    pptr%pc14s%leafc(i) = pptr%pcs%leafc(i) * c14ratio
+                 if (pcs%leafc(i) .ne. spval .and. &
+                      .not. isnan(pcs%leafc(i)) ) then
+                    pc14s%leafc(i) = pcs%leafc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1503,14 +1495,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='leafc_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='leafc_storage_14', data=pptr%pc14s%leafc_storage, &
+           call ncd_io(varname='leafc_storage_14', data=pc14s%leafc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%leafc_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%leafc_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%leafc_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%leafc_storage(i)) ) then
-                    pptr%pc14s%leafc_storage(i) = pptr%pcs%leafc_storage(i) * c14ratio
+                 if (pcs%leafc_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%leafc_storage(i)) ) then
+                    pc14s%leafc_storage(i) = pcs%leafc_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1522,14 +1514,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='leafc_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='leafc_xfer_14', data=pptr%pc14s%leafc_xfer, &
+           call ncd_io(varname='leafc_xfer_14', data=pc14s%leafc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%leafc_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%leafc_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%leafc_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%leafc_xfer(i)) ) then
-                    pptr%pc14s%leafc_xfer(i) = pptr%pcs%leafc_xfer(i) * c14ratio
+                 if (pcs%leafc_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%leafc_xfer(i)) ) then
+                    pc14s%leafc_xfer(i) = pcs%leafc_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1541,14 +1533,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='frootc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='frootc_14', data=pptr%pc14s%frootc, &
+           call ncd_io(varname='frootc_14', data=pc14s%frootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%frootc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%frootc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%frootc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%frootc(i)) ) then
-                    pptr%pc14s%frootc(i) = pptr%pcs%frootc(i) * c14ratio
+                 if (pcs%frootc(i) .ne. spval .and. &
+                      .not. isnan(pcs%frootc(i)) ) then
+                    pc14s%frootc(i) = pcs%frootc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1560,14 +1552,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='frootc_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='frootc_storage_14', data=pptr%pc14s%frootc_storage, &
+           call ncd_io(varname='frootc_storage_14', data=pc14s%frootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%frootc_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%frootc_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%frootc_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%frootc_storage(i)) ) then
-                    pptr%pc14s%frootc_storage(i) = pptr%pcs%frootc_storage(i) * c14ratio
+                 if (pcs%frootc_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%frootc_storage(i)) ) then
+                    pc14s%frootc_storage(i) = pcs%frootc_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1579,14 +1571,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='frootc_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='frootc_xfer_14', data=pptr%pc14s%frootc_xfer, &
+           call ncd_io(varname='frootc_xfer_14', data=pc14s%frootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%frootc_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%frootc_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%frootc_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%frootc_xfer(i)) ) then
-                    pptr%pc14s%frootc_xfer(i) = pptr%pcs%frootc_xfer(i) * c14ratio
+                 if (pcs%frootc_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%frootc_xfer(i)) ) then
+                    pc14s%frootc_xfer(i) = pcs%frootc_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1598,14 +1590,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='livestemc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livestemc_14', data=pptr%pc14s%livestemc, &
+           call ncd_io(varname='livestemc_14', data=pc14s%livestemc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%livestemc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%livestemc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%livestemc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%livestemc(i)) ) then
-                    pptr%pc14s%livestemc(i) = pptr%pcs%livestemc(i) * c14ratio
+                 if (pcs%livestemc(i) .ne. spval .and. &
+                      .not. isnan(pcs%livestemc(i)) ) then
+                    pc14s%livestemc(i) = pcs%livestemc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1617,14 +1609,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='livestemc_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livestemc_storage_14', data=pptr%pc14s%livestemc_storage, &
+           call ncd_io(varname='livestemc_storage_14', data=pc14s%livestemc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%livestemc_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%livestemc_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%livestemc_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%livestemc_storage(i)) ) then
-                    pptr%pc14s%livestemc_storage(i) = pptr%pcs%livestemc_storage(i) * c14ratio
+                 if (pcs%livestemc_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%livestemc_storage(i)) ) then
+                    pc14s%livestemc_storage(i) = pcs%livestemc_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1636,14 +1628,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='livestemc_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livestemc_xfer_14', data=pptr%pc14s%livestemc_xfer, &
+           call ncd_io(varname='livestemc_xfer_14', data=pc14s%livestemc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%livestemc_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%livestemc_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%livestemc_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%livestemc_xfer(i)) ) then
-                    pptr%pc14s%livestemc_xfer(i) = pptr%pcs%livestemc_xfer(i) * c14ratio
+                 if (pcs%livestemc_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%livestemc_xfer(i)) ) then
+                    pc14s%livestemc_xfer(i) = pcs%livestemc_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1655,14 +1647,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadstemc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadstemc_14', data=pptr%pc14s%deadstemc, &
+           call ncd_io(varname='deadstemc_14', data=pc14s%deadstemc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%deadstemc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%deadstemc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%deadstemc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%deadstemc(i)) ) then
-                    pptr%pc14s%deadstemc(i) = pptr%pcs%deadstemc(i) * c14ratio
+                 if (pcs%deadstemc(i) .ne. spval .and. &
+                      .not. isnan(pcs%deadstemc(i)) ) then
+                    pc14s%deadstemc(i) = pcs%deadstemc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1674,14 +1666,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadstemc_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadstemc_storage_14', data=pptr%pc14s%deadstemc_storage, &
+           call ncd_io(varname='deadstemc_storage_14', data=pc14s%deadstemc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%deadstemc_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%deadstemc_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%deadstemc_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%deadstemc_storage(i)) ) then
-                    pptr%pc14s%deadstemc_storage(i) = pptr%pcs%deadstemc_storage(i) * c14ratio
+                 if (pcs%deadstemc_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%deadstemc_storage(i)) ) then
+                    pc14s%deadstemc_storage(i) = pcs%deadstemc_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1693,14 +1685,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadstemc_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadstemc_xfer_14', data=pptr%pc14s%deadstemc_xfer, &
+           call ncd_io(varname='deadstemc_xfer_14', data=pc14s%deadstemc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%deadstemc_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%deadstemc_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%deadstemc_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%deadstemc_xfer(i)) ) then
-                    pptr%pc14s%deadstemc_xfer(i) = pptr%pcs%deadstemc_xfer(i) * c14ratio
+                 if (pcs%deadstemc_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%deadstemc_xfer(i)) ) then
+                    pc14s%deadstemc_xfer(i) = pcs%deadstemc_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1712,14 +1704,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='livecrootc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livecrootc_14', data=pptr%pc14s%livecrootc, &
+           call ncd_io(varname='livecrootc_14', data=pc14s%livecrootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%livecrootc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%livecrootc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%livecrootc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%livecrootc(i)) ) then
-                    pptr%pc14s%livecrootc(i) = pptr%pcs%livecrootc(i) * c14ratio
+                 if (pcs%livecrootc(i) .ne. spval .and. &
+                      .not. isnan(pcs%livecrootc(i)) ) then
+                    pc14s%livecrootc(i) = pcs%livecrootc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1731,14 +1723,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='livecrootc_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livecrootc_storage_14', data=pptr%pc14s%livecrootc_storage, &
+           call ncd_io(varname='livecrootc_storage_14', data=pc14s%livecrootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%livecrootc_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%livecrootc_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%livecrootc_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%livecrootc_storage(i)) ) then
-                    pptr%pc14s%livecrootc_storage(i) = pptr%pcs%livecrootc_storage(i) * c14ratio
+                 if (pcs%livecrootc_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%livecrootc_storage(i)) ) then
+                    pc14s%livecrootc_storage(i) = pcs%livecrootc_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1750,14 +1742,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='livecrootc_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='livecrootc_xfer_14', data=pptr%pc14s%livecrootc_xfer, &
+           call ncd_io(varname='livecrootc_xfer_14', data=pc14s%livecrootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%livecrootc_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%livecrootc_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%livecrootc_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%livecrootc_xfer(i)) ) then
-                    pptr%pc14s%livecrootc_xfer(i) = pptr%pcs%livecrootc_xfer(i) * c14ratio
+                 if (pcs%livecrootc_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%livecrootc_xfer(i)) ) then
+                    pc14s%livecrootc_xfer(i) = pcs%livecrootc_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1769,14 +1761,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadcrootc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadcrootc_14', data=pptr%pc14s%deadcrootc, &
+           call ncd_io(varname='deadcrootc_14', data=pc14s%deadcrootc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%deadcrootc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%deadcrootc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%deadcrootc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%deadcrootc(i)) ) then
-                    pptr%pc14s%deadcrootc(i) = pptr%pcs%deadcrootc(i) * c14ratio
+                 if (pcs%deadcrootc(i) .ne. spval .and. &
+                      .not. isnan(pcs%deadcrootc(i)) ) then
+                    pc14s%deadcrootc(i) = pcs%deadcrootc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1788,14 +1780,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadcrootc_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadcrootc_storage_14', data=pptr%pc14s%deadcrootc_storage, &
+           call ncd_io(varname='deadcrootc_storage_14', data=pc14s%deadcrootc_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%deadcrootc_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%deadcrootc_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%deadcrootc_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%deadcrootc_storage(i)) ) then
-                    pptr%pc14s%deadcrootc_storage(i) = pptr%pcs%deadcrootc_storage(i) * c14ratio
+                 if (pcs%deadcrootc_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%deadcrootc_storage(i)) ) then
+                    pc14s%deadcrootc_storage(i) = pcs%deadcrootc_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1807,14 +1799,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='deadcrootc_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='deadcrootc_xfer_14', data=pptr%pc14s%deadcrootc_xfer, &
+           call ncd_io(varname='deadcrootc_xfer_14', data=pc14s%deadcrootc_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%deadcrootc_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%deadcrootc_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%deadcrootc_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%deadcrootc_xfer(i)) ) then
-                    pptr%pc14s%deadcrootc_xfer(i) = pptr%pcs%deadcrootc_xfer(i) * c14ratio
+                 if (pcs%deadcrootc_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%deadcrootc_xfer(i)) ) then
+                    pc14s%deadcrootc_xfer(i) = pcs%deadcrootc_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1826,14 +1818,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='gresp_storage_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='gresp_storage_14', data=pptr%pc14s%gresp_storage, &
+           call ncd_io(varname='gresp_storage_14', data=pc14s%gresp_storage, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%gresp_storage with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%gresp_storage with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%gresp_storage(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%gresp_storage(i)) ) then
-                    pptr%pc14s%gresp_storage(i) = pptr%pcs%gresp_storage(i) * c14ratio
+                 if (pcs%gresp_storage(i) .ne. spval .and. &
+                      .not. isnan(pcs%gresp_storage(i)) ) then
+                    pc14s%gresp_storage(i) = pcs%gresp_storage(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1845,14 +1837,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='gresp_xfer_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='gresp_xfer_14', data=pptr%pc14s%gresp_xfer, &
+           call ncd_io(varname='gresp_xfer_14', data=pc14s%gresp_xfer, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%gresp_xfer with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%gresp_xfer with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%gresp_xfer(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%gresp_xfer(i)) ) then
-                    pptr%pc14s%gresp_xfer(i) = pptr%pcs%gresp_xfer(i) * c14ratio
+                 if (pcs%gresp_xfer(i) .ne. spval .and. &
+                      .not. isnan(pcs%gresp_xfer(i)) ) then
+                    pc14s%gresp_xfer(i) = pcs%gresp_xfer(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1864,14 +1856,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='cpool_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='cpool_14', data=pptr%pc14s%cpool, &
+           call ncd_io(varname='cpool_14', data=pc14s%cpool, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%cpool with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%cpool with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%cpool(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%cpool(i)) ) then
-                    pptr%pc14s%cpool(i) = pptr%pcs%cpool(i) * c14ratio
+                 if (pcs%cpool(i) .ne. spval .and. &
+                      .not. isnan(pcs%cpool(i)) ) then
+                    pc14s%cpool(i) = pcs%cpool(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1883,14 +1875,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='xsmrpool_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='xsmrpool_14', data=pptr%pc14s%xsmrpool, &
+           call ncd_io(varname='xsmrpool_14', data=pc14s%xsmrpool, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%xsmrpool with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%xsmrpool with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%xsmrpool(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%xsmrpool(i)) ) then
-                    pptr%pc14s%xsmrpool(i) = pptr%pcs%xsmrpool(i) * c14ratio
+                 if (pcs%xsmrpool(i) .ne. spval .and. &
+                      .not. isnan(pcs%xsmrpool(i)) ) then
+                    pc14s%xsmrpool(i) = pcs%xsmrpool(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1902,14 +1894,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='pft_ctrunc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='pft_ctrunc_14', data=pptr%pc14s%pft_ctrunc, &
+           call ncd_io(varname='pft_ctrunc_14', data=pc14s%pft_ctrunc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%pft_ctrunc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%pft_ctrunc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%pft_ctrunc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%pft_ctrunc(i)) ) then
-                    pptr%pc14s%pft_ctrunc(i) = pptr%pcs%pft_ctrunc(i) * c14ratio
+                 if (pcs%pft_ctrunc(i) .ne. spval .and. &
+                      .not. isnan(pcs%pft_ctrunc(i)) ) then
+                    pc14s%pft_ctrunc(i) = pcs%pft_ctrunc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1921,14 +1913,14 @@ contains
            call ncd_defvar(ncid=ncid, varname='totvegc_14', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='totvegc_14', data=pptr%pc14s%totvegc, &
+           call ncd_io(varname='totvegc_14', data=pc14s%totvegc, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing pptr%pc14s%totvegc with atmospheric c14 value'
+              write(iulog,*) 'initializing pc14s%totvegc with atmospheric c14 value'
               do i = begp,endp
-                 if (pptr%pcs%totvegc(i) .ne. spval .and. &
-                      .not. isnan(pptr%pcs%totvegc(i)) ) then
-                    pptr%pc14s%totvegc(i) = pptr%pcs%totvegc(i) * c14ratio
+                 if (pcs%totvegc(i) .ne. spval .and. &
+                      .not. isnan(pcs%totvegc(i)) ) then
+                    pc14s%totvegc(i) = pcs%totvegc(i) * c14ratio
                  endif
               end do
               if (is_restart()) call endrun
@@ -1940,12 +1932,12 @@ contains
            call ncd_defvar(ncid=ncid, varname='rc14_atm', xtype=ncd_double,  &
                 dim1name='pft',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
-           call ncd_io(varname='rc14_atm', data=pptr%pepv%rc14_atm, &
+           call ncd_io(varname='rc14_atm', data=pepv%rc14_atm, &
                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
-              write(iulog,*) 'initializing cptr%cc14s%rc14_atm with atmospheric c14 value'
+              write(iulog,*) 'initializing cc14s%rc14_atm with atmospheric c14 value'
               do i = begp,endp
-                 pptr%pepv%rc14_atm(i) = c14ratio
+                 pepv%rc14_atm(i) = c14ratio
               end do
               if (is_restart()) call endrun
            end if
@@ -1962,7 +1954,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafn', data=pptr%pns%leafn, &
+       call ncd_io(varname='leafn', data=pns%leafn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -1974,7 +1966,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafn_storage', data=pptr%pns%leafn_storage, &
+       call ncd_io(varname='leafn_storage', data=pns%leafn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -1986,7 +1978,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafn_xfer', data=pptr%pns%leafn_xfer, &
+       call ncd_io(varname='leafn_xfer', data=pns%leafn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -1998,7 +1990,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='frootn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='frootn', data=pptr%pns%frootn, &
+       call ncd_io(varname='frootn', data=pns%frootn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2010,7 +2002,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='frootn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='frootn_storage', data=pptr%pns%frootn_storage, &
+       call ncd_io(varname='frootn_storage', data=pns%frootn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2022,7 +2014,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='frootn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='frootn_xfer', data=pptr%pns%frootn_xfer, &
+       call ncd_io(varname='frootn_xfer', data=pns%frootn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2034,7 +2026,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemn', data=pptr%pns%livestemn, &
+       call ncd_io(varname='livestemn', data=pns%livestemn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2046,7 +2038,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemn_storage', data=pptr%pns%livestemn_storage, &
+       call ncd_io(varname='livestemn_storage', data=pns%livestemn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2058,7 +2050,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemn_xfer', data=pptr%pns%livestemn_xfer, &
+       call ncd_io(varname='livestemn_xfer', data=pns%livestemn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2070,7 +2062,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadstemn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadstemn', data=pptr%pns%deadstemn, &
+       call ncd_io(varname='deadstemn', data=pns%deadstemn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2082,7 +2074,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadstemn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadstemn_storage', data=pptr%pns%deadstemn_storage, &
+       call ncd_io(varname='deadstemn_storage', data=pns%deadstemn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2094,7 +2086,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadstemn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadstemn_xfer', data=pptr%pns%deadstemn_xfer, &
+       call ncd_io(varname='deadstemn_xfer', data=pns%deadstemn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2106,7 +2098,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livecrootn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livecrootn', data=pptr%pns%livecrootn, &
+       call ncd_io(varname='livecrootn', data=pns%livecrootn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2118,7 +2110,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livecrootn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livecrootn_storage', data=pptr%pns%livecrootn_storage, &
+       call ncd_io(varname='livecrootn_storage', data=pns%livecrootn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2130,7 +2122,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livecrootn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livecrootn_xfer', data=pptr%pns%livecrootn_xfer, &
+       call ncd_io(varname='livecrootn_xfer', data=pns%livecrootn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2142,7 +2134,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadcrootn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadcrootn', data=pptr%pns%deadcrootn, &
+       call ncd_io(varname='deadcrootn', data=pns%deadcrootn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2154,7 +2146,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadcrootn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadcrootn_storage', data=pptr%pns%deadcrootn_storage, &
+       call ncd_io(varname='deadcrootn_storage', data=pns%deadcrootn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2166,7 +2158,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='deadcrootn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='deadcrootn_xfer', data=pptr%pns%deadcrootn_xfer, &
+       call ncd_io(varname='deadcrootn_xfer', data=pns%deadcrootn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2178,7 +2170,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='retransn', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='retransn', data=pptr%pns%retransn, &
+       call ncd_io(varname='retransn', data=pns%retransn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2190,7 +2182,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='npool', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='npool', data=pptr%pns%npool, &
+       call ncd_io(varname='npool', data=pns%npool, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2202,7 +2194,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='pft_ntrunc', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='pft_ntrunc', data=pptr%pns%pft_ntrunc, &
+       call ncd_io(varname='pft_ntrunc', data=pns%pft_ntrunc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2218,7 +2210,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='decl', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='decl', data=cptr%cps%decl, &
+       call ncd_io(varname='decl', data=cps%decl, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2229,35 +2221,35 @@ contains
     call cnrest_addfld_decomp(ncid=ncid, varname='fpi',                        &
                               longname='fraction of potential immobilization', &
                               units='unitless', flag=flag,                     &
-                              data_rl=cptr%cps%fpi_vr, readvar=readvar)
+                              data_rl=cps%fpi_vr, readvar=readvar)
 
 #ifdef VERTSOILC
     ! som_adv_coef
     call cnrest_addfld_decomp(ncid=ncid, varname='som_adv_coef',   &
                       longname='SOM advective flux', units='m/s',  &
                       flag=flag, fill_value=spval,                 &
-                      data_rl=cptr%cps%som_adv_coef, readvar=readvar)
+                      data_rl=cps%som_adv_coef, readvar=readvar)
 
     ! som_diffus_coef
     call cnrest_addfld_decomp(ncid=ncid, varname='som_diffus_coef',          &
                       longname='SOM diffusivity due to bio/cryo-turbation',  &
                       units='m^2/s',  flag=flag, fill_value=spval,           &
-                      data_rl=cptr%cps%som_diffus_coef, readvar=readvar)
+                      data_rl=cps%som_diffus_coef, readvar=readvar)
 #endif
 
 ! #ifdef NITRIF_DENITRIF
 !     ! tmean_monthly_max
-!     call cnrest_addfld_decomp(ncid=ncid, varname='tmean_monthly_max', longname='', units='', flag=flag, data_rl=cptr%cps%tmean_monthly_max, readvar=readvar)
+!     call cnrest_addfld_decomp(ncid=ncid, varname='tmean_monthly_max', longname='', units='', flag=flag, data_rl=cps%tmean_monthly_max, readvar=readvar)
 
 !     ! tmean_monthly
-!     call cnrest_addfld_decomp(ncid=ncid, varname='tmean_monthly', longname='', units='', flag=flag, data_rl=cptr%cps%tmean_monthly, readvar=readvar)
+!     call cnrest_addfld_decomp(ncid=ncid, varname='tmean_monthly', longname='', units='', flag=flag, data_rl=cps%tmean_monthly, readvar=readvar)
 ! #endif
     ! fpg
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='fpg', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fpg', data=cptr%cps%fpg, &
+       call ncd_io(varname='fpg', data=cps%fpg, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2269,7 +2261,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annsum_counter', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annsum_counter', data=cptr%cps%annsum_counter, &
+       call ncd_io(varname='annsum_counter', data=cps%annsum_counter, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2281,7 +2273,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cannsum_npp', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cannsum_npp', data=cptr%cps%cannsum_npp, &
+       call ncd_io(varname='cannsum_npp', data=cps%cannsum_npp, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2293,7 +2285,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='col_lag_npp', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='col_lag_npp', data=cptr%cps%col_lag_npp, &
+       call ncd_io(varname='col_lag_npp', data=cps%col_lag_npp, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2305,7 +2297,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cannavg_t2m', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cannavg_t2m', data=cptr%cps%cannavg_t2m, &
+       call ncd_io(varname='cannavg_t2m', data=cps%cannavg_t2m, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2318,7 +2310,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='burndate', xtype=ncd_int,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='burndate', data=pptr%pps%burndate, &
+       call ncd_io(varname='burndate', data=pps%burndate, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2330,7 +2322,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='lfc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='lfc', data=cptr%cps%lfc, &
+       call ncd_io(varname='lfc', data=cps%lfc, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2342,7 +2334,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='wf', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='wf', data=cptr%cps%wf, &
+       call ncd_io(varname='wf', data=cps%wf, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2355,7 +2347,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='btran2', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='btran2', data=pptr%pps%btran2, &
+       call ncd_io(varname='btran2', data=pps%btran2, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2370,7 +2362,7 @@ contains
     !--------------------------------
 
     do k = 1, ndecomp_pools
-       ptr2d => cptr%ccs%decomp_cpools_vr(:,:,k)
+       ptr2d => ccs%decomp_cpools_vr(:,:,k)
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
        call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
           units='', flag=flag, data_rl=ptr2d, readvar=readvar)
@@ -2382,23 +2374,23 @@ contains
     ! col_ctrunc
     varname = 'col_ctrunc'
     call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
-       units='', flag=flag, data_rl=cptr%ccs%col_ctrunc_vr, readvar=readvar)
+       units='', flag=flag, data_rl=ccs%col_ctrunc_vr, readvar=readvar)
     if (flag=='read' .and. .not. readvar) then
        call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
     end if
 
     ! ! nfixation_prof
-    ! call cnrest_addfld_decomp(ncid=ncid, varname='nfixation_prof', longname='', units='', flag=flag, data_rl=cptr%cps%nfixation_prof, readvar=readvar)
+    ! call cnrest_addfld_decomp(ncid=ncid, varname='nfixation_prof', longname='', units='', flag=flag, data_rl=cps%nfixation_prof, readvar=readvar)
 
     ! ! ndep_prof
-    ! call cnrest_addfld_decomp(ncid=ncid, varname='ndep_prof', longname='', units='', flag=flag, data_rl=cptr%cps%ndep_prof, readvar=readvar)
+    ! call cnrest_addfld_decomp(ncid=ncid, varname='ndep_prof', longname='', units='', flag=flag, data_rl=cps%ndep_prof, readvar=readvar)
 
     ! altmax
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='altmax', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='altmax', data=cptr%cps%altmax, &
+       call ncd_io(varname='altmax', data=cps%altmax, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2410,7 +2402,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='altmax_lastyear', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='altmax_lastyear', data=cptr%cps%altmax_lastyear, &
+       call ncd_io(varname='altmax_lastyear', data=cps%altmax_lastyear, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2422,7 +2414,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='altmax_indx', xtype=ncd_int,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='altmax_indx', data=cptr%cps%altmax_indx, &
+       call ncd_io(varname='altmax_indx', data=cps%altmax_indx, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2434,7 +2426,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='altmax_lastyear_indx', xtype=ncd_int,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='altmax_lastyear_indx', data=cptr%cps%altmax_lastyear_indx, &
+       call ncd_io(varname='altmax_lastyear_indx', data=cps%altmax_lastyear_indx, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2448,7 +2440,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='seedc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='seedc', data=cptr%ccs%seedc, &
+       call ncd_io(varname='seedc', data=ccs%seedc, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2460,7 +2452,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='totlitc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='totlitc', data=cptr%ccs%totlitc, &
+       call ncd_io(varname='totlitc', data=ccs%totlitc, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2472,7 +2464,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='totcolc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='totcolc', data=cptr%ccs%totcolc, &
+       call ncd_io(varname='totcolc', data=ccs%totcolc, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2484,7 +2476,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prod10c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prod10c', data=cptr%ccs%prod10c, &
+       call ncd_io(varname='prod10c', data=ccs%prod10c, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2496,7 +2488,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prod100c', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prod100c', data=cptr%ccs%prod100c, &
+       call ncd_io(varname='prod100c', data=ccs%prod100c, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2508,7 +2500,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='totsomc', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='totsomc', data=cptr%ccs%totsomc, &
+       call ncd_io(varname='totsomc', data=ccs%totsomc, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2522,17 +2514,17 @@ contains
        !--------------------------------
        
        do k = 1, ndecomp_pools
-          ptr2d => cptr%cc13s%decomp_cpools_vr(:,:,k)
+          ptr2d => cc13s%decomp_cpools_vr(:,:,k)
           varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_13'
           call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
              units='', flag=flag, data_rl=ptr2d, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc13s%decomp_cpools_vr with atmospheric c13 value for: '//varname
+             write(iulog,*) 'initializing cc13s%decomp_cpools_vr with atmospheric c13 value for: '//varname
              do i = begc,endc
                 do j = 1, nlevdecomp
-                   if (cptr%ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. &
-                      .not. isnan(cptr%ccs%decomp_cpools_vr(i,j,k)) ) then
-                         cptr%cc13s%decomp_cpools_vr(i,j,k) = cptr%ccs%decomp_cpools_vr(i,j,k) * c3_r2
+                   if (ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. &
+                      .not. isnan(ccs%decomp_cpools_vr(i,j,k)) ) then
+                         cc13s%decomp_cpools_vr(i,j,k) = ccs%decomp_cpools_vr(i,j,k) * c3_r2
                    endif
                 end do
              end do
@@ -2544,13 +2536,13 @@ contains
           call ncd_defvar(ncid=ncid, varname='seedc_13', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='seedc_13', data=cptr%cc13s%seedc, &
+          call ncd_io(varname='seedc_13', data=cc13s%seedc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              do i = begc,endc
-                if (cptr%ccs%seedc(i) .ne. spval .and. &
-                   .not. isnan(cptr%ccs%seedc(i)) ) then
-                      cptr%cc13s%seedc(i) = cptr%ccs%seedc(i) * c3_r2
+                if (ccs%seedc(i) .ne. spval .and. &
+                   .not. isnan(ccs%seedc(i)) ) then
+                      cc13s%seedc(i) = ccs%seedc(i) * c3_r2
                 end if
              end do
              if (is_restart()) call endrun
@@ -2559,20 +2551,20 @@ contains
        
        ! col_ctrunc_13
        call cnrest_addfld_decomp(ncid=ncid, varname='col_ctrunc_13_vr', longname='', &
-          units='', flag=flag, data_rl=cptr%cc13s%col_ctrunc_vr, readvar=readvar)
+          units='', flag=flag, data_rl=cc13s%col_ctrunc_vr, readvar=readvar)
 
        ! totlitc
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='totlitc_13', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='totlitc_13', data=cptr%cc13s%totlitc, &
+          call ncd_io(varname='totlitc_13', data=cc13s%totlitc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              do i = begc,endc
-                if (cptr%ccs%totlitc(i) .ne. spval .and. &
-                  .not. isnan( cptr%ccs%totlitc(i) ) ) then
-                      cptr%cc13s%totlitc(i) = cptr%ccs%totlitc(i) * c3_r2
+                if (ccs%totlitc(i) .ne. spval .and. &
+                  .not. isnan( ccs%totlitc(i) ) ) then
+                      cc13s%totlitc(i) = ccs%totlitc(i) * c3_r2
                 end if
              end do
              if (is_restart()) call endrun
@@ -2584,13 +2576,13 @@ contains
           call ncd_defvar(ncid=ncid, varname='totcolc_13', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='totcolc_13', data=cptr%cc13s%totcolc, &
+          call ncd_io(varname='totcolc_13', data=cc13s%totcolc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              do i = begc,endc
-                if (cptr%ccs%totcolc(i) .ne. spval .and. &
-                  .not. isnan (cptr%ccs%totcolc(i) ) ) then
-                   cptr%cc13s%totcolc(i) = cptr%ccs%totcolc(i) * c3_r2
+                if (ccs%totcolc(i) .ne. spval .and. &
+                  .not. isnan (ccs%totcolc(i) ) ) then
+                   cc13s%totcolc(i) = ccs%totcolc(i) * c3_r2
                 end if
              end do
              if (is_restart()) call endrun
@@ -2602,13 +2594,13 @@ contains
           call ncd_defvar(ncid=ncid, varname='prod10c_13', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='prod10c_13', data=cptr%cc13s%prod10c, &
+          call ncd_io(varname='prod10c_13', data=cc13s%prod10c, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              do i = begc,endc
-                if (cptr%ccs%prod10c(i) .ne. spval .and. &
-                  .not. isnan( cptr%ccs%prod10c(i) ) ) then
-                   cptr%cc13s%prod10c(i) = cptr%ccs%prod10c(i) * c3_r2
+                if (ccs%prod10c(i) .ne. spval .and. &
+                  .not. isnan( ccs%prod10c(i) ) ) then
+                   cc13s%prod10c(i) = ccs%prod10c(i) * c3_r2
                 endif
              end do
              if (is_restart()) call endrun
@@ -2620,13 +2612,13 @@ contains
           call ncd_defvar(ncid=ncid, varname='prod100c_13', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='prod100c_13', data=cptr%cc13s%prod100c, &
+          call ncd_io(varname='prod100c_13', data=cc13s%prod100c, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
              do i = begc,endc
-                if (cptr%ccs%prod100c(i) .ne. spval .and. &
-                  .not. isnan( cptr%ccs%prod100c(i) ) ) then
-                   cptr%cc13s%prod100c(i) = cptr%ccs%prod100c(i) * c3_r2
+                if (ccs%prod100c(i) .ne. spval .and. &
+                  .not. isnan( ccs%prod100c(i) ) ) then
+                   cc13s%prod100c(i) = ccs%prod100c(i) * c3_r2
                 endif
              end do
              if (is_restart()) call endrun
@@ -2640,17 +2632,17 @@ contains
        !--------------------------------
        
        do k = 1, ndecomp_pools
-          ptr2d => cptr%cc14s%decomp_cpools_vr(:,:,k)
+          ptr2d => cc14s%decomp_cpools_vr(:,:,k)
           varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_14'
           call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
              units='', flag=flag, data_rl=ptr2d, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc14s%decomp_cpools_vr with atmospheric c14 value for: '//varname
+             write(iulog,*) 'initializing cc14s%decomp_cpools_vr with atmospheric c14 value for: '//varname
              do i = begc,endc
                 do j = 1, nlevdecomp
-                   if (cptr%ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. &
-                        .not. isnan(cptr%ccs%decomp_cpools_vr(i,j,k)) ) then
-                      cptr%cc14s%decomp_cpools_vr(i,j,k) = cptr%ccs%decomp_cpools_vr(i,j,k) * c14ratio
+                   if (ccs%decomp_cpools_vr(i,j,k) .ne. spval .and. &
+                        .not. isnan(ccs%decomp_cpools_vr(i,j,k)) ) then
+                      cc14s%decomp_cpools_vr(i,j,k) = ccs%decomp_cpools_vr(i,j,k) * c14ratio
                    endif
                 end do
              end do
@@ -2662,14 +2654,14 @@ contains
           call ncd_defvar(ncid=ncid, varname='seedc_14', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='seedc_14', data=cptr%cc14s%seedc, &
+          call ncd_io(varname='seedc_14', data=cc14s%seedc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc14s%seedc with atmospheric c14 value'
+             write(iulog,*) 'initializing cc14s%seedc with atmospheric c14 value'
              do i = begc,endc
-                if (cptr%ccs%seedc(i) .ne. spval .and. &
-                     .not. isnan(cptr%ccs%seedc(i)) ) then
-                   cptr%cc14s%seedc(i) = cptr%ccs%seedc(i) * c14ratio
+                if (ccs%seedc(i) .ne. spval .and. &
+                     .not. isnan(ccs%seedc(i)) ) then
+                   cc14s%seedc(i) = ccs%seedc(i) * c14ratio
                 endif
              end do
              if (is_restart()) call endrun
@@ -2678,21 +2670,21 @@ contains
        
        ! col_ctrunc_c14
        call cnrest_addfld_decomp(ncid=ncid, varname='col_ctrunc_14_vr', longname='', &
-          units='', flag=flag, data_rl=cptr%cc14s%col_ctrunc_vr, readvar=readvar)
+          units='', flag=flag, data_rl=cc14s%col_ctrunc_vr, readvar=readvar)
 
        ! totlitc
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='totlitc_14', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='totlitc_14', data=cptr%cc14s%totlitc, &
+          call ncd_io(varname='totlitc_14', data=cc14s%totlitc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc14s%totlitc with atmospheric c14 value'
+             write(iulog,*) 'initializing cc14s%totlitc with atmospheric c14 value'
              do i = begc,endc
-                if (cptr%ccs%totlitc(i) .ne. spval .and. &
-                     .not. isnan(cptr%ccs%totlitc(i)) ) then
-                   cptr%cc14s%totlitc(i) = cptr%ccs%totlitc(i) * c14ratio
+                if (ccs%totlitc(i) .ne. spval .and. &
+                     .not. isnan(ccs%totlitc(i)) ) then
+                   cc14s%totlitc(i) = ccs%totlitc(i) * c14ratio
                 endif
              end do
              if (is_restart()) call endrun
@@ -2704,14 +2696,14 @@ contains
           call ncd_defvar(ncid=ncid, varname='totcolc_14', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='totcolc_14', data=cptr%cc14s%totcolc, &
+          call ncd_io(varname='totcolc_14', data=cc14s%totcolc, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc14s%totcolc with atmospheric c14 value'
+             write(iulog,*) 'initializing cc14s%totcolc with atmospheric c14 value'
              do i = begc,endc
-                if (cptr%ccs%totcolc(i) .ne. spval .and. &
-                     .not. isnan(cptr%ccs%totcolc(i)) ) then
-                   cptr%cc14s%totcolc(i) = cptr%ccs%totcolc(i) * c14ratio
+                if (ccs%totcolc(i) .ne. spval .and. &
+                     .not. isnan(ccs%totcolc(i)) ) then
+                   cc14s%totcolc(i) = ccs%totcolc(i) * c14ratio
                 endif
              end do
              if (is_restart()) call endrun
@@ -2723,14 +2715,14 @@ contains
           call ncd_defvar(ncid=ncid, varname='prod10c_14', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='prod10c_14', data=cptr%cc14s%prod10c, &
+          call ncd_io(varname='prod10c_14', data=cc14s%prod10c, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc14s%prod10c with atmospheric c14 value'
+             write(iulog,*) 'initializing cc14s%prod10c with atmospheric c14 value'
              do i = begc,endc
-                if (cptr%ccs%prod10c(i) .ne. spval .and. &
-                     .not. isnan(cptr%ccs%prod10c(i)) ) then
-                   cptr%cc14s%prod10c(i) = cptr%ccs%prod10c(i) * c14ratio
+                if (ccs%prod10c(i) .ne. spval .and. &
+                     .not. isnan(ccs%prod10c(i)) ) then
+                   cc14s%prod10c(i) = ccs%prod10c(i) * c14ratio
                 endif
              end do
              if (is_restart()) call endrun
@@ -2742,14 +2734,14 @@ contains
           call ncd_defvar(ncid=ncid, varname='prod100c_14', xtype=ncd_double,  &
                dim1name='column',long_name='',units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_io(varname='prod100c_14', data=cptr%cc14s%prod100c, &
+          call ncd_io(varname='prod100c_14', data=cc14s%prod100c, &
                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
           if (flag=='read' .and. .not. readvar) then
-             write(iulog,*) 'initializing cptr%cc14s%prod100c with atmospheric c14 value'
+             write(iulog,*) 'initializing cc14s%prod100c with atmospheric c14 value'
              do i = begc,endc
-                if (cptr%ccs%prod100c(i) .ne. spval .and. &
-                     .not. isnan(cptr%ccs%prod100c(i)) ) then
-                   cptr%cc14s%prod100c(i) = cptr%ccs%prod100c(i) * c14ratio
+                if (ccs%prod100c(i) .ne. spval .and. &
+                     .not. isnan(ccs%prod100c(i)) ) then
+                   cc14s%prod100c(i) = ccs%prod100c(i) * c14ratio
                 endif
              end do
              if (is_restart()) call endrun
@@ -2764,14 +2756,14 @@ contains
     ! sminn
     varname='sminn'
     call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
-       units='', flag=flag, data_rl=cptr%cns%sminn_vr, readvar=readvar)
+       units='', flag=flag, data_rl=cns%sminn_vr, readvar=readvar)
     if (flag=='read' .and. .not. readvar) then
        call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
     end if
     
     ! decomposing N pools
     do k = 1, ndecomp_pools
-       ptr2d => cptr%cns%decomp_npools_vr(:,:,k)
+       ptr2d => cns%decomp_npools_vr(:,:,k)
        varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
        call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', units='', flag=flag, data_rl=ptr2d, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -2782,25 +2774,25 @@ contains
     
     ! col_ntrunc
     call cnrest_addfld_decomp(ncid=ncid, varname='col_ntrunc', longname='', &
-       units='', flag=flag, data_rl=cptr%cns%col_ntrunc_vr, readvar=readvar)
+       units='', flag=flag, data_rl=cns%col_ntrunc_vr, readvar=readvar)
 
 #ifdef NITRIF_DENITRIF
     ! f_nit_vr
     call cnrest_addfld_decomp(ncid=ncid, varname='f_nit_vr', &
                               longname='soil nitrification flux', &
                               units='gN/m3/s', &
-                              flag=flag, data_rl=cptr%cnf%f_nit_vr, readvar=readvar)
+                              flag=flag, data_rl=cnf%f_nit_vr, readvar=readvar)
 
     ! pot_f_nit_vr
     call cnrest_addfld_decomp(ncid=ncid, varname='pot_f_nit_vr', &
                               longname='potential soil nitrification flux', &
                               units='gN/m3/s', &
-                              flag=flag, data_rl=cptr%cnf%pot_f_nit_vr, readvar=readvar)
+                              flag=flag, data_rl=cnf%pot_f_nit_vr, readvar=readvar)
 
     ! smin_no3_vr
     varname = 'smin_no3'
     call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
-       units='', flag=flag, data_rl=cptr%cns%smin_no3_vr, readvar=readvar)
+       units='', flag=flag, data_rl=cns%smin_no3_vr, readvar=readvar)
     if (flag=='read' .and. .not. readvar) then
        call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
     end if
@@ -2808,7 +2800,7 @@ contains
     ! smin_nh4
     varname = 'smin_nh4'
     call cnrest_addfld_decomp(ncid=ncid, varname=varname, longname='', &
-       units='', flag=flag, data_rl=cptr%cns%smin_nh4_vr, readvar=readvar)
+       units='', flag=flag, data_rl=cns%smin_nh4_vr, readvar=readvar)
     if (flag=='read' .and. .not. readvar) then
        call endrun( 'ERROR:: '//trim(varname)//' is required on an initialization dataset' )
     end if
@@ -2820,7 +2812,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='totcoln', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='totcoln', data=cptr%cns%totcoln, &
+       call ncd_io(varname='totcoln', data=cns%totcoln, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2832,7 +2824,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='seedn', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='seedn', data=cptr%cns%seedn, &
+       call ncd_io(varname='seedn', data=cns%seedn, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2844,7 +2836,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prod10n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prod10n', data=cptr%cns%prod10n, &
+       call ncd_io(varname='prod10n', data=cns%prod10n, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2856,7 +2848,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='prod100n', xtype=ncd_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='prod100n', data=cptr%cns%prod100n, &
+       call ncd_io(varname='prod100n', data=cns%prod100n, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2952,17 +2944,17 @@ contains
           end if
           do c = begc, endc
              do j = 1, nlevdecomp
-                clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) = clm3%g%l%c%ccs%decomp_cpools_vr(c,j,k) * m
+                ccs%decomp_cpools_vr(c,j,k) = ccs%decomp_cpools_vr(c,j,k) * m
                 
                 if ( use_c13 ) then
-                   clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) = clm3%g%l%c%cc13s%decomp_cpools_vr(c,j,k) * m
+                   cc13s%decomp_cpools_vr(c,j,k) = cc13s%decomp_cpools_vr(c,j,k) * m
                 endif
                 
                 if ( use_c14 ) then
-                   clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) = clm3%g%l%c%cc14s%decomp_cpools_vr(c,j,k) * m
+                   cc14s%decomp_cpools_vr(c,j,k) = cc14s%decomp_cpools_vr(c,j,k) * m
                 endif
                 
-                clm3%g%l%c%cns%decomp_npools_vr(c,j,k) = clm3%g%l%c%cns%decomp_npools_vr(c,j,k) * m
+                cns%decomp_npools_vr(c,j,k) = cns%decomp_npools_vr(c,j,k) * m
              end do
           end do
        end do
@@ -2970,7 +2962,7 @@ contains
 
     if ( .not. is_restart() .and. nstep .eq. 1 ) then
        do i = begp, endp
-          if (pftcon%c3psn(clm3%g%l%c%p%itype(i)) == 1._r8) then
+          if (pftcon%c3psn(pft%itype(i)) == 1._r8) then
              pcisos%grainc(i) = pcbulks%grainc(i) * c3_r2
              pcisos%grainc_storage(i) = pcbulks%grainc_storage(i) * c3_r2
              pcisos%grainc_xfer(i) = pcbulks%grainc_xfer(i) * c3_r2
@@ -2998,7 +2990,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='CROWNAREA', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CROWNAREA', data=pptr%pdgvs%crownarea, &
+       call ncd_io(varname='CROWNAREA', data=pdgvs%crownarea, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3010,7 +3002,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempsum_litfall', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempsum_litfall', data=pptr%pepv%tempsum_litfall, &
+       call ncd_io(varname='tempsum_litfall', data=pepv%tempsum_litfall, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3022,7 +3014,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annsum_litfall', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annsum_litfall', data=pptr%pepv%annsum_litfall, &
+       call ncd_io(varname='annsum_litfall', data=pepv%annsum_litfall, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3034,7 +3026,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='nind', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='nind', data=pptr%pdgvs%nind, &
+       call ncd_io(varname='nind', data=pdgvs%nind, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3046,7 +3038,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='fpcgrid', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fpcgrid', data=pptr%pdgvs%fpcgrid, &
+       call ncd_io(varname='fpcgrid', data=pdgvs%fpcgrid, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3058,7 +3050,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='fpcgridold', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fpcgridold', data=pptr%pdgvs%fpcgridold, &
+       call ncd_io(varname='fpcgridold', data=pdgvs%fpcgridold, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3070,7 +3062,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='TMOMIN20', xtype=ncd_double,  &
             dim1name='gridcell',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='TMOMIN20', data=gptr%gdgvs%tmomin20, &
+       call ncd_io(varname='TMOMIN20', data=gdgvs%tmomin20, &
             dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3082,7 +3074,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='AGDD20', xtype=ncd_double,  &
             dim1name='gridcell',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='AGDD20', data=gptr%gdgvs%agdd20, &
+       call ncd_io(varname='AGDD20', data=gdgvs%agdd20, &
             dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3094,7 +3086,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='T_MO_MIN', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='T_MO_MIN', data=pptr%pdgvs%t_mo_min, &
+       call ncd_io(varname='T_MO_MIN', data=pdgvs%t_mo_min, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3113,7 +3105,7 @@ contains
        if (flag == 'write') then
           do p = begp,endp
              iptemp(p) = 0
-             if (pptr%pdgvs%present(p)) iptemp(p) = 1
+             if (pdgvs%present(p)) iptemp(p) = 1
           end do
        end if
        call ncd_io(varname='present', data=iptemp, &
@@ -3123,8 +3115,8 @@ contains
              if (is_restart()) call endrun
           else
              do p = begp,endp
-                pptr%pdgvs%present(p) = .false.
-                if (iptemp(p) == 1) pptr%pdgvs%present(p) = .true.
+                pdgvs%present(p) = .false.
+                if (iptemp(p) == 1) pdgvs%present(p) = .true.
              end do
           end if
        end if
@@ -3136,7 +3128,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='leafcmax', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='leafcmax', data=pptr%pcs%leafcmax, &
+       call ncd_io(varname='leafcmax', data=pcs%leafcmax, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3148,7 +3140,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='heatstress', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='heatstress', data=pptr%pdgvs%heatstress, &
+       call ncd_io(varname='heatstress', data=pdgvs%heatstress, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -3160,7 +3152,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='greffic', xtype=ncd_double,  &
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='greffic', data=pptr%pdgvs%greffic, &
+       call ncd_io(varname='greffic', data=pdgvs%greffic, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun

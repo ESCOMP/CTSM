@@ -163,7 +163,7 @@ end subroutine init_lnd2glc_type
 ! Assign values to clm_s2x based on the appropriate derived types
 !
 ! !USES:
-  use clmtype     , only : clm3
+  use clmtype 
   use domainMod   , only : ldomain
   use clm_varcon  , only : istice_mec
   use clm_atmlnd  , only : clm_l2a, clm_a2l
@@ -187,9 +187,9 @@ end subroutine init_lnd2glc_type
 
     ! Assign local pointers to derived type members
 
-    clandunit => clm3%g%l%c%landunit
-    cgridcell => clm3%g%l%c%gridcell
-    ityplun   => clm3%g%l%itype
+    clandunit =>col%landunit
+    cgridcell =>col%gridcell
+    ityplun   => lun%itype
 
     ! Get processor bounds
     call get_proc_bounds(begg, endg, begc=begc, endc=endc)
@@ -214,16 +214,16 @@ end subroutine init_lnd2glc_type
 
           ! Following assumes all elevation classes are populated
           if (ityplun(l) == istice_mec) then
-             n = c - clm3%g%l%coli(l) + 1    ! elevation class index
+             n = c -lun%coli(l) + 1    ! elevation class index
 
              ! t_soisno and glc_topo are valid even in initialization, so tsrf and topo
              ! are set here regardless of the value of init. But qflx_glcice is not valid
              ! until the run loop; thus, in initialization, we will use the default value
              ! for qice, as set above.
-             clm_s2x%tsrf(g,n) = clm3%g%l%c%ces%t_soisno(c,1)
-             clm_s2x%topo(g,n) = clm3%g%l%c%cps%glc_topo(c)
+             clm_s2x%tsrf(g,n) = ces%t_soisno(c,1)
+             clm_s2x%topo(g,n) = cps%glc_topo(c)
              if (.not. init) then
-                clm_s2x%qice(g,n) = clm3%g%l%c%cwf%qflx_glcice(c)
+                clm_s2x%qice(g,n) = cwf%qflx_glcice(c)
 
                 ! Check for bad values of qice
                 if ( abs(clm_s2x%qice(g,n)) > 1.0_r8 .and. clm_s2x%qice(g,n) /= spval) then
@@ -269,7 +269,7 @@ end subroutine create_clm_s2x
 !
 ! !USES:
   use clm_varcon  , only : istice_mec
-  use clmtype     , only : clm3
+  use clmtype 
 
 !
 ! !ARGUMENTS:
@@ -290,9 +290,9 @@ end subroutine create_clm_s2x
 
     ! Assign local pointers to derived type members
 
-    clandunit     => clm3%g%l%c%landunit
-    cgridcell     => clm3%g%l%c%gridcell
-    ityplun       => clm3%g%l%itype
+    clandunit     =>col%landunit
+    cgridcell     =>col%gridcell
+    ityplun       => lun%itype
 
     update_glc2sno_fields = .false.
                                            
@@ -303,12 +303,12 @@ end subroutine create_clm_s2x
           g = cgridcell(c)
 
           if (ityplun(l) == istice_mec) then
-             n = c - clm3%g%l%coli(l) + 1    ! elevation class index
-             clm3%g%l%c%cps%glc_frac(c) = clm_x2s%frac(g,n)
-             clm3%g%l%c%cps%glc_topo(c) = clm_x2s%topo(g,n)
-             clm3%g%l%c%cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
-             clm3%g%l%c%cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
-             clm3%g%l%c%cef%eflx_bot(c) = clm_x2s%hflx(g,n)
+             n = c -lun%coli(l) + 1    ! elevation class index
+             cps%glc_frac(c) = clm_x2s%frac(g,n)
+             cps%glc_topo(c) = clm_x2s%topo(g,n)
+             cwf%glc_rofi(c) = clm_x2s%rofi(g,n)
+             cwf%glc_rofl(c) = clm_x2s%rofl(g,n)
+             cef%eflx_bot(c) = clm_x2s%hflx(g,n)
 
           endif
        enddo

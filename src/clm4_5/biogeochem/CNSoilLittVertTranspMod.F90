@@ -129,10 +129,10 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    
    is_cwd                                  => decomp_cascade_con%is_cwd
    spinup_factor                           => decomp_cascade_con%spinup_factor
-   altmax                          => clm3%g%l%c%cps%altmax
-   altmax_lastyear                 => clm3%g%l%c%cps%altmax_lastyear
-   som_adv_coef                    => clm3%g%l%c%cps%som_adv_coef
-   som_diffus_coef                 => clm3%g%l%c%cps%som_diffus_coef
+   altmax                          => cps%altmax
+   altmax_lastyear                 => cps%altmax_lastyear
+   som_adv_coef                    => cps%som_adv_coef
+   som_diffus_coef                 => cps%som_diffus_coef
 
    
    dtime = get_step_size()
@@ -192,31 +192,31 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
             
       select case (i_type)
       case (1)  ! C
-         conc_ptr => clm3%g%l%c%ccs%decomp_cpools_vr
-         source    => clm3%g%l%c%ccf%decomp_cpools_sourcesink
-         trcr_tendency_ptr => clm3%g%l%c%ccf%decomp_cpools_transport_tendency
+         conc_ptr => ccs%decomp_cpools_vr
+         source    => ccf%decomp_cpools_sourcesink
+         trcr_tendency_ptr => ccf%decomp_cpools_transport_tendency
       case (2)  ! N
-         conc_ptr => clm3%g%l%c%cns%decomp_npools_vr
-         source    => clm3%g%l%c%cnf%decomp_npools_sourcesink
-         trcr_tendency_ptr => clm3%g%l%c%cnf%decomp_npools_transport_tendency
+         conc_ptr => cns%decomp_npools_vr
+         source    => cnf%decomp_npools_sourcesink
+         trcr_tendency_ptr => cnf%decomp_npools_transport_tendency
       case (3)
          if ( use_c13 ) then
             ! C13
-            conc_ptr => clm3%g%l%c%cc13s%decomp_cpools_vr
-            source    => clm3%g%l%c%cc13f%decomp_cpools_sourcesink
-            trcr_tendency_ptr => clm3%g%l%c%cc13f%decomp_cpools_transport_tendency
+            conc_ptr => cc13s%decomp_cpools_vr
+            source    => cc13f%decomp_cpools_sourcesink
+            trcr_tendency_ptr => cc13f%decomp_cpools_transport_tendency
          else
             ! C14
-            conc_ptr => clm3%g%l%c%cc14s%decomp_cpools_vr
-            source    => clm3%g%l%c%cc14f%decomp_cpools_sourcesink
-            trcr_tendency_ptr => clm3%g%l%c%cc14f%decomp_cpools_transport_tendency
+            conc_ptr => cc14s%decomp_cpools_vr
+            source    => cc14f%decomp_cpools_sourcesink
+            trcr_tendency_ptr => cc14f%decomp_cpools_transport_tendency
          endif
       case (4)
          if ( use_c14 .and. use_c13 ) then
             ! C14
-            conc_ptr => clm3%g%l%c%cc14s%decomp_cpools_vr
-            source    => clm3%g%l%c%cc14f%decomp_cpools_sourcesink
-            trcr_tendency_ptr => clm3%g%l%c%cc14f%decomp_cpools_transport_tendency
+            conc_ptr => cc14s%decomp_cpools_vr
+            source    => cc14f%decomp_cpools_sourcesink
+            trcr_tendency_ptr => cc14f%decomp_cpools_transport_tendency
          else
             write(iulog,*) 'error.  ncase = 4, but c13 and c14 not both enabled.'
             call endrun()

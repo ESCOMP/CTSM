@@ -149,10 +149,10 @@ subroutine init_decompcascade(begc, endc)
 
 
    cascade_step_name                       => decomp_cascade_con%cascade_step_name
-   rf_decomp_cascade                       => clm3%g%l%c%cps%rf_decomp_cascade
+   rf_decomp_cascade                       => cps%rf_decomp_cascade
    cascade_donor_pool                      => decomp_cascade_con%cascade_donor_pool
    cascade_receiver_pool                   => decomp_cascade_con%cascade_receiver_pool
-   pathfrac_decomp_cascade                 => clm3%g%l%c%cps%pathfrac_decomp_cascade
+   pathfrac_decomp_cascade                 => cps%pathfrac_decomp_cascade
    floating_cn_ratio_decomp_pools          => decomp_cascade_con%floating_cn_ratio_decomp_pools
    decomp_pool_name_restart                => decomp_cascade_con%decomp_pool_name_restart
    decomp_pool_name_history                => decomp_cascade_con%decomp_pool_name_history
@@ -166,8 +166,8 @@ subroutine init_decompcascade(begc, endc)
    is_metabolic                            => decomp_cascade_con%is_metabolic
    is_cellulose                            => decomp_cascade_con%is_cellulose
    is_lignin                               => decomp_cascade_con%is_lignin
-   cellclay                                => clm3%g%l%c%cps%cellclay
-   cellsand                                => clm3%g%l%c%cps%cellsand
+   cellclay                                => cps%cellclay
+   cellsand                                => cps%cellsand
    spinup_factor                           => decomp_cascade_con%spinup_factor
 
    !------- time-constant coefficients ---------- !
@@ -500,20 +500,20 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    catanf(t1) = 11.75_r8 +(29.7_r8 / SHR_CONST_PI) * atan( SHR_CONST_PI * 0.031_r8  * ( t1 - 15.4_r8 ))
 
    ! Assign local pointers to derived type arrays
-   t_soisno              => clm3%g%l%c%ces%t_soisno
-   sucsat            => clm3%g%l%c%cps%sucsat
-   soilpsi               => clm3%g%l%c%cps%soilpsi
-   dz                    => clm3%g%l%c%cps%dz
-   t_scalar           => clm3%g%l%c%ccf%t_scalar
-   w_scalar           => clm3%g%l%c%ccf%w_scalar
-   o_scalar           => clm3%g%l%c%ccf%o_scalar
-   decomp_k              => clm3%g%l%c%ccf%decomp_k
+   t_soisno              => ces%t_soisno
+   sucsat            => cps%sucsat
+   soilpsi               => cps%soilpsi
+   dz                    => cps%dz
+   t_scalar           => ccf%t_scalar
+   w_scalar           => ccf%w_scalar
+   o_scalar           => ccf%o_scalar
+   decomp_k              => ccf%decomp_k
 #ifdef LCH4
-   o2stress_sat          => clm3%g%l%c%cch4%o2stress_sat
-   o2stress_unsat        => clm3%g%l%c%cch4%o2stress_unsat
-   finundated            => clm3%g%l%c%cws%finundated
+   o2stress_sat          => cch4%o2stress_sat
+   o2stress_unsat        => cch4%o2stress_unsat
+   finundated            => cws%finundated
 #endif
-   alt_indx              => clm3%g%l%c%cps%alt_indx
+   alt_indx              => cps%alt_indx
 
    if ( use_century_tfunc .and. normalize_q10_to_century_tfunc ) then
       call endrun( 'ERROR: cannot have both use_century_tfunc and normalize_q10_to_century_tfunc set as true' )

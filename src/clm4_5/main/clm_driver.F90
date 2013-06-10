@@ -220,7 +220,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   integer  :: begl_proc, endl_proc     ! proc beginning and ending landunit indices
   integer  :: begc_proc, endc_proc     ! proc beginning and ending column indices
   integer  :: begp_proc, endp_proc     ! proc beginning and ending pft indices
-  type(column_type), pointer :: cptr   ! pointer to column derived subtype
 #if (defined CNDV)
   integer  :: yrp1                     ! year (0, ...) for nstep+1
   integer  :: monp1                    ! month (1, ..., 12) for nstep+1
@@ -240,15 +239,14 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  itypelun            => clm3%g%l%itype
+  itypelun            => lun%itype
 
   ! Assign local pointers to derived subtypes components (column-level)
 
-  clandunit           => clm3%g%l%c%landunit
+  clandunit           =>col%landunit
 
   ! Set pointers into derived type
 
-  cptr => clm3%g%l%c
 
 #ifdef CN
   ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
@@ -299,20 +297,20 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call t_startf("init_hwcontent")
      ! initialize heat and water content and dynamic balance fields to zero
      do g = begg,endg
-        clm3%g%gwf%qflx_liq_dynbal(g) = 0._r8
-        clm3%g%gws%gc_liq2(g)         = 0._r8
-        clm3%g%gws%gc_liq1(g)         = 0._r8
-        clm3%g%gwf%qflx_ice_dynbal(g) = 0._r8
-        clm3%g%gws%gc_ice2(g)         = 0._r8 
-        clm3%g%gws%gc_ice1(g)         = 0._r8
-        clm3%g%gef%eflx_dynbal(g)     = 0._r8
-        clm3%g%ges%gc_heat2(g)        = 0._r8
-        clm3%g%ges%gc_heat1(g)        = 0._r8
+        gwf%qflx_liq_dynbal(g) = 0._r8
+        gws%gc_liq2(g)         = 0._r8
+        gws%gc_liq1(g)         = 0._r8
+        gwf%qflx_ice_dynbal(g) = 0._r8
+        gws%gc_ice2(g)         = 0._r8 
+        gws%gc_ice1(g)         = 0._r8
+        gef%eflx_dynbal(g)     = 0._r8
+        ges%gc_heat2(g)        = 0._r8
+        ges%gc_heat1(g)        = 0._r8
      enddo
 
      !--- get initial heat,water content ---
-      call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq1(begg:endg), &
-                              clm3%g%gws%gc_ice1(begg:endg), clm3%g%ges%gc_heat1(begg:endg) )
+      call dynland_hwcontent( begg, endg, gws%gc_liq1(begg:endg), &
+                              gws%gc_ice1(begg:endg), ges%gc_heat1(begg:endg) )
      call t_stopf("init_hwcontent")
    end do
 !$OMP END PARALLEL DO
@@ -357,13 +355,13 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
          call reweightWrapup(nc)
 
          !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
-         call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &
-                                 clm3%g%gws%gc_ice2(begg:endg), clm3%g%ges%gc_heat2(begg:endg) )
+         call dynland_hwcontent( begg, endg, gws%gc_liq2(begg:endg), &
+                                 gws%gc_ice2(begg:endg), ges%gc_heat2(begg:endg) )
          dtime = get_step_size()
          do g = begg,endg
-            clm3%g%gwf%qflx_liq_dynbal(g) = (clm3%g%gws%gc_liq2 (g) - clm3%g%gws%gc_liq1 (g))/dtime
-            clm3%g%gwf%qflx_ice_dynbal(g) = (clm3%g%gws%gc_ice2 (g) - clm3%g%gws%gc_ice1 (g))/dtime
-            clm3%g%gef%eflx_dynbal    (g) = (clm3%g%ges%gc_heat2(g) - clm3%g%ges%gc_heat1(g))/dtime
+            gwf%qflx_liq_dynbal(g) = (gws%gc_liq2 (g) - gws%gc_liq1 (g))/dtime
+            gwf%qflx_ice_dynbal(g) = (gws%gc_ice2 (g) - gws%gc_ice1 (g))/dtime
+            gef%eflx_dynbal    (g) = (ges%gc_heat2(g) - ges%gc_heat1(g))/dtime
          enddo
       end do
 !$OMP END PARALLEL DO
@@ -455,12 +453,12 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      
      call t_startf('drvinit')
      ! initialize intracellular CO2 (Pa) parameters each timestep for use in VOCEmission
-     clm3%g%l%c%p%pcf%cisun_z(begp:endp,:) = -999._r8
-     clm3%g%l%c%p%pcf%cisha_z(begp:endp,:) = -999._r8
+     pcf%cisun_z(begp:endp,:) = -999._r8
+     pcf%cisha_z(begp:endp,:) = -999._r8
 
      ! initialize declination for current timestep
      do c = begc,endc
-        clm3%g%l%c%cps%decl(c) = declin
+        cps%decl(c) = declin
      end do
      
      call clm_driverInit(begc, endc, begp, endp, &
@@ -626,7 +624,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         l = clandunit(c)
         if (itypelun(l) == isturb) then
            ! Urban landunit use Bonan 1996 (LSM Technical Note)
-           cptr%cps%frac_sno(c) = min( cptr%cps%snow_depth(c)/0.05_r8, 1._r8)
+           cps%frac_sno(c) = min( cps%snow_depth(c)/0.05_r8, 1._r8)
         end if
      end do
 

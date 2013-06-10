@@ -165,30 +165,30 @@ contains
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
-    ltype      => clm3%g%l%itype
-    lakpoi     => clm3%g%l%lakpoi
+    ltype      => lun%itype
+    lakpoi     =>lun%lakpoi
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    clandunit  => clm3%g%l%c%landunit
-    snl        => clm3%g%l%c%cps%snl
-    dz         => clm3%g%l%c%cps%dz
-    watsat     => clm3%g%l%c%cps%watsat
-    h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_vol => clm3%g%l%c%cws%h2osoi_vol
-    h2osno     => clm3%g%l%c%cws%h2osno
-    t_soisno   => clm3%g%l%c%ces%t_soisno
-    t_lake     => clm3%g%l%c%ces%t_lake
-    t_grnd     => clm3%g%l%c%ces%t_grnd
-    lake_icefrac => clm3%g%l%c%cws%lake_icefrac
-    savedtke1  => clm3%g%l%c%cps%savedtke1
-    ust_lake   => clm3%g%l%c%cps%ust_lake
-    z0mg       => clm3%g%l%c%cps%z0mg
+    clandunit  =>col%landunit
+    snl        => cps%snl
+    dz         => cps%dz
+    watsat     => cps%watsat
+    h2osoi_ice => cws%h2osoi_ice
+    h2osoi_liq => cws%h2osoi_liq
+    h2osoi_vol => cws%h2osoi_vol
+    h2osno     => cws%h2osno
+    t_soisno   => ces%t_soisno
+    t_lake     => ces%t_lake
+    t_grnd     => ces%t_grnd
+    lake_icefrac => cws%lake_icefrac
+    savedtke1  => cps%savedtke1
+    ust_lake   => cps%ust_lake
+    z0mg       => cps%z0mg
     ! New SNICAR variables
-    snw_rds          => clm3%g%l%c%cps%snw_rds
-    snw_rds_top      => clm3%g%l%c%cps%snw_rds_top
-    sno_liq_top      => clm3%g%l%c%cps%sno_liq_top
+    snw_rds          => cps%snw_rds
+    snw_rds_top      => cps%snw_rds_top
+    sno_liq_top      => cps%sno_liq_top
 
     ! Determine subgrid bounds on this processor
 
@@ -362,17 +362,17 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  lakpoi => clm3%g%l%lakpoi
+  lakpoi =>lun%lakpoi
 
   ! Assign local pointers to derived type members (column-level)
 
-  clandunit => clm3%g%l%c%landunit
-  snow_depth    => clm3%g%l%c%cps%snow_depth
-  snl       => clm3%g%l%c%cps%snl
-  zi        => clm3%g%l%c%cps%zi
-  dz        => clm3%g%l%c%cps%dz
-  z         => clm3%g%l%c%cps%z
-  lake_icefrac => clm3%g%l%c%cws%lake_icefrac
+  clandunit =>col%landunit
+  snow_depth    => cps%snow_depth
+  snl       => cps%snl
+  zi        => cps%zi
+  dz        => cps%dz
+  z         => cps%z
+  lake_icefrac => cws%lake_icefrac
 
 
   ! Determine snow levels and interfaces for lake points
@@ -580,35 +580,35 @@ subroutine initTimeConst
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  ltype           => clm3%g%l%itype
+  ltype           => lun%itype
 
   ! Assign local pointers to derived subtypes components (column-level)
 
-  clandunit       => clm3%g%l%c%landunit
-  cgridcell       => clm3%g%l%c%gridcell
-  z               => clm3%g%l%c%cps%z
-  dz              => clm3%g%l%c%cps%dz
-  zi              => clm3%g%l%c%cps%zi
-  bsw             => clm3%g%l%c%cps%bsw
-  watsat          => clm3%g%l%c%cps%watsat
-  watdry          => clm3%g%l%c%cps%watdry  
-  watopt          => clm3%g%l%c%cps%watopt  
-  hksat           => clm3%g%l%c%cps%hksat
-  sucsat          => clm3%g%l%c%cps%sucsat
-  tkmg            => clm3%g%l%c%cps%tkmg
-  tksatu          => clm3%g%l%c%cps%tksatu
-  tkdry           => clm3%g%l%c%cps%tkdry
-  csol            => clm3%g%l%c%cps%csol
-  dz_lake         => clm3%g%l%c%cps%dz_lake
-  z_lake          => clm3%g%l%c%cps%z_lake
-  cellsand        => clm3%g%l%c%cps%cellsand
-  cellclay        => clm3%g%l%c%cps%cellclay
-  cellorg         => clm3%g%l%c%cps%cellorg
-  lakedepth       => clm3%g%l%c%cps%lakedepth
-  watfc           => clm3%g%l%c%cps%watfc
-  h2osoi_liq      => clm3%g%l%c%cws%h2osoi_liq
-  h2osoi_ice      => clm3%g%l%c%cws%h2osoi_ice
-  h2osoi_vol      => clm3%g%l%c%cws%h2osoi_vol
+  clandunit       =>col%landunit
+  cgridcell       =>col%gridcell
+  z               => cps%z
+  dz              => cps%dz
+  zi              => cps%zi
+  bsw             => cps%bsw
+  watsat          => cps%watsat
+  watdry          => cps%watdry  
+  watopt          => cps%watopt  
+  hksat           => cps%hksat
+  sucsat          => cps%sucsat
+  tkmg            => cps%tkmg
+  tksatu          => cps%tksatu
+  tkdry           => cps%tkdry
+  csol            => cps%csol
+  dz_lake         => cps%dz_lake
+  z_lake          => cps%z_lake
+  cellsand        => cps%cellsand
+  cellclay        => cps%cellclay
+  cellorg         => cps%cellorg
+  lakedepth       => cps%lakedepth
+  watfc           => cps%watfc
+  h2osoi_liq      => cws%h2osoi_liq
+  h2osoi_ice      => cws%h2osoi_ice
+  h2osoi_vol      => cws%h2osoi_vol
 
 
    ! Set SLakeCon constants according to namelist fields

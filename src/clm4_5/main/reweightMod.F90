@@ -192,9 +192,6 @@ contains
 !EOP
 !
 ! LOCAL VARIABLES:
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
     
     integer :: begp, endp  ! per-clump beginning and ending pft indices
     integer :: begc, endc  ! per-clump beginning and ending column indices
@@ -210,20 +207,17 @@ contains
 
     call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
 
     error_found = .false.
 
     do l = begl,endl
-       lptr%active(l) = is_active_l(l)
+       lun%active(l) = is_active_l(l)
     end do
 
     do c = begc,endc
-       l = cptr%landunit(c)
-       cptr%active(c) = is_active_c(c)
-       if (cptr%active(c) .and. .not. lptr%active(l)) then
+       l = col%landunit(c)
+       col%active(c) = is_active_c(c)
+       if (col%active(c) .and. .not. lun%active(l)) then
           write(iulog,*) trim(subname),' ERROR: active column found on inactive landunit', &
                          'at c = ', c, ', l = ', l
           error_found = .true. 
@@ -231,9 +225,9 @@ contains
     end do
 
     do p = begp,endp
-       c = pptr%column(p)
-       pptr%active(p) = is_active_p(p)
-       if (pptr%active(p) .and. .not. cptr%active(c)) then
+       c = pft%column(p)
+       pft%active(p) = is_active_p(p)
+       if (pft%active(p) .and. .not. col%active(c)) then
           write(iulog,*) trim(subname),' ERROR: active pft found on inactive column', &
                          'at p = ', p, ', c = ', c
           error_found = .true. 
@@ -277,16 +271,16 @@ contains
     integer :: g  ! grid cell index
 !------------------------------------------------------------------------
     
-    l = clm3%g%l%c%p%landunit(p)
-    g = clm3%g%l%c%p%gridcell(p)
+    l =pft%landunit(p)
+    g =pft%gridcell(p)
     
     is_active_p = .false.
 
-    if (clm3%g%l%c%p%wtgcell(p) > 0) is_active_p = .true.
+    if (pft%wtgcell(p) > 0) is_active_p = .true.
 
     ! always run over ice_mec landunits within the glcmask, because this is where glc
     ! might need input from virtual (0-weight) landunits
-    if (clm3%g%l%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_p = .true.
+    if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_p = .true.
 
   end function is_active_p
 !------------------------------------------------------------------------
@@ -321,16 +315,16 @@ contains
     integer :: g  ! grid cell index
 !------------------------------------------------------------------------
     
-    l = clm3%g%l%c%landunit(c)
-    g = clm3%g%l%c%gridcell(c)
+    l =col%landunit(c)
+    g =col%gridcell(c)
 
     is_active_c = .false.
 
-    if (clm3%g%l%c%wtgcell(c) > 0) is_active_c = .true.
+    if (col%wtgcell(c) > 0) is_active_c = .true.
 
     ! always run over ice_mec landunits within the glcmask, because this is where glc
     ! might need input from virtual (0-weight) landunits
-    if (clm3%g%l%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
+    if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
     
   end function is_active_c
 !------------------------------------------------------------------------
@@ -364,15 +358,15 @@ contains
     integer :: g  ! grid cell index
 !------------------------------------------------------------------------
     
-    g = clm3%g%l%gridcell(l)
+    g =lun%gridcell(l)
 
     is_active_l = .false.
     
-    if (clm3%g%l%wtgcell(l) > 0) is_active_l = .true.
+    if (lun%wtgcell(l) > 0) is_active_l = .true.
 
     ! always run over ice_mec landunits within the glcmask, because this is where glc
     ! might need input from virtual (0-weight) landunits
-    if (clm3%g%l%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
+    if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_l = .true.
 
   end function is_active_l
 !------------------------------------------------------------------------
@@ -397,8 +391,7 @@ contains
 ! active_only=true.
 !
 ! !USES
-    use clmtype, only : clm3, gridcell_type, landunit_type, &
-                        column_type, pft_type
+    use clmtype
     use decompMod , only : get_clump_bounds
 
 ! !ARGUMENTS
@@ -419,20 +412,12 @@ contains
     integer :: begg, endg  ! per-clump beginning and ending gridcell indices
     integer :: g,l,c,p     ! loop counters
     real(r8), allocatable :: sumwtcol(:), sumwtlunit(:), sumwtgcell(:)
-    type(gridcell_type), pointer  :: gptr ! pointer to gridcell derived subtype
-    type(landunit_type), pointer  :: lptr ! pointer to landunit derived subtype
-    type(column_type)  , pointer  :: cptr ! pointer to column derived subtype
-    type(pft_type)     , pointer  :: pptr ! pointer to pft derived subtype
     logical :: error_found                ! true if we find an error
 
     character(len=*), parameter :: subname = 'checkWeights'
 !EOP
 !------------------------------------------------------------------------------
 
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
 
     call get_clump_bounds(nc,begg,endg,begl,endl,begc,endc,begp,endp)
 
@@ -446,19 +431,19 @@ contains
     sumwtgcell(:) = 0._r8
 
     do p = begp,endp
-       c = pptr%column(p)
-       l = pptr%landunit(p)
-       g = pptr%gridcell(p)
+       c = pft%column(p)
+       l = pft%landunit(p)
+       g = pft%gridcell(p)
 
-       if ((active_only .and. pptr%active(p)) .or. .not. active_only) then 
-          sumwtcol(c) = sumwtcol(c) + pptr%wtcol(p)
-          sumwtlunit(l) = sumwtlunit(l) + pptr%wtlunit(p)
-          sumwtgcell(g) = sumwtgcell(g) + pptr%wtgcell(p)
+       if ((active_only .and. pft%active(p)) .or. .not. active_only) then 
+          sumwtcol(c) = sumwtcol(c) + pft%wtcol(p)
+          sumwtlunit(l) = sumwtlunit(l) + pft%wtlunit(p)
+          sumwtgcell(g) = sumwtgcell(g) + pft%wtgcell(p)
        end if
     end do
 
     do c = begc,endc
-       if (.not. weightsOkay(sumwtcol(c), active_only, cptr%active(c))) then
+       if (.not. weightsOkay(sumwtcol(c), active_only, col%active(c))) then
           write(iulog,*) trim(subname),' ERROR: at c = ',c,'total PFT weight is ',sumwtcol(c), &
                          'active_only = ', active_only
           error_found = .true.
@@ -466,7 +451,7 @@ contains
     end do
 
     do l = begl,endl
-       if (.not. weightsOkay(sumwtlunit(l), active_only, lptr%active(l))) then
+       if (.not. weightsOkay(sumwtlunit(l), active_only, lun%active(l))) then
           write(iulog,*) trim(subname),' ERROR: at l = ',l,'total PFT weight is ',sumwtlunit(l), &
                          'active_only = ', active_only
           error_found = .true.
@@ -486,17 +471,17 @@ contains
     sumwtgcell(:) = 0._r8
 
     do c = begc,endc
-       l = cptr%landunit(c)
-       g = cptr%gridcell(c)
+       l = col%landunit(c)
+       g = col%gridcell(c)
 
-       if ((active_only .and. cptr%active(c)) .or. .not. active_only) then
-          sumwtlunit(l) = sumwtlunit(l) + cptr%wtlunit(c)
-          sumwtgcell(g) = sumwtgcell(g) + cptr%wtgcell(c)
+       if ((active_only .and. col%active(c)) .or. .not. active_only) then
+          sumwtlunit(l) = sumwtlunit(l) + col%wtlunit(c)
+          sumwtgcell(g) = sumwtgcell(g) + col%wtgcell(c)
        end if
     end do
 
     do l = begl,endl
-       if (.not. weightsOkay(sumwtlunit(l), active_only, lptr%active(l))) then
+       if (.not. weightsOkay(sumwtlunit(l), active_only, lun%active(l))) then
           write(iulog,*) trim(subname),' ERROR: at l = ',l,'total col weight is ',sumwtlunit(l), &
                          'active_only = ', active_only
           error_found = .true.
@@ -515,9 +500,9 @@ contains
     sumwtgcell(:) = 0._r8
 
     do l = begl,endl
-       g = lptr%gridcell(l)
-       if ((active_only .and. lptr%active(l)) .or. .not. active_only) then
-          sumwtgcell(g) = sumwtgcell(g) + lptr%wtgcell(l)
+       g = lun%gridcell(l)
+       if ((active_only .and. lun%active(l)) .or. .not. active_only) then
+          sumwtgcell(g) = sumwtgcell(g) + lun%wtgcell(l)
        end if
     end do
 

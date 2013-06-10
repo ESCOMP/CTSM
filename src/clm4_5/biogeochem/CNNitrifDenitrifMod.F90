@@ -162,58 +162,58 @@ subroutine nitrif_denitrif(lbc, ubc, num_soilc, filter_soilc)
    
    !-- implicit in
 ! #ifdef LCH4
-!    pH                       => clm3%g%l%c%cps%pH
+!    pH                       => cps%pH
 ! #endif
-   phr_vr                   => clm3%g%l%c%ccf%phr_vr
-   w_scalar                 => clm3%g%l%c%ccf%w_scalar
-   t_scalar                 => clm3%g%l%c%ccf%t_scalar
-   h2osoi_vol               => clm3%g%l%c%cws%h2osoi_vol
-   h2osoi_liq               => clm3%g%l%c%cws%h2osoi_liq
-   watsat                   => clm3%g%l%c%cps%watsat
-   t_soisno                 => clm3%g%l%c%ces%t_soisno
-   smin_nh4_vr              => clm3%g%l%c%cns%smin_nh4_vr
-   smin_no3_vr              => clm3%g%l%c%cns%smin_no3_vr
-   bd                       => clm3%g%l%c%cps%bd
-   dz                       => clm3%g%l%c%cps%dz
-   watfc                    => clm3%g%l%c%cps%watfc
-   bsw                      => clm3%g%l%c%cps%bsw
+   phr_vr                   => ccf%phr_vr
+   w_scalar                 => ccf%w_scalar
+   t_scalar                 => ccf%t_scalar
+   h2osoi_vol               => cws%h2osoi_vol
+   h2osoi_liq               => cws%h2osoi_liq
+   watsat                   => cps%watsat
+   t_soisno                 => ces%t_soisno
+   smin_nh4_vr              => cns%smin_nh4_vr
+   smin_no3_vr              => cns%smin_no3_vr
+   bd                       => cps%bd
+   dz                       => cps%dz
+   watfc                    => cps%watfc
+   bsw                      => cps%bsw
 
-   soilpsi                  => clm3%g%l%c%cps%soilpsi
+   soilpsi                  => cps%soilpsi
 #ifdef LCH4
-   o2_decomp_depth_unsat    => clm3%g%l%c%cch4%o2_decomp_depth_unsat
-   conc_o2_unsat            => clm3%g%l%c%cch4%conc_o2_unsat
-   o2_decomp_depth_sat      => clm3%g%l%c%cch4%o2_decomp_depth_sat
-   conc_o2_sat              => clm3%g%l%c%cch4%conc_o2_sat
-   finundated               => clm3%g%l%c%cws%finundated
+   o2_decomp_depth_unsat    => cch4%o2_decomp_depth_unsat
+   conc_o2_unsat            => cch4%conc_o2_unsat
+   o2_decomp_depth_sat      => cch4%o2_decomp_depth_sat
+   conc_o2_sat              => cch4%conc_o2_sat
+   finundated               => cws%finundated
 #endif
-   sucsat                   => clm3%g%l%c%cps%sucsat
+   sucsat                   => cps%sucsat
 
-   r_psi                       => clm3%g%l%c%cnf%r_psi
-   anaerobic_frac              => clm3%g%l%c%cnf%anaerobic_frac
+   r_psi                       => cnf%r_psi
+   anaerobic_frac              => cnf%anaerobic_frac
 
    ! ! subsets of the n flux calcs (for diagnostic/debugging purposes)
-   smin_no3_massdens_vr    => clm3%g%l%c%cnf%smin_no3_massdens_vr
-   k_nitr_t_vr             => clm3%g%l%c%cnf%k_nitr_t_vr
-   k_nitr_ph_vr            => clm3%g%l%c%cnf%k_nitr_ph_vr
-   k_nitr_h2o_vr           => clm3%g%l%c%cnf%k_nitr_h2o_vr
-   k_nitr_vr               => clm3%g%l%c%cnf%k_nitr_vr
-   wfps_vr                 => clm3%g%l%c%cnf%wfps_vr
-   fmax_denit_carbonsubstrate_vr    => clm3%g%l%c%cnf%fmax_denit_carbonsubstrate_vr
-   fmax_denit_nitrate_vr            => clm3%g%l%c%cnf%fmax_denit_nitrate_vr
-   f_denit_base_vr                  => clm3%g%l%c%cnf%f_denit_base_vr
-   diffus                        => clm3%g%l%c%cnf%diffus
-   ratio_k1                      => clm3%g%l%c%cnf%ratio_k1
-   ratio_no3_co2                 => clm3%g%l%c%cnf%ratio_no3_co2
-   soil_co2_prod                 => clm3%g%l%c%cnf%soil_co2_prod
-   fr_WFPS                       => clm3%g%l%c%cnf%fr_WFPS
-   soil_bulkdensity              => clm3%g%l%c%cnf%soil_bulkdensity
+   smin_no3_massdens_vr    => cnf%smin_no3_massdens_vr
+   k_nitr_t_vr             => cnf%k_nitr_t_vr
+   k_nitr_ph_vr            => cnf%k_nitr_ph_vr
+   k_nitr_h2o_vr           => cnf%k_nitr_h2o_vr
+   k_nitr_vr               => cnf%k_nitr_vr
+   wfps_vr                 => cnf%wfps_vr
+   fmax_denit_carbonsubstrate_vr    => cnf%fmax_denit_carbonsubstrate_vr
+   fmax_denit_nitrate_vr            => cnf%fmax_denit_nitrate_vr
+   f_denit_base_vr                  => cnf%f_denit_base_vr
+   diffus                        => cnf%diffus
+   ratio_k1                      => cnf%ratio_k1
+   ratio_no3_co2                 => cnf%ratio_no3_co2
+   soil_co2_prod                 => cnf%soil_co2_prod
+   fr_WFPS                       => cnf%fr_WFPS
+   soil_bulkdensity              => cnf%soil_bulkdensity
    
-   cellorg   => clm3%g%l%c%cps%cellorg
+   cellorg   => cps%cellorg
 
    !-- implicit out
-   pot_f_nit_vr                 => clm3%g%l%c%cnf%pot_f_nit_vr
-   pot_f_denit_vr               => clm3%g%l%c%cnf%pot_f_denit_vr
-   n2_n2o_ratio_denit_vr            => clm3%g%l%c%cnf%n2_n2o_ratio_denit_vr
+   pot_f_nit_vr                 => cnf%pot_f_nit_vr
+   pot_f_denit_vr               => cnf%pot_f_denit_vr
+   n2_n2o_ratio_denit_vr            => cnf%n2_n2o_ratio_denit_vr
 
    k_nitr_max =  0.1_r8 / secspday   ! [1/sec] 10%/day  Parton et al., 2001 
 

@@ -150,20 +150,20 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    ! select which isotope
    select case (isotope)
    case ('bulk')
-      pcisof => clm3%g%l%c%p%pcf
-      pcisos => clm3%g%l%c%p%pcs
-      ccisof => clm3%g%l%c%ccf
-      ccisos => clm3%g%l%c%ccs
+      pcisof =>  pcf
+      pcisos =>  pcs
+      ccisof =>  ccf
+      ccisos =>  ccs
    case ('c14')
-      pcisof => clm3%g%l%c%p%pc14f
-      pcisos => clm3%g%l%c%p%pc14s
-      ccisof => clm3%g%l%c%cc14f
-      ccisos => clm3%g%l%c%cc14s
+      pcisof =>  pc14f
+      pcisos =>  pc14s
+      ccisof =>  cc14f
+      ccisos =>  cc14s
    case ('c13')
-      pcisof => clm3%g%l%c%p%pc13f
-      pcisos => clm3%g%l%c%p%pc13s
-      ccisof => clm3%g%l%c%cc13f
-      ccisos => clm3%g%l%c%cc13s
+      pcisof =>  pc13f
+      pcisos =>  pc13s
+      ccisof =>  cc13f
+      ccisos =>  cc13s
    case default
       call endrun('CNCIsoStateUpdate3Mod: iso must be bulk, c13 or c14')
    end select

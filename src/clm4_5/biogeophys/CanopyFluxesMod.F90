@@ -453,18 +453,18 @@ contains
 
    ! Assign local pointers to derived type members (gridcell-level)
 
-   eflx_sh_snow   => clm3%g%l%c%p%pef%eflx_sh_snow
-   eflx_sh_soil   => clm3%g%l%c%p%pef%eflx_sh_soil
-   eflx_sh_h2osfc => clm3%g%l%c%p%pef%eflx_sh_h2osfc
-   snl            => clm3%g%l%c%cps%snl
-   t_h2osfc       => clm3%g%l%c%ces%t_h2osfc
-   frac_h2osfc    => clm3%g%l%c%cps%frac_h2osfc
-   qg_snow        => clm3%g%l%c%cws%qg_snow 
-   qg_soil        => clm3%g%l%c%cws%qg_soil
-   qg_h2osfc      => clm3%g%l%c%cws%qg_h2osfc
-   qflx_ev_snow   => clm3%g%l%c%p%pwf%qflx_ev_snow
-   qflx_ev_soil   => clm3%g%l%c%p%pwf%qflx_ev_soil
-   qflx_ev_h2osfc => clm3%g%l%c%p%pwf%qflx_ev_h2osfc
+   eflx_sh_snow   => pef%eflx_sh_snow
+   eflx_sh_soil   => pef%eflx_sh_soil
+   eflx_sh_h2osfc => pef%eflx_sh_h2osfc
+   snl            => cps%snl
+   t_h2osfc       => ces%t_h2osfc
+   frac_h2osfc    => cps%frac_h2osfc
+   qg_snow        => cws%qg_snow 
+   qg_soil        => cws%qg_soil
+   qg_h2osfc      => cws%qg_h2osfc
+   qflx_ev_snow   => pwf%qflx_ev_snow
+   qflx_ev_soil   => pwf%qflx_ev_soil
+   qflx_ev_h2osfc => pwf%qflx_ev_h2osfc
 
    forc_lwrad     => clm_a2l%forc_lwrad
    forc_pco2      => clm_a2l%forc_pco2
@@ -478,124 +478,124 @@ contains
    forc_v         => clm_a2l%forc_v
    forc_th        => clm_a2l%forc_th
    forc_rho       => clm_a2l%forc_rho
-   lat            => clm3%g%lat
-   londeg         => clm3%g%londeg
+   lat            =>  grc%lat
+   londeg         =>  grc%londeg
 
    ! Assign local pointers to derived type members (column-level)
 
-   t_soisno       => clm3%g%l%c%ces%t_soisno
-   watsat         => clm3%g%l%c%cps%watsat
-   watdry         => clm3%g%l%c%cps%watdry 
-   watopt         => clm3%g%l%c%cps%watopt 
-   h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-   h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
-   dz             => clm3%g%l%c%cps%dz
-   h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-   sucsat         => clm3%g%l%c%cps%sucsat
-   bsw            => clm3%g%l%c%cps%bsw
-   emg            => clm3%g%l%c%cps%emg
-   t_grnd         => clm3%g%l%c%ces%t_grnd
-   qg             => clm3%g%l%c%cws%qg
-   thv            => clm3%g%l%c%ces%thv
-   dqgdT          => clm3%g%l%c%cws%dqgdT
-   htvp           => clm3%g%l%c%cps%htvp
-   z0mg           => clm3%g%l%c%cps%z0mg
-   frac_sno       => clm3%g%l%c%cps%frac_sno_eff
-   snow_depth         => clm3%g%l%c%cps%snow_depth
-   soilbeta       => clm3%g%l%c%cws%soilbeta
-   decl           => clm3%g%l%c%cps%decl
-   max_dayl       => clm3%g%l%c%cps%max_dayl
+   t_soisno       => ces%t_soisno
+   watsat         => cps%watsat
+   watdry         => cps%watdry 
+   watopt         => cps%watopt 
+   h2osoi_ice     => cws%h2osoi_ice
+   h2osoi_vol     => cws%h2osoi_vol
+   dz             => cps%dz
+   h2osoi_liq     => cws%h2osoi_liq
+   sucsat         => cps%sucsat
+   bsw            => cps%bsw
+   emg            => cps%emg
+   t_grnd         => ces%t_grnd
+   qg             => cws%qg
+   thv            => ces%thv
+   dqgdT          => cws%dqgdT
+   htvp           => cps%htvp
+   z0mg           => cps%z0mg
+   frac_sno       => cps%frac_sno_eff
+   snow_depth         => cps%snow_depth
+   soilbeta       => cws%soilbeta
+   decl           => cps%decl
+   max_dayl       => cps%max_dayl
 
    ! Assign local pointers to derived type members (pft-level)
 
-   rb1            => clm3%g%l%c%p%pps%rb1
-   ivt            => clm3%g%l%c%p%itype
-   pcolumn        => clm3%g%l%c%p%column
-   plandunit      => clm3%g%l%c%p%landunit
-   pgridcell      => clm3%g%l%c%p%gridcell
-   frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
-   btran          => clm3%g%l%c%p%pps%btran
-   btran2          => clm3%g%l%c%p%pps%btran2
-   rootfr         => clm3%g%l%c%p%pps%rootfr
-   rootr          => clm3%g%l%c%p%pps%rootr
-   rresis         => clm3%g%l%c%p%pps%rresis
-   emv            => clm3%g%l%c%p%pps%emv
-   t_veg          => clm3%g%l%c%p%pes%t_veg
-   displa         => clm3%g%l%c%p%pps%displa
-   z0mv           => clm3%g%l%c%p%pps%z0mv
-   z0hv           => clm3%g%l%c%p%pps%z0hv
-   z0qv           => clm3%g%l%c%p%pps%z0qv
-   ram1           => clm3%g%l%c%p%pps%ram1
-   htop           => clm3%g%l%c%p%pps%htop
-   rssun          => clm3%g%l%c%p%pps%rssun
-   rssha          => clm3%g%l%c%p%pps%rssha
-   rhal           => clm3%g%l%c%p%pps%rhal
-   vpdal          => clm3%g%l%c%p%pps%vpdal
-   psnsun         => clm3%g%l%c%p%pcf%psnsun
-   psnsun_wc      => clm3%g%l%c%p%pcf%psnsun_wc
-   psnsun_wj      => clm3%g%l%c%p%pcf%psnsun_wj
-   psnsun_wp      => clm3%g%l%c%p%pcf%psnsun_wp
-   psnsha         => clm3%g%l%c%p%pcf%psnsha
-   psnsha_wc      => clm3%g%l%c%p%pcf%psnsha_wc
-   psnsha_wj      => clm3%g%l%c%p%pcf%psnsha_wj
-   psnsha_wp      => clm3%g%l%c%p%pcf%psnsha_wp
+   rb1            => pps%rb1
+   ivt            =>pft%itype
+   pcolumn        =>pft%column
+   plandunit      =>pft%landunit
+   pgridcell      =>pft%gridcell
+   frac_veg_nosno => pps%frac_veg_nosno
+   btran          => pps%btran
+   btran2          => pps%btran2
+   rootfr         => pps%rootfr
+   rootr          => pps%rootr
+   rresis         => pps%rresis
+   emv            => pps%emv
+   t_veg          => pes%t_veg
+   displa         => pps%displa
+   z0mv           => pps%z0mv
+   z0hv           => pps%z0hv
+   z0qv           => pps%z0qv
+   ram1           => pps%ram1
+   htop           => pps%htop
+   rssun          => pps%rssun
+   rssha          => pps%rssha
+   rhal           => pps%rhal
+   vpdal          => pps%vpdal
+   psnsun         => pcf%psnsun
+   psnsun_wc      => pcf%psnsun_wc
+   psnsun_wj      => pcf%psnsun_wj
+   psnsun_wp      => pcf%psnsun_wp
+   psnsha         => pcf%psnsha
+   psnsha_wc      => pcf%psnsha_wc
+   psnsha_wj      => pcf%psnsha_wj
+   psnsha_wp      => pcf%psnsha_wp
    if ( use_c13 ) then
-      c13_psnsun     => clm3%g%l%c%p%pc13f%psnsun
-      c13_psnsha     => clm3%g%l%c%p%pc13f%psnsha
-      rc13_canair    => clm3%g%l%c%p%pepv%rc13_canair
-      rc13_psnsun    => clm3%g%l%c%p%pepv%rc13_psnsun
-      rc13_psnsha    => clm3%g%l%c%p%pepv%rc13_psnsha
-      alphapsnsun    => clm3%g%l%c%p%pps%alphapsnsun
-      alphapsnsha    => clm3%g%l%c%p%pps%alphapsnsha
+      c13_psnsun     => pc13f%psnsun
+      c13_psnsha     => pc13f%psnsha
+      rc13_canair    => pepv%rc13_canair
+      rc13_psnsun    => pepv%rc13_psnsun
+      rc13_psnsha    => pepv%rc13_psnsha
+      alphapsnsun    => pps%alphapsnsun
+      alphapsnsha    => pps%alphapsnsha
    end if
    if ( use_c14 ) then
-      c14_psnsun     => clm3%g%l%c%p%pc14f%psnsun
-      c14_psnsha     => clm3%g%l%c%p%pc14f%psnsha
-      rc14_atm       => clm3%g%l%c%p%pepv%rc14_atm
+      c14_psnsun     => pc14f%psnsun
+      c14_psnsha     => pc14f%psnsha
+      rc14_atm       => pepv%rc14_atm
    end if
-   elai           => clm3%g%l%c%p%pps%elai
-   esai           => clm3%g%l%c%p%pps%esai
-   fdry           => clm3%g%l%c%p%pps%fdry
-   laisun         => clm3%g%l%c%p%pps%laisun
-   laisha         => clm3%g%l%c%p%pps%laisha
-   qflx_tran_veg  => clm3%g%l%c%p%pwf%qflx_tran_veg
-   fwet           => clm3%g%l%c%p%pps%fwet
-   h2ocan         => clm3%g%l%c%p%pws%h2ocan
-   dt_veg         => clm3%g%l%c%p%pps%dt_veg
-   sabv           => clm3%g%l%c%p%pef%sabv
-   qflx_evap_veg  => clm3%g%l%c%p%pwf%qflx_evap_veg
-   eflx_sh_veg    => clm3%g%l%c%p%pef%eflx_sh_veg
-   taux           => clm3%g%l%c%p%pmf%taux
-   tauy           => clm3%g%l%c%p%pmf%tauy
-   eflx_sh_grnd   => clm3%g%l%c%p%pef%eflx_sh_grnd
-   qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
-   t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
-   q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
-   t_ref2m_r      => clm3%g%l%c%p%pes%t_ref2m_r
-   rh_ref2m_r     => clm3%g%l%c%p%pes%rh_ref2m_r
-   rh_ref2m       => clm3%g%l%c%p%pes%rh_ref2m
-   dlrad          => clm3%g%l%c%p%pef%dlrad
-   ulrad          => clm3%g%l%c%p%pef%ulrad
-   cgrnds         => clm3%g%l%c%p%pef%cgrnds
-   cgrndl         => clm3%g%l%c%p%pef%cgrndl
-   cgrnd          => clm3%g%l%c%p%pef%cgrnd
-   fpsn           => clm3%g%l%c%p%pcf%fpsn
-   fpsn_wc        => clm3%g%l%c%p%pcf%fpsn_wc
-   fpsn_wj        => clm3%g%l%c%p%pcf%fpsn_wj
-   fpsn_wp        => clm3%g%l%c%p%pcf%fpsn_wp
-   forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
-   thm            => clm3%g%l%c%p%pes%thm
+   elai           => pps%elai
+   esai           => pps%esai
+   fdry           => pps%fdry
+   laisun         => pps%laisun
+   laisha         => pps%laisha
+   qflx_tran_veg  => pwf%qflx_tran_veg
+   fwet           => pps%fwet
+   h2ocan         => pws%h2ocan
+   dt_veg         => pps%dt_veg
+   sabv           => pef%sabv
+   qflx_evap_veg  => pwf%qflx_evap_veg
+   eflx_sh_veg    => pef%eflx_sh_veg
+   taux           => pmf%taux
+   tauy           => pmf%tauy
+   eflx_sh_grnd   => pef%eflx_sh_grnd
+   qflx_evap_soi  => pwf%qflx_evap_soi
+   t_ref2m        => pes%t_ref2m
+   q_ref2m        => pes%q_ref2m
+   t_ref2m_r      => pes%t_ref2m_r
+   rh_ref2m_r     => pes%rh_ref2m_r
+   rh_ref2m       => pes%rh_ref2m
+   dlrad          => pef%dlrad
+   ulrad          => pef%ulrad
+   cgrnds         => pef%cgrnds
+   cgrndl         => pef%cgrndl
+   cgrnd          => pef%cgrnd
+   fpsn           => pcf%fpsn
+   fpsn_wc        => pcf%fpsn_wc
+   fpsn_wj        => pcf%fpsn_wj
+   fpsn_wp        => pcf%fpsn_wp
+   forc_hgt_u_pft => pps%forc_hgt_u_pft
+   thm            => pes%thm
 !KO
-   rhaf           => clm3%g%l%c%p%pps%rhaf
+   rhaf           => pps%rhaf
 !KO
 #if (defined LCH4)
-   grnd_ch4_cond  => clm3%g%l%c%p%pps%grnd_ch4_cond
-   canopy_cond    => clm3%g%l%c%p%pps%canopy_cond
+   grnd_ch4_cond  => pps%grnd_ch4_cond
+   canopy_cond    => pps%canopy_cond
 #endif
-   irrig_rate           => clm3%g%l%c%cps%irrig_rate
-   n_irrig_steps_left   => clm3%g%l%c%cps%n_irrig_steps_left
-   altmax_lastyear_indx => clm3%g%l%c%cps%altmax_lastyear_indx
-   altmax_indx          => clm3%g%l%c%cps%altmax_indx
+   irrig_rate           => cps%irrig_rate
+   n_irrig_steps_left   => cps%n_irrig_steps_left
+   altmax_lastyear_indx => cps%altmax_lastyear_indx
+   altmax_indx          => cps%altmax_indx
       
    ! Assign local pointers to derived type members (ecophysiological)
 
@@ -768,7 +768,7 @@ contains
       g = pgridcell(p)
       if (irrigated(ivt(p)) == 1._r8 .and. elai(p) > irrig_min_lai .and. btran(p) < irrig_btran_thresh) then
          ! see if it's the right time of day to start irrigating:
-         local_time = modulo(time + nint(londeg(g)/degpsec), isecspday)
+         local_time = modulo(time + nint(grc%londeg(g)/degpsec), isecspday)
          if (modulo(local_time - irrig_start_time, isecspday) < dtime) then
             ! it's time to start irrigating
             check_for_irrig(p)    = .true.
@@ -1546,51 +1546,51 @@ contains
    forc_pbot => clm_a2l%forc_pbot
 
    ! Assign local pointers to derived type members (pft-level)
-   pgridcell => clm3%g%l%c%p%gridcell
-   ivt       => clm3%g%l%c%p%itype
-   t_veg     => clm3%g%l%c%p%pes%t_veg
-   btran     => clm3%g%l%c%p%pps%btran
-   tgcm      => clm3%g%l%c%p%pes%thm
-   nrad      => clm3%g%l%c%p%pps%nrad
-   tlai_z    => clm3%g%l%c%p%pps%tlai_z
+   pgridcell =>pft%gridcell
+   ivt       =>pft%itype
+   t_veg     => pes%t_veg
+   btran     => pps%btran
+   tgcm      => pes%thm
+   nrad      => pps%nrad
+   tlai_z    => pps%tlai_z
    if (phase == 'sun') then
-      lai_z  => clm3%g%l%c%p%pps%laisun_z
-      par_z  => clm3%g%l%c%p%pef%parsun_z
-      psn_z  => clm3%g%l%c%p%pcf%psnsun_z
-      ci_z   => clm3%g%l%c%p%pcf%cisun_z
-      lmr_z  => clm3%g%l%c%p%pcf%lmrsun_z
-      rs_z   => clm3%g%l%c%p%pps%rssun_z
-      psn    => clm3%g%l%c%p%pcf%psnsun
-      psn_wc => clm3%g%l%c%p%pcf%psnsun_wc
-      psn_wj => clm3%g%l%c%p%pcf%psnsun_wj
-      psn_wp => clm3%g%l%c%p%pcf%psnsun_wp
-      lmr    => clm3%g%l%c%p%pcf%lmrsun
-      rs     => clm3%g%l%c%p%pps%rssun
-      vcmaxcint => clm3%g%l%c%p%pps%vcmaxcintsun
+      lai_z  => pps%laisun_z
+      par_z  => pef%parsun_z
+      psn_z  => pcf%psnsun_z
+      ci_z   => pcf%cisun_z
+      lmr_z  => pcf%lmrsun_z
+      rs_z   => pps%rssun_z
+      psn    => pcf%psnsun
+      psn_wc => pcf%psnsun_wc
+      psn_wj => pcf%psnsun_wj
+      psn_wp => pcf%psnsun_wp
+      lmr    => pcf%lmrsun
+      rs     => pps%rssun
+      vcmaxcint => pps%vcmaxcintsun
       if ( use_c13 ) then
-         alphapsn  => clm3%g%l%c%p%pps%alphapsnsun
+         alphapsn  => pps%alphapsnsun
       end if
    else if (phase == 'sha') then
-      lai_z  => clm3%g%l%c%p%pps%laisha_z
-      par_z  => clm3%g%l%c%p%pef%parsha_z
-      psn_z  => clm3%g%l%c%p%pcf%psnsha_z
-      ci_z   => clm3%g%l%c%p%pcf%cisha_z
-      lmr_z  => clm3%g%l%c%p%pcf%lmrsha_z
-      rs_z   => clm3%g%l%c%p%pps%rssha_z
-      psn    => clm3%g%l%c%p%pcf%psnsha
-      psn_wc => clm3%g%l%c%p%pcf%psnsha_wc
-      psn_wj => clm3%g%l%c%p%pcf%psnsha_wj
-      psn_wp => clm3%g%l%c%p%pcf%psnsha_wp
-      lmr    => clm3%g%l%c%p%pcf%lmrsha
-      rs     => clm3%g%l%c%p%pps%rssha
-      vcmaxcint => clm3%g%l%c%p%pps%vcmaxcintsha
+      lai_z  => pps%laisha_z
+      par_z  => pef%parsha_z
+      psn_z  => pcf%psnsha_z
+      ci_z   => pcf%cisha_z
+      lmr_z  => pcf%lmrsha_z
+      rs_z   => pps%rssha_z
+      psn    => pcf%psnsha
+      psn_wc => pcf%psnsha_wc
+      psn_wj => pcf%psnsha_wj
+      psn_wp => pcf%psnsha_wp
+      lmr    => pcf%lmrsha
+      rs     => pps%rssha
+      vcmaxcint => pps%vcmaxcintsha
       if ( use_c13 ) then
-         alphapsn  => clm3%g%l%c%p%pps%alphapsnsha
+         alphapsn  => pps%alphapsnsha
       end if
    end if
 !KO
-   t10       => clm3%g%l%c%p%pes%t10
-   rh_leaf   => clm3%g%l%c%p%pps%rh_leaf
+   t10       => pes%t10
+   rh_leaf   => pps%rh_leaf
 !KO
 
    ! Assign local pointers to pft constants
@@ -1601,24 +1601,24 @@ contains
    slatop    => pftcon%slatop
 
 
-   c3flag => clm3%g%l%c%p%ppsyns%c3flag
-   ac     => clm3%g%l%c%p%ppsyns%ac
-   aj     => clm3%g%l%c%p%ppsyns%aj
-   ap     => clm3%g%l%c%p%ppsyns%ap
-   ag     => clm3%g%l%c%p%ppsyns%ag
-   an     => clm3%g%l%c%p%ppsyns%an   
-   gb_mol => clm3%g%l%c%p%ppsyns%gb_mol   
-   gs_mol => clm3%g%l%c%p%ppsyns%gs_mol
-   vcmax_z=> clm3%g%l%c%p%ppsyns%vcmax_z
-   cp     => clm3%g%l%c%p%ppsyns%cp
-   kc     => clm3%g%l%c%p%ppsyns%kc
-   ko     => clm3%g%l%c%p%ppsyns%ko
-   qe     => clm3%g%l%c%p%ppsyns%qe
-   tpu_z  => clm3%g%l%c%p%ppsyns%tpu_z
-   kp_z   => clm3%g%l%c%p%ppsyns%kp_z
-   theta_cj=>clm3%g%l%c%p%ppsyns%theta_cj
-   bbb     =>clm3%g%l%c%p%ppsyns%bbb
-   mbb    => clm3%g%l%c%p%ppsyns%mbb
+   c3flag => ppsyns%c3flag
+   ac     => ppsyns%ac
+   aj     => ppsyns%aj
+   ap     => ppsyns%ap
+   ag     => ppsyns%ag
+   an     => ppsyns%an   
+   gb_mol => ppsyns%gb_mol   
+   gs_mol => ppsyns%gs_mol
+   vcmax_z=> ppsyns%vcmax_z
+   cp     => ppsyns%cp
+   kc     => ppsyns%kc
+   ko     => ppsyns%ko
+   qe     => ppsyns%qe
+   tpu_z  => ppsyns%tpu_z
+   kp_z   => ppsyns%kp_z
+   theta_cj=>ppsyns%theta_cj
+   bbb     =>ppsyns%bbb
+   mbb    => ppsyns%mbb
    
    !==============================================================================!
    ! Photosynthesis and stomatal conductance parameters, from:
@@ -2146,22 +2146,22 @@ contains
    forc_pbot => clm_a2l%forc_pbot
 
    !pft level
-   c3flag => clm3%g%l%c%p%ppsyns%c3flag
-   ac     => clm3%g%l%c%p%ppsyns%ac
-   aj     => clm3%g%l%c%p%ppsyns%aj
-   ap     => clm3%g%l%c%p%ppsyns%ap
-   ag     => clm3%g%l%c%p%ppsyns%ag
-   an     => clm3%g%l%c%p%ppsyns%an   
-   vcmax_z=> clm3%g%l%c%p%ppsyns%vcmax_z
-   cp     => clm3%g%l%c%p%ppsyns%cp
-   kc     => clm3%g%l%c%p%ppsyns%kc
-   ko     => clm3%g%l%c%p%ppsyns%ko
-   qe     => clm3%g%l%c%p%ppsyns%qe
-   tpu_z  => clm3%g%l%c%p%ppsyns%tpu_z
-   kp_z   => clm3%g%l%c%p%ppsyns%kp_z
-   theta_cj=>clm3%g%l%c%p%ppsyns%theta_cj
-   bbb     =>clm3%g%l%c%p%ppsyns%bbb
-   mbb    => clm3%g%l%c%p%ppsyns%mbb
+   c3flag => ppsyns%c3flag
+   ac     => ppsyns%ac
+   aj     => ppsyns%aj
+   ap     => ppsyns%ap
+   ag     => ppsyns%ag
+   an     => ppsyns%an   
+   vcmax_z=> ppsyns%vcmax_z
+   cp     => ppsyns%cp
+   kc     => ppsyns%kc
+   ko     => ppsyns%ko
+   qe     => ppsyns%qe
+   tpu_z  => ppsyns%tpu_z
+   kp_z   => ppsyns%kp_z
+   theta_cj=>ppsyns%theta_cj
+   bbb     =>ppsyns%bbb
+   mbb    => ppsyns%mbb
 
    ! Miscellaneous parameters, from Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
    fnps = 0.15_r8
@@ -2672,23 +2672,23 @@ contains
    real(r8) :: ci
 !------------------------------------------------------------------------------
 
-   pgridcell      => clm3%g%l%c%p%gridcell
-   nrad           => clm3%g%l%c%p%pps%nrad
+   pgridcell      =>pft%gridcell
+   nrad           => pps%nrad
    forc_pbot      => clm_a2l%forc_pbot
    forc_pco2      => clm_a2l%forc_pco2      
    c3psn          => pftcon%c3psn
-   ivt            => clm3%g%l%c%p%itype
-   downreg        => clm3%g%l%c%p%pepv%downreg
-   an             => clm3%g%l%c%p%ppsyns%an   
-   gb_mol         => clm3%g%l%c%p%ppsyns%gb_mol   
-   gs_mol         => clm3%g%l%c%p%ppsyns%gs_mol
+   ivt            =>pft%itype
+   downreg        => pepv%downreg
+   an             => ppsyns%an   
+   gb_mol         => ppsyns%gb_mol   
+   gs_mol         => ppsyns%gs_mol
 
    if (phase == 'sun') then
-      par_z       => clm3%g%l%c%p%pef%parsun_z
-      alphapsn    => clm3%g%l%c%p%pps%alphapsnsun 
+      par_z       => pef%parsun_z
+      alphapsn    => pps%alphapsnsun 
    else if (phase == 'sha') then
-      par_z       => clm3%g%l%c%p%pef%parsha_z
-      alphapsn    => clm3%g%l%c%p%pps%alphapsnsha               
+      par_z       => pef%parsha_z
+      alphapsn    => pps%alphapsnsha               
    end if
 
    do f = 1, fn

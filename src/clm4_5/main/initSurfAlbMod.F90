@@ -139,45 +139,45 @@ contains
 
     ! Assign local pointers to derived subtypes components (landunit-level)
     
-    lakpoi              => clm3%g%l%lakpoi
-    itypelun            => clm3%g%l%itype
+    lakpoi              =>lun%lakpoi
+    itypelun            => lun%itype
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    dz                  => clm3%g%l%c%cps%dz
-    h2osoi_ice          => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq          => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_vol          => clm3%g%l%c%cws%h2osoi_vol
-    snow_depth              => clm3%g%l%c%cps%snow_depth
-    h2osno              => clm3%g%l%c%cws%h2osno
-    frac_sno            => clm3%g%l%c%cps%frac_sno 
-    ctype               => clm3%g%l%c%itype
-    clandunit           => clm3%g%l%c%landunit
-    soilpsi             => clm3%g%l%c%cps%soilpsi
+    dz                  => cps%dz
+    h2osoi_ice          => cws%h2osoi_ice
+    h2osoi_liq          => cws%h2osoi_liq
+    h2osoi_vol          => cws%h2osoi_vol
+    snow_depth              => cps%snow_depth
+    h2osno              => cws%h2osno
+    frac_sno            => cps%frac_sno 
+    ctype               => col%itype
+    clandunit           =>col%landunit
+    soilpsi             => cps%soilpsi
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    plandunit          => clm3%g%l%c%p%landunit
-    frac_veg_nosno_alb => clm3%g%l%c%p%pps%frac_veg_nosno_alb
-    frac_veg_nosno     => clm3%g%l%c%p%pps%frac_veg_nosno
-    fwet               => clm3%g%l%c%p%pps%fwet
+    plandunit          =>pft%landunit
+    frac_veg_nosno_alb => pps%frac_veg_nosno_alb
+    frac_veg_nosno     => pps%frac_veg_nosno
+    fwet               => pps%fwet
 
     ! Assign local pointers to derived subtypes components (pft-level)
     ! The folowing pointers will only be used for lake points in this routine
 
-    htop               => clm3%g%l%c%p%pps%htop
-    hbot               => clm3%g%l%c%p%pps%hbot
-    tlai               => clm3%g%l%c%p%pps%tlai
-    tsai               => clm3%g%l%c%p%pps%tsai
-    elai               => clm3%g%l%c%p%pps%elai
-    esai               => clm3%g%l%c%p%pps%esai
-    fdry               => clm3%g%l%c%p%pps%fdry
+    htop               => pps%htop
+    hbot               => pps%hbot
+    tlai               => pps%tlai
+    tsai               => pps%tsai
+    elai               => pps%elai
+    esai               => pps%esai
+    fdry               => pps%fdry
 
-    decl      => clm3%g%l%c%cps%decl
-    dayl      => clm3%g%l%c%p%pepv%dayl
-    pcolumn   => clm3%g%l%c%p%column
-    pgridcell => clm3%g%l%c%p%gridcell
-    latdeg    => clm3%g%latdeg 
+    decl      => cps%decl
+    dayl      => pepv%dayl
+    pcolumn   =>pft%column
+    pgridcell =>pft%gridcell
+    latdeg    =>  grc%latdeg 
 
     ! ========================================================================
     ! Determine surface albedo - initialized by calls to ecosystem dynamics and
@@ -285,7 +285,7 @@ contains
           c = pcolumn(p)
           l = plandunit(p)
           if (itypelun(l) == istsoil .or. itypelun(l) == istcrop) then
-             lat = latdeg(pgridcell(p)) * SHR_CONST_PI / 180._r8
+             lat = grc%latdeg(pgridcell(p)) * SHR_CONST_PI / 180._r8
              temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
              temp = min(1._r8,max(-1._r8,temp))
              dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp) 

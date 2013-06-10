@@ -201,34 +201,34 @@ CONTAINS
     forc_psrf  => clm_a2l%forc_pbot
     forc_rain  => clm_a2l%forc_rain 
 
-    latdeg     => clm3%g%latdeg
-    londeg     => clm3%g%londeg
-    pactive    => clm3%g%l%c%p%active
-    ivt        => clm3%g%l%c%p%itype
-    elai       => clm3%g%l%c%p%pps%elai 
-    ram1       => clm3%g%l%c%p%pps%ram1 
-    vds        => clm3%g%l%c%p%pps%vds
-    fsun       => clm3%g%l%c%p%pps%fsun 
-    rssun      => clm3%g%l%c%p%pps%rssun 
-    rssha      => clm3%g%l%c%p%pps%rssha 
-    rb1        => clm3%g%l%c%p%pps%rb1 
-    mlaidiff   => clm3%g%l%c%p%pps%mlaidiff 
-    annlai     => clm3%g%l%c%p%pps%annlai    
+    latdeg     =>  grc%latdeg
+    londeg     =>  grc%londeg
+    pactive    => pft%active
+    ivt        =>pft%itype
+    elai       => pps%elai 
+    ram1       => pps%ram1 
+    vds        => pps%vds
+    fsun       => pps%fsun 
+    rssun      => pps%rssun 
+    rssha      => pps%rssha 
+    rb1        => pps%rb1 
+    mlaidiff   => pps%mlaidiff 
+    annlai     => pps%annlai    
 
     forc_solai => clm_a2l%forc_solai 
     forc_solad => clm_a2l%forc_solad
 
-    pgridcell  => clm3%g%l%c%p%gridcell
-    plandunit  => clm3%g%l%c%p%landunit
+    pgridcell  =>pft%gridcell
+    plandunit  =>pft%landunit
 
-    pcolumn    => clm3%g%l%c%p%column
-    itypelun   => clm3%g%l%itype
+    pcolumn    =>pft%column
+    itypelun   => lun%itype
 
-    h2osoi_vol => clm3%g%l%c%cws%h2osoi_vol
+    h2osoi_vol => cws%h2osoi_vol
 
-    velocity   => clm3%g%l%c%p%pdd%drydepvel ! cm/sec
+    velocity   => pdd%drydepvel ! cm/sec
 
-    snow_depth        => clm3%g%l%c%cps%snow_depth
+    snow_depth        => cps%snow_depth
 
     ! Assign local pointers to original implicit out arrays 
     !_________________________________________________________________ 
@@ -237,7 +237,7 @@ CONTAINS
     pft_loop: do pi = lbp,ubp
        l = plandunit(pi)
 
-       active: if (pactive(pi)) then
+      active: if (pactive(pi)) then
 
           c = pcolumn(pi)
           g = pgridcell(pi)
@@ -247,8 +247,8 @@ CONTAINS
           spec_hum   = forc_q(g)
           rain       = forc_rain(g) 
           sfc_temp   = forc_t(g) 
-          lat        = latdeg(g) 
-          lon        = londeg(g) 
+          lat        = grc%latdeg(g) 
+          lon        = grc%londeg(g) 
           solar_flux = forc_solad(g,1) 
           clmveg     = ivt(pi) 
           soilw = h2osoi_vol(c,1)

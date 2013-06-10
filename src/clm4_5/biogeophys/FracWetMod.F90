@@ -82,13 +82,13 @@ contains
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
-    dewmx => clm3%g%l%c%p%pps%dewmx
-    elai => clm3%g%l%c%p%pps%elai
-    esai => clm3%g%l%c%p%pps%esai
-    h2ocan => clm3%g%l%c%p%pws%h2ocan
-    fwet => clm3%g%l%c%p%pps%fwet
-    fdry => clm3%g%l%c%p%pps%fdry
+    frac_veg_nosno => pps%frac_veg_nosno
+    dewmx => pps%dewmx
+    elai => pps%elai
+    esai => pps%esai
+    h2ocan => pws%h2ocan
+    fwet => pps%fwet
+    fdry => pps%fdry
 
     ! Compute fraction of canopy that is wet and dry
 

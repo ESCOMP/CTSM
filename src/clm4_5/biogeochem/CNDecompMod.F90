@@ -147,44 +147,44 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    !EOP
    !-----------------------------------------------------------------------
    
-   decomp_cpools_vr              => clm3%g%l%c%ccs%decomp_cpools_vr
-   decomp_cascade_hr_vr          => clm3%g%l%c%ccf%decomp_cascade_hr_vr
-   decomp_cascade_ctransfer_vr   => clm3%g%l%c%ccf%decomp_cascade_ctransfer_vr
-   decomp_npools_vr              => clm3%g%l%c%cns%decomp_npools_vr
-   decomp_cascade_ntransfer_vr   => clm3%g%l%c%cnf%decomp_cascade_ntransfer_vr
-   decomp_cascade_sminn_flux_vr  => clm3%g%l%c%cnf%decomp_cascade_sminn_flux_vr
-   fpi_vr                => clm3%g%l%c%cps%fpi_vr
-   potential_immob_vr    => clm3%g%l%c%cnf%potential_immob_vr
+   decomp_cpools_vr              => ccs%decomp_cpools_vr
+   decomp_cascade_hr_vr          => ccf%decomp_cascade_hr_vr
+   decomp_cascade_ctransfer_vr   => ccf%decomp_cascade_ctransfer_vr
+   decomp_npools_vr              => cns%decomp_npools_vr
+   decomp_cascade_ntransfer_vr   => cnf%decomp_cascade_ntransfer_vr
+   decomp_cascade_sminn_flux_vr  => cnf%decomp_cascade_sminn_flux_vr
+   fpi_vr                => cps%fpi_vr
+   potential_immob_vr    => cnf%potential_immob_vr
    
-   decomp_k                        => clm3%g%l%c%ccf%decomp_k
-   rf_decomp_cascade               => clm3%g%l%c%cps%rf_decomp_cascade
+   decomp_k                        => ccf%decomp_k
+   rf_decomp_cascade               => cps%rf_decomp_cascade
    cascade_donor_pool              => decomp_cascade_con%cascade_donor_pool
    cascade_receiver_pool           => decomp_cascade_con%cascade_receiver_pool
-   pathfrac_decomp_cascade         => clm3%g%l%c%cps%pathfrac_decomp_cascade
+   pathfrac_decomp_cascade         => cps%pathfrac_decomp_cascade
    floating_cn_ratio_decomp_pools  => decomp_cascade_con%floating_cn_ratio_decomp_pools
    initial_cn_ratio                => decomp_cascade_con%initial_cn_ratio
-   altmax_indx                     => clm3%g%l%c%cps%altmax_indx
-   altmax_lastyear_indx            => clm3%g%l%c%cps%altmax_lastyear_indx
+   altmax_indx                     => cps%altmax_indx
+   altmax_lastyear_indx            => cps%altmax_lastyear_indx
    
 #ifndef NITRIF_DENITRIF
-   sminn_to_denit_decomp_cascade_vr   => clm3%g%l%c%cnf%sminn_to_denit_decomp_cascade_vr
-   sminn_to_denit_excess_vr => clm3%g%l%c%cnf%sminn_to_denit_excess_vr
+   sminn_to_denit_decomp_cascade_vr   => cnf%sminn_to_denit_decomp_cascade_vr
+   sminn_to_denit_excess_vr => cnf%sminn_to_denit_excess_vr
 #else
-   phr_vr                   => clm3%g%l%c%ccf%phr_vr
+   phr_vr                   => ccf%phr_vr
 #endif
-   gross_nmin_vr            => clm3%g%l%c%cnf%gross_nmin_vr
-   net_nmin_vr              => clm3%g%l%c%cnf%net_nmin_vr
-   gross_nmin               => clm3%g%l%c%cnf%gross_nmin
-   net_nmin                 => clm3%g%l%c%cnf%net_nmin
+   gross_nmin_vr            => cnf%gross_nmin_vr
+   net_nmin_vr              => cnf%net_nmin_vr
+   gross_nmin               => cnf%gross_nmin
+   net_nmin                 => cnf%net_nmin
    ! For methane code
 #ifdef LCH4
-   fphr               => clm3%g%l%c%cch4%fphr
-   w_scalar           => clm3%g%l%c%ccf%w_scalar
+   fphr               => cch4%fphr
+   w_scalar           => ccf%w_scalar
 #endif
    
-   rootfr                => clm3%g%l%c%p%pps%rootfr
-   clandunit             => clm3%g%l%c%landunit
-   itypelun              => clm3%g%l%itype
+   rootfr                => pps%rootfr
+   clandunit             =>col%landunit
+   itypelun              => lun%itype
    
    
    

@@ -105,10 +105,6 @@ contains
    real(r8), pointer :: dz(:,:)          ! layer depth (m)
    real(r8), pointer :: wa(:,:)          ! h2o in underground aquifer
 
-   type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-   type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-   type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-   type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
 
 !-------------------------------------------------------------------------------
 ! Note: this routine does not compute heat or water content of lakes.
@@ -117,30 +113,26 @@ contains
 
    ! Set pointers into derived type
 
-   gptr => clm3%g
-   lptr => clm3%g%l
-   cptr => clm3%g%l%c
-   pptr => clm3%g%l%c%p
 
-   pactive => clm3%g%l%c%p%active
+   pactive => pft%active
 
-   ltype => clm3%g%l%itype
-   ctype => clm3%g%l%c%itype
-   ptype => clm3%g%l%c%p%itype
+   ltype => lun%itype
+   ctype => col%itype
+   ptype =>pft%itype
 
-   nlev_improad => clm3%g%l%lps%nlev_improad
-   cv_wall      => clm3%g%l%lps%cv_wall
-   cv_roof      => clm3%g%l%lps%cv_roof
-   cv_improad   => clm3%g%l%lps%cv_improad
+   nlev_improad => lps%nlev_improad
+   cv_wall      => lps%cv_wall
+   cv_roof      => lps%cv_roof
+   cv_improad   => lps%cv_improad
 
-   snl          => clm3%g%l%c%cps%snl
-   watsat       => clm3%g%l%c%cps%watsat
-   csol         => clm3%g%l%c%cps%csol
-   dz           => clm3%g%l%c%cps%dz
-   t_soisno     => clm3%g%l%c%ces%t_soisno
-   h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
-   h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
-   h2osno       => clm3%g%l%c%cws%h2osno
+   snl          => cps%snl
+   watsat       => cps%watsat
+   csol         => cps%csol
+   dz           => cps%dz
+   t_soisno     => ces%t_soisno
+   h2osoi_liq   => cws%h2osoi_liq
+   h2osoi_ice   => cws%h2osoi_ice
+   h2osno       => cws%h2osno
 
    ! Get relevant sizes
 
@@ -150,12 +142,12 @@ contains
       gcell_ice  (g) = 0.0_r8   ! sum for one grid cell
       gcell_heat (g) = 0.0_r8   ! sum for one grid cell
 
-      li = gptr%luni(g)
-      lf = gptr%lunf(g)
+      li = grc%luni(g)
+      lf = grc%lunf(g)
       do l = li,lf   ! loop over land units  
 
-         ci = lptr%coli(l)
-         cf = lptr%colf(l)
+         ci = lun%coli(l)
+         cf = lun%colf(l)
          do c = ci,cf   ! loop over columns
 
             liq   = 0.0_r8 ! sum for one column
@@ -174,11 +166,11 @@ contains
 
                if ( snl(c) < 0 ) then
                   do k = snl(c)+1,0 ! loop over snow layers
-                     liq   = liq   + clm3%g%l%c%cws%h2osoi_liq(c,k)
-                     ice   = ice   + clm3%g%l%c%cws%h2osoi_ice(c,k)
+                     liq   = liq   + cws%h2osoi_liq(c,k)
+                     ice   = ice   + cws%h2osoi_ice(c,k)
                   end do
                else                 ! no snow layers exist
-                  ice = ice + cptr%cws%h2osno(c)
+                  ice = ice + cws%h2osno(c)
                end if
             end if
 
@@ -190,16 +182,16 @@ contains
             .or. (ltype(l) == istice_mec                               )  &           
             .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
                do k = 1,nlevgrnd
-                  liq   = liq   + cptr%cws%h2osoi_liq(c,k)
-                  ice   = ice   + cptr%cws%h2osoi_ice(c,k)
+                  liq   = liq   + cws%h2osoi_liq(c,k)
+                  ice   = ice   + cws%h2osoi_ice(c,k)
                end do
             end if
 
             !--- water & ice, below ground, for lakes ---
             if ( ltype(l) == istdlak ) then
                do k = 1,nlevlak
-                  liq   = liq   + (1 - cptr%cws%lake_icefrac(c,k))*cptr%cps%dz_lake(c,k)*denh2o
-                  ice   = ice   + cptr%cws%lake_icefrac(c,k)*cptr%cps%dz_lake(c,k)*denh2o
+                  liq   = liq   + (1 - cws%lake_icefrac(c,k))*cps%dz_lake(c,k)*denh2o
+                  ice   = ice   + cws%lake_icefrac(c,k)*cps%dz_lake(c,k)*denh2o
                         ! lake layers do not change thickness when freezing, so denh2o should be used
                         ! (thermal properties are appropriately adjusted; see SLakeTemperatureMod)
                end do
@@ -211,17 +203,17 @@ contains
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istice_mec                               )  &           
             .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
-               liq = liq + cptr%cws%wa(c)
+               liq = liq + cws%wa(c)
             end if
 
             !--- water in canopy (at pft level) ---
             if (ltype(l) == istsoil .or. ltype(l) == istcrop) then   ! note: soil specified at LU level
-               pi = cptr%pfti(c)
-               pf = cptr%pftf(c)
+               pi = col%pfti(c)
+               pf = col%pftf(c)
                do p = pi,pf ! loop over pfts
                   if (pactive(p)) then
-                     wtcol = pptr%wtcol(p)
-                     liq = liq + pptr%pws%h2ocan(p) * wtcol
+                     wtcol = pft%wtcol(p)
+                     liq = liq + pws%h2ocan(p) * wtcol
                   end if
                end do
             end if
@@ -258,9 +250,9 @@ contains
                !--- heat content, below ground in lake water, for lakes ---
                do k = 1,nlevlak
                   if (ltype(l) == istdlak) then
-                     cv = denh2o*cptr%cps%dz_lake(c,k)*( cptr%cws%lake_icefrac(c,k)*cpice + &
-                          (1 - cptr%cws%lake_icefrac(c,k))*cpliq )
-                     heat = heat + cv*cptr%ces%t_lake(c,k) / 1.e6_r8
+                     cv = denh2o*cps%dz_lake(c,k)*( cws%lake_icefrac(c,k)*cpice + &
+                          (1 - cws%lake_icefrac(c,k))*cpliq )
+                     heat = heat + cv*ces%t_lake(c,k) / 1.e6_r8
                   end if
                end do
 
@@ -281,7 +273,7 @@ contains
             end if
 
             !--- scale x/m^2 column-level values into x/m^2 gridcell-level values ---
-            wtgcell = cptr%wtgcell(c)
+            wtgcell = col%wtgcell(c)
             gcell_liq  (g) = gcell_liq  (g) + liq   * wtgcell
             gcell_ice  (g) = gcell_ice  (g) + ice   * wtgcell
             gcell_heat (g) = gcell_heat (g) + heat  * wtgcell

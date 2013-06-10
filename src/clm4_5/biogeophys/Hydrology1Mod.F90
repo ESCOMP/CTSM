@@ -267,87 +267,87 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    pgridcell          => clm3%g%l%c%p%gridcell
+    pgridcell          =>pft%gridcell
     forc_rain          => clm_a2l%forc_rain
     forc_snow          => clm_a2l%forc_snow
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    ltype              => clm3%g%l%itype
+    ltype              => lun%itype
 
     ! Assign local pointers to derived type members (column-level)
 
-    swe_old            => clm3%g%l%c%cws%swe_old
-    frac_sno_eff       => clm3%g%l%c%cps%frac_sno_eff  
-    frac_sno           => clm3%g%l%c%cps%frac_sno 
-    frac_h2osfc        => clm3%g%l%c%cps%frac_h2osfc
-    h2osfc             => clm3%g%l%c%cws%h2osfc
-    qflx_snow_h2osfc   => clm3%g%l%c%cwf%qflx_snow_h2osfc
-    int_snow           => clm3%g%l%c%cws%int_snow
+    swe_old            => cws%swe_old
+    frac_sno_eff       => cps%frac_sno_eff  
+    frac_sno           => cps%frac_sno 
+    frac_h2osfc        => cps%frac_h2osfc
+    h2osfc             => cws%h2osfc
+    qflx_snow_h2osfc   => cwf%qflx_snow_h2osfc
+    int_snow           => cws%int_snow
     qflx_floodg        => clm_a2l%forc_flood
-    qflx_floodc        => clm3%g%l%c%cwf%qflx_floodc
-    qflx_snow_melt     => clm3%g%l%c%cwf%qflx_snow_melt
-    n_melt             => clm3%g%l%c%cps%n_melt
+    qflx_floodc        => cwf%qflx_floodc
+    qflx_snow_melt     => cwf%qflx_snow_melt
+    n_melt             => cps%n_melt
 
-    cgridcell          => clm3%g%l%c%gridcell
-    clandunit          => clm3%g%l%c%landunit
-    ctype              => clm3%g%l%c%itype
-    pfti               => clm3%g%l%c%pfti
-    npfts              => clm3%g%l%c%npfts
-    do_capsnow         => clm3%g%l%c%cps%do_capsnow
-    forc_t             => clm3%g%l%c%ces%forc_t
-    t_grnd             => clm3%g%l%c%ces%t_grnd
-    snl                => clm3%g%l%c%cps%snl
-    snow_depth             => clm3%g%l%c%cps%snow_depth
-    h2osno             => clm3%g%l%c%cws%h2osno
-    zi                 => clm3%g%l%c%cps%zi
-    dz                 => clm3%g%l%c%cps%dz
-    z                  => clm3%g%l%c%cps%z
-    frac_iceold        => clm3%g%l%c%cps%frac_iceold
-    t_soisno           => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice         => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
-    qflx_snow_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
-    h2ocan_loss        => clm3%g%l%c%cwf%h2ocan_loss
-    snw_rds            => clm3%g%l%c%cps%snw_rds
-    mss_bcpho          => clm3%g%l%c%cps%mss_bcpho
-    mss_bcphi          => clm3%g%l%c%cps%mss_bcphi
-    mss_bctot          => clm3%g%l%c%cps%mss_bctot
-    mss_bc_col         => clm3%g%l%c%cps%mss_bc_col
-    mss_bc_top         => clm3%g%l%c%cps%mss_bc_top
-    mss_ocpho          => clm3%g%l%c%cps%mss_ocpho
-    mss_ocphi          => clm3%g%l%c%cps%mss_ocphi
-    mss_octot          => clm3%g%l%c%cps%mss_octot
-    mss_oc_col         => clm3%g%l%c%cps%mss_oc_col
-    mss_oc_top         => clm3%g%l%c%cps%mss_oc_top
-    mss_dst1           => clm3%g%l%c%cps%mss_dst1
-    mss_dst2           => clm3%g%l%c%cps%mss_dst2
-    mss_dst3           => clm3%g%l%c%cps%mss_dst3
-    mss_dst4           => clm3%g%l%c%cps%mss_dst4
-    mss_dsttot         => clm3%g%l%c%cps%mss_dsttot
-    mss_dst_col        => clm3%g%l%c%cps%mss_dst_col
-    mss_dst_top        => clm3%g%l%c%cps%mss_dst_top
+    cgridcell          =>col%gridcell
+    clandunit          =>col%landunit
+    ctype              => col%itype
+    pfti               =>col%pfti
+    npfts              =>col%npfts
+    do_capsnow         => cps%do_capsnow
+    forc_t             => ces%forc_t
+    t_grnd             => ces%t_grnd
+    snl                => cps%snl
+    snow_depth             => cps%snow_depth
+    h2osno             => cws%h2osno
+    zi                 => cps%zi
+    dz                 => cps%dz
+    z                  => cps%z
+    frac_iceold        => cps%frac_iceold
+    t_soisno           => ces%t_soisno
+    h2osoi_ice         => cws%h2osoi_ice
+    h2osoi_liq         => cws%h2osoi_liq
+    qflx_snow_grnd_col => pwf_a%qflx_snow_grnd
+    h2ocan_loss        => cwf%h2ocan_loss
+    snw_rds            => cps%snw_rds
+    mss_bcpho          => cps%mss_bcpho
+    mss_bcphi          => cps%mss_bcphi
+    mss_bctot          => cps%mss_bctot
+    mss_bc_col         => cps%mss_bc_col
+    mss_bc_top         => cps%mss_bc_top
+    mss_ocpho          => cps%mss_ocpho
+    mss_ocphi          => cps%mss_ocphi
+    mss_octot          => cps%mss_octot
+    mss_oc_col         => cps%mss_oc_col
+    mss_oc_top         => cps%mss_oc_top
+    mss_dst1           => cps%mss_dst1
+    mss_dst2           => cps%mss_dst2
+    mss_dst3           => cps%mss_dst3
+    mss_dst4           => cps%mss_dst4
+    mss_dsttot         => cps%mss_dsttot
+    mss_dst_col        => cps%mss_dst_col
+    mss_dst_top        => cps%mss_dst_top
 
     ! Assign local pointers to derived type members (pft-level)
 
-    plandunit          => clm3%g%l%c%p%landunit
-    pcolumn            => clm3%g%l%c%p%column
-    dewmx              => clm3%g%l%c%p%pps%dewmx
-    frac_veg_nosno     => clm3%g%l%c%p%pps%frac_veg_nosno
-    elai               => clm3%g%l%c%p%pps%elai
-    esai               => clm3%g%l%c%p%pps%esai
-    h2ocan             => clm3%g%l%c%p%pws%h2ocan
-    qflx_prec_intr     => clm3%g%l%c%p%pwf%qflx_prec_intr
-    qflx_prec_grnd     => clm3%g%l%c%p%pwf%qflx_prec_grnd
-    qflx_snwcp_liq     => clm3%g%l%c%p%pwf%qflx_snwcp_liq
-    qflx_snwcp_ice     => clm3%g%l%c%p%pwf%qflx_snwcp_ice
-    qflx_snow_grnd_pft => clm3%g%l%c%p%pwf%qflx_snow_grnd
-    qflx_rain_grnd     => clm3%g%l%c%p%pwf%qflx_rain_grnd
-    fwet               => clm3%g%l%c%p%pps%fwet
-    fdry               => clm3%g%l%c%p%pps%fdry
-    irrig_rate         => clm3%g%l%c%cps%irrig_rate
-    n_irrig_steps_left => clm3%g%l%c%cps%n_irrig_steps_left
-    qflx_irrig         => clm3%g%l%c%cwf%qflx_irrig
+    plandunit          =>pft%landunit
+    pcolumn            =>pft%column
+    dewmx              => pps%dewmx
+    frac_veg_nosno     => pps%frac_veg_nosno
+    elai               => pps%elai
+    esai               => pps%esai
+    h2ocan             => pws%h2ocan
+    qflx_prec_intr     => pwf%qflx_prec_intr
+    qflx_prec_grnd     => pwf%qflx_prec_grnd
+    qflx_snwcp_liq     => pwf%qflx_snwcp_liq
+    qflx_snwcp_ice     => pwf%qflx_snwcp_ice
+    qflx_snow_grnd_pft => pwf%qflx_snow_grnd
+    qflx_rain_grnd     => pwf%qflx_rain_grnd
+    fwet               => pps%fwet
+    fdry               => pps%fdry
+    irrig_rate         => cps%irrig_rate
+    n_irrig_steps_left => cps%n_irrig_steps_left
+    qflx_irrig         => cwf%qflx_irrig
 
     ! Compute time step
 

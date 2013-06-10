@@ -73,8 +73,8 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers at the column level
-   col_begcb                      => clm3%g%l%c%ccbal%begcb
-   totcolc                        => clm3%g%l%c%ccs%totcolc
+   col_begcb                      => ccbal%begcb
+   totcolc                        => ccs%totcolc
 
    ! column loop
    do fc = 1,num_soilc
@@ -133,8 +133,8 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers at the column level
-   col_begnb                      => clm3%g%l%c%cnbal%begnb
-   totcoln                        => clm3%g%l%c%cns%totcoln
+   col_begnb                      => cnbal%begnb
+   totcoln                        => cns%totcoln
 
    ! column loop
    do fc = 1,num_soilc
@@ -205,20 +205,20 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 !-----------------------------------------------------------------------
 
    ! assign local pointers to column-level arrays
-   totcolc                        => clm3%g%l%c%ccs%totcolc
-   gpp                            => clm3%g%l%c%ccf%pcf_a%gpp
-   er                             => clm3%g%l%c%ccf%er
-   col_fire_closs                 => clm3%g%l%c%ccf%col_fire_closs
-   col_hrv_xsmrpool_to_atm        => clm3%g%l%c%ccf%pcf_a%hrv_xsmrpool_to_atm
-   dwt_closs                      => clm3%g%l%c%ccf%dwt_closs
-   product_closs                  => clm3%g%l%c%ccf%product_closs
+   totcolc                        => ccs%totcolc
+   gpp                            => pcf_a%gpp
+   er                             => ccf%er
+   col_fire_closs                 => ccf%col_fire_closs
+   col_hrv_xsmrpool_to_atm        => pcf_a%hrv_xsmrpool_to_atm
+   dwt_closs                      => ccf%dwt_closs
+   product_closs                  => ccf%product_closs
    
-   col_cinputs                    => clm3%g%l%c%ccf%col_cinputs
-   col_coutputs                   => clm3%g%l%c%ccf%col_coutputs
-   col_begcb                      => clm3%g%l%c%ccbal%begcb
-   col_endcb                      => clm3%g%l%c%ccbal%endcb
-   col_errcb                      => clm3%g%l%c%ccbal%errcb
-   som_c_leached                  => clm3%g%l%c%ccf%som_c_leached
+   col_cinputs                    => ccf%col_cinputs
+   col_coutputs                   => ccf%col_coutputs
+   col_begcb                      => ccbal%begcb
+   col_endcb                      => ccbal%endcb
+   col_errcb                      => ccbal%errcb
+   som_c_leached                  => ccf%som_c_leached
    
    
    ! set time steps
@@ -260,7 +260,7 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    if (err_found) then
       c = err_index
       write(iulog,*)'column cbalance error = ', col_errcb(c), c
-      write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(clm3%g%l%c%gridcell(c)),clm3%g%londeg(clm3%g%l%c%gridcell(c))
+      write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
       write(iulog,*)'begcb       = ',col_begcb(c)
       write(iulog,*)'endcb       = ',col_endcb(c)
       write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
@@ -341,30 +341,30 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 !-----------------------------------------------------------------------
     ! assign local pointers to column-level arrays
    
-   totcoln                        => clm3%g%l%c%cns%totcoln
-   ndep_to_sminn                  => clm3%g%l%c%cnf%ndep_to_sminn
-   nfix_to_sminn                  => clm3%g%l%c%cnf%nfix_to_sminn
-   fert_to_sminn                  => clm3%g%l%c%cnf%fert_to_sminn
-   soyfixn_to_sminn               => clm3%g%l%c%cnf%soyfixn_to_sminn
-   supplement_to_sminn            => clm3%g%l%c%cnf%supplement_to_sminn
-   denit                          => clm3%g%l%c%cnf%denit
+   totcoln                        => cns%totcoln
+   ndep_to_sminn                  => cnf%ndep_to_sminn
+   nfix_to_sminn                  => cnf%nfix_to_sminn
+   fert_to_sminn                  => cnf%fert_to_sminn
+   soyfixn_to_sminn               => cnf%soyfixn_to_sminn
+   supplement_to_sminn            => cnf%supplement_to_sminn
+   denit                          => cnf%denit
 #ifndef NITRIF_DENITRIF
-   sminn_leached                  => clm3%g%l%c%cnf%sminn_leached
+   sminn_leached                  => cnf%sminn_leached
 #else
-   smin_no3_leached               => clm3%g%l%c%cnf%smin_no3_leached
-   smin_no3_runoff                => clm3%g%l%c%cnf%smin_no3_runoff
-   f_n2o_nit                      => clm3%g%l%c%cnf%f_n2o_nit
+   smin_no3_leached               => cnf%smin_no3_leached
+   smin_no3_runoff                => cnf%smin_no3_runoff
+   f_n2o_nit                      => cnf%f_n2o_nit
 #endif
-   col_fire_nloss                 => clm3%g%l%c%cnf%col_fire_nloss
-   dwt_nloss                      => clm3%g%l%c%cnf%dwt_nloss
-   product_nloss                  => clm3%g%l%c%cnf%product_nloss
-   som_n_leached                  => clm3%g%l%c%cnf%som_n_leached
+   col_fire_nloss                 => cnf%col_fire_nloss
+   dwt_nloss                      => cnf%dwt_nloss
+   product_nloss                  => cnf%product_nloss
+   som_n_leached                  => cnf%som_n_leached
    
-   col_ninputs                    => clm3%g%l%c%cnf%col_ninputs
-   col_noutputs                   => clm3%g%l%c%cnf%col_noutputs
-   col_begnb                      => clm3%g%l%c%cnbal%begnb
-   col_endnb                      => clm3%g%l%c%cnbal%endnb
-   col_errnb                      => clm3%g%l%c%cnbal%errnb
+   col_ninputs                    => cnf%col_ninputs
+   col_noutputs                   => cnf%col_noutputs
+   col_begnb                      => cnbal%begnb
+   col_endnb                      => cnbal%endnb
+   col_errnb                      => cnbal%errnb
    
    ! set time steps
    dt = real( get_step_size(), r8 )
@@ -413,7 +413,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    if (err_found) then
       c = err_index
       write(iulog,*)'column nbalance error = ', col_errnb(c), c
-      write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(clm3%g%l%c%gridcell(c)),clm3%g%londeg(clm3%g%l%c%gridcell(c))
+      write(iulog,*)'Latdeg,Londeg=',grc%latdeg(col%gridcell(c)),grc%londeg(col%gridcell(c))
       write(iulog,*)'begnb       = ',col_begnb(c)
       write(iulog,*)'endnb       = ',col_endnb(c)
       write(iulog,*)'delta store = ',col_endnb(c)-col_begnb(c)

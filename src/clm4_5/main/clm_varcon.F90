@@ -151,7 +151,7 @@ module clm_varcon
   integer, parameter :: isturb     = 6  !urban        landunit type
   integer, parameter :: istice_mec = 7  !land ice (multiple elevation classes) landunit type
   integer, parameter :: istcrop    = 8  !crop         landunit type
-  integer, parameter :: max_lunit  = 8  !maximum value that clm3%g%l%itype can have
+  integer, parameter :: max_lunit  = 8  !maximum value that lun%itype can have
                              !(i.e., largest value in the above list)
 
   ! urban column types

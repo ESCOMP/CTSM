@@ -23,7 +23,6 @@ module mkarbinitMod
 ! !PUBLIC MEMBER FUNCTIONS:
 
     public mkarbinit   ! Make arbitrary initial conditions
-    public perturbIC   ! Perturb the initial conditions by pertlim
 
 !EOP
 !-----------------------------------------------------------------------
@@ -54,7 +53,7 @@ contains
                               icol_shadewall
     use clm_varcon   , only : istcrop
     use clm_varcon   , only : istice_mec, h2osno_max
-    use clm_varctl   , only : iulog, pertlim
+    use clm_varctl   , only : iulog
     use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
     use SNICARMod    , only : snw_rds_min
@@ -172,85 +171,85 @@ contains
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
-    h2osfc           => clm3%g%l%c%cws%h2osfc
-    t_h2osfc         => clm3%g%l%c%ces%t_h2osfc
-    frac_h2osfc      => clm3%g%l%c%cps%frac_h2osfc
-    qflx_h2osfc_surf => clm3%g%l%c%cwf%qflx_h2osfc_surf
-    qflx_snow_melt   => clm3%g%l%c%cwf%qflx_snow_melt
-    frost_table      => clm3%g%l%c%cws%frost_table
-    zwt_perched      => clm3%g%l%c%cws%zwt_perched
-    int_snow         => clm3%g%l%c%cws%int_snow
-    ltype            => clm3%g%l%itype
-    lakpoi           => clm3%g%l%lakpoi
-    ifspecial        => clm3%g%l%ifspecial
-    urbpoi           => clm3%g%l%urbpoi
+    h2osfc           => cws%h2osfc
+    t_h2osfc         => ces%t_h2osfc
+    frac_h2osfc      => cps%frac_h2osfc
+    qflx_h2osfc_surf => cwf%qflx_h2osfc_surf
+    qflx_snow_melt   => cwf%qflx_snow_melt
+    frost_table      => cws%frost_table
+    zwt_perched      => cws%zwt_perched
+    int_snow         => cws%int_snow
+    ltype            => lun%itype
+    lakpoi           =>lun%lakpoi
+    ifspecial        =>lun%ifspecial
+    urbpoi           =>lun%urbpoi
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    ctype            => clm3%g%l%c%itype
-    clandunit        => clm3%g%l%c%landunit
-    snl              => clm3%g%l%c%cps%snl
-    dz               => clm3%g%l%c%cps%dz
-    watsat            => clm3%g%l%c%cps%watsat
-    sucsat            => clm3%g%l%c%cps%sucsat
-    bsw               => clm3%g%l%c%cps%bsw
-    soilpsi          => clm3%g%l%c%cps%soilpsi
-    h2osoi_ice       => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_vol       => clm3%g%l%c%cws%h2osoi_vol
-    h2ocan_col       => clm3%g%l%c%cws%pws_a%h2ocan
-    qflx_irrig       => clm3%g%l%c%cwf%qflx_irrig
-    snow_depth           => clm3%g%l%c%cps%snow_depth
-    h2osno           => clm3%g%l%c%cws%h2osno
-    t_soisno         => clm3%g%l%c%ces%t_soisno
-    t_lake           => clm3%g%l%c%ces%t_lake
-    t_grnd           => clm3%g%l%c%ces%t_grnd
-    tsoi17           => clm3%g%l%c%ces%tsoi17
-    zi               => clm3%g%l%c%cps%zi
-    wa               => clm3%g%l%c%cws%wa
-    zwt              => clm3%g%l%c%cws%zwt
-    fsat             => clm3%g%l%c%cws%fsat
-    snw_rds          => clm3%g%l%c%cps%snw_rds
-    snw_rds_top      => clm3%g%l%c%cps%snw_rds_top
-    sno_liq_top      => clm3%g%l%c%cps%sno_liq_top
-    mss_bcpho        => clm3%g%l%c%cps%mss_bcpho
-    mss_bcphi        => clm3%g%l%c%cps%mss_bcphi
-    mss_bctot        => clm3%g%l%c%cps%mss_bctot
-    mss_bc_col       => clm3%g%l%c%cps%mss_bc_col
-    mss_bc_top       => clm3%g%l%c%cps%mss_bc_top
-    mss_cnc_bcphi    => clm3%g%l%c%cps%mss_cnc_bcphi
-    mss_cnc_bcpho    => clm3%g%l%c%cps%mss_cnc_bcpho
-    mss_ocpho        => clm3%g%l%c%cps%mss_ocpho
-    mss_ocphi        => clm3%g%l%c%cps%mss_ocphi
-    mss_octot        => clm3%g%l%c%cps%mss_octot
-    mss_oc_col       => clm3%g%l%c%cps%mss_oc_col
-    mss_oc_top       => clm3%g%l%c%cps%mss_oc_top
-    mss_cnc_ocphi    => clm3%g%l%c%cps%mss_cnc_ocphi
-    mss_cnc_ocpho    => clm3%g%l%c%cps%mss_cnc_ocpho
-    mss_dst1         => clm3%g%l%c%cps%mss_dst1
-    mss_dst2         => clm3%g%l%c%cps%mss_dst2
-    mss_dst3         => clm3%g%l%c%cps%mss_dst3
-    mss_dst4         => clm3%g%l%c%cps%mss_dst4
-    mss_dsttot       => clm3%g%l%c%cps%mss_dsttot
-    mss_dst_col      => clm3%g%l%c%cps%mss_dst_col
-    mss_dst_top      => clm3%g%l%c%cps%mss_dst_top
-    mss_cnc_dst1     => clm3%g%l%c%cps%mss_cnc_dst1
-    mss_cnc_dst2     => clm3%g%l%c%cps%mss_cnc_dst2
-    mss_cnc_dst3     => clm3%g%l%c%cps%mss_cnc_dst3
-    mss_cnc_dst4     => clm3%g%l%c%cps%mss_cnc_dst4
-    n_irrig_steps_left => clm3%g%l%c%cps%n_irrig_steps_left
-    irrig_rate       => clm3%g%l%c%cps%irrig_rate
+    ctype            => col%itype
+    clandunit        =>col%landunit
+    snl              => cps%snl
+    dz               => cps%dz
+    watsat            => cps%watsat
+    sucsat            => cps%sucsat
+    bsw               => cps%bsw
+    soilpsi          => cps%soilpsi
+    h2osoi_ice       => cws%h2osoi_ice
+    h2osoi_liq       => cws%h2osoi_liq
+    h2osoi_vol       => cws%h2osoi_vol
+    h2ocan_col       => pws_a%h2ocan
+    qflx_irrig       => cwf%qflx_irrig
+    snow_depth           => cps%snow_depth
+    h2osno           => cws%h2osno
+    t_soisno         => ces%t_soisno
+    t_lake           => ces%t_lake
+    t_grnd           => ces%t_grnd
+    tsoi17           => ces%tsoi17
+    zi               => cps%zi
+    wa               => cws%wa
+    zwt              => cws%zwt
+    fsat             => cws%fsat
+    snw_rds          => cps%snw_rds
+    snw_rds_top      => cps%snw_rds_top
+    sno_liq_top      => cps%sno_liq_top
+    mss_bcpho        => cps%mss_bcpho
+    mss_bcphi        => cps%mss_bcphi
+    mss_bctot        => cps%mss_bctot
+    mss_bc_col       => cps%mss_bc_col
+    mss_bc_top       => cps%mss_bc_top
+    mss_cnc_bcphi    => cps%mss_cnc_bcphi
+    mss_cnc_bcpho    => cps%mss_cnc_bcpho
+    mss_ocpho        => cps%mss_ocpho
+    mss_ocphi        => cps%mss_ocphi
+    mss_octot        => cps%mss_octot
+    mss_oc_col       => cps%mss_oc_col
+    mss_oc_top       => cps%mss_oc_top
+    mss_cnc_ocphi    => cps%mss_cnc_ocphi
+    mss_cnc_ocpho    => cps%mss_cnc_ocpho
+    mss_dst1         => cps%mss_dst1
+    mss_dst2         => cps%mss_dst2
+    mss_dst3         => cps%mss_dst3
+    mss_dst4         => cps%mss_dst4
+    mss_dsttot       => cps%mss_dsttot
+    mss_dst_col      => cps%mss_dst_col
+    mss_dst_top      => cps%mss_dst_top
+    mss_cnc_dst1     => cps%mss_cnc_dst1
+    mss_cnc_dst2     => cps%mss_cnc_dst2
+    mss_cnc_dst3     => cps%mss_cnc_dst3
+    mss_cnc_dst4     => cps%mss_cnc_dst4
+    n_irrig_steps_left => cps%n_irrig_steps_left
+    irrig_rate       => cps%irrig_rate
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    pcolumn        => clm3%g%l%c%p%column
-    h2ocan_pft     => clm3%g%l%c%p%pws%h2ocan
-    t_veg          => clm3%g%l%c%p%pes%t_veg
-    t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
-    t_ref2m_u      => clm3%g%l%c%p%pes%t_ref2m_u
-    t_ref2m_r      => clm3%g%l%c%p%pes%t_ref2m_r
-    plandunit      => clm3%g%l%c%p%landunit
-    eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out  
+    pcolumn        =>pft%column
+    h2ocan_pft     => pws%h2ocan
+    t_veg          => pes%t_veg
+    t_ref2m        => pes%t_ref2m
+    t_ref2m_u      => pes%t_ref2m_u
+    t_ref2m_r      => pes%t_ref2m_r
+    plandunit      =>pft%landunit
+    eflx_lwrad_out => pef%eflx_lwrad_out  
 
     ! Determine subgrid bounds on this processor
 
@@ -261,15 +260,6 @@ contains
 
     do p = begp, endp
        h2ocan_pft(p) = 0._r8
-       
-       ! added for canopy water mass balance under dynamic pft weights
-       !clm3%g%l%c%p%pps%tlai(p) = 0._r8
-       !clm3%g%l%c%p%pps%tsai(p) = 0._r8
-       !clm3%g%l%c%p%pps%elai(p) = 0._r8
-       !clm3%g%l%c%p%pps%esai(p) = 0._r8
-       !clm3%g%l%c%p%pps%htop(p) = 0._r8
-       !clm3%g%l%c%p%pps%hbot(p) = 0._r8
-       !clm3%g%l%c%p%pps%frac_veg_nosno_alb(p) = 0._r8
     end do
 
     ! initialize h2osfc, frac_h2osfc, t_h2osfc, qflx_snow_melt
@@ -412,8 +402,6 @@ contains
        tsoi17(c) = t_grnd(c)
 
     end do
-
-    call perturbIC( clm3%g%l )
 
     do p = begp, endp
        c = pcolumn(p)
@@ -649,103 +637,6 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: perturbIC
-!
-! !INTERFACE:
-  subroutine perturbIC( landunit )
-!
-! !DESCRIPTION:
-!   Perturbs initial conditions by the amount in the namelist variable pertlim.
-!
-! !USES:
-    use clm_varpar   , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use clm_varctl   , only : pertlim
-    use clm_varcon   , only : isturb, icol_road_perv, icol_road_imperv
-    use decompMod    , only : get_proc_bounds
-    use clmtype      , only : landunit_type, clm3
-    implicit none
-!
-! !ARGUMENTS:
-    type(landunit_type), intent(INOUT) :: landunit
-!
-! !REVISION HISTORY:
-! Created by Erik Kluzek
-!
-! !LOCAL VARIABLES:
-!
-    integer :: j,l,c        ! indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    real(r8):: pertval      ! for calculating temperature perturbation
-    integer :: nlevs        ! number of levels
-    integer , pointer :: clandunit(:)   ! landunit index associated with each column
-    integer , pointer :: ltype(:)       ! landunit type
-    logical , pointer :: lakpoi(:)      ! true => landunit is a lake point
-    integer , pointer :: snl(:)         ! number of snow layers
-    real(r8), pointer :: t_soisno(:,:)  ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-    real(r8), pointer :: t_lake(:,:)    ! lake temperature (Kelvin)  (1:nlevlak)
-    real(r8), pointer :: t_grnd(:)      ! ground temperature (Kelvin)
-    integer , pointer :: ctype(:)          ! column type
-!EOP
-!-----------------------------------------------------------------------
-
-    if ( pertlim /= 0.0_r8 )then
-
-       if ( masterproc ) write(iulog,*) 'Applying perturbation to initial soil temperature'
-
-       clandunit  => landunit%c%landunit
-       lakpoi     => landunit%lakpoi
-       ltype      => landunit%itype
-       t_soisno   => landunit%c%ces%t_soisno
-       t_lake     => landunit%c%ces%t_lake
-       t_grnd     => landunit%c%ces%t_grnd
-       snl        => landunit%c%cps%snl
-       ctype      => clm3%g%l%c%itype
-
-       ! Determine subgrid bounds on this processor
-
-       call get_proc_bounds( begc=begc, endc=endc )
-
-       do c = begc,endc
-          l = clandunit(c)
-          if (.not. lakpoi(l)) then  !not lake
-             if (     ltype(l) == isturb) then
-                if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                   nlevs = nlevgrnd
-                else
-                   nlevs = nlevurb
-                end if
-             else
-                nlevs = nlevgrnd
-             end if
-             ! Randomly perturb soil temperature
-             do j = 1, nlevs
-                call random_number (pertval)
-                pertval       = 2._r8*pertlim*(0.5_r8 - pertval)
-                t_soisno(c,j) = t_soisno(c,j)*(1._r8 + pertval)
-             end do
-          else                       !lake
-             ! Randomly perturb lake temperature
-             do j = 1, nlevlak
-                call random_number (pertval)
-                pertval     = 2._r8*pertlim*(0.5_r8 - pertval)
-                t_lake(c,j) = t_lake(c,j)*(1._r8 + pertval)
-             end do
-          endif
-          ! Randomly perturb surface ground temp
-          call random_number (pertval)
-          pertval   = 2._r8*pertlim*(0.5_r8 - pertval)
-          t_grnd(c) = t_grnd(c)*(1._r8 + pertval)
-       end do
-    end if
-    !-----------------------------------------------------------------------
-
-  end subroutine perturbIC
-
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
-!BOP
-!
 ! !ROUTINE: snow_depth2lev
 !
 ! !INTERFACE:
@@ -790,16 +681,16 @@ contains
  
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  lakpoi => clm3%g%l%lakpoi
+  lakpoi =>lun%lakpoi
 
   ! Assign local pointers to derived type members (column-level)
 
-  clandunit => clm3%g%l%c%landunit
-  snow_depth    => clm3%g%l%c%cps%snow_depth
-  snl       => clm3%g%l%c%cps%snl
-  zi        => clm3%g%l%c%cps%zi
-  dz        => clm3%g%l%c%cps%dz
-  z         => clm3%g%l%c%cps%z
+  clandunit =>col%landunit
+  snow_depth    => cps%snow_depth
+  snl       => cps%snl
+  zi        => cps%zi
+  dz        => cps%dz
+  z         => cps%z
 
   ! Initialize snow levels and interfaces (lake and non-lake points)
 

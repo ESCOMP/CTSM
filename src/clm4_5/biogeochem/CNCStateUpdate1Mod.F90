@@ -77,14 +77,14 @@ subroutine CStateUpdate0(num_soilp, filter_soilp, isotope)
    ! select which isotope
    select case (isotope)
    case ('bulk')
-      pcisof => clm3%g%l%c%p%pcf
-      pcisos => clm3%g%l%c%p%pcs
+      pcisof =>  pcf
+      pcisos =>  pcs
    case ('c14')
-      pcisof => clm3%g%l%c%p%pc14f
-      pcisos => clm3%g%l%c%p%pc14s
+      pcisof =>  pc14f
+      pcisos =>  pc14s
    case ('c13')
-      pcisof => clm3%g%l%c%p%pc13f
-      pcisos => clm3%g%l%c%p%pc13s
+      pcisof =>  pc13f
+      pcisos =>  pc13s
    case default
       call endrun('CNCIsoStateUpdate1Mod: iso must be bulk, c13 or c14')
    end select
@@ -279,20 +279,20 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    ! select which isotope
    select case (isotope)
    case ('bulk')
-      pcisof => clm3%g%l%c%p%pcf
-      pcisos => clm3%g%l%c%p%pcs
-      ccisof => clm3%g%l%c%ccf
-      ccisos => clm3%g%l%c%ccs
+      pcisof =>  pcf
+      pcisos =>  pcs
+      ccisof =>  ccf
+      ccisos =>  ccs
    case ('c14')
-      pcisof => clm3%g%l%c%p%pc14f
-      pcisos => clm3%g%l%c%p%pc14s
-      ccisof => clm3%g%l%c%cc14f
-      ccisos => clm3%g%l%c%cc14s
+      pcisof =>  pc14f
+      pcisos =>  pc14s
+      ccisof =>  cc14f
+      ccisos =>  cc14s
    case ('c13')
-      pcisof => clm3%g%l%c%p%pc13f
-      pcisos => clm3%g%l%c%p%pc13s
-      ccisof => clm3%g%l%c%cc13f
-      ccisos => clm3%g%l%c%cc13s
+      pcisof =>  pc13f
+      pcisos =>  pc13s
+      ccisof =>  cc13f
+      ccisos =>  cc13s
    case default
       call endrun('CNCIsoStateUpdate1Mod: iso must be bulk, c13 or c14')
    end select
@@ -322,7 +322,7 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
     seedc                          => ccisos%seedc
 
     ! assign local pointers at the pft level
-    ivt                            => clm3%g%l%c%p%itype
+    ivt                            =>pft%itype
     cpool_deadcroot_gr             => pcisof%cpool_deadcroot_gr
     cpool_deadcroot_storage_gr     => pcisof%cpool_deadcroot_storage_gr
     cpool_deadstem_gr              => pcisof%cpool_deadstem_gr
@@ -380,15 +380,15 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
     transfer_leaf_gr               => pcisof%transfer_leaf_gr
     transfer_livecroot_gr          => pcisof%transfer_livecroot_gr
     transfer_livestem_gr           => pcisof%transfer_livestem_gr
-    harvdate                       => clm3%g%l%c%p%pps%harvdate
+    harvdate                       => pps%harvdate
     xsmrpool_to_atm                => pcisof%xsmrpool_to_atm
     cpool_grain_gr                 => pcisof%cpool_grain_gr
     cpool_grain_storage_gr         => pcisof%cpool_grain_storage_gr
     cpool_to_grainc                => pcisof%cpool_to_grainc
     cpool_to_grainc_storage        => pcisof%cpool_to_grainc_storage
     livestemc_to_litter            => pcisof%livestemc_to_litter
-    grain_curmr                    => clm3%g%l%c%p%pcf%grain_curmr
-    grain_xsmr                     => clm3%g%l%c%p%pcf%grain_xsmr
+    grain_curmr                    => pcf%grain_curmr
+    grain_xsmr                     => pcf%grain_xsmr
     grainc_storage_to_xfer         => pcisof%grainc_storage_to_xfer
     grainc_to_food                 => pcisof%grainc_to_food
     grainc_xfer_to_grainc          => pcisof%grainc_xfer_to_grainc

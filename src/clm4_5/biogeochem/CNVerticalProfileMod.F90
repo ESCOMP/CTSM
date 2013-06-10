@@ -113,22 +113,22 @@ contains
     character(len=32) :: subname = 'decomp_vertprofiles'
 
     ! assign local pointers at the column level    
-    nfixation_prof                    => clm3%g%l%c%cps%nfixation_prof
-    ndep_prof                         => clm3%g%l%c%cps%ndep_prof
-    altmax_lastyear_indx              => clm3%g%l%c%cps%altmax_lastyear_indx
-    npfts                             => clm3%g%l%c%npfts
-    pfti                              => clm3%g%l%c%pfti
+    nfixation_prof                    => cps%nfixation_prof
+    ndep_prof                         => cps%ndep_prof
+    altmax_lastyear_indx              => cps%altmax_lastyear_indx
+    npfts                             =>col%npfts
+    pfti                              =>col%pfti
     
     ! assign local pointers at the pft level
-    ivt                               => clm3%g%l%c%p%itype
-    leaf_prof                         => clm3%g%l%c%p%pps%leaf_prof
-    froot_prof                        => clm3%g%l%c%p%pps%froot_prof
-    croot_prof                        => clm3%g%l%c%p%pps%croot_prof
-    stem_prof                         => clm3%g%l%c%p%pps%stem_prof
-    pcolumn                           => clm3%g%l%c%p%column
-    rootfr                            => clm3%g%l%c%p%pps%rootfr
-    wtcol                             => clm3%g%l%c%p%wtcol
-    pactive                           => clm3%g%l%c%p%active
+    ivt                               =>pft%itype
+    leaf_prof                         => pps%leaf_prof
+    froot_prof                        => pps%froot_prof
+    croot_prof                        => pps%croot_prof
+    stem_prof                         => pps%stem_prof
+    pcolumn                           =>pft%column
+    rootfr                            => pps%rootfr
+    wtcol                             =>pft%wtcol
+    pactive                           => pft%active
 
 
 #ifdef VERTSOILC

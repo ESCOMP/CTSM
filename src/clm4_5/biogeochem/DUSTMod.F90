@@ -153,33 +153,33 @@ contains
 
     ! Assign local pointers to derived type scalar members (landunit-level)
 
-    ityplun         => clm3%g%l%itype
+    ityplun         => lun%itype
 
     ! Assign local pointers to derived type scalar members (column-level)
 
-    frac_sno        => clm3%g%l%c%cps%frac_sno
-    gwc_thr         => clm3%g%l%c%cps%gwc_thr
-    mbl_bsn_fct     => clm3%g%l%c%cps%mbl_bsn_fct
-    mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
-    h2osoi_vol      => clm3%g%l%c%cws%h2osoi_vol
-    h2osoi_liq      => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice      => clm3%g%l%c%cws%h2osoi_ice
-    watsat          => clm3%g%l%c%cps%watsat
+    frac_sno        => cps%frac_sno
+    gwc_thr         => cps%gwc_thr
+    mbl_bsn_fct     => cps%mbl_bsn_fct
+    mss_frc_cly_vld => cps%mss_frc_cly_vld
+    h2osoi_vol      => cws%h2osoi_vol
+    h2osoi_liq      => cws%h2osoi_liq
+    h2osoi_ice      => cws%h2osoi_ice
+    watsat          => cps%watsat
 
     ! Assign local pointers to derived type scalar members (pft-level)
 
-    pactive         => clm3%g%l%c%p%active
-    pgridcell       => clm3%g%l%c%p%gridcell
-    plandunit       => clm3%g%l%c%p%landunit
-    pcolumn         => clm3%g%l%c%p%column
-    tlai            => clm3%g%l%c%p%pps%tlai
-    tsai            => clm3%g%l%c%p%pps%tsai
-    fv              => clm3%g%l%c%p%pps%fv
-    u10             => clm3%g%l%c%p%pps%u10
-    flx_mss_vrt_dst => clm3%g%l%c%p%pdf%flx_mss_vrt_dst
-    flx_mss_vrt_dst_tot => clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot
+    pactive         => pft%active
+    pgridcell       =>pft%gridcell
+    plandunit       =>pft%landunit
+    pcolumn         =>pft%column
+    tlai            => pps%tlai
+    tsai            => pps%tsai
+    fv              => pps%fv
+    u10             => pps%u10
+    flx_mss_vrt_dst => pdf%flx_mss_vrt_dst
+    flx_mss_vrt_dst_tot => pdf%flx_mss_vrt_dst_tot
    !local pointers from subgridAveMod/p2l_1d
-    wtlunit         => clm3%g%l%c%p%wtlunit
+    wtlunit         =>pft%wtlunit
 
     ttlai(:) = 0._r8
 ! make lai average at landunit level
@@ -465,15 +465,15 @@ contains
 
     ! Assign local pointers to derived type members (pft-level)
 
-    pactive   => clm3%g%l%c%p%active
-    pgridcell => clm3%g%l%c%p%gridcell
-    fv        => clm3%g%l%c%p%pps%fv
-    ram1      => clm3%g%l%c%p%pps%ram1
-    vlc_trb   => clm3%g%l%c%p%pdf%vlc_trb
-    vlc_trb_1 => clm3%g%l%c%p%pdf%vlc_trb_1
-    vlc_trb_2 => clm3%g%l%c%p%pdf%vlc_trb_2
-    vlc_trb_3 => clm3%g%l%c%p%pdf%vlc_trb_3
-    vlc_trb_4 => clm3%g%l%c%p%pdf%vlc_trb_4
+    pactive   => pft%active
+    pgridcell =>pft%gridcell
+    fv        => pps%fv
+    ram1      => pps%ram1
+    vlc_trb   => pdf%vlc_trb
+    vlc_trb_1 => pdf%vlc_trb_1
+    vlc_trb_2 => pdf%vlc_trb_2
+    vlc_trb_3 => pdf%vlc_trb_3
+    vlc_trb_4 => pdf%vlc_trb_4
 
     do p = lbp,ubp
        if (pactive(p)) then
@@ -650,7 +650,7 @@ contains
 
     ! Assign local pointers to derived type scalar members (column-level)
 
-    mbl_bsn_fct => clm3%g%l%c%cps%mbl_bsn_fct
+    mbl_bsn_fct => cps%mbl_bsn_fct
 
     ! the following comes from (1) szdstlgn.F subroutine ovr_src_snk_frc_get
     !                      and (2) dstszdst.F subroutine dst_szdst_ini
@@ -694,8 +694,8 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     do c = begc, endc
-      l = clm3%g%l%c%landunit(c)
-      if (.not. clm3%g%l%lakpoi(l)) then
+      l =col%landunit(c)
+      if (.not.lun%lakpoi(l)) then
          mbl_bsn_fct(c) = 1.0_r8
       end if
     end do

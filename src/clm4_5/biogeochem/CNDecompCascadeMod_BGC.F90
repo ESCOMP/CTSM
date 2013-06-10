@@ -131,10 +131,10 @@ subroutine init_decompcascade(begc, endc)
 
 
    cascade_step_name                       => decomp_cascade_con%cascade_step_name
-   rf_decomp_cascade                       => clm3%g%l%c%cps%rf_decomp_cascade
+   rf_decomp_cascade                       => cps%rf_decomp_cascade
    cascade_donor_pool                      => decomp_cascade_con%cascade_donor_pool
    cascade_receiver_pool                   => decomp_cascade_con%cascade_receiver_pool
-   pathfrac_decomp_cascade                 => clm3%g%l%c%cps%pathfrac_decomp_cascade
+   pathfrac_decomp_cascade                 => cps%pathfrac_decomp_cascade
    floating_cn_ratio_decomp_pools          => decomp_cascade_con%floating_cn_ratio_decomp_pools
    decomp_pool_name_restart                => decomp_cascade_con%decomp_pool_name_restart
    decomp_pool_name_history                => decomp_cascade_con%decomp_pool_name_history
@@ -481,20 +481,20 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 #endif
 
    ! Assign local pointers to derived type arrays
-   t_soisno              => clm3%g%l%c%ces%t_soisno
-   sucsat                => clm3%g%l%c%cps%sucsat
-   soilpsi               => clm3%g%l%c%cps%soilpsi
-   dz                    => clm3%g%l%c%cps%dz
-   t_scalar              => clm3%g%l%c%ccf%t_scalar
-   w_scalar              => clm3%g%l%c%ccf%w_scalar
-   o_scalar              => clm3%g%l%c%ccf%o_scalar
-   decomp_k              => clm3%g%l%c%ccf%decomp_k
+   t_soisno              => ces%t_soisno
+   sucsat                => cps%sucsat
+   soilpsi               => cps%soilpsi
+   dz                    => cps%dz
+   t_scalar              => ccf%t_scalar
+   w_scalar              => ccf%w_scalar
+   o_scalar              => ccf%o_scalar
+   decomp_k              => ccf%decomp_k
 #ifdef LCH4
-   o2stress_sat          => clm3%g%l%c%cch4%o2stress_sat
-   o2stress_unsat        => clm3%g%l%c%cch4%o2stress_unsat
-   finundated            => clm3%g%l%c%cws%finundated
+   o2stress_sat          => cch4%o2stress_sat
+   o2stress_unsat        => cch4%o2stress_unsat
+   finundated            => cws%finundated
 #endif
-   alt_indx              => clm3%g%l%c%cps%alt_indx
+   alt_indx              => cps%alt_indx
 
 
    ! set time steps

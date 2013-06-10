@@ -189,66 +189,66 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    ! Gridcell level pointers
    forc_t    => clm_a2l%forc_t
    forc_pbot => clm_a2l%forc_pbot
-   c_atm     => clm3%g%gch4%c_atm
+   c_atm     => gch4%c_atm
    forc_po2  => clm_a2l%forc_po2
    forc_pco2 => clm_a2l%forc_pco2
    forc_pch4 => clm_a2l%forc_pch4
    flux_ch4  => clm_l2a%flux_ch4
-   ch4co2f   => clm3%g%gch4%ch4co2f
-   ch4prodg  => clm3%g%gch4%ch4prodg
-   nem       => clm3%g%gch4%nem
-   latdeg    => clm3%g%latdeg
+   ch4co2f   => gch4%ch4co2f
+   ch4prodg  => gch4%ch4prodg
+   nem       => gch4%nem
+   latdeg    =>  grc%latdeg
    ! Column level pointers
-   cgridcell           => clm3%g%l%c%gridcell
-   ch4_surf_diff_sat   => clm3%g%l%c%cch4%ch4_surf_diff_sat
-   ch4_surf_diff_unsat => clm3%g%l%c%cch4%ch4_surf_diff_unsat
-   ch4_surf_diff_lake  => clm3%g%l%c%cch4%ch4_surf_diff_lake
-   ch4_surf_ebul_sat   => clm3%g%l%c%cch4%ch4_surf_ebul_sat
-   ch4_surf_ebul_unsat => clm3%g%l%c%cch4%ch4_surf_ebul_unsat
-   ch4_surf_ebul_lake  => clm3%g%l%c%cch4%ch4_surf_ebul_lake
-   ch4_surf_aere_sat   => clm3%g%l%c%cch4%ch4_surf_aere_sat
-   ch4_surf_aere_unsat => clm3%g%l%c%cch4%ch4_surf_aere_unsat
-   fsat_bef            => clm3%g%l%c%cch4%fsat_bef
-   ch4_oxid_depth_sat  => clm3%g%l%c%cch4%ch4_oxid_depth_sat
-   ch4_oxid_depth_unsat=> clm3%g%l%c%cch4%ch4_oxid_depth_unsat
-   ch4_oxid_depth_lake=> clm3%g%l%c%cch4%ch4_oxid_depth_lake
-   ch4_prod_depth_sat  => clm3%g%l%c%cch4%ch4_prod_depth_sat
-   ch4_prod_depth_unsat=> clm3%g%l%c%cch4%ch4_prod_depth_unsat
-   ch4_prod_depth_lake => clm3%g%l%c%cch4%ch4_prod_depth_lake
-   lake_soilc          => clm3%g%l%c%cch4%lake_soilc
-   conc_ch4_sat        => clm3%g%l%c%cch4%conc_ch4_sat
-   conc_ch4_unsat      => clm3%g%l%c%cch4%conc_ch4_unsat
-   conc_ch4_lake       => clm3%g%l%c%cch4%conc_ch4_lake
-   conc_o2_lake        => clm3%g%l%c%cch4%conc_o2_lake
-   conc_o2_sat         => clm3%g%l%c%cch4%conc_o2_sat
-   ch4_dfsat_flux      => clm3%g%l%c%cch4%ch4_dfsat_flux
-   zwt_ch4_unsat       => clm3%g%l%c%cch4%zwt_ch4_unsat
-   dz                  => clm3%g%l%c%cps%dz
-   zi                  => clm3%g%l%c%cps%zi
-   z                   => clm3%g%l%c%cps%z
-   rootfr_col          => clm3%g%l%c%cps%pps_a%rootfr
-   grnd_ch4_cond_col   => clm3%g%l%c%cps%pps_a%grnd_ch4_cond
-   totcolch4           => clm3%g%l%c%cch4%totcolch4
-   zwt0                => clm3%g%l%c%cps%zwt0
-   f0                  => clm3%g%l%c%cps%f0
-   p3                  => clm3%g%l%c%cps%p3
-   finundated          => clm3%g%l%c%cws%finundated
-   zwt                 => clm3%g%l%c%cws%zwt
-   zwt_perched         => clm3%g%l%c%cws%zwt_perched
-   qflx_surf           => clm3%g%l%c%cwf%qflx_surf
-   qflx_surf_lag       => clm3%g%l%c%cch4%qflx_surf_lag
-   finundated_lag      => clm3%g%l%c%cch4%finundated_lag
-   layer_sat_lag       => clm3%g%l%c%cch4%layer_sat_lag
-   frac_h2osfc         => clm3%g%l%c%cps%frac_h2osfc
-   cactive             => clm3%g%l%c%active
+   cgridcell           =>col%gridcell
+   ch4_surf_diff_sat   => cch4%ch4_surf_diff_sat
+   ch4_surf_diff_unsat => cch4%ch4_surf_diff_unsat
+   ch4_surf_diff_lake  => cch4%ch4_surf_diff_lake
+   ch4_surf_ebul_sat   => cch4%ch4_surf_ebul_sat
+   ch4_surf_ebul_unsat => cch4%ch4_surf_ebul_unsat
+   ch4_surf_ebul_lake  => cch4%ch4_surf_ebul_lake
+   ch4_surf_aere_sat   => cch4%ch4_surf_aere_sat
+   ch4_surf_aere_unsat => cch4%ch4_surf_aere_unsat
+   fsat_bef            => cch4%fsat_bef
+   ch4_oxid_depth_sat  => cch4%ch4_oxid_depth_sat
+   ch4_oxid_depth_unsat=> cch4%ch4_oxid_depth_unsat
+   ch4_oxid_depth_lake=> cch4%ch4_oxid_depth_lake
+   ch4_prod_depth_sat  => cch4%ch4_prod_depth_sat
+   ch4_prod_depth_unsat=> cch4%ch4_prod_depth_unsat
+   ch4_prod_depth_lake => cch4%ch4_prod_depth_lake
+   lake_soilc          => cch4%lake_soilc
+   conc_ch4_sat        => cch4%conc_ch4_sat
+   conc_ch4_unsat      => cch4%conc_ch4_unsat
+   conc_ch4_lake       => cch4%conc_ch4_lake
+   conc_o2_lake        => cch4%conc_o2_lake
+   conc_o2_sat         => cch4%conc_o2_sat
+   ch4_dfsat_flux      => cch4%ch4_dfsat_flux
+   zwt_ch4_unsat       => cch4%zwt_ch4_unsat
+   dz                  => cps%dz
+   zi                  => cps%zi
+   z                   => cps%z
+   rootfr_col          => pps_a%rootfr
+   grnd_ch4_cond_col   => pps_a%grnd_ch4_cond
+   totcolch4           => cch4%totcolch4
+   zwt0                => cps%zwt0
+   f0                  => cps%f0
+   p3                  => cps%p3
+   finundated          => cws%finundated
+   zwt                 => cws%zwt
+   zwt_perched         => cws%zwt_perched
+   qflx_surf           => cwf%qflx_surf
+   qflx_surf_lag       => cch4%qflx_surf_lag
+   finundated_lag      => cch4%finundated_lag
+   layer_sat_lag       => cch4%layer_sat_lag
+   frac_h2osfc         => cps%frac_h2osfc
+   cactive             => col%active
 
 
    ! Pft level pointers
-   rootfr              => clm3%g%l%c%p%pps%rootfr
-   grnd_ch4_cond       => clm3%g%l%c%p%pps%grnd_ch4_cond
-   pwtc                => clm3%g%l%c%p%wtcol
-   ivt                 => clm3%g%l%c%p%itype 
-   pcolumn             => clm3%g%l%c%p%column
+   rootfr              => pps%rootfr
+   grnd_ch4_cond       => pps%grnd_ch4_cond
+   pwtc                =>pft%wtcol
+   ivt                 =>pft%itype 
+   pcolumn             =>pft%column
 
 
    dtime = get_step_size()
@@ -296,7 +296,7 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
 
       ! Update lagged surface runoff
 
-      if (latdeg(g) < 45._r8) then
+      if (grc%latdeg(g) < 45._r8) then
          qflxlags = qflxlagd * secspday ! 30 days
       else
          qflxlags = qflxlagd * secspday * highlatfact ! 60 days
@@ -603,7 +603,7 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
                write(iulog,*)'CH4 Conservation Error in CH4Mod driver, nstep, c, errch4 (gC /m^2.timestep)', &
                              nstep,c,errch4
                g = cgridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                call endrun( trim(subname)//' ERROR: Methane conservation error')
             end if 
          end if
@@ -623,7 +623,7 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
                   write(iulog,*)'CH4 Conservation Error in CH4Mod driver for lake column, nstep, c, errch4 (gC/m^2.timestep)', &
                                 nstep,c,errch4
                   g = cgridcell(c)
-                  write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+                  write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                   call endrun( trim(subname)//' ERROR: Methane conservation error, allowlakeprod')
                end if
             end if
@@ -779,52 +779,52 @@ subroutine ch4_prod (lbc, ubc, lbp, ubp, num_methc, filter_methc, num_methp, &
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays
    ! Gridcell level
-   latdeg          => clm3%g%latdeg
+   latdeg          =>  grc%latdeg
 
    ! Column level
-   cgridcell       => clm3%g%l%c%gridcell
-   t_soisno        => clm3%g%l%c%ces%t_soisno
-   h2osoi_vol      => clm3%g%l%c%cws%h2osoi_vol
-   watsat          => clm3%g%l%c%cps%watsat
-   rootfr_col      => clm3%g%l%c%cps%pps_a%rootfr
-   dz              => clm3%g%l%c%cps%dz
-   z               => clm3%g%l%c%cps%z
-   zi              => clm3%g%l%c%cps%zi
-   somhr            => clm3%g%l%c%ccf%somhr
-   lake_soilc       => clm3%g%l%c%cch4%lake_soilc
-   fphr             => clm3%g%l%c%cch4%fphr
-   annavg_finrw     => clm3%g%l%c%cch4%annavg_finrw
-   sif              => clm3%g%l%c%cch4%sif
-   finundated       => clm3%g%l%c%cws%finundated
-   !col_rr           => clm3%g%l%c%ccf%pcf_a%rr
-   pH               => clm3%g%l%c%cps%pH
-   lithr            => clm3%g%l%c%ccf%lithr
-   finundated_lag   => clm3%g%l%c%cch4%finundated_lag
-   hr_vr            => clm3%g%l%c%ccf%hr_vr
-   o_scalar         => clm3%g%l%c%ccf%o_scalar
-   layer_sat_lag    => clm3%g%l%c%cch4%layer_sat_lag
+   cgridcell       =>col%gridcell
+   t_soisno        => ces%t_soisno
+   h2osoi_vol      => cws%h2osoi_vol
+   watsat          => cps%watsat
+   rootfr_col      => pps_a%rootfr
+   dz              => cps%dz
+   z               => cps%z
+   zi              => cps%zi
+   somhr            => ccf%somhr
+   lake_soilc       => cch4%lake_soilc
+   fphr             => cch4%fphr
+   annavg_finrw     => cch4%annavg_finrw
+   sif              => cch4%sif
+   finundated       => cws%finundated
+   !col_rr           => pcf_a%rr
+   pH               => cps%pH
+   lithr            => ccf%lithr
+   finundated_lag   => cch4%finundated_lag
+   hr_vr            => ccf%hr_vr
+   o_scalar         => ccf%o_scalar
+   layer_sat_lag    => cch4%layer_sat_lag
 #if (defined NITRIF_DENITRIF)
-   pot_f_nit_vr     => clm3%g%l%c%cnf%pot_f_nit_vr
+   pot_f_nit_vr     => cnf%pot_f_nit_vr
 #endif
 
    ! PFT level
-   pcolumn          => clm3%g%l%c%p%column
-   wtcol            => clm3%g%l%c%p%wtcol
-   ivt              => clm3%g%l%c%p%itype
-   rootfr           => clm3%g%l%c%p%pps%rootfr
-   rr               => clm3%g%l%c%p%pcf%rr
+   pcolumn          =>pft%column
+   wtcol            =>pft%wtcol
+   ivt              =>pft%itype
+   rootfr           => pps%rootfr
+   rr               => pcf%rr
 
 
    if (sat == 0) then ! unsaturated
-      ch4_prod_depth  => clm3%g%l%c%cch4%ch4_prod_depth_unsat
-      o2_decomp_depth => clm3%g%l%c%cch4%o2_decomp_depth_unsat
-      co2_decomp_depth=> clm3%g%l%c%cch4%co2_decomp_depth_unsat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_unsat
+      ch4_prod_depth  => cch4%ch4_prod_depth_unsat
+      o2_decomp_depth => cch4%o2_decomp_depth_unsat
+      co2_decomp_depth=> cch4%co2_decomp_depth_unsat
+      conc_o2        => cch4%conc_o2_unsat
    else ! saturated
-      ch4_prod_depth  => clm3%g%l%c%cch4%ch4_prod_depth_sat
-      o2_decomp_depth => clm3%g%l%c%cch4%o2_decomp_depth_sat
-      co2_decomp_depth=> clm3%g%l%c%cch4%co2_decomp_depth_sat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_sat
+      ch4_prod_depth  => cch4%ch4_prod_depth_sat
+      o2_decomp_depth => cch4%o2_decomp_depth_sat
+      co2_decomp_depth=> cch4%co2_decomp_depth_sat
+      conc_o2        => cch4%conc_o2_sat
    endif
 
    dtime = get_step_size()
@@ -1098,25 +1098,25 @@ subroutine ch4_oxid (lbc, ubc, num_methc, filter_methc, jwt, sat, lake)
    ! Assign local pointers to derived type arrays
    
    ! Column level
-   h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
-   watsat         => clm3%g%l%c%cps%watsat
-   t_soisno       => clm3%g%l%c%ces%t_soisno
-   smp_l             => clm3%g%l%c%cws%smp_l
+   h2osoi_vol     => cws%h2osoi_vol
+   watsat         => cps%watsat
+   t_soisno       => ces%t_soisno
+   smp_l             => cws%smp_l
 
    if (sat == 0) then ! unsaturated
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_unsat
-      o2_oxid_depth  => clm3%g%l%c%cch4%o2_oxid_depth_unsat
-      co2_oxid_depth => clm3%g%l%c%cch4%co2_oxid_depth_unsat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_unsat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_unsat
-      o2_decomp_depth => clm3%g%l%c%cch4%o2_decomp_depth_unsat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_unsat
+      o2_oxid_depth  => cch4%o2_oxid_depth_unsat
+      co2_oxid_depth => cch4%co2_oxid_depth_unsat
+      conc_ch4       => cch4%conc_ch4_unsat
+      conc_o2        => cch4%conc_o2_unsat
+      o2_decomp_depth => cch4%o2_decomp_depth_unsat
    else ! saturated
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_sat
-      o2_oxid_depth  => clm3%g%l%c%cch4%o2_oxid_depth_sat
-      co2_oxid_depth => clm3%g%l%c%cch4%co2_oxid_depth_sat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_sat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_sat
-      o2_decomp_depth => clm3%g%l%c%cch4%o2_decomp_depth_sat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_sat
+      o2_oxid_depth  => cch4%o2_oxid_depth_sat
+      co2_oxid_depth => cch4%co2_oxid_depth_sat
+      conc_ch4       => cch4%conc_ch4_sat
+      conc_o2        => cch4%conc_o2_sat
+      o2_decomp_depth => cch4%o2_decomp_depth_sat
    endif
 
    ! Get land model time step
@@ -1276,48 +1276,48 @@ subroutine ch4_aere (lbc, ubc, lbp, ubp, num_methc, filter_methc, num_methp, &
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays
    !gridcell level
-   c_atm          => clm3%g%gch4%c_atm
+   c_atm          => gch4%c_atm
    !column level
-   cgridcell => clm3%g%l%c%gridcell
-   z         => clm3%g%l%c%cps%z
-   dz        => clm3%g%l%c%cps%dz
-   h2osoi_vol => clm3%g%l%c%cws%h2osoi_vol
-   watsat    => clm3%g%l%c%cps%watsat
-   t_soisno  => clm3%g%l%c%ces%t_soisno
+   cgridcell =>col%gridcell
+   z         => cps%z
+   dz        => cps%dz
+   h2osoi_vol => cws%h2osoi_vol
+   watsat    => cps%watsat
+   t_soisno  => ces%t_soisno
    !pft level
-   wtcol      => clm3%g%l%c%p%wtcol
-   ivt       => clm3%g%l%c%p%itype
-   pcolumn   => clm3%g%l%c%p%column
-   elai       => clm3%g%l%c%p%pps%elai
-   frootc     => clm3%g%l%c%p%pcs%frootc
-   rootfr    => clm3%g%l%c%p%pps%rootfr
-   rootr     => clm3%g%l%c%p%pps%rootr
-   qflx_tran_veg  => clm3%g%l%c%p%pwf%qflx_tran_veg
-   canopy_cond => clm3%g%l%c%p%pps%canopy_cond
-   annsum_npp            => clm3%g%l%c%p%pepv%annsum_npp
-   annavg_agnpp          => clm3%g%l%c%p%pcf%annavg_agnpp
-   annavg_bgnpp          => clm3%g%l%c%p%pcf%annavg_bgnpp
-   grnd_ch4_cond       => clm3%g%l%c%p%pps%grnd_ch4_cond
+   wtcol      =>pft%wtcol
+   ivt       =>pft%itype
+   pcolumn   =>pft%column
+   elai       => pps%elai
+   frootc     => pcs%frootc
+   rootfr    => pps%rootfr
+   rootr     => pps%rootr
+   qflx_tran_veg  => pwf%qflx_tran_veg
+   canopy_cond => pps%canopy_cond
+   annsum_npp            => pepv%annsum_npp
+   annavg_agnpp          => pcf%annavg_agnpp
+   annavg_bgnpp          => pcf%annavg_bgnpp
+   grnd_ch4_cond       => pps%grnd_ch4_cond
 
 
    if (sat == 0) then ! unsaturated
-      ch4_aere_depth => clm3%g%l%c%cch4%ch4_aere_depth_unsat
-      ch4_tran_depth => clm3%g%l%c%cch4%ch4_tran_depth_unsat
-      o2_aere_depth => clm3%g%l%c%cch4%o2_aere_depth_unsat
-      co2_aere_depth => clm3%g%l%c%cch4%co2_aere_depth_unsat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_unsat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_unsat
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_unsat
-      ch4_prod_depth => clm3%g%l%c%cch4%ch4_prod_depth_unsat
+      ch4_aere_depth => cch4%ch4_aere_depth_unsat
+      ch4_tran_depth => cch4%ch4_tran_depth_unsat
+      o2_aere_depth => cch4%o2_aere_depth_unsat
+      co2_aere_depth => cch4%co2_aere_depth_unsat
+      conc_ch4       => cch4%conc_ch4_unsat
+      conc_o2        => cch4%conc_o2_unsat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_unsat
+      ch4_prod_depth => cch4%ch4_prod_depth_unsat
    else ! saturated
-      ch4_aere_depth => clm3%g%l%c%cch4%ch4_aere_depth_sat
-      ch4_tran_depth => clm3%g%l%c%cch4%ch4_tran_depth_sat
-      o2_aere_depth => clm3%g%l%c%cch4%o2_aere_depth_sat
-      co2_aere_depth => clm3%g%l%c%cch4%co2_aere_depth_sat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_sat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_sat
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_sat
-      ch4_prod_depth => clm3%g%l%c%cch4%ch4_prod_depth_sat
+      ch4_aere_depth => cch4%ch4_aere_depth_sat
+      ch4_tran_depth => cch4%ch4_tran_depth_sat
+      o2_aere_depth => cch4%o2_aere_depth_sat
+      co2_aere_depth => cch4%co2_aere_depth_sat
+      conc_ch4       => cch4%conc_ch4_sat
+      conc_o2        => cch4%conc_o2_sat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_sat
+      ch4_prod_depth => cch4%ch4_prod_depth_sat
    endif
 
    dtime = get_step_size()
@@ -1525,30 +1525,30 @@ subroutine ch4_ebul (lbc, ubc, num_methc, filter_methc, jwt, sat, lake)
    ! Gridcell level
    forc_pbot => clm_a2l%forc_pbot
    ! Column level
-   cgridcell => clm3%g%l%c%gridcell
-   z         => clm3%g%l%c%cps%z
-   dz        => clm3%g%l%c%cps%dz
-   zi        => clm3%g%l%c%cps%zi
-   t_soisno  => clm3%g%l%c%ces%t_soisno
-   h2osoi_vol=> clm3%g%l%c%cws%h2osoi_vol
-   watsat    => clm3%g%l%c%cps%watsat
-   lakedepth      => clm3%g%l%c%cps%lakedepth
-   lake_icefrac   => clm3%g%l%c%cws%lake_icefrac
-   h2osfc         => clm3%g%l%c%cws%h2osfc
-   frac_h2osfc    => clm3%g%l%c%cps%frac_h2osfc
+   cgridcell =>col%gridcell
+   z         => cps%z
+   dz        => cps%dz
+   zi        => cps%zi
+   t_soisno  => ces%t_soisno
+   h2osoi_vol=> cws%h2osoi_vol
+   watsat    => cps%watsat
+   lakedepth      => cps%lakedepth
+   lake_icefrac   => cws%lake_icefrac
+   h2osfc         => cws%h2osfc
+   frac_h2osfc    => cps%frac_h2osfc
 
    if (sat == 0) then ! unsaturated
-      ch4_ebul_depth => clm3%g%l%c%cch4%ch4_ebul_depth_unsat
-      ch4_ebul_total => clm3%g%l%c%cch4%ch4_ebul_total_unsat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_unsat
-      ch4_aere_depth => clm3%g%l%c%cch4%ch4_aere_depth_unsat
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_unsat
+      ch4_ebul_depth => cch4%ch4_ebul_depth_unsat
+      ch4_ebul_total => cch4%ch4_ebul_total_unsat
+      conc_ch4       => cch4%conc_ch4_unsat
+      ch4_aere_depth => cch4%ch4_aere_depth_unsat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_unsat
    else ! saturated
-      ch4_ebul_depth => clm3%g%l%c%cch4%ch4_ebul_depth_sat
-      ch4_ebul_total => clm3%g%l%c%cch4%ch4_ebul_total_sat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_sat
-      ch4_aere_depth => clm3%g%l%c%cch4%ch4_aere_depth_sat
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_sat
+      ch4_ebul_depth => cch4%ch4_ebul_depth_sat
+      ch4_ebul_total => cch4%ch4_ebul_total_sat
+      conc_ch4       => cch4%conc_ch4_sat
+      ch4_aere_depth => cch4%ch4_aere_depth_sat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_sat
    endif
 
    ! Get land model time step
@@ -1747,66 +1747,66 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
    ! Assign local pointers to derived type arrays
    !pft level
    !column level
-   z         => clm3%g%l%c%cps%z
-   dz        => clm3%g%l%c%cps%dz
-   zi        => clm3%g%l%c%cps%zi
-   t_soisno  => clm3%g%l%c%ces%t_soisno
-   cgridcell => clm3%g%l%c%gridcell
-   h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
-   h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-   h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-   watsat         => clm3%g%l%c%cps%watsat
-   grnd_ch4_cond  => clm3%g%l%c%cps%pps_a%grnd_ch4_cond
-   h2osno    => clm3%g%l%c%cws%h2osno
-   snow_depth       => clm3%g%l%c%cps%snow_depth
-   lake_icefrac => clm3%g%l%c%cws%lake_icefrac
-   bsw       => clm3%g%l%c%cps%bsw
-   cellorg   => clm3%g%l%c%cps%cellorg
-   t_grnd    => clm3%g%l%c%ces%t_grnd
-   snl       => clm3%g%l%c%cps%snl
-   h2osfc         => clm3%g%l%c%cws%h2osfc
-   frac_h2osfc    => clm3%g%l%c%cps%frac_h2osfc
-   t_h2osfc       => clm3%g%l%c%ces%t_h2osfc
+   z         => cps%z
+   dz        => cps%dz
+   zi        => cps%zi
+   t_soisno  => ces%t_soisno
+   cgridcell =>col%gridcell
+   h2osoi_vol     => cws%h2osoi_vol
+   h2osoi_liq     => cws%h2osoi_liq
+   h2osoi_ice     => cws%h2osoi_ice
+   watsat         => cps%watsat
+   grnd_ch4_cond  => pps_a%grnd_ch4_cond
+   h2osno    => cws%h2osno
+   snow_depth       => cps%snow_depth
+   lake_icefrac => cws%lake_icefrac
+   bsw       => cps%bsw
+   cellorg   => cps%cellorg
+   t_grnd    => ces%t_grnd
+   snl       => cps%snl
+   h2osfc         => cws%h2osfc
+   frac_h2osfc    => cps%frac_h2osfc
+   t_h2osfc       => ces%t_h2osfc
 
 
    !gridcell level
-   c_atm          => clm3%g%gch4%c_atm
+   c_atm          => gch4%c_atm
    forc_pbot      => clm_a2l%forc_pbot
 
    if (sat == 0) then ! unsaturated
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_unsat
-      o2_oxid_depth  => clm3%g%l%c%cch4%o2_oxid_depth_unsat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_unsat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_unsat
-      ch4_prod_depth => clm3%g%l%c%cch4%ch4_prod_depth_unsat
-      ch4_aere_depth => clm3%g%l%c%cch4%ch4_aere_depth_unsat
-      ch4_surf_aere  => clm3%g%l%c%cch4%ch4_surf_aere_unsat
-      ch4_ebul_depth => clm3%g%l%c%cch4%ch4_ebul_depth_unsat
-      ch4_ebul_total => clm3%g%l%c%cch4%ch4_ebul_total_unsat
-      ch4_surf_ebul  => clm3%g%l%c%cch4%ch4_surf_ebul_unsat
-      ch4_surf_diff  => clm3%g%l%c%cch4%ch4_surf_diff_unsat
-      o2_decomp_depth=> clm3%g%l%c%cch4%o2_decomp_depth_unsat
-      o2_aere_depth  => clm3%g%l%c%cch4%o2_aere_depth_unsat
-      co2_decomp_depth=> clm3%g%l%c%cch4%co2_decomp_depth_unsat
-      o2stress       => clm3%g%l%c%cch4%o2stress_unsat
-      ch4stress      => clm3%g%l%c%cch4%ch4stress_unsat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_unsat
+      o2_oxid_depth  => cch4%o2_oxid_depth_unsat
+      conc_ch4       => cch4%conc_ch4_unsat
+      conc_o2        => cch4%conc_o2_unsat
+      ch4_prod_depth => cch4%ch4_prod_depth_unsat
+      ch4_aere_depth => cch4%ch4_aere_depth_unsat
+      ch4_surf_aere  => cch4%ch4_surf_aere_unsat
+      ch4_ebul_depth => cch4%ch4_ebul_depth_unsat
+      ch4_ebul_total => cch4%ch4_ebul_total_unsat
+      ch4_surf_ebul  => cch4%ch4_surf_ebul_unsat
+      ch4_surf_diff  => cch4%ch4_surf_diff_unsat
+      o2_decomp_depth=> cch4%o2_decomp_depth_unsat
+      o2_aere_depth  => cch4%o2_aere_depth_unsat
+      co2_decomp_depth=> cch4%co2_decomp_depth_unsat
+      o2stress       => cch4%o2stress_unsat
+      ch4stress      => cch4%ch4stress_unsat
    else ! saturated
-      ch4_oxid_depth => clm3%g%l%c%cch4%ch4_oxid_depth_sat
-      o2_oxid_depth  => clm3%g%l%c%cch4%o2_oxid_depth_sat
-      conc_ch4       => clm3%g%l%c%cch4%conc_ch4_sat
-      conc_o2        => clm3%g%l%c%cch4%conc_o2_sat
-      ch4_prod_depth => clm3%g%l%c%cch4%ch4_prod_depth_sat
-      ch4_aere_depth => clm3%g%l%c%cch4%ch4_aere_depth_sat
-      ch4_surf_aere  => clm3%g%l%c%cch4%ch4_surf_aere_sat
-      ch4_ebul_depth => clm3%g%l%c%cch4%ch4_ebul_depth_sat
-      ch4_ebul_total => clm3%g%l%c%cch4%ch4_ebul_total_sat
-      ch4_surf_ebul  => clm3%g%l%c%cch4%ch4_surf_ebul_sat
-      ch4_surf_diff  => clm3%g%l%c%cch4%ch4_surf_diff_sat
-      o2_decomp_depth=> clm3%g%l%c%cch4%o2_decomp_depth_sat
-      o2_aere_depth  => clm3%g%l%c%cch4%o2_aere_depth_sat
-      co2_decomp_depth=> clm3%g%l%c%cch4%co2_decomp_depth_sat
-      o2stress       => clm3%g%l%c%cch4%o2stress_sat
-      ch4stress      => clm3%g%l%c%cch4%ch4stress_sat
+      ch4_oxid_depth => cch4%ch4_oxid_depth_sat
+      o2_oxid_depth  => cch4%o2_oxid_depth_sat
+      conc_ch4       => cch4%conc_ch4_sat
+      conc_o2        => cch4%conc_o2_sat
+      ch4_prod_depth => cch4%ch4_prod_depth_sat
+      ch4_aere_depth => cch4%ch4_aere_depth_sat
+      ch4_surf_aere  => cch4%ch4_surf_aere_sat
+      ch4_ebul_depth => cch4%ch4_ebul_depth_sat
+      ch4_ebul_total => cch4%ch4_ebul_total_sat
+      ch4_surf_ebul  => cch4%ch4_surf_ebul_sat
+      ch4_surf_diff  => cch4%ch4_surf_diff_sat
+      o2_decomp_depth=> cch4%o2_decomp_depth_sat
+      o2_aere_depth  => cch4%o2_aere_depth_sat
+      co2_decomp_depth=> cch4%co2_decomp_depth_sat
+      o2stress       => cch4%o2stress_sat
+      ch4stress      => cch4%ch4stress_sat
    endif
 
    ! Get land model time step
@@ -1929,13 +1929,13 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
             write(iulog,*) 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
                             source(c,j,1) + conc_ch4(c,j) / dtime, c, j
             g = cgridcell(c)
-            write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+            write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun( trim(subname)//' ERROR: Methane demands exceed methane available.' )
          else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
             write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                             source(c,j,1) + conc_ch4(c,j) / dtime, c, j
             g = cgridcell(c)
-            write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+            write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun( trim(subname)//' ERROR: Methane limited, yet some left over.' )
          end if
 
@@ -1944,13 +1944,13 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
             write(iulog,*) 'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
                             source(c,j,2) + conc_o2(c,j) / dtime, c, j
             g = cgridcell(c)
-            write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+            write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun( trim(subname)//' ERROR: Oxygen demands exceed oxygen available.' )
          else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
             write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                              source(c,j,2) + conc_o2(c,j) / dtime, c, j
             g = cgridcell(c)
-            write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+            write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun( trim(subname)//' ERROR: Oxygen limited, yet some left over.' )
          end if
 
@@ -2286,7 +2286,7 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
                      if (deficit > 1.e-2_r8) then
                         write(iulog,*)'Note: sink > source in ch4_tran, sources are changing quickly relative to diffusion timestep, and/or diffusion is rapid.'
                         g = cgridcell(c)
-                        write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+                        write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                         write(iulog,*)'This typically occurs when there is a larger than normal diffusive flux.'
                         write(iulog,*)'If this occurs frequently, consider reducing land model (or methane model) timestep, or reducing the max. sink per timestep in the methane model.'
                      end if
@@ -2401,7 +2401,7 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
          write(iulog,*)'CH4 Conservation Error in CH4Mod during diffusion, nstep, c, errch4 (mol /m^2.timestep)', &
                        nstep,c,errch4(c)
          g = cgridcell(c)
-         write(iulog,*)'Latdeg,Londeg=',clm3%g%latdeg(g),clm3%g%londeg(g)
+         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
          call endrun( trim(subname)//' ERROR: CH4 Conservation Error in CH4Mod during diffusion' )
       end if
    end do
@@ -2453,9 +2453,9 @@ subroutine get_jwt (lbc, ubc, num_methc, filter_methc, jwt)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays
-   h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
-   watsat         => clm3%g%l%c%cps%watsat
-   t_soisno       => clm3%g%l%c%ces%t_soisno
+   h2osoi_vol     => cws%h2osoi_vol
+   watsat         => cps%watsat
+   t_soisno       => ces%t_soisno
 
    ! The layer index of the first unsaturated layer, i.e., the layer right above
    ! the water table.
@@ -2553,20 +2553,20 @@ subroutine ch4annualupdate(lbc, ubc, lbp, ubp, num_methc, filter_methc, num_meth
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays
-   annsum_counter    => clm3%g%l%c%cch4%annsum_counter
-   tempavg_somhr     => clm3%g%l%c%cch4%tempavg_somhr
-   annavg_somhr      => clm3%g%l%c%cch4%annavg_somhr
-   tempavg_finrw     => clm3%g%l%c%cch4%tempavg_finrw
-   annavg_finrw      => clm3%g%l%c%cch4%annavg_finrw
-   pcolumn           => clm3%g%l%c%p%column
-   agnpp             => clm3%g%l%c%p%pcf%agnpp
-   bgnpp             => clm3%g%l%c%p%pcf%bgnpp
-   tempavg_agnpp     => clm3%g%l%c%p%pcf%tempavg_agnpp
-   annavg_agnpp      => clm3%g%l%c%p%pcf%annavg_agnpp
-   tempavg_bgnpp     => clm3%g%l%c%p%pcf%tempavg_bgnpp
-   annavg_bgnpp      => clm3%g%l%c%p%pcf%annavg_bgnpp
-   somhr             => clm3%g%l%c%ccf%somhr
-   finundated        => clm3%g%l%c%cws%finundated
+   annsum_counter    => cch4%annsum_counter
+   tempavg_somhr     => cch4%tempavg_somhr
+   annavg_somhr      => cch4%annavg_somhr
+   tempavg_finrw     => cch4%tempavg_finrw
+   annavg_finrw      => cch4%annavg_finrw
+   pcolumn           =>pft%column
+   agnpp             => pcf%agnpp
+   bgnpp             => pcf%bgnpp
+   tempavg_agnpp     => pcf%tempavg_agnpp
+   annavg_agnpp      => pcf%annavg_agnpp
+   tempavg_bgnpp     => pcf%tempavg_bgnpp
+   annavg_bgnpp      => pcf%annavg_bgnpp
+   somhr             => ccf%somhr
+   finundated        => cws%finundated
 
    ! set time steps
    dt = real(get_step_size(), r8)

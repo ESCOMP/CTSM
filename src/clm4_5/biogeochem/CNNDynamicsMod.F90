@@ -86,10 +86,10 @@ subroutine CNNDeposition( lbc, ubc )
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
    forc_ndep     => clm_a2l%forc_ndep
-   gridcell      => clm3%g%l%c%gridcell
+   gridcell      =>col%gridcell
 
    ! Assign local pointers to derived type arrays (out)
-   ndep_to_sminn => clm3%g%l%c%cnf%ndep_to_sminn
+   ndep_to_sminn => cnf%ndep_to_sminn
 
    ! Loop through columns
    do c = lbc, ubc
@@ -155,13 +155,13 @@ subroutine CNNFixation(num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   cannsum_npp   => clm3%g%l%c%cps%cannsum_npp
+   cannsum_npp   => cps%cannsum_npp
 
    ! Assign local pointers to derived type arrays (out)
-   nfix_to_sminn => clm3%g%l%c%cnf%nfix_to_sminn
+   nfix_to_sminn => cnf%nfix_to_sminn
 
    if (nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
-      col_lag_npp                    => clm3%g%l%c%cps%col_lag_npp
+      col_lag_npp                    => cps%col_lag_npp
    endif
 
    dayspyr = get_days_per_year()
@@ -270,20 +270,20 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
-   qflx_drain       => clm3%g%l%c%cwf%qflx_drain
-   !!! awaiting_new_frozen_hydrolgy qflx_drain_perched       => clm3%g%l%c%cwf%qflx_drain_perched
-   qflx_surf        => clm3%g%l%c%cwf%qflx_surf
-   sminn_vr         => clm3%g%l%c%cns%sminn_vr
+   h2osoi_liq       => cws%h2osoi_liq
+   qflx_drain       => cwf%qflx_drain
+   !!! awaiting_new_frozen_hydrolgy qflx_drain_perched       => cwf%qflx_drain_perched
+   qflx_surf        => cwf%qflx_surf
+   sminn_vr         => cns%sminn_vr
    ! Assign local pointers to derived type arrays (out)
 #ifndef NITRIF_DENITRIF
-   sminn_leached_vr => clm3%g%l%c%cnf%sminn_leached_vr
+   sminn_leached_vr => cnf%sminn_leached_vr
 #else
-   smin_no3_leached_vr => clm3%g%l%c%cnf%smin_no3_leached_vr
-   smin_no3_runoff_vr  => clm3%g%l%c%cnf%smin_no3_runoff_vr
-   smin_no3_vr         => clm3%g%l%c%cns%smin_no3_vr
+   smin_no3_leached_vr => cnf%smin_no3_leached_vr
+   smin_no3_runoff_vr  => cnf%smin_no3_runoff_vr
+   smin_no3_vr         => cns%smin_no3_vr
 #endif
-   dz               => clm3%g%l%c%cps%dz
+   dz               => cps%dz
 
 
    ! set time steps
@@ -484,10 +484,10 @@ subroutine CNNFert(num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   fert          => clm3%g%l%c%p%pnf%fert
+   fert          => pnf%fert
 !
    ! Assign local pointers to derived type arrays (out)
-   fert_to_sminn => clm3%g%l%c%cnf%fert_to_sminn
+   fert_to_sminn => cnf%fert_to_sminn
 !
     call p2c(num_soilc,filter_soilc,fert,fert_to_sminn)
 !
@@ -560,19 +560,19 @@ subroutine CNSoyfix (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   ivt                         => clm3%g%l%c%p%itype
-   pcolumn                     => clm3%g%l%c%p%column
-   fpg                         => clm3%g%l%c%cps%fpg
-   wf                          => clm3%g%l%c%cps%wf
-   plant_ndemand               => clm3%g%l%c%p%pepv%plant_ndemand
-   sminn                       => clm3%g%l%c%cns%sminn
-   hui                         => clm3%g%l%c%p%pps%gddplant
-   gddmaturity                 => clm3%g%l%c%p%pps%gddmaturity
-   croplive                    => clm3%g%l%c%p%pps%croplive
+   ivt                         =>pft%itype
+   pcolumn                     =>pft%column
+   fpg                         => cps%fpg
+   wf                          => cps%wf
+   plant_ndemand               => pepv%plant_ndemand
+   sminn                       => cns%sminn
+   hui                         => pps%gddplant
+   gddmaturity                 => pps%gddmaturity
+   croplive                    => pps%croplive
 
    ! Assign local pointers to derived type arrays (out)
-   soyfixn                     => clm3%g%l%c%p%pnf%soyfixn
-   soyfixn_to_sminn            => clm3%g%l%c%cnf%soyfixn_to_sminn
+   soyfixn                     => pnf%soyfixn
+   soyfixn_to_sminn            => cnf%soyfixn_to_sminn
 
    sminnthreshold1 = 30._r8
    sminnthreshold2 = 10._r8

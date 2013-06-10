@@ -71,18 +71,10 @@ contains
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
 !-----------------------------------------------------------------------
 
     ! Set pointers into derived type
 
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
 
     ! Note t_lake is already in BiogeophysRest.
 
@@ -93,7 +85,7 @@ contains
             dim1name='column', dim2name='levlak', switchdim=.true., &
             long_name='lake layer ice fraction', units='kg/kg')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='LAKE_ICEFRAC', data=cptr%cws%lake_icefrac, &
+       call ncd_io(varname='LAKE_ICEFRAC', data=cws%lake_icefrac, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -108,7 +100,7 @@ contains
             dim1name='column', &
             long_name='top lake layer eddy conductivity', units='W/(m K)')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='SAVEDTKE1', data=cptr%cps%savedtke1, &
+       call ncd_io(varname='SAVEDTKE1', data=cps%savedtke1, &
             dim1name='column', &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -123,7 +115,7 @@ contains
             dim1name='column', &
             long_name='friction velocity for lakes', units='m/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='USTLAKE', data=cptr%cps%ust_lake, &
+       call ncd_io(varname='USTLAKE', data=cps%ust_lake, &
             dim1name='column', &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then
@@ -138,7 +130,7 @@ contains
             dim1name='column', &
             long_name='ground momentum roughness length', units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='Z0MG', data=cptr%cps%z0mg, &
+       call ncd_io(varname='Z0MG', data=cps%z0mg, &
             dim1name='column', &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag == 'read' .and. .not. readvar) then

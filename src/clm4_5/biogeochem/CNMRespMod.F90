@@ -105,31 +105,31 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays
-   t_soisno       => clm3%g%l%c%ces%t_soisno
-   t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
-   leafn          => clm3%g%l%c%p%pns%leafn
-   frootn         => clm3%g%l%c%p%pns%frootn
-   livestemn      => clm3%g%l%c%p%pns%livestemn
-   livecrootn     => clm3%g%l%c%p%pns%livecrootn
-   grainn         => clm3%g%l%c%p%pns%grainn
-   rootfr         => clm3%g%l%c%p%pps%rootfr
-   leaf_mr        => clm3%g%l%c%p%pcf%leaf_mr
-   froot_mr       => clm3%g%l%c%p%pcf%froot_mr
-   livestem_mr    => clm3%g%l%c%p%pcf%livestem_mr
-   livecroot_mr   => clm3%g%l%c%p%pcf%livecroot_mr
-   grain_mr       => clm3%g%l%c%p%pcf%grain_mr
-   lmrsun          => clm3%g%l%c%p%pcf%lmrsun
-   lmrsha          => clm3%g%l%c%p%pcf%lmrsha
-   laisun         => clm3%g%l%c%p%pps%laisun
-   laisha         => clm3%g%l%c%p%pps%laisha
-   frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
-   ivt            => clm3%g%l%c%p%itype
-   pcolumn        => clm3%g%l%c%p%column
-   plandunit      => clm3%g%l%c%p%landunit
-   clandunit      => clm3%g%l%c%landunit
-   itypelun       => clm3%g%l%itype
+   t_soisno       => ces%t_soisno
+   t_ref2m        => pes%t_ref2m
+   leafn          => pns%leafn
+   frootn         => pns%frootn
+   livestemn      => pns%livestemn
+   livecrootn     => pns%livecrootn
+   grainn         => pns%grainn
+   rootfr         => pps%rootfr
+   leaf_mr        => pcf%leaf_mr
+   froot_mr       => pcf%froot_mr
+   livestem_mr    => pcf%livestem_mr
+   livecroot_mr   => pcf%livecroot_mr
+   grain_mr       => pcf%grain_mr
+   lmrsun          => pcf%lmrsun
+   lmrsha          => pcf%lmrsha
+   laisun         => pps%laisun
+   laisha         => pps%laisha
+   frac_veg_nosno => pps%frac_veg_nosno
+   ivt            =>pft%itype
+   pcolumn        =>pft%column
+   plandunit      =>pft%landunit
+   clandunit      =>col%landunit
+   itypelun       => lun%itype
    woody          => pftcon%woody
-   croplive       => clm3%g%l%c%p%pps%croplive
+   croplive       => pps%croplive
 
    ! base rate for maintenance respiration is from:
    ! M. Ryan, 1991. Effects of climate change on plant respiration.

@@ -62,14 +62,12 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
   integer :: fc        ! lake filter indices
   integer :: c         ! indices
   real(r8):: dt        ! time step (seconds)
-  type(column_type),   pointer :: cptr         ! pointer to column derived subtype
   real(r8) :: kprod10       ! decay constant for 10-year product pool
   real(r8) :: kprod100      ! decay constant for 100-year product pool
 
 !EOP
 !-----------------------------------------------------------------------
 
-  cptr => clm3%g%l%c
   
   ! calculate column-level losses from product pools
   ! the following (1/s) rate constants result in ~90% loss of initial state over 10 and 100 years,
@@ -81,21 +79,21 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
      c = filter_soilc(fc)
      
      ! calculate fluxes (1/sec)
-     cptr%ccf%prod10c_loss(c)    = cptr%ccs%prod10c(c)    * kprod10
-     cptr%ccf%prod100c_loss(c)   = cptr%ccs%prod100c(c)   * kprod100
+     ccf%prod10c_loss(c)    = ccs%prod10c(c)    * kprod10
+     ccf%prod100c_loss(c)   = ccs%prod100c(c)   * kprod100
      
      if ( use_c13 ) then
-        cptr%cc13f%prod10c_loss(c)  = cptr%cc13s%prod10c(c)  * kprod10
-        cptr%cc13f%prod100c_loss(c) = cptr%cc13s%prod100c(c) * kprod100
+        cc13f%prod10c_loss(c)  = cc13s%prod10c(c)  * kprod10
+        cc13f%prod100c_loss(c) = cc13s%prod100c(c) * kprod100
      endif
      
      if ( use_c14 ) then
-        cptr%cc14f%prod10c_loss(c)  = cptr%cc14s%prod10c(c)  * kprod10
-        cptr%cc14f%prod100c_loss(c) = cptr%cc14s%prod100c(c) * kprod100
+        cc14f%prod10c_loss(c)  = cc14s%prod10c(c)  * kprod10
+        cc14f%prod100c_loss(c) = cc14s%prod100c(c) * kprod100
      endif
 
-     cptr%cnf%prod10n_loss(c)    = cptr%cns%prod10n(c)    * kprod10
-     cptr%cnf%prod100n_loss(c)   = cptr%cns%prod100n(c)   * kprod100
+     cnf%prod10n_loss(c)    = cns%prod10n(c)    * kprod10
+     cnf%prod100n_loss(c)   = cns%prod100n(c)   * kprod100
   end do
   
   ! set time steps
@@ -109,55 +107,55 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
      ! column-level fluxes
      
      ! fluxes into wood product pools, from landcover change
-     cptr%ccs%prod10c(c)    = cptr%ccs%prod10c(c)    + cptr%ccf%dwt_prod10c_gain(c)*dt
-     cptr%ccs%prod100c(c)   = cptr%ccs%prod100c(c)   + cptr%ccf%dwt_prod100c_gain(c)*dt
+     ccs%prod10c(c)    = ccs%prod10c(c)    + ccf%dwt_prod10c_gain(c)*dt
+     ccs%prod100c(c)   = ccs%prod100c(c)   + ccf%dwt_prod100c_gain(c)*dt
 
      if ( use_c13 ) then
-        cptr%cc13s%prod10c(c)  = cptr%cc13s%prod10c(c)  + cptr%cc13f%dwt_prod10c_gain(c)*dt
-        cptr%cc13s%prod100c(c) = cptr%cc13s%prod100c(c) + cptr%cc13f%dwt_prod100c_gain(c)*dt
+        cc13s%prod10c(c)  = cc13s%prod10c(c)  + cc13f%dwt_prod10c_gain(c)*dt
+        cc13s%prod100c(c) = cc13s%prod100c(c) + cc13f%dwt_prod100c_gain(c)*dt
      endif
 
      if ( use_c14 ) then
-        cptr%cc14s%prod10c(c)  = cptr%cc14s%prod10c(c)  + cptr%cc14f%dwt_prod10c_gain(c)*dt
-        cptr%cc14s%prod100c(c) = cptr%cc14s%prod100c(c) + cptr%cc14f%dwt_prod100c_gain(c)*dt
+        cc14s%prod10c(c)  = cc14s%prod10c(c)  + cc14f%dwt_prod10c_gain(c)*dt
+        cc14s%prod100c(c) = cc14s%prod100c(c) + cc14f%dwt_prod100c_gain(c)*dt
      endif
 
-     cptr%cns%prod10n(c)    = cptr%cns%prod10n(c)    + cptr%cnf%dwt_prod10n_gain(c)*dt
-     cptr%cns%prod100n(c)   = cptr%cns%prod100n(c)   + cptr%cnf%dwt_prod100n_gain(c)*dt
+     cns%prod10n(c)    = cns%prod10n(c)    + cnf%dwt_prod10n_gain(c)*dt
+     cns%prod100n(c)   = cns%prod100n(c)   + cnf%dwt_prod100n_gain(c)*dt
      
      ! fluxes into wood product pools, from harvest
-     cptr%ccs%prod10c(c)    = cptr%ccs%prod10c(c)    + cptr%ccf%hrv_deadstemc_to_prod10c(c)*dt
-     cptr%ccs%prod100c(c)   = cptr%ccs%prod100c(c)   + cptr%ccf%hrv_deadstemc_to_prod100c(c)*dt
+     ccs%prod10c(c)    = ccs%prod10c(c)    + ccf%hrv_deadstemc_to_prod10c(c)*dt
+     ccs%prod100c(c)   = ccs%prod100c(c)   + ccf%hrv_deadstemc_to_prod100c(c)*dt
 
      if ( use_c13 ) then
-        cptr%cc13s%prod10c(c)  = cptr%cc13s%prod10c(c)  + cptr%cc13f%hrv_deadstemc_to_prod10c(c)*dt
-        cptr%cc13s%prod100c(c) = cptr%cc13s%prod100c(c) + cptr%cc13f%hrv_deadstemc_to_prod100c(c)*dt
+        cc13s%prod10c(c)  = cc13s%prod10c(c)  + cc13f%hrv_deadstemc_to_prod10c(c)*dt
+        cc13s%prod100c(c) = cc13s%prod100c(c) + cc13f%hrv_deadstemc_to_prod100c(c)*dt
      endif
 
      if ( use_c14 ) then
-        cptr%cc14s%prod10c(c)  = cptr%cc14s%prod10c(c)  + cptr%cc14f%hrv_deadstemc_to_prod10c(c)*dt
-        cptr%cc14s%prod100c(c) = cptr%cc14s%prod100c(c) + cptr%cc14f%hrv_deadstemc_to_prod100c(c)*dt
+        cc14s%prod10c(c)  = cc14s%prod10c(c)  + cc14f%hrv_deadstemc_to_prod10c(c)*dt
+        cc14s%prod100c(c) = cc14s%prod100c(c) + cc14f%hrv_deadstemc_to_prod100c(c)*dt
      endif
 
-     cptr%cns%prod10n(c)    = cptr%cns%prod10n(c)    + cptr%cnf%hrv_deadstemn_to_prod10n(c)*dt
-     cptr%cns%prod100n(c)   = cptr%cns%prod100n(c)   + cptr%cnf%hrv_deadstemn_to_prod100n(c)*dt
+     cns%prod10n(c)    = cns%prod10n(c)    + cnf%hrv_deadstemn_to_prod10n(c)*dt
+     cns%prod100n(c)   = cns%prod100n(c)   + cnf%hrv_deadstemn_to_prod100n(c)*dt
      
      ! fluxes out of wood product pools, from decomposition
-     cptr%ccs%prod10c(c)    = cptr%ccs%prod10c(c)    - cptr%ccf%prod10c_loss(c)*dt
-     cptr%ccs%prod100c(c)   = cptr%ccs%prod100c(c)   - cptr%ccf%prod100c_loss(c)*dt
+     ccs%prod10c(c)    = ccs%prod10c(c)    - ccf%prod10c_loss(c)*dt
+     ccs%prod100c(c)   = ccs%prod100c(c)   - ccf%prod100c_loss(c)*dt
 
      if ( use_c13 ) then
-        cptr%cc13s%prod10c(c)  = cptr%cc13s%prod10c(c)  - cptr%cc13f%prod10c_loss(c)*dt
-        cptr%cc13s%prod100c(c) = cptr%cc13s%prod100c(c) - cptr%cc13f%prod100c_loss(c)*dt
+        cc13s%prod10c(c)  = cc13s%prod10c(c)  - cc13f%prod10c_loss(c)*dt
+        cc13s%prod100c(c) = cc13s%prod100c(c) - cc13f%prod100c_loss(c)*dt
      endif
 
      if ( use_c14 ) then
-        cptr%cc14s%prod10c(c)  = cptr%cc14s%prod10c(c)  - cptr%cc14f%prod10c_loss(c)*dt
-        cptr%cc14s%prod100c(c) = cptr%cc14s%prod100c(c) - cptr%cc14f%prod100c_loss(c)*dt
+        cc14s%prod10c(c)  = cc14s%prod10c(c)  - cc14f%prod10c_loss(c)*dt
+        cc14s%prod100c(c) = cc14s%prod100c(c) - cc14f%prod100c_loss(c)*dt
      endif
 
-     cptr%cns%prod10n(c)    = cptr%cns%prod10n(c)    - cptr%cnf%prod10n_loss(c)*dt
-     cptr%cns%prod100n(c)   = cptr%cns%prod100n(c)   - cptr%cnf%prod100n_loss(c)*dt
+     cns%prod10n(c)    = cns%prod10n(c)    - cnf%prod10n_loss(c)*dt
+     cns%prod100n(c)   = cns%prod100n(c)   - cnf%prod100n_loss(c)*dt
      
   end do ! end of column loop
   

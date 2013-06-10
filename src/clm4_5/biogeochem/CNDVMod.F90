@@ -90,16 +90,16 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    agdd20    => clm3%g%gdgvs%agdd20
-    tmomin20  => clm3%g%gdgvs%tmomin20
+    agdd20    => gdgvs%agdd20
+    tmomin20  => gdgvs%tmomin20
 
     ! Assign local pointers to derived type members (pft-level)
 
-    mxy       => clm3%g%l%c%p%mxy
-    pgridcell => clm3%g%l%c%p%gridcell
-    fpcgrid   => clm3%g%l%c%p%pdgvs%fpcgrid
-    t_mo_min  => clm3%g%l%c%p%pdgvs%t_mo_min
-    agdd      => clm3%g%l%c%p%pdgvs%agdd
+    mxy       =>pft%mxy
+    pgridcell =>pft%gridcell
+    fpcgrid   => pdgvs%fpcgrid
+    t_mo_min  => pdgvs%t_mo_min
+    agdd      => pdgvs%agdd
 
     ! *************************************************************************
     ! S. Levis version of LPJ's routine climate20: 'Returns' tmomin20 & agdd20
@@ -134,8 +134,8 @@ contains
     ! Reset dgvm variables needed in next yr (too few to keep subr. dvreset)
 
     do p = lbp,ubp
-       clm3%g%l%c%p%pcs%leafcmax(p) = 0._r8
-       clm3%g%l%c%p%pdgvs%t_mo_min(p) = 1.0e+36_r8
+       pcs%leafcmax(p) = 0._r8
+       pdgvs%t_mo_min(p) = 1.0e+36_r8
     end do
   end subroutine dv
 
@@ -217,15 +217,15 @@ contains
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    ifspecial  => clm3%g%l%ifspecial
+    ifspecial  =>lun%ifspecial
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    mxy       => clm3%g%l%c%p%mxy
-    pgridcell => clm3%g%l%c%p%gridcell
-    plandunit => clm3%g%l%c%p%landunit
-    fpcgrid   => clm3%g%l%c%p%pdgvs%fpcgrid
-    nind      => clm3%g%l%c%p%pdgvs%nind
+    mxy       =>pft%mxy
+    pgridcell =>pft%gridcell
+    plandunit =>pft%landunit
+    fpcgrid   => pdgvs%fpcgrid
+    nind      => pdgvs%nind
 
     ! Determine subgrid bounds for this processor and allocate dynamic memory
 
@@ -545,7 +545,7 @@ contains
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived type members (pft-level)
-    present   => clm3%g%l%c%p%pdgvs%present
+    present   => pdgvs%present
 
     num_natvegp = 0
     do p = lbp,ubp

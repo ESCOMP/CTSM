@@ -234,56 +234,56 @@ contains
 
     ! Assign gridcell level pointers
 
-    lat                => clm3%g%lat
-    lon                => clm3%g%lon
+    lat                =>  grc%lat
+    lon                =>  grc%lon
 
     ! Assign landunit level pointer
 
-    lgridcell          => clm3%g%l%gridcell
-    coli               => clm3%g%l%coli
-    colf               => clm3%g%l%colf
-    vf_sr              => clm3%g%l%lps%vf_sr
-    vf_wr              => clm3%g%l%lps%vf_wr
-    vf_sw              => clm3%g%l%lps%vf_sw
-    vf_rw              => clm3%g%l%lps%vf_rw
-    vf_ww              => clm3%g%l%lps%vf_ww
-    sabs_roof_dir      => clm3%g%l%lps%sabs_roof_dir
-    sabs_roof_dif      => clm3%g%l%lps%sabs_roof_dif
-    sabs_sunwall_dir   => clm3%g%l%lps%sabs_sunwall_dir
-    sabs_sunwall_dif   => clm3%g%l%lps%sabs_sunwall_dif
-    sabs_shadewall_dir => clm3%g%l%lps%sabs_shadewall_dir
-    sabs_shadewall_dif => clm3%g%l%lps%sabs_shadewall_dif
-    sabs_improad_dir   => clm3%g%l%lps%sabs_improad_dir
-    sabs_improad_dif   => clm3%g%l%lps%sabs_improad_dif
-    sabs_perroad_dir   => clm3%g%l%lps%sabs_perroad_dir
-    sabs_perroad_dif   => clm3%g%l%lps%sabs_perroad_dif
+    lgridcell          =>lun%gridcell
+    coli               =>lun%coli
+    colf               =>lun%colf
+    vf_sr              => lps%vf_sr
+    vf_wr              => lps%vf_wr
+    vf_sw              => lps%vf_sw
+    vf_rw              => lps%vf_rw
+    vf_ww              => lps%vf_ww
+    sabs_roof_dir      => lps%sabs_roof_dir
+    sabs_roof_dif      => lps%sabs_roof_dif
+    sabs_sunwall_dir   => lps%sabs_sunwall_dir
+    sabs_sunwall_dif   => lps%sabs_sunwall_dif
+    sabs_shadewall_dir => lps%sabs_shadewall_dir
+    sabs_shadewall_dif => lps%sabs_shadewall_dif
+    sabs_improad_dir   => lps%sabs_improad_dir
+    sabs_improad_dif   => lps%sabs_improad_dif
+    sabs_perroad_dir   => lps%sabs_perroad_dir
+    sabs_perroad_dif   => lps%sabs_perroad_dif
 
     ! Assign column level pointers
 
-    ctype              => clm3%g%l%c%itype
-    albgrd             => clm3%g%l%c%cps%albgrd
-    albgri             => clm3%g%l%c%cps%albgri
-    frac_sno           => clm3%g%l%c%cps%frac_sno
-    clandunit          => clm3%g%l%c%landunit
-    cgridcell          => clm3%g%l%c%gridcell
-    czen               => clm3%g%l%c%cps%coszen
+    ctype              => col%itype
+    albgrd             => cps%albgrd
+    albgri             => cps%albgri
+    frac_sno           => cps%frac_sno
+    clandunit          =>col%landunit
+    cgridcell          =>col%gridcell
+    czen               => cps%coszen
 
     ! Assign pft  level pointers
 
-    pgridcell          => clm3%g%l%c%p%gridcell
-    pcolumn            => clm3%g%l%c%p%column
-    albd               => clm3%g%l%c%p%pps%albd
-    albi               => clm3%g%l%c%p%pps%albi
-    fabd               => clm3%g%l%c%p%pps%fabd
-    fabd_sun           => clm3%g%l%c%p%pps%fabd_sun
-    fabd_sha           => clm3%g%l%c%p%pps%fabd_sha
-    fabi               => clm3%g%l%c%p%pps%fabi
-    fabi_sun           => clm3%g%l%c%p%pps%fabi_sun
-    fabi_sha           => clm3%g%l%c%p%pps%fabi_sha
-    ftdd               => clm3%g%l%c%p%pps%ftdd
-    ftid               => clm3%g%l%c%p%pps%ftid
-    ftii               => clm3%g%l%c%p%pps%ftii
-    fsun               => clm3%g%l%c%p%pps%fsun
+    pgridcell          =>pft%gridcell
+    pcolumn            =>pft%column
+    albd               => pps%albd
+    albi               => pps%albi
+    fabd               => pps%fabd
+    fabd_sun           => pps%fabd_sun
+    fabd_sha           => pps%fabd_sha
+    fabi               => pps%fabi
+    fabi_sun           => pps%fabi_sun
+    fabi_sha           => pps%fabi_sha
+    ftdd               => pps%ftdd
+    ftid               => pps%ftid
+    ftii               => pps%ftii
+    fsun               => pps%fsun
 
 
     ! ----------------------------------------------------------------------------
@@ -559,13 +559,13 @@ contains
 
     ! Assign local pointers to derived type members (landunit level)
 
-    coli       => clm3%g%l%coli
-    colf       => clm3%g%l%colf
+    coli       =>lun%coli
+    colf       =>lun%colf
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    ctype      => clm3%g%l%c%itype
-    h2osno     => clm3%g%l%c%cws%h2osno
+    ctype      => col%itype
+    h2osno     => cws%h2osno
 
     ! this code assumes that numrad = 2 , with the following
     ! index values: 1 = visible, 2 = NIR
@@ -770,7 +770,7 @@ contains
 
     ! Assign local pointers to multi-level derived type members (gridcell level)
     
-    londeg        => clm3%g%londeg
+    londeg        =>  grc%londeg
     forc_solad    => clm_a2l%forc_solad
     forc_solai    => clm_a2l%forc_solai
     forc_solar    => clm_a2l%forc_solar
@@ -778,62 +778,62 @@ contains
 
     ! Assign local pointers to derived type members (landunit level)
 
-    pfti           => clm3%g%l%pfti
-    pftf           => clm3%g%l%pftf
-    coli           => clm3%g%l%coli
-    colf           => clm3%g%l%colf
-    lgridcell      => clm3%g%l%gridcell
-    vf_sr          => clm3%g%l%lps%vf_sr
-    vf_wr          => clm3%g%l%lps%vf_wr
-    vf_sw          => clm3%g%l%lps%vf_sw
-    vf_rw          => clm3%g%l%lps%vf_rw
-    vf_ww          => clm3%g%l%lps%vf_ww
-    sabs_roof_dir      => clm3%g%l%lps%sabs_roof_dir
-    sabs_roof_dif      => clm3%g%l%lps%sabs_roof_dif
-    sabs_sunwall_dir   => clm3%g%l%lps%sabs_sunwall_dir
-    sabs_sunwall_dif   => clm3%g%l%lps%sabs_sunwall_dif
-    sabs_shadewall_dir => clm3%g%l%lps%sabs_shadewall_dir
-    sabs_shadewall_dif => clm3%g%l%lps%sabs_shadewall_dif
-    sabs_improad_dir   => clm3%g%l%lps%sabs_improad_dir
-    sabs_improad_dif   => clm3%g%l%lps%sabs_improad_dif
-    sabs_perroad_dir   => clm3%g%l%lps%sabs_perroad_dir
-    sabs_perroad_dif   => clm3%g%l%lps%sabs_perroad_dif
+    pfti           =>lun%pfti
+    pftf           =>lun%pftf
+    coli           =>lun%coli
+    colf           =>lun%colf
+    lgridcell      =>lun%gridcell
+    vf_sr          => lps%vf_sr
+    vf_wr          => lps%vf_wr
+    vf_sw          => lps%vf_sw
+    vf_rw          => lps%vf_rw
+    vf_ww          => lps%vf_ww
+    sabs_roof_dir      => lps%sabs_roof_dir
+    sabs_roof_dif      => lps%sabs_roof_dif
+    sabs_sunwall_dir   => lps%sabs_sunwall_dir
+    sabs_sunwall_dif   => lps%sabs_sunwall_dif
+    sabs_shadewall_dir => lps%sabs_shadewall_dir
+    sabs_shadewall_dif => lps%sabs_shadewall_dif
+    sabs_improad_dir   => lps%sabs_improad_dir
+    sabs_improad_dif   => lps%sabs_improad_dif
+    sabs_perroad_dir   => lps%sabs_perroad_dir
+    sabs_perroad_dif   => lps%sabs_perroad_dif
 
     ! Assign local pointers to derived type members (column level)
 
-    ctype          => clm3%g%l%c%itype
-    t_grnd         => clm3%g%l%c%ces%t_grnd 
-    frac_sno       => clm3%g%l%c%cps%frac_sno
+    ctype          => col%itype
+    t_grnd         => ces%t_grnd 
+    frac_sno       => cps%frac_sno
 
     ! Assign local pointers to derived type members (pft level)
 
-    pgridcell      => clm3%g%l%c%p%gridcell
-    pcolumn        => clm3%g%l%c%p%column
-    albd           => clm3%g%l%c%p%pps%albd
-    albi           => clm3%g%l%c%p%pps%albi
-    sabg           => clm3%g%l%c%p%pef%sabg
-    sabv           => clm3%g%l%c%p%pef%sabv
-    fsa            => clm3%g%l%c%p%pef%fsa
-    fsa_u          => clm3%g%l%c%p%pef%fsa_u
-    fsr            => clm3%g%l%c%p%pef%fsr
-    fsds_vis_d     => clm3%g%l%c%p%pef%fsds_vis_d
-    fsds_nir_d     => clm3%g%l%c%p%pef%fsds_nir_d
-    fsds_vis_i     => clm3%g%l%c%p%pef%fsds_vis_i
-    fsds_nir_i     => clm3%g%l%c%p%pef%fsds_nir_i
-    fsr_vis_d      => clm3%g%l%c%p%pef%fsr_vis_d
-    fsr_nir_d      => clm3%g%l%c%p%pef%fsr_nir_d
-    fsr_vis_i      => clm3%g%l%c%p%pef%fsr_vis_i
-    fsr_nir_i      => clm3%g%l%c%p%pef%fsr_nir_i
-    fsds_vis_d_ln  => clm3%g%l%c%p%pef%fsds_vis_d_ln
-    fsds_nir_d_ln  => clm3%g%l%c%p%pef%fsds_nir_d_ln
-    fsds_vis_i_ln  => clm3%g%l%c%p%pef%fsds_vis_i_ln
-    parveg_ln      => clm3%g%l%c%p%pef%parveg_ln
-    fsr_vis_d_ln   => clm3%g%l%c%p%pef%fsr_vis_d_ln
-    fsr_nir_d_ln   => clm3%g%l%c%p%pef%fsr_nir_d_ln
-    eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out 
-    eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
-    eflx_lwrad_net_u => clm3%g%l%c%p%pef%eflx_lwrad_net_u
-    t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
+    pgridcell      =>pft%gridcell
+    pcolumn        =>pft%column
+    albd           => pps%albd
+    albi           => pps%albi
+    sabg           => pef%sabg
+    sabv           => pef%sabv
+    fsa            => pef%fsa
+    fsa_u          => pef%fsa_u
+    fsr            => pef%fsr
+    fsds_vis_d     => pef%fsds_vis_d
+    fsds_nir_d     => pef%fsds_nir_d
+    fsds_vis_i     => pef%fsds_vis_i
+    fsds_nir_i     => pef%fsds_nir_i
+    fsr_vis_d      => pef%fsr_vis_d
+    fsr_nir_d      => pef%fsr_nir_d
+    fsr_vis_i      => pef%fsr_vis_i
+    fsr_nir_i      => pef%fsr_nir_i
+    fsds_vis_d_ln  => pef%fsds_vis_d_ln
+    fsds_nir_d_ln  => pef%fsds_nir_d_ln
+    fsds_vis_i_ln  => pef%fsds_vis_i_ln
+    parveg_ln      => pef%parveg_ln
+    fsr_vis_d_ln   => pef%fsr_vis_d_ln
+    fsr_nir_d_ln   => pef%fsr_nir_d_ln
+    eflx_lwrad_out => pef%eflx_lwrad_out 
+    eflx_lwrad_net => pef%eflx_lwrad_net
+    eflx_lwrad_net_u => pef%eflx_lwrad_net_u
+    t_ref2m        => pes%t_ref2m
 
     ! Define fields that appear on the restart file for non-urban landunits 
 
@@ -915,7 +915,7 @@ contains
        p = filter_urbanp(fp)
        g = pgridcell(p)
        
-       local_secp1 = secs + nint((londeg(g)/degpsec)/dtime)*dtime
+       local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
        local_secp1 = mod(local_secp1,isecspday)
 
        ! Solar incident 
@@ -1088,11 +1088,11 @@ contains
 
     ! Assign landunit level pointer
 
-    vf_sr  => clm3%g%l%lps%vf_sr
-    vf_wr  => clm3%g%l%lps%vf_wr
-    vf_sw  => clm3%g%l%lps%vf_sw
-    vf_rw  => clm3%g%l%lps%vf_rw
-    vf_ww  => clm3%g%l%lps%vf_ww
+    vf_sr  => lps%vf_sr
+    vf_wr  => lps%vf_wr
+    vf_sw  => lps%vf_sw
+    vf_rw  => lps%vf_rw
+    vf_ww  => lps%vf_ww
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
@@ -1351,8 +1351,8 @@ contains
 
     ! Assign landunit level pointer
 
-    vf_sr              => clm3%g%l%lps%vf_sr
-    vf_sw              => clm3%g%l%lps%vf_sw
+    vf_sr              => lps%vf_sr
+    vf_sw              => lps%vf_sw
 
     do ib = 1, numrad
 
@@ -1549,21 +1549,21 @@ contains
 
     ! Assign landunit level pointer
 
-    vf_sr              => clm3%g%l%lps%vf_sr
-    vf_wr              => clm3%g%l%lps%vf_wr
-    vf_sw              => clm3%g%l%lps%vf_sw
-    vf_rw              => clm3%g%l%lps%vf_rw
-    vf_ww              => clm3%g%l%lps%vf_ww
-    sabs_roof_dir      => clm3%g%l%lps%sabs_roof_dir
-    sabs_roof_dif      => clm3%g%l%lps%sabs_roof_dif
-    sabs_sunwall_dir   => clm3%g%l%lps%sabs_sunwall_dir
-    sabs_sunwall_dif   => clm3%g%l%lps%sabs_sunwall_dif
-    sabs_shadewall_dir => clm3%g%l%lps%sabs_shadewall_dir
-    sabs_shadewall_dif => clm3%g%l%lps%sabs_shadewall_dif
-    sabs_improad_dir   => clm3%g%l%lps%sabs_improad_dir
-    sabs_improad_dif   => clm3%g%l%lps%sabs_improad_dif
-    sabs_perroad_dir   => clm3%g%l%lps%sabs_perroad_dir
-    sabs_perroad_dif   => clm3%g%l%lps%sabs_perroad_dif
+    vf_sr              => lps%vf_sr
+    vf_wr              => lps%vf_wr
+    vf_sw              => lps%vf_sw
+    vf_rw              => lps%vf_rw
+    vf_ww              => lps%vf_ww
+    sabs_roof_dir      => lps%sabs_roof_dir
+    sabs_roof_dif      => lps%sabs_roof_dif
+    sabs_sunwall_dir   => lps%sabs_sunwall_dir
+    sabs_sunwall_dif   => lps%sabs_sunwall_dif
+    sabs_shadewall_dir => lps%sabs_shadewall_dir
+    sabs_shadewall_dif => lps%sabs_shadewall_dif
+    sabs_improad_dir   => lps%sabs_improad_dir
+    sabs_improad_dif   => lps%sabs_improad_dif
+    sabs_perroad_dir   => lps%sabs_perroad_dir
+    sabs_perroad_dif   => lps%sabs_perroad_dif
 
     ! Calculate impervious road
 
@@ -2084,11 +2084,11 @@ contains
 
     ! Assign landunit level pointer
 
-    vf_sr              => clm3%g%l%lps%vf_sr
-    vf_wr              => clm3%g%l%lps%vf_wr
-    vf_sw              => clm3%g%l%lps%vf_sw
-    vf_rw              => clm3%g%l%lps%vf_rw
-    vf_ww              => clm3%g%l%lps%vf_ww
+    vf_sr              => lps%vf_sr
+    vf_wr              => lps%vf_wr
+    vf_sw              => lps%vf_sw
+    vf_rw              => lps%vf_rw
+    vf_ww              => lps%vf_ww
 
     ! Calculate impervious road
 
@@ -2392,14 +2392,14 @@ contains
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    coli         => clm3%g%l%coli
-    colf         => clm3%g%l%colf
-    lgridcell    => clm3%g%l%gridcell
-    udenstype    => clm3%g%l%udenstype
+    coli         =>lun%coli
+    colf         =>lun%colf
+    lgridcell    =>lun%gridcell
+    udenstype    =>lun%udenstype
 
     ! Assign local pointers to derived type members (column-level)
 
-    ctype      => clm3%g%l%c%itype
+    ctype      => col%itype
 
     ! Allocate memory 
 
@@ -2461,7 +2461,7 @@ contains
 
        do fl = 1,num_urbanl
           l = filter(nc)%urbanl(fl)
-          g = clm3%g%l%gridcell(l)
+          g =lun%gridcell(l)
           dindx = udenstype(l) - udens_base
           urban_clump(nc)%canyon_hwr     (fl) = urbinp%canyon_hwr     (g,dindx)
           urban_clump(nc)%wtroad_perv    (fl) = urbinp%wtroad_perv    (g,dindx)
@@ -2747,82 +2747,82 @@ contains
     forc_rho   => clm_a2l%forc_rho
     forc_q     => clm_a2l%forc_q
     forc_pbot  => clm_a2l%forc_pbot
-    londeg     => clm3%g%londeg
+    londeg     =>  grc%londeg
 
     ! Assign local pointers to derived type members (landunit level)
 
-    pfti                => clm3%g%l%pfti
-    pftf                => clm3%g%l%pftf
-    coli                => clm3%g%l%coli
-    colf                => clm3%g%l%colf
-    lgridcell           => clm3%g%l%gridcell
-    z_0_town            => clm3%g%l%z_0_town
-    z_d_town            => clm3%g%l%z_d_town
-    taf                 => clm3%g%l%lps%taf
-    qaf                 => clm3%g%l%lps%qaf
-    npfts               => clm3%g%l%npfts
-    eflx_traffic        => clm3%g%l%lef%eflx_traffic
-    eflx_traffic_factor => clm3%g%l%lef%eflx_traffic_factor
-    eflx_wasteheat      => clm3%g%l%lef%eflx_wasteheat
-    eflx_heat_from_ac   => clm3%g%l%lef%eflx_heat_from_ac
-    t_building          => clm3%g%l%lps%t_building
+    pfti                =>lun%pfti
+    pftf                =>lun%pftf
+    coli                =>lun%coli
+    colf                =>lun%colf
+    lgridcell           =>lun%gridcell
+    z_0_town            =>lun%z_0_town
+    z_d_town            =>lun%z_d_town
+    taf                 => lps%taf
+    qaf                 => lps%qaf
+    npfts               =>lun%npfts
+    eflx_traffic        => lef%eflx_traffic
+    eflx_traffic_factor => lef%eflx_traffic_factor
+    eflx_wasteheat      => lef%eflx_wasteheat
+    eflx_heat_from_ac   => lef%eflx_heat_from_ac
+    t_building          => lps%t_building
 
     ! Assign local pointers to derived type members (column level)
 
-    ctype              => clm3%g%l%c%itype
-    t_grnd             => clm3%g%l%c%ces%t_grnd
-    qg                 => clm3%g%l%c%cws%qg
-    htvp               => clm3%g%l%c%cps%htvp
-    dqgdT              => clm3%g%l%c%cws%dqgdT
-    t_soisno           => clm3%g%l%c%ces%t_soisno
-    eflx_urban_ac      => clm3%g%l%c%cef%eflx_urban_ac
-    eflx_urban_heat    => clm3%g%l%c%cef%eflx_urban_heat
-    h2osoi_ice         => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
-    frac_sno           => clm3%g%l%c%cps%frac_sno
-    snow_depth             => clm3%g%l%c%cps%snow_depth
-    h2osno             => clm3%g%l%c%cws%h2osno
-    snl                => clm3%g%l%c%cps%snl
-    rootr_road_perv    => clm3%g%l%c%cps%rootr_road_perv
-    soilalpha_u        => clm3%g%l%c%cws%soilalpha_u
+    ctype              => col%itype
+    t_grnd             => ces%t_grnd
+    qg                 => cws%qg
+    htvp               => cps%htvp
+    dqgdT              => cws%dqgdT
+    t_soisno           => ces%t_soisno
+    eflx_urban_ac      => cef%eflx_urban_ac
+    eflx_urban_heat    => cef%eflx_urban_heat
+    h2osoi_ice         => cws%h2osoi_ice
+    h2osoi_liq         => cws%h2osoi_liq
+    frac_sno           => cps%frac_sno
+    snow_depth             => cps%snow_depth
+    h2osno             => cws%h2osno
+    snl                => cps%snl
+    rootr_road_perv    => cps%rootr_road_perv
+    soilalpha_u        => cws%soilalpha_u
 
     ! Assign local pointers to derived type members (pft level)
 
-    pgridcell      => clm3%g%l%c%p%gridcell
-    pcolumn        => clm3%g%l%c%p%column
-    plandunit      => clm3%g%l%c%p%landunit
-    ram1           => clm3%g%l%c%p%pps%ram1
-    dlrad          => clm3%g%l%c%p%pef%dlrad
-    ulrad          => clm3%g%l%c%p%pef%ulrad
-    cgrnds         => clm3%g%l%c%p%pef%cgrnds
-    cgrndl         => clm3%g%l%c%p%pef%cgrndl
-    cgrnd          => clm3%g%l%c%p%pef%cgrnd
-    taux           => clm3%g%l%c%p%pmf%taux
-    tauy           => clm3%g%l%c%p%pmf%tauy
-    eflx_sh_grnd   => clm3%g%l%c%p%pef%eflx_sh_grnd
-    eflx_sh_tot    => clm3%g%l%c%p%pef%eflx_sh_tot
-    eflx_sh_tot_u  => clm3%g%l%c%p%pef%eflx_sh_tot_u
-    qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
-    qflx_tran_veg  => clm3%g%l%c%p%pwf%qflx_tran_veg
-    qflx_evap_veg  => clm3%g%l%c%p%pwf%qflx_evap_veg
-    qflx_evap_tot  => clm3%g%l%c%p%pwf%qflx_evap_tot
-    t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
-    q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
-    t_ref2m_u      => clm3%g%l%c%p%pes%t_ref2m_u
-    t_veg          => clm3%g%l%c%p%pes%t_veg
-    rootr          => clm3%g%l%c%p%pps%rootr
-    psnsun         => clm3%g%l%c%p%pcf%psnsun
-    psnsha         => clm3%g%l%c%p%pcf%psnsha
-    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
-    forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
-    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
-    forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
-    rh_ref2m => clm3%g%l%c%p%pes%rh_ref2m
-    rh_ref2m_u     => clm3%g%l%c%p%pes%rh_ref2m_u
+    pgridcell      =>pft%gridcell
+    pcolumn        =>pft%column
+    plandunit      =>pft%landunit
+    ram1           => pps%ram1
+    dlrad          => pef%dlrad
+    ulrad          => pef%ulrad
+    cgrnds         => pef%cgrnds
+    cgrndl         => pef%cgrndl
+    cgrnd          => pef%cgrnd
+    taux           => pmf%taux
+    tauy           => pmf%tauy
+    eflx_sh_grnd   => pef%eflx_sh_grnd
+    eflx_sh_tot    => pef%eflx_sh_tot
+    eflx_sh_tot_u  => pef%eflx_sh_tot_u
+    qflx_evap_soi  => pwf%qflx_evap_soi
+    qflx_tran_veg  => pwf%qflx_tran_veg
+    qflx_evap_veg  => pwf%qflx_evap_veg
+    qflx_evap_tot  => pwf%qflx_evap_tot
+    t_ref2m        => pes%t_ref2m
+    q_ref2m        => pes%q_ref2m
+    t_ref2m_u      => pes%t_ref2m_u
+    t_veg          => pes%t_veg
+    rootr          => pps%rootr
+    psnsun         => pcf%psnsun
+    psnsha         => pcf%psnsha
+    forc_hgt_u_pft => pps%forc_hgt_u_pft
+    forc_hgt_t_pft => pps%forc_hgt_t_pft
+    forc_hgt_u_pft => pps%forc_hgt_u_pft
+    forc_hgt_t_pft => pps%forc_hgt_t_pft
+    rh_ref2m => pes%rh_ref2m
+    rh_ref2m_u     => pes%rh_ref2m_u
 
-    eflx_sh_snow   => clm3%g%l%c%p%pef%eflx_sh_snow
-    eflx_sh_soil   => clm3%g%l%c%p%pef%eflx_sh_soil
-    eflx_sh_h2osfc => clm3%g%l%c%p%pef%eflx_sh_h2osfc
+    eflx_sh_snow   => pef%eflx_sh_snow
+    eflx_sh_soil   => pef%eflx_sh_soil
+    eflx_sh_h2osfc => pef%eflx_sh_h2osfc
     ! Define fields that appear on the restart file for non-urban landunits 
 
     do fl = 1,num_nourbanl
@@ -2848,7 +2848,7 @@ contains
        l = filter_urbanl(fl)
        g = lgridcell(l)
 
-       local_secp1(l)        = secs + nint((londeg(g)/degpsec)/dtime)*dtime
+       local_secp1(l)        = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
        local_secp1(l)        = mod(local_secp1(l),isecspday)
 
        ! Error checks

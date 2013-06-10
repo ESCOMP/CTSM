@@ -90,18 +90,18 @@ contains
 
 ! Assign local pointers to derived subtypes components (column-level)
 
-    h2osoi_liq          => clm3%g%l%c%cws%h2osoi_liq
-    h2osfc              => clm3%g%l%c%cws%h2osfc
-    micro_sigma         => clm3%g%l%c%cps%micro_sigma
-    topo_slope          => clm3%g%l%c%cps%topo_slope
-    topo_ndx            => clm3%g%l%c%cps%topo_ndx
-    ltype               => clm3%g%l%itype
-    clandunit           => clm3%g%l%c%landunit
+    h2osoi_liq          => cws%h2osoi_liq
+    h2osfc              => cws%h2osfc
+    micro_sigma         => cps%micro_sigma
+    topo_slope          => cps%topo_slope
+    topo_ndx            => cps%topo_ndx
+    ltype               => lun%itype
+    clandunit           =>col%landunit
 
-    frac_sno            => clm3%g%l%c%cps%frac_sno 
-    frac_sno_eff        => clm3%g%l%c%cps%frac_sno_eff
-    snl                 => clm3%g%l%c%cps%snl
-    h2osno              => clm3%g%l%c%cws%h2osno
+    frac_sno            => cps%frac_sno 
+    frac_sno_eff        => cps%frac_sno_eff
+    snl                 => cps%snl
+    h2osno              => cws%h2osno
  
     ! arbitrary lower limit on h2osfc for safer numerics...
     min_h2osfc=1.e-8_r8

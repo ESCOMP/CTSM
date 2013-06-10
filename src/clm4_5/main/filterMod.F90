@@ -218,7 +218,7 @@ contains
     integer :: begg, endg  ! per-clump beginning and ending gridcell indices
 !------------------------------------------------------------------------
 
-    ctype => clm3%g%l%c%itype
+    ctype => col%itype
 
     ! Determine clump boundaries
 
@@ -229,8 +229,8 @@ contains
     fl = 0
     fnl = 0
     do c = begc,endc
-       l = clm3%g%l%c%landunit(c)
-       if (clm3%g%l%lakpoi(l)) then
+       l =col%landunit(c)
+       if (lun%lakpoi(l)) then
           fl = fl + 1
           filter(nc)%lakec(fl) = c
        else
@@ -248,15 +248,15 @@ contains
     fnl = 0
     fnlu = 0
     do p = begp,endp
-       if (clm3%g%l%c%p%active(p)) then
-          l = clm3%g%l%c%p%landunit(p)
-          if (clm3%g%l%lakpoi(l) ) then
+       if (pft%active(p)) then
+          l =pft%landunit(p)
+          if (lun%lakpoi(l) ) then
              fl = fl + 1
              filter(nc)%lakep(fl) = p
           else
              fnl = fnl + 1
              filter(nc)%nolakep(fnl) = p
-             if (clm3%g%l%itype(l) /= isturb) then
+             if (lun%itype(l) /= isturb) then
                 fnlu = fnlu + 1
                 filter(nc)%nolakeurbanp(fnlu) = p
              end if
@@ -271,8 +271,8 @@ contains
 
     fs = 0
     do c = begc,endc
-       l = clm3%g%l%c%landunit(c)
-       if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
+       l =col%landunit(c)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           fs = fs + 1
           filter(nc)%soilc(fs) = c
        end if
@@ -284,9 +284,9 @@ contains
 
     fs = 0
     do p = begp,endp
-       if (clm3%g%l%c%p%active(p)) then
-          l = clm3%g%l%c%p%landunit(p)
-          if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
+       if (pft%active(p)) then
+          l =pft%landunit(p)
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
              fs = fs + 1
              filter(nc)%soilp(fs) = p
           end if
@@ -298,9 +298,9 @@ contains
 
     f = 0
     do c = begc,endc
-       l = clm3%g%l%c%landunit(c)
-       if (clm3%g%l%itype(l) == istsoil .or. ctype(c) == icol_road_perv .or. &
-           clm3%g%l%itype(l) == istcrop) then
+       l =col%landunit(c)
+       if (lun%itype(l) == istsoil .or. ctype(c) == icol_road_perv .or. &
+           lun%itype(l) == istcrop) then
           f = f + 1
           filter(nc)%hydrologyc(f) = c
        end if
@@ -313,13 +313,13 @@ contains
     fl  = 0
     fnl = 0
     do p = begp,endp
-       if (clm3%g%l%c%p%active(p)) then
-          if (clm3%g%l%c%p%itype(p) >= npcropmin) then !skips 2 generic crop types
+       if (pft%active(p)) then
+          if (pft%itype(p) >= npcropmin) then !skips 2 generic crop types
              fl = fl + 1
              filter(nc)%pcropp(fl) = p
           else
-             l = clm3%g%l%c%p%landunit(p)
-             if (clm3%g%l%itype(l) == istsoil .or. clm3%g%l%itype(l) == istcrop) then
+             l =pft%landunit(p)
+             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
                 fnl = fnl + 1
                 filter(nc)%soilnopcropp(fnl) = p
              end if
@@ -334,7 +334,7 @@ contains
     f = 0
     fn = 0
     do l = begl,endl
-       if (clm3%g%l%itype(l) == isturb) then
+       if (lun%itype(l) == isturb) then
           f = f + 1
           filter(nc)%urbanl(f) = l
        else
@@ -350,8 +350,8 @@ contains
     f = 0
     fn = 0
     do c = begc,endc
-       l = clm3%g%l%c%landunit(c)
-       if (clm3%g%l%itype(l) == isturb) then
+       l =col%landunit(c)
+       if (lun%itype(l) == isturb) then
           f = f + 1
           filter(nc)%urbanc(f) = c
        else
@@ -367,8 +367,8 @@ contains
     f = 0
     fn = 0
     do p = begp,endp
-       l = clm3%g%l%c%p%landunit(p)
-       if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%active(p)) then
+       l =pft%landunit(p)
+       if (lun%itype(l) == isturb .and. pft%active(p)) then
           f = f + 1
           filter(nc)%urbanp(f) = p
        else

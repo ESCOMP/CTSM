@@ -128,27 +128,27 @@ contains
    ! Assign local pointers to derived type members (gridcell-level)
 
    if (present(landunit_index)) then
-     ngridcell  => clm3%g%l%gridcell
+     ngridcell  =>lun%gridcell
    else
-     ngridcell  => clm3%g%l%c%p%gridcell
+     ngridcell  =>pft%gridcell
    end if
 
-   vds        => clm3%g%l%c%p%pps%vds
-   u10        => clm3%g%l%c%p%pps%u10
-   u10_clm    => clm3%g%l%c%p%pps%u10_clm
-   va         => clm3%g%l%c%p%pps%va
-   fv         => clm3%g%l%c%p%pps%fv
+   vds        => pps%vds
+   u10        => pps%u10
+   u10_clm    => pps%u10_clm
+   va         => pps%va
+   fv         => pps%fv
 
    ! Assign local pointers to derived type members (pft or landunit-level)
 
-   pfti             => clm3%g%l%pfti
-   pftf             => clm3%g%l%pftf
+   pfti             =>lun%pfti
+   pftf             =>lun%pftf
 
    ! Assign local pointers to derived type members (pft-level)
 
-   forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
-   forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
-   forc_hgt_q_pft => clm3%g%l%c%p%pps%forc_hgt_q_pft
+   forc_hgt_u_pft => pps%forc_hgt_u_pft
+   forc_hgt_t_pft => pps%forc_hgt_t_pft
+   forc_hgt_q_pft => pps%forc_hgt_q_pft
 
    ! Adjustment factors for unstable (moz < 0) or stable (moz > 0) conditions.
 

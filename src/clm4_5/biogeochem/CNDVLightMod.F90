@@ -113,13 +113,13 @@ contains
 
     ! Assign local pointers to derived type scalar members
 
-    ivt           => clm3%g%l%c%p%itype
-    pgridcell     => clm3%g%l%c%p%gridcell
-    nind          => clm3%g%l%c%p%pdgvs%nind
-    fpcgrid       => clm3%g%l%c%p%pdgvs%fpcgrid
-    leafcmax      => clm3%g%l%c%p%pcs%leafcmax
-    deadstemc     => clm3%g%l%c%p%pcs%deadstemc
-    crownarea     => clm3%g%l%c%p%pdgvs%crownarea
+    ivt           =>pft%itype
+    pgridcell     =>pft%gridcell
+    nind          => pdgvs%nind
+    fpcgrid       => pdgvs%fpcgrid
+    leafcmax      => pcs%leafcmax
+    deadstemc     => pcs%deadstemc
+    crownarea     => pdgvs%crownarea
     crownarea_max => dgv_pftcon%crownarea_max
     reinickerp    => dgv_pftcon%reinickerp
     allom1        => dgv_pftcon%allom1

@@ -44,7 +44,7 @@ contains
 ! Grimmond and Oke (1999)
 !
 ! !USES:
-    use clmtype   , only : clm3
+    use clmtype 
     use clm_varcon, only : isturb, vkc
     use decompMod , only : get_proc_bounds
 !
@@ -86,11 +86,11 @@ contains
 
     ! Assign local pointers to derived type members (landunit level)
 
-    ltype      => clm3%g%l%itype
-    z_0_town   => clm3%g%l%z_0_town
-    z_d_town   => clm3%g%l%z_d_town
-    ht_roof    => clm3%g%l%ht_roof
-    canyon_hwr => clm3%g%l%canyon_hwr
+    ltype      => lun%itype
+    z_0_town   =>lun%z_0_town
+    z_d_town   =>lun%z_d_town
+    ht_roof    =>lun%ht_roof
+    canyon_hwr =>lun%canyon_hwr
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -148,7 +148,7 @@ contains
 ! Initialize urban time-constant variables
 !
 ! !USES:
-    use clmtype      , only : clm3
+    use clmtype 
     use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
                               icol_road_perv, icol_road_imperv, spval, &
                               udens_base
@@ -204,34 +204,34 @@ contains
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    ltype               => clm3%g%l%itype
-    lgridcell           => clm3%g%l%gridcell
-    coli                => clm3%g%l%coli
-    colf                => clm3%g%l%colf
-    udenstype           => clm3%g%l%udenstype
-    canyon_hwr          => clm3%g%l%canyon_hwr
-    wtroad_perv         => clm3%g%l%wtroad_perv 
-    ht_roof             => clm3%g%l%ht_roof
-    wtlunit_roof        => clm3%g%l%wtlunit_roof
-    wind_hgt_canyon     => clm3%g%l%wind_hgt_canyon
-    eflx_traffic_factor => clm3%g%l%lef%eflx_traffic_factor
-    t_building_max      => clm3%g%l%lps%t_building_max
-    t_building_min      => clm3%g%l%lps%t_building_min
-    canyon_hwr          => clm3%g%l%canyon_hwr
-    tk_wall             => clm3%g%l%lps%tk_wall
-    tk_roof             => clm3%g%l%lps%tk_roof
-    tk_improad          => clm3%g%l%lps%tk_improad
-    cv_wall             => clm3%g%l%lps%cv_wall
-    cv_roof             => clm3%g%l%lps%cv_roof
-    cv_improad          => clm3%g%l%lps%cv_improad
-    thick_wall          => clm3%g%l%lps%thick_wall
-    thick_roof          => clm3%g%l%lps%thick_roof
-    nlev_improad        => clm3%g%l%lps%nlev_improad
+    ltype               => lun%itype
+    lgridcell           =>lun%gridcell
+    coli                =>lun%coli
+    colf                =>lun%colf
+    udenstype           =>lun%udenstype
+    canyon_hwr          =>lun%canyon_hwr
+    wtroad_perv         =>lun%wtroad_perv 
+    ht_roof             =>lun%ht_roof
+    wtlunit_roof        =>lun%wtlunit_roof
+    wind_hgt_canyon     =>lun%wind_hgt_canyon
+    eflx_traffic_factor => lef%eflx_traffic_factor
+    t_building_max      => lps%t_building_max
+    t_building_min      => lps%t_building_min
+    canyon_hwr          =>lun%canyon_hwr
+    tk_wall             => lps%tk_wall
+    tk_roof             => lps%tk_roof
+    tk_improad          => lps%tk_improad
+    cv_wall             => lps%cv_wall
+    cv_roof             => lps%cv_roof
+    cv_improad          => lps%cv_improad
+    thick_wall          => lps%thick_wall
+    thick_roof          => lps%thick_roof
+    nlev_improad        => lps%nlev_improad
 
     ! Assign local pointers to derived type members (column-level)
 
-    ctype               => clm3%g%l%c%itype
-    emg                 => clm3%g%l%c%cps%emg
+    ctype               => col%itype
+    emg                 => cps%emg
     
    ! Initialize time constant urban variables
 
@@ -239,7 +239,7 @@ contains
 
     do l = begl, endl
        if (ltype(l) == isturb) then
-          g = clm3%g%l%gridcell(l)
+          g =lun%gridcell(l)
           dindx = udenstype(l) - udens_base
           canyon_hwr(l)         = urbinp%canyon_hwr(g,dindx)
           wtroad_perv(l)        = urbinp%wtroad_perv(g,dindx)
@@ -305,7 +305,7 @@ contains
 ! Initialize urban time-varying variables
 !
 ! !USES:
-    use clmtype   , only : clm3
+    use clmtype
     use clm_varcon, only : isturb, spval, icol_road_perv
     use decompMod , only : get_proc_bounds
 !
@@ -368,44 +368,44 @@ contains
 
     ! Assign local pointers to derived type members (landunit level)
 
-    taf                => clm3%g%l%lps%taf
-    qaf                => clm3%g%l%lps%qaf
-    ltype              => clm3%g%l%itype
-    lgridcell          => clm3%g%l%gridcell
-    t_building         => clm3%g%l%lps%t_building
-    eflx_traffic       => clm3%g%l%lef%eflx_traffic
-    eflx_wasteheat     => clm3%g%l%lef%eflx_wasteheat
+    taf                => lps%taf
+    qaf                => lps%qaf
+    ltype              => lun%itype
+    lgridcell          =>lun%gridcell
+    t_building         => lps%t_building
+    eflx_traffic       => lef%eflx_traffic
+    eflx_wasteheat     => lef%eflx_wasteheat
 
     ! Assign local pointers to derived type members (column level)
 
-    clandunit          => clm3%g%l%c%landunit
-    eflx_building_heat => clm3%g%l%c%cef%eflx_building_heat
-    eflx_urban_ac      => clm3%g%l%c%cef%eflx_urban_ac
-    eflx_urban_heat    => clm3%g%l%c%cef%eflx_urban_heat
-    fcov               => clm3%g%l%c%cws%fcov
-    fsat               => clm3%g%l%c%cws%fsat
-    qcharge            => clm3%g%l%c%cws%qcharge
-    ctype              => clm3%g%l%c%itype
-    t_grnd_u           => clm3%g%l%c%ces%t_grnd_u
-    qflx_runoff_u      => clm3%g%l%c%cwf%qflx_runoff_u
-    eflx_snomelt_u     => clm3%g%l%c%cef%eflx_snomelt_u
+    clandunit          =>col%landunit
+    eflx_building_heat => cef%eflx_building_heat
+    eflx_urban_ac      => cef%eflx_urban_ac
+    eflx_urban_heat    => cef%eflx_urban_heat
+    fcov               => cws%fcov
+    fsat               => cws%fsat
+    qcharge            => cws%qcharge
+    ctype              => col%itype
+    t_grnd_u           => ces%t_grnd_u
+    qflx_runoff_u      => cwf%qflx_runoff_u
+    eflx_snomelt_u     => cef%eflx_snomelt_u
 
     ! Assign local pointers to derived type members (pft level)
 
-    t_ref2m_u          => clm3%g%l%c%p%pes%t_ref2m_u
-    t_ref2m_min_u      => clm3%g%l%c%p%pes%t_ref2m_min_u
-    t_ref2m_max_u      => clm3%g%l%c%p%pes%t_ref2m_max_u
-    rh_ref2m_u         => clm3%g%l%c%p%pes%rh_ref2m_u
-    plandunit          => clm3%g%l%c%p%landunit
-    eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
-    eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
-    eflx_traffic_pft => clm3%g%l%c%p%pef%eflx_traffic_pft
-    eflx_anthro => clm3%g%l%c%p%pef%eflx_anthro
-    fsa_u              => clm3%g%l%c%p%pef%fsa_u
-    eflx_lwrad_net_u   => clm3%g%l%c%p%pef%eflx_lwrad_net_u
-    eflx_lh_tot_u      => clm3%g%l%c%p%pef%eflx_lh_tot_u
-    eflx_sh_tot_u      => clm3%g%l%c%p%pef%eflx_sh_tot_u
-    eflx_soil_grnd_u   => clm3%g%l%c%p%pef%eflx_soil_grnd_u
+    t_ref2m_u          => pes%t_ref2m_u
+    t_ref2m_min_u      => pes%t_ref2m_min_u
+    t_ref2m_max_u      => pes%t_ref2m_max_u
+    rh_ref2m_u         => pes%rh_ref2m_u
+    plandunit          =>pft%landunit
+    eflx_wasteheat_pft => pef%eflx_wasteheat_pft
+    eflx_heat_from_ac_pft => pef%eflx_heat_from_ac_pft
+    eflx_traffic_pft => pef%eflx_traffic_pft
+    eflx_anthro => pef%eflx_anthro
+    fsa_u              => pef%fsa_u
+    eflx_lwrad_net_u   => pef%eflx_lwrad_net_u
+    eflx_lh_tot_u      => pef%eflx_lh_tot_u
+    eflx_sh_tot_u      => pef%eflx_sh_tot_u
+    eflx_soil_grnd_u   => pef%eflx_soil_grnd_u
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 

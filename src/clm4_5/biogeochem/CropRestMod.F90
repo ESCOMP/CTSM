@@ -78,10 +78,6 @@ contains
     real(r8):: m                          ! multiplier for the exit_spinup code
     logical :: readvar                    ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
     integer , pointer :: iptemp(:)        ! pointer to memory to be allocated
     integer :: ier                        ! error status
 !-----------------------------------------------------------------------
@@ -105,10 +101,6 @@ contains
 
     ! Set pointers into derived type
 
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
 
     ! Determine necessary subgrid bounds
 
@@ -125,7 +117,7 @@ contains
             flag_values=(/0,1/), nvalid_range=(/0,1/),                    &
             flag_meanings=(/'NOT-at-peak', 'AT_peak-LAI' /) )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='peaklai', data=pptr%pps%peaklai, &
+       call ncd_io(varname='peaklai', data=pps%peaklai, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -138,7 +130,7 @@ contains
             dim1name='pft',long_name='Date of planting',units='jday', &
             nvalid_range=(/1,366/) )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='idop', data=pptr%pps%idop, &
+       call ncd_io(varname='idop', data=pps%idop, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -150,7 +142,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='aleaf', xtype=ncd_double,  &
             dim1name='pft',long_name='leaf allocation coefficient',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='aleaf', data=pptr%pps%aleaf, &
+       call ncd_io(varname='aleaf', data=pps%aleaf, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -163,7 +155,7 @@ contains
             dim1name='pft',long_name='Saved leaf allocation coefficient from phase 2', &
             units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='aleafi', data=pptr%pps%aleafi, &
+       call ncd_io(varname='aleafi', data=pps%aleafi, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -175,7 +167,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='astem', xtype=ncd_double,  &
             dim1name='pft',long_name='stem allocation coefficient',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='astem', data=pptr%pps%astem, &
+       call ncd_io(varname='astem', data=pps%astem, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -188,7 +180,7 @@ contains
             dim1name='pft',long_name='Saved stem allocation coefficient from phase 2',&
             units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='astemi', data=pptr%pps%astemi, &
+       call ncd_io(varname='astemi', data=pps%astemi, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -201,7 +193,7 @@ contains
             dim1name='pft',long_name='max height attained by a crop during year',&
             units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='htmx', data=pptr%pps%htmx, &
+       call ncd_io(varname='htmx', data=pps%htmx, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -213,7 +205,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='hdidx', xtype=ncd_double,  &
             dim1name='pft',long_name='cold hardening index',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='hdidx', data=pptr%pps%hdidx, &
+       call ncd_io(varname='hdidx', data=pps%hdidx, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -225,7 +217,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='vf', xtype=ncd_double,  &
             dim1name='pft',long_name='vernalization factor',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='vf', data=pptr%pps%vf, &
+       call ncd_io(varname='vf', data=pps%vf, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -237,7 +229,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cumvd', xtype=ncd_double,  &
             dim1name='pft',long_name='cumulative vernalization d',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cumvd', data=pptr%pps%cumvd, &
+       call ncd_io(varname='cumvd', data=pps%cumvd, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -249,7 +241,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='croplive', xtype=ncd_log,  &
             dim1name='pft',long_name='Flag that crop is alive, but not harvested')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='croplive', data=pptr%pps%croplive, &
+       call ncd_io(varname='croplive', data=pps%croplive, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -261,7 +253,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cropplant', xtype=ncd_log,  &
             dim1name='pft',long_name='Flag that crop is planted, but not harvested' )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cropplant', data=pptr%pps%cropplant, &
+       call ncd_io(varname='cropplant', data=pps%cropplant, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -274,7 +266,7 @@ contains
             dim1name='pft',long_name='harvest date',units='jday', &
             nvalid_range=(/1,366/) )
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='harvdate', data=pptr%pps%harvdate, &
+       call ncd_io(varname='harvdate', data=pps%harvdate, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -288,7 +280,7 @@ contains
             long_name='20 year average of growing degree-days base 10C from planting', &
             units='ddays')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gdd1020', data=pptr%pps%gdd1020, &
+       call ncd_io(varname='gdd1020', data=pps%gdd1020, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -302,7 +294,7 @@ contains
             long_name='20 year average of growing degree-days base 8C from planting', &
             units='ddays')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gdd820', data=pptr%pps%gdd820, &
+       call ncd_io(varname='gdd820', data=pps%gdd820, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -316,7 +308,7 @@ contains
             long_name='20 year average of growing degree-days base 0C from planting', &
             units='ddays')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gdd020', data=pptr%pps%gdd020, &
+       call ncd_io(varname='gdd020', data=pps%gdd020, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -328,7 +320,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='gddmaturity', xtype=ncd_double,  &
             dim1name='pft',long_name='Growing degree days needed to harvest',units='ddays')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='gddmaturity', data=pptr%pps%gddmaturity, &
+       call ncd_io(varname='gddmaturity', data=pps%gddmaturity, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -341,7 +333,7 @@ contains
             dim1name='pft', &
             long_name='heat unit index needed from planting to leaf emergence',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='huileaf', data=pptr%pps%huileaf, &
+       call ncd_io(varname='huileaf', data=pps%huileaf, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -354,7 +346,7 @@ contains
             dim1name='pft',long_name='heat unit index needed to reach vegetative maturity', &
             units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='huigrain', data=pptr%pps%huigrain, &
+       call ncd_io(varname='huigrain', data=pps%huigrain, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -366,7 +358,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainc', xtype=ncd_double,  &
             dim1name='pft',long_name='grain C',units='gC/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainc', data=pptr%pcs%grainc, &
+       call ncd_io(varname='grainc', data=pcs%grainc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -378,7 +370,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='grain C storage',units='gC/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainc_storage', data=pptr%pcs%grainc_storage, &
+       call ncd_io(varname='grainc_storage', data=pcs%grainc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -390,7 +382,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainc_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='grain C transfer',units='gC/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainc_xfer', data=pptr%pcs%grainc_xfer, &
+       call ncd_io(varname='grainc_xfer', data=pcs%grainc_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -402,7 +394,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainn', xtype=ncd_double,  &
             dim1name='pft',long_name='grain N',units='gN/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainn', data=pptr%pns%grainn, &
+       call ncd_io(varname='grainn', data=pns%grainn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -414,7 +406,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='grain N storage',units='gN/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainn_storage', data=pptr%pns%grainn_storage, &
+       call ncd_io(varname='grainn_storage', data=pns%grainn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -426,7 +418,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainn_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='grain N transfer',units='gN/m2')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainn_xfer', data=pptr%pns%grainn_xfer, &
+       call ncd_io(varname='grainn_xfer', data=pns%grainn_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -438,7 +430,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainc_xfer_to_grainc', xtype=ncd_double,  &
             dim1name='pft',long_name='grain C growth from storage',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainc_xfer_to_grainc', data=pptr%pcf%grainc_xfer_to_grainc, &
+       call ncd_io(varname='grainc_xfer_to_grainc', data=pcf%grainc_xfer_to_grainc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -450,7 +442,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemc_to_litter', xtype=ncd_double,  &
             dim1name='pft',long_name='live stem C litterfall',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemc_to_litter', data=pptr%pcf%livestemc_to_litter, &
+       call ncd_io(varname='livestemc_to_litter', data=pcf%livestemc_to_litter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -462,7 +454,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainc_to_food', xtype=ncd_double,  &
             dim1name='pft',long_name='grain C to food',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainc_to_food', data=pptr%pcf%grainc_to_food, &
+       call ncd_io(varname='grainc_to_food', data=pcf%grainc_to_food, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -474,7 +466,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainn_xfer_to_grainn', xtype=ncd_double,  &
             dim1name='pft',long_name='grain N growth from storage',units='gN/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainn_xfer_to_grainn', data=pptr%pnf%grainn_xfer_to_grainn, &
+       call ncd_io(varname='grainn_xfer_to_grainn', data=pnf%grainn_xfer_to_grainn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -486,7 +478,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='livestemn_to_litter', xtype=ncd_double,  &
             dim1name='pft',long_name='livestem N to litter',units='gN/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='livestemn_to_litter', data=pptr%pnf%livestemn_to_litter, &
+       call ncd_io(varname='livestemn_to_litter', data=pnf%livestemn_to_litter, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -498,7 +490,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainn_to_food', xtype=ncd_double,  &
             dim1name='pft',long_name='grain N to food',units='gN/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainn_to_food', data=pptr%pnf%grainn_to_food, &
+       call ncd_io(varname='grainn_to_food', data=pnf%grainn_to_food, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -510,7 +502,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cpool_to_grainc', xtype=ncd_double,  &
             dim1name='pft',long_name='allocation to grain C',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cpool_to_grainc', data=pptr%pcf%cpool_to_grainc, &
+       call ncd_io(varname='cpool_to_grainc', data=pcf%cpool_to_grainc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -522,7 +514,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cpool_to_grainc_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='allocation to grain C storage',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cpool_to_grainc_storage', data=pptr%pcf%cpool_to_grainc_storage, &
+       call ncd_io(varname='cpool_to_grainc_storage', data=pcf%cpool_to_grainc_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -534,7 +526,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='npool_to_grainn', xtype=ncd_double,  &
             dim1name='pft',long_name='allocation to grain N',units='gN/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='npool_to_grainn', data=pptr%pnf%npool_to_grainn, &
+       call ncd_io(varname='npool_to_grainn', data=pnf%npool_to_grainn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -546,7 +538,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='npool_to_grainn_storage', xtype=ncd_double,  &
             dim1name='pft',long_name='allocation to grain N storage',units='gN/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='npool_to_grainn_storage', data=pptr%pnf%npool_to_grainn_storage, &
+       call ncd_io(varname='npool_to_grainn_storage', data=pnf%npool_to_grainn_storage, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -558,7 +550,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cpool_grain_gr', xtype=ncd_double,  &
             dim1name='pft',long_name='grain growth respiration',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cpool_grain_gr', data=pptr%pcf%cpool_grain_gr, &
+       call ncd_io(varname='cpool_grain_gr', data=pcf%cpool_grain_gr, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -570,7 +562,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='cpool_grain_storage_gr', xtype=ncd_double,  &
             dim1name='pft',long_name='grain growth respiration to storage',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='cpool_grain_storage_gr', data=pptr%pcf%cpool_grain_storage_gr, &
+       call ncd_io(varname='cpool_grain_storage_gr', data=pcf%cpool_grain_storage_gr, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -582,7 +574,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='transfer_grain_gr', xtype=ncd_double,  &
             dim1name='pft',long_name='grain growth respiration from storage',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='transfer_grain_gr', data=pptr%pcf%transfer_grain_gr, &
+       call ncd_io(varname='transfer_grain_gr', data=pcf%transfer_grain_gr, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -594,7 +586,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainc_storage_to_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='grain C shift storage to transfer',units='gC/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainc_storage_to_xfer', data=pptr%pcf%grainc_storage_to_xfer, &
+       call ncd_io(varname='grainc_storage_to_xfer', data=pcf%grainc_storage_to_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun
@@ -606,7 +598,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='grainn_storage_to_xfer', xtype=ncd_double,  &
             dim1name='pft',long_name='grain N shift storage to transfer',units='gN/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grainn_storage_to_xfer', data=pptr%pnf%grainn_storage_to_xfer, &
+       call ncd_io(varname='grainn_storage_to_xfer', data=pnf%grainn_storage_to_xfer, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
            if (is_restart()) call endrun

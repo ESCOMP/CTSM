@@ -115,52 +115,52 @@ subroutine CNGResp(num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   ivt                           => clm3%g%l%c%p%itype
-   cpool_to_leafc                => clm3%g%l%c%p%pcf%cpool_to_leafc
-   cpool_to_leafc_storage        => clm3%g%l%c%p%pcf%cpool_to_leafc_storage
-   cpool_to_frootc               => clm3%g%l%c%p%pcf%cpool_to_frootc
-   cpool_to_frootc_storage       => clm3%g%l%c%p%pcf%cpool_to_frootc_storage
-   cpool_to_livestemc            => clm3%g%l%c%p%pcf%cpool_to_livestemc
-   cpool_to_livestemc_storage    => clm3%g%l%c%p%pcf%cpool_to_livestemc_storage
-   cpool_to_deadstemc            => clm3%g%l%c%p%pcf%cpool_to_deadstemc
-   cpool_to_deadstemc_storage    => clm3%g%l%c%p%pcf%cpool_to_deadstemc_storage
-   cpool_to_livecrootc           => clm3%g%l%c%p%pcf%cpool_to_livecrootc
-   cpool_to_livecrootc_storage   => clm3%g%l%c%p%pcf%cpool_to_livecrootc_storage
-   cpool_to_deadcrootc           => clm3%g%l%c%p%pcf%cpool_to_deadcrootc
-   cpool_to_deadcrootc_storage   => clm3%g%l%c%p%pcf%cpool_to_deadcrootc_storage
-   cpool_to_grainc               => clm3%g%l%c%p%pcf%cpool_to_grainc
-   cpool_to_grainc_storage       => clm3%g%l%c%p%pcf%cpool_to_grainc_storage
-   grainc_xfer_to_grainc         => clm3%g%l%c%p%pcf%grainc_xfer_to_grainc
-   leafc_xfer_to_leafc           => clm3%g%l%c%p%pcf%leafc_xfer_to_leafc
-   frootc_xfer_to_frootc         => clm3%g%l%c%p%pcf%frootc_xfer_to_frootc
-   livestemc_xfer_to_livestemc   => clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc
-   deadstemc_xfer_to_deadstemc   => clm3%g%l%c%p%pcf%deadstemc_xfer_to_deadstemc
-   livecrootc_xfer_to_livecrootc => clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc
-   deadcrootc_xfer_to_deadcrootc => clm3%g%l%c%p%pcf%deadcrootc_xfer_to_deadcrootc
+   ivt                           =>pft%itype
+   cpool_to_leafc                => pcf%cpool_to_leafc
+   cpool_to_leafc_storage        => pcf%cpool_to_leafc_storage
+   cpool_to_frootc               => pcf%cpool_to_frootc
+   cpool_to_frootc_storage       => pcf%cpool_to_frootc_storage
+   cpool_to_livestemc            => pcf%cpool_to_livestemc
+   cpool_to_livestemc_storage    => pcf%cpool_to_livestemc_storage
+   cpool_to_deadstemc            => pcf%cpool_to_deadstemc
+   cpool_to_deadstemc_storage    => pcf%cpool_to_deadstemc_storage
+   cpool_to_livecrootc           => pcf%cpool_to_livecrootc
+   cpool_to_livecrootc_storage   => pcf%cpool_to_livecrootc_storage
+   cpool_to_deadcrootc           => pcf%cpool_to_deadcrootc
+   cpool_to_deadcrootc_storage   => pcf%cpool_to_deadcrootc_storage
+   cpool_to_grainc               => pcf%cpool_to_grainc
+   cpool_to_grainc_storage       => pcf%cpool_to_grainc_storage
+   grainc_xfer_to_grainc         => pcf%grainc_xfer_to_grainc
+   leafc_xfer_to_leafc           => pcf%leafc_xfer_to_leafc
+   frootc_xfer_to_frootc         => pcf%frootc_xfer_to_frootc
+   livestemc_xfer_to_livestemc   => pcf%livestemc_xfer_to_livestemc
+   deadstemc_xfer_to_deadstemc   => pcf%deadstemc_xfer_to_deadstemc
+   livecrootc_xfer_to_livecrootc => pcf%livecrootc_xfer_to_livecrootc
+   deadcrootc_xfer_to_deadcrootc => pcf%deadcrootc_xfer_to_deadcrootc
    woody => pftcon%woody
 
    ! Assign local pointers to derived type arrays (out)
-   cpool_grain_gr                => clm3%g%l%c%p%pcf%cpool_grain_gr
-   cpool_grain_storage_gr        => clm3%g%l%c%p%pcf%cpool_grain_storage_gr
-   transfer_grain_gr             => clm3%g%l%c%p%pcf%transfer_grain_gr
-   cpool_leaf_gr                 => clm3%g%l%c%p%pcf%cpool_leaf_gr
-   cpool_leaf_storage_gr         => clm3%g%l%c%p%pcf%cpool_leaf_storage_gr
-   transfer_leaf_gr              => clm3%g%l%c%p%pcf%transfer_leaf_gr
-   cpool_froot_gr                => clm3%g%l%c%p%pcf%cpool_froot_gr
-   cpool_froot_storage_gr        => clm3%g%l%c%p%pcf%cpool_froot_storage_gr
-   transfer_froot_gr             => clm3%g%l%c%p%pcf%transfer_froot_gr
-   cpool_livestem_gr             => clm3%g%l%c%p%pcf%cpool_livestem_gr
-   cpool_livestem_storage_gr     => clm3%g%l%c%p%pcf%cpool_livestem_storage_gr
-   transfer_livestem_gr          => clm3%g%l%c%p%pcf%transfer_livestem_gr
-   cpool_deadstem_gr             => clm3%g%l%c%p%pcf%cpool_deadstem_gr
-   cpool_deadstem_storage_gr     => clm3%g%l%c%p%pcf%cpool_deadstem_storage_gr
-   transfer_deadstem_gr          => clm3%g%l%c%p%pcf%transfer_deadstem_gr
-   cpool_livecroot_gr            => clm3%g%l%c%p%pcf%cpool_livecroot_gr
-   cpool_livecroot_storage_gr    => clm3%g%l%c%p%pcf%cpool_livecroot_storage_gr
-   transfer_livecroot_gr         => clm3%g%l%c%p%pcf%transfer_livecroot_gr
-   cpool_deadcroot_gr            => clm3%g%l%c%p%pcf%cpool_deadcroot_gr
-   cpool_deadcroot_storage_gr    => clm3%g%l%c%p%pcf%cpool_deadcroot_storage_gr
-   transfer_deadcroot_gr         => clm3%g%l%c%p%pcf%transfer_deadcroot_gr
+   cpool_grain_gr                => pcf%cpool_grain_gr
+   cpool_grain_storage_gr        => pcf%cpool_grain_storage_gr
+   transfer_grain_gr             => pcf%transfer_grain_gr
+   cpool_leaf_gr                 => pcf%cpool_leaf_gr
+   cpool_leaf_storage_gr         => pcf%cpool_leaf_storage_gr
+   transfer_leaf_gr              => pcf%transfer_leaf_gr
+   cpool_froot_gr                => pcf%cpool_froot_gr
+   cpool_froot_storage_gr        => pcf%cpool_froot_storage_gr
+   transfer_froot_gr             => pcf%transfer_froot_gr
+   cpool_livestem_gr             => pcf%cpool_livestem_gr
+   cpool_livestem_storage_gr     => pcf%cpool_livestem_storage_gr
+   transfer_livestem_gr          => pcf%transfer_livestem_gr
+   cpool_deadstem_gr             => pcf%cpool_deadstem_gr
+   cpool_deadstem_storage_gr     => pcf%cpool_deadstem_storage_gr
+   transfer_deadstem_gr          => pcf%transfer_deadstem_gr
+   cpool_livecroot_gr            => pcf%cpool_livecroot_gr
+   cpool_livecroot_storage_gr    => pcf%cpool_livecroot_storage_gr
+   transfer_livecroot_gr         => pcf%transfer_livecroot_gr
+   cpool_deadcroot_gr            => pcf%cpool_deadcroot_gr
+   cpool_deadcroot_storage_gr    => pcf%cpool_deadcroot_storage_gr
+   transfer_deadcroot_gr         => pcf%transfer_deadcroot_gr
 
    ! Loop through pfts
    ! start pft loop

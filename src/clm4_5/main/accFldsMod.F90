@@ -389,67 +389,67 @@ contains
     forc_solai => clm_a2l%forc_solai 	    ! (heald 04/06)
 
     ! Assign local pointers to derived subtypes components (landunit-level)
-    ifspecial  => clm3%g%l%ifspecial
-    urbpoi     => clm3%g%l%urbpoi
+    ifspecial  =>lun%ifspecial
+    urbpoi     =>lun%urbpoi
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    itype            => clm3%g%l%c%p%itype
-    pgridcell        => clm3%g%l%c%p%gridcell
-    t_ref2m          => clm3%g%l%c%p%pes%t_ref2m
-    t_ref2m_max_inst => clm3%g%l%c%p%pes%t_ref2m_max_inst
-    t_ref2m_min_inst => clm3%g%l%c%p%pes%t_ref2m_min_inst
-    t_ref2m_max      => clm3%g%l%c%p%pes%t_ref2m_max
-    t_ref2m_min      => clm3%g%l%c%p%pes%t_ref2m_min
-    t_ref2m_u        => clm3%g%l%c%p%pes%t_ref2m_u
-    t_ref2m_r        => clm3%g%l%c%p%pes%t_ref2m_r
-    t_ref2m_max_u    => clm3%g%l%c%p%pes%t_ref2m_max_u
-    t_ref2m_max_r    => clm3%g%l%c%p%pes%t_ref2m_max_r
-    t_ref2m_min_u    => clm3%g%l%c%p%pes%t_ref2m_min_u
-    t_ref2m_min_r    => clm3%g%l%c%p%pes%t_ref2m_min_r
-    t_ref2m_max_inst_u => clm3%g%l%c%p%pes%t_ref2m_max_inst_u
-    t_ref2m_max_inst_r => clm3%g%l%c%p%pes%t_ref2m_max_inst_r
-    t_ref2m_min_inst_u => clm3%g%l%c%p%pes%t_ref2m_min_inst_u
-    t_ref2m_min_inst_r => clm3%g%l%c%p%pes%t_ref2m_min_inst_r
-    plandunit        => clm3%g%l%c%p%landunit
-    t10              => clm3%g%l%c%p%pes%t10
-    a10tmin          => clm3%g%l%c%p%pes%a10tmin
-    a5tmin           => clm3%g%l%c%p%pes%a5tmin
+    itype            =>pft%itype
+    pgridcell        =>pft%gridcell
+    t_ref2m          => pes%t_ref2m
+    t_ref2m_max_inst => pes%t_ref2m_max_inst
+    t_ref2m_min_inst => pes%t_ref2m_min_inst
+    t_ref2m_max      => pes%t_ref2m_max
+    t_ref2m_min      => pes%t_ref2m_min
+    t_ref2m_u        => pes%t_ref2m_u
+    t_ref2m_r        => pes%t_ref2m_r
+    t_ref2m_max_u    => pes%t_ref2m_max_u
+    t_ref2m_max_r    => pes%t_ref2m_max_r
+    t_ref2m_min_u    => pes%t_ref2m_min_u
+    t_ref2m_min_r    => pes%t_ref2m_min_r
+    t_ref2m_max_inst_u => pes%t_ref2m_max_inst_u
+    t_ref2m_max_inst_r => pes%t_ref2m_max_inst_r
+    t_ref2m_min_inst_u => pes%t_ref2m_min_inst_u
+    t_ref2m_min_inst_r => pes%t_ref2m_min_inst_r
+    plandunit        =>pft%landunit
+    t10              => pes%t10
+    a10tmin          => pes%a10tmin
+    a5tmin           => pes%a5tmin
 #if (defined CNDV)
-    t_mo             => clm3%g%l%c%p%pdgvs%t_mo
-    t_mo_min         => clm3%g%l%c%p%pdgvs%t_mo_min
-    prec365          => clm3%g%l%c%p%pdgvs%prec365
-    agddtw           => clm3%g%l%c%p%pdgvs%agddtw
-    agdd             => clm3%g%l%c%p%pdgvs%agdd
+    t_mo             => pdgvs%t_mo
+    t_mo_min         => pdgvs%t_mo_min
+    prec365          => pdgvs%prec365
+    agddtw           => pdgvs%agddtw
+    agdd             => pdgvs%agdd
     twmax            => dgv_pftcon%twmax
 #endif
-    prec60           => clm3%g%l%c%p%pps%prec60
-    prec10           => clm3%g%l%c%p%pps%prec10
-    gdd0             => clm3%g%l%c%p%pps%gdd0
-    gdd8             => clm3%g%l%c%p%pps%gdd8
-    gdd10            => clm3%g%l%c%p%pps%gdd10
-    gddplant         => clm3%g%l%c%p%pps%gddplant
-    gddtsoi          => clm3%g%l%c%p%pps%gddtsoi
-    vf               => clm3%g%l%c%p%pps%vf
-    t_soisno         => clm3%g%l%c%ces%t_soisno
-    h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
-    watsat           => clm3%g%l%c%cps%watsat
-    dz               => clm3%g%l%c%cps%dz
-    latdeg           => clm3%g%latdeg
-    croplive         => clm3%g%l%c%p%pps%croplive
-    pcolumn          => clm3%g%l%c%p%column
-    t_veg24          => clm3%g%l%c%p%pvs%t_veg24           ! (heald 04/06)
-    t_veg240         => clm3%g%l%c%p%pvs%t_veg240          ! (heald 04/06)
-    fsd24            => clm3%g%l%c%p%pvs%fsd24             ! (heald 04/06)
-    fsd240           => clm3%g%l%c%p%pvs%fsd240            ! (heald 04/06)
-    fsi24            => clm3%g%l%c%p%pvs%fsi24             ! (heald 04/06)
-    fsi240           => clm3%g%l%c%p%pvs%fsi240            ! (heald 04/06)
-    fsun24           => clm3%g%l%c%p%pvs%fsun24            ! (heald 04/06)
-    fsun240          => clm3%g%l%c%p%pvs%fsun240           ! (heald 04/06)
-    elai_p           => clm3%g%l%c%p%pvs%elai_p            ! (heald 04/06)
-    t_veg            => clm3%g%l%c%p%pes%t_veg 	           ! (heald 04/06)
-    fsun             => clm3%g%l%c%p%pps%fsun 	           ! (heald 04/06)
-    elai             => clm3%g%l%c%p%pps%elai 	           ! (heald 04/06)
+    prec60           => pps%prec60
+    prec10           => pps%prec10
+    gdd0             => pps%gdd0
+    gdd8             => pps%gdd8
+    gdd10            => pps%gdd10
+    gddplant         => pps%gddplant
+    gddtsoi          => pps%gddtsoi
+    vf               => pps%vf
+    t_soisno         => ces%t_soisno
+    h2osoi_liq       => cws%h2osoi_liq
+    watsat           => cps%watsat
+    dz               => cps%dz
+    latdeg           =>  grc%latdeg
+    croplive         => pps%croplive
+    pcolumn          =>pft%column
+    t_veg24          => pvs%t_veg24           ! (heald 04/06)
+    t_veg240         => pvs%t_veg240          ! (heald 04/06)
+    fsd24            => pvs%fsd24             ! (heald 04/06)
+    fsd240           => pvs%fsd240            ! (heald 04/06)
+    fsi24            => pvs%fsi24             ! (heald 04/06)
+    fsi240           => pvs%fsi240            ! (heald 04/06)
+    fsun24           => pvs%fsun24            ! (heald 04/06)
+    fsun240          => pvs%fsun240           ! (heald 04/06)
+    elai_p           => pvs%elai_p            ! (heald 04/06)
+    t_veg            => pes%t_veg 	           ! (heald 04/06)
+    fsun             => pps%fsun 	           ! (heald 04/06)
+    elai             => pps%elai 	           ! (heald 04/06)
 
     ! Determine calendar information
 
@@ -699,8 +699,8 @@ contains
           g = pgridcell(p)
           if (month==1 .and. day==1 .and. secs==int(dtime)) then
              rbufslp(p) = -99999._r8 ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. latdeg(g) <  0._r8)     ) then
+          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
              rbufslp(p) = max(0._r8, min(26._r8, t_ref2m(p)-SHR_CONST_TKFRZ)) &
                           * dtime/SHR_CONST_CDAY
           else
@@ -717,8 +717,8 @@ contains
           g = pgridcell(p)
           if (month==1 .and. day==1 .and. secs==int(dtime)) then
              rbufslp(p) = -99999._r8 ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. latdeg(g) <  0._r8)     ) then
+          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
              rbufslp(p) = max(0._r8, min(30._r8, &
                                          t_ref2m(p)-(SHR_CONST_TKFRZ + 8._r8))) &
                           * dtime/SHR_CONST_CDAY
@@ -736,8 +736,8 @@ contains
           g = pgridcell(p)
           if (month==1 .and. day==1 .and. secs==int(dtime)) then
              rbufslp(p) = -99999._r8 ! reset gdd
-          else if (( month > 3 .and. month < 10 .and. latdeg(g) >= 0._r8) .or. &
-                   ((month > 9 .or.  month < 4) .and. latdeg(g) <  0._r8)     ) then
+          else if (( month > 3 .and. month < 10 .and. grc%latdeg(g) >= 0._r8) .or. &
+                   ((month > 9 .or.  month < 4) .and. grc%latdeg(g) <  0._r8)     ) then
              rbufslp(p) = max(0._r8, min(30._r8, &
                                          t_ref2m(p)-(SHR_CONST_TKFRZ + 10._r8))) &
                           * dtime/SHR_CONST_CDAY
@@ -885,44 +885,44 @@ contains
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    t_ref2m_max_inst => clm3%g%l%c%p%pes%t_ref2m_max_inst
-    t_ref2m_min_inst => clm3%g%l%c%p%pes%t_ref2m_min_inst
-    t_ref2m_max      => clm3%g%l%c%p%pes%t_ref2m_max
-    t_ref2m_min      => clm3%g%l%c%p%pes%t_ref2m_min
-    t_ref2m_max_inst_u => clm3%g%l%c%p%pes%t_ref2m_max_inst_u
-    t_ref2m_max_inst_r => clm3%g%l%c%p%pes%t_ref2m_max_inst_r
-    t_ref2m_min_inst_u => clm3%g%l%c%p%pes%t_ref2m_min_inst_u
-    t_ref2m_min_inst_r => clm3%g%l%c%p%pes%t_ref2m_min_inst_r
-    t_ref2m_max_u      => clm3%g%l%c%p%pes%t_ref2m_max_u
-    t_ref2m_max_r      => clm3%g%l%c%p%pes%t_ref2m_max_r
-    t_ref2m_min_u      => clm3%g%l%c%p%pes%t_ref2m_min_u
-    t_ref2m_min_r      => clm3%g%l%c%p%pes%t_ref2m_min_r
-    t10              => clm3%g%l%c%p%pes%t10
-    a10tmin          => clm3%g%l%c%p%pes%a10tmin
-    a5tmin           => clm3%g%l%c%p%pes%a5tmin
+    t_ref2m_max_inst => pes%t_ref2m_max_inst
+    t_ref2m_min_inst => pes%t_ref2m_min_inst
+    t_ref2m_max      => pes%t_ref2m_max
+    t_ref2m_min      => pes%t_ref2m_min
+    t_ref2m_max_inst_u => pes%t_ref2m_max_inst_u
+    t_ref2m_max_inst_r => pes%t_ref2m_max_inst_r
+    t_ref2m_min_inst_u => pes%t_ref2m_min_inst_u
+    t_ref2m_min_inst_r => pes%t_ref2m_min_inst_r
+    t_ref2m_max_u      => pes%t_ref2m_max_u
+    t_ref2m_max_r      => pes%t_ref2m_max_r
+    t_ref2m_min_u      => pes%t_ref2m_min_u
+    t_ref2m_min_r      => pes%t_ref2m_min_r
+    t10              => pes%t10
+    a10tmin          => pes%a10tmin
+    a5tmin           => pes%a5tmin
 #if (defined CNDV)
-    t_mo             => clm3%g%l%c%p%pdgvs%t_mo
-    prec365          => clm3%g%l%c%p%pdgvs%prec365
-    agddtw           => clm3%g%l%c%p%pdgvs%agddtw
-    agdd             => clm3%g%l%c%p%pdgvs%agdd
+    t_mo             => pdgvs%t_mo
+    prec365          => pdgvs%prec365
+    agddtw           => pdgvs%agddtw
+    agdd             => pdgvs%agdd
 #endif
-    prec60           => clm3%g%l%c%p%pps%prec60
-    prec10           => clm3%g%l%c%p%pps%prec10
-    gdd0             => clm3%g%l%c%p%pps%gdd0
-    gdd8             => clm3%g%l%c%p%pps%gdd8
-    gdd10            => clm3%g%l%c%p%pps%gdd10
-    gddplant         => clm3%g%l%c%p%pps%gddplant
-    gddtsoi          => clm3%g%l%c%p%pps%gddtsoi
+    prec60           => pps%prec60
+    prec10           => pps%prec10
+    gdd0             => pps%gdd0
+    gdd8             => pps%gdd8
+    gdd10            => pps%gdd10
+    gddplant         => pps%gddplant
+    gddtsoi          => pps%gddtsoi
     ! heald (04/06): accumulated variables for VOC emissions
-    t_veg24          => clm3%g%l%c%p%pvs%t_veg24
-    t_veg240         => clm3%g%l%c%p%pvs%t_veg240
-    fsd24            => clm3%g%l%c%p%pvs%fsd24
-    fsd240           => clm3%g%l%c%p%pvs%fsd240
-    fsi24            => clm3%g%l%c%p%pvs%fsi24
-    fsi240           => clm3%g%l%c%p%pvs%fsi240
-    fsun24           => clm3%g%l%c%p%pvs%fsun24
-    fsun240          => clm3%g%l%c%p%pvs%fsun240
-    elai_p           => clm3%g%l%c%p%pvs%elai_p
+    t_veg24          => pvs%t_veg24
+    t_veg240         => pvs%t_veg240
+    fsd24            => pvs%fsd24
+    fsd240           => pvs%fsd240
+    fsi24            => pvs%fsi24
+    fsi240           => pvs%fsi240
+    fsun24           => pvs%fsun24
+    fsun240          => pvs%fsun240
+    elai_p           => pvs%elai_p
 
     ! Determine necessary indices
 

@@ -30,7 +30,6 @@
       <auxTests>
          <yellowstone>
             <INTEL>
-               <entry testId="ERB.ne30_g16.I_1948-2004"                                  failType="FAIL"  bugz="1658" >Differences found</entry>
                <entry testId="ERS_Ld211_D_P112x1.f10_f10.ICNCROP"                        failType="FAIL"  bugz="1696" >use before define in history</entry>
                <entry testId="ERS.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"        failType="FAIL"  bugz="1722" >floating point exception</entry>
                <entry testId="ERS_D.f09_g16.ICLM45VIC.yellowstone_intel.clm-vrtlay"      failType="FAIL"  bugz="1722" >floating point exception</entry>

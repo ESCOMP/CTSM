@@ -80,78 +80,78 @@ contains
 
     ! Averaging for pft water state variables
 
-    ptrp => clm3%g%l%c%p%pws%h2ocan
-    ptrc => clm3%g%l%c%cws%pws_a%h2ocan
+    ptrp => pws%h2ocan
+    ptrc => pws_a%h2ocan
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
     ! Averaging for pft water flux variables
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_ev_snow
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_ev_snow
+    ptrp => pwf%qflx_ev_snow
+    ptrc => pwf_a%qflx_ev_snow
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_ev_soil
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_ev_soil
+    ptrp => pwf%qflx_ev_soil
+    ptrc => pwf_a%qflx_ev_soil
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_ev_h2osfc
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_ev_h2osfc
+    ptrp => pwf%qflx_ev_h2osfc
+    ptrc => pwf_a%qflx_ev_h2osfc
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_evap_soi
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
+    ptrp => pwf%qflx_evap_soi
+    ptrc => pwf_a%qflx_evap_soi
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_evap_tot
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+    ptrp => pwf%qflx_evap_tot
+    ptrc => pwf_a%qflx_evap_tot
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_rain_grnd
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
+    ptrp => pwf%qflx_rain_grnd
+    ptrc => pwf_a%qflx_rain_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_snow_grnd
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
+    ptrp => pwf%qflx_snow_grnd
+    ptrc => pwf_a%qflx_snow_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
     
-    ptrp => clm3%g%l%c%p%pwf%qflx_snwcp_liq
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
+    ptrp => pwf%qflx_snwcp_liq
+    ptrc => pwf_a%qflx_snwcp_liq
     call p2c (num_allc, filter_allc, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_snwcp_ice
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    ptrp => pwf%qflx_snwcp_ice
+    ptrc => pwf_a%qflx_snwcp_ice
     ! For lakes, this field is initially set in SLakeFluxesMod (which is called before
     ! this routine; hence it is appropriate to include lake columns in this p2c call).
     ! However, it is later overwritten in SLakeHydrologyMod, both on the pft and the column
     ! level.
     call p2c (num_allc, filter_allc, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_tran_veg
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_tran_veg
+    ptrp => pwf%qflx_tran_veg
+    ptrc => pwf_a%qflx_tran_veg
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_evap_grnd
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    ptrp => pwf%qflx_evap_grnd
+    ptrc => pwf_a%qflx_evap_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_evap_soi
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
+    ptrp => pwf%qflx_evap_soi
+    ptrc => pwf_a%qflx_evap_soi
     call p2c (num_allc, filter_allc, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_prec_grnd
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_prec_grnd
+    ptrp => pwf%qflx_prec_grnd
+    ptrc => pwf_a%qflx_prec_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_dew_grnd
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
+    ptrp => pwf%qflx_dew_grnd
+    ptrc => pwf_a%qflx_dew_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_sub_snow
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
+    ptrp => pwf%qflx_sub_snow
+    ptrc => pwf_a%qflx_sub_snow
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_dew_snow
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
+    ptrp => pwf%qflx_dew_snow
+    ptrc => pwf_a%qflx_dew_snow
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
 
   end subroutine pft2col

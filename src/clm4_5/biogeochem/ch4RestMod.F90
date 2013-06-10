@@ -64,18 +64,10 @@ contains
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-    type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
 !-----------------------------------------------------------------------
 
     ! Set pointers into derived type
 
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
 
     ! column ch4 state variable - conc_ch4_sat
 
@@ -84,7 +76,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='methane soil concentration', units='mol/m^3')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_CH4_SAT', data=cptr%cch4%conc_ch4_sat, &
+       call ncd_io(varname='CONC_CH4_SAT', data=cch4%conc_ch4_sat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -99,7 +91,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='methane soil concentration', units='mol/m^3')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_CH4_UNSAT', data=cptr%cch4%conc_ch4_unsat, &
+       call ncd_io(varname='CONC_CH4_UNSAT', data=cch4%conc_ch4_unsat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -114,7 +106,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='oxygen soil concentration', units='mol/m^3')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_O2_SAT', data=cptr%cch4%conc_o2_sat, &
+       call ncd_io(varname='CONC_O2_SAT', data=cch4%conc_o2_sat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -129,7 +121,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='oxygen soil concentration', units='mol/m^3')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='CONC_O2_UNSAT', data=cptr%cch4%conc_o2_unsat, &
+       call ncd_io(varname='CONC_O2_UNSAT', data=cch4%conc_o2_unsat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -144,7 +136,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='oxygen stress fraction', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2STRESS_SAT', data=cptr%cch4%o2stress_sat, &
+       call ncd_io(varname='O2STRESS_SAT', data=cch4%o2stress_sat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -159,7 +151,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='oxygen stress fraction', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2STRESS_UNSAT', data=cptr%cch4%o2stress_unsat, &
+       call ncd_io(varname='O2STRESS_UNSAT', data=cch4%o2stress_unsat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -174,7 +166,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='lagged saturation status of layer in unsat. zone', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='LAYER_SAT_LAG', data=cptr%cch4%layer_sat_lag, &
+       call ncd_io(varname='LAYER_SAT_LAG', data=cch4%layer_sat_lag, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -188,7 +180,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='QFLX_SURF_LAG', xtype=ncd_double, &
             dim1name='column', long_name='time-lagged surface runoff', units='mm/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='QFLX_SURF_LAG', data=cptr%cch4%qflx_surf_lag, &
+       call ncd_io(varname='QFLX_SURF_LAG', data=cch4%qflx_surf_lag, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then 
           if (is_restart()) call endrun()
@@ -201,7 +193,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='FINUNDATED_LAG', xtype=ncd_double, &
             dim1name='column', long_name='time-lagged inundated fraction', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='FINUNDATED_LAG', data=cptr%cch4%finundated_lag, &
+       call ncd_io(varname='FINUNDATED_LAG', data=cch4%finundated_lag, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then 
           if (is_restart()) call endrun()
@@ -217,7 +209,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='FINUNDATED', xtype=ncd_double, &
             dim1name='column', long_name='inundated fraction', units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='FINUNDATED', data=cptr%cch4%fsat_bef, &
+       call ncd_io(varname='FINUNDATED', data=cch4%fsat_bef, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then 
           if (is_restart()) call endrun()
@@ -231,7 +223,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annavg_somhr', xtype=ncd_double,  &
             dim1name='column',long_name='Annual Average SOMHR',units='gC/m^2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_somhr', data=cptr%cch4%annavg_somhr, &
+       call ncd_io(varname='annavg_somhr', data=cch4%annavg_somhr, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -243,7 +235,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annavg_finrw', xtype=ncd_double,  &
             dim1name='column',long_name='Annual Average Respiration-Weighted FINUNDATED',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_finrw', data=cptr%cch4%annavg_finrw, &
+       call ncd_io(varname='annavg_finrw', data=cch4%annavg_finrw, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -255,7 +247,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annsum_counter_ch4', xtype=ncd_double,  &
             dim1name='column',long_name='CH4 Ann. Sum Time Counter',units='s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annsum_counter_ch4', data=cptr%cch4%annsum_counter, &
+       call ncd_io(varname='annsum_counter_ch4', data=cch4%annsum_counter, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -267,7 +259,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempavg_somhr', xtype=ncd_double,  &
             dim1name='column',long_name='Temp. Average SOMHR',units='gC/m^2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_somhr', data=cptr%cch4%tempavg_somhr, &
+       call ncd_io(varname='tempavg_somhr', data=cch4%tempavg_somhr, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -279,7 +271,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempavg_finrw', xtype=ncd_double,  &
             dim1name='column',long_name='Temp. Average Respiration-Weighted FINUNDATED',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_finrw', data=cptr%cch4%tempavg_finrw, &
+       call ncd_io(varname='tempavg_finrw', data=cch4%tempavg_finrw, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -291,7 +283,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempavg_agnpp', xtype=ncd_double,  &
             dim1name='pft',long_name='Temp. Average AGNPP',units='gC/m^2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_agnpp', data=pptr%pcf%tempavg_agnpp, &
+       call ncd_io(varname='tempavg_agnpp', data=pcf%tempavg_agnpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -303,7 +295,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='tempavg_bgnpp', xtype=ncd_double,  &
             dim1name='pft',long_name='Temp. Average BGNPP',units='gC/m^2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='tempavg_bgnpp', data=pptr%pcf%tempavg_bgnpp, &
+       call ncd_io(varname='tempavg_bgnpp', data=pcf%tempavg_bgnpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -315,7 +307,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annavg_agnpp', xtype=ncd_double,  &
             dim1name='pft',long_name='Ann. Average AGNPP',units='gC/m^2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_agnpp', data=pptr%pcf%annavg_agnpp, &
+       call ncd_io(varname='annavg_agnpp', data=pcf%annavg_agnpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -327,7 +319,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='annavg_bgnpp', xtype=ncd_double,  &
             dim1name='pft',long_name='Ann. Average BGNPP',units='gC/m^2/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='annavg_bgnpp', data=pptr%pcf%annavg_bgnpp, &
+       call ncd_io(varname='annavg_bgnpp', data=pcf%annavg_bgnpp, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -341,7 +333,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='O2 consumption during decomposition', units='mol/m3/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2_DECOMP_DEPTH_SAT', data=cptr%cch4%o2_decomp_depth_sat, &
+       call ncd_io(varname='O2_DECOMP_DEPTH_SAT', data=cch4%o2_decomp_depth_sat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -356,7 +348,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='O2 consumption during decomposition', units='mol/m3/s')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='O2_DECOMP_DEPTH_UNSAT', data=cptr%cch4%o2_decomp_depth_unsat, &
+       call ncd_io(varname='O2_DECOMP_DEPTH_UNSAT', data=cch4%o2_decomp_depth_unsat, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
@@ -373,7 +365,7 @@ contains
             dim1name='column', dim2name='levgrnd', switchdim=.true.,&
             long_name='lake soil carbon concentration', units='g/m^3')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='LAKE_SOILC', data=cptr%cch4%lake_soilc, &
+       call ncd_io(varname='LAKE_SOILC', data=cch4%lake_soilc, &
             dim1name='column', switchdim=.true., &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then 

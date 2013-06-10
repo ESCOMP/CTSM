@@ -69,10 +69,6 @@ contains
     integer :: numg,numl,numc,nump            ! total numbers
     logical :: readvar                        ! determine if variable is on initial file
     integer :: ier                            ! error status
-    type(gridcell_type), pointer :: gptr      ! pointer to gridcell derived subtype
-    type(landunit_type), pointer :: lptr      ! pointer to landunit derived subtype
-    type(column_type)  , pointer :: cptr      ! pointer to column derived subtype
-    type(pft_type)     , pointer :: pptr      ! pointer to pft derived subtype
     integer , pointer :: clandunit(:)         ! landunit index associated with each column
     integer , pointer :: itypelun(:)          ! landunit type
     character(len=256), save :: loc_fni       ! local finidat name
@@ -82,12 +78,8 @@ contains
 
     ! Assign local pointers to derived subtypes components 
 
-    itypelun  => clm3%g%l%itype
-    clandunit => clm3%g%l%c%landunit
-    gptr      => clm3%g
-    lptr      => clm3%g%l
-    cptr      => clm3%g%l%c
-    pptr      => clm3%g%l%c%p
+    itypelun  => lun%itype
+    clandunit =>col%landunit
 
     ! Determine necessary processor subgrid bounds
 
@@ -118,35 +110,35 @@ contains
        call ncd_pio_openfile(ncid, trim(loc_fni), 0) 
     end if
 
-    call ncd_io(varname='ZSNO', data=cptr%cps%z, dim1name=namec, &
+    call ncd_io(varname='ZSNO', data=cps%z, dim1name=namec, &
          lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='DZSNO', data=cptr%cps%dz, dim1name=namec, &
+    call ncd_io(varname='DZSNO', data=cps%dz, dim1name=namec, &
          lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='ZISNO', data=cptr%cps%zi, dim1name=namec, &
+    call ncd_io(varname='ZISNO', data=cps%zi, dim1name=namec, &
          lowerb2=-nlevsno, upperb2=-1, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='H2OSNO', data=cptr%cws%h2osno, dim1name=namec, &
+    call ncd_io(varname='H2OSNO', data=cws%h2osno, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='SNOW_DEPTH', data=cptr%cps%snow_depth, dim1name=namec, &
+    call ncd_io(varname='SNOW_DEPTH', data=cps%snow_depth, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='SNLSNO', data=cptr%cps%snl, dim1name=namec, &
+    call ncd_io(varname='SNLSNO', data=cps%snl, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, dim1name=namec, &
+    call ncd_io(varname='H2OSOI_LIQ', data=cws%h2osoi_liq, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_io(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, dim1name=namec, &
+    call ncd_io(varname='H2OSOI_ICE', data=cws%h2osoi_ice, dim1name=namec, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
@@ -156,10 +148,10 @@ contains
 
     do j = 1,nlevsoi
        do c = begc,endc
-          l = cptr%landunit(c)
-          if (.not. lptr%lakpoi(l)) then
-             cptr%cws%h2osoi_vol(c,j) = cptr%cws%h2osoi_liq(c,j)/(cptr%cps%dz(c,j)*denh2o) &
-                                       +cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)
+          l = col%landunit(c)
+          if (.not. lun%lakpoi(l)) then
+             cws%h2osoi_vol(c,j) = cws%h2osoi_liq(c,j)/(cps%dz(c,j)*denh2o) &
+                                       +cws%h2osoi_ice(c,j)/(cps%dz(c,j)*denice)
           end if
        end do
     end do
@@ -172,13 +164,13 @@ contains
        l = clandunit(c)
        if (itypelun(l) == isturb) then
           ! Urban landunit use Bonan 1996 (LSM Technical Note)
-          cptr%cps%frac_sno(c) = min( cptr%cps%snow_depth(c)/0.05_r8, 1._r8)
+          cps%frac_sno(c) = min( cps%snow_depth(c)/0.05_r8, 1._r8)
        else
           ! snow cover fraction in Niu et al. 2007
-          cptr%cps%frac_sno(c) = 0.0_r8
-          if ( cptr%cps%snow_depth(c) > 0.0_r8 ) then
-            cptr%cps%frac_sno(c) = tanh(cptr%cps%snow_depth(c)/(2.5_r8*zlnd* &
-              (min(800._r8,cptr%cws%h2osno(c)/cptr%cps%snow_depth(c))/100._r8)**1._r8) )
+          cps%frac_sno(c) = 0.0_r8
+          if ( cps%snow_depth(c) > 0.0_r8 ) then
+            cps%frac_sno(c) = tanh(cps%snow_depth(c)/(2.5_r8*zlnd* &
+              (min(800._r8,cws%h2osno(c)/cps%snow_depth(c))/100._r8)**1._r8) )
           endif
        end if
     end do

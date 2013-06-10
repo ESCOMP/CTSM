@@ -209,41 +209,41 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
-    qflx_snow_h2osfc  => clm3%g%l%c%cwf%qflx_snow_h2osfc
-    frac_h2osfc       => clm3%g%l%c%cps%frac_h2osfc
-    frost_table       => clm3%g%l%c%cws%frost_table
-    zwt_perched       => clm3%g%l%c%cws%zwt_perched
-    qflx_floodc       => clm3%g%l%c%cwf%qflx_floodc
-    cgridcell         => clm3%g%l%c%gridcell
-    clandunit         => clm3%g%l%c%landunit
-    ltype             => clm3%g%l%itype
-    ctype             => clm3%g%l%c%itype
-    qflx_top_soil     => clm3%g%l%c%cwf%qflx_top_soil
-    qflx_surf         => clm3%g%l%c%cwf%qflx_surf
-    watsat            => clm3%g%l%c%cps%watsat
-    hkdepth           => clm3%g%l%c%cps%hkdepth
-    dz                => clm3%g%l%c%cps%dz
-    h2osoi_ice        => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
-    fcov              => clm3%g%l%c%cws%fcov
-    fsat              => clm3%g%l%c%cws%fsat
-    eff_porosity      => clm3%g%l%c%cps%eff_porosity
-    wtfact            => clm3%g%l%c%cps%wtfact
-    zwt               => clm3%g%l%c%cws%zwt
-    fracice           => clm3%g%l%c%cps%fracice
-    hksat             => clm3%g%l%c%cps%hksat
-    bsw               => clm3%g%l%c%cps%bsw
-    sucsat            => clm3%g%l%c%cps%sucsat
-    snl               => clm3%g%l%c%cps%snl
-    qflx_evap_grnd    => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
-    zi                => clm3%g%l%c%cps%zi
+    qflx_snow_h2osfc  => cwf%qflx_snow_h2osfc
+    frac_h2osfc       => cps%frac_h2osfc
+    frost_table       => cws%frost_table
+    zwt_perched       => cws%zwt_perched
+    qflx_floodc       => cwf%qflx_floodc
+    cgridcell         =>col%gridcell
+    clandunit         =>col%landunit
+    ltype             => lun%itype
+    ctype             => col%itype
+    qflx_top_soil     => cwf%qflx_top_soil
+    qflx_surf         => cwf%qflx_surf
+    watsat            => cps%watsat
+    hkdepth           => cps%hkdepth
+    dz                => cps%dz
+    h2osoi_ice        => cws%h2osoi_ice
+    h2osoi_liq        => cws%h2osoi_liq
+    fcov              => cws%fcov
+    fsat              => cws%fsat
+    eff_porosity      => cps%eff_porosity
+    wtfact            => cps%wtfact
+    zwt               => cws%zwt
+    fracice           => cps%fracice
+    hksat             => cps%hksat
+    bsw               => cps%bsw
+    sucsat            => cps%sucsat
+    snl               => cps%snl
+    qflx_evap_grnd    => pwf_a%qflx_evap_grnd
+    zi                => cps%zi
 #if (defined VICHYDRO)
-    b_infil           => clm3%g%l%c%cps%b_infil
-    max_moist         => clm3%g%l%c%cps%max_moist
-    moist             => clm3%g%l%c%cws%moist
-    ice               => clm3%g%l%c%cws%ice
-    max_infil         => clm3%g%l%c%cws%max_infil
-    i_0               => clm3%g%l%c%cws%i_0 
+    b_infil           => cps%b_infil
+    max_moist         => cps%max_moist
+    moist             => cws%moist
+    ice               => cws%ice
+    max_infil         => cws%max_infil
+    i_0               => cws%i_0 
 #endif
 
     ! Get time step
@@ -512,51 +512,51 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
-    frost_table    => clm3%g%l%c%cws%frost_table
-    zwt_perched    => clm3%g%l%c%cws%zwt_perched
-    fsat           => clm3%g%l%c%cws%fsat
-    h2osfc_thresh  => clm3%g%l%c%cps%h2osfc_thresh
-    frac_sno       => clm3%g%l%c%cps%frac_sno_eff 
-    qflx_evap_soi  => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
-    qflx_h2osfc_surf  => clm3%g%l%c%cwf%qflx_h2osfc_surf
-    frac_h2osfc    => clm3%g%l%c%cps%frac_h2osfc
-    frac_h2osfc_temp => clm3%g%l%c%cps%frac_h2osfc_temp
-    h2osfc         => clm3%g%l%c%cws%h2osfc
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    sucsat         => clm3%g%l%c%cps%sucsat
-    watsat         => clm3%g%l%c%cps%watsat
-    bsw            => clm3%g%l%c%cps%bsw
-    t_soisno       => clm3%g%l%c%ces%t_soisno
-    smpmin         => clm3%g%l%c%cps%smpmin
-    fcov           => clm3%g%l%c%cws%fcov
-    eff_porosity   => clm3%g%l%c%cps%eff_porosity
-    hksat          => clm3%g%l%c%cps%hksat
-    hksat_min      => clm3%g%l%c%cps%hksat_min
-    dz             => clm3%g%l%c%cps%dz
-    h2osno         => clm3%g%l%c%cws%h2osno
-    snow_depth     => clm3%g%l%c%cps%snow_depth
-    t_h2osfc       => clm3%g%l%c%ces%t_h2osfc
-    clandunit      => clm3%g%l%c%landunit
-    ltype          => clm3%g%l%itype
-    topo_slope     => clm3%g%l%c%cps%topo_slope
-    qflx_ev_snow   => clm3%g%l%c%cwf%pwf_a%qflx_ev_snow
-    qflx_ev_soil   => clm3%g%l%c%cwf%pwf_a%qflx_ev_soil
-    qflx_ev_h2osfc => clm3%g%l%c%cwf%pwf_a%qflx_ev_h2osfc
-    zwt            => clm3%g%l%c%cws%zwt
-    ctype          => clm3%g%l%c%itype
-    snl            => clm3%g%l%c%cps%snl
-    qflx_top_soil  => clm3%g%l%c%cwf%qflx_top_soil
-    qflx_surf      => clm3%g%l%c%cwf%qflx_surf
-    qflx_infl      => clm3%g%l%c%cwf%qflx_infl
-    qflx_evap_grnd => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    frost_table    => cws%frost_table
+    zwt_perched    => cws%zwt_perched
+    fsat           => cws%fsat
+    h2osfc_thresh  => cps%h2osfc_thresh
+    frac_sno       => cps%frac_sno_eff 
+    qflx_evap_soi  => pwf_a%qflx_evap_soi
+    qflx_h2osfc_surf  => cwf%qflx_h2osfc_surf
+    frac_h2osfc    => cps%frac_h2osfc
+    frac_h2osfc_temp => cps%frac_h2osfc_temp
+    h2osfc         => cws%h2osfc
+    h2osoi_ice     => cws%h2osoi_ice
+    h2osoi_liq     => cws%h2osoi_liq
+    sucsat         => cps%sucsat
+    watsat         => cps%watsat
+    bsw            => cps%bsw
+    t_soisno       => ces%t_soisno
+    smpmin         => cps%smpmin
+    fcov           => cws%fcov
+    eff_porosity   => cps%eff_porosity
+    hksat          => cps%hksat
+    hksat_min      => cps%hksat_min
+    dz             => cps%dz
+    h2osno         => cws%h2osno
+    snow_depth     => cps%snow_depth
+    t_h2osfc       => ces%t_h2osfc
+    clandunit      =>col%landunit
+    ltype          => lun%itype
+    topo_slope     => cps%topo_slope
+    qflx_ev_snow   => pwf_a%qflx_ev_snow
+    qflx_ev_soil   => pwf_a%qflx_ev_soil
+    qflx_ev_h2osfc => pwf_a%qflx_ev_h2osfc
+    zwt            => cws%zwt
+    ctype          => col%itype
+    snl            => cps%snl
+    qflx_top_soil  => cwf%qflx_top_soil
+    qflx_surf      => cwf%qflx_surf
+    qflx_infl      => cwf%qflx_infl
+    qflx_evap_grnd => pwf_a%qflx_evap_grnd
 #if (defined VICHYDRO)
-    b_infil        => clm3%g%l%c%cps%b_infil
-    max_moist      => clm3%g%l%c%cps%max_moist
-    moist          => clm3%g%l%c%cws%moist
-    ice            => clm3%g%l%c%cws%ice
-    max_infil      => clm3%g%l%c%cws%max_infil
-    i_0            => clm3%g%l%c%cws%i_0
+    b_infil        => cps%b_infil
+    max_moist      => cps%max_moist
+    moist          => cws%moist
+    ice            => cws%ice
+    max_infil      => cws%max_infil
+    i_0            => cws%i_0
 #endif
 
     dtime = get_step_size()
@@ -909,38 +909,38 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
-    h2osoi_ice        => clm3%g%l%c%cws%h2osoi_ice
-    qcharge           => clm3%g%l%c%cws%qcharge
-    hkdepth           => clm3%g%l%c%cps%hkdepth
-    zi                => clm3%g%l%c%cps%zi
-    zwt               => clm3%g%l%c%cws%zwt
-    ctype             => clm3%g%l%c%itype
-    npfts             => clm3%g%l%c%npfts
-    z                 => clm3%g%l%c%cps%z
-    dz                => clm3%g%l%c%cps%dz
-    smpmin            => clm3%g%l%c%cps%smpmin
-    watsat            => clm3%g%l%c%cps%watsat
-    hksat             => clm3%g%l%c%cps%hksat
-    bsw               => clm3%g%l%c%cps%bsw
-    sucsat            => clm3%g%l%c%cps%sucsat
-    eff_porosity      => clm3%g%l%c%cps%eff_porosity
-    rootr_col         => clm3%g%l%c%cps%rootr_column
-    t_soisno          => clm3%g%l%c%ces%t_soisno
-    h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_vol        => clm3%g%l%c%cws%h2osoi_vol
-    qflx_infl         => clm3%g%l%c%cwf%qflx_infl
-    fracice           => clm3%g%l%c%cps%fracice
-    qflx_tran_veg_col => clm3%g%l%c%cwf%pwf_a%qflx_tran_veg
-    pfti              => clm3%g%l%c%pfti
-    smp_l             => clm3%g%l%c%cws%smp_l
-    hk_l              => clm3%g%l%c%cws%hk_l
+    h2osoi_ice        => cws%h2osoi_ice
+    qcharge           => cws%qcharge
+    hkdepth           => cps%hkdepth
+    zi                => cps%zi
+    zwt               => cws%zwt
+    ctype             => col%itype
+    npfts             =>col%npfts
+    z                 => cps%z
+    dz                => cps%dz
+    smpmin            => cps%smpmin
+    watsat            => cps%watsat
+    hksat             => cps%hksat
+    bsw               => cps%bsw
+    sucsat            => cps%sucsat
+    eff_porosity      => cps%eff_porosity
+    rootr_col         => cps%rootr_column
+    t_soisno          => ces%t_soisno
+    h2osoi_liq        => cws%h2osoi_liq
+    h2osoi_vol        => cws%h2osoi_vol
+    qflx_infl         => cwf%qflx_infl
+    fracice           => cps%fracice
+    qflx_tran_veg_col => pwf_a%qflx_tran_veg
+    pfti              =>col%pfti
+    smp_l             => cws%smp_l
+    hk_l              => cws%hk_l
 
     ! Assign local pointers to derived type members (pft-level)
 
-    pactive           => clm3%g%l%c%p%active
-    qflx_tran_veg_pft => clm3%g%l%c%p%pwf%qflx_tran_veg
-    rootr_pft         => clm3%g%l%c%p%pps%rootr
-    pwtcol            => clm3%g%l%c%p%wtcol
+    pactive           => pft%active
+    qflx_tran_veg_pft => pwf%qflx_tran_veg
+    rootr_pft         => pps%rootr
+    pwtcol            =>pft%wtcol
 
     ! Get time step
 
@@ -1498,52 +1498,52 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    h2osfc         => clm3%g%l%c%cws%h2osfc
-    frac_h2osfc    => clm3%g%l%c%cps%frac_h2osfc
-    topo_ndx       => clm3%g%l%c%cps%topo_ndx
-    topo_slope     => clm3%g%l%c%cps%topo_slope
-    frost_table    => clm3%g%l%c%cws%frost_table
-    zwt_perched    => clm3%g%l%c%cws%zwt_perched
-    qflx_drain_perched    => clm3%g%l%c%cwf%qflx_drain_perched
-    clandunit      => clm3%g%l%c%landunit
-    ltype          => clm3%g%l%itype
-    ctype          => clm3%g%l%c%itype
-    snl           => clm3%g%l%c%cps%snl
-    dz            => clm3%g%l%c%cps%dz
-    bsw           => clm3%g%l%c%cps%bsw
-    t_soisno      => clm3%g%l%c%ces%t_soisno
-    hksat         => clm3%g%l%c%cps%hksat
-    sucsat        => clm3%g%l%c%cps%sucsat
-    z             => clm3%g%l%c%cps%z
-    zi            => clm3%g%l%c%cps%zi
-    watsat        => clm3%g%l%c%cps%watsat
-    hkdepth       => clm3%g%l%c%cps%hkdepth
-    zwt           => clm3%g%l%c%cws%zwt
-    wa            => clm3%g%l%c%cws%wa
-    qcharge       => clm3%g%l%c%cws%qcharge
-    eff_porosity  => clm3%g%l%c%cps%eff_porosity
-    qflx_snwcp_liq => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
-    qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
-    qflx_dew_grnd => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
-    qflx_dew_snow => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
-    qflx_sub_snow => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
-    qflx_drain    => clm3%g%l%c%cwf%qflx_drain
-    qflx_irrig    => clm3%g%l%c%cwf%qflx_irrig
-    qflx_qrgwl    => clm3%g%l%c%cwf%qflx_qrgwl
-    qflx_rsub_sat => clm3%g%l%c%cwf%qflx_rsub_sat
-    eflx_impsoil  => clm3%g%l%c%cef%eflx_impsoil
-    h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
+    h2osfc         => cws%h2osfc
+    frac_h2osfc    => cps%frac_h2osfc
+    topo_ndx       => cps%topo_ndx
+    topo_slope     => cps%topo_slope
+    frost_table    => cws%frost_table
+    zwt_perched    => cws%zwt_perched
+    qflx_drain_perched    => cwf%qflx_drain_perched
+    clandunit      =>col%landunit
+    ltype          => lun%itype
+    ctype          => col%itype
+    snl           => cps%snl
+    dz            => cps%dz
+    bsw           => cps%bsw
+    t_soisno      => ces%t_soisno
+    hksat         => cps%hksat
+    sucsat        => cps%sucsat
+    z             => cps%z
+    zi            => cps%zi
+    watsat        => cps%watsat
+    hkdepth       => cps%hkdepth
+    zwt           => cws%zwt
+    wa            => cws%wa
+    qcharge       => cws%qcharge
+    eff_porosity  => cps%eff_porosity
+    qflx_snwcp_liq => pwf_a%qflx_snwcp_liq
+    qflx_snwcp_ice => pwf_a%qflx_snwcp_ice
+    qflx_dew_grnd => pwf_a%qflx_dew_grnd
+    qflx_dew_snow => pwf_a%qflx_dew_snow
+    qflx_sub_snow => pwf_a%qflx_sub_snow
+    qflx_drain    => cwf%qflx_drain
+    qflx_irrig    => cwf%qflx_irrig
+    qflx_qrgwl    => cwf%qflx_qrgwl
+    qflx_rsub_sat => cwf%qflx_rsub_sat
+    eflx_impsoil  => cef%eflx_impsoil
+    h2osoi_liq    => cws%h2osoi_liq
+    h2osoi_ice    => cws%h2osoi_ice
 #if (defined VICHYDRO)
-    Dsmax          => clm3%g%l%c%cps%dsmax
-    Ds             => clm3%g%l%c%cps%ds
-    Wsvic          => clm3%g%l%c%cps%Wsvic
-    c_param        => clm3%g%l%c%cps%c_param
-    max_moist      => clm3%g%l%c%cps%max_moist
-    depth          => clm3%g%l%c%cps%depth
-    moist          => clm3%g%l%c%cws%moist
-    ice            => clm3%g%l%c%cws%ice
-    hk_l          => clm3%g%l%c%cws%hk_l
+    Dsmax          => cps%dsmax
+    Ds             => cps%ds
+    Wsvic          => cps%Wsvic
+    c_param        => cps%c_param
+    max_moist      => cps%max_moist
+    depth          => cps%depth
+    moist          => cws%moist
+    ice            => cws%ice
+    hk_l          => cws%hk_l
 #endif
 
     ! Get time step

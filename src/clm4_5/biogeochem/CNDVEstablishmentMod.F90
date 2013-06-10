@@ -157,29 +157,29 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    agdd20        => clm3%g%gdgvs%agdd20
-    tmomin20      => clm3%g%gdgvs%tmomin20
+    agdd20        => gdgvs%agdd20
+    tmomin20      => gdgvs%tmomin20
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    ltype => clm3%g%l%itype
+    ltype => lun%itype
 
     ! Assign local pointers to derived type members (pft-level)
 
-    ivt           => clm3%g%l%c%p%itype
-    pgridcell     => clm3%g%l%c%p%gridcell
-    plandunit     => clm3%g%l%c%p%landunit
-    present       => clm3%g%l%c%p%pdgvs%present
-    nind          => clm3%g%l%c%p%pdgvs%nind
-    fpcgrid       => clm3%g%l%c%p%pdgvs%fpcgrid
-    crownarea     => clm3%g%l%c%p%pdgvs%crownarea
-    greffic       => clm3%g%l%c%p%pdgvs%greffic
-    heatstress    => clm3%g%l%c%p%pdgvs%heatstress
-    annsum_npp     => clm3%g%l%c%p%pepv%annsum_npp
-    annsum_litfall => clm3%g%l%c%p%pepv%annsum_litfall
-    prec365       => clm3%g%l%c%p%pdgvs%prec365
-    agddtw        => clm3%g%l%c%p%pdgvs%agddtw
-    pftmayexist   => clm3%g%l%c%p%pdgvs%pftmayexist
+    ivt           =>pft%itype
+    pgridcell     =>pft%gridcell
+    plandunit     =>pft%landunit
+    present       => pdgvs%present
+    nind          => pdgvs%nind
+    fpcgrid       => pdgvs%fpcgrid
+    crownarea     => pdgvs%crownarea
+    greffic       => pdgvs%greffic
+    heatstress    => pdgvs%heatstress
+    annsum_npp     => pepv%annsum_npp
+    annsum_litfall => pepv%annsum_litfall
+    prec365       => pdgvs%prec365
+    agddtw        => pdgvs%agddtw
+    pftmayexist   => pdgvs%pftmayexist
 
     ! Assign local pointers to derived type members (vegetation types)
 
@@ -190,8 +190,8 @@ contains
     tcmax         => dgv_pftcon%tcmax
     tcmin         => dgv_pftcon%tcmin
     gddmin        => dgv_pftcon%gddmin
-    leafcmax      => clm3%g%l%c%p%pcs%leafcmax
-    deadstemc     => clm3%g%l%c%p%pcs%deadstemc
+    leafcmax      => pcs%leafcmax
+    deadstemc     => pcs%deadstemc
     slatop        => pftcon%slatop
     dsladlai      => pftcon%dsladlai
     dwood         => pftcon%dwood

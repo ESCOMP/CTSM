@@ -352,10 +352,6 @@ subroutine clm_map2gcell(init)
 ! !LOCAL VARIABLES:
 !EOP
   integer :: g                           ! indices
-  type(gridcell_type), pointer :: gptr   ! pointer to gridcell derived subtype
-  type(landunit_type), pointer :: lptr   ! pointer to landunit derived subtype
-  type(column_type)  , pointer :: cptr   ! pointer to column derived subtype
-  type(pft_type)     , pointer :: pptr   ! pointer to pft derived subtype
   integer             :: n               ! Loop index over nmap
   real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
   real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
@@ -367,10 +363,6 @@ subroutine clm_map2gcell(init)
 
   ! Set pointers into derived type
 
-  gptr => clm3%g
-  lptr => clm3%g%l
-  cptr => clm3%g%l%c
-  pptr => clm3%g%l%c%p
 
   ! Determine processor bounds
 
@@ -381,26 +373,26 @@ subroutine clm_map2gcell(init)
   if (present(init)) then
 
      call c2g(begc, endc, begl, endl, begg, endg, &
-          cptr%cws%h2osno, clm_l2a%h2osno, &
+          cws%h2osno, clm_l2a%h2osno, &
           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
      do g = begg,endg
         clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
      end do
      
       call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, &
-          cptr%cws%h2osoi_vol, clm_l2a%h2osoi_vol, &
+          cws%h2osoi_vol, clm_l2a%h2osoi_vol, &
           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pptr%pps%albd, clm_l2a%albd,&
+          pps%albd, clm_l2a%albd,&
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
       
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pptr%pps%albi, clm_l2a%albi,&
+          pps%albi, clm_l2a%albi,&
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
       
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
+          pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
      do g = begg,endg
         clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
@@ -408,67 +400,67 @@ subroutine clm_map2gcell(init)
 
   else
 
-     call c2g(begc, endc, begl, endl, begg, endg, cptr%cws%h2osno, clm_l2a%h2osno,&
+     call c2g(begc, endc, begl, endl, begg, endg, cws%h2osno, clm_l2a%h2osno,&
           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
      do g = begg,endg
         clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
      end do
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pptr%pps%albd, clm_l2a%albd, &
+          pps%albd, clm_l2a%albd, &
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
-          pptr%pps%albi, clm_l2a%albi, &
+          pps%albi, clm_l2a%albi, &
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pes%t_ref2m, clm_l2a%t_ref2m, & 
+          pes%t_ref2m, clm_l2a%t_ref2m, & 
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pes%q_ref2m, clm_l2a%q_ref2m, & 
+          pes%q_ref2m, clm_l2a%q_ref2m, & 
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pps%u10_clm, clm_l2a%u_ref10m, & 
+          pps%u10_clm, clm_l2a%u_ref10m, & 
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pmf%taux, clm_l2a%taux, & 
+          pmf%taux, clm_l2a%taux, & 
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pmf%tauy, clm_l2a%tauy, & 
+          pmf%tauy, clm_l2a%tauy, & 
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
+          pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      do g = begg,endg
-        clm_l2a%eflx_sh_tot(g) = gptr%gef%eflx_sh_totg(g)
+        clm_l2a%eflx_sh_tot(g) = gef%eflx_sh_totg(g)
      end do
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, & 
+          pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, & 
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pef%fsa, clm_l2a%fsa, &
+          pef%fsa, clm_l2a%fsa, &
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
                   
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out, &
+          pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out, &
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
                   
 #if (defined CN)
      call c2g(begc, endc, begl, endl, begg, endg, &
-          cptr%ccf%nee, clm_l2a%nee, &
+          ccf%nee, clm_l2a%nee, &
           c2l_scale_type= 'unity', l2g_scale_type='unity')
 #else
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pcf%fco2, clm_l2a%nee, &
+          pcf%fco2, clm_l2a%nee, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
      ! Note that fco2 in is umolC/m2/sec so units need to be changed to gC/m2/sec
      do g = begg,endg
@@ -480,7 +472,7 @@ subroutine clm_map2gcell(init)
      if (.not. ch4offline) then
         ! Adjust flux of CO2 by the net conversion of mineralizing C to CH4
         do g = begg,endg
-           clm_l2a%nee(g) = clm_l2a%nee(g) + gptr%gch4%nem(g) ! nem is in g C/m2/sec
+           clm_l2a%nee(g) = clm_l2a%nee(g) + gch4%nem(g) ! nem is in g C/m2/sec
                                                               ! nem is calculated in ch4Mod
                                                               ! flux_ch4 is averaged there also.
         end do
@@ -489,31 +481,31 @@ subroutine clm_map2gcell(init)
 ! defined CH4
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pps%fv, clm_l2a%fv, &
+          pps%fv, clm_l2a%fv, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pps%ram1, clm_l2a%ram1, &
+          pps%ram1, clm_l2a%ram1, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      do g = begg,endg
-        clm_l2a%rofliq(g) = gptr%gwf%qflx_runoffg(g)
-        clm_l2a%rofice(g) = gptr%gwf%qflx_snwcp_iceg(g)
+        clm_l2a%rofliq(g) = gwf%qflx_runoffg(g)
+        clm_l2a%rofice(g) = gwf%qflx_snwcp_iceg(g)
      end do
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
-          pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
+          pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      if (shr_megan_mechcomps_n>0) then
         call p2g(begp, endp, begc, endc, begl, endl, begg, endg, shr_megan_mechcomps_n, &
-             pptr%pvf%vocflx, clm_l2a%flxvoc, &
+             pvf%vocflx, clm_l2a%flxvoc, &
              p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
      endif
 
      if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
         call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
-             pptr%pdd%drydepvel, clm_l2a%ddvel, &
+             pdd%drydepvel, clm_l2a%ddvel, &
              p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
      endif
 

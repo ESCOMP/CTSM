@@ -87,17 +87,17 @@ contains
     real(r8) :: t1, t2, z1, z2                  ! temporary variables
     
     ! Assign local pointers to derived type arrays
-    t_soisno                               => clm3%g%l%c%ces%t_soisno
-    alt                                    => clm3%g%l%c%cps%alt
-    altmax                                 => clm3%g%l%c%cps%altmax
-    altmax_lastyear                        => clm3%g%l%c%cps%altmax_lastyear
-    alt_indx                               => clm3%g%l%c%cps%alt_indx
-    altmax_indx                            => clm3%g%l%c%cps%altmax_indx
-    altmax_lastyear_indx                   => clm3%g%l%c%cps%altmax_lastyear_indx
+    t_soisno                               => ces%t_soisno
+    alt                                    => cps%alt
+    altmax                                 => cps%altmax
+    altmax_lastyear                        => cps%altmax_lastyear
+    alt_indx                               => cps%alt_indx
+    altmax_indx                            => cps%altmax_indx
+    altmax_lastyear_indx                   => cps%altmax_lastyear_indx
     
     ! Assign local pointers to derived subtypes components (gridcell-level and mapping)
-    lat             => clm3%g%lat
-    cgridcell       => clm3%g%l%c%gridcell
+    lat             =>  grc%lat
+    cgridcell       =>col%gridcell
     
     
     ! on a set annual timestep, update annual maxima

@@ -63,14 +63,10 @@ contains
     integer  :: begc, endc      !              "                column indices
     integer  :: begl, endl      !              "                landunit indices
     integer  :: begg, endg      !              "                gridcell indices
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
-    type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
 !-----------------------------------------------------------------------
 
     ! Set pointers into derived type
 
-    gptr => clm3%g
-    pptr => clm3%g%l%c%p
 
     ! ---------------------------------------------------------------
     ! Some of the following came from LPJ subroutine initgrid
@@ -79,16 +75,16 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     do p = begp,endp
-       pptr%pdgvs%present(p)   = .false.
-       pptr%pdgvs%crownarea(p) = 0._r8
-       pptr%pdgvs%nind(p)      = 0._r8
-       pptr%pcs%leafcmax(p)    = 0._r8
-       pptr%pdgvs%t_mo_min(p)  = 1.0e+36_r8
+       pdgvs%present(p)   = .false.
+       pdgvs%crownarea(p) = 0._r8
+       pdgvs%nind(p)      = 0._r8
+       pcs%leafcmax(p)    = 0._r8
+       pdgvs%t_mo_min(p)  = 1.0e+36_r8
     end do
 
     do g = begg,endg
-       gptr%gdgvs%agdd20(g)   = 0._r8
-       gptr%gdgvs%tmomin20(g) = SHR_CONST_TKFRZ - 5._r8 !initialize this way for Phenology code
+       gdgvs%agdd20(g)   = 0._r8
+       gdgvs%tmomin20(g) = SHR_CONST_TKFRZ - 5._r8 !initialize this way for Phenology code
     end do
 
   end subroutine CNDVEcosystemDynini

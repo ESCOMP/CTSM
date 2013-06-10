@@ -286,51 +286,51 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
-    cgridcell      => clm3%g%l%c%gridcell
-    dz             => clm3%g%l%c%cps%dz
-    z              => clm3%g%l%c%cps%z
-    t_lake         => clm3%g%l%c%ces%t_lake
-    h2osno         => clm3%g%l%c%cws%h2osno
-    t_grnd         => clm3%g%l%c%ces%t_grnd
-    errsoi         => clm3%g%l%c%cebal%errsoi
-    ws             => clm3%g%l%c%cps%ws
-    ks             => clm3%g%l%c%cps%ks
-    dz_lake        => clm3%g%l%c%cps%dz_lake
-    z_lake         => clm3%g%l%c%cps%z_lake
-    t_soisno       => clm3%g%l%c%ces%t_soisno
-    snl            => clm3%g%l%c%cps%snl
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-    lake_icefrac   => clm3%g%l%c%cws%lake_icefrac
-    lake_icethick  => clm3%g%l%c%cws%lake_icethick
-    savedtke1      => clm3%g%l%c%cps%savedtke1
-    frac_iceold   => clm3%g%l%c%cps%frac_iceold
-    lakedepth      => clm3%g%l%c%cps%lakedepth
-    etal           => clm3%g%l%c%cps%etal
-    hc_soi         => clm3%g%l%c%ces%hc_soi
-    hc_soisno      => clm3%g%l%c%ces%hc_soisno
+    cgridcell      =>col%gridcell
+    dz             => cps%dz
+    z              => cps%z
+    t_lake         => ces%t_lake
+    h2osno         => cws%h2osno
+    t_grnd         => ces%t_grnd
+    errsoi         => cebal%errsoi
+    ws             => cps%ws
+    ks             => cps%ks
+    dz_lake        => cps%dz_lake
+    z_lake         => cps%z_lake
+    t_soisno       => ces%t_soisno
+    snl            => cps%snl
+    h2osoi_liq     => cws%h2osoi_liq
+    h2osoi_ice     => cws%h2osoi_ice
+    lake_icefrac   => cws%lake_icefrac
+    lake_icethick  => cws%lake_icethick
+    savedtke1      => cps%savedtke1
+    frac_iceold   => cps%frac_iceold
+    lakedepth      => cps%lakedepth
+    etal           => cps%etal
+    hc_soi         => ces%hc_soi
+    hc_soisno      => ces%hc_soisno
 #ifdef LCH4
-    lake_raw       => clm3%g%l%c%cch4%lake_raw
-    grnd_ch4_cond  => clm3%g%l%c%cps%pps_a%grnd_ch4_cond
+    lake_raw       => cch4%lake_raw
+    grnd_ch4_cond  => pps_a%grnd_ch4_cond
 #endif
-    qflx_snofrz_col=> clm3%g%l%c%cwf%qflx_snofrz_col
+    qflx_snofrz_col=> cwf%qflx_snofrz_col
 
     ! Assign local pointers to derived type members (pft-level)
 
-    pcolumn        => clm3%g%l%c%p%column
-    pgridcell      => clm3%g%l%c%p%gridcell
-    sabg           => clm3%g%l%c%p%pef%sabg
-    eflx_soil_grnd => clm3%g%l%c%p%pef%eflx_soil_grnd
-    eflx_sh_grnd   => clm3%g%l%c%p%pef%eflx_sh_grnd
-    eflx_sh_tot    => clm3%g%l%c%p%pef%eflx_sh_tot
-    eflx_gnet      => clm3%g%l%c%p%pef%eflx_gnet
-    eflx_grnd_lake => clm3%g%l%c%p%pef%eflx_grnd_lake
-    sabg_lyr       => clm3%g%l%c%p%pef%sabg_lyr
+    pcolumn        =>pft%column
+    pgridcell      =>pft%gridcell
+    sabg           => pef%sabg
+    eflx_soil_grnd => pef%eflx_soil_grnd
+    eflx_sh_grnd   => pef%eflx_sh_grnd
+    eflx_sh_tot    => pef%eflx_sh_tot
+    eflx_gnet      => pef%eflx_gnet
+    eflx_grnd_lake => pef%eflx_grnd_lake
+    sabg_lyr       => pef%sabg_lyr
     ! For calculation of NIR fraction of sabg
-     fsds_nir_d    => clm3%g%l%c%p%pef%fsds_nir_d
-     fsds_nir_i    => clm3%g%l%c%p%pef%fsds_nir_i
-     fsr_nir_d     => clm3%g%l%c%p%pef%fsr_nir_d
-     fsr_nir_i     => clm3%g%l%c%p%pef%fsr_nir_i
+     fsds_nir_d    => pef%fsds_nir_d
+     fsds_nir_i    => pef%fsds_nir_i
+     fsr_nir_d     => pef%fsr_nir_d
+     fsr_nir_i     => pef%fsr_nir_i
 
     ! 1!) Initialization
     ! Determine step size
@@ -1191,18 +1191,18 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    snl        => clm3%g%l%c%cps%snl
-    watsat     => clm3%g%l%c%cps%watsat
-    tksatu     => clm3%g%l%c%cps%tksatu
-    tkmg       => clm3%g%l%c%cps%tkmg
-    tkdry      => clm3%g%l%c%cps%tkdry
-    csol       => clm3%g%l%c%cps%csol
-    dz         => clm3%g%l%c%cps%dz
-    zi         => clm3%g%l%c%cps%zi
-    z          => clm3%g%l%c%cps%z
-    t_soisno   => clm3%g%l%c%ces%t_soisno
-    h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
+    snl        => cps%snl
+    watsat     => cps%watsat
+    tksatu     => cps%tksatu
+    tkmg       => cps%tkmg
+    tkdry      => cps%tkdry
+    csol       => cps%csol
+    dz         => cps%dz
+    zi         => cps%zi
+    z          => cps%z
+    t_soisno   => ces%t_soisno
+    h2osoi_liq => cws%h2osoi_liq
+    h2osoi_ice => cws%h2osoi_ice
 
     ! Thermal conductivity of soil from Farouki (1981)
 
@@ -1414,22 +1414,22 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    qflx_snow_melt => clm3%g%l%c%cwf%qflx_snow_melt
-    snl          => clm3%g%l%c%cps%snl
-    h2osno       => clm3%g%l%c%cws%h2osno
-    snow_depth       => clm3%g%l%c%cps%snow_depth
-    qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
-    eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
-    h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
-    imelt        => clm3%g%l%c%cps%imelt
-    t_soisno     => clm3%g%l%c%ces%t_soisno
-    dz           => clm3%g%l%c%cps%dz
-    lake_icefrac => clm3%g%l%c%cws%lake_icefrac
-    t_lake       => clm3%g%l%c%ces%t_lake
-    dz_lake      => clm3%g%l%c%cps%dz_lake
-    qflx_snofrz_lyr => clm3%g%l%c%cwf%qflx_snofrz_lyr
-    qflx_snofrz_col=> clm3%g%l%c%cwf%qflx_snofrz_col
+    qflx_snow_melt => cwf%qflx_snow_melt
+    snl          => cps%snl
+    h2osno       => cws%h2osno
+    snow_depth       => cps%snow_depth
+    qflx_snomelt => cwf%qflx_snomelt
+    eflx_snomelt => cef%eflx_snomelt
+    h2osoi_liq   => cws%h2osoi_liq
+    h2osoi_ice   => cws%h2osoi_ice
+    imelt        => cps%imelt
+    t_soisno     => ces%t_soisno
+    dz           => cps%dz
+    lake_icefrac => cws%lake_icefrac
+    t_lake       => ces%t_lake
+    dz_lake      => cps%dz_lake
+    qflx_snofrz_lyr => cwf%qflx_snofrz_lyr
+    qflx_snofrz_col=> cwf%qflx_snofrz_col
 
     ! Get step size
 

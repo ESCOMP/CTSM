@@ -111,34 +111,34 @@ contains
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    ityplun            => clm3%g%l%itype
+    ityplun            => lun%itype
 
     ! Assign local pointers to derived type members (column-level)
 
-    snl                => clm3%g%l%c%cps%snl
-    h2osno             => clm3%g%l%c%cws%h2osno
-    h2osno_old         => clm3%g%l%c%cws%h2osno_old
-    do_capsnow         => clm3%g%l%c%cps%do_capsnow
-    frac_iceold        => clm3%g%l%c%cps%frac_iceold
-    h2osoi_ice         => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
-    frac_veg_nosno_alb => clm3%g%l%c%p%pps%frac_veg_nosno_alb
-    frac_veg_nosno     => clm3%g%l%c%p%pps%frac_veg_nosno
-    qflx_glcice        => clm3%g%l%c%cwf%qflx_glcice
-    eflx_bot           => clm3%g%l%c%cef%eflx_bot
-    glc_topo           => clm3%g%l%c%cps%glc_topo
-    forc_t             => clm3%g%l%c%ces%forc_t
-    forc_th            => clm3%g%l%c%ces%forc_th
-    forc_q             => clm3%g%l%c%cws%forc_q
-    forc_pbot          => clm3%g%l%c%cps%forc_pbot
-    forc_rho           => clm3%g%l%c%cps%forc_rho
-    clandunit          => clm3%g%l%c%landunit
-    cgridcell          => clm3%g%l%c%gridcell
+    snl                => cps%snl
+    h2osno             => cws%h2osno
+    h2osno_old         => cws%h2osno_old
+    do_capsnow         => cps%do_capsnow
+    frac_iceold        => cps%frac_iceold
+    h2osoi_ice         => cws%h2osoi_ice
+    h2osoi_liq         => cws%h2osoi_liq
+    frac_veg_nosno_alb => pps%frac_veg_nosno_alb
+    frac_veg_nosno     => pps%frac_veg_nosno
+    qflx_glcice        => cwf%qflx_glcice
+    eflx_bot           => cef%eflx_bot
+    glc_topo           => cps%glc_topo
+    forc_t             => ces%forc_t
+    forc_th            => ces%forc_th
+    forc_q             => cws%forc_q
+    forc_pbot          => cps%forc_pbot
+    forc_rho           => cps%forc_rho
+    clandunit          =>col%landunit
+    cgridcell          =>col%gridcell
 
     ! Assign local pointers to derived type members (pft-level)
 
-    pactive            => clm3%g%l%c%p%active
-    plandunit          => clm3%g%l%c%p%landunit
+    pactive            => pft%active
+    plandunit          =>pft%landunit
 
     do c = lbc, ubc
 

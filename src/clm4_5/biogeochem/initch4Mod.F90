@@ -150,24 +150,24 @@ contains
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
-    ltype      => clm3%g%l%itype
+    ltype      => lun%itype
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    clandunit          => clm3%g%l%c%landunit
-    conc_ch4_sat       => clm3%g%l%c%cch4%conc_ch4_sat
-    conc_ch4_unsat     => clm3%g%l%c%cch4%conc_ch4_unsat
-    conc_o2_sat        => clm3%g%l%c%cch4%conc_o2_sat
-    conc_o2_unsat      => clm3%g%l%c%cch4%conc_o2_unsat
-    lake_soilc         => clm3%g%l%c%cch4%lake_soilc
-    cellorg            => clm3%g%l%c%cps%cellorg
-    qflx_surf_lag      => clm3%g%l%c%cch4%qflx_surf_lag
-    finundated_lag     => clm3%g%l%c%cch4%finundated_lag
-    o2stress_sat       => clm3%g%l%c%cch4%o2stress_sat
-    o2stress_unsat     => clm3%g%l%c%cch4%o2stress_unsat
-    finundated         => clm3%g%l%c%cws%finundated
-    fsat_bef           => clm3%g%l%c%cch4%fsat_bef
-    layer_sat_lag      => clm3%g%l%c%cch4%layer_sat_lag
+    clandunit          =>col%landunit
+    conc_ch4_sat       => cch4%conc_ch4_sat
+    conc_ch4_unsat     => cch4%conc_ch4_unsat
+    conc_o2_sat        => cch4%conc_o2_sat
+    conc_o2_unsat      => cch4%conc_o2_unsat
+    lake_soilc         => cch4%lake_soilc
+    cellorg            => cps%cellorg
+    qflx_surf_lag      => cch4%qflx_surf_lag
+    finundated_lag     => cch4%finundated_lag
+    o2stress_sat       => cch4%o2stress_sat
+    o2stress_unsat     => cch4%o2stress_unsat
+    finundated         => cws%finundated
+    fsat_bef           => cch4%fsat_bef
+    layer_sat_lag      => cch4%layer_sat_lag
 
 
     ! Assign local pointers to derived subtypes components (pft-level)
@@ -334,60 +334,60 @@ subroutine initTimeConst_ch4
   integer  :: begl, endl       ! per-proc beginning and ending landunit indices
   integer  :: begg, endg       ! per-proc gridcell ending gridcell indices
 
-  watsat     => clm3%g%l%c%cps%watsat
+  watsat     => cps%watsat
 
-  ch4_surf_diff_sat => clm3%g%l%c%cch4%ch4_surf_diff_sat
-  ch4_surf_diff_unsat => clm3%g%l%c%cch4%ch4_surf_diff_unsat
-  ch4_surf_diff_lake => clm3%g%l%c%cch4%ch4_surf_diff_lake
-  ch4_surf_aere_sat => clm3%g%l%c%cch4%ch4_surf_aere_sat
-  ch4_surf_aere_unsat => clm3%g%l%c%cch4%ch4_surf_aere_unsat
-  ch4_surf_ebul_sat => clm3%g%l%c%cch4%ch4_surf_ebul_sat
-  ch4_surf_ebul_unsat => clm3%g%l%c%cch4%ch4_surf_ebul_unsat
-  ch4_surf_ebul_lake => clm3%g%l%c%cch4%ch4_surf_ebul_lake
-  ch4_oxid_depth_sat => clm3%g%l%c%cch4%ch4_oxid_depth_sat
-  ch4_oxid_depth_unsat => clm3%g%l%c%cch4%ch4_oxid_depth_unsat
-  ch4_oxid_depth_lake => clm3%g%l%c%cch4%ch4_oxid_depth_lake
-  ch4_prod_depth_sat => clm3%g%l%c%cch4%ch4_prod_depth_sat
-  ch4_prod_depth_unsat => clm3%g%l%c%cch4%ch4_prod_depth_unsat
-  ch4_prod_depth_lake => clm3%g%l%c%cch4%ch4_prod_depth_lake
-  ch4_ebul_total_sat => clm3%g%l%c%cch4%ch4_ebul_total_sat
-  ch4_ebul_total_unsat => clm3%g%l%c%cch4%ch4_ebul_total_unsat
-  ch4_ebul_depth_sat => clm3%g%l%c%cch4%ch4_ebul_depth_sat
-  ch4_ebul_depth_unsat => clm3%g%l%c%cch4%ch4_ebul_depth_unsat
-  ch4_aere_depth_sat => clm3%g%l%c%cch4%ch4_aere_depth_sat
-  ch4_aere_depth_unsat => clm3%g%l%c%cch4%ch4_aere_depth_unsat
-  ch4_tran_depth_sat => clm3%g%l%c%cch4%ch4_tran_depth_sat
-  ch4_tran_depth_unsat => clm3%g%l%c%cch4%ch4_tran_depth_unsat
-  co2_aere_depth_sat => clm3%g%l%c%cch4%co2_aere_depth_sat
-  co2_aere_depth_unsat => clm3%g%l%c%cch4%co2_aere_depth_unsat
-  o2_oxid_depth_sat => clm3%g%l%c%cch4%o2_oxid_depth_sat
-  o2_oxid_depth_unsat => clm3%g%l%c%cch4%o2_oxid_depth_unsat
-  o2_decomp_depth_sat => clm3%g%l%c%cch4%o2_decomp_depth_sat
-  o2_decomp_depth_unsat => clm3%g%l%c%cch4%o2_decomp_depth_unsat
-  o2_aere_depth_sat => clm3%g%l%c%cch4%o2_aere_depth_sat
-  o2_aere_depth_unsat => clm3%g%l%c%cch4%o2_aere_depth_unsat
-  co2_decomp_depth_sat => clm3%g%l%c%cch4%co2_decomp_depth_sat
-  co2_decomp_depth_unsat => clm3%g%l%c%cch4%co2_decomp_depth_unsat
-  co2_oxid_depth_sat => clm3%g%l%c%cch4%co2_oxid_depth_sat
-  co2_oxid_depth_unsat => clm3%g%l%c%cch4%co2_oxid_depth_unsat
-  ch4_dfsat_flux => clm3%g%l%c%cch4%ch4_dfsat_flux
-  zwt_ch4_unsat => clm3%g%l%c%cch4%zwt_ch4_unsat
-  grnd_ch4_cond => clm3%g%l%c%cps%pps_a%grnd_ch4_cond
-  conc_ch4_lake => clm3%g%l%c%cch4%conc_ch4_lake
-  conc_o2_lake => clm3%g%l%c%cch4%conc_o2_lake
-  finundated    => clm3%g%l%c%cws%finundated
-  fphr       => clm3%g%l%c%cch4%fphr
-  sif           => clm3%g%l%c%cch4%sif
-  rootfr        => clm3%g%l%c%cps%pps_a%rootfr
-  o2stress_unsat   => clm3%g%l%c%cch4%o2stress_unsat
-  o2stress_sat     => clm3%g%l%c%cch4%o2stress_sat
-  ch4stress_unsat  => clm3%g%l%c%cch4%ch4stress_unsat
-  ch4stress_sat    => clm3%g%l%c%cch4%ch4stress_sat
-  totcolch4           => clm3%g%l%c%cch4%totcolch4
-  conc_ch4_sat => clm3%g%l%c%cch4%conc_ch4_sat
-  conc_o2_sat => clm3%g%l%c%cch4%conc_o2_sat
-  lake_soilc  => clm3%g%l%c%cch4%lake_soilc
-  cellorg            => clm3%g%l%c%cps%cellorg
+  ch4_surf_diff_sat => cch4%ch4_surf_diff_sat
+  ch4_surf_diff_unsat => cch4%ch4_surf_diff_unsat
+  ch4_surf_diff_lake => cch4%ch4_surf_diff_lake
+  ch4_surf_aere_sat => cch4%ch4_surf_aere_sat
+  ch4_surf_aere_unsat => cch4%ch4_surf_aere_unsat
+  ch4_surf_ebul_sat => cch4%ch4_surf_ebul_sat
+  ch4_surf_ebul_unsat => cch4%ch4_surf_ebul_unsat
+  ch4_surf_ebul_lake => cch4%ch4_surf_ebul_lake
+  ch4_oxid_depth_sat => cch4%ch4_oxid_depth_sat
+  ch4_oxid_depth_unsat => cch4%ch4_oxid_depth_unsat
+  ch4_oxid_depth_lake => cch4%ch4_oxid_depth_lake
+  ch4_prod_depth_sat => cch4%ch4_prod_depth_sat
+  ch4_prod_depth_unsat => cch4%ch4_prod_depth_unsat
+  ch4_prod_depth_lake => cch4%ch4_prod_depth_lake
+  ch4_ebul_total_sat => cch4%ch4_ebul_total_sat
+  ch4_ebul_total_unsat => cch4%ch4_ebul_total_unsat
+  ch4_ebul_depth_sat => cch4%ch4_ebul_depth_sat
+  ch4_ebul_depth_unsat => cch4%ch4_ebul_depth_unsat
+  ch4_aere_depth_sat => cch4%ch4_aere_depth_sat
+  ch4_aere_depth_unsat => cch4%ch4_aere_depth_unsat
+  ch4_tran_depth_sat => cch4%ch4_tran_depth_sat
+  ch4_tran_depth_unsat => cch4%ch4_tran_depth_unsat
+  co2_aere_depth_sat => cch4%co2_aere_depth_sat
+  co2_aere_depth_unsat => cch4%co2_aere_depth_unsat
+  o2_oxid_depth_sat => cch4%o2_oxid_depth_sat
+  o2_oxid_depth_unsat => cch4%o2_oxid_depth_unsat
+  o2_decomp_depth_sat => cch4%o2_decomp_depth_sat
+  o2_decomp_depth_unsat => cch4%o2_decomp_depth_unsat
+  o2_aere_depth_sat => cch4%o2_aere_depth_sat
+  o2_aere_depth_unsat => cch4%o2_aere_depth_unsat
+  co2_decomp_depth_sat => cch4%co2_decomp_depth_sat
+  co2_decomp_depth_unsat => cch4%co2_decomp_depth_unsat
+  co2_oxid_depth_sat => cch4%co2_oxid_depth_sat
+  co2_oxid_depth_unsat => cch4%co2_oxid_depth_unsat
+  ch4_dfsat_flux => cch4%ch4_dfsat_flux
+  zwt_ch4_unsat => cch4%zwt_ch4_unsat
+  grnd_ch4_cond => pps_a%grnd_ch4_cond
+  conc_ch4_lake => cch4%conc_ch4_lake
+  conc_o2_lake => cch4%conc_o2_lake
+  finundated    => cws%finundated
+  fphr       => cch4%fphr
+  sif           => cch4%sif
+  rootfr        => pps_a%rootfr
+  o2stress_unsat   => cch4%o2stress_unsat
+  o2stress_sat     => cch4%o2stress_sat
+  ch4stress_unsat  => cch4%ch4stress_unsat
+  ch4stress_sat    => cch4%ch4stress_sat
+  totcolch4           => cch4%totcolch4
+  conc_ch4_sat => cch4%conc_ch4_sat
+  conc_o2_sat => cch4%conc_o2_sat
+  lake_soilc  => cch4%lake_soilc
+  cellorg            => cps%cellorg
 
 !------------------------------------------------------------------------
 
@@ -397,12 +397,12 @@ subroutine initTimeConst_ch4
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  ltype           => clm3%g%l%itype
+  ltype           => lun%itype
 
   ! Assign local pointers to derived subtypes components (column-level)
 
-  clandunit       => clm3%g%l%c%landunit
-  cgridcell       => clm3%g%l%c%gridcell
+  clandunit       =>col%landunit
+  cgridcell       =>col%gridcell
 
   do c = begc,endc
      l = clandunit(c)

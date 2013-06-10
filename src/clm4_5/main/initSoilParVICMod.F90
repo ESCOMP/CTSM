@@ -104,23 +104,23 @@ contains
 
  ! Assign local pointers to derived subtypes components (column-level)
 
-    dz         => clm3%g%l%c%cps%dz
-    zi         => clm3%g%l%c%cps%zi
-    z          => clm3%g%l%c%cps%z
-    depth      => clm3%g%l%c%cps%depth
-    vic_clm_fract => clm3%g%l%c%cps%vic_clm_fract
+    dz         => cps%dz
+    zi         => cps%zi
+    z          => cps%z
+    depth      => cps%depth
+    vic_clm_fract => cps%vic_clm_fract
  !------------------------------------------------------------------
  !   VIC soil parameters
-    b_infil        => clm3%g%l%c%cps%b_infil
-    dsmax          => clm3%g%l%c%cps%dsmax
-    ds             => clm3%g%l%c%cps%ds
-    Wsvic          => clm3%g%l%c%cps%Wsvic
-    c_param        => clm3%g%l%c%cps%c_param
-    expt           => clm3%g%l%c%cps%expt
-    ksat           => clm3%g%l%c%cps%ksat
-    phi_s          => clm3%g%l%c%cps%phi_s
-    porosity       => clm3%g%l%c%cps%porosity
-    max_moist      => clm3%g%l%c%cps%max_moist
+    b_infil        => cps%b_infil
+    dsmax          => cps%dsmax
+    ds             => cps%ds
+    Wsvic          => cps%Wsvic
+    c_param        => cps%c_param
+    expt           => cps%expt
+    ksat           => cps%ksat
+    phi_s          => cps%phi_s
+    porosity       => cps%porosity
+    max_moist      => cps%max_moist
 
 !************************************************************************  
 !  map parameters between VIC layers and CLM layers

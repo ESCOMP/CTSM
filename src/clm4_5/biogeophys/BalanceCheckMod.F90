@@ -103,27 +103,27 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
-    h2osfc             => clm3%g%l%c%cws%h2osfc
-    londeg             => clm3%g%londeg
-    latdeg             => clm3%g%latdeg
-    cgridcell          => clm3%g%l%c%gridcell
-    clandunit          => clm3%g%l%c%landunit
-    ltype              => clm3%g%l%itype
-    dz                 => clm3%g%l%c%cps%dz
-    watsat             => clm3%g%l%c%cps%watsat
-    h2osno             => clm3%g%l%c%cws%h2osno
-    h2osoi_ice         => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
-    begwb              => clm3%g%l%c%cwbal%begwb
-    h2ocan_col         => clm3%g%l%c%cws%pws_a%h2ocan
-    wa                 => clm3%g%l%c%cws%wa
-    ctype              => clm3%g%l%c%itype
-    zwt                => clm3%g%l%c%cws%zwt
-    zi                 => clm3%g%l%c%cps%zi
+    h2osfc             => cws%h2osfc
+    londeg             =>  grc%londeg
+    latdeg             =>  grc%latdeg
+    cgridcell          =>col%gridcell
+    clandunit          =>col%landunit
+    ltype              => lun%itype
+    dz                 => cps%dz
+    watsat             => cps%watsat
+    h2osno             => cws%h2osno
+    h2osoi_ice         => cws%h2osoi_ice
+    h2osoi_liq         => cws%h2osoi_liq
+    begwb              => cwbal%begwb
+    h2ocan_col         => pws_a%h2ocan
+    wa                 => cws%wa
+    ctype              => col%itype
+    zwt                => cws%zwt
+    zi                 => cps%zi
 
     ! Assign local pointers to derived type members (pft-level)
 
-    h2ocan_pft         => clm3%g%l%c%p%pws%h2ocan
+    h2ocan_pft         => pws%h2ocan
 
     ! Determine beginning water balance for time step
     ! pft-level canopy water averaged to column
@@ -318,25 +318,25 @@ contains
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    tws                 => clm3%g%tws
-    area                => clm3%g%area
+    tws                 =>  grc%tws
+    area                =>  grc%area
     volr                => clm_a2l%volr
-    do_capsnow          => clm3%g%l%c%cps%do_capsnow
-    qflx_rain_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
-    qflx_snow_grnd_col  => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
-    qflx_snow_h2osfc    => clm3%g%l%c%cwf%qflx_snow_h2osfc
-    frac_sno_eff        => clm3%g%l%c%cps%frac_sno_eff
-    qflx_h2osfc_to_ice  => clm3%g%l%c%cwf%qflx_h2osfc_to_ice
-    frac_sno            => clm3%g%l%c%cps%frac_sno 
-    qflx_drain_perched  => clm3%g%l%c%cwf%qflx_drain_perched
-    qflx_floodc         => clm3%g%l%c%cwf%qflx_floodc
-    qflx_evap_soi       => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
-    qflx_h2osfc_surf    => clm3%g%l%c%cwf%qflx_h2osfc_surf
-    qflx_snow_melt      => clm3%g%l%c%cwf%qflx_snow_melt
-    sabg_soil           => clm3%g%l%c%p%pef%sabg_soil
-    sabg_snow           => clm3%g%l%c%p%pef%sabg_snow
-    sabg_chk            => clm3%g%l%c%p%pef%sabg_chk
-    pcolumn             => clm3%g%l%c%p%column
+    do_capsnow          => cps%do_capsnow
+    qflx_rain_grnd_col  => pwf_a%qflx_rain_grnd
+    qflx_snow_grnd_col  => pwf_a%qflx_snow_grnd
+    qflx_snow_h2osfc    => cwf%qflx_snow_h2osfc
+    frac_sno_eff        => cps%frac_sno_eff
+    qflx_h2osfc_to_ice  => cwf%qflx_h2osfc_to_ice
+    frac_sno            => cps%frac_sno 
+    qflx_drain_perched  => cwf%qflx_drain_perched
+    qflx_floodc         => cwf%qflx_floodc
+    qflx_evap_soi       => pwf_a%qflx_evap_soi
+    qflx_h2osfc_surf    => cwf%qflx_h2osfc_surf
+    qflx_snow_melt      => cwf%qflx_snow_melt
+    sabg_soil           => pef%sabg_soil
+    sabg_snow           => pef%sabg_snow
+    sabg_chk            => pef%sabg_chk
+    pcolumn             =>pft%column
     forc_rain           => clm_a2l%forc_rain
     forc_snow           => clm_a2l%forc_snow
     forc_lwrad          => clm_a2l%forc_lwrad
@@ -345,73 +345,73 @@ contains
 
     ! Assign local pointers to derived type scalar members (landunit-level)
 
-    ltype             => clm3%g%l%itype
-    canyon_hwr        => clm3%g%l%canyon_hwr
+    ltype             => lun%itype
+    canyon_hwr        =>lun%canyon_hwr
 
     ! Assign local pointers to derived type scalar members (column-level)
 
-    cactive           => clm3%g%l%c%active
-    ctype             => clm3%g%l%c%itype
-    cgridcell         => clm3%g%l%c%gridcell
-    clandunit         => clm3%g%l%c%landunit
-    endwb             => clm3%g%l%c%cwbal%endwb
-    begwb             => clm3%g%l%c%cwbal%begwb
-    qflx_irrig        => clm3%g%l%c%cwf%qflx_irrig
-    qflx_surf         => clm3%g%l%c%cwf%qflx_surf
-    qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
-    qflx_drain        => clm3%g%l%c%cwf%qflx_drain
-    qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
-    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
-    qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
-    qflx_glcice       => clm3%g%l%c%cwf%qflx_glcice
-    qflx_glcice_frz   => clm3%g%l%c%cwf%qflx_glcice_frz
-    errh2o            => clm3%g%l%c%cwbal%errh2o
-    errsoi_col        => clm3%g%l%c%cebal%errsoi
-    h2osno             => clm3%g%l%c%cws%h2osno
-    h2osno_old         => clm3%g%l%c%cws%h2osno_old
-    qflx_dew_snow      => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
-    qflx_sub_snow      => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
-    qflx_top_soil      => clm3%g%l%c%cwf%qflx_top_soil
-    qflx_evap_grnd     => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
-    qflx_dew_grnd      => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
-    qflx_prec_grnd     => clm3%g%l%c%cwf%pwf_a%qflx_prec_grnd
-    qflx_snwcp_liq     => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
-    qflx_sl_top_soil   => clm3%g%l%c%cwf%qflx_sl_top_soil
-    snow_sources       => clm3%g%l%c%cws%snow_sources
-    snow_sinks         => clm3%g%l%c%cws%snow_sinks
-    errh2osno          => clm3%g%l%c%cws%errh2osno
-    snl                => clm3%g%l%c%cps%snl
+    cactive           => col%active
+    ctype             => col%itype
+    cgridcell         =>col%gridcell
+    clandunit         =>col%landunit
+    endwb             => cwbal%endwb
+    begwb             => cwbal%begwb
+    qflx_irrig        => cwf%qflx_irrig
+    qflx_surf         => cwf%qflx_surf
+    qflx_qrgwl        => cwf%qflx_qrgwl
+    qflx_drain        => cwf%qflx_drain
+    qflx_runoff       => cwf%qflx_runoff
+    qflx_snwcp_ice    => pwf_a%qflx_snwcp_ice
+    qflx_evap_tot     => pwf_a%qflx_evap_tot
+    qflx_glcice       => cwf%qflx_glcice
+    qflx_glcice_frz   => cwf%qflx_glcice_frz
+    errh2o            => cwbal%errh2o
+    errsoi_col        => cebal%errsoi
+    h2osno             => cws%h2osno
+    h2osno_old         => cws%h2osno_old
+    qflx_dew_snow      => pwf_a%qflx_dew_snow
+    qflx_sub_snow      => pwf_a%qflx_sub_snow
+    qflx_top_soil      => cwf%qflx_top_soil
+    qflx_evap_grnd     => pwf_a%qflx_evap_grnd
+    qflx_dew_grnd      => pwf_a%qflx_dew_grnd
+    qflx_prec_grnd     => pwf_a%qflx_prec_grnd
+    qflx_snwcp_liq     => pwf_a%qflx_snwcp_liq
+    qflx_sl_top_soil   => cwf%qflx_sl_top_soil
+    snow_sources       => cws%snow_sources
+    snow_sinks         => cws%snow_sinks
+    errh2osno          => cws%errh2osno
+    snl                => cps%snl
 
     ! Assign local pointers to derived type scalar members (pft-level)
 
-    pactive           => clm3%g%l%c%p%active
-    pgridcell         => clm3%g%l%c%p%gridcell
-    plandunit         => clm3%g%l%c%p%landunit
-    fsa               => clm3%g%l%c%p%pef%fsa
-    fsr               => clm3%g%l%c%p%pef%fsr
-    eflx_lwrad_out    => clm3%g%l%c%p%pef%eflx_lwrad_out
-    eflx_lwrad_net    => clm3%g%l%c%p%pef%eflx_lwrad_net
-    sabv              => clm3%g%l%c%p%pef%sabv
-    sabg              => clm3%g%l%c%p%pef%sabg
-    eflx_sh_tot       => clm3%g%l%c%p%pef%eflx_sh_tot
-    eflx_lh_tot       => clm3%g%l%c%p%pef%eflx_lh_tot
-    eflx_soil_grnd    => clm3%g%l%c%p%pef%eflx_soil_grnd
-    errsol            => clm3%g%l%c%p%pebal%errsol
-    errseb            => clm3%g%l%c%p%pebal%errseb
-    errlon            => clm3%g%l%c%p%pebal%errlon
-    netrad            => clm3%g%l%c%p%pef%netrad
-    eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
-    eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
-    eflx_traffic_pft  => clm3%g%l%c%p%pef%eflx_traffic_pft
+    pactive           => pft%active
+    pgridcell         =>pft%gridcell
+    plandunit         =>pft%landunit
+    fsa               => pef%fsa
+    fsr               => pef%fsr
+    eflx_lwrad_out    => pef%eflx_lwrad_out
+    eflx_lwrad_net    => pef%eflx_lwrad_net
+    sabv              => pef%sabv
+    sabg              => pef%sabg
+    eflx_sh_tot       => pef%eflx_sh_tot
+    eflx_lh_tot       => pef%eflx_lh_tot
+    eflx_soil_grnd    => pef%eflx_soil_grnd
+    errsol            => pebal%errsol
+    errseb            => pebal%errseb
+    errlon            => pebal%errlon
+    netrad            => pef%netrad
+    eflx_wasteheat_pft => pef%eflx_wasteheat_pft
+    eflx_heat_from_ac_pft => pef%eflx_heat_from_ac_pft
+    eflx_traffic_pft  => pef%eflx_traffic_pft
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    qflx_runoffg       => clm3%g%gwf%qflx_runoffg
-    qflx_liq_dynbal    => clm3%g%gwf%qflx_liq_dynbal
-    qflx_snwcp_iceg    => clm3%g%gwf%qflx_snwcp_iceg
-    qflx_ice_dynbal    => clm3%g%gwf%qflx_ice_dynbal
-    eflx_sh_totg       => clm3%g%gef%eflx_sh_totg
-    eflx_dynbal        => clm3%g%gef%eflx_dynbal
+    qflx_runoffg       => gwf%qflx_runoffg
+    qflx_liq_dynbal    => gwf%qflx_liq_dynbal
+    qflx_snwcp_iceg    => gwf%qflx_snwcp_iceg
+    qflx_ice_dynbal    => gwf%qflx_ice_dynbal
+    eflx_sh_totg       => gef%eflx_sh_totg
+    eflx_dynbal        => gef%eflx_dynbal
 
     ! Get step size and time step
 

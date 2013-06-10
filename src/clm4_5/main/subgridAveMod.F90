@@ -122,11 +122,11 @@ contains
     integer , pointer :: pfti(:)       ! initial pft index in column
 !------------------------------------------------------------------------
 
-    pactive  => clm3%g%l%c%p%active
-    wtcol    => clm3%g%l%c%p%wtcol
-    pcolumn  => clm3%g%l%c%p%column
-    npfts    => clm3%g%l%c%npfts
-    pfti     => clm3%g%l%c%pfti
+    pactive  => pft%active
+    wtcol    =>pft%wtcol
+    pcolumn  =>pft%column
+    npfts    =>col%npfts
+    pfti     =>col%pfti
 
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
@@ -206,11 +206,11 @@ contains
     integer , pointer :: pfti(:)       ! initial pft index in column
 !------------------------------------------------------------------------
 
-    pactive  => clm3%g%l%c%p%active
-    wtcol    => clm3%g%l%c%p%wtcol
-    pcolumn  => clm3%g%l%c%p%column
-    npfts    => clm3%g%l%c%npfts
-    pfti     => clm3%g%l%c%pfti
+    pactive  => pft%active
+    wtcol    =>pft%wtcol
+    pcolumn  =>pft%column
+    npfts    =>col%npfts
+    pfti     =>col%pfti
 
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
@@ -285,11 +285,11 @@ contains
     real(r8), pointer :: wtcol(:)
 !-----------------------------------------------------------------------
 
-    pactive => clm3%g%l%c%p%active
-    npfts   => clm3%g%l%c%npfts
-    pfti    => clm3%g%l%c%pfti
-    pftf    => clm3%g%l%c%pftf
-    wtcol   => clm3%g%l%c%p%wtcol
+    pactive => pft%active
+    npfts   =>col%npfts
+    pfti    =>col%pfti
+    pftf    =>col%pftf
+    wtcol   =>pft%wtcol
 
     do fc = 1,numfc
        c = filterc(fc)
@@ -337,11 +337,11 @@ contains
     real(r8), pointer :: wtcol(:)
 !-----------------------------------------------------------------------
 
-    pactive => clm3%g%l%c%p%active
-    npfts   => clm3%g%l%c%npfts
-    pfti    => clm3%g%l%c%pfti
-    pftf    => clm3%g%l%c%pftf
-    wtcol   => clm3%g%l%c%p%wtcol
+    pactive => pft%active
+    npfts   =>col%npfts
+    pfti    =>col%pfti
+    pftf    =>col%pftf
+    wtcol   =>pft%wtcol
 
     do j = 1,lev
        do fc = 1,numfc
@@ -404,16 +404,16 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    pactive    => clm3%g%l%c%p%active
-    canyon_hwr => clm3%g%l%canyon_hwr
-    ltype      => clm3%g%l%itype
-    ctype      => clm3%g%l%c%itype
-    clandunit  => clm3%g%l%c%landunit
-    wtlunit    => clm3%g%l%c%p%wtlunit
-    pcolumn    => clm3%g%l%c%p%column
-    plandunit  => clm3%g%l%c%p%landunit
-    npfts      => clm3%g%l%npfts
-    pfti       => clm3%g%l%pfti
+    pactive    => pft%active
+    canyon_hwr =>lun%canyon_hwr
+    ltype      => lun%itype
+    ctype      => col%itype
+    clandunit  =>col%landunit
+    wtlunit    =>pft%wtlunit
+    pcolumn    =>pft%column
+    plandunit  =>pft%landunit
+    npfts      =>lun%npfts
+    pfti       =>lun%pfti
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -546,16 +546,16 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    pactive    => clm3%g%l%c%p%active
-    canyon_hwr => clm3%g%l%canyon_hwr
-    ltype      => clm3%g%l%itype
-    clandunit  => clm3%g%l%c%landunit
-    ctype      => clm3%g%l%c%itype
-    wtlunit   => clm3%g%l%c%p%wtlunit
-    pcolumn   => clm3%g%l%c%p%column
-    plandunit => clm3%g%l%c%p%landunit
-    npfts     => clm3%g%l%npfts
-    pfti      => clm3%g%l%pfti
+    pactive    => pft%active
+    canyon_hwr =>lun%canyon_hwr
+    ltype      => lun%itype
+    clandunit  =>col%landunit
+    ctype      => col%itype
+    wtlunit   =>pft%wtlunit
+    pcolumn   =>pft%column
+    plandunit =>pft%landunit
+    npfts     =>lun%npfts
+    pfti      =>lun%pfti
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -692,17 +692,17 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    pactive    => clm3%g%l%c%p%active
-    canyon_hwr => clm3%g%l%canyon_hwr
-    ltype      => clm3%g%l%itype
-    clandunit  => clm3%g%l%c%landunit
-    ctype      => clm3%g%l%c%itype
-    wtgcell   => clm3%g%l%c%p%wtgcell
-    pcolumn   => clm3%g%l%c%p%column
-    pgridcell => clm3%g%l%c%p%gridcell
-    plandunit => clm3%g%l%c%p%landunit
-    npfts     => clm3%g%npfts
-    pfti      => clm3%g%pfti
+    pactive    => pft%active
+    canyon_hwr =>lun%canyon_hwr
+    ltype      => lun%itype
+    clandunit  =>col%landunit
+    ctype      => col%itype
+    wtgcell   =>pft%wtgcell
+    pcolumn   =>pft%column
+    pgridcell =>pft%gridcell
+    plandunit =>pft%landunit
+    npfts     =>  grc%npfts
+    pfti      =>  grc%pfti
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -842,17 +842,17 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    pactive      => clm3%g%l%c%p%active
-    canyon_hwr   => clm3%g%l%canyon_hwr
-    ltype        => clm3%g%l%itype
-    clandunit    => clm3%g%l%c%landunit
-    ctype        => clm3%g%l%c%itype
-    wtgcell      => clm3%g%l%c%p%wtgcell
-    pcolumn      => clm3%g%l%c%p%column
-    pgridcell    => clm3%g%l%c%p%gridcell
-    plandunit    => clm3%g%l%c%p%landunit
-    npfts        => clm3%g%npfts
-    pfti         => clm3%g%pfti
+    pactive      => pft%active
+    canyon_hwr   =>lun%canyon_hwr
+    ltype        => lun%itype
+    clandunit    =>col%landunit
+    ctype        => col%itype
+    wtgcell      =>pft%wtgcell
+    pcolumn      =>pft%column
+    pgridcell    =>pft%gridcell
+    plandunit    =>pft%landunit
+    npfts        =>  grc%npfts
+    pfti         =>  grc%pfti
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -981,14 +981,14 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    cactive    => clm3%g%l%c%active
-    ctype      => clm3%g%l%c%itype
-    ltype      => clm3%g%l%itype
-    canyon_hwr => clm3%g%l%canyon_hwr
-    wtlunit    => clm3%g%l%c%wtlunit
-    clandunit  => clm3%g%l%c%landunit
-    ncolumns   => clm3%g%l%ncolumns
-    coli       => clm3%g%l%coli
+    cactive    => col%active
+    ctype      => col%itype
+    ltype      => lun%itype
+    canyon_hwr =>lun%canyon_hwr
+    wtlunit    =>col%wtlunit
+    clandunit  =>col%landunit
+    ncolumns   =>lun%ncolumns
+    coli       =>lun%coli
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -1103,14 +1103,14 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    cactive    => clm3%g%l%c%active
-    ctype      => clm3%g%l%c%itype
-    ltype      => clm3%g%l%itype
-    canyon_hwr => clm3%g%l%canyon_hwr
-    wtlunit    => clm3%g%l%c%wtlunit
-    clandunit  => clm3%g%l%c%landunit
-    ncolumns   => clm3%g%l%ncolumns
-    coli       => clm3%g%l%coli
+    cactive    => col%active
+    ctype      => col%itype
+    ltype      => lun%itype
+    canyon_hwr =>lun%canyon_hwr
+    wtlunit    =>col%wtlunit
+    clandunit  =>col%landunit
+    ncolumns   =>lun%ncolumns
+    coli       =>lun%coli
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -1231,15 +1231,15 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    cactive    => clm3%g%l%c%active
-    ctype      => clm3%g%l%c%itype
-    ltype      => clm3%g%l%itype
-    canyon_hwr => clm3%g%l%canyon_hwr
-    wtgcell    => clm3%g%l%c%wtgcell
-    clandunit  => clm3%g%l%c%landunit
-    cgridcell  => clm3%g%l%c%gridcell
-    ncolumns   => clm3%g%ncolumns
-    coli       => clm3%g%coli
+    cactive    => col%active
+    ctype      => col%itype
+    ltype      => lun%itype
+    canyon_hwr =>lun%canyon_hwr
+    wtgcell    =>col%wtgcell
+    clandunit  =>col%landunit
+    cgridcell  =>col%gridcell
+    ncolumns   =>  grc%ncolumns
+    coli       =>  grc%coli
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1362,15 +1362,15 @@ contains
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    cactive    => clm3%g%l%c%active
-    ctype      => clm3%g%l%c%itype
-    ltype      => clm3%g%l%itype
-    canyon_hwr => clm3%g%l%canyon_hwr
-    wtgcell    => clm3%g%l%c%wtgcell
-    clandunit  => clm3%g%l%c%landunit
-    cgridcell  => clm3%g%l%c%gridcell
-    ncolumns   => clm3%g%ncolumns
-    coli       => clm3%g%coli
+    cactive    => col%active
+    ctype      => col%itype
+    ltype      => lun%itype
+    canyon_hwr =>lun%canyon_hwr
+    wtgcell    =>col%wtgcell
+    clandunit  =>col%landunit
+    cgridcell  =>col%gridcell
+    ncolumns   =>  grc%ncolumns
+    coli       =>  grc%coli
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1486,11 +1486,11 @@ contains
     integer , pointer :: luni(:)       ! initial landunit index in gridcell
 !------------------------------------------------------------------------
 
-    lactive    => clm3%g%l%active
-    wtgcell    => clm3%g%l%wtgcell
-    lgridcell  => clm3%g%l%gridcell
-    nlandunits => clm3%g%nlandunits
-    luni       => clm3%g%luni
+    lactive    =>lun%active
+    wtgcell    =>lun%wtgcell
+    lgridcell  =>lun%gridcell
+    nlandunits =>  grc%nlandunits
+    luni       =>  grc%luni
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1561,11 +1561,11 @@ contains
     integer , pointer :: luni(:)       ! initial landunit index in gridcell
 !------------------------------------------------------------------------
 
-    lactive   => clm3%g%l%active
-    wtgcell   => clm3%g%l%wtgcell
-    lgridcell => clm3%g%l%gridcell
-    nlandunits => clm3%g%nlandunits
-    luni       => clm3%g%luni
+    lactive   =>lun%active
+    wtgcell   =>lun%wtgcell
+    lgridcell =>lun%gridcell
+    nlandunits =>  grc%nlandunits
+    luni       =>  grc%luni
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1631,7 +1631,7 @@ contains
      integer , pointer :: ltype(:)       ! landunit type
 !-----------------------------------------------------------------------
 
-     ltype      => clm3%g%l%itype
+     ltype      => lun%itype
      
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 

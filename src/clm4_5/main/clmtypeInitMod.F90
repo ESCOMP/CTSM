@@ -135,10 +135,10 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
 
-    call init_pft_type     (begp, endp, clm3%g%l%c%p)
-    call init_column_type  (begc, endc, clm3%g%l%c)
-    call init_landunit_type(begl, endl, clm3%g%l)
-    call init_gridcell_type(begg, endg, clm3%g)
+    call init_pft_type     (begp, endp, pft)
+    call init_column_type  (begc, endc, col)
+    call init_landunit_type(begl, endl, lun)
+    call init_gridcell_type(begg, endg, grc)
 
     ! pft ecophysiological constants
 
@@ -154,70 +154,66 @@ contains
 
     ! energy balance structures (all levels)
 
-    call init_energy_balance_type(begp, endp, clm3%g%l%c%p%pebal)
-    call init_energy_balance_type(begc, endc, clm3%g%l%c%cebal)
+    call init_energy_balance_type(begp, endp, pebal)
+    call init_energy_balance_type(begc, endc, cebal)
 
     ! water balance structures (all levels)
 
-    call init_water_balance_type(begp, endp, clm3%g%l%c%p%pwbal)
-    call init_water_balance_type(begc, endc, clm3%g%l%c%cwbal)
+    call init_water_balance_type(begp, endp, pwbal)
+    call init_water_balance_type(begc, endc, cwbal)
 
     ! carbon balance structures (pft and column levels)
 
-    call init_carbon_balance_type(begp, endp, clm3%g%l%c%p%pcbal)
-    call init_carbon_balance_type(begc, endc, clm3%g%l%c%ccbal)
+    call init_carbon_balance_type(begp, endp, pcbal)
+    call init_carbon_balance_type(begc, endc, ccbal)
 
     ! nitrogen balance structures (pft and column levels)
 
-    call init_nitrogen_balance_type(begp, endp, clm3%g%l%c%p%pnbal)
-    call init_nitrogen_balance_type(begc, endc, clm3%g%l%c%cnbal)
+    call init_nitrogen_balance_type(begp, endp, pnbal)
+    call init_nitrogen_balance_type(begc, endc, cnbal)
 
     ! pft physical state variables at pft level and averaged to the column
 
-    call init_pft_pstate_type(begp, endp, clm3%g%l%c%p%pps)
-    call init_pft_pstate_type(begc, endc, clm3%g%l%c%cps%pps_a)
+    call init_pft_pstate_type(begp, endp, pps)
+    call init_pft_pstate_type(begc, endc, pps_a)
 
     ! pft ecophysiological variables (only at the pft level for now)
-    call init_pft_epv_type(begp, endp, clm3%g%l%c%p%pepv)
+    call init_pft_epv_type(begp, endp, pepv)
 
     !pft photosynthesis relevant variables
-    call init_pft_psynstate_type(begp, endp, clm3%g%l%c%p%ppsyns)
+    call init_pft_psynstate_type(begp, endp, ppsyns)
 #if (defined CNDV)
     ! pft DGVM state variables at pft level and averaged to column
 
-    call init_pft_pdgvstate_type(begp, endp, clm3%g%l%c%p%pdgvs)
+    call init_pft_pdgvstate_type(begp, endp, pdgvs)
 #endif
-#if (defined CNDV)
-    call init_pft_pdgvstate_type(begc, endc, clm3%g%l%c%cdgvs%pdgvs_a)
-#endif
-    call init_pft_vstate_type(begp, endp, clm3%g%l%c%p%pvs)
+    call init_pft_vstate_type(begp, endp, pvs)
 
     ! pft energy state variables at the pft level and averaged to the column
 
-    call init_pft_estate_type(begp, endp, clm3%g%l%c%p%pes)
-    call init_pft_estate_type(begc, endc, clm3%g%l%c%ces%pes_a)
+    call init_pft_estate_type(begp, endp, pes)
 
     ! pft water state variables at the pft level and averaged to the column
 
-    call init_pft_wstate_type(begp, endp, clm3%g%l%c%p%pws)
-    call init_pft_wstate_type(begc, endc, clm3%g%l%c%cws%pws_a)
+    call init_pft_wstate_type(begp, endp, pws)
+    call init_pft_wstate_type(begc, endc, pws_a)
 
     ! pft carbon state variables at the pft level and averaged to the column
 
-    call init_pft_cstate_type(begp, endp, clm3%g%l%c%p%pcs)
-    call init_pft_cstate_type(begc, endc, clm3%g%l%c%ccs%pcs_a)
+    call init_pft_cstate_type(begp, endp, pcs)
+    call init_pft_cstate_type(begc, endc, pcs_a)
     
     if ( use_c13 ) then       
-       call init_pft_cstate_type(begp, endp, clm3%g%l%c%p%pc13s)
-       call init_pft_cstate_type(begc, endc, clm3%g%l%c%cc13s%pcs_a)
+       call init_pft_cstate_type(begp, endp, pc13s)
+       call init_pft_cstate_type(begc, endc, pc13s_a)
 #ifdef CROP
        call endrun( trim(subname)//" ERROR:: CROP and C13 can NOT be on at the same time" )
 #endif
     endif
 
     if ( use_c14 ) then
-       call init_pft_cstate_type(begp, endp, clm3%g%l%c%p%pc14s)
-       call init_pft_cstate_type(begc, endc, clm3%g%l%c%cc14s%pcs_a)
+       call init_pft_cstate_type(begp, endp, pc14s)
+       call init_pft_cstate_type(begc, endc, pc14s_a)
 #ifdef CROP
        call endrun( trim(subname)//" ERROR:: CROP and C14 can NOT be on at the same time" )
 #endif
@@ -225,142 +221,127 @@ contains
 
     ! pft nitrogen state variables at the pft level and averaged to the column
 
-    call init_pft_nstate_type(begp, endp, clm3%g%l%c%p%pns)
-    call init_pft_nstate_type(begc, endc, clm3%g%l%c%cns%pns_a)
+    call init_pft_nstate_type(begp, endp, pns)
+    call init_pft_nstate_type(begc, endc, pns_a)
 
     ! pft energy flux variables at pft level and averaged to column
 
-    call init_pft_eflux_type(begp, endp, clm3%g%l%c%p%pef)
-    call init_pft_eflux_type(begc, endc, clm3%g%l%c%cef%pef_a)
+    call init_pft_eflux_type(begp, endp, pef)
 
     ! pft momentum flux variables at pft level and averaged to the column
 
-    call init_pft_mflux_type(begp, endp, clm3%g%l%c%p%pmf)
-    call init_pft_mflux_type(begc, endc, clm3%g%l%c%cmf%pmf_a)
+    call init_pft_mflux_type(begp, endp, pmf)
 
     ! pft water flux variables
 
-    call init_pft_wflux_type(begp, endp, clm3%g%l%c%p%pwf)
-    call init_pft_wflux_type(begc, endc, clm3%g%l%c%cwf%pwf_a)
+    call init_pft_wflux_type(begp, endp, pwf)
+    call init_pft_wflux_type(begc, endc, pwf_a)
 
     ! pft carbon flux variables at pft level and averaged to column
 
-    call init_pft_cflux_type(begp, endp, clm3%g%l%c%p%pcf)
-    call init_pft_cflux_type(begc, endc, clm3%g%l%c%ccf%pcf_a)
+    call init_pft_cflux_type(begp, endp, pcf)
+    call init_pft_cflux_type(begc, endc, pcf_a)
     
     if ( use_c13 ) then       
-       call init_pft_cflux_type(begp, endp, clm3%g%l%c%p%pc13f)
-       call init_pft_cflux_type(begc, endc, clm3%g%l%c%cc13f%pcf_a)
+       call init_pft_cflux_type(begp, endp, pc13f)
+       call init_pft_cflux_type(begc, endc, pc13f_a)
     endif
     
     if ( use_c14 ) then
-       call init_pft_cflux_type(begp, endp, clm3%g%l%c%p%pc14f)
-       call init_pft_cflux_type(begc, endc, clm3%g%l%c%cc14f%pcf_a)
+       call init_pft_cflux_type(begp, endp, pc14f)
+       call init_pft_cflux_type(begc, endc, pc14f_a)
     endif
 
     ! pft nitrogen flux variables at pft level and averaged to column
 
-    call init_pft_nflux_type(begp, endp, clm3%g%l%c%p%pnf)
-    call init_pft_nflux_type(begc, endc, clm3%g%l%c%cnf%pnf_a)
+    call init_pft_nflux_type(begp, endp, pnf)
+    call init_pft_nflux_type(begc, endc, pnf_a)
 
     ! pft VOC flux variables at pft level
 
-    call init_pft_vflux_type(begp, endp, clm3%g%l%c%p%pvf)
+    call init_pft_vflux_type(begp, endp, pvf)
 
     ! gridcell VOC emission factors (heald, 05/06)
 
-    call init_gridcell_efstate_type(begg, endg, clm3%g%gve)
+    call init_gridcell_efstate_type(begg, endg, gve)
 
-    ! pft dust flux variables at pft level and averaged to column
+    ! pft dust flux variables at pft level 
 
-    call init_pft_dflux_type(begp, endp, clm3%g%l%c%p%pdf)
-    call init_pft_dflux_type(begc, endc, clm3%g%l%c%cdf%pdf_a)
+    call init_pft_dflux_type(begp, endp, pdf)
 
-    ! pft dry dep velocity variables at pft level and averaged to column
+    ! pft dry dep velocity variables at pft level 
 
-    call init_pft_depvd_type(begp, endp, clm3%g%l%c%p%pdd)
+    call init_pft_depvd_type(begp, endp, pdd)
 
-    ! column physical state variables at column level and averaged to
-    ! the landunit
+    ! column physical state variables at column level 
 
-    call init_column_pstate_type(begc, endc, clm3%g%l%c%cps)
-    call init_column_pstate_type(begl, endl, clm3%g%l%lps%cps_a)
+    call init_column_pstate_type(begc, endc, cps)
 
-    ! column energy state variables at column level and averaged to
-    ! the gridcell
+    ! column energy state variables at column level
 
-    call init_column_estate_type(begc, endc, clm3%g%l%c%ces)
-    call init_column_estate_type(begg, endg, clm3%g%ges%ces_a)
+    call init_column_estate_type(begc, endc, ces)
 
-    ! column water state variables at column level and averaged to
-    ! the gridcell
+    ! column water state variables at column level 
 
-    call init_column_wstate_type(begc, endc, clm3%g%l%c%cws)
-    call init_column_wstate_type(begg, endg, clm3%g%gws%cws_a)
+    call init_column_wstate_type(begc, endc, cws)
 
     ! column carbon state variables at column level
 
-    call init_column_cstate_type(begc, endc, clm3%g%l%c%ccs)
+    call init_column_cstate_type(begc, endc, ccs)
     
     if ( use_c13 ) then       
-       call init_column_cstate_type(begc, endc, clm3%g%l%c%cc13s)
+       call init_column_cstate_type(begc, endc, cc13s)
     endif
 
     if ( use_c14 ) then       
-       call init_column_cstate_type(begc, endc, clm3%g%l%c%cc14s)
+       call init_column_cstate_type(begc, endc, cc14s)
     endif
-    ! column nitrogen state variables at column level
 
     ! column nitrogen state variables at column level
 
-    call init_column_nstate_type(begc, endc, clm3%g%l%c%cns)
+    call init_column_nstate_type(begc, endc, cns)
 
-    ! column energy flux variables at column level and averaged to
-    ! the landunit and gridcell
+    ! column energy flux variables at column level 
 
-    call init_column_eflux_type(begc, endc, clm3%g%l%c%cef)
-    call init_column_eflux_type(begl, endl, clm3%g%l%lef%cef_a)
-    call init_column_eflux_type(begg, endg, clm3%g%gef%cef_a)
+    call init_column_eflux_type(begc, endc, cef)
 
-    ! column water flux variables at column level and averaged to
-    ! gridcell
+    ! column water flux variables at column level 
 
-    call init_column_wflux_type(begc, endc, clm3%g%l%c%cwf)
-    call init_column_wflux_type(begg, endg, clm3%g%gwf%cwf_a)
+    call init_column_wflux_type(begc, endc, cwf)
 
     ! column carbon flux variables at column level
 
-    call init_column_cflux_type(begc, endc, clm3%g%l%c%ccf)
+    call init_column_cflux_type(begc, endc, ccf)
     
     if ( use_c13 ) then       
-       call init_column_cflux_type(begc, endc, clm3%g%l%c%cc13f)
+       call init_column_cflux_type(begc, endc, cc13f)
     endif
     
     if ( use_c14 ) then       
-       call init_column_cflux_type(begc, endc, clm3%g%l%c%cc14f)
+       call init_column_cflux_type(begc, endc, cc14f)
     endif
 
 #if (defined LCH4)
     ! column CH4 flux variables at column level
-    call init_column_ch4_type(begc, endc, clm3%g%l%c%cch4)
+    call init_column_ch4_type(begc, endc, cch4)
 #endif
 
     ! column nitrogen flux variables at column level
 
-    call init_column_nflux_type(begc, endc, clm3%g%l%c%cnf)
+    call init_column_nflux_type(begc, endc, cnf)
 
     ! land unit physical state variables
 
-    call init_landunit_pstate_type(begl, endl, clm3%g%l%lps)
+    call init_landunit_pstate_type(begl, endl, lps)
 
     ! land unit energy flux variables 
 
-    call init_landunit_eflux_type(begl, endl, clm3%g%l%lef)
+    call init_landunit_eflux_type(begl, endl, lef)
 
 #if (defined CNDV)
     ! gridcell DGVM variables
 
-    call init_gridcell_dgvstate_type(begg, endg, clm3%g%gdgvs)
+    call init_gridcell_dgvstate_type(begg, endg, gdgvs)
 #endif
 
     ! gridcell physical state variables
@@ -368,24 +349,24 @@ contains
 
     ! gridcell: water flux variables
 
-    call init_gridcell_wflux_type(begg, endg, clm3%g%gwf)
+    call init_gridcell_wflux_type(begg, endg, gwf)
 
     ! gridcell: energy flux variables
 
-    call init_gridcell_eflux_type(begg, endg, clm3%g%gef)
+    call init_gridcell_eflux_type(begg, endg, gef)
 
     ! gridcell: water state variables
 
-    call init_gridcell_wstate_type(begg, endg, clm3%g%gws)
+    call init_gridcell_wstate_type(begg, endg, gws)
 
     ! gridcell: energy state variables
 
-    call init_gridcell_estate_type(begg, endg, clm3%g%ges)
+    call init_gridcell_estate_type(begg, endg, ges)
 
 #if (defined LCH4)
     ! gridcell: ch4 variables
 
-    call init_gridcell_ch4_type(begg, endg, clm3%g%gch4)
+    call init_gridcell_ch4_type(begg, endg, gch4)
 #endif
 
   end subroutine initClmtype
@@ -396,7 +377,7 @@ contains
 ! !IROUTINE: init_pft_type
 !
 ! !INTERFACE:
-  subroutine init_pft_type (beg, end, p)
+  subroutine init_pft_type (beg, end, pft)
 !
 ! !DESCRIPTION:
 ! Initialize components of pft_type structure
@@ -404,7 +385,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
-    type(pft_type), intent(inout):: p
+    type(pft_type), intent(inout):: pft
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -412,13 +393,13 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(p%gridcell(beg:end),p%wtgcell(beg:end))
-    allocate(p%landunit(beg:end),p%wtlunit(beg:end))
-    allocate(p%column  (beg:end),p%wtcol  (beg:end))
+    allocate(pft%gridcell(beg:end),pft%wtgcell(beg:end))
+    allocate(pft%landunit(beg:end),pft%wtlunit(beg:end))
+    allocate(pft%column  (beg:end),pft%wtcol  (beg:end))
 
-    allocate(p%itype(beg:end))
-    allocate(p%mxy(beg:end))
-    allocate(p%active(beg:end))
+    allocate(pft%itype(beg:end))
+    allocate(pft%mxy(beg:end))
+    allocate(pft%active(beg:end))
 
   end subroutine init_pft_type
 
@@ -444,13 +425,13 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(c%gridcell(beg:end),c%wtgcell(beg:end))
-   allocate(c%landunit(beg:end),c%wtlunit(beg:end))
+   allocate(col%gridcell(beg:end),col%wtgcell(beg:end))
+   allocate(col%landunit(beg:end),col%wtlunit(beg:end))
 
-   allocate(c%pfti(beg:end),c%pftf(beg:end),c%npfts(beg:end))
+   allocate(col%pfti(beg:end),col%pftf(beg:end),col%npfts(beg:end))
 
-   allocate(c%itype(beg:end))
-   allocate(c%active(beg:end))
+   allocate(col%itype(beg:end))
+   allocate(col%active(beg:end))
 
   end subroutine init_column_type
 
@@ -476,37 +457,37 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(l%gridcell(beg:end),l%wtgcell(beg:end))
+   allocate(lun%gridcell(beg:end),lun%wtgcell(beg:end))
 
-   allocate(l%coli(beg:end),l%colf(beg:end),l%ncolumns(beg:end))
-   allocate(l%pfti(beg:end),l%pftf(beg:end),l%npfts   (beg:end))
+   allocate(lun%coli(beg:end),lun%colf(beg:end),lun%ncolumns(beg:end))
+   allocate(lun%pfti(beg:end),lun%pftf(beg:end),lun%npfts   (beg:end))
 
-   allocate(l%itype(beg:end))
-   allocate(l%ifspecial(beg:end))
-   allocate(l%lakpoi(beg:end))
-   allocate(l%urbpoi(beg:end))
-   allocate(l%glcmecpoi(beg:end))
-   allocate(l%udenstype(beg:end))
-   allocate(l%active(beg:end))
+   allocate(lun%itype(beg:end))
+   allocate(lun%ifspecial(beg:end))
+   allocate(lun%lakpoi(beg:end))
+   allocate(lun%urbpoi(beg:end))
+   allocate(lun%glcmecpoi(beg:end))
+   allocate(lun%udenstype(beg:end))
+   allocate(lun%active(beg:end))
 
    ! MV - these should be moved to landunit physical state -MV
-   allocate(l%canyon_hwr(beg:end))
-   allocate(l%wtroad_perv(beg:end))
-   allocate(l%ht_roof(beg:end))
-   allocate(l%wtlunit_roof(beg:end))
-   allocate(l%wind_hgt_canyon(beg:end))
-   allocate(l%z_0_town(beg:end))
-   allocate(l%z_d_town(beg:end))
+   allocate(lun%canyon_hwr(beg:end))
+   allocate(lun%wtroad_perv(beg:end))
+   allocate(lun%ht_roof(beg:end))
+   allocate(lun%wtlunit_roof(beg:end))
+   allocate(lun%wind_hgt_canyon(beg:end))
+   allocate(lun%z_0_town(beg:end))
+   allocate(lun%z_d_town(beg:end))
 
-   l%canyon_hwr(beg:end)  = nan
-   l%wtroad_perv(beg:end) = nan
-   l%ht_roof(beg:end) = nan
-   l%wtlunit_roof(beg:end) = nan
-   l%wind_hgt_canyon(beg:end) = nan
-   l%z_0_town(beg:end) = nan
-   l%z_d_town(beg:end) = nan
+   lun%canyon_hwr(beg:end)  = nan
+   lun%wtroad_perv(beg:end) = nan
+   lun%ht_roof(beg:end) = nan
+   lun%wtlunit_roof(beg:end) = nan
+   lun%wind_hgt_canyon(beg:end) = nan
+   lun%z_0_town(beg:end) = nan
+   lun%z_d_town(beg:end) = nan
 
-   l%glcmecpoi(beg:end) = .false.
+   lun%glcmecpoi(beg:end) = .false.
 
   end subroutine init_landunit_type
 
@@ -516,7 +497,7 @@ contains
 ! !IROUTINE: init_gridcell_type
 !
 ! !INTERFACE:
-  subroutine init_gridcell_type (beg, end,g)
+  subroutine init_gridcell_type (beg, end,grc)
 !
 ! !DESCRIPTION:
 ! Initialize components of gridcell_type structure
@@ -524,7 +505,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
-    type(gridcell_type), intent(inout):: g
+    type(gridcell_type), intent(inout):: grc
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -532,32 +513,32 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(g%luni(beg:end),g%lunf(beg:end),g%nlandunits(beg:end))
-   allocate(g%coli(beg:end),g%colf(beg:end),g%ncolumns  (beg:end))
-   allocate(g%pfti(beg:end),g%pftf(beg:end),g%npfts     (beg:end))
+   allocate(grc%luni(beg:end),grc%lunf(beg:end),grc%nlandunits(beg:end))
+   allocate(grc%coli(beg:end),grc%colf(beg:end),grc%ncolumns  (beg:end))
+   allocate(grc%pfti(beg:end),grc%pftf(beg:end),grc%npfts     (beg:end))
 
-   allocate(g%gindex(beg:end))
-   allocate(g%area(beg:end))
-   allocate(g%lat(beg:end))
-   allocate(g%lon(beg:end))
-   allocate(g%latdeg(beg:end))
-   allocate(g%londeg(beg:end))
-   allocate(g%gindex_a(beg:end))
-   allocate(g%lat_a(beg:end))
-   allocate(g%lon_a(beg:end))
-   allocate(g%latdeg_a(beg:end))
-   allocate(g%londeg_a(beg:end))
+   allocate(grc%gindex(beg:end))
+   allocate(grc%area(beg:end))
+   allocate(grc%lat(beg:end))
+   allocate(grc%lon(beg:end))
+   allocate(grc%latdeg(beg:end))
+   allocate(grc%londeg(beg:end))
+   allocate(grc%gindex_a(beg:end))
+   allocate(grc%lat_a(beg:end))
+   allocate(grc%lon_a(beg:end))
+   allocate(grc%latdeg_a(beg:end))
+   allocate(grc%londeg_a(beg:end))
 
-   allocate(g%gris_mask(beg:end))
-   allocate(g%gris_area(beg:end))
-   allocate(g%aais_mask(beg:end))
-   allocate(g%aais_area(beg:end))
-   allocate(g%tws(beg:end))
-   g%gris_mask(beg:end) = nan
-   g%gris_area(beg:end) = nan
-   g%aais_mask(beg:end) = nan
-   g%aais_area(beg:end) = nan
-   g%tws(beg:end) = nan
+   allocate(grc%gris_mask(beg:end))
+   allocate(grc%gris_area(beg:end))
+   allocate(grc%aais_mask(beg:end))
+   allocate(grc%aais_area(beg:end))
+   allocate(grc%tws(beg:end))
+   grc%gris_mask(beg:end) = nan
+   grc%gris_area(beg:end) = nan
+   grc%aais_mask(beg:end) = nan
+   grc%aais_area(beg:end) = nan
+   grc%tws(beg:end) = nan
 
   end subroutine init_gridcell_type
 
@@ -1268,9 +1249,6 @@ contains
     
     if ( use_c14 ) then
        allocate(pepv%rc14_atm(beg:end))
-       ! allocate(pepv%rc14_canair(beg:end))
-       ! allocate(pepv%rc14_psnsun(beg:end))
-       ! allocate(pepv%rc14_psnsha(beg:end))
     endif
 
     pepv%dormant_flag(beg:end) = nan

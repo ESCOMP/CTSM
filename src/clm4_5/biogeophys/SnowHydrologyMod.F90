@@ -181,56 +181,56 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
-    frac_sno_eff     => clm3%g%l%c%cps%frac_sno_eff 
-    frac_sno         => clm3%g%l%c%cps%frac_sno 
-    clandunit        => clm3%g%l%c%landunit
-    ltype            => clm3%g%l%itype
-    int_snow         => clm3%g%l%c%cws%int_snow
-    h2osno           => clm3%g%l%c%cws%h2osno
-    qflx_ev_snow     => clm3%g%l%c%cwf%pwf_a%qflx_ev_snow
-    qflx_ev_soil     => clm3%g%l%c%cwf%pwf_a%qflx_ev_soil
-    qflx_evap_soi    => clm3%g%l%c%cwf%pwf_a%qflx_evap_soi
-    qflx_snow_melt   => clm3%g%l%c%cwf%qflx_snow_melt
-    snl              => clm3%g%l%c%cps%snl
-    do_capsnow       => clm3%g%l%c%cps%do_capsnow
-    qflx_snomelt     => clm3%g%l%c%cwf%qflx_snomelt
-    qflx_rain_grnd   => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
-    qflx_sub_snow    => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
-    qflx_evap_grnd   => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
-    qflx_dew_snow    => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
-    qflx_dew_grnd    => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
-    qflx_top_soil    => clm3%g%l%c%cwf%qflx_top_soil
-    dz               => clm3%g%l%c%cps%dz
-    h2osoi_ice       => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
-    cgridcell        => clm3%g%l%c%gridcell
-    mss_bcphi        => clm3%g%l%c%cps%mss_bcphi
-    mss_bcpho        => clm3%g%l%c%cps%mss_bcpho
-    mss_ocphi        => clm3%g%l%c%cps%mss_ocphi
-    mss_ocpho        => clm3%g%l%c%cps%mss_ocpho
-    mss_dst1         => clm3%g%l%c%cps%mss_dst1
-    mss_dst2         => clm3%g%l%c%cps%mss_dst2
-    mss_dst3         => clm3%g%l%c%cps%mss_dst3
-    mss_dst4         => clm3%g%l%c%cps%mss_dst4
-    flx_bc_dep       => clm3%g%l%c%cwf%flx_bc_dep
-    flx_bc_dep_wet   => clm3%g%l%c%cwf%flx_bc_dep_wet
-    flx_bc_dep_dry   => clm3%g%l%c%cwf%flx_bc_dep_dry
-    flx_bc_dep_phi   => clm3%g%l%c%cwf%flx_bc_dep_phi
-    flx_bc_dep_pho   => clm3%g%l%c%cwf%flx_bc_dep_pho
-    flx_oc_dep       => clm3%g%l%c%cwf%flx_oc_dep
-    flx_oc_dep_wet   => clm3%g%l%c%cwf%flx_oc_dep_wet
-    flx_oc_dep_dry   => clm3%g%l%c%cwf%flx_oc_dep_dry
-    flx_oc_dep_phi   => clm3%g%l%c%cwf%flx_oc_dep_phi
-    flx_oc_dep_pho   => clm3%g%l%c%cwf%flx_oc_dep_pho
-    flx_dst_dep      => clm3%g%l%c%cwf%flx_dst_dep
-    flx_dst_dep_wet1 => clm3%g%l%c%cwf%flx_dst_dep_wet1
-    flx_dst_dep_dry1 => clm3%g%l%c%cwf%flx_dst_dep_dry1
-    flx_dst_dep_wet2 => clm3%g%l%c%cwf%flx_dst_dep_wet2
-    flx_dst_dep_dry2 => clm3%g%l%c%cwf%flx_dst_dep_dry2
-    flx_dst_dep_wet3 => clm3%g%l%c%cwf%flx_dst_dep_wet3
-    flx_dst_dep_dry3 => clm3%g%l%c%cwf%flx_dst_dep_dry3
-    flx_dst_dep_wet4 => clm3%g%l%c%cwf%flx_dst_dep_wet4
-    flx_dst_dep_dry4 => clm3%g%l%c%cwf%flx_dst_dep_dry4
+    frac_sno_eff     => cps%frac_sno_eff 
+    frac_sno         => cps%frac_sno 
+    clandunit        =>col%landunit
+    ltype            => lun%itype
+    int_snow         => cws%int_snow
+    h2osno           => cws%h2osno
+    qflx_ev_snow     => pwf_a%qflx_ev_snow
+    qflx_ev_soil     => pwf_a%qflx_ev_soil
+    qflx_evap_soi    => pwf_a%qflx_evap_soi
+    qflx_snow_melt   => cwf%qflx_snow_melt
+    snl              => cps%snl
+    do_capsnow       => cps%do_capsnow
+    qflx_snomelt     => cwf%qflx_snomelt
+    qflx_rain_grnd   => pwf_a%qflx_rain_grnd
+    qflx_sub_snow    => pwf_a%qflx_sub_snow
+    qflx_evap_grnd   => pwf_a%qflx_evap_grnd
+    qflx_dew_snow    => pwf_a%qflx_dew_snow
+    qflx_dew_grnd    => pwf_a%qflx_dew_grnd
+    qflx_top_soil    => cwf%qflx_top_soil
+    dz               => cps%dz
+    h2osoi_ice       => cws%h2osoi_ice
+    h2osoi_liq       => cws%h2osoi_liq
+    cgridcell        =>col%gridcell
+    mss_bcphi        => cps%mss_bcphi
+    mss_bcpho        => cps%mss_bcpho
+    mss_ocphi        => cps%mss_ocphi
+    mss_ocpho        => cps%mss_ocpho
+    mss_dst1         => cps%mss_dst1
+    mss_dst2         => cps%mss_dst2
+    mss_dst3         => cps%mss_dst3
+    mss_dst4         => cps%mss_dst4
+    flx_bc_dep       => cwf%flx_bc_dep
+    flx_bc_dep_wet   => cwf%flx_bc_dep_wet
+    flx_bc_dep_dry   => cwf%flx_bc_dep_dry
+    flx_bc_dep_phi   => cwf%flx_bc_dep_phi
+    flx_bc_dep_pho   => cwf%flx_bc_dep_pho
+    flx_oc_dep       => cwf%flx_oc_dep
+    flx_oc_dep_wet   => cwf%flx_oc_dep_wet
+    flx_oc_dep_dry   => cwf%flx_oc_dep_dry
+    flx_oc_dep_phi   => cwf%flx_oc_dep_phi
+    flx_oc_dep_pho   => cwf%flx_oc_dep_pho
+    flx_dst_dep      => cwf%flx_dst_dep
+    flx_dst_dep_wet1 => cwf%flx_dst_dep_wet1
+    flx_dst_dep_dry1 => cwf%flx_dst_dep_dry1
+    flx_dst_dep_wet2 => cwf%flx_dst_dep_wet2
+    flx_dst_dep_dry2 => cwf%flx_dst_dep_dry2
+    flx_dst_dep_wet3 => cwf%flx_dst_dep_wet3
+    flx_dst_dep_dry3 => cwf%flx_dst_dep_dry3
+    flx_dst_dep_wet4 => cwf%flx_dst_dep_wet4
+    flx_dst_dep_dry4 => cwf%flx_dst_dep_dry4
     forc_aer         => clm_a2l%forc_aer
 
     ! Determine model time step
@@ -619,22 +619,22 @@ contains
 
     ! Assign local pointers to derived subtypes (column-level)
 
-    snow_depth      => clm3%g%l%c%cps%snow_depth
-    frac_sno    => clm3%g%l%c%cps%frac_sno_eff 
-    swe_old     => clm3%g%l%c%cws%swe_old
-    int_snow    => clm3%g%l%c%cws%int_snow
-    ltype       => clm3%g%l%itype
-    clandunit   => clm3%g%l%c%landunit
-    n_melt      => clm3%g%l%c%cps%n_melt
-    snl         => clm3%g%l%c%cps%snl
-    dz          => clm3%g%l%c%cps%dz
-    imelt       => clm3%g%l%c%cps%imelt
-    frac_iceold => clm3%g%l%c%cps%frac_iceold
-    t_soisno    => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice  => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq  => clm3%g%l%c%cws%h2osoi_liq
-    clandunit   => clm3%g%l%c%landunit
-    ltype       => clm3%g%l%itype
+    snow_depth      => cps%snow_depth
+    frac_sno    => cps%frac_sno_eff 
+    swe_old     => cws%swe_old
+    int_snow    => cws%int_snow
+    ltype       => lun%itype
+    clandunit   =>col%landunit
+    n_melt      => cps%n_melt
+    snl         => cps%snl
+    dz          => cps%dz
+    imelt       => cps%imelt
+    frac_iceold => cps%frac_iceold
+    t_soisno    => ces%t_soisno
+    h2osoi_ice  => cws%h2osoi_ice
+    h2osoi_liq  => cws%h2osoi_liq
+    clandunit   =>col%landunit
+    ltype       => lun%itype
 
     ! Get time step
 
@@ -817,33 +817,33 @@ contains
 
     ! Assign local pointers to derived subtypes (landunit-level)
 
-    ltype      => clm3%g%l%itype
+    ltype      => lun%itype
 
     ! Assign local pointers to derived subtypes (column-level)
 
-    frac_sno       => clm3%g%l%c%cps%frac_sno
-    frac_sno_eff   => clm3%g%l%c%cps%frac_sno_eff 
-    int_snow       => clm3%g%l%c%cws%int_snow
-    clandunit  => clm3%g%l%c%landunit
-    snl        => clm3%g%l%c%cps%snl
-    snow_depth     => clm3%g%l%c%cps%snow_depth
-    h2osno     => clm3%g%l%c%cws%h2osno
-    dz         => clm3%g%l%c%cps%dz
-    zi         => clm3%g%l%c%cps%zi
-    z          => clm3%g%l%c%cps%z
-    t_soisno   => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
-    mss_bcphi  => clm3%g%l%c%cps%mss_bcphi
-    mss_bcpho  => clm3%g%l%c%cps%mss_bcpho
-    mss_ocphi  => clm3%g%l%c%cps%mss_ocphi
-    mss_ocpho  => clm3%g%l%c%cps%mss_ocpho
-    mss_dst1   => clm3%g%l%c%cps%mss_dst1
-    mss_dst2   => clm3%g%l%c%cps%mss_dst2
-    mss_dst3   => clm3%g%l%c%cps%mss_dst3
-    mss_dst4   => clm3%g%l%c%cps%mss_dst4
-    snw_rds    => clm3%g%l%c%cps%snw_rds
-    qflx_sl_top_soil => clm3%g%l%c%cwf%qflx_sl_top_soil
+    frac_sno       => cps%frac_sno
+    frac_sno_eff   => cps%frac_sno_eff 
+    int_snow       => cws%int_snow
+    clandunit  =>col%landunit
+    snl        => cps%snl
+    snow_depth     => cps%snow_depth
+    h2osno     => cws%h2osno
+    dz         => cps%dz
+    zi         => cps%zi
+    z          => cps%z
+    t_soisno   => ces%t_soisno
+    h2osoi_ice => cws%h2osoi_ice
+    h2osoi_liq => cws%h2osoi_liq
+    mss_bcphi  => cps%mss_bcphi
+    mss_bcpho  => cps%mss_bcpho
+    mss_ocphi  => cps%mss_ocphi
+    mss_ocpho  => cps%mss_ocpho
+    mss_dst1   => cps%mss_dst1
+    mss_dst2   => cps%mss_dst2
+    mss_dst3   => cps%mss_dst3
+    mss_dst4   => cps%mss_dst4
+    snw_rds    => cps%snw_rds
+    qflx_sl_top_soil => cwf%qflx_sl_top_soil
 
     ! Determine model time step
 
@@ -1223,23 +1223,23 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
-    frac_sno   => clm3%g%l%c%cps%frac_sno_eff 
-    snl        => clm3%g%l%c%cps%snl
-    dz         => clm3%g%l%c%cps%dz
-    zi         => clm3%g%l%c%cps%zi
-    z          => clm3%g%l%c%cps%z
-    t_soisno   => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
-    mss_bcphi  => clm3%g%l%c%cps%mss_bcphi
-    mss_bcpho  => clm3%g%l%c%cps%mss_bcpho
-    mss_ocphi  => clm3%g%l%c%cps%mss_ocphi
-    mss_ocpho  => clm3%g%l%c%cps%mss_ocpho
-    mss_dst1   => clm3%g%l%c%cps%mss_dst1
-    mss_dst2   => clm3%g%l%c%cps%mss_dst2
-    mss_dst3   => clm3%g%l%c%cps%mss_dst3
-    mss_dst4   => clm3%g%l%c%cps%mss_dst4
-    snw_rds    => clm3%g%l%c%cps%snw_rds
+    frac_sno   => cps%frac_sno_eff 
+    snl        => cps%snl
+    dz         => cps%dz
+    zi         => cps%zi
+    z          => cps%z
+    t_soisno   => ces%t_soisno
+    h2osoi_ice => cws%h2osoi_ice
+    h2osoi_liq => cws%h2osoi_liq
+    mss_bcphi  => cps%mss_bcphi
+    mss_bcpho  => cps%mss_bcpho
+    mss_ocphi  => cps%mss_ocphi
+    mss_ocpho  => cps%mss_ocpho
+    mss_dst1   => cps%mss_dst1
+    mss_dst2   => cps%mss_dst2
+    mss_dst3   => cps%mss_dst3
+    mss_dst4   => cps%mss_dst4
+    snw_rds    => cps%snw_rds
     
 
     ! Begin calculation - note that the following column loops are only invoked
@@ -1751,7 +1751,7 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
-    snl => clm3%g%l%c%cps%snl
+    snl => cps%snl
 
     ! Build snow/no-snow filters for other subroutines
 
@@ -1871,22 +1871,22 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
-    snl        => clm3%g%l%c%cps%snl
-    dz         => clm3%g%l%c%cps%dz
-    zi         => clm3%g%l%c%cps%zi
-    z          => clm3%g%l%c%cps%z
-    t_soisno   => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
-    mss_bcphi  => clm3%g%l%c%cps%mss_bcphi
-    mss_bcpho  => clm3%g%l%c%cps%mss_bcpho
-    mss_ocphi  => clm3%g%l%c%cps%mss_ocphi
-    mss_ocpho  => clm3%g%l%c%cps%mss_ocpho
-    mss_dst1   => clm3%g%l%c%cps%mss_dst1
-    mss_dst2   => clm3%g%l%c%cps%mss_dst2
-    mss_dst3   => clm3%g%l%c%cps%mss_dst3
-    mss_dst4   => clm3%g%l%c%cps%mss_dst4
-    snw_rds    => clm3%g%l%c%cps%snw_rds
+    snl        => cps%snl
+    dz         => cps%dz
+    zi         => cps%zi
+    z          => cps%z
+    t_soisno   => ces%t_soisno
+    h2osoi_ice => cws%h2osoi_ice
+    h2osoi_liq => cws%h2osoi_liq
+    mss_bcphi  => cps%mss_bcphi
+    mss_bcpho  => cps%mss_bcpho
+    mss_ocphi  => cps%mss_ocphi
+    mss_ocpho  => cps%mss_ocpho
+    mss_dst1   => cps%mss_dst1
+    mss_dst2   => cps%mss_dst2
+    mss_dst3   => cps%mss_dst3
+    mss_dst4   => cps%mss_dst4
+    snw_rds    => cps%snw_rds
     
 
     ! Initialize for consistency check

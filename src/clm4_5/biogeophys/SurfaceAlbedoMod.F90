@@ -239,83 +239,83 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    lat => clm3%g%lat
-    lon => clm3%g%lon
+    lat =>  grc%lat
+    lon =>  grc%lon
 
     ! Assign local pointers to derived subtypes components (landunit level)
 
-    itypelun       => clm3%g%l%itype
+    itypelun       => lun%itype
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    cgridcell      => clm3%g%l%c%gridcell
-    h2osno         => clm3%g%l%c%cws%h2osno
-    albgrd         => clm3%g%l%c%cps%albgrd
-    albgri         => clm3%g%l%c%cps%albgri
-    decl           => clm3%g%l%c%cps%decl 
-    coszen         => clm3%g%l%c%cps%coszen 
-    albsod         => clm3%g%l%c%cps%albsod
-    albsoi         => clm3%g%l%c%cps%albsoi
-    frac_sno       => clm3%g%l%c%cps%frac_sno
-    flx_absdv      => clm3%g%l%c%cps%flx_absdv
-    flx_absdn      => clm3%g%l%c%cps%flx_absdn
-    flx_absiv      => clm3%g%l%c%cps%flx_absiv
-    flx_absin      => clm3%g%l%c%cps%flx_absin
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-    snw_rds        => clm3%g%l%c%cps%snw_rds
-    albgrd_pur     => clm3%g%l%c%cps%albgrd_pur
-    albgri_pur     => clm3%g%l%c%cps%albgri_pur
-    albgrd_bc      => clm3%g%l%c%cps%albgrd_bc
-    albgri_bc      => clm3%g%l%c%cps%albgri_bc
-    albgrd_oc      => clm3%g%l%c%cps%albgrd_oc
-    albgri_oc      => clm3%g%l%c%cps%albgri_oc
-    albgrd_dst     => clm3%g%l%c%cps%albgrd_dst
-    albgri_dst     => clm3%g%l%c%cps%albgri_dst
-    mss_cnc_bcphi  => clm3%g%l%c%cps%mss_cnc_bcphi
-    mss_cnc_bcpho  => clm3%g%l%c%cps%mss_cnc_bcpho
-    mss_cnc_ocphi  => clm3%g%l%c%cps%mss_cnc_ocphi
-    mss_cnc_ocpho  => clm3%g%l%c%cps%mss_cnc_ocpho
-    mss_cnc_dst1   => clm3%g%l%c%cps%mss_cnc_dst1
-    mss_cnc_dst2   => clm3%g%l%c%cps%mss_cnc_dst2
-    mss_cnc_dst3   => clm3%g%l%c%cps%mss_cnc_dst3
-    mss_cnc_dst4   => clm3%g%l%c%cps%mss_cnc_dst4
-    albsnd_hst     => clm3%g%l%c%cps%albsnd_hst
-    albsni_hst     => clm3%g%l%c%cps%albsni_hst
+    cgridcell      =>col%gridcell
+    h2osno         => cws%h2osno
+    albgrd         => cps%albgrd
+    albgri         => cps%albgri
+    decl           => cps%decl 
+    coszen         => cps%coszen 
+    albsod         => cps%albsod
+    albsoi         => cps%albsoi
+    frac_sno       => cps%frac_sno
+    flx_absdv      => cps%flx_absdv
+    flx_absdn      => cps%flx_absdn
+    flx_absiv      => cps%flx_absiv
+    flx_absin      => cps%flx_absin
+    h2osoi_liq     => cws%h2osoi_liq
+    h2osoi_ice     => cws%h2osoi_ice
+    snw_rds        => cps%snw_rds
+    albgrd_pur     => cps%albgrd_pur
+    albgri_pur     => cps%albgri_pur
+    albgrd_bc      => cps%albgrd_bc
+    albgri_bc      => cps%albgri_bc
+    albgrd_oc      => cps%albgrd_oc
+    albgri_oc      => cps%albgri_oc
+    albgrd_dst     => cps%albgrd_dst
+    albgri_dst     => cps%albgri_dst
+    mss_cnc_bcphi  => cps%mss_cnc_bcphi
+    mss_cnc_bcpho  => cps%mss_cnc_bcpho
+    mss_cnc_ocphi  => cps%mss_cnc_ocphi
+    mss_cnc_ocpho  => cps%mss_cnc_ocpho
+    mss_cnc_dst1   => cps%mss_cnc_dst1
+    mss_cnc_dst2   => cps%mss_cnc_dst2
+    mss_cnc_dst3   => cps%mss_cnc_dst3
+    mss_cnc_dst4   => cps%mss_cnc_dst4
+    albsnd_hst     => cps%albsnd_hst
+    albsni_hst     => cps%albsni_hst
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    pactive   => clm3%g%l%c%p%active
-    plandunit => clm3%g%l%c%p%landunit
-    pgridcell => clm3%g%l%c%p%gridcell
-    pcolumn   => clm3%g%l%c%p%column
-    albd      => clm3%g%l%c%p%pps%albd
-    albi      => clm3%g%l%c%p%pps%albi
-    fabd      => clm3%g%l%c%p%pps%fabd
-    fabd_sun  => clm3%g%l%c%p%pps%fabd_sun
-    fabd_sha  => clm3%g%l%c%p%pps%fabd_sha
-    fabi      => clm3%g%l%c%p%pps%fabi
-    fabi_sun  => clm3%g%l%c%p%pps%fabi_sun
-    fabi_sha  => clm3%g%l%c%p%pps%fabi_sha
-    ftdd      => clm3%g%l%c%p%pps%ftdd
-    ftid      => clm3%g%l%c%p%pps%ftid
-    ftii      => clm3%g%l%c%p%pps%ftii
-    vcmaxcintsun => clm3%g%l%c%p%pps%vcmaxcintsun
-    vcmaxcintsha => clm3%g%l%c%p%pps%vcmaxcintsha
-    ncan      => clm3%g%l%c%p%pps%ncan
-    nrad      => clm3%g%l%c%p%pps%nrad
-    fabd_sun_z  => clm3%g%l%c%p%pps%fabd_sun_z
-    fabd_sha_z  => clm3%g%l%c%p%pps%fabd_sha_z
-    fabi_sun_z  => clm3%g%l%c%p%pps%fabi_sun_z
-    fabi_sha_z  => clm3%g%l%c%p%pps%fabi_sha_z
-    fsun_z      => clm3%g%l%c%p%pps%fsun_z
-    tlai_z    => clm3%g%l%c%p%pps%tlai_z
-    tsai_z    => clm3%g%l%c%p%pps%tsai_z
-    tlai      => clm3%g%l%c%p%pps%tlai
-    tsai      => clm3%g%l%c%p%pps%tsai
-    elai      => clm3%g%l%c%p%pps%elai
-    esai      => clm3%g%l%c%p%pps%esai
-    ivt       => clm3%g%l%c%p%itype
+    pactive   => pft%active
+    plandunit =>pft%landunit
+    pgridcell =>pft%gridcell
+    pcolumn   =>pft%column
+    albd      => pps%albd
+    albi      => pps%albi
+    fabd      => pps%fabd
+    fabd_sun  => pps%fabd_sun
+    fabd_sha  => pps%fabd_sha
+    fabi      => pps%fabi
+    fabi_sun  => pps%fabi_sun
+    fabi_sha  => pps%fabi_sha
+    ftdd      => pps%ftdd
+    ftid      => pps%ftid
+    ftii      => pps%ftii
+    vcmaxcintsun => pps%vcmaxcintsun
+    vcmaxcintsha => pps%vcmaxcintsha
+    ncan      => pps%ncan
+    nrad      => pps%nrad
+    fabd_sun_z  => pps%fabd_sun_z
+    fabd_sha_z  => pps%fabd_sha_z
+    fabi_sun_z  => pps%fabi_sun_z
+    fabi_sha_z  => pps%fabi_sha_z
+    fsun_z      => pps%fsun_z
+    tlai_z    => pps%tlai_z
+    tsai_z    => pps%tsai_z
+    tlai      => pps%tlai
+    tsai      => pps%tsai
+    elai      => pps%elai
+    esai      => pps%esai
+    ivt       =>pft%itype
     rhol      => pftcon%rhol
     rhos      => pftcon%rhos
     taul      => pftcon%taul
@@ -930,20 +930,20 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    clandunit  => clm3%g%l%c%landunit
-    isoicol    => clm3%g%l%c%cps%isoicol
-    t_grnd     => clm3%g%l%c%ces%t_grnd
-    h2osoi_vol => clm3%g%l%c%cws%h2osoi_vol
-    albgrd     => clm3%g%l%c%cps%albgrd
-    albgri     => clm3%g%l%c%cps%albgri
-    albsod     => clm3%g%l%c%cps%albsod
-    albsoi     => clm3%g%l%c%cps%albsoi
-    snl        => clm3%g%l%c%cps%snl
-    lake_icefrac => clm3%g%l%c%cws%lake_icefrac
+    clandunit  =>col%landunit
+    isoicol    => cps%isoicol
+    t_grnd     => ces%t_grnd
+    h2osoi_vol => cws%h2osoi_vol
+    albgrd     => cps%albgrd
+    albgri     => cps%albgri
+    albsod     => cps%albsod
+    albsoi     => cps%albsoi
+    snl        => cps%snl
+    lake_icefrac => cws%lake_icefrac
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
-    ltype      => clm3%g%l%itype
+    ltype      => lun%itype
 
     ! Compute soil albedos
 
@@ -1137,39 +1137,39 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    albgrd  => clm3%g%l%c%cps%albgrd
-    albgri  => clm3%g%l%c%cps%albgri
+    albgrd  => cps%albgrd
+    albgri  => cps%albgri
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    pcolumn  => clm3%g%l%c%p%column
-    fwet     => clm3%g%l%c%p%pps%fwet
-    t_veg    => clm3%g%l%c%p%pes%t_veg
-    ivt      => clm3%g%l%c%p%itype
-    elai     => clm3%g%l%c%p%pps%elai
-    esai     => clm3%g%l%c%p%pps%esai
-    albd     => clm3%g%l%c%p%pps%albd
-    albi     => clm3%g%l%c%p%pps%albi
-    fabd     => clm3%g%l%c%p%pps%fabd
-    fabd_sun => clm3%g%l%c%p%pps%fabd_sun
-    fabd_sha => clm3%g%l%c%p%pps%fabd_sha
-    fabi     => clm3%g%l%c%p%pps%fabi
-    fabi_sun => clm3%g%l%c%p%pps%fabi_sun
-    fabi_sha => clm3%g%l%c%p%pps%fabi_sha
-    ftdd     => clm3%g%l%c%p%pps%ftdd
-    ftid     => clm3%g%l%c%p%pps%ftid
-    ftii     => clm3%g%l%c%p%pps%ftii
+    pcolumn  =>pft%column
+    fwet     => pps%fwet
+    t_veg    => pes%t_veg
+    ivt      =>pft%itype
+    elai     => pps%elai
+    esai     => pps%esai
+    albd     => pps%albd
+    albi     => pps%albi
+    fabd     => pps%fabd
+    fabd_sun => pps%fabd_sun
+    fabd_sha => pps%fabd_sha
+    fabi     => pps%fabi
+    fabi_sun => pps%fabi_sun
+    fabi_sha => pps%fabi_sha
+    ftdd     => pps%ftdd
+    ftid     => pps%ftid
+    ftii     => pps%ftii
     xl       => pftcon%xl
-    nrad     => clm3%g%l%c%p%pps%nrad
-    fabd_sun_z  => clm3%g%l%c%p%pps%fabd_sun_z
-    fabd_sha_z  => clm3%g%l%c%p%pps%fabd_sha_z
-    fabi_sun_z  => clm3%g%l%c%p%pps%fabi_sun_z
-    fabi_sha_z  => clm3%g%l%c%p%pps%fabi_sha_z
-    fsun_z      => clm3%g%l%c%p%pps%fsun_z
-    tlai_z   => clm3%g%l%c%p%pps%tlai_z
-    tsai_z   => clm3%g%l%c%p%pps%tsai_z
-    vcmaxcintsun => clm3%g%l%c%p%pps%vcmaxcintsun
-    vcmaxcintsha => clm3%g%l%c%p%pps%vcmaxcintsha
+    nrad     => pps%nrad
+    fabd_sun_z  => pps%fabd_sun_z
+    fabd_sha_z  => pps%fabd_sha_z
+    fabi_sun_z  => pps%fabi_sun_z
+    fabi_sha_z  => pps%fabi_sha_z
+    fsun_z      => pps%fsun_z
+    tlai_z   => pps%tlai_z
+    tsai_z   => pps%tsai_z
+    vcmaxcintsun => pps%vcmaxcintsun
+    vcmaxcintsha => pps%vcmaxcintsha
 
     ! Calculate two-stream parameters that are independent of waveband:
     ! chil, gdir, twostext, avmu, and temp0 and temp2 (used for asu)

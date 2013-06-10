@@ -88,7 +88,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clm_atmlnd   , only : clm_a2l
-    use clmtype,       only : clm3, megan_out_type
+    use clmtype
     use domainMod,     only : ldomain 
     use clm_varcon   , only : spval
 !
@@ -217,70 +217,70 @@ contains
 !-----------------------------------------------------------------------
     if ( shr_megan_mechcomps_n < 1) return
 
-    clandunit  => clm3%g%l%c%landunit
-    ltype      => clm3%g%l%itype
+    clandunit  =>col%landunit
+    ltype      => lun%itype
     ! Assign local pointers to derived type members (gridcell-level)
     forc_solad => clm_a2l%forc_solad
     forc_solai => clm_a2l%forc_solai
     forc_pbot  => clm_a2l%forc_pbot
 
     ! Assign local pointers to derived subtypes components (column-level)
-    h2osoi_vol       => clm3%g%l%c%cws%h2osoi_vol
-    h2osoi_ice       => clm3%g%l%c%cws%h2osoi_ice
-    dz               => clm3%g%l%c%cps%dz
-    bsw              => clm3%g%l%c%cps%bsw
-    watsat           => clm3%g%l%c%cps%watsat
-    sucsat           => clm3%g%l%c%cps%sucsat
+    h2osoi_vol       => cws%h2osoi_vol
+    h2osoi_ice       => cws%h2osoi_ice
+    dz               => cps%dz
+    bsw              => cps%bsw
+    watsat           => cps%watsat
+    sucsat           => cps%sucsat
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
-    pgridcell        => clm3%g%l%c%p%gridcell
-    pcolumn          => clm3%g%l%c%p%column
-    ivt              => clm3%g%l%c%p%itype
-    t_veg            => clm3%g%l%c%p%pes%t_veg
-    fsun             => clm3%g%l%c%p%pps%fsun
-    elai             => clm3%g%l%c%p%pps%elai
-    clayfrac         => clm3%g%l%c%p%pps%clayfrac
-    sandfrac         => clm3%g%l%c%p%pps%sandfrac
+    pgridcell        =>pft%gridcell
+    pcolumn          =>pft%column
+    ivt              =>pft%itype
+    t_veg            => pes%t_veg
+    fsun             => pps%fsun
+    elai             => pps%elai
+    clayfrac         => pps%clayfrac
+    sandfrac         => pps%sandfrac
 
-    cisun_z          => clm3%g%l%c%p%pcf%cisun_z
-    cisha_z          => clm3%g%l%c%p%pcf%cisha_z
+    cisun_z          => pcf%cisun_z
+    cisha_z          => pcf%cisha_z
     if ( nlevcan /= 1 )then
        call endrun( subname//' error: can NOT work without nlevcan == 1' )
     end if
 
-    vocflx           => clm3%g%l%c%p%pvf%vocflx
-    vocflx_tot       => clm3%g%l%c%p%pvf%vocflx_tot
-    meg_out          => clm3%g%l%c%p%pvf%meg
+    vocflx           => pvf%vocflx
+    vocflx_tot       => pvf%vocflx_tot
+    meg_out          => pvf%meg
 
-    gammaL_out       => clm3%g%l%c%p%pvf%gammaL_out
-    gammaT_out       => clm3%g%l%c%p%pvf%gammaT_out
-    gammaP_out       => clm3%g%l%c%p%pvf%gammaP_out
-    gammaA_out       => clm3%g%l%c%p%pvf%gammaA_out
-    gammaS_out       => clm3%g%l%c%p%pvf%gammaS_out
-    gammaC_out       => clm3%g%l%c%p%pvf%gammaC_out
-    gamma_out        => clm3%g%l%c%p%pvf%gamma_out
+    gammaL_out       => pvf%gammaL_out
+    gammaT_out       => pvf%gammaT_out
+    gammaP_out       => pvf%gammaP_out
+    gammaA_out       => pvf%gammaA_out
+    gammaS_out       => pvf%gammaS_out
+    gammaC_out       => pvf%gammaC_out
+    gamma_out        => pvf%gamma_out
 
-    Eopt_out         => clm3%g%l%c%p%pvf%Eopt_out
-    topt_out         => clm3%g%l%c%p%pvf%topt_out
-    alpha_out        => clm3%g%l%c%p%pvf%alpha_out
-    cp_out           => clm3%g%l%c%p%pvf%cp_out
-    paru_out         => clm3%g%l%c%p%pvf%paru_out
-    par24u_out       => clm3%g%l%c%p%pvf%par24u_out
-    par240u_out      => clm3%g%l%c%p%pvf%par240u_out
-    para_out         => clm3%g%l%c%p%pvf%para_out
-    par24a_out       => clm3%g%l%c%p%pvf%par24a_out
-    par240a_out      => clm3%g%l%c%p%pvf%par240a_out
+    Eopt_out         => pvf%Eopt_out
+    topt_out         => pvf%topt_out
+    alpha_out        => pvf%alpha_out
+    cp_out           => pvf%cp_out
+    paru_out         => pvf%paru_out
+    par24u_out       => pvf%par24u_out
+    par240u_out      => pvf%par240u_out
+    para_out         => pvf%para_out
+    par24a_out       => pvf%par24a_out
+    par240a_out      => pvf%par240a_out
 
-    t_veg24          => clm3%g%l%c%p%pvs%t_veg24
-    t_veg240         => clm3%g%l%c%p%pvs%t_veg240
-    forc_solad24     => clm3%g%l%c%p%pvs%fsd24
-    forc_solad240    => clm3%g%l%c%p%pvs%fsd240
-    forc_solai24     => clm3%g%l%c%p%pvs%fsi24
-    forc_solai240    => clm3%g%l%c%p%pvs%fsi240
-    fsun24           => clm3%g%l%c%p%pvs%fsun24
-    fsun240          => clm3%g%l%c%p%pvs%fsun240
-    elai_p           => clm3%g%l%c%p%pvs%elai_p
+    t_veg24          => pvs%t_veg24
+    t_veg240         => pvs%t_veg240
+    forc_solad24     => pvs%fsd24
+    forc_solad240    => pvs%fsd240
+    forc_solai24     => pvs%fsi24
+    forc_solai240    => pvs%fsi240
+    fsun24           => pvs%fsun24
+    fsun240          => pvs%fsun240
+    elai_p           => pvs%elai_p
 
     ! initialize variables which get passed to the atmosphere
     vocflx(lbp:ubp,:) = 0._r8
@@ -533,7 +533,7 @@ function get_map_EF(ivt_in,g_in)
     real(r8), pointer :: efisop(:,:)      ! emission factors for isoprene for each pft [ug m-2 h-1]
 
     ! assign local pointer
-    efisop     => clm3%g%gve%efisop
+    efisop     => gve%efisop
 !-----------------------------------------------------------------------
     get_map_EF = 0._r8
     

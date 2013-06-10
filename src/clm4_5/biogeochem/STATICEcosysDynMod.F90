@@ -161,20 +161,20 @@ contains
 
        ! Assign local pointers to derived type scalar members (column-level)
 
-       frac_sno => clm3%g%l%c%cps%frac_sno 
-       snow_depth  => clm3%g%l%c%cps%snow_depth
+       frac_sno => cps%frac_sno 
+       snow_depth  => cps%snow_depth
 
        ! Assign local pointers to derived type scalar members (pftlevel)
 
-       pcolumn => clm3%g%l%c%p%column
-       tlai    => clm3%g%l%c%p%pps%tlai
-       tsai    => clm3%g%l%c%p%pps%tsai
-       elai    => clm3%g%l%c%p%pps%elai
-       esai    => clm3%g%l%c%p%pps%esai
-       htop    => clm3%g%l%c%p%pps%htop
-       hbot    => clm3%g%l%c%p%pps%hbot
-       frac_veg_nosno_alb => clm3%g%l%c%p%pps%frac_veg_nosno_alb
-       ivt     => clm3%g%l%c%p%itype
+       pcolumn =>pft%column
+       tlai    => pps%tlai
+       tsai    => pps%tsai
+       elai    => pps%elai
+       esai    => pps%esai
+       htop    => pps%htop
+       hbot    => pps%hbot
+       frac_veg_nosno_alb => pps%frac_veg_nosno_alb
+       ivt     =>pft%itype
 
        do fp = 1, num_nolakep
           p = filter_nolakep(fp)
@@ -346,7 +346,7 @@ contains
     logical :: isgrid2d                   ! true => file is 2d
     character(len=32) :: subname = 'readAnnualVegetation'
 
-    annlai    => clm3%g%l%c%p%pps%annlai
+    annlai    => pps%annlai
 
     ! Determine necessary indices
 
@@ -390,8 +390,8 @@ contains
        !! as determined in subroutine surfrd
 
        do p = begp,endp
-          g = clm3%g%l%c%p%gridcell(p)
-          ivt = clm3%g%l%c%p%itype(p)
+          g =pft%gridcell(p)
+          ivt =pft%itype(p)
           if (ivt /= noveg) then     !! vegetated pft
              do l = 0, numpft
                 if (l == ivt) then
@@ -517,8 +517,8 @@ contains
        ! as determined in subroutine surfrd
 
        do p = begp,endp
-          g = clm3%g%l%c%p%gridcell(p)
-          ivt = clm3%g%l%c%p%itype(p)
+          g =pft%gridcell(p)
+          ivt =pft%itype(p)
           if (ivt /= noveg) then     ! vegetated pft
              do l = 0, numpft
                 if (l == ivt) then
@@ -549,7 +549,7 @@ contains
 
     deallocate(mlai, msai, mhgtt, mhgtb)
 
-    mlaidiff => clm3%g%l%c%p%pps%mlaidiff
+    mlaidiff => pps%mlaidiff
     do p = begp,endp
        mlaidiff(p)=mlai2t(p,1)-mlai2t(p,2)
     enddo

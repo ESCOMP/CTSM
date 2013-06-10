@@ -297,17 +297,17 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
 !-----------------------------------------------------------------------
 
    ! assign local pointers to derived type arrays
-   ivt                           => clm3%g%l%c%p%itype
-   t_ref2m                       => clm3%g%l%c%p%pes%t_ref2m
-   tempavg_t2m                   => clm3%g%l%c%p%pepv%tempavg_t2m
+   ivt                           =>pft%itype
+   t_ref2m                       => pes%t_ref2m
+   tempavg_t2m                   => pepv%tempavg_t2m
 
-   gdd0                          => clm3%g%l%c%p%pps%gdd0
-   gdd8                          => clm3%g%l%c%p%pps%gdd8
-   gdd10                         => clm3%g%l%c%p%pps%gdd10
-   gdd020                        => clm3%g%l%c%p%pps%gdd020
-   gdd820                        => clm3%g%l%c%p%pps%gdd820
-   gdd1020                       => clm3%g%l%c%p%pps%gdd1020
-   pgridcell                     => clm3%g%l%c%p%gridcell
+   gdd0                          => pps%gdd0
+   gdd8                          => pps%gdd8
+   gdd10                         => pps%gdd10
+   gdd020                        => pps%gdd020
+   gdd820                        => pps%gdd820
+   gdd1020                       => pps%gdd1020
+   pgridcell                     =>pft%gridcell
 
    ! set time steps
 
@@ -406,12 +406,12 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
 !-----------------------------------------------------------------------
 
    ! assign local pointers to derived type arrays
-   ivt       => clm3%g%l%c%p%itype
+   ivt       =>pft%itype
    evergreen => pftcon%evergreen
    leaf_long => pftcon%leaf_long
-   bglfr     => clm3%g%l%c%p%pepv%bglfr
-   bgtr      => clm3%g%l%c%p%pepv%bgtr
-   lgsf      => clm3%g%l%c%p%pepv%lgsf
+   bglfr     => pepv%bglfr
+   bgtr      => pepv%bgtr
+   lgsf      => pepv%lgsf
    dayspyr   = get_days_per_year()
 
    do fp = 1,num_soilp
@@ -552,84 +552,84 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   ivt                           => clm3%g%l%c%p%itype
-   pcolumn                       => clm3%g%l%c%p%column
-   pgridcell                     => clm3%g%l%c%p%gridcell
-   latdeg                        => clm3%g%latdeg
-   decl                          => clm3%g%l%c%cps%decl
-   t_soisno                      => clm3%g%l%c%ces%t_soisno
-   leafc_storage                 => clm3%g%l%c%p%pcs%leafc_storage
-   frootc_storage                => clm3%g%l%c%p%pcs%frootc_storage
-   livestemc_storage             => clm3%g%l%c%p%pcs%livestemc_storage
-   deadstemc_storage             => clm3%g%l%c%p%pcs%deadstemc_storage
-   livecrootc_storage            => clm3%g%l%c%p%pcs%livecrootc_storage
-   deadcrootc_storage            => clm3%g%l%c%p%pcs%deadcrootc_storage
-   gresp_storage                 => clm3%g%l%c%p%pcs%gresp_storage
-   leafn_storage                 => clm3%g%l%c%p%pns%leafn_storage
-   frootn_storage                => clm3%g%l%c%p%pns%frootn_storage
-   livestemn_storage             => clm3%g%l%c%p%pns%livestemn_storage
-   deadstemn_storage             => clm3%g%l%c%p%pns%deadstemn_storage
-   livecrootn_storage            => clm3%g%l%c%p%pns%livecrootn_storage
-   deadcrootn_storage            => clm3%g%l%c%p%pns%deadcrootn_storage
+   ivt                           =>pft%itype
+   pcolumn                       =>pft%column
+   pgridcell                     =>pft%gridcell
+   latdeg                        =>  grc%latdeg
+   decl                          => cps%decl
+   t_soisno                      => ces%t_soisno
+   leafc_storage                 => pcs%leafc_storage
+   frootc_storage                => pcs%frootc_storage
+   livestemc_storage             => pcs%livestemc_storage
+   deadstemc_storage             => pcs%deadstemc_storage
+   livecrootc_storage            => pcs%livecrootc_storage
+   deadcrootc_storage            => pcs%deadcrootc_storage
+   gresp_storage                 => pcs%gresp_storage
+   leafn_storage                 => pns%leafn_storage
+   frootn_storage                => pns%frootn_storage
+   livestemn_storage             => pns%livestemn_storage
+   deadstemn_storage             => pns%deadstemn_storage
+   livecrootn_storage            => pns%livecrootn_storage
+   deadcrootn_storage            => pns%deadcrootn_storage
    season_decid                  => pftcon%season_decid
    woody                         => pftcon%woody
 
    ! Assign local pointers to derived type arrays (out)
-   dormant_flag                  => clm3%g%l%c%p%pepv%dormant_flag
-   days_active                   => clm3%g%l%c%p%pepv%days_active
-   onset_flag                    => clm3%g%l%c%p%pepv%onset_flag
-   onset_counter                 => clm3%g%l%c%p%pepv%onset_counter
-   onset_gddflag                 => clm3%g%l%c%p%pepv%onset_gddflag
-   onset_gdd                     => clm3%g%l%c%p%pepv%onset_gdd
-   offset_flag                   => clm3%g%l%c%p%pepv%offset_flag
-   offset_counter                => clm3%g%l%c%p%pepv%offset_counter
-   dayl                          => clm3%g%l%c%p%pepv%dayl
-   prev_dayl                     => clm3%g%l%c%p%pepv%prev_dayl
-   annavg_t2m                    => clm3%g%l%c%p%pepv%annavg_t2m
-   prev_leafc_to_litter          => clm3%g%l%c%p%pepv%prev_leafc_to_litter
-   prev_frootc_to_litter         => clm3%g%l%c%p%pepv%prev_frootc_to_litter
-   bglfr                         => clm3%g%l%c%p%pepv%bglfr
-   bgtr                          => clm3%g%l%c%p%pepv%bgtr
-   lgsf                          => clm3%g%l%c%p%pepv%lgsf
-   leafc_xfer_to_leafc           => clm3%g%l%c%p%pcf%leafc_xfer_to_leafc
-   frootc_xfer_to_frootc         => clm3%g%l%c%p%pcf%frootc_xfer_to_frootc
-   livestemc_xfer_to_livestemc   => clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc
-   deadstemc_xfer_to_deadstemc   => clm3%g%l%c%p%pcf%deadstemc_xfer_to_deadstemc
-   livecrootc_xfer_to_livecrootc => clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc
-   deadcrootc_xfer_to_deadcrootc => clm3%g%l%c%p%pcf%deadcrootc_xfer_to_deadcrootc
-   leafn_xfer_to_leafn           => clm3%g%l%c%p%pnf%leafn_xfer_to_leafn
-   frootn_xfer_to_frootn         => clm3%g%l%c%p%pnf%frootn_xfer_to_frootn
-   livestemn_xfer_to_livestemn   => clm3%g%l%c%p%pnf%livestemn_xfer_to_livestemn
-   deadstemn_xfer_to_deadstemn   => clm3%g%l%c%p%pnf%deadstemn_xfer_to_deadstemn
-   livecrootn_xfer_to_livecrootn => clm3%g%l%c%p%pnf%livecrootn_xfer_to_livecrootn
-   deadcrootn_xfer_to_deadcrootn => clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn
-   leafc_xfer                    => clm3%g%l%c%p%pcs%leafc_xfer
-   frootc_xfer                   => clm3%g%l%c%p%pcs%frootc_xfer
-   livestemc_xfer                => clm3%g%l%c%p%pcs%livestemc_xfer
-   deadstemc_xfer                => clm3%g%l%c%p%pcs%deadstemc_xfer
-   livecrootc_xfer               => clm3%g%l%c%p%pcs%livecrootc_xfer
-   deadcrootc_xfer               => clm3%g%l%c%p%pcs%deadcrootc_xfer
-   leafn_xfer                    => clm3%g%l%c%p%pns%leafn_xfer
-   frootn_xfer                   => clm3%g%l%c%p%pns%frootn_xfer
-   livestemn_xfer                => clm3%g%l%c%p%pns%livestemn_xfer
-   deadstemn_xfer                => clm3%g%l%c%p%pns%deadstemn_xfer
-   livecrootn_xfer               => clm3%g%l%c%p%pns%livecrootn_xfer
-   deadcrootn_xfer               => clm3%g%l%c%p%pns%deadcrootn_xfer
-   leafc_storage_to_xfer         => clm3%g%l%c%p%pcf%leafc_storage_to_xfer
-   frootc_storage_to_xfer        => clm3%g%l%c%p%pcf%frootc_storage_to_xfer
-   livestemc_storage_to_xfer     => clm3%g%l%c%p%pcf%livestemc_storage_to_xfer
-   deadstemc_storage_to_xfer     => clm3%g%l%c%p%pcf%deadstemc_storage_to_xfer
-   livecrootc_storage_to_xfer    => clm3%g%l%c%p%pcf%livecrootc_storage_to_xfer
-   deadcrootc_storage_to_xfer    => clm3%g%l%c%p%pcf%deadcrootc_storage_to_xfer
-   gresp_storage_to_xfer         => clm3%g%l%c%p%pcf%gresp_storage_to_xfer
-   leafn_storage_to_xfer         => clm3%g%l%c%p%pnf%leafn_storage_to_xfer
-   frootn_storage_to_xfer        => clm3%g%l%c%p%pnf%frootn_storage_to_xfer
-   livestemn_storage_to_xfer     => clm3%g%l%c%p%pnf%livestemn_storage_to_xfer
-   deadstemn_storage_to_xfer     => clm3%g%l%c%p%pnf%deadstemn_storage_to_xfer
-   livecrootn_storage_to_xfer    => clm3%g%l%c%p%pnf%livecrootn_storage_to_xfer
-   deadcrootn_storage_to_xfer    => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
+   dormant_flag                  => pepv%dormant_flag
+   days_active                   => pepv%days_active
+   onset_flag                    => pepv%onset_flag
+   onset_counter                 => pepv%onset_counter
+   onset_gddflag                 => pepv%onset_gddflag
+   onset_gdd                     => pepv%onset_gdd
+   offset_flag                   => pepv%offset_flag
+   offset_counter                => pepv%offset_counter
+   dayl                          => pepv%dayl
+   prev_dayl                     => pepv%prev_dayl
+   annavg_t2m                    => pepv%annavg_t2m
+   prev_leafc_to_litter          => pepv%prev_leafc_to_litter
+   prev_frootc_to_litter         => pepv%prev_frootc_to_litter
+   bglfr                         => pepv%bglfr
+   bgtr                          => pepv%bgtr
+   lgsf                          => pepv%lgsf
+   leafc_xfer_to_leafc           => pcf%leafc_xfer_to_leafc
+   frootc_xfer_to_frootc         => pcf%frootc_xfer_to_frootc
+   livestemc_xfer_to_livestemc   => pcf%livestemc_xfer_to_livestemc
+   deadstemc_xfer_to_deadstemc   => pcf%deadstemc_xfer_to_deadstemc
+   livecrootc_xfer_to_livecrootc => pcf%livecrootc_xfer_to_livecrootc
+   deadcrootc_xfer_to_deadcrootc => pcf%deadcrootc_xfer_to_deadcrootc
+   leafn_xfer_to_leafn           => pnf%leafn_xfer_to_leafn
+   frootn_xfer_to_frootn         => pnf%frootn_xfer_to_frootn
+   livestemn_xfer_to_livestemn   => pnf%livestemn_xfer_to_livestemn
+   deadstemn_xfer_to_deadstemn   => pnf%deadstemn_xfer_to_deadstemn
+   livecrootn_xfer_to_livecrootn => pnf%livecrootn_xfer_to_livecrootn
+   deadcrootn_xfer_to_deadcrootn => pnf%deadcrootn_xfer_to_deadcrootn
+   leafc_xfer                    => pcs%leafc_xfer
+   frootc_xfer                   => pcs%frootc_xfer
+   livestemc_xfer                => pcs%livestemc_xfer
+   deadstemc_xfer                => pcs%deadstemc_xfer
+   livecrootc_xfer               => pcs%livecrootc_xfer
+   deadcrootc_xfer               => pcs%deadcrootc_xfer
+   leafn_xfer                    => pns%leafn_xfer
+   frootn_xfer                   => pns%frootn_xfer
+   livestemn_xfer                => pns%livestemn_xfer
+   deadstemn_xfer                => pns%deadstemn_xfer
+   livecrootn_xfer               => pns%livecrootn_xfer
+   deadcrootn_xfer               => pns%deadcrootn_xfer
+   leafc_storage_to_xfer         => pcf%leafc_storage_to_xfer
+   frootc_storage_to_xfer        => pcf%frootc_storage_to_xfer
+   livestemc_storage_to_xfer     => pcf%livestemc_storage_to_xfer
+   deadstemc_storage_to_xfer     => pcf%deadstemc_storage_to_xfer
+   livecrootc_storage_to_xfer    => pcf%livecrootc_storage_to_xfer
+   deadcrootc_storage_to_xfer    => pcf%deadcrootc_storage_to_xfer
+   gresp_storage_to_xfer         => pcf%gresp_storage_to_xfer
+   leafn_storage_to_xfer         => pnf%leafn_storage_to_xfer
+   frootn_storage_to_xfer        => pnf%frootn_storage_to_xfer
+   livestemn_storage_to_xfer     => pnf%livestemn_storage_to_xfer
+   deadstemn_storage_to_xfer     => pnf%deadstemn_storage_to_xfer
+   livecrootn_storage_to_xfer    => pnf%livecrootn_storage_to_xfer
+   deadcrootn_storage_to_xfer    => pnf%deadcrootn_storage_to_xfer
 #if (defined CNDV)
-   pftmayexist                   => clm3%g%l%c%p%pdgvs%pftmayexist
+   pftmayexist                   => pdgvs%pftmayexist
 #endif
 
    ! start pft loop
@@ -653,7 +653,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
          ! the constant 13750.9871 is the number of seconds per radian of hour-angle
 
          prev_dayl(p) = dayl(p)
-         lat = (SHR_CONST_PI/180._r8)*latdeg(pgridcell(p))
+         lat = (SHR_CONST_PI/180._r8)*grc%latdeg(pgridcell(p))
          temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
          temp = min(1._r8,max(-1._r8,temp))
          dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp)
@@ -968,87 +968,87 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-    ivt                            => clm3%g%l%c%p%itype
-    pcolumn                        => clm3%g%l%c%p%column
-    pgridcell                      => clm3%g%l%c%p%gridcell
-    latdeg                         => clm3%g%latdeg
-    decl                           => clm3%g%l%c%cps%decl
-    leafc_storage                  => clm3%g%l%c%p%pcs%leafc_storage
-    frootc_storage                 => clm3%g%l%c%p%pcs%frootc_storage
-    livestemc_storage              => clm3%g%l%c%p%pcs%livestemc_storage
-    deadstemc_storage              => clm3%g%l%c%p%pcs%deadstemc_storage
-    livecrootc_storage             => clm3%g%l%c%p%pcs%livecrootc_storage
-    deadcrootc_storage             => clm3%g%l%c%p%pcs%deadcrootc_storage
-    gresp_storage                  => clm3%g%l%c%p%pcs%gresp_storage
-    leafn_storage                  => clm3%g%l%c%p%pns%leafn_storage
-    frootn_storage                 => clm3%g%l%c%p%pns%frootn_storage
-    livestemn_storage              => clm3%g%l%c%p%pns%livestemn_storage
-    deadstemn_storage              => clm3%g%l%c%p%pns%deadstemn_storage
-    livecrootn_storage             => clm3%g%l%c%p%pns%livecrootn_storage
-    deadcrootn_storage             => clm3%g%l%c%p%pns%deadcrootn_storage
-    soilpsi                        => clm3%g%l%c%cps%soilpsi
-    t_soisno                       => clm3%g%l%c%ces%t_soisno
+    ivt                            =>pft%itype
+    pcolumn                        =>pft%column
+    pgridcell                      =>pft%gridcell
+    latdeg                         =>  grc%latdeg
+    decl                           => cps%decl
+    leafc_storage                  => pcs%leafc_storage
+    frootc_storage                 => pcs%frootc_storage
+    livestemc_storage              => pcs%livestemc_storage
+    deadstemc_storage              => pcs%deadstemc_storage
+    livecrootc_storage             => pcs%livecrootc_storage
+    deadcrootc_storage             => pcs%deadcrootc_storage
+    gresp_storage                  => pcs%gresp_storage
+    leafn_storage                  => pns%leafn_storage
+    frootn_storage                 => pns%frootn_storage
+    livestemn_storage              => pns%livestemn_storage
+    deadstemn_storage              => pns%deadstemn_storage
+    livecrootn_storage             => pns%livecrootn_storage
+    deadcrootn_storage             => pns%deadcrootn_storage
+    soilpsi                        => cps%soilpsi
+    t_soisno                       => ces%t_soisno
     leaf_long                      => pftcon%leaf_long
     woody                          => pftcon%woody
     stress_decid                   => pftcon%stress_decid
 
    ! Assign local pointers to derived type arrays (out)
-    dormant_flag                   => clm3%g%l%c%p%pepv%dormant_flag
-    days_active                    => clm3%g%l%c%p%pepv%days_active
-    onset_flag                     => clm3%g%l%c%p%pepv%onset_flag
-    onset_counter                  => clm3%g%l%c%p%pepv%onset_counter
-    onset_gddflag                  => clm3%g%l%c%p%pepv%onset_gddflag
-    onset_fdd                      => clm3%g%l%c%p%pepv%onset_fdd
-    onset_gdd                      => clm3%g%l%c%p%pepv%onset_gdd
-    onset_swi                      => clm3%g%l%c%p%pepv%onset_swi
-    offset_flag                    => clm3%g%l%c%p%pepv%offset_flag
-    offset_counter                 => clm3%g%l%c%p%pepv%offset_counter
-    dayl                           => clm3%g%l%c%p%pepv%dayl
-    offset_fdd                     => clm3%g%l%c%p%pepv%offset_fdd
-    offset_swi                     => clm3%g%l%c%p%pepv%offset_swi
-    annavg_t2m                     => clm3%g%l%c%p%pepv%annavg_t2m
-    prev_leafc_to_litter           => clm3%g%l%c%p%pepv%prev_leafc_to_litter
-    prev_frootc_to_litter          => clm3%g%l%c%p%pepv%prev_frootc_to_litter
-    lgsf                           => clm3%g%l%c%p%pepv%lgsf
-    bglfr                          => clm3%g%l%c%p%pepv%bglfr
-    bgtr                           => clm3%g%l%c%p%pepv%bgtr
-    leafc_xfer_to_leafc            => clm3%g%l%c%p%pcf%leafc_xfer_to_leafc
-    frootc_xfer_to_frootc          => clm3%g%l%c%p%pcf%frootc_xfer_to_frootc
-    livestemc_xfer_to_livestemc    => clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc
-    deadstemc_xfer_to_deadstemc    => clm3%g%l%c%p%pcf%deadstemc_xfer_to_deadstemc
-    livecrootc_xfer_to_livecrootc  => clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc
-    deadcrootc_xfer_to_deadcrootc  => clm3%g%l%c%p%pcf%deadcrootc_xfer_to_deadcrootc
-    leafn_xfer_to_leafn            => clm3%g%l%c%p%pnf%leafn_xfer_to_leafn
-    frootn_xfer_to_frootn          => clm3%g%l%c%p%pnf%frootn_xfer_to_frootn
-    livestemn_xfer_to_livestemn    => clm3%g%l%c%p%pnf%livestemn_xfer_to_livestemn
-    deadstemn_xfer_to_deadstemn    => clm3%g%l%c%p%pnf%deadstemn_xfer_to_deadstemn
-    livecrootn_xfer_to_livecrootn  => clm3%g%l%c%p%pnf%livecrootn_xfer_to_livecrootn
-    deadcrootn_xfer_to_deadcrootn  => clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn
-    leafc_xfer                     => clm3%g%l%c%p%pcs%leafc_xfer
-    frootc_xfer                    => clm3%g%l%c%p%pcs%frootc_xfer
-    livestemc_xfer                 => clm3%g%l%c%p%pcs%livestemc_xfer
-    deadstemc_xfer                 => clm3%g%l%c%p%pcs%deadstemc_xfer
-    livecrootc_xfer                => clm3%g%l%c%p%pcs%livecrootc_xfer
-    deadcrootc_xfer                => clm3%g%l%c%p%pcs%deadcrootc_xfer
-    leafn_xfer                     => clm3%g%l%c%p%pns%leafn_xfer
-    frootn_xfer                    => clm3%g%l%c%p%pns%frootn_xfer
-    livestemn_xfer                 => clm3%g%l%c%p%pns%livestemn_xfer
-    deadstemn_xfer                 => clm3%g%l%c%p%pns%deadstemn_xfer
-    livecrootn_xfer                => clm3%g%l%c%p%pns%livecrootn_xfer
-    deadcrootn_xfer                => clm3%g%l%c%p%pns%deadcrootn_xfer
-    leafc_storage_to_xfer          => clm3%g%l%c%p%pcf%leafc_storage_to_xfer
-    frootc_storage_to_xfer         => clm3%g%l%c%p%pcf%frootc_storage_to_xfer
-    livestemc_storage_to_xfer      => clm3%g%l%c%p%pcf%livestemc_storage_to_xfer
-    deadstemc_storage_to_xfer      => clm3%g%l%c%p%pcf%deadstemc_storage_to_xfer
-    livecrootc_storage_to_xfer     => clm3%g%l%c%p%pcf%livecrootc_storage_to_xfer
-    deadcrootc_storage_to_xfer     => clm3%g%l%c%p%pcf%deadcrootc_storage_to_xfer
-    gresp_storage_to_xfer          => clm3%g%l%c%p%pcf%gresp_storage_to_xfer
-    leafn_storage_to_xfer          => clm3%g%l%c%p%pnf%leafn_storage_to_xfer
-    frootn_storage_to_xfer         => clm3%g%l%c%p%pnf%frootn_storage_to_xfer
-    livestemn_storage_to_xfer      => clm3%g%l%c%p%pnf%livestemn_storage_to_xfer
-    deadstemn_storage_to_xfer      => clm3%g%l%c%p%pnf%deadstemn_storage_to_xfer
-    livecrootn_storage_to_xfer     => clm3%g%l%c%p%pnf%livecrootn_storage_to_xfer
-    deadcrootn_storage_to_xfer     => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
+    dormant_flag                   => pepv%dormant_flag
+    days_active                    => pepv%days_active
+    onset_flag                     => pepv%onset_flag
+    onset_counter                  => pepv%onset_counter
+    onset_gddflag                  => pepv%onset_gddflag
+    onset_fdd                      => pepv%onset_fdd
+    onset_gdd                      => pepv%onset_gdd
+    onset_swi                      => pepv%onset_swi
+    offset_flag                    => pepv%offset_flag
+    offset_counter                 => pepv%offset_counter
+    dayl                           => pepv%dayl
+    offset_fdd                     => pepv%offset_fdd
+    offset_swi                     => pepv%offset_swi
+    annavg_t2m                     => pepv%annavg_t2m
+    prev_leafc_to_litter           => pepv%prev_leafc_to_litter
+    prev_frootc_to_litter          => pepv%prev_frootc_to_litter
+    lgsf                           => pepv%lgsf
+    bglfr                          => pepv%bglfr
+    bgtr                           => pepv%bgtr
+    leafc_xfer_to_leafc            => pcf%leafc_xfer_to_leafc
+    frootc_xfer_to_frootc          => pcf%frootc_xfer_to_frootc
+    livestemc_xfer_to_livestemc    => pcf%livestemc_xfer_to_livestemc
+    deadstemc_xfer_to_deadstemc    => pcf%deadstemc_xfer_to_deadstemc
+    livecrootc_xfer_to_livecrootc  => pcf%livecrootc_xfer_to_livecrootc
+    deadcrootc_xfer_to_deadcrootc  => pcf%deadcrootc_xfer_to_deadcrootc
+    leafn_xfer_to_leafn            => pnf%leafn_xfer_to_leafn
+    frootn_xfer_to_frootn          => pnf%frootn_xfer_to_frootn
+    livestemn_xfer_to_livestemn    => pnf%livestemn_xfer_to_livestemn
+    deadstemn_xfer_to_deadstemn    => pnf%deadstemn_xfer_to_deadstemn
+    livecrootn_xfer_to_livecrootn  => pnf%livecrootn_xfer_to_livecrootn
+    deadcrootn_xfer_to_deadcrootn  => pnf%deadcrootn_xfer_to_deadcrootn
+    leafc_xfer                     => pcs%leafc_xfer
+    frootc_xfer                    => pcs%frootc_xfer
+    livestemc_xfer                 => pcs%livestemc_xfer
+    deadstemc_xfer                 => pcs%deadstemc_xfer
+    livecrootc_xfer                => pcs%livecrootc_xfer
+    deadcrootc_xfer                => pcs%deadcrootc_xfer
+    leafn_xfer                     => pns%leafn_xfer
+    frootn_xfer                    => pns%frootn_xfer
+    livestemn_xfer                 => pns%livestemn_xfer
+    deadstemn_xfer                 => pns%deadstemn_xfer
+    livecrootn_xfer                => pns%livecrootn_xfer
+    deadcrootn_xfer                => pns%deadcrootn_xfer
+    leafc_storage_to_xfer          => pcf%leafc_storage_to_xfer
+    frootc_storage_to_xfer         => pcf%frootc_storage_to_xfer
+    livestemc_storage_to_xfer      => pcf%livestemc_storage_to_xfer
+    deadstemc_storage_to_xfer      => pcf%deadstemc_storage_to_xfer
+    livecrootc_storage_to_xfer     => pcf%livecrootc_storage_to_xfer
+    deadcrootc_storage_to_xfer     => pcf%deadcrootc_storage_to_xfer
+    gresp_storage_to_xfer          => pcf%gresp_storage_to_xfer
+    leafn_storage_to_xfer          => pnf%leafn_storage_to_xfer
+    frootn_storage_to_xfer         => pnf%frootn_storage_to_xfer
+    livestemn_storage_to_xfer      => pnf%livestemn_storage_to_xfer
+    deadstemn_storage_to_xfer      => pnf%deadstemn_storage_to_xfer
+    livecrootn_storage_to_xfer     => pnf%livecrootn_storage_to_xfer
+    deadcrootn_storage_to_xfer     => pnf%deadcrootn_storage_to_xfer
 
    ! set time steps
    dayspyr = get_days_per_year()
@@ -1065,7 +1065,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
          ! and latitude from gps to calcluate daylength (convert latitude from degrees to radians)
          ! the constant 13750.9871 is the number of seconds per radian of hour-angle
 
-         lat = (SHR_CONST_PI/180._r8)*latdeg(pgridcell(p))
+         lat = (SHR_CONST_PI/180._r8)*grc%latdeg(pgridcell(p))
          temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
          temp = min(1._r8,max(-1._r8,temp))
          dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp)
@@ -1437,45 +1437,45 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
       real(r8), pointer :: fert(:)           ! fertilizer applied each timestep (gN/m2/s)
 !------------------------------------------------------------------------
 
-      pgridcell      => clm3%g%l%c%p%gridcell
-      pcolumn        => clm3%g%l%c%p%column
-      ivt            => clm3%g%l%c%p%itype
-      idop           => clm3%g%l%c%p%pps%idop
-      harvdate       => clm3%g%l%c%p%pps%harvdate
-      croplive       => clm3%g%l%c%p%pps%croplive
-      cropplant      => clm3%g%l%c%p%pps%cropplant
-      gddmaturity    => clm3%g%l%c%p%pps%gddmaturity
-      huileaf        => clm3%g%l%c%p%pps%huileaf
-      huigrain       => clm3%g%l%c%p%pps%huigrain
-      hui            => clm3%g%l%c%p%pps%gddplant
-      leafout        => clm3%g%l%c%p%pps%gddtsoi
-      tlai           => clm3%g%l%c%p%pps%tlai
-      gdd020         => clm3%g%l%c%p%pps%gdd020
-      gdd820         => clm3%g%l%c%p%pps%gdd820
-      gdd1020        => clm3%g%l%c%p%pps%gdd1020
-      a5tmin         => clm3%g%l%c%p%pes%a5tmin
-      a10tmin        => clm3%g%l%c%p%pes%a10tmin
-      t10            => clm3%g%l%c%p%pes%t10
-      cumvd          => clm3%g%l%c%p%pps%cumvd
-      hdidx          => clm3%g%l%c%p%pps%hdidx
-      vf             => clm3%g%l%c%p%pps%vf
-      t_ref2m_min    => clm3%g%l%c%p%pes%t_ref2m_min
-      bglfr          => clm3%g%l%c%p%pepv%bglfr
-      bgtr           => clm3%g%l%c%p%pepv%bgtr
-      lgsf           => clm3%g%l%c%p%pepv%lgsf
-      onset_flag     => clm3%g%l%c%p%pepv%onset_flag
-      offset_flag    => clm3%g%l%c%p%pepv%offset_flag
-      onset_counter  => clm3%g%l%c%p%pepv%onset_counter
-      offset_counter => clm3%g%l%c%p%pepv%offset_counter
-      fert_counter   => clm3%g%l%c%p%pepv%fert_counter
-      leafc_xfer     => clm3%g%l%c%p%pcs%leafc_xfer
-      leafn_xfer     => clm3%g%l%c%p%pns%leafn_xfer
-      fert           => clm3%g%l%c%p%pnf%fert
+      pgridcell      =>pft%gridcell
+      pcolumn        =>pft%column
+      ivt            =>pft%itype
+      idop           => pps%idop
+      harvdate       => pps%harvdate
+      croplive       => pps%croplive
+      cropplant      => pps%cropplant
+      gddmaturity    => pps%gddmaturity
+      huileaf        => pps%huileaf
+      huigrain       => pps%huigrain
+      hui            => pps%gddplant
+      leafout        => pps%gddtsoi
+      tlai           => pps%tlai
+      gdd020         => pps%gdd020
+      gdd820         => pps%gdd820
+      gdd1020        => pps%gdd1020
+      a5tmin         => pes%a5tmin
+      a10tmin        => pes%a10tmin
+      t10            => pes%t10
+      cumvd          => pps%cumvd
+      hdidx          => pps%hdidx
+      vf             => pps%vf
+      t_ref2m_min    => pes%t_ref2m_min
+      bglfr          => pepv%bglfr
+      bgtr           => pepv%bgtr
+      lgsf           => pepv%lgsf
+      onset_flag     => pepv%onset_flag
+      offset_flag    => pepv%offset_flag
+      onset_counter  => pepv%onset_counter
+      offset_counter => pepv%offset_counter
+      fert_counter   => pepv%fert_counter
+      leafc_xfer     => pcs%leafc_xfer
+      leafn_xfer     => pns%leafn_xfer
+      fert           => pnf%fert
       leaf_long      => pftcon%leaf_long
       leafcn         => pftcon%leafcn
       fertnitro      => pftcon%fertnitro
-      dwt_seedc_to_leaf => clm3%g%l%c%ccf%dwt_seedc_to_leaf
-      dwt_seedn_to_leaf => clm3%g%l%c%cnf%dwt_seedn_to_leaf
+      dwt_seedc_to_leaf => ccf%dwt_seedc_to_leaf
+      dwt_seedn_to_leaf => cnf%dwt_seedn_to_leaf
 ! ---------------------------------------
 
       ! get time info
@@ -1869,8 +1869,8 @@ subroutine CropPhenologyInit( begp, endp )
    integer , pointer :: pgridcell(:)                ! pft's gridcell index
    integer           :: p,g,n,i                     ! indices
 !------------------------------------------------------------------------
-   latdeg         => clm3%g%latdeg
-   pgridcell      => clm3%g%l%c%p%gridcell
+   latdeg         =>  grc%latdeg
+   pgridcell      =>pft%gridcell
 
    allocate( inhemi(begp:endp) )
 
@@ -1894,7 +1894,7 @@ subroutine CropPhenologyInit( begp, endp )
    do p = begp, endp
       g = pgridcell(p)
       ! Northern hemisphere
-      if ( latdeg(g) > 0.0_r8 )then
+      if ( grc%latdeg(g) > 0.0_r8 )then
          inhemi(p) = inNH
       else
          inhemi(p) = inSH
@@ -1965,18 +1965,18 @@ end subroutine CropPhenologyInit
       real(r8), pointer :: hdidx(:)       ! cold hardening index?
 !------------------------------------------------------------------------
 
-        pcolumn     => clm3%g%l%c%p%column
-        croplive    => clm3%g%l%c%p%pps%croplive
-        hdidx       => clm3%g%l%c%p%pps%hdidx
-        cumvd       => clm3%g%l%c%p%pps%cumvd
-        vf          => clm3%g%l%c%p%pps%vf
-        gddmaturity => clm3%g%l%c%p%pps%gddmaturity
-        huigrain    => clm3%g%l%c%p%pps%huigrain
-        tlai        => clm3%g%l%c%p%pps%tlai
-        t_ref2m     => clm3%g%l%c%p%pes%t_ref2m
-        t_ref2m_min => clm3%g%l%c%p%pes%t_ref2m_min
-        t_ref2m_max => clm3%g%l%c%p%pes%t_ref2m_max
-        snow_depth      => clm3%g%l%c%cps%snow_depth
+        pcolumn     =>pft%column
+        croplive    => pps%croplive
+        hdidx       => pps%hdidx
+        cumvd       => pps%cumvd
+        vf          => pps%vf
+        gddmaturity => pps%gddmaturity
+        huigrain    => pps%huigrain
+        tlai        => pps%tlai
+        t_ref2m     => pes%t_ref2m
+        t_ref2m_min => pes%t_ref2m_min
+        t_ref2m_max => pes%t_ref2m_max
+        snow_depth      => cps%snow_depth
 
         c = pcolumn(p)
 
@@ -2145,37 +2145,37 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
-    ivt                            => clm3%g%l%c%p%itype
-    onset_flag                     => clm3%g%l%c%p%pepv%onset_flag
-    onset_counter                  => clm3%g%l%c%p%pepv%onset_counter
-    leafc_xfer                     => clm3%g%l%c%p%pcs%leafc_xfer
-    frootc_xfer                    => clm3%g%l%c%p%pcs%frootc_xfer
-    livestemc_xfer                 => clm3%g%l%c%p%pcs%livestemc_xfer
-    deadstemc_xfer                 => clm3%g%l%c%p%pcs%deadstemc_xfer
-    livecrootc_xfer                => clm3%g%l%c%p%pcs%livecrootc_xfer
-    deadcrootc_xfer                => clm3%g%l%c%p%pcs%deadcrootc_xfer
-    leafn_xfer                     => clm3%g%l%c%p%pns%leafn_xfer
-    frootn_xfer                    => clm3%g%l%c%p%pns%frootn_xfer
-    livestemn_xfer                 => clm3%g%l%c%p%pns%livestemn_xfer
-    deadstemn_xfer                 => clm3%g%l%c%p%pns%deadstemn_xfer
-    livecrootn_xfer                => clm3%g%l%c%p%pns%livecrootn_xfer
-    deadcrootn_xfer                => clm3%g%l%c%p%pns%deadcrootn_xfer
-    bgtr                           => clm3%g%l%c%p%pepv%bgtr
+    ivt                            =>pft%itype
+    onset_flag                     => pepv%onset_flag
+    onset_counter                  => pepv%onset_counter
+    leafc_xfer                     => pcs%leafc_xfer
+    frootc_xfer                    => pcs%frootc_xfer
+    livestemc_xfer                 => pcs%livestemc_xfer
+    deadstemc_xfer                 => pcs%deadstemc_xfer
+    livecrootc_xfer                => pcs%livecrootc_xfer
+    deadcrootc_xfer                => pcs%deadcrootc_xfer
+    leafn_xfer                     => pns%leafn_xfer
+    frootn_xfer                    => pns%frootn_xfer
+    livestemn_xfer                 => pns%livestemn_xfer
+    deadstemn_xfer                 => pns%deadstemn_xfer
+    livecrootn_xfer                => pns%livecrootn_xfer
+    deadcrootn_xfer                => pns%deadcrootn_xfer
+    bgtr                           => pepv%bgtr
     woody                          => pftcon%woody
 
    ! assign local pointers to derived type arrays (out)
-    leafc_xfer_to_leafc            => clm3%g%l%c%p%pcf%leafc_xfer_to_leafc
-    frootc_xfer_to_frootc          => clm3%g%l%c%p%pcf%frootc_xfer_to_frootc
-    livestemc_xfer_to_livestemc    => clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc
-    deadstemc_xfer_to_deadstemc    => clm3%g%l%c%p%pcf%deadstemc_xfer_to_deadstemc
-    livecrootc_xfer_to_livecrootc  => clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc
-    deadcrootc_xfer_to_deadcrootc  => clm3%g%l%c%p%pcf%deadcrootc_xfer_to_deadcrootc
-    leafn_xfer_to_leafn            => clm3%g%l%c%p%pnf%leafn_xfer_to_leafn
-    frootn_xfer_to_frootn          => clm3%g%l%c%p%pnf%frootn_xfer_to_frootn
-    livestemn_xfer_to_livestemn    => clm3%g%l%c%p%pnf%livestemn_xfer_to_livestemn
-    deadstemn_xfer_to_deadstemn    => clm3%g%l%c%p%pnf%deadstemn_xfer_to_deadstemn
-    livecrootn_xfer_to_livecrootn  => clm3%g%l%c%p%pnf%livecrootn_xfer_to_livecrootn
-    deadcrootn_xfer_to_deadcrootn  => clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn
+    leafc_xfer_to_leafc            => pcf%leafc_xfer_to_leafc
+    frootc_xfer_to_frootc          => pcf%frootc_xfer_to_frootc
+    livestemc_xfer_to_livestemc    => pcf%livestemc_xfer_to_livestemc
+    deadstemc_xfer_to_deadstemc    => pcf%deadstemc_xfer_to_deadstemc
+    livecrootc_xfer_to_livecrootc  => pcf%livecrootc_xfer_to_livecrootc
+    deadcrootc_xfer_to_deadcrootc  => pcf%deadcrootc_xfer_to_deadcrootc
+    leafn_xfer_to_leafn            => pnf%leafn_xfer_to_leafn
+    frootn_xfer_to_frootn          => pnf%frootn_xfer_to_frootn
+    livestemn_xfer_to_livestemn    => pnf%livestemn_xfer_to_livestemn
+    deadstemn_xfer_to_deadstemn    => pnf%deadstemn_xfer_to_deadstemn
+    livecrootn_xfer_to_livecrootn  => pnf%livecrootn_xfer_to_livecrootn
+    deadcrootn_xfer_to_deadcrootn  => pnf%deadcrootn_xfer_to_deadcrootn
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2306,17 +2306,17 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
-    ivt                            => clm3%g%l%c%p%itype
-    offset_flag                    => clm3%g%l%c%p%pepv%offset_flag
-    offset_counter                 => clm3%g%l%c%p%pepv%offset_counter
-    leafc                          => clm3%g%l%c%p%pcs%leafc
-    frootc                         => clm3%g%l%c%p%pcs%frootc
-    grainc                         => clm3%g%l%c%p%pcs%grainc
-    livestemc                      => clm3%g%l%c%p%pcs%livestemc
-    cpool_to_grainc                => clm3%g%l%c%p%pcf%cpool_to_grainc
-    cpool_to_livestemc             => clm3%g%l%c%p%pcf%cpool_to_livestemc
-    cpool_to_leafc                 => clm3%g%l%c%p%pcf%cpool_to_leafc
-    cpool_to_frootc                => clm3%g%l%c%p%pcf%cpool_to_frootc
+    ivt                            =>pft%itype
+    offset_flag                    => pepv%offset_flag
+    offset_counter                 => pepv%offset_counter
+    leafc                          => pcs%leafc
+    frootc                         => pcs%frootc
+    grainc                         => pcs%grainc
+    livestemc                      => pcs%livestemc
+    cpool_to_grainc                => pcf%cpool_to_grainc
+    cpool_to_livestemc             => pcf%cpool_to_livestemc
+    cpool_to_leafc                 => pcf%cpool_to_leafc
+    cpool_to_frootc                => pcf%cpool_to_frootc
     leafcn                         => pftcon%leafcn
     lflitcn                        => pftcon%lflitcn
     frootcn                        => pftcon%frootcn
@@ -2324,17 +2324,17 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
     graincn                        => pftcon%graincn
 
    ! assign local pointers to derived type arrays (out)
-    prev_leafc_to_litter           => clm3%g%l%c%p%pepv%prev_leafc_to_litter
-    prev_frootc_to_litter          => clm3%g%l%c%p%pepv%prev_frootc_to_litter
-    leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
-    frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
-    livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
-    grainc_to_food                 => clm3%g%l%c%p%pcf%grainc_to_food
-    livestemn_to_litter            => clm3%g%l%c%p%pnf%livestemn_to_litter
-    grainn_to_food                 => clm3%g%l%c%p%pnf%grainn_to_food
-    leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
-    leafn_to_retransn              => clm3%g%l%c%p%pnf%leafn_to_retransn
-    frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
+    prev_leafc_to_litter           => pepv%prev_leafc_to_litter
+    prev_frootc_to_litter          => pepv%prev_frootc_to_litter
+    leafc_to_litter                => pcf%leafc_to_litter
+    frootc_to_litter               => pcf%frootc_to_litter
+    livestemc_to_litter            => pcf%livestemc_to_litter
+    grainc_to_food                 => pcf%grainc_to_food
+    livestemn_to_litter            => pnf%livestemn_to_litter
+    grainn_to_food                 => pnf%grainn_to_food
+    leafn_to_litter                => pnf%leafn_to_litter
+    leafn_to_retransn              => pnf%leafn_to_retransn
+    frootn_to_litter               => pnf%frootn_to_litter
 
    ! The litterfall transfer rate starts at 0.0 and increases linearly
    ! over time, with displayed growth going to 0.0 on the last day of litterfall
@@ -2440,20 +2440,20 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
-    ivt                            => clm3%g%l%c%p%itype
-    bglfr                          => clm3%g%l%c%p%pepv%bglfr
-    leafc                          => clm3%g%l%c%p%pcs%leafc
-    frootc                         => clm3%g%l%c%p%pcs%frootc
+    ivt                            =>pft%itype
+    bglfr                          => pepv%bglfr
+    leafc                          => pcs%leafc
+    frootc                         => pcs%frootc
     leafcn                         => pftcon%leafcn
     lflitcn                        => pftcon%lflitcn
     frootcn                        => pftcon%frootcn
 
    ! assign local pointers to derived type arrays (out)
-    leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
-    frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
-    leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
-    leafn_to_retransn              => clm3%g%l%c%p%pnf%leafn_to_retransn
-    frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
+    leafc_to_litter                => pcf%leafc_to_litter
+    frootc_to_litter               => pcf%frootc_to_litter
+    leafn_to_litter                => pnf%leafn_to_litter
+    leafn_to_retransn              => pnf%leafn_to_retransn
+    frootn_to_litter               => pnf%frootn_to_litter
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2538,22 +2538,22 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
-    ivt                            => clm3%g%l%c%p%itype
-    livestemc                      => clm3%g%l%c%p%pcs%livestemc
-    livecrootc                     => clm3%g%l%c%p%pcs%livecrootc
-    livestemn                      => clm3%g%l%c%p%pns%livestemn
-    livecrootn                     => clm3%g%l%c%p%pns%livecrootn
+    ivt                            =>pft%itype
+    livestemc                      => pcs%livestemc
+    livecrootc                     => pcs%livecrootc
+    livestemn                      => pns%livestemn
+    livecrootn                     => pns%livecrootn
     woody                          => pftcon%woody
     livewdcn                       => pftcon%livewdcn
     deadwdcn                       => pftcon%deadwdcn
 
    ! assign local pointers to derived type arrays (out)
-    livestemc_to_deadstemc         => clm3%g%l%c%p%pcf%livestemc_to_deadstemc
-    livecrootc_to_deadcrootc       => clm3%g%l%c%p%pcf%livecrootc_to_deadcrootc
-    livestemn_to_deadstemn         => clm3%g%l%c%p%pnf%livestemn_to_deadstemn
-    livestemn_to_retransn          => clm3%g%l%c%p%pnf%livestemn_to_retransn
-    livecrootn_to_deadcrootn       => clm3%g%l%c%p%pnf%livecrootn_to_deadcrootn
-    livecrootn_to_retransn         => clm3%g%l%c%p%pnf%livecrootn_to_retransn
+    livestemc_to_deadstemc         => pcf%livestemc_to_deadstemc
+    livecrootc_to_deadcrootc       => pcf%livecrootc_to_deadcrootc
+    livestemn_to_deadstemn         => pnf%livestemn_to_deadstemn
+    livestemn_to_retransn          => pnf%livestemn_to_retransn
+    livecrootn_to_deadcrootn       => pnf%livecrootn_to_deadcrootn
+    livecrootn_to_retransn         => pnf%livecrootn_to_retransn
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2655,25 +2655,25 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! assign local pointers to derived type arrays (in)
-    pactive                        => clm3%g%l%c%p%active
-    ivt                            => clm3%g%l%c%p%itype
-    wtcol                          => clm3%g%l%c%p%wtcol
-    leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
-    frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
-    livestemc_to_litter            => clm3%g%l%c%p%pcf%livestemc_to_litter
-    grainc_to_food                 => clm3%g%l%c%p%pcf%grainc_to_food
-    livestemn_to_litter            => clm3%g%l%c%p%pnf%livestemn_to_litter
-    grainn_to_food                 => clm3%g%l%c%p%pnf%grainn_to_food
-    leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
-    frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
-    npfts                          => clm3%g%l%c%npfts
-    pfti                           => clm3%g%l%c%pfti
-    phenology_c_to_litr_met_c      => clm3%g%l%c%ccf%phenology_c_to_litr_met_c
-    phenology_c_to_litr_cel_c      => clm3%g%l%c%ccf%phenology_c_to_litr_cel_c
-    phenology_c_to_litr_lig_c      => clm3%g%l%c%ccf%phenology_c_to_litr_lig_c
-    phenology_n_to_litr_met_n      => clm3%g%l%c%cnf%phenology_n_to_litr_met_n
-    phenology_n_to_litr_cel_n      => clm3%g%l%c%cnf%phenology_n_to_litr_cel_n
-    phenology_n_to_litr_lig_n      => clm3%g%l%c%cnf%phenology_n_to_litr_lig_n
+    pactive                        => pft%active
+    ivt                            =>pft%itype
+    wtcol                          =>pft%wtcol
+    leafc_to_litter                => pcf%leafc_to_litter
+    frootc_to_litter               => pcf%frootc_to_litter
+    livestemc_to_litter            => pcf%livestemc_to_litter
+    grainc_to_food                 => pcf%grainc_to_food
+    livestemn_to_litter            => pnf%livestemn_to_litter
+    grainn_to_food                 => pnf%grainn_to_food
+    leafn_to_litter                => pnf%leafn_to_litter
+    frootn_to_litter               => pnf%frootn_to_litter
+    npfts                          =>col%npfts
+    pfti                           =>col%pfti
+    phenology_c_to_litr_met_c      => ccf%phenology_c_to_litr_met_c
+    phenology_c_to_litr_cel_c      => ccf%phenology_c_to_litr_cel_c
+    phenology_c_to_litr_lig_c      => ccf%phenology_c_to_litr_lig_c
+    phenology_n_to_litr_met_n      => cnf%phenology_n_to_litr_met_n
+    phenology_n_to_litr_cel_n      => cnf%phenology_n_to_litr_cel_n
+    phenology_n_to_litr_lig_n      => cnf%phenology_n_to_litr_lig_n
     lf_flab                        => pftcon%lf_flab
     lf_fcel                        => pftcon%lf_fcel
     lf_flig                        => pftcon%lf_flig
@@ -2683,8 +2683,8 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 
    ! assign local pointers to derived type arrays (out)
 
-    leaf_prof                      => clm3%g%l%c%p%pps%leaf_prof
-    froot_prof                     => clm3%g%l%c%p%pps%froot_prof
+    leaf_prof                      => pps%leaf_prof
+    froot_prof                     => pps%froot_prof
     
     do j = 1, nlevdecomp
        do pi = 1,max_pft_per_col

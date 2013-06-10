@@ -80,7 +80,7 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    ctype          => clm3%g%l%c%itype
+    ctype          => col%itype
 
     ! Solve the matrix
 

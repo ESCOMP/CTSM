@@ -91,7 +91,7 @@ contains
 ! for the entire canopy to begin with.  Corrected this inconsistency in this version, so that
 ! the parsun and parsha fluxes going into canopy fluxes are per unit lai in the sunlit and
 ! shaded canopies.
-! 6/9/03, Peter Thornton: Moved coszen from g%gps to c%cps to avoid problem
+! 6/9/03, Peter Thornton: Moved coszen from gps tocol%cps to avoid problem
 ! with OpenMP threading over columns, where different columns hit the radiation
 ! time step at different times during execution.
 ! 6/10/03, Peter Thornton: Added constraint on negative tot_aid, instead of
@@ -251,117 +251,117 @@ contains
 
      ! Assign local pointers to multi-level derived type members (gridcell level)
 
-     londeg        => clm3%g%londeg
-     latdeg        => clm3%g%latdeg
+     londeg        =>  grc%londeg
+     latdeg        =>  grc%latdeg
      forc_solad    => clm_a2l%forc_solad
      forc_solai    => clm_a2l%forc_solai
 
      ! Assign local pointers to multi-level derived type members (landunit level)
 
-     ityplun       => clm3%g%l%itype
+     ityplun       => lun%itype
 
      ! Assign local pointers to multi-level derived type members (column level)
 
-     albgrd        => clm3%g%l%c%cps%albgrd
-     albgri        => clm3%g%l%c%cps%albgri
-     coszen        => clm3%g%l%c%cps%coszen
+     albgrd        => cps%albgrd
+     albgri        => cps%albgri
+     coszen        => cps%coszen
 
      ! Assign local pointers to derived type members (pft-level)
 
-     albsod        => clm3%g%l%c%cps%albsod
-     albsoi        => clm3%g%l%c%cps%albsoi
-     sabg_soil     => clm3%g%l%c%p%pef%sabg_soil
-     sabg_snow     => clm3%g%l%c%p%pef%sabg_snow
-     pactive       => clm3%g%l%c%p%active
-     plandunit     => clm3%g%l%c%p%landunit
-     ivt           => clm3%g%l%c%p%itype
-     pcolumn       => clm3%g%l%c%p%column
-     pgridcell     => clm3%g%l%c%p%gridcell
-     elai          => clm3%g%l%c%p%pps%elai
-     esai          => clm3%g%l%c%p%pps%esai
-     laisun        => clm3%g%l%c%p%pps%laisun
-     laisha        => clm3%g%l%c%p%pps%laisha
-     laisun_z      => clm3%g%l%c%p%pps%laisun_z
-     laisha_z      => clm3%g%l%c%p%pps%laisha_z
-     albd          => clm3%g%l%c%p%pps%albd
-     albi          => clm3%g%l%c%p%pps%albi
-     fabd          => clm3%g%l%c%p%pps%fabd
-     fabd_sun      => clm3%g%l%c%p%pps%fabd_sun
-     fabd_sha      => clm3%g%l%c%p%pps%fabd_sha
-     fabi          => clm3%g%l%c%p%pps%fabi
-     fabi_sun      => clm3%g%l%c%p%pps%fabi_sun
-     fabi_sha      => clm3%g%l%c%p%pps%fabi_sha
-     ftdd          => clm3%g%l%c%p%pps%ftdd
-     ftid          => clm3%g%l%c%p%pps%ftid
-     ftii          => clm3%g%l%c%p%pps%ftii
-     nrad          => clm3%g%l%c%p%pps%nrad
-     fabd_sun_z    => clm3%g%l%c%p%pps%fabd_sun_z
-     fabd_sha_z    => clm3%g%l%c%p%pps%fabd_sha_z
-     fabi_sun_z    => clm3%g%l%c%p%pps%fabi_sun_z
-     fabi_sha_z    => clm3%g%l%c%p%pps%fabi_sha_z
-     fsun_z        => clm3%g%l%c%p%pps%fsun_z
-     tlai_z        => clm3%g%l%c%p%pps%tlai_z
-     tsai_z        => clm3%g%l%c%p%pps%tsai_z
-     fsun          => clm3%g%l%c%p%pps%fsun
-     sabg          => clm3%g%l%c%p%pef%sabg
-     sabv          => clm3%g%l%c%p%pef%sabv
-     snow_depth        => clm3%g%l%c%cps%snow_depth
-     fsa           => clm3%g%l%c%p%pef%fsa
-     fsa_r         => clm3%g%l%c%p%pef%fsa_r
-     fsr           => clm3%g%l%c%p%pef%fsr
-     parsun_z      => clm3%g%l%c%p%pef%parsun_z
-     parsha_z      => clm3%g%l%c%p%pef%parsha_z
-     fsds_vis_d    => clm3%g%l%c%p%pef%fsds_vis_d
-     fsds_nir_d    => clm3%g%l%c%p%pef%fsds_nir_d
-     fsds_vis_i    => clm3%g%l%c%p%pef%fsds_vis_i
-     fsds_nir_i    => clm3%g%l%c%p%pef%fsds_nir_i
-     fsr_vis_d     => clm3%g%l%c%p%pef%fsr_vis_d
-     fsr_nir_d     => clm3%g%l%c%p%pef%fsr_nir_d
-     fsr_vis_i     => clm3%g%l%c%p%pef%fsr_vis_i
-     fsr_nir_i     => clm3%g%l%c%p%pef%fsr_nir_i
-     fsds_vis_d_ln => clm3%g%l%c%p%pef%fsds_vis_d_ln
-     fsds_nir_d_ln => clm3%g%l%c%p%pef%fsds_nir_d_ln
-     parveg_ln     => clm3%g%l%c%p%pef%parveg_ln
-     fsds_vis_i_ln => clm3%g%l%c%p%pef%fsds_vis_i_ln
-     fsr_vis_d_ln  => clm3%g%l%c%p%pef%fsr_vis_d_ln
-     fsr_nir_d_ln  => clm3%g%l%c%p%pef%fsr_nir_d_ln
+     albsod        => cps%albsod
+     albsoi        => cps%albsoi
+     sabg_soil     => pef%sabg_soil
+     sabg_snow     => pef%sabg_snow
+     pactive       => pft%active
+     plandunit     =>pft%landunit
+     ivt           =>pft%itype
+     pcolumn       =>pft%column
+     pgridcell     =>pft%gridcell
+     elai          => pps%elai
+     esai          => pps%esai
+     laisun        => pps%laisun
+     laisha        => pps%laisha
+     laisun_z      => pps%laisun_z
+     laisha_z      => pps%laisha_z
+     albd          => pps%albd
+     albi          => pps%albi
+     fabd          => pps%fabd
+     fabd_sun      => pps%fabd_sun
+     fabd_sha      => pps%fabd_sha
+     fabi          => pps%fabi
+     fabi_sun      => pps%fabi_sun
+     fabi_sha      => pps%fabi_sha
+     ftdd          => pps%ftdd
+     ftid          => pps%ftid
+     ftii          => pps%ftii
+     nrad          => pps%nrad
+     fabd_sun_z    => pps%fabd_sun_z
+     fabd_sha_z    => pps%fabd_sha_z
+     fabi_sun_z    => pps%fabi_sun_z
+     fabi_sha_z    => pps%fabi_sha_z
+     fsun_z        => pps%fsun_z
+     tlai_z        => pps%tlai_z
+     tsai_z        => pps%tsai_z
+     fsun          => pps%fsun
+     sabg          => pef%sabg
+     sabv          => pef%sabv
+     snow_depth        => cps%snow_depth
+     fsa           => pef%fsa
+     fsa_r         => pef%fsa_r
+     fsr           => pef%fsr
+     parsun_z      => pef%parsun_z
+     parsha_z      => pef%parsha_z
+     fsds_vis_d    => pef%fsds_vis_d
+     fsds_nir_d    => pef%fsds_nir_d
+     fsds_vis_i    => pef%fsds_vis_i
+     fsds_nir_i    => pef%fsds_nir_i
+     fsr_vis_d     => pef%fsr_vis_d
+     fsr_nir_d     => pef%fsr_nir_d
+     fsr_vis_i     => pef%fsr_vis_i
+     fsr_nir_i     => pef%fsr_nir_i
+     fsds_vis_d_ln => pef%fsds_vis_d_ln
+     fsds_nir_d_ln => pef%fsds_nir_d_ln
+     parveg_ln     => pef%parveg_ln
+     fsds_vis_i_ln => pef%fsds_vis_i_ln
+     fsr_vis_d_ln  => pef%fsr_vis_d_ln
+     fsr_nir_d_ln  => pef%fsr_nir_d_ln
      
      ! Assign local pointers to derived type members (ecophysiological)
 
-     frac_sno         => clm3%g%l%c%cps%frac_sno
-     flx_absdv        => clm3%g%l%c%cps%flx_absdv
-     flx_absdn        => clm3%g%l%c%cps%flx_absdn
-     flx_absiv        => clm3%g%l%c%cps%flx_absiv
-     flx_absin        => clm3%g%l%c%cps%flx_absin
-     sabg_lyr         => clm3%g%l%c%p%pef%sabg_lyr
-     sabg_pen         => clm3%g%l%c%p%pef%sabg_pen
-     snl              => clm3%g%l%c%cps%snl
-     sfc_frc_aer      => clm3%g%l%c%p%pef%sfc_frc_aer
-     sfc_frc_aer_sno  => clm3%g%l%c%p%pef%sfc_frc_aer_sno
-     albgrd_pur       => clm3%g%l%c%cps%albgrd_pur
-     albgri_pur       => clm3%g%l%c%cps%albgri_pur
-     sfc_frc_bc       => clm3%g%l%c%p%pef%sfc_frc_bc
-     sfc_frc_bc_sno   => clm3%g%l%c%p%pef%sfc_frc_bc_sno
-     albgrd_bc        => clm3%g%l%c%cps%albgrd_bc
-     albgri_bc        => clm3%g%l%c%cps%albgri_bc
-     sfc_frc_oc       => clm3%g%l%c%p%pef%sfc_frc_oc
-     sfc_frc_oc_sno   => clm3%g%l%c%p%pef%sfc_frc_oc_sno
-     albgrd_oc        => clm3%g%l%c%cps%albgrd_oc
-     albgri_oc        => clm3%g%l%c%cps%albgri_oc
-     sfc_frc_dst      => clm3%g%l%c%p%pef%sfc_frc_dst
-     sfc_frc_dst_sno  => clm3%g%l%c%p%pef%sfc_frc_dst_sno
-     albgrd_dst       => clm3%g%l%c%cps%albgrd_dst
-     albgri_dst       => clm3%g%l%c%cps%albgri_dst
-     albsnd_hst       => clm3%g%l%c%cps%albsnd_hst
-     albsni_hst       => clm3%g%l%c%cps%albsni_hst
-     fsr_sno_vd       => clm3%g%l%c%p%pef%fsr_sno_vd
-     fsr_sno_nd       => clm3%g%l%c%p%pef%fsr_sno_nd
-     fsr_sno_vi       => clm3%g%l%c%p%pef%fsr_sno_vi
-     fsr_sno_ni       => clm3%g%l%c%p%pef%fsr_sno_ni
-     fsds_sno_vd      => clm3%g%l%c%p%pef%fsds_sno_vd
-     fsds_sno_nd      => clm3%g%l%c%p%pef%fsds_sno_nd
-     fsds_sno_vi      => clm3%g%l%c%p%pef%fsds_sno_vi
-     fsds_sno_ni      => clm3%g%l%c%p%pef%fsds_sno_ni
+     frac_sno         => cps%frac_sno
+     flx_absdv        => cps%flx_absdv
+     flx_absdn        => cps%flx_absdn
+     flx_absiv        => cps%flx_absiv
+     flx_absin        => cps%flx_absin
+     sabg_lyr         => pef%sabg_lyr
+     sabg_pen         => pef%sabg_pen
+     snl              => cps%snl
+     sfc_frc_aer      => pef%sfc_frc_aer
+     sfc_frc_aer_sno  => pef%sfc_frc_aer_sno
+     albgrd_pur       => cps%albgrd_pur
+     albgri_pur       => cps%albgri_pur
+     sfc_frc_bc       => pef%sfc_frc_bc
+     sfc_frc_bc_sno   => pef%sfc_frc_bc_sno
+     albgrd_bc        => cps%albgrd_bc
+     albgri_bc        => cps%albgri_bc
+     sfc_frc_oc       => pef%sfc_frc_oc
+     sfc_frc_oc_sno   => pef%sfc_frc_oc_sno
+     albgrd_oc        => cps%albgrd_oc
+     albgri_oc        => cps%albgri_oc
+     sfc_frc_dst      => pef%sfc_frc_dst
+     sfc_frc_dst_sno  => pef%sfc_frc_dst_sno
+     albgrd_dst       => cps%albgrd_dst
+     albgri_dst       => cps%albgri_dst
+     albsnd_hst       => cps%albsnd_hst
+     albsni_hst       => cps%albsni_hst
+     fsr_sno_vd       => pef%fsr_sno_vd
+     fsr_sno_nd       => pef%fsr_sno_nd
+     fsr_sno_vi       => pef%fsr_sno_vi
+     fsr_sno_ni       => pef%fsr_sno_ni
+     fsds_sno_vd      => pef%fsds_sno_vd
+     fsds_sno_nd      => pef%fsds_sno_nd
+     fsds_sno_vi      => pef%fsds_sno_vi
+     fsds_sno_ni      => pef%fsds_sno_ni
 
      ! Determine seconds off current time step
      
@@ -657,7 +657,7 @@ contains
            fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
            fsr_nir_i(p)  = albi(p,2)*forc_solai(g,2)
            
-           local_secp1 = secs + nint((londeg(g)/degpsec)/dtime)*dtime
+           local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
            local_secp1 = mod(local_secp1,isecspday)
            if (local_secp1 == isecspday/2) then
               fsds_vis_d_ln(p) = forc_solad(g,1)
