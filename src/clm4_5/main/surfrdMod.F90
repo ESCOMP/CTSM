@@ -7,27 +7,15 @@ module surfrdMod
 !
 ! !DESCRIPTION:
 ! Contains methods for reading in surface data file and determining
-! two-dimensional subgrid weights as well as writing out new surface
-! dataset. When reading in the surface dataset, determines array
-! which sets the PFT for each of the [maxpatch] patches and
-! array which sets the relative abundance of the PFT.
-! Also fills in the PFTs for vegetated portion of each grid cell.
-! Fractional areas for these points pertain to "vegetated"
-! area not to total grid area. Need to adjust them for fraction of grid
-! that is vegetated. Also fills in urban, lake, wetland, and glacier patches.
+! subgrid weights
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : nlevsoifl, numpft, &
-                           maxpatch_pft, numcft, maxpatch, &
-                           npatch_urban_tbd, npatch_urban_hd, npatch_urban_md, &
-                           numurbl, npatch_lake, npatch_wet, &
-                           npatch_glacier,maxpatch_urb, npatch_glacier_mec, &
-                           maxpatch_glcmec
-  use clm_varctl  , only : glc_topomax, iulog, scmlat, scmlon, single_column, &
+  use clm_varpar  , only : nlevsoifl, numpft, numcft
+  use clm_varcon  , only : numurbl
+  use clm_varctl  , only : iulog, scmlat, scmlon, single_column, &
                            create_glacier_mec_landunit
-  use clm_varsur  , only : wtxy, vegxy, topoxy, pctspec
   use decompMod   , only : get_proc_bounds
   use clmtype
   use spmdMod                         
@@ -43,9 +31,7 @@ module surfrdMod
   public :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
   public :: surfrd_get_topo      ! Read grid topography into domain (after domain decomp)
   public :: surfrd_get_data      ! Read surface dataset and determine subgrid weights
-!
-! !PUBLIC DATA MEMBERS:
-  logical, public :: crop_prog = .false. ! If prognostic crops is turned on
+  public :: surfrd_check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -54,9 +40,9 @@ module surfrdMod
 !
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: surfrd_wtxy_special
-  private :: surfrd_wtxy_veg_all
-  private :: surfrd_wtxy_veg_dgvm
+  private :: surfrd_special
+  private :: surfrd_veg_all
+  private :: surfrd_veg_dgvm
 !
 ! !PRIVATE DATA MEMBERS:
   ! default multiplication factor for epsilon for error checks
@@ -485,13 +471,13 @@ contains
 !
 ! !USES:
     use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
-    use pftvarcon   , only : noveg
     use fileutils   , only : getfil
     use domainMod   , only : domain_type, domain_init, domain_clean
+    use clm_varsur  , only : pctspec, wt_lunit, topo_glc_mec
 !
 ! !ARGUMENTS:
     implicit none
-    type(domain_type),intent(in) :: ldomain     ! land domain associated with wtxy
+    type(domain_type),intent(in) :: ldomain     ! land domain
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
 !
 ! !CALLED FROM:
@@ -528,10 +514,8 @@ contains
     call get_proc_bounds(begg,endg)
     allocate(pctspec(begg:endg))
 
-    vegxy(:,:) = noveg
-    wtxy(:,:)  = 0._r8
     pctspec(:) = 0._r8
-    if (allocated(topoxy)) topoxy(:,:) = 0._r8
+    topo_glc_mec(:,:) = 0._r8
 
     ! Read surface data
 
@@ -601,24 +585,23 @@ contains
 
     ! Obtain special landunit info
 
-    call surfrd_wtxy_special(ncid, ldomain%ns)
+    call surfrd_special(ncid, ldomain%ns)
 
     ! Obtain vegetated landunit info
 
-#if (defined CNDV)
-    if (create_crop_landunit) then ! CNDV means allocate_all_vegpfts = .true.
-       call surfrd_wtxy_veg_all(ncid, ldomain%ns, ldomain%pftm)
-    end if
-    call surfrd_wtxy_veg_dgvm()
-#else
     if (allocate_all_vegpfts) then
-       call surfrd_wtxy_veg_all(ncid, ldomain%ns, ldomain%pftm)
+       call surfrd_veg_all(ncid, ldomain%ns)
     else
        call endrun (trim(subname) // 'only allocate_all_vegpfts is supported')
     end if
+
+#if (defined CNDV)
+    call surfrd_veg_dgvm()
 #endif
 
     call ncd_pio_closefile(ncid)
+
+    call surfrd_check_sums_equal_1(wt_lunit, begg, 'wt_lunit', subname)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read surface boundary data'
@@ -630,20 +613,20 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: surfrd_wtxy_special 
+! !IROUTINE: surfrd_special 
 !
 ! !INTERFACE:
-  subroutine surfrd_wtxy_special(ncid, ns)
+  subroutine surfrd_special(ncid, ns)
 !
 ! !DESCRIPTION:
 ! Determine weight with respect to gridcell of all special "pfts" as well
 ! as soil color and percent sand and clay
 !
 ! !USES:
-    use pftvarcon     , only : noveg
     use UrbanInputMod , only : urbinp
     use clm_varpar    , only : maxpatch_glcmec, nlevurb
-    use clm_varcon    , only : udens_base, udens_tbd, udens_hd, udens_md 
+    use clm_varcon    , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice, istice_mec
+    use clm_varsur    , only : wt_lunit, wt_glc_mec, topo_glc_mec, pctspec
 !
 ! !ARGUMENTS:
     implicit none
@@ -667,18 +650,16 @@ contains
     integer  :: nindx                      ! temporary for error check
     integer  :: ier                        ! error status
     integer  :: nlev                       ! level
-    integer  :: npatch
     logical  :: readvar
     real(r8),pointer :: pctgla(:)      ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)      ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
     real(r8),pointer :: pcturb(:,:)      ! percent of grid cell is urbanized
-    real(r8),pointer :: pctglc_mec(:,:)   ! percent of grid cell is glacier_mec (in each elev class)
     real(r8),pointer :: pctglc_mec_tot(:) ! percent of grid cell is glacier (sum over classes)
     real(r8),pointer :: pcturb_tot(:)  ! percent of grid cell is urban (sum over density classes)
+    integer  :: dens_index             ! urban density index
     integer  :: dindx                      ! temporary for error check
-    real(r8),pointer :: topoglc_mec(:,:)  ! surface elevation in each elev class
-    character(len=32) :: subname = 'surfrd_wtxy_special'  ! subroutine name
+    character(len=32) :: subname = 'surfrd_special'  ! subroutine name
     real(r8) closelat,closelon
 !!-----------------------------------------------------------------------
 
@@ -686,12 +667,7 @@ contains
 
     allocate(pctgla(begg:endg),pctlak(begg:endg))
     allocate(pctwet(begg:endg),pcturb(begg:endg,numurbl),pcturb_tot(begg:endg))
-    if (create_glacier_mec_landunit) then
-       allocate(pctglc_mec(begg:endg,maxpatch_glcmec))
-       allocate(pctglc_mec_tot(begg:endg))
-       allocate(topoglc_mec(begg:endg,maxpatch_glcmec))
-       allocate(glc_topomax(0:maxpatch_glcmec))
-    endif
+    allocate(pctglc_mec_tot(begg:endg))
 
     call check_dim(ncid, 'nlevsoi', nlevsoifl)
 
@@ -734,98 +710,29 @@ contains
        call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
        call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
 
-       call ncd_io(ncid=ncid, varname='GLC_MEC', flag='read', data=glc_topomax, &
-            readvar=readvar)
-       if (.not. readvar) call endrun( trim(subname)//'ERROR: GLC_MEC was NOT on the input surfdata file' )
-
-       call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=pctglc_mec, &
+       call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_GLC_MEC NOT on surfdata file' )
 
-       call ncd_io(ncid=ncid, varname='TOPO_GLC_MEC',  flag='read', data=topoglc_mec, &
+       wt_glc_mec(:,:) = wt_glc_mec(:,:) / 100._r8
+       call surfrd_check_sums_equal_1(wt_glc_mec, begg, 'wt_glc_mec', subname)
+
+       call ncd_io(ncid=ncid, varname='TOPO_GLC_MEC',  flag='read', data=topo_glc_mec, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( trim(subname)//' ERROR: TOPO_GLC_MEC NOT on surfdata file' )
 
-       pctglc_mec_tot(:) = 0._r8
-       do n = 1, maxpatch_glcmec
-          do nl = begg,endg
-             pctglc_mec_tot(nl) = pctglc_mec_tot(nl) + pctglc_mec(nl,n)
-          enddo
-       enddo
+       topo_glc_mec(:,:) = max(topo_glc_mec(:,:), 0._r8)
 
-       ! Make sure sum of pctglc_mec = pctgla (approximately), then correct pctglc_mec so
-       ! that its sum more exactly equals pctgla, then zero out pctgla
-       !
-       ! WJS (9-28-12): The reason for the correction piece of this is: in the surface
-       ! dataset, pctgla underwent various minor corrections that make it the trusted
-       ! value (as opposed to sum(pctglc_mec). sum(pctglc_mec) can differ from pctgla by
-       ! single precision roundoff. This difference can cause problems later (e.g., in the
-       ! consistency check in pftdynMod), so we do this correction here. It might be
-       ! better to do this correction in mksurfdata_map, but because of time constraints,
-       ! which make me unable to recreate surface datasets, I have to do it here instead
-       ! (and there are arguments for putting it here anyway).
 
-       do nl = begg,endg
-          ! We need to use a fairly high threshold for equality (2.0e-5) because pctgla
-          ! and pctglc_mec are computed using single precision inputs. Note that this
-          ! threshold agrees with the threshold in the error checks in mkglcmecMod:
-          ! mkglcmec in mksurfdata_map. 
-          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 2.0e-5) then
-             write(iulog,*) ' '
-             write(iulog,*) 'surfrd error: pctgla not equal to sum of pctglc_mec for nl=', nl
-             write(iulog,*) 'pctgla =', pctgla(nl)
-             write(iulog,*) 'pctglc_mec_tot =', pctglc_mec_tot(nl)
-             call endrun()
-          endif
-
-          ! Correct the remaining minor differences in pctglc_mec so sum more exactly
-          ! equals pctglc (see notes above for justification)
-          if (pctglc_mec_tot(nl) > 0.0_r8) then
-             pctglc_mec(nl,:) = pctglc_mec(nl,:) * pctgla(nl)/pctglc_mec_tot(nl)
-          end if
-
-          ! Now recompute pctglc_mec_tot, and confirm that we are now much closer to pctgla
-          pctglc_mec_tot(nl) = 0._r8
-          do n = 1, maxpatch_glcmec
-             pctglc_mec_tot(nl) = pctglc_mec_tot(nl) + pctglc_mec(nl,n)
-          end do
-
-          if (abs(pctgla(nl) - pctglc_mec_tot(nl)) > 1.0e-13) then
-             write(iulog,*) ' '
-             write(iulog,*) 'surfrd error: after correction, pctgla not equal to sum of pctglc_mec for nl=', nl
-             write(iulog,*) 'pctgla =', pctgla(nl)
-             write(iulog,*) 'pctglc_mec_tot =', pctglc_mec_tot(nl)
-             call endrun()
-          endif
-
-          ! Finally, zero out pctgla
-          pctgla(nl) = 0._r8
-       enddo
-
-       ! If pctglc_mec_tot is very close to 100%, round to 100%
-
-       do nl = begg,endg
-          ! The inequality here ( <= 2.0e-5 ) is designed to be the complement of the
-          ! above check that makes sure pctglc_mec_tot is close to pctgla: so if pctglc=
-          ! 100 (exactly), then exactly one of these conditionals will be triggered.
-          ! Update 9-28-12: Now that there is a rescaling of pctglc_mec to bring it more
-          ! in line with pctgla, we could probably decrease this tolerance again (the
-          ! point about exactly one of these conditionals being triggered no longer holds)
-          ! - or perhaps even get rid of this whole block of code. But I'm keeping this as
-          ! is for now because that's how I tested it, and I don't think it will hurt
-          ! anything to use this larger tolerance.
-          if (abs(pctglc_mec_tot(nl) - 100._r8) <= 2.0e-5) then
-             pctglc_mec(nl,:) = pctglc_mec(nl,:) * 100._r8 / pctglc_mec_tot(nl)
-             pctglc_mec_tot(nl) = 100._r8
-          endif
-       enddo
+       ! Put glacier area into the GLC_MEC landunit rather than the simple glacier landunit
+       pctglc_mec_tot(:) = pctgla(:)
+       pctgla(:) = 0._r8
 
        pctspec = pctwet + pctlak + pcturb_tot + pctglc_mec_tot
 
-       if ( masterproc ) write(iulog,*) '   elevation limits = ', glc_topomax
-
     else
 
+       pctglc_mec_tot(:) = 0._r8
        pctspec = pctwet + pctlak + pcturb_tot + pctgla
  
     endif
@@ -846,66 +753,22 @@ contains
        call endrun()
     end if
 
-    ! Determine veg and wtxy for special landunits
+    ! Determine wt_lunit for special landunits
 
     do nl = begg,endg
 
-       vegxy(nl,npatch_lake)   = noveg
-       wtxy(nl,npatch_lake)    = pctlak(nl)/100._r8
+       wt_lunit(nl,istdlak)     = pctlak(nl)/100._r8
 
-       vegxy(nl,npatch_wet)    = noveg
-       wtxy(nl,npatch_wet)     = pctwet(nl)/100._r8
+       wt_lunit(nl,istwet)      = pctwet(nl)/100._r8
 
-       vegxy(nl,npatch_glacier)= noveg
-       wtxy(nl,npatch_glacier) = pctgla(nl)/100._r8
+       wt_lunit(nl,istice)      = pctgla(nl)/100._r8
 
-       ! Initialize urban tall building district weights
-       n = udens_tbd - udens_base
-       do nurb = npatch_urban_tbd, npatch_urban_hd-1 
-          vegxy(nl,nurb) = noveg
-          wtxy(nl,nurb)  = pcturb(nl,n) / 100._r8
+       wt_lunit(nl,istice_mec)  = pctglc_mec_tot(nl)/100._r8
+
+       do n = isturb_MIN, isturb_MAX
+          dens_index = n - isturb_MIN + 1
+          wt_lunit(nl,n)        = pcturb(nl,dens_index) / 100._r8
        end do
-       if ( pcturb(nl,n) > 0.0_r8 )then
-          wtxy(nl,npatch_urban_tbd)   = wtxy(nl,npatch_urban_tbd)*urbinp%wtlunit_roof(nl,n)
-          wtxy(nl,npatch_urban_tbd+1) = wtxy(nl,npatch_urban_tbd+1)*(1 - urbinp%wtlunit_roof(nl,n))/3
-          wtxy(nl,npatch_urban_tbd+2) = wtxy(nl,npatch_urban_tbd+2)*(1 - urbinp%wtlunit_roof(nl,n))/3
-          wtxy(nl,npatch_urban_tbd+3) = wtxy(nl,npatch_urban_tbd+3)*(1 - urbinp%wtlunit_roof(nl,n))/3 &
-                                        * (1.-urbinp%wtroad_perv(nl,n))
-          wtxy(nl,npatch_urban_tbd+4) = wtxy(nl,npatch_urban_tbd+4)*(1 - urbinp%wtlunit_roof(nl,n))/3 &
-                                        * urbinp%wtroad_perv(nl,n)
-       end if
-
-       ! Initialize urban high density weights
-       n = udens_hd - udens_base
-       do nurb = npatch_urban_hd, npatch_urban_md-1 
-          vegxy(nl,nurb) = noveg
-          wtxy(nl,nurb)  = pcturb(nl,n) / 100._r8
-       end do
-       if ( pcturb(nl,n) > 0.0_r8 )then
-          wtxy(nl,npatch_urban_hd)   = wtxy(nl,npatch_urban_hd)*urbinp%wtlunit_roof(nl,n)
-          wtxy(nl,npatch_urban_hd+1) = wtxy(nl,npatch_urban_hd+1)*(1 - urbinp%wtlunit_roof(nl,n))/3
-          wtxy(nl,npatch_urban_hd+2) = wtxy(nl,npatch_urban_hd+2)*(1 - urbinp%wtlunit_roof(nl,n))/3
-          wtxy(nl,npatch_urban_hd+3) = wtxy(nl,npatch_urban_hd+3)*(1 - urbinp%wtlunit_roof(nl,n))/3 &
-                                        * (1.-urbinp%wtroad_perv(nl,n))
-          wtxy(nl,npatch_urban_hd+4) = wtxy(nl,npatch_urban_hd+4)*(1 - urbinp%wtlunit_roof(nl,n))/3 &
-                                        * urbinp%wtroad_perv(nl,n)
-       end if
-
-       ! Initialize urban medium density weights
-       n = udens_md - udens_base
-       do nurb = npatch_urban_md, npatch_lake-1 
-          vegxy(nl,nurb) = noveg
-          wtxy(nl,nurb)  = pcturb(nl,n) / 100._r8
-       end do
-       if ( pcturb(nl,n) > 0.0_r8 )then
-          wtxy(nl,npatch_urban_md)   = wtxy(nl,npatch_urban_md)*urbinp%wtlunit_roof(nl,n)
-          wtxy(nl,npatch_urban_md+1) = wtxy(nl,npatch_urban_md+1)*(1 - urbinp%wtlunit_roof(nl,n))/3
-          wtxy(nl,npatch_urban_md+2) = wtxy(nl,npatch_urban_md+2)*(1 - urbinp%wtlunit_roof(nl,n))/3
-          wtxy(nl,npatch_urban_md+3) = wtxy(nl,npatch_urban_md+3)*(1 - urbinp%wtlunit_roof(nl,n))/3 &
-                                        * (1.-urbinp%wtroad_perv(nl,n))
-          wtxy(nl,npatch_urban_md+4) = wtxy(nl,npatch_urban_md+4)*(1 - urbinp%wtlunit_roof(nl,n))/3 &
-                                        * urbinp%wtroad_perv(nl,n)
-       end if
 
     end do
 
@@ -995,47 +858,36 @@ contains
        end if
        call endrun()
     end if
-    ! Initialize glacier_mec weights
 
-    if (create_glacier_mec_landunit) then
-       do n = 1, maxpatch_glcmec
-          npatch = npatch_glacier_mec - maxpatch_glcmec + n
-          do nl = begg, endg
-             vegxy (nl,npatch) = noveg
-             wtxy  (nl,npatch) = pctglc_mec(nl,n)/100._r8
-             topoxy(nl,npatch) = topoglc_mec(nl,n)
-          enddo   ! nl
-       enddo      ! maxpatch_glcmec
-       deallocate(pctglc_mec, pctglc_mec_tot, topoglc_mec)
-    endif          ! create_glacier_mec_landunit
+    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot,pctglc_mec_tot)
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot)
-
-  end subroutine surfrd_wtxy_special
+  end subroutine surfrd_special
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: surfrd_wtxy_veg_all
+! !IROUTINE: surfrd_veg_all
 !
 ! !INTERFACE:
-  subroutine surfrd_wtxy_veg_all(ncid, ns, pftm)
+  subroutine surfrd_veg_all(ncid, ns)
 !
 ! !DESCRIPTION:
-! Determine wtxy and veg arrays for non-dynamic landuse mode
+! Determine weight arrays for non-dynamic landuse mode
 !
 ! !USES:
-    use clm_varctl  , only : create_crop_landunit, fpftdyn, irrigate
+    use clm_varctl  , only : irrigate
+    use clm_varpar  , only : natpft_lb, natpft_ub, natpft_size, cft_lb, cft_ub, cft_size, &
+                             crop_prog
+    use clm_varsur  , only : wt_lunit, wt_nat_pft, wt_cft
+    use clm_varcon  , only : istsoil, istcrop
     use pftvarcon   , only : nc3crop, nc3irrig, npcropmin, &
                              ncorn, ncornirrig, nsoybean, nsoybeanirrig, &
                              nscereal, nscerealirrig, nwcereal, nwcerealirrig
-    use spmdMod     , only : mpicom, MPI_LOGICAL, MPI_LOR
 !
 ! !ARGUMENTS:
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! netcdf id
     integer          ,intent(in)    :: ns     ! domain size
-    integer          ,pointer       :: pftm(:)
 !
 ! !CALLED FROM:
 ! subroutine surfrd in this module
@@ -1046,132 +898,122 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer  :: m,mp7,mp8,mp11,n,nl            ! indices
+    integer  :: nl                             ! index
     integer  :: begg,endg                      ! beg/end gcell index
     integer  :: dimid,varid                    ! netCDF id's
     integer  :: ier                            ! error status	
     logical  :: readvar                        ! is variable on dataset
-    real(r8) :: sumpct                         ! sum of %pft over maxpatch_pft
-    real(r8),allocatable :: pctpft(:,:)        ! percent of vegetated gridcell area for PFTs
-    real(r8),pointer :: arrayl(:,:)            ! local array
-    real(r8) :: numpftp1data(0:numpft)         
-    logical  :: crop = .false.                 ! if crop data on this section of file
-    character(len=32) :: subname = 'surfrd_wtxy_veg_all'  ! subroutine name
+    logical  :: cft_dim_exists                 ! does the dimension 'cft' exist on the dataset?
+    real(r8),pointer :: arrayl(:)              ! local array
+    character(len=32) :: subname = 'surfrd_veg_all'  ! subroutine name
 !-----------------------------------------------------------------------
 
     call get_proc_bounds(begg,endg)
-    allocate(pctpft(begg:endg,0:numpft))
 
     call check_dim(ncid, 'lsmpft', numpft+1)
+    call check_dim(ncid, 'natpft', natpft_size)
 
-    allocate(arrayl(begg:endg,0:numpft))
-    call ncd_io(ncid=ncid, varname='PCT_PFT', flag='read', data=arrayl, &
+    if (cft_size > 0) then
+       call check_dim(ncid, 'cft', cft_size)
+    else
+       ! If cft_size == 0, then we expect to be running with a surface dataset that does
+       ! NOT have a PCT_CFT array, and thus does not have a 'cft' dimension. Make sure
+       ! that's the case.
+       call ncd_inqdid(ncid, 'cft', dimid, cft_dim_exists)
+       if (cft_dim_exists) then
+          call endrun( trim(subname)// &
+               ' ERROR: unexpectedly found cft dimension on dataset when cft_size=0'// &
+               ' (if the surface dataset has a separate crop landunit, then the code'// &
+               ' must also have a separate crop landunit, and vice versa)')
+       end if
+    end if
+
+
+    ! This temporary array is needed because ncd_io expects a pointer, so we can't
+    ! directly pass wt_lunit(begg:endg,istsoil)
+    allocate(arrayl(begg:endg))
+
+    call ncd_io(ncid=ncid, varname='PCT_NATVEG', flag='read', data=arrayl, &
          dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on surfdata file' )
-    pctpft(begg:endg,0:numpft) = arrayl(begg:endg,0:numpft)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NATVEG NOT on surfdata file' )
+    wt_lunit(begg:endg,istsoil) = arrayl(begg:endg) / 100._r8
+
+    call ncd_io(ncid=ncid, varname='PCT_CROP', flag='read', data=arrayl, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CROP NOT on surfdata file' )
+    wt_lunit(begg:endg,istcrop) = arrayl(begg:endg) / 100._r8
+
     deallocate(arrayl)
 
-    do nl = begg,endg
-       if (pftm(nl) >= 0) then
+    call ncd_io(ncid=ncid, varname='PCT_NAT_PFT', flag='read', data=wt_nat_pft, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NAT_PFT NOT on surfdata file' )
+    wt_nat_pft(begg:endg,:) = wt_nat_pft(begg:endg,:) / 100._r8
+    call surfrd_check_sums_equal_1(wt_nat_pft, begg, 'wt_nat_pft', subname)
+    
+    if (cft_size > 0) then
+       call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
+            dim1name=grlnd, readvar=readvar)
+       if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CFT NOT on surfdata file' )
+       wt_cft(begg:endg,:) = wt_cft(begg:endg,:) / 100._r8
+       call surfrd_check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
 
-          ! Error check: make sure PFTs sum to 100% cover for vegetated landunit 
-          ! (convert pctpft from percent with respect to gridcel to percent with 
-          ! respect to vegetated landunit)
-
-          ! THESE CHECKS NEEDS TO BE THE SAME AS IN pftdynMod.F90!
-          if (pctspec(nl) < 100._r8 * (1._r8 - eps_fact*epsilon(1._r8))) then  ! pctspec not within eps_fact*epsilon of 100
-             sumpct = 0._r8
-             do m = 0,numpft
-                sumpct = sumpct + pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
-             end do
-             if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
-                write(iulog,*) trim(subname)//' ERROR: sum(pct) over numpft+1 is not = 100.'
-                write(iulog,*) sumpct, sumpct-100._r8, nl
-                call endrun()
-             end if
-             if (sumpct < -0.000001_r8) then
-                write(iulog,*) trim(subname)//' ERROR: sum(pct) over numpft+1 is < 0.'
-                write(iulog,*) sumpct, nl
-                call endrun()
-             end if
-             do m = npcropmin, numpft
-                if ( pctpft(nl,m) > 0.0_r8 ) crop = .true.
-             end do
-          end if
-
-          ! Set weight of each pft wrt gridcell (note that maxpatch_pft = numpft+1 here)
-
-          do m = 1,numpft+1
-             vegxy(nl,m)  = m - 1 ! 0 (bare ground) to numpft
-             wtxy(nl,m) = pctpft(nl,m-1) / 100._r8
-          end do
-
+    else
+       ! If cft_size == 0, and thus we aren't reading PCT_CFT, then make sure PCT_CROP is
+       ! 0 everywhere (PCT_CROP > 0 anywhere requires that we have a PCT_CFT array)
+       if (any(wt_lunit(begg:endg,istcrop) > 0._r8)) then
+          call endrun( trim(subname)// &
+               ' ERROR: if PCT_CROP > 0 anywhere, then cft_size must be > 0'// &
+               ' (if the surface dataset has a separate crop landunit, then the code'// &
+               ' must also have a separate crop landunit, and vice versa)')
        end if
-    end do
-
-    call mpi_allreduce(crop,crop_prog,1,MPI_LOGICAL,MPI_LOR,mpicom,ier)
-    if (ier /= 0) then
-       write(iulog,*) trim(subname)//' mpi_allreduce error = ',ier
-       call endrun( trim(subname)//' ERROR: error in reduce of crop_prog' )
-    endif
-    if (crop_prog .and. .not. create_crop_landunit) then
-       call endrun( trim(subname)//' ERROR: prognostic crop '// &
-                    'PFTs require create_crop_landunit=.true.' )
-    end if
-    if (crop_prog .and. fpftdyn /= ' ') &
-       call endrun( trim(subname)//' ERROR: prognostic crop '// &
-                    'is incompatible with transient landuse' )
-    if (.not. crop_prog .and. irrigate) then
-       call endrun( trim(subname)//' ERROR surfrdMod: irrigate = .true. requires CROP model active.' )
     end if
 
-    if (masterproc .and. crop_prog .and. .not. irrigate) then
-       write(iulog,*) trim(subname)//' crop=.T. and irrigate=.F., so merging irrigated pfts with rainfed' ! in the following do-loop
-    end if
 
-! repeat do-loop for error checking and for rainfed crop case
-
-    do nl = begg,endg
-       if (pftm(nl) >= 0) then
-          if (pctspec(nl) < 100._r8 * (1._r8 - eps_fact*epsilon(1._r8))) then  ! pctspec not within eps_fact*epsilon of 100
-             if (.not. crop_prog .and. wtxy(nl,nc3irrig+1) > 0._r8) then
-                call endrun( trim(subname)//' ERROR surfrdMod: irrigated crop PFT requires CROP model active.' )
-             end if
-             if (crop_prog .and. .not. irrigate) then
-                wtxy(nl,nc3crop+1)       = wtxy(nl,nc3crop+1)  + wtxy(nl,nc3irrig+1)
-                wtxy(nl,nc3irrig+1)      = 0._r8
-                wtxy(nl,ncorn+1)         = wtxy(nl,ncorn+1)    + wtxy(nl,ncornirrig+1)
-                wtxy(nl,ncornirrig+1)    = 0._r8
-                wtxy(nl,nscereal+1)      = wtxy(nl,nscereal+1) + wtxy(nl,nscerealirrig+1)
-                wtxy(nl,nscerealirrig+1) = 0._r8
-                wtxy(nl,nwcereal+1)      = wtxy(nl,nwcereal+1) + wtxy(nl,nwcerealirrig+1)
-                wtxy(nl,nwcerealirrig+1) = 0._r8
-                wtxy(nl,nsoybean+1)      = wtxy(nl,nsoybean+1) + wtxy(nl,nsoybeanirrig+1)
-                wtxy(nl,nsoybeanirrig+1) = 0._r8
-             end if
-          end if
+    ! If no irrigation, merge irrigated CFTs with rainfed
+    
+    if (crop_prog .and. .not. irrigate) then
+       if (masterproc) then
+          write(iulog,*) trim(subname)//' crop=.T. and irrigate=.F., so merging irrigated pfts with rainfed'
        end if
-    end do
 
+       if (cft_size <= 0) then
+          call endrun( trim(subname)// &
+               'ERROR: Trying to merge irrigated CFTs with rainfed, but cft_size <= 0')
+       end if
 
-    deallocate(pctpft)
+       do nl = begg,endg
+          wt_cft(nl,nc3crop)       = wt_cft(nl,nc3crop)  + wt_cft(nl,nc3irrig)
+          wt_cft(nl,nc3irrig)      = 0._r8
+          wt_cft(nl,ncorn)         = wt_cft(nl,ncorn)    + wt_cft(nl,ncornirrig)
+          wt_cft(nl,ncornirrig)    = 0._r8
+          wt_cft(nl,nscereal)      = wt_cft(nl,nscereal) + wt_cft(nl,nscerealirrig)
+          wt_cft(nl,nscerealirrig) = 0._r8
+          wt_cft(nl,nwcereal)      = wt_cft(nl,nwcereal) + wt_cft(nl,nwcerealirrig)
+          wt_cft(nl,nwcerealirrig) = 0._r8
+          wt_cft(nl,nsoybean)      = wt_cft(nl,nsoybean) + wt_cft(nl,nsoybeanirrig)
+          wt_cft(nl,nsoybeanirrig) = 0._r8
+       end do
 
-  end subroutine surfrd_wtxy_veg_all
+       call surfrd_check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
+    end if
+
+  end subroutine surfrd_veg_all
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: surfrd_wtxy_veg_dgvm
+! !IROUTINE: surfrd_veg_dgvm
 !
 ! !INTERFACE:
-  subroutine surfrd_wtxy_veg_dgvm()
+  subroutine surfrd_veg_dgvm()
 !
 ! !DESCRIPTION:
-! Determine wtxy and vegxy for CNDV mode.
+! Determine weights for CNDV mode.
 !
 ! !USES:
-    use pftvarcon , only : noveg, crop
-    use clm_varctl, only : create_crop_landunit
+    use pftvarcon , only : noveg
+    use clm_varsur, only : wt_nat_pft
 !
 ! !ARGUMENTS:
     implicit none
@@ -1186,30 +1028,69 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: m,nl         ! indices
     integer  :: begg,endg   ! beg/end gcell index
+    character(len=*), parameter :: subname = 'surfrd_veg_dgvm'
 !-----------------------------------------------------------------------
 
     call get_proc_bounds(begg,endg)
-    do nl = begg,endg
-       do m = 1, maxpatch_pft ! CNDV means allocate_all_vegpfts = .true.
-          if (create_crop_landunit) then ! been through surfrd_wtxy_veg_all
-             if (crop(m-1) == 0) then    ! so update natural vegetation only
-                wtxy(nl,m) = 0._r8       ! crops should have values >= 0.
-             end if
-          else                   ! not been through surfrd_wtxy_veg_all
-             wtxy(nl,m) = 0._r8  ! so update all vegetation
-             vegxy(nl,m) = m - 1 ! 0 (bare ground) to maxpatch_pft-1 (= 16)
-          end if
-       end do
-       ! bare ground weights
-       wtxy(nl,noveg+1) = max(0._r8, 1._r8 - sum(wtxy(nl,:)))
-       if (abs(sum(wtxy(nl,:)) - 1._r8) > 1.e-5_r8) then
-          write(iulog,*) 'all wtxy =', wtxy(nl,:)
-          call endrun()
-       end if ! error check
+
+    ! Bare ground gets 100% weight; all other natural PFTs are zeroed out
+    wt_nat_pft(begg:endg, :)     = 0._r8
+    wt_nat_pft(begg:endg, noveg) = 1._r8
+
+    call surfrd_check_sums_equal_1(wt_nat_pft, begg, 'wt_nat_pft', subname)
+
+  end subroutine surfrd_veg_dgvm
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: surfrd_check_sums_equal_1
+!
+! !INTERFACE:
+  subroutine surfrd_check_sums_equal_1(arr, lb, name, caller)
+!
+! !DESCRIPTION:
+! Confirm that sum(arr(n,:)) == 1 for all n. If this isn't true for any n, abort with a message.
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    integer         , intent(in) :: lb           ! lower bound of the first dimension of arr
+    real(r8)        , intent(in) :: arr(lb:,:)   ! array to check
+    character(len=*), intent(in) :: name         ! name of array
+    character(len=*), intent(in) :: caller       ! identifier of caller, for more meaningful error messages
+!
+! !REVISION HISTORY:
+! Created by Bill Sacks 4/2013
+!
+!
+! !LOCAL VARIABLES:
+!EOP
+    logical :: found
+    integer :: nl
+    integer :: nindx
+
+    real(r8), parameter :: eps = 1.e-14_r8
+!-----------------------------------------------------------------------
+
+    found = .false.
+
+    do nl = lbound(arr, 1), ubound(arr, 1)
+       if (abs(sum(arr(nl,:)) - 1._r8) > eps) then
+          found = .true.
+          nindx = nl
+          exit
+       end if
     end do
 
-  end subroutine surfrd_wtxy_veg_dgvm
-   
+    if (found) then
+       write(iulog,*) trim(caller), ' ERROR: sum of ', trim(name), ' not 1.0 at nl=', nindx
+       write(iulog,*) 'sum is: ', sum(arr(nindx,:))
+       call endrun()
+    end if
+
+  end subroutine surfrd_check_sums_equal_1
+
 end module surfrdMod

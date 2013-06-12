@@ -2355,7 +2355,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon   , only : spval, icol_roof, icol_sunwall, icol_shadewall, &
-                              icol_road_perv, icol_road_imperv, udens_base
+                              icol_road_perv, icol_road_imperv, isturb_MIN
     use decompMod    , only : get_proc_clumps, ldecomp
     use filterMod    , only : filter
     use UrbanInputMod, only : urbinp
@@ -2377,7 +2377,7 @@ contains
     integer , pointer :: colf(:)         ! ending column index for landunit
     integer , pointer :: lgridcell(:)    ! gridcell of corresponding landunit
     integer , pointer :: ctype(:)        ! column type
-    integer , pointer :: udenstype(:)    ! urban density type
+    integer , pointer :: ltype(:)        ! landunit type index
 !
 !
 ! !OTHER LOCAL VARIABLES
@@ -2395,7 +2395,7 @@ contains
     coli         =>lun%coli
     colf         =>lun%colf
     lgridcell    =>lun%gridcell
-    udenstype    =>lun%udenstype
+    ltype        =>lun%itype
 
     ! Assign local pointers to derived type members (column-level)
 
@@ -2462,7 +2462,7 @@ contains
        do fl = 1,num_urbanl
           l = filter(nc)%urbanl(fl)
           g =lun%gridcell(l)
-          dindx = udenstype(l) - udens_base
+          dindx = ltype(l) - isturb_MIN + 1
           urban_clump(nc)%canyon_hwr     (fl) = urbinp%canyon_hwr     (g,dindx)
           urban_clump(nc)%wtroad_perv    (fl) = urbinp%wtroad_perv    (g,dindx)
           urban_clump(nc)%ht_roof        (fl) = urbinp%ht_roof        (g,dindx)
@@ -3220,6 +3220,11 @@ contains
     end do   ! end iteration
 
 ! Determine fluxes from canyon surfaces
+
+    ! the following initializations are needed to ensure that the values are 0 over non-
+    ! active urban PFTs
+    eflx_sh_grnd_scale(:) = 0._r8
+    qflx_evap_soi_scale(:) = 0._r8
 
     do f = 1, num_urbanp
 

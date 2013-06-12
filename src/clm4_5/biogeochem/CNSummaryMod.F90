@@ -14,7 +14,7 @@ module CNSummaryMod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon, only: dzsoi_decomp, zisoi
     use pftvarcon   , only: npcropmin
-    use surfrdMod   , only: crop_prog
+    use clm_varpar  , only: crop_prog
     use abortutils  , only: endrun
     implicit none
     save

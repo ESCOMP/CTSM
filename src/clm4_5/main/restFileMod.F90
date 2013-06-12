@@ -13,7 +13,7 @@ module restFileMod
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
   use clm_varctl  , only : iulog
-  use surfrdMod   , only : crop_prog
+  use clm_varpar  , only : crop_prog
   use ncdio_pio       
 !
 ! !PUBLIC TYPES:

@@ -6,7 +6,8 @@ module clm_varcon
 ! !MODULE: clm_varcon
 !
 ! !DESCRIPTION:
-! Module containing various model constants
+! Module containing various model constants. This includes physical constants, landunit
+! and column indices, and others.
 !
 ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
@@ -129,45 +130,36 @@ module clm_varcon
 
 
   !------------------------------------------------------------------
-  ! Initialize water type constants
+  ! Initialize landunit & column type constants
   !------------------------------------------------------------------
 
-  ! "land unit " types
-  !   1     soil (includes vegetated landunits)
-  !   2     land ice (glacier)
-  !   3     deep lake
-  !  (DEPRECATED: New lake model has variable depth) 4     shallow lake
-  !   5     wetland (swamp, marsh, etc.)
-  !   6     urban
-  !   7     land ice (glacier) with multiple elevation classes
-  !   8     crop
+  integer, parameter :: istsoil    = 1  !soil         landunit type (natural vegetation)
+  integer, parameter :: istcrop    = 2  !crop         landunit type
+  integer, parameter :: istice     = 3  !land ice     landunit type (glacier)
+  integer, parameter :: istice_mec = 4  !land ice (multiple elevation classes) landunit type
+  integer, parameter :: istdlak    = 5  !deep lake    landunit type (now used for all lakes)
+  integer, parameter :: istwet     = 6  !wetland      landunit type (swamp, marsh, etc.)
 
-  integer, parameter :: istsoil    = 1  !soil         landunit type
-  integer, parameter :: istice     = 2  !land ice     landunit type
-  integer, parameter :: istdlak    = 3  !deep lake    landunit type
-  ! Not used; now 3 is used for all lakes, which have variable depth.
-  integer, parameter :: istslak    = 4  !shallow lake landunit type
-  integer, parameter :: istwet     = 5  !wetland      landunit type
-  integer, parameter :: isturb     = 6  !urban        landunit type
-  integer, parameter :: istice_mec = 7  !land ice (multiple elevation classes) landunit type
-  integer, parameter :: istcrop    = 8  !crop         landunit type
-  integer, parameter :: max_lunit  = 8  !maximum value that lun%itype can have
-                             !(i.e., largest value in the above list)
+  integer, parameter :: isturb_MIN = 7  !minimum urban type index
+  integer, parameter :: isturb_tbd = 7  !urban tbd    landunit type
+  integer, parameter :: isturb_hd  = 8  !urban hd     landunit type
+  integer, parameter :: isturb_md  = 9  !urban md     landunit type
+  integer, parameter :: isturb_MAX = 9  !maximum urban type index
+
+  integer, parameter :: max_lunit  = 9  !maximum value that lun%itype can have
+                                        !(i.e., largest value in the above list)
 
   ! urban column types
 
-  integer, parameter :: icol_roof        = 61
-  integer, parameter :: icol_sunwall     = 62
-  integer, parameter :: icol_shadewall   = 63
-  integer, parameter :: icol_road_imperv = 64
-  integer, parameter :: icol_road_perv   = 65
+  integer, parameter :: icol_roof        = 71
+  integer, parameter :: icol_sunwall     = 72
+  integer, parameter :: icol_shadewall   = 73
+  integer, parameter :: icol_road_imperv = 74
+  integer, parameter :: icol_road_perv   = 75
 
-  ! urban density types
+  ! parameters that depend on the above constants
 
-  integer, parameter :: udens_base     = 600
-  integer, parameter :: udens_tbd      = 601
-  integer, parameter :: udens_hd       = 602
-  integer, parameter :: udens_md       = 603
+  integer, parameter :: numurbl = isturb_MAX - isturb_MIN + 1   ! number of urban landunits
 
   !------------------------------------------------------------------
   ! Initialize miscellaneous radiation constants

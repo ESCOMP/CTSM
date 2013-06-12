@@ -52,7 +52,7 @@ contains
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevsoi, &
                                  nlevcan
     use clm_varcon      , only : istcrop
-    use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, &
+    use clm_varcon      , only : denice, denh2o, istdlak, &
                                  istsoil, pondmx, watmin, spval, icol_roof, icol_sunwall, &
                                  icol_shadewall
     use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn,    &

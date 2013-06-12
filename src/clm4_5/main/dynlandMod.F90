@@ -50,7 +50,7 @@ contains
 !
 ! !USES:
 
-   use clm_varcon, only : istsoil,istice,istwet,istdlak,istslak,isturb,istice_mec
+   use clm_varcon, only : istsoil,istice,istwet,istdlak,istice_mec
    use clm_varcon, only : istcrop
    use clm_varcon, only : icol_road_perv,icol_road_imperv,icol_roof
    use clm_varcon, only : icol_sunwall,icol_shadewall
@@ -89,6 +89,7 @@ contains
    integer ,pointer :: ltype(:)          ! landunit type index
    integer ,pointer :: ctype(:)          ! column   type index
    integer ,pointer :: ptype(:)          ! pft      type index
+   logical ,pointer :: urbpoi(:)         ! true => landunit is an urban point
 
    integer,  pointer :: nlev_improad(:)  ! number of impervious road layers
    real(r8), pointer :: cv_wall(:,:)     ! thermal conductivity of urban wall
@@ -116,9 +117,10 @@ contains
 
    pactive => pft%active
 
-   ltype => lun%itype
-   ctype => col%itype
-   ptype =>pft%itype
+   ltype  => lun%itype
+   ctype  => col%itype
+   ptype  => pft%itype
+   urbpoi => lun%urbpoi
 
    nlev_improad => lps%nlev_improad
    cv_wall      => lps%cv_wall
@@ -159,10 +161,10 @@ contains
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istice_mec                               )  &           
-            .or. (ltype(l) == isturb .and. ctype(c) == icol_roof       )  &
-            .or. (ltype(l) == isturb .and. ctype(c) == icol_road_imperv)  &
+            .or. (urbpoi(l)          .and. ctype(c) == icol_roof       )  &
+            .or. (urbpoi(l)          .and. ctype(c) == icol_road_imperv)  &
             .or. (ltype(l) == istdlak                                  )  &
-            .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
+            .or. (urbpoi(l)          .and. ctype(c) == icol_road_perv  )) then
 
                if ( snl(c) < 0 ) then
                   do k = snl(c)+1,0 ! loop over snow layers
@@ -180,7 +182,7 @@ contains
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istdlak                                  )  &
             .or. (ltype(l) == istice_mec                               )  &           
-            .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
+            .or. (urbpoi(l)          .and. ctype(c) == icol_road_perv  )) then
                do k = 1,nlevgrnd
                   liq   = liq   + cws%h2osoi_liq(c,k)
                   ice   = ice   + cws%h2osoi_ice(c,k)
@@ -202,7 +204,7 @@ contains
             .or. (ltype(l) == istwet                                   )  &
             .or. (ltype(l) == istice                                   )  &
             .or. (ltype(l) == istice_mec                               )  &           
-            .or. (ltype(l) == isturb .and. ctype(c) == icol_road_perv  )) then
+            .or. (urbpoi(l)          .and. ctype(c) == icol_road_perv  )) then
                liq = liq + cws%wa(c)
             end if
 
@@ -218,58 +220,53 @@ contains
                end do
             end if
 
-            if ( (ltype(l) /= istslak) ) then
-            ! in new lake code, all lakes are "istdlak", but have variable depth
-
-               !--- heat content, below ground only ---
-               if (nlevurb > 0) then
-                 do k = 1,nlevurb
-                    if (ctype(c)==icol_sunwall .OR. ctype(c)==icol_shadewall) then
-                        cv = cv_wall(l,k) * dz(c,k)
-                        heat = heat + cv*t_soisno(c,k) / 1.e6_r8 
-                    else if (ctype(c) == icol_roof) then
-                        cv = cv_roof(l,k) * dz(c,k)
-                        heat = heat + cv*t_soisno(c,k) / 1.e6_r8 
-                    end if
-                 end do
-               end if
-               do k = 1,nlevgrnd
-                   if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall &
-                       .and. ctype(c) /= icol_roof) then
-                      if (ctype(c) == icol_road_imperv .and. k >= 1 .and. k <= nlev_improad(l)) then
-                         cv = cv_improad(l,k) * dz(c,k)
-                      else if (ltype(l) /= istwet .AND. ltype(l) /= istice .AND. ltype(l) /= istice_mec) then
-                         cv = csol(c,k)*(1-watsat(c,k))*dz(c,k) + (h2osoi_ice(c,k)*cpice + h2osoi_liq(c,k)*cpliq)
-                      else
-                         cv = (h2osoi_ice(c,k)*cpice + h2osoi_liq(c,k)*cpliq)
-                      endif
-                      heat = heat + cv*t_soisno(c,k) / 1.e6_r8 
-                   end if
+            !--- heat content, below ground only ---
+            if (nlevurb > 0) then
+               do k = 1,nlevurb
+                  if (ctype(c)==icol_sunwall .OR. ctype(c)==icol_shadewall) then
+                     cv = cv_wall(l,k) * dz(c,k)
+                     heat = heat + cv*t_soisno(c,k) / 1.e6_r8 
+                  else if (ctype(c) == icol_roof) then
+                     cv = cv_roof(l,k) * dz(c,k)
+                     heat = heat + cv*t_soisno(c,k) / 1.e6_r8 
+                  end if
                end do
+            end if
+            do k = 1,nlevgrnd
+               if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall &
+                    .and. ctype(c) /= icol_roof) then
+                  if (ctype(c) == icol_road_imperv .and. k >= 1 .and. k <= nlev_improad(l)) then
+                     cv = cv_improad(l,k) * dz(c,k)
+                  else if (ltype(l) /= istwet .AND. ltype(l) /= istice .AND. ltype(l) /= istice_mec) then
+                     cv = csol(c,k)*(1-watsat(c,k))*dz(c,k) + (h2osoi_ice(c,k)*cpice + h2osoi_liq(c,k)*cpliq)
+                  else
+                     cv = (h2osoi_ice(c,k)*cpice + h2osoi_liq(c,k)*cpliq)
+                  endif
+                  heat = heat + cv*t_soisno(c,k) / 1.e6_r8 
+               end if
+            end do
 
-               !--- heat content, below ground in lake water, for lakes ---
-               do k = 1,nlevlak
-                  if (ltype(l) == istdlak) then
+            !--- heat content, below ground in lake water, for lakes ---
+            do k = 1,nlevlak
+               if (ltype(l) == istdlak) then
                      cv = denh2o*cps%dz_lake(c,k)*( cws%lake_icefrac(c,k)*cpice + &
                           (1 - cws%lake_icefrac(c,k))*cpliq )
                      heat = heat + cv*ces%t_lake(c,k) / 1.e6_r8
-                  end if
-               end do
-
-               !--- heat content, above ground only ---
-               if ( snl(c) < 0 ) then
-                  do k = snl(c)+1,0 ! loop over snow layers
-                     cv = cpliq*h2osoi_liq(c,k) + cpice*h2osoi_ice(c,k)
-                     heat = heat + cv*t_soisno(c,k) / 1.e6_r8
-                  end do
-               else if ( h2osno(c) > 0.0_r8 .and. ltype(l) /= istdlak) then
-                       ! the heat capacity (not latent heat) of snow without snow layers
-                       ! is currently ignored in SLakeTemperature, so it should be ignored here
-                  k = 1
-                  cv = cpice*h2osno(c)
-                  heat = heat + cv*t_soisno(c,k) / 1.e6_r8
                end if
+            end do
 
+            !--- heat content, above ground only ---
+            if ( snl(c) < 0 ) then
+               do k = snl(c)+1,0 ! loop over snow layers
+                  cv = cpliq*h2osoi_liq(c,k) + cpice*h2osoi_ice(c,k)
+                  heat = heat + cv*t_soisno(c,k) / 1.e6_r8
+               end do
+            else if ( h2osno(c) > 0.0_r8 .and. ltype(l) /= istdlak) then
+               ! the heat capacity (not latent heat) of snow without snow layers
+               ! is currently ignored in SLakeTemperature, so it should be ignored here
+               k = 1
+               cv = cpice*h2osno(c)
+               heat = heat + cv*t_soisno(c,k) / 1.e6_r8
             end if
 
             !--- scale x/m^2 column-level values into x/m^2 gridcell-level values ---

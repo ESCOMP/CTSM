@@ -59,18 +59,19 @@ module clm_varpar
 #if (defined CROP)
   integer, parameter :: numpft      = mxpft   ! actual # of pfts (without bare)
   integer, parameter :: numcft      =  10     ! actual # of crops
+  logical, parameter :: crop_prog   = .true.  ! If prognostic crops is turned on
 #else
   integer, parameter :: numpft      = numveg  ! actual # of pfts (without bare)
   integer, parameter :: numcft      =   2     ! actual # of crops
+  logical, parameter :: crop_prog   = .false. ! If prognostic crops is turned on
 #endif
   integer, parameter :: maxpatch_pft= MAXPATCH_PFT ! max number of plant functional types in naturally vegetated landunit
-  integer, parameter :: numurbl     = 3       ! number of urban landunits
 
   integer            :: nlevdecomp                    ! number of biogeochemically active soil layers
   integer            :: nlevdecomp_full               ! number of biogeochemical layers (includes lower layers that are biogeochemically inactive)
 
 ! -------------------------------------------------------
-! Module Varaibles (initialized in clm_varpar_init)
+! Module Varaibles (initialized in clm_varpar_init or initParametersMod:initParameters)
 ! -------------------------------------------------------
 
 #ifndef CENTURY_DECOMP
@@ -94,6 +95,13 @@ module clm_varpar
 #endif
 
 ! Indices used in surface file read and set in clm_varpar_init
+
+  integer :: natpft_lb          ! In PFT arrays, lower bound of PFTs on the natural veg landunit (i.e., bare ground index)
+  integer :: natpft_ub          ! In PFT arrays, upper bound of PFTs on the natural veg landunit
+  integer :: natpft_size        ! Number of PFTs on natural veg landunit (including bare ground)
+  integer :: cft_lb             ! In PFT arrays, lower bound of PFTs on the crop landunit
+  integer :: cft_ub             ! In PFT arrays, upper bound of PFTs on the crop landunit
+  integer :: cft_size           ! Number of PFTs on crop landunit
 
   integer :: maxpatch           ! max number of patches
   integer :: maxpatch_glcmec    ! max number of elevation classes
@@ -143,6 +151,10 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
+    ! WJS (5-15-13): Introducing this duplicate variable to avoid circular dependencies --
+    !  clm_varcon uses clm_varpar, so we can't have clm_varpar use numurbl from
+    !  clm_varcon. I should be able to remove this once I do away with max_pft_per_gcell
+    integer, parameter :: my_numurbl = 3
 !EOP
 !------------------------------------------------------------------------------
 
@@ -157,10 +169,10 @@ contains
   maxpatch       = npatch_glacier_mec
   mach_eps       = epsilon(1.0_r8)
 
-  max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb*numurbl + maxpatch_glcmec
-#if (defined CROP)
-  max_pft_per_gcell = max_pft_per_gcell +  numcft  
-#endif
+  max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb*my_numurbl + maxpatch_glcmec
+  if (crop_prog) then
+     max_pft_per_gcell = max_pft_per_gcell +  numcft  
+  end if
   max_pft_per_lu    = max(numpft+1, numcft, maxpatch_urb)
   max_pft_per_col   = max(numpft+1, numcft, maxpatch_urb)
 

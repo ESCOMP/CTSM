@@ -100,7 +100,7 @@ contains
 ! The following clmtype components should NOT be initialized here
 ! since they are set in routine clm_map which is called before this
 ! routine is invoked
-!    *%area, *%wtlnd, *%wtxy, *%ixy, *%jxy, *%mxy, %snindex
+!    *%area, *%wtlnd, *%ixy, *%jxy, *%mxy, %snindex
 !    *%ifspecial, *%ityplun, *%itype
 !    *%pfti, *%pftf, *%pftn
 !    *%coli, *%colf, *%coln
@@ -206,17 +206,11 @@ contains
     if ( use_c13 ) then       
        call init_pft_cstate_type(begp, endp, pc13s)
        call init_pft_cstate_type(begc, endc, pc13s_a)
-#ifdef CROP
-       call endrun( trim(subname)//" ERROR:: CROP and C13 can NOT be on at the same time" )
-#endif
     endif
 
     if ( use_c14 ) then
        call init_pft_cstate_type(begp, endp, pc14s)
        call init_pft_cstate_type(begc, endc, pc14s_a)
-#ifdef CROP
-       call endrun( trim(subname)//" ERROR:: CROP and C14 can NOT be on at the same time" )
-#endif
     endif
 
     ! pft nitrogen state variables at the pft level and averaged to the column
@@ -467,7 +461,6 @@ contains
    allocate(lun%lakpoi(beg:end))
    allocate(lun%urbpoi(beg:end))
    allocate(lun%glcmecpoi(beg:end))
-   allocate(lun%udenstype(beg:end))
    allocate(lun%active(beg:end))
 
    ! MV - these should be moved to landunit physical state -MV
@@ -909,7 +902,7 @@ contains
 !
 ! !USES:
     use clm_varcon, only : spval,ispval
-    use surfrdMod , only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1432,7 +1425,7 @@ contains
 !
 ! !USES:
     use clm_varcon, only : spval 
-    use surfrdMod, only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !AGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1498,7 +1491,7 @@ contains
 !
 ! !USES:
     use clm_varcon, only : spval
-    use surfrdMod, only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !AGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1607,7 +1600,7 @@ contains
 ! Initialize pft carbon state
 !
 ! !USES:
-    use surfrdMod, only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -1707,7 +1700,7 @@ contains
 ! Initialize pft nitrogen state
 !
 ! !USES:
-    use surfrdMod, only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2067,7 +2060,7 @@ contains
 !
 ! !USES:
     use clm_varcon, only : spval
-    use surfrdMod , only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2535,7 +2528,7 @@ contains
 ! Initialize pft nitrogen flux variables
 !
 ! !USES:
-    use surfrdMod , only : crop_prog
+    use clm_varpar, only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -3920,8 +3913,6 @@ contains
 ! !DESCRIPTION:
 ! Initialize column carbon flux variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -4261,8 +4252,6 @@ contains
 ! !DESCRIPTION:
 ! Initialize column nitrogen flux variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end

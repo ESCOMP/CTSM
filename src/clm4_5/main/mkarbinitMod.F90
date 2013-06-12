@@ -47,7 +47,7 @@ contains
     use shr_const_mod, only : SHR_CONST_TKFRZ
     use clmtype
     use clm_varpar   , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use clm_varcon   , only : bdsno, istice, istwet, istsoil, isturb, &
+    use clm_varcon   , only : bdsno, istice, istwet, istsoil, &
                               denice, denh2o, spval, sb, icol_road_perv, &
                               icol_road_imperv, icol_roof, icol_sunwall, &
                               icol_shadewall
@@ -340,7 +340,7 @@ contains
              do j = 1, nlevgrnd
                 t_soisno(c,j) = 277._r8
              end do
-          else if (ltype(l) == isturb) then
+          else if (urbpoi(l)) then
 #if (defined VANCOUVER)
              if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
                ! Set road top layer to initial air temperature and interpolate other
@@ -471,7 +471,7 @@ contains
     do c = begc,endc
        l = clandunit(c)
        if (.not. lakpoi(l)) then  !not lake
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_road_perv) then
                 wa(c)  = 4800._r8
                 zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
@@ -506,7 +506,7 @@ contains
                    h2osoi_vol(c,j) = 0.15_r8
                 endif
              end do
-          else if (ltype(l) == isturb) then 
+          else if (urbpoi(l)) then
              if (ctype(c) == icol_road_perv) then
                nlevs = nlevgrnd
                do j = 1, nlevs

@@ -79,7 +79,7 @@ CONTAINS
     use seq_drydep_mod    , only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
                                     rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
                                     rgss, rgso
-    use clm_varcon        , only : istsoil, istice, istice_mec, istslak, istdlak, istwet, isturb
+    use clm_varcon        , only : istsoil, istice, istice_mec, istdlak, istwet
     use clm_varctl        , only : iulog
     use pftvarcon         , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree,   &
                                    ndllf_dcd_brl_tree,        nbrdlf_evr_trp_tree,  &
@@ -121,6 +121,7 @@ CONTAINS
     real(r8), pointer :: mlaidiff(:)      !difference in lai between month one and month two 
     real(r8), pointer :: velocity(:,:)
     real(r8), pointer :: snow_depth(:)        ! snow height (m)
+    logical , pointer :: urbpoi(:)        ! true => landunit is an urban point
 
     integer, pointer :: pcolumn(:)        ! column index associated with each pft
     integer :: c
@@ -203,6 +204,7 @@ CONTAINS
 
     latdeg     =>  grc%latdeg
     londeg     =>  grc%londeg
+    urbpoi     =>  lun%urbpoi
     pactive    => pft%active
     ivt        =>pft%itype
     elai       => pps%elai 
@@ -307,13 +309,13 @@ CONTAINS
              if ( itypelun(l) == istice .or. itypelun(l) == istice_mec ) then
                 wesveg       = 8
                 index_season = 4
-             elseif ( itypelun(l) == istdlak .or. itypelun(l) == istslak ) then
+             elseif ( itypelun(l) == istdlak ) then
                 wesveg       = 7
                 index_season = 4
              elseif ( itypelun(l) == istwet ) then
                 wesveg       = 9
                 index_season = 2
-             elseif ( itypelun(l) == isturb ) then
+             elseif ( urbpoi(l) ) then
                 wesveg       = 1
                 index_season = 2
              end if

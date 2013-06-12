@@ -46,7 +46,7 @@ contains
     use clmtype
     use clm_varctl  , only : finidat
     use clm_varpar  , only : nlevsno, nlevgrnd, nlevsoi, nlevlak, nlevurb
-    use clm_varcon  , only : denice, denh2o, zlnd, isturb
+    use clm_varcon  , only : denice, denh2o, zlnd
     use fileutils   , only : getfil
     use decompMod   , only : get_proc_bounds, get_proc_global
     use fileutils   , only : getfil
@@ -71,6 +71,7 @@ contains
     integer :: ier                            ! error status
     integer , pointer :: clandunit(:)         ! landunit index associated with each column
     integer , pointer :: itypelun(:)          ! landunit type
+    logical , pointer :: urbpoi(:)            ! true => landunit is an urban point
     character(len=256), save :: loc_fni       ! local finidat name
     logical, save :: opened_finidat = .false. ! true => finidat was opened for read
     character(len= 32) :: subname='inicfile_perp'  ! subroutine name
@@ -79,7 +80,8 @@ contains
     ! Assign local pointers to derived subtypes components 
 
     itypelun  => lun%itype
-    clandunit =>col%landunit
+    urbpoi    => lun%urbpoi
+    clandunit => col%landunit
 
     ! Determine necessary processor subgrid bounds
 
@@ -162,7 +164,7 @@ contains
 
     do c = begc,endc
        l = clandunit(c)
-       if (itypelun(l) == isturb) then
+       if (urbpoi(l)) then
           ! Urban landunit use Bonan 1996 (LSM Technical Note)
           cps%frac_sno(c) = min( cps%snow_depth(c)/0.05_r8, 1._r8)
        else

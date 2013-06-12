@@ -78,7 +78,7 @@ subroutine CNAllocationInit ( lbc, ubc, lbp, ubp )
 ! !USES:
    use clm_varcon      , only: secspday
    use clm_time_manager, only: get_step_size
-   use surfrdMod       , only: crop_prog
+   use clm_varpar      , only: crop_prog
    use clm_varctl      , only: iulog
    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
 ! !ARGUMENTS:

@@ -716,7 +716,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    use pftvarcon, only: cc_leaf,cc_lstem,cc_dstem,cc_other,fm_leaf,fm_lstem,fm_other,fm_root,fm_lroot,fm_droot
    use pftvarcon, only: nc3crop,lf_flab,lf_fcel,lf_flig,fr_flab,fr_fcel,fr_flig
    use clm_time_manager, only: get_step_size,get_days_per_year,get_curr_date
-   use clm_varpar, only : max_pft_per_col
+   use clm_varpar  , only: max_pft_per_col
    use clm_varctl  , only: fpftdyn
    use clm_varcon  , only: secspday
 !

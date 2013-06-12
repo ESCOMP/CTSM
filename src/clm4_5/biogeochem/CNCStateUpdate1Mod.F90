@@ -125,7 +125,6 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
    use clm_time_manager, only: get_step_size
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
    use pftvarcon , only: npcropmin, nc3crop
-   use surfrdMod , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none

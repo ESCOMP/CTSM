@@ -49,8 +49,8 @@ module pftdynMod
 !
 ! ! PRIVATE TYPES
   integer , pointer   :: yearspft(:)
-  real(r8), pointer   :: wtpft1(:,:)   
-  real(r8), pointer   :: wtpft2(:,:)
+  real(r8), pointer   :: wtpft1(:,:)      ! weight of each pft relative to the natural veg landunit, time 1
+  real(r8), pointer   :: wtpft2(:,:)      ! weight of each pft relative to the natural veg landunit, time 2
   real(r8), pointer   :: harvest(:)   
   real(r8), pointer   :: wtcol_old(:)
   integer :: nt1
@@ -79,7 +79,9 @@ contains
 ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
-    use clm_varpar  , only : numpft, maxpatch_pft, numurbl
+    use clm_varpar  , only : numpft, maxpatch_pft, natpft_lb, natpft_ub, natpft_size
+    use clm_varcon  , only : numurbl, istsoil, istcrop
+    use clm_varsur  , only : wt_lunit
     use fileutils   , only : getfil
 !
 ! !ARGUMENTS:
@@ -102,6 +104,8 @@ contains
     integer  :: begl,endl                       ! beg/end indices for land landunits
     integer  :: begc,endc                       ! beg/end indices for land columns
     integer  :: begp,endp                       ! beg/end indices for land pfts
+    real(r8), pointer :: pctnatveg(:)       ! percent of gcell is natural vegetation landunit
+    real(r8), pointer :: pctcrop(:)         ! percent of gcell is crop landunit
     real(r8), pointer :: pctgla(:)          ! percent of gcell is glacier
     real(r8), pointer :: pctlak(:)          ! percent of gcell is lake
     real(r8), pointer :: pctwet(:)          ! percent of gcell is wetland
@@ -118,6 +122,7 @@ contains
        call endrun( subname//' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case' )
     end if
 
+    allocate(pctnatveg(begg:endg),pctcrop(begg:endg))
     allocate(pctgla(begg:endg),pctlak(begg:endg))
     allocate(pctwet(begg:endg),pcturb(begg:endg,numurbl),pcturb_tot(begg:endg))
 
@@ -129,9 +134,11 @@ contains
     ! check consistency -  special landunits, grid, frac and mask
     ! only do this once
 
-    ! read data PCT_PFT corresponding to correct year
+    ! read data PCT_NAT_PFT corresponding to correct year
 
-    allocate(wtpft1(begg:endg,0:numpft), wtpft2(begg:endg,0:numpft), stat=ier)
+    allocate(wtpft1(begg:endg,natpft_lb:natpft_ub), &
+             wtpft2(begg:endg,natpft_lb:natpft_ub), &
+             stat=ier)
     if (ier /= 0) then
        call endrun( subname//' allocation error for wtpft1, wtpft2' )
     end if
@@ -161,7 +168,7 @@ contains
 
     ! Consistency check
     
-    call check_dim(ncid, 'lsmpft', numpft+1)
+    call check_dim(ncid, 'natpft', natpft_size)
 
     allocate (yearspft(ntimes), stat=ier)
     if (ier /= 0) then
@@ -169,6 +176,14 @@ contains
     end if
 
     call ncd_io(ncid=ncid, varname='YEAR', flag='read', data=yearspft)
+
+    call ncd_io(ncid=ncid, varname='PCT_NATVEG', flag='read', data=pctnatveg, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NATVEG NOT on pftdyn file' )
+
+    call ncd_io(ncid=ncid, varname='PCT_CROP', flag='read', data=pctcrop, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_CROP NOT on pftdyn file' )
 
     call ncd_io(ncid=ncid, varname='PCT_WETLAND', flag='read', data=pctwet, &
          dim1name=grlnd, readvar=readvar)
@@ -194,7 +209,33 @@ contains
 
     ! Consistency check
     do g = begg,endg
-    !   this was causing a fail, even though values are the same to within 1e-15
+       ! WJS (5-9-13): I am adding these pctnatveg and pctcrop consistency checks for now,
+       ! although both these and the following pctspec consistency check (which was
+       ! already here) may not be necessary now that pctpft is specified as % of landunit
+       ! rather than % of grid cell. Furthermore, once we have dynamic landunits, both of
+       ! these consistency checks may become problematic, and could be removed. If these
+       ! consistency checks are removed, I think we could do quite a bit of cleanup:
+       ! (1) I think that the time-invariant PCT fields no longer need to be on the pftdyn dataset
+       ! (2) Similarly, much of this routine could be removed
+       ! (3) I think that pctspec no longer needs to be saved (I think it's just saved
+       !     for the sake of this consistency check)
+       ! (4) wt_lunit no longer needs to be saved past the end of the initialize1 routine
+       !     in clm_initializeMod (so we can move its deallocation from initialize2 to
+       !     initialize1)
+       if (abs(pctnatveg(g) - wt_lunit(g,istsoil)*100._r8) > 1.e-13_r8) then
+          write(iulog,*) subname//'mismatch between input PCT_NATVEG = ', pctnatveg(g), &
+               ' and that obtained from surface dataset ', wt_lunit(g,istsoil)*100._r8, &
+               ' at g= ',g
+          call endrun()
+       end if
+       if (abs(pctcrop(g) - wt_lunit(g,istcrop)*100._r8) > 1.e-13_r8) then
+          write(iulog,*) subname//'mismatch between input PCT_CROP = ', pctcrop(g), &
+               ' and that obtained from surface dataset ', wt_lunit(g,istcrop)*100._r8, &
+               ' at g= ',g
+          call endrun()
+       end if
+
+    !   This was causing a fail, even though values are the same to within 1e-15
     !   if (pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g) /= pctspec(g)) then 
        if (abs((pctlak(g)+pctwet(g)+pcturb_tot(g)+pctgla(g))-pctspec(g)) > 1e-13_r8) then 
           write(iulog,*) subname//'mismatch between input pctspec = ',&
@@ -247,23 +288,15 @@ contains
 
     ! Get pctpft time samples bracketing the current time
 
-    call pftdyn_getdata(nt1, wtpft1, begg,endg,0,numpft)
-    call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
+    call pftdyn_getdata(nt1, wtpft1, begg,endg, natpft_lb,natpft_ub)
+    call pftdyn_getdata(nt2, wtpft2, begg,endg, natpft_lb,natpft_ub)
     
 #ifdef CN
     ! Get harvest rate at the nt1 time
     call pftdyn_getharvest(nt1,begg,endg)
 #endif
 
-    ! convert weights from percent to proportion
-    do m = 0,numpft
-       do g = begg,endg
-          wtpft1(g,m) = wtpft1(g,m)/100._r8
-          wtpft2(g,m) = wtpft2(g,m)/100._r8
-       end do
-    end do
-       
-    deallocate(pctgla,pctlak,pctwet,pcturb,pcturb_tot)
+    deallocate(pctnatveg, pctcrop, pctgla,pctlak,pctwet,pcturb,pcturb_tot)
 
   end subroutine pftdyn_init
 
@@ -289,8 +322,7 @@ contains
     use clm_time_manager, only : get_curr_date, get_curr_calday, &
                                  get_days_per_year
     use clm_varcon      , only : istsoil
-    use clm_varcon      , only : istcrop
-    use clm_varpar      , only : numpft
+    use clm_varpar      , only : natpft_lb, natpft_ub
     implicit none
 !
 !
@@ -310,24 +342,15 @@ contains
     real(r8) :: cday             ! current calendar day (1.0 = 0Z on Jan 1)
     real(r8) :: days_per_year    ! days per year
     integer  :: ier              ! error status
-    integer  :: lbc,ubc
     real(r8) :: wt1              ! time interpolation weights
-    real(r8), pointer :: wtpfttot1(:)            ! summation of pft weights for renormalization
-    real(r8), pointer :: wtpfttot2(:)            ! summation of pft weights for renormalization
-    real(r8), parameter :: wtpfttol = 1.e-10     ! tolerance for pft weight renormalization
     character(len=32) :: subname='pftdyn_interp' ! subroutine name
-    logical  :: readvar    ! F. Li and S. Levis
 !-----------------------------------------------------------------------
 
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     ! Set pointers into derived type
 
-    allocate(wtpfttot1(begc:endc),wtpfttot2(begc:endc))
-    wtpfttot1(:) = 0._r8
-    wtpfttot2(:) = 0._r8
-
-    ! Interpolat pctpft to current time step - output in pctpft_intp
+    ! Interpolate pctpft to current time step - output in pctpft_intp
     ! Map interpolated pctpft to subgrid weights
     ! assumes that maxpatch_pft = numpft + 1, that each landunit has only 1 column, 
     ! SCAM and CNDV have not been defined, and create_croplandunit = .false.
@@ -363,24 +386,18 @@ contains
           write(iulog,*)subname,' error - current year is past input data boundary'
        end if
        
-       do m = 0,numpft
+       do m = natpft_lb,natpft_ub
           do g = begg,endg
              wtpft1(g,m) = wtpft2(g,m)
           end do
        end do
 
-       call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
+       call pftdyn_getdata(nt2, wtpft2, begg,endg, natpft_lb,natpft_ub)
 
 #ifdef CN
        call pftdyn_getharvest(nt1,begg,endg)
 #endif
 
-       do m = 0,numpft
-          do g = begg,endg
-             wtpft2(g,m) = wtpft2(g,m)/100._r8
-          end do
-       end do
-    
     end if  ! end of need new data if-block 
 
     ! Interpolate pft weight to current time
@@ -394,40 +411,26 @@ contains
        c = pft%column(p)
        g = pft%gridcell(p)
        l = pft%landunit(p)
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+
+       ! Note that we only deal with the istsoil landunit here, NOT the istcrop landunit
+       ! (if there is one)
+       ! (However, currently [as of 5-9-13] the code won't let you run with transient
+       ! PFTs combined with create_crop_landunit anyway, so it's a moot point.)
+       if (lun%itype(l) == istsoil) then
           m = pft%itype(p)
           wtcol_old(p)      = pft%wtcol(p)
+
+          ! Note that the following assignments assume that all PFTs share a single column
+
 !         --- recoded for roundoff performance, tcraig 3/07 from k.lindsay
-!         pft%wtgcell(p)   = wtpft1(g,m)*wt1 + wtpft2(g,m)*wt2
-          wtpfttot1(c) = wtpfttot1(c)+pft%wtgcell(p)    
-          pft%wtgcell(p)   = wtpft2(g,m) + wt1*(wtpft1(g,m)-wtpft2(g,m))
-          pft%wtlunit(p)   = pft%wtgcell(p) / lun%wtgcell(l)
-          pft%wtcol(p)     = pft%wtgcell(p) / lun%wtgcell(l)
-          wtpfttot2(c) = wtpfttot2(c)+pft%wtgcell(p)
+!         pft%wtcol(p)     = wtpft1(g,m)*wt1 + wtpft2(g,m)*wt2
+          pft%wtcol(p)     = wtpft2(g,m) + wt1*(wtpft1(g,m)-wtpft2(g,m))
+          pft%wtlunit(p)   = pft%wtcol(p)
+          pft%wtgcell(p)   = pft%wtlunit(p) * lun%wtgcell(l)
        end if
 
     end do
 
-!   Renormalize pft weights so that sum of pft weights relative to grid cell 
-!   remain constant even as land cover changes.  Doing this eliminates 
-!   soil balance error warnings.  (DML, 4/8/2009)
-    do p = begp,endp
-       c = pft%column(p)
-       g = pft%gridcell(p)
-       l = pft%landunit(p)
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          if (wtpfttot2(c) /= 0 .and. &
-              abs(wtpfttot1(c)-wtpfttot2(c)) > wtpfttol) then
-             pft%wtgcell(p)   = (wtpfttot1(c)/wtpfttot2(c))*pft%wtgcell(p)
-             pft%wtlunit(p)   = pft%wtgcell(p) / lun%wtgcell(l)
-             pft%wtcol(p)     = pft%wtgcell(p) / lun%wtgcell(l)
-          end if
-       end if
-
-    end do
-   
-    deallocate(wtpfttot1,wtpfttot2) 
-    
   end subroutine pftdyn_interp
 
 !-----------------------------------------------------------------------
@@ -436,20 +439,20 @@ contains
 ! !ROUTINE: pftdyn_getdata
 !
 ! !INTERFACE:
-  subroutine pftdyn_getdata(ntime, pctpft, begg, endg, pft0, maxpft)
+  subroutine pftdyn_getdata(ntime, wtpft, begg, endg, pft0, maxpft)
 !
 ! !DESCRIPTION:
-! Obtain dynamic landuse data (pctpft) and make sure that
+! Obtain dynamic landuse data (wtpft) and make sure that
 ! percentage of PFTs sum to 100% cover for vegetated landunit
 !
 ! !USES:
-    use clm_varpar  , only : numpft
+    use surfrdMod   , only : surfrd_check_sums_equal_1
 !
 ! !ARGUMENTS:
     implicit none
     integer , intent(in)  :: ntime
     integer , intent(in)  :: begg,endg,pft0,maxpft
-    real(r8), intent(out) :: pctpft(begg:endg,pft0:maxpft)
+    real(r8), intent(out) :: wtpft(begg:endg,pft0:maxpft)  ! pft weights (sum to 1.0)
 !
 !
 ! !LOCAL VARIABLES:
@@ -464,35 +467,13 @@ contains
 !-----------------------------------------------------------------------
     
     allocate(arrayl(begg:endg,pft0:maxpft))	
-    call ncd_io(ncid=ncid, varname= 'PCT_PFT', flag='read', data=arrayl, &
+    call ncd_io(ncid=ncid, varname= 'PCT_NAT_PFT', flag='read', data=arrayl, &
          dim1name=grlnd, nt=ntime, readvar=readvar)
-    pctpft(begg:endg,pft0:maxpft) = arrayl(begg:endg,pft0:maxpft)
+    wtpft(begg:endg,pft0:maxpft) = arrayl(begg:endg,pft0:maxpft) / 100._r8
     deallocate(arrayl)		
-    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on pftdyn file' )
-
-    err = 0
-    do n = begg,endg
-       ! THESE CHECKS NEEDS TO BE THE SAME AS IN surfrdMod.F90!
-       if (pctspec(n) < 100._r8 * (1._r8 - eps_fact*epsilon(1._r8))) then  ! pctspec not within eps_fact*epsilon of 100
-          sumpct = 0._r8
-          do m = 0, numpft
-             sumpct = sumpct + pctpft(n,m) * 100._r8/(100._r8-pctspec(n))
-          end do
-          if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
-             err = 1; ierr = n; sumerr = sumpct
-          end if
-          if (sumpct < -0.000001_r8) then
-             err = 2; ierr = n; sumerr = sumpct
-          end if
-       end if
-    end do
-    if (err == 1) then
-       write(iulog,*) subname,' error: sum(pct) over numpft+1 is not = 100.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
-       call endrun()
-    else if (err == 2) then
-       write(iulog,*)subname,' error: sum(pct) over numpft+1 is < 0.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
-       call endrun()
-    end if
+    if (.not. readvar) call endrun( trim(subname)//' ERROR: PCT_NAT_PFT NOT on pftdyn file' )
+    
+    call surfrd_check_sums_equal_1(wtpft, begg, 'PCT_NAT_PFT', subname)
     
   end subroutine pftdyn_getdata
 
@@ -729,7 +710,7 @@ contains
     use shr_const_mod,only : SHR_CONST_PDB
     use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil
-    use clm_varpar  , only : numveg, numpft, nlevdecomp
+    use clm_varpar  , only : numveg, nlevdecomp
     use clm_varcon  , only : istcrop
     use pftvarcon   , only : pconv, pprod10, pprod100
     use clm_varcon  , only : c13ratio, c14ratio

@@ -67,7 +67,7 @@ contains
     use clm_time_manager  , only : get_step_size
     use clm_varctl    , only : iulog
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-    use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
+    use clm_varcon    , only : sb, capr, cnfac, hvap, &
                                icol_roof, icol_sunwall, icol_shadewall, &
                                icol_road_perv, icol_road_imperv, istwet, &
                                denh2o, denice, cpice,  cpliq,hfus, tfrz,&
@@ -166,6 +166,7 @@ contains
     real(r8), pointer :: canyon_hwr(:)      ! urban canyon height to width ratio
     real(r8), pointer :: wtlunit_roof(:)    ! weight of roof with respect to landunit
     real(r8), pointer :: eflx_bot(:)        ! heat flux from beneath column (W/m**2) [+ = upward]
+    logical , pointer :: urbpoi(:)          ! true => landunit is an urban point
 ! 
 ! local pointers to  original implicit inout arguments
 !
@@ -253,6 +254,7 @@ contains
     eflx_wasteheat => lef%eflx_wasteheat
     eflx_heat_from_ac => lef%eflx_heat_from_ac
     wtlunit_roof   =>lun%wtlunit_roof
+    urbpoi         =>lun%urbpoi
 
     ! Assign local pointers to derived subtypes components (column-level)
 
@@ -362,7 +364,7 @@ contains
              g = pgridcell(p)
 
              if (pactive(p)) then
-                if (ltype(l) /= isturb) then
+                if (.not. urbpoi(l)) then
                    eflx_gnet(p) = sabg(p) + dlrad(p) &
                                   + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) - lwrad_emit(c) &
                                   - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
@@ -442,7 +444,7 @@ contains
              if (pactive(p)) then
                 g = pgridcell(p)
                 l = plandunit(p)
-                if (ltype(l) /= isturb )then
+                if (.not. urbpoi(l)) then
 
                    eflx_gnet_top = sabg_lyr(p,lyr_top) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
                         - lwrad_emit(c) - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
@@ -479,7 +481,7 @@ contains
     ! and determine if heating or air conditioning is on
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       if (ltype(l) == isturb) then
+       if (urbpoi(l)) then
           cool_on(l) = .false. 
           heat_on(l) = .false. 
           if (t_building(l) > t_building_max(l)) then
@@ -798,7 +800,7 @@ contains
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
-       if (ltype(l) == isturb) then
+       if (urbpoi(l)) then
          eflx_building_heat(c) = cnfac*fn(c,nlevurb) + (1-cnfac)*fn1(c,nlevurb)
          if (cool_on(l)) then
            eflx_urban_ac(c) = abs(eflx_building_heat(c))
@@ -853,7 +855,7 @@ contains
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
-       if (ltype(l) /= isturb) then
+       if (.not. urbpoi(l)) then
          hc_soisno(c) = 0._r8
          hc_soi(c)    = 0._r8
        end if
@@ -875,7 +877,7 @@ contains
              eflx_fgr(c,j) = 0._r8
           end if
 
-          if (ltype(l) /= isturb) then
+          if (.not. urbpoi(l)) then
             if (j >= snl(c)+1) then
                hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
             endif
@@ -1422,7 +1424,7 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : tfrz, hfus, grav, isturb, istsoil, &
+    use clm_varcon  , only : tfrz, hfus, grav, istsoil, &
                              istcrop, icol_roof, icol_sunwall, icol_shadewall, icol_road_perv,istice_mec
     use clm_varpar  , only : nlevsno, nlevgrnd,nlevurb
     use clm_varctl  , only : iulog
@@ -1460,6 +1462,7 @@ contains
     integer , pointer :: clandunit(:)     ! column's landunit
     integer , pointer :: snl(:)           ! number of snow layers
     real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
+    logical , pointer :: urbpoi(:)        ! true => landunit is an urban point
 !
 ! local pointers to original implicit inout scalars
 !
@@ -1524,6 +1527,7 @@ contains
     frac_h2osfc  => cps%frac_h2osfc
     clandunit    =>col%landunit
     ltype        => lun%itype
+    urbpoi       => lun%urbpoi
     ctype        => col%itype
     snl          => cps%snl
     h2osno       => cws%h2osno
@@ -1826,7 +1830,7 @@ contains
        c = filter_nolakec(fc)
        eflx_snomelt(c) = qflx_snomelt(c) * hfus
        l = clandunit(c)
-       if (ltype(l) == isturb) then
+       if (urbpoi(l)) then
          eflx_snomelt_u(c) = eflx_snomelt(c)
        else if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
          eflx_snomelt_r(c) = eflx_snomelt(c)

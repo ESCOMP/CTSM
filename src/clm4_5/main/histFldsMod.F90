@@ -47,7 +47,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon , only : spval
-    use clm_varpar , only : maxpatch_glcmec
+    use clm_varpar , only : maxpatch_glcmec, crop_prog
     use clm_atmlnd , only : clm_a2l
     use clm_varctl , only : create_glacier_mec_landunit, &
                             use_c13, use_c14
@@ -59,7 +59,6 @@ contains
     use clm_glclnd , only : clm_s2x
     use histFileMod, only : hist_add_subscript, hist_addfld1d, hist_addfld2d, &
                             hist_printflds
-    use surfrdMod  , only : crop_prog
     use shr_megan_mod  , only : shr_megan_linkedlist, shr_megan_megcomp_t, shr_megan_megcomps_n
 
     use clm_varpar , only :  ndecomp_cascade_transitions, ndecomp_pools, nlevdecomp, nlevdecomp_full
@@ -1148,6 +1147,10 @@ contains
          avgflag='A', long_name='atmospheric pressure', &
          ptr_lnd=clm_a2l%forc_pbot)
 
+! WJS (5-2-13): I am trying to get rid of uses of the CROP CPP token, replacing it with
+! 'if (crop_prog)'. But it's hard to fix this boolean logic in a way that doesn't
+! complicate things further, so for now I'm leaving it -- but this should be changed to
+! use 'crop_prog' rather than CROP once the CNDV CPP token is removed as well.
 #if (defined CNDV) || (defined CROP)
     active = "active"
 #else
@@ -5849,12 +5852,11 @@ contains
   subroutine hist_addfld_decomp (fname, type2d, units, avgflag, long_name, ptr_col, ptr_pft, default)
 
 ! !USES:
-    use clm_varpar, only : nlevdecomp_full
+    use clm_varpar, only : nlevdecomp_full, crop_prog
 
     use histFileMod, only : hist_addfld1d, hist_addfld2d
     use abortutils, only: endrun
     use clm_varctl, only : iulog
-    use surfrdMod , only : crop_prog
 !
 ! !ARGUMENTS:
     implicit none

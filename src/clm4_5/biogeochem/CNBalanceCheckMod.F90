@@ -287,7 +287,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
-   use surfrdMod       , only: crop_prog
+   use clm_varpar      , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none

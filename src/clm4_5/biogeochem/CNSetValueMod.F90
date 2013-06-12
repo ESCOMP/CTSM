@@ -18,7 +18,8 @@ module CNSetValueMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar  , only: nlevgrnd, nlevdecomp_full, ndecomp_pools, ndecomp_cascade_transitions, nlevdecomp
+    use clm_varpar  , only: nlevgrnd, nlevdecomp_full, ndecomp_pools, ndecomp_cascade_transitions, nlevdecomp, &
+                            crop_prog
     use clm_varctl  , only: iulog, use_c13, use_c14
     use clmtype
     implicit none
@@ -397,8 +398,6 @@ subroutine CNSetPcs (num, filter, val, pcs)
 ! !DESCRIPTION:
 ! Set pft carbon state variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -473,8 +472,6 @@ subroutine CNSetPns(num, filter, val, pns)
 ! !DESCRIPTION:
 ! Set pft nitrogen state variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -544,8 +541,6 @@ subroutine CNSetPcf(num, filter, val, pcf)
 ! !DESCRIPTION:
 ! Set pft carbon flux variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -775,8 +770,6 @@ subroutine CNSetPnf(num, filter, val, pnf)
 ! !DESCRIPTION:
 ! Set pft nitrogen flux variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -1176,8 +1169,6 @@ subroutine CNSetCcf(num, filter, val, ccf)
 ! !DESCRIPTION:
 ! Set column carbon flux variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num
@@ -1303,8 +1294,6 @@ subroutine CNSetCnf(num, filter, val, cnf)
 ! !DESCRIPTION:
 ! Set column nitrogen flux variables
 !
-! !USES:
-    use surfrdMod , only : crop_prog
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: num

@@ -63,7 +63,7 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd      , only : clm_a2l
-    use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, isturb, istice_mec, spval, &
+    use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, istice_mec, spval, &
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall, istdlak, &
                                  tfrz, hfus, grav
@@ -131,6 +131,7 @@ contains
     real(r8), pointer :: begwb(:)         ! water mass begining of the time step
     real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
     real(r8), pointer :: smpmin(:)        ! restriction for min of soil potential (mm)
+    logical , pointer :: urbpoi(:)        ! true => landunit is an urban point
 !
 ! local pointers to implicit inout arguments
 !
@@ -247,6 +248,7 @@ contains
     ! Assign local pointers to derived subtypes components (landunit-level)
 
     ityplun => lun%itype
+    urbpoi  =>lun%urbpoi
 
     ! Assign local pointers to derived subtypes components (column-level)
 
@@ -466,7 +468,7 @@ contains
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
-       if (ityplun(l) /= isturb) then
+       if (.not. urbpoi(l)) then
           t_soi_10cm(c) = 0._r8
           tsoi17(c) = 0._r8
           h2osoi_liqice_10cm(c) = 0._r8
@@ -476,7 +478,7 @@ contains
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
-          if (ityplun(l) /= isturb) then
+          if (.not. urbpoi(l)) then
     ! soil T at top 17 cm added by F. Li and S. Levis
             if (zi(c,j) <= 0.17_r8) then
               fracl = 1._r8
@@ -521,7 +523,7 @@ contains
           t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
        endif
 
-       if (ityplun(l)==isturb) then
+       if (urbpoi(l)) then
           t_grnd_u(c) = t_soisno(c,snl(c)+1)
        else
           t_soi_10cm(c) = t_soi_10cm(c)/0.1_r8
@@ -584,7 +586,7 @@ contains
           fsat(c)       = spval
           qcharge(c)    = spval
           qflx_rsub_sat(c) = spval
-       else if (ityplun(l) == isturb .and. ctype(c) /= icol_road_perv) then
+       else if (urbpoi(l) .and. ctype(c) /= icol_road_perv) then
           fcov(c)               = spval
           fsat(c)               = spval
           qflx_drain_perched(c) = 0._r8
@@ -617,7 +619,7 @@ contains
            .and. cactive(c)) then
           qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
        end if
-       if (ityplun(l)==isturb) then
+       if (urbpoi(l)) then
          qflx_runoff_u(c) = qflx_runoff(c)
        else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          qflx_runoff_r(c) = qflx_runoff(c)

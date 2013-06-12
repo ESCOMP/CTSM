@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_11        sacks 06/11/2013 Change pct_pft and related surface dataset variables to be % of landunit
    clm4_5_10      muszala 06/10/2013 refactor clmtype
    clm4_5_09      muszala 06/04/2013 volr and vic fix, update mct and rtm
    clm4_5_08      muszala 06/03/2013 port for NAG compiler

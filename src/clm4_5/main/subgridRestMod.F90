@@ -173,7 +173,7 @@ contains
             dim1name='column', long_name='column landunit type (vegetated,urban,lake,wetland or glacier)')
        call ncd_defvar(ncid=ncid, varname='cols1d_ityp', xtype=ncd_int,   &
             dim1name='column', long_name=&
-           'column type (61-roof,62-sunwall,63-shadewall,64-impervious road,65-pervious road,1-all other columns)')
+           'column type (71-roof,72-sunwall,73-shadewall,74-impervious road,75-pervious road,1-all other columns)')
     else if (flag == 'write') then
        do c=begc,endc
           rcarr(c) = grc%londeg(col%gridcell(c))

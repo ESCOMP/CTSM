@@ -113,7 +113,7 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd   , only : clm_a2l
-    use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, isturb, &
+    use clm_varcon   , only : tfrz, istice, istwet, istsoil, istice_mec, &
                               istcrop, icol_roof, icol_sunwall, icol_shadewall,&
                               hfus,denice, &
                               zlnd,rpi,spval
@@ -181,6 +181,7 @@ contains
     real(r8), pointer :: esai(:)           ! one-sided stem area index with burying by snow
     real(r8), pointer :: h2ocan_loss(:)    ! canopy water mass balance term (column)
     real(r8), pointer :: irrig_rate(:)     ! current irrigation rate (applied if n_irrig_steps_left > 0) [mm/s]
+    logical , pointer :: urbpoi(:)         ! true => landunit is an urban point
 !
 ! local pointers to original implicit inout arrays
 !
@@ -274,6 +275,7 @@ contains
     ! Assign local pointers to derived type members (landunit-level)
 
     ltype              => lun%itype
+    urbpoi             =>lun%urbpoi
 
     ! Assign local pointers to derived type members (column-level)
 
@@ -364,7 +366,7 @@ contains
        ! Canopy interception and precipitation onto ground surface
        ! Add precipitation to leaf water
 
-       if (ltype(l)==istsoil .or. ltype(l)==istwet .or. ltype(l)==isturb .or. &
+       if (ltype(l)==istsoil .or. ltype(l)==istwet .or. urbpoi(l) .or. &
            ltype(l)==istcrop) then
           qflx_candrip(p) = 0._r8      ! rate of canopy runoff
           qflx_through_snow(p) = 0._r8 ! rain precipitation direct through canopy
@@ -578,7 +580,7 @@ contains
              !====================================================================
 
              ! for subgrid fluxes
-             if (subgridflag ==1 .and. ltype(l) /= isturb) then
+             if (subgridflag ==1 .and. .not. urbpoi(l)) then
                 if (frac_sno(c) > 0._r8)then
                     snow_depth(c)=snow_depth(c) + newsnow(c)/(bifall * frac_sno(c))
                 else
@@ -615,7 +617,7 @@ contains
                 int_snow(c) = min(1.e8_r8,temp_intsnow)
 
                 ! update snow_depth and h2osno to be consistent with frac_sno, z_avg
-                if (subgridflag ==1 .and. ltype(l) /= isturb) then
+                if (subgridflag ==1 .and. .not. urbpoi(l)) then
                    snow_depth(c)=z_avg/frac_sno(c)
                 else
                    snow_depth(c)=newsnow(c)/bifall

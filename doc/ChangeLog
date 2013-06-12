@@ -1,4 +1,422 @@
 ===============================================================
+Tag name:  clm4_5_11
+Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
+Date: Tue Jun 11 20:54:11 MDT 2013
+One-line Summary: Change pct_pft and related surface dataset variables to be % of landunit
+
+Purpose of changes:
+
+Main purpose is to change pct_pft and related surface dataset variables to be %
+of landunit rather than % of grid cell. This is needed to support transient PFTs
+with dynamic landunits. This required substantial changes in both mksurfdata_map
+and CLM. This also required generating all new surface datasets.
+
+A very related change is the separation of PCT_PFT in the surface dataset into
+PCT_NAT_PFT and PCT_CFT; in addition to these two variables, there are also new
+PCT_NATVEG (% of natural veg landunit on the gridcell) and PCT_CROP (% of crop
+landunit on the gridcell) variables. Note that the separation of PCT_PFT into
+natural vs crop was only done on the surface dataset -- raw datasets to
+mksurfdata_map have not been changed, nor have most of the CLM data structures.
+
+In addition, this tag includes the following:
+
+(1) Renumbered landunits to (a) add separate landunit numbers for each urban
+landunit, (b) do away with the obsolete shallow lake, and (c) group together
+similar landunits
+
+(2) In any urban landunit, allocate space for ALL urban columns. Previously,
+there were some urban landunits with only one of the two road types. This change
+simplifies the code and only adds a relatively small number of columns in memory.
+
+(3) Modified interpinic, partly to have compatibility with (1), partly to fix
+urban bug (allowed by (1)), and partly to fix an unrelated bug
+
+(4) All new initial conditions for CLM4.5, to have compatibility with (1) and (2)
+
+(5) Check _OPENMP in initialization rather than driver
+
+(6) Tighten error check in reweightMod: checkWeights. It seems like this error
+check can be stricter with the new pct_pft formulation
+
+
+Requirements for tag: Standard test + tools
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID):
+     1621 (normalization issue in ne120np4 datasets and in CLM)
+     1675 (need to relax error tolerance in reweightMod: weightsOkay) -- note
+          that I have actually TIGHTENED the tolerance, but that seems to be
+          okay now
+     1702- PARTIAL FIX (clm4.5 interpinic doesn't work right for urban)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+    1747 - need 1x1_tropicAtl surface dataset and pftdyn dataset for clm4_5_11 and later
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Changes to fsurdat and finidat for
+CLM4.5, as described below
+
+List any changes to the defaults for the boundary datasets: 
+
+   For CLM4.5, all surface datasets and initial conditions files have been
+   recreated. For surface datasets, changes result in only roundoff-level
+   differences in the pct_* fields. For initial conditions, the new initial
+   conditions are effectively the same as the old, but bugs in interpinic
+   prevent them from being exactly the same.
+
+Describe any substantial timing or memory changes: 
+
+   Slight (probably < 1%) increase in memory for all CLM4.5 cases, due to
+   allocation of ALL urban columns wherever there is an urban landunit
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): NONE
+
+List all files eliminated:
+
+========= Remove unneeded modules (iulog moved to fileutils.F90)
+D       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/clm_varpar.F90
+D       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/clm_varctl.F90
+
+========= Now differs for clm4_0 and clm4_5, so copied to those two places
+D       models/lnd/clm/src/util_share/clm_varsur.F90
+
+========= Replaced with new file for testing interpinic
+D       models/lnd/clm/tools/clm4_5/interpinic/clmi.BCN.1949-01-01_10x15_USGS_simyr1850_c121113.nc
+
+
+List all files added and what they do:
+
+========= New file for testing interpinic
+A       models/lnd/clm/tools/clm4_5/interpinic/clmi.I2000CLM45BGC.2000-01-01.10x15_simyr2000_c130607.nc
+
+========= Add tests
+A       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkpftMod.F90
+
+========= Moved from util_share
+A       models/lnd/clm/src/clm4_0/main/clm_varsur.F90
+
+========= Moved from util_share, and modified extensively to support new surface
+          dataset format
+A       models/lnd/clm/src/clm4_5/main/clm_varsur.F90
+
+========= Add module to do some initialization that doesn't fit well elsewhere,
+          and/or can't go elsewhere because of circular dependencies
+A       models/lnd/clm/src/clm4_5/main/initParametersMod.F90
+
+
+List all existing files that have been modified, and describe the changes:
+
+========= Change pct_pft and related variables on surface dataset to be % of
+          landunit; this requires significant changes for mkpftMod, mkglcmecMod
+          and the error checks / corrections done in mksurfdat.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkutilsMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/fileutils.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkfileMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkglcmecMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkvarpar.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mksurfdat.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/Srcfiles
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/src/mkpftMod.F90
+
+========= Add tests
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mkutilsMod.F90
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/Srcfiles
+M       models/lnd/clm/tools/clm4_5/mksurfdata_map/unit_testers/test_mksurfdata_map.F90
+
+========= Update crop landunit numbering, fix urban bug for column-level
+          variables, take code out of a conditional to prevent floating point
+          exceptions
+M       models/lnd/clm/tools/clm4_5/interpinic/src/interpinic.F90
+
+========= New files for testing interpinic
+M       models/lnd/clm/tools/clm4_5/interpinic/interpinic.runoptions
+
+========= Change landunit and column numbering; delete udenstype
+M       models/lnd/clm/src/clm4_5/main/clm_varcon.F90
+M       models/lnd/clm/src/clm4_5/main/subgridRestMod.F90
+
+========= Add variables for determining number of natural & crop PFTs
+M       models/lnd/clm/src/clm4_5/main/clm_varpar.F90
+
+========= Major changes to handle pct_pft being specified as % of landunit
+          rather than % of gridcell
+M       models/lnd/clm/src/clm4_5/main/surfrdMod.F90
+M       models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+M       models/lnd/clm/src/clm4_5/main/subgridMod.F90
+M       models/lnd/clm/src/clm4_5/main/initGridCellsMod.F90
+
+========= Initialize new surface variables, check _OPENMP here instead of driver
+M       models/lnd/clm/src/clm4_5/main/clm_initializeMod.F90
+
+========= Update comments, remove udenstype
+M       models/lnd/clm/src/clm4_5/main/clmtype.F90
+
+========= Change 'use' statements, use ltype instead of udenstype, fix
+          initialization for 0-weight columns
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+
+========= Add some consistency checks (moved here from clmtypeInitMod), change others
+M       models/lnd/clm/src/clm4_5/main/clm_varctl.F90
+
+========= Change 'use' statements; use urbpoi rather than isturb; remove
+          references to 'istslak'
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/main/CNiniTimeVar.F90
+M       models/lnd/clm/src/clm4_5/main/dynlandMod.F90
+M       models/lnd/clm/src/clm4_5/main/accFldsMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+          -- also, remove udenstype, and move some consistency checks elsewhere
+M       models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+M       models/lnd/clm/src/clm4_5/main/restFileMod.F90
+M       models/lnd/clm/src/clm4_5/main/controlMod.F90
+M       models/lnd/clm/src/clm4_5/main/initSurfAlbMod.F90
+M       models/lnd/clm/src/clm4_5/main/filterMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_driver.F90
+          -- also, move _OPENMP check to initialization
+M       models/lnd/clm/src/clm4_5/main/subgridAveMod.F90
+M       models/lnd/clm/src/clm4_5/main/CNiniSpecial.F90
+M       models/lnd/clm/src/clm4_5/main/inicPerpMod.F90
+M       models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+
+========= Tighten tolerance for error check
+M       models/lnd/clm/src/clm4_5/main/reweightMod.F90
+
+========= Use 'crop_prog' rather than the CROP CPP def
+M       models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90
+
+========= New surface datasets and initial conditions
+M       models/lnd/clm/bld/namelist_files/namelist_defaults_clm4_5.xml
+
+========= Change environment variable in component_gen_comp command to something universal
+M       .ChangeLog_template
+
+========= Restore a failing test (see bug 1658)
+M       models/lnd/clm/bld/unit_testers/xFail/expectedClmTestFails.xml
+
+
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   yes
+
+     All PASS or xFail except for the following expected baseline failures:
+     418/444 < FAIL> <Test Id: 418> <Desc: lnd_in file the same as expected for phys45>  
+     423/444 < FAIL> <Test Id: 423> <Desc: lnd_in file the same as expected for phys45>  
+     428/444 < FAIL> <Test Id: 428> <Desc: lnd_in file the same as expected for phys45>  
+     433/444 < FAIL> <Test Id: 433> <Desc: lnd_in file the same as expected for phys45>  
+     438/444 < FAIL> <Test Id: 438> <Desc: lnd_in file the same as expected for phys45>  
+     443/444 < FAIL> <Test Id: 443> <Desc: lnd_in file the same as expected for phys45-crop>  
+
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       yes
+       Tests themselves: All PASS or xFail, except
+       ERB.ne30_g16.I_1948-2004.yellowstone_intel, which I have re-added to the
+       xFail list (see bugz 1658)
+       
+       Comparisons: Some nlcomp and compare_hist failures, as expected
+
+    yellowstone/aux_clm     pgi         yes
+       All PASS or xFail except for some nlcomp & compare_hist failures (expected)
+
+    frankfurt/aux_clm       intel       yes
+       All PASS or xFail except for some nlcomp & compare_hist failures (expected)
+
+    frankfurt/aux_clm       pgi         NO
+
+    frankfurt/aux_clm       nag         yes
+       All PASS or xFail except for nlcomp failures (expected)
+
+  CESM history file comparison:
+  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $CESMDATAROOT/ccsm_baselines/ -model clm2)
+
+    yellowstone/aux_clm     intel       yes
+
+       Some compare_hist failures for CLM4.5 tests, as expected
+
+  test_driver.sh tools testing:
+
+    yellowstone interactive:    yes
+       All PASS except for expected baseline failures:
+       012 blg54 TBLtools.sh clm4_5 mksurfdata_map tools__s namelist ...................................rc=7 FAIL
+       016 blh54 TBLtools.sh clm4_5 interpinic tools__ds runoptions ....................................rc=7 FAIL
+       020 bli24 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds rc=7 FAIL
+       022 bli53 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o ....rc=7 FAIL
+       024 bli54 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds ...rc=7 FAIL
+       026 bli57 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__do ...rc=7 FAIL
+       032 bliT4 TBLscript_tools.sh clm4_5 mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_mp24_2000^tools_rc=7 FAIL
+
+       and expected failures:
+       027 smiS4 TSMscript_tools.sh shared ncl_scripts getregional_datasets.pl getregional .............rc=6 FAIL
+       028 bliS4 TBLscript_tools.sh shared ncl_scripts getregional_datasets.pl getregional .............rc=4 FAIL
+
+
+    frankfurt interactive:      NO
+
+  yellowstone/PTCLM:            NO
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_10
+
+Changes answers relative to baseline: YES
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Changes in all CLM4.5 configurations. See below
+      for details
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Mostly roundoff, but some larger than roundoff -- see below for details.
+
+      Changes are limited to CLM4.5. Where the below notes refer to "all
+      configurations", this is really limited to CLM4.5 configurations.
+
+      For all configurations, there are roundoff-level changes due to
+      roundoff-level differences in subgrid weights. These changes can quickly
+      grow to greater than roundoff (which I believe is due to nonlinear
+      feedbacks with snow variables), but as described below, I have verified
+      that the root cause of differences is this roundoff-level change.
+
+      For cases that use initial conditions, where these initial conditions were
+      previously interpinic'ed, there are greater-than-roundoff level changes
+      due to various bugs and limitations of interpinic (for example, some
+      fields, like tsai, are skipped). I took pains to ensure that, for cases
+      using original (non-interpinic'ed) initial conditions in clm4_5_10 and
+      prior, the new initial conditions are nearly identical to the old (but not
+      entirely identical, due to bug 1702 - see comment 2); this applies to most
+      f09 initial conditions. However, this was not practical for cases that
+      used interpinic'ed files; this applies to f19, ne30 and hcru initial
+      conditions, as well as f09 BGCDV initial conditions. So for this latter
+      set of cases, there can be large differences from clm4_5_10, especially at
+      the start of the simulation.
+
+      There are also greater than roundoff-level changes for some glc_mec
+      virtual columns, because we now use information on topo_glc_mec whenever
+      we can.
+
+      There are also greater than roundoff-level changes in subgrid weights in
+      virtual (0-weight) glc_mec and crop landunits, now that we no longer use
+      arbitrary subgrid weights there; I don't think this will affect anything
+      important, though.
+
+      Some tests that exhibited larger-than-usual changes from baseline, in cpl
+      hist and/or clm hist files, were the following (ignoring changes that can
+      be explained by the above notes):
+      
+      ERS_Lm3.f19_g16.IGRCP60CLM45CN.yellowstone_intel
+      ERS_D.f19_g16.ICLM45GLCMEC.yellowstone_intel.clm-glcMEC
+      ERS_D.f10_f10.ICLM45BGCNoVS.yellowstone_intel.clm-rootlit
+      ERS_Ld3_D_P64x1.ne30_g16.ICLM45CN.yellowstone_intel.clm-default
+
+      From these results, it seems that large changes may occur more often in
+      glc_mec runs, even above and beyond the virtual column changes that are
+      expected, as noted above.
+
+      For the four above tests, I verified that differences were attributable to
+      the roundoff-level changes in subgrid weights, using the procedure
+      documented below.
+
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      In order to confirm that answers only differed by roundoff, I ran 7
+      additional tests (these tests all had nl_dirs, but that was not central to
+      these tests, so I'm not listing them here):
+
+          SMS_Lm1.f19_g16.I_1850_CLM45_BGC
+          SMS_Ly2.T31_g37.IG1850CLM45CN
+          SMS_Ly5.T31_g37.I20TRCRUCLM45BGC
+          SMS_Ly5.T31_g37.ICLM45BGCDV
+          SMS_Ly5.T31_g37.I_2000_CLM45_BGC
+          SMS_Ly5.f10_f10.ICLM45BGCDVCROP
+          SMS_Ly5.f10_f10.I_2000_CLM45_BGC_CROP
+
+      Each test was done as follows:
+
+      (1) Created baselines from clm4_5_04
+
+      (2) Ran tests from a branch (allocate_all_urban_cols), where all I changed
+      from the baseline was (a) wherever we have an urban landunit, create ALL
+      urban landunits, and (b) for f19, change finidat files to use a new,
+      interpinic'ed file based on the original. Confirmed that this was bfb with
+      (1) except for (a) 1-d history files (now have extra urban columns), and
+      (b) any CLM4.5 test that uses initial conditions, since interpinic is
+      currently broken for urban.
+
+      Side-note: I actually confirmed bfb behavior for the full yellowstone
+      aux_clm test suite, in addition to the above 7 tests
+
+      This extra branch was necessary because I cannot compare 1-d history files
+      directly between my main branch and the trunk, because of the extra urban
+      columns present in the new code.
+
+
+      (3) Ran these 7 tests from my main branch, off of clm4_5_04, comparing
+      with (2). For this comparison, I only confirmed that the subgrid weights
+      were the same within roundoff (up to about 1e-12 differences for the
+      transient case; smaller for other cases). Note that greater than
+      roundoff-level changes are seen in many other fields, presumably because
+      small differences in subgrid pft weights can cause differences in how
+      variables are averaged from pft to column. This, in turn, can lead to
+      larger changes due to nonlinearities in the system (e.g., snow). The
+      following steps were taken to confirm that other differences between my
+      branch and the trunk were only due to these small differences in subgrid
+      weights.
+
+      That is, I am confirming that:
+      (a) the only differences in the branch are subgrid weights
+      (b) these subgrid weights only differ by roundoff
+
+
+      (4) Reran (2), but with extra code to write out subgrid weights (including
+      writing these weights at every time step for pftdyn) -- from branch
+      allocate_all_urban_cols_writeWeights
+
+      (5) Reran (3), but with extra code to read the subgrid weights written in
+      (4). Confirmed that, with this one-off, my branch was bfb with (4).
+
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_10
 Originator(s):  muszala (Stefan Muszala)
 Date: Mon Jun 10 13:10:31 MDT 2013

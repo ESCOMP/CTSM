@@ -192,9 +192,9 @@ contains
     use clm_atmlnd   , only : clm_a2l
     use subgridAveMod
     use clm_time_manager , only : get_step_size, get_nstep
-    use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
+    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, &
                               spval, icol_road_perv, icol_road_imperv, istice_mec, &
-                              istdlak, istslak,istsoil,istcrop,istwet
+                              istdlak, istsoil,istcrop,istwet
     use clm_varctl   , only : glc_dyntopo, create_glacier_mec_landunit
 !
 ! !ARGUMENTS:
@@ -291,6 +291,7 @@ contains
     real(r8), pointer :: qflx_snwcp_liq(:)     ! excess liquid water due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: qflx_sl_top_soil(:)   ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
     integer , pointer :: snl(:)                ! number of snow layers
+    logical , pointer :: urbpoi(:)             ! true => landunit is an urban point
 !
 ! local pointers to original implicit out arguments
 !
@@ -347,6 +348,7 @@ contains
 
     ltype             => lun%itype
     canyon_hwr        =>lun%canyon_hwr
+    urbpoi            =>lun%urbpoi
 
     ! Assign local pointers to derived type scalar members (column-level)
 
@@ -628,7 +630,7 @@ contains
           ! Do not do this check for an urban pft since it will not balance on a per-column
           ! level because of interactions between columns and since a separate check is done
           ! in the urban radiation module
-          if (ltype(l) /= isturb) then
+          if (.not. urbpoi(l)) then
              errsol(p) = fsa(p) + fsr(p) &
                   - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2))
           else
@@ -639,7 +641,7 @@ contains
           ! Do not do this check for an urban pft since it will not balance on a per-column
           ! level because of interactions between columns and since a separate check is done
           ! in the urban radiation module
-          if (ltype(l) /= isturb) then
+          if (.not. urbpoi(l)) then
              errlon(p) = eflx_lwrad_out(p) - eflx_lwrad_net(p) - forc_lwrad(g)
           else
              errlon(p) = spval
@@ -651,7 +653,7 @@ contains
           ! For surfaces other than urban, (eflx_lwrad_net) equals (forc_lwrad - eflx_lwrad_out),
           ! and a separate check is done above for these terms.
           
-          if (ltype(l) /= isturb) then
+          if (.not. urbpoi(l)) then
              c=pcolumn(p)
              errseb(p) = sabv(p) + sabg_chk(p) + forc_lwrad(g) - eflx_lwrad_out(p) &
                          - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)

@@ -43,9 +43,8 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    use clmtype
    use abortutils,   only: endrun
    use clm_varctl,   only: iulog, use_c13, use_c14
-   use clm_varpar  , only : nlevdecomp
+   use clm_varpar,   only: nlevdecomp, crop_prog
    use pftvarcon,    only: nc3crop
-   use surfrdMod,    only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none

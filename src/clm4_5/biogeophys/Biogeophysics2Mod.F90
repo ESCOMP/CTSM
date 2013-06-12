@@ -76,7 +76,7 @@ contains
     use clm_atmlnd        , only : clm_a2l
     use clm_time_manager  , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb, icol_road_perv, &
-                                   isturb, icol_roof, icol_sunwall, icol_shadewall, istsoil, &
+                                   icol_roof, icol_sunwall, icol_shadewall, istsoil, &
                                    istice_mec
     use clm_varcon        , only : istcrop
     use clm_varpar        , only : nlevsno, nlevgrnd, nlevurb, max_pft_per_col
@@ -154,6 +154,7 @@ contains
     real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
     real(r8), pointer :: eflx_heat_from_ac_pft(:) ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
     real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width (-)
+    logical , pointer :: urbpoi(:)          ! true => landunit is an urban point
  
 ! local pointers to implicit inout arguments
 !
@@ -223,6 +224,7 @@ contains
     ! Assign local pointers to derived subtypes components (landunit-level)
 
     ltype      => lun%itype
+    urbpoi     => lun%urbpoi
     canyon_hwr     =>lun%canyon_hwr
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -359,7 +361,7 @@ contains
 
        ! set ev_snow, ev_soil for urban landunits here
        l = plandunit(p)
-       if (ltype(l) == isturb) then
+       if (urbpoi(l)) then
           qflx_ev_snow(p) = qflx_evap_soi(p)
           qflx_ev_soil(p) = 0._r8
           qflx_ev_h2osfc(p) = 0._r8
@@ -425,7 +427,7 @@ contains
 
        ! Ground heat flux
 
-       if (ltype(l) /= isturb) then
+       if (.not. urbpoi(l)) then
           lw_grnd=(frac_sno_eff(c)*tssbef(c,snl(c)+1)**4 &
                +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
                +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
@@ -462,7 +464,7 @@ contains
        if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
          eflx_lh_tot_r(p)= eflx_lh_tot(p)
          eflx_sh_tot_r(p)= eflx_sh_tot(p)
-       else if (ltype(l) == isturb) then
+       else if (urbpoi(l)) then
          eflx_lh_tot_u(p)= eflx_lh_tot(p)
          eflx_sh_tot_u(p)= eflx_sh_tot(p)
        end if
@@ -558,7 +560,7 @@ contains
        g = pgridcell(p)
        j = snl(c)+1
 
-       if (ltype(l) /= isturb) then
+       if (.not. urbpoi(l)) then
           lw_grnd=(frac_sno_eff(c)*tssbef(c,snl(c)+1)**4 &
                +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
                +frac_h2osfc(c)*t_h2osfc_bef(c)**4)

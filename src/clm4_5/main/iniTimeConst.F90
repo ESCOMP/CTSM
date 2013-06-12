@@ -21,7 +21,7 @@ subroutine iniTimeConst
   use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevgrnd, nlevlak, numpft, numrad, nlevurb, mach_eps
   use clm_varpar  , only : toplev_equalspace, nlev_equalspace, more_vertlayers, nlevsoifl
-  use clm_varcon  , only : istice, istdlak, istwet, isturb, istsoil, istcrop, istice_mec, &
+  use clm_varcon  , only : istice, istdlak, istwet, istsoil, istcrop, istice_mec, &
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry, dzsoi_decomp, secspday
@@ -112,6 +112,7 @@ subroutine iniTimeConst
   real(r8), pointer :: thick_wall(:)      ! total thickness of urban wall
   real(r8), pointer :: thick_roof(:)      ! total thickness of urban roof
   real(r8), pointer :: lat(:)             ! gridcell latitude (radians)
+  logical , pointer :: urbpoi(:)          ! true => landunit is an urban point
 !
 ! local pointers to implicit out arguments
 !
@@ -321,6 +322,7 @@ subroutine iniTimeConst
   ! Assign local pointers to derived subtypes components (landunit-level)
 
   ltype               => lun%itype
+  urbpoi              => lun%urbpoi
   thick_wall          => lps%thick_wall
   thick_roof          => lps%thick_roof
 
@@ -786,7 +788,7 @@ subroutine iniTimeConst
    do l = begl, endl
 
    ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
-    if (ltype(l)==isturb) then
+    if (urbpoi(l)) then
 #if (defined VANCOUVER)
       zurb_wall(l,1) = 0.010_r8/2._r8
       zurb_wall(l,2) = zurb_wall(l,1) + 0.010_r8/2._r8 + 0.020_r8/2._r8
@@ -1082,7 +1084,7 @@ subroutine iniTimeConst
             depth(c,lev)     = spval
          end do
 #endif
-      else if (ltype(l)==isturb .and. (ctype(c) /= icol_road_perv) .and. (ctype(c) /= icol_road_imperv) )then
+      else if (urbpoi(l) .and. (ctype(c) /= icol_road_perv) .and. (ctype(c) /= icol_road_imperv) )then
          ! Urban Roof, sunwall, shadewall properties set to special value
          do lev = 1,nlevgrnd
             watsat(c,lev) = spval
@@ -1158,7 +1160,7 @@ subroutine iniTimeConst
              end if
           else if (ltype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
             ! No organic matter for urban
-            if (ltype(l)==isturb) then
+            if (urbpoi(l)) then
               om_frac = 0._r8
             end if
             if (lev <= nlevsoi) then
@@ -1248,7 +1250,7 @@ subroutine iniTimeConst
 
       ! Define non-lake levels, layers and interfaces
       ! Lakes will be set in initSLake
-      if (ltype(l) == isturb) then
+      if (urbpoi(l)) then
          if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall) then
             z(c,1:nlevurb)  = zurb_wall(l,1:nlevurb)
             zi(c,0:nlevurb) = ziurb_wall(l,0:nlevurb)

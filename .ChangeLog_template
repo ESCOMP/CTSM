@@ -55,7 +55,7 @@ Machines testing ran on:  (Tests in priority order)
     frankfurt/aux_clm       nag         yes
 
   CESM history file comparison:
-  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $GLDCSEG/ccsm_baselines/ -model clm2)
+  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $CESMDATAROOT/ccsm_baselines/ -model clm2)
 
     yellowstone/aux_clm     intel       yes **
 

@@ -66,7 +66,7 @@ module interpinic
   real(r8), parameter :: re = SHR_CONST_REARTH
   ! These types need to agree with the types in clm_varcon.F90 in the main CLM model code
   integer,  parameter :: croptype     = 15
-  integer,  parameter :: istcrop      = 8
+  integer,  parameter :: istcrop      = 2
   integer,  parameter :: istsoil      = 1
   integer,  parameter :: baresoil     = 0
   integer,  parameter :: nonurbcol    = 1
@@ -855,7 +855,7 @@ contains
                 if (typei_urb(n) == nonurbcol) then
                    if (typei(n) == typeo(no)) calcmin = .true.
                 else
-                   if (typei_urb(n) == typeo_urb(no)) calcmin = .true.
+                   if (typei(n) == typeo(no) .and. typei_urb(n) == typeo_urb(no)) calcmin = .true.
                 end if
              end if
              if (calcmin) then
@@ -1284,7 +1284,7 @@ contains
              !
              if ( htop_var )then
                 ! AND this is non-vegetated land-unit -- set to zero
-                if( typeo(no) > istsoil .and. typeo(no) < istcrop )then
+                if( typeo(no) /= istsoil .and. typeo(no) /= istcrop )then
                    rbufslo(no) = 0.0_r8
                 else
                    ! Otherwise calculate it from the nearest neighbor
@@ -1398,14 +1398,12 @@ contains
     else if (nveco == numpftso) then
        allocate (typeo(nveco))
        allocate (vtypeo(nveco))
-       if ( present_var .or. itypveg_var )then
-          call check_ret(nf90_inq_varid (ncido, 'pfts1d_itypveg', varid))
-          call check_ret(nf90_get_var(ncido, varid, vtypeo))
-          call check_ret(nf90_inq_varid (ncido, 'pfts1d_ityplun', varid))
-          call check_ret(nf90_get_var(ncido, varid, typeo))
-          call check_ret(nf90_inq_varid (ncido, 'pfts1d_wtxy', varid))
-          call check_ret(nf90_get_var(ncido, varid, wto))
-       end if
+       call check_ret(nf90_inq_varid (ncido, 'pfts1d_itypveg', varid))
+       call check_ret(nf90_get_var(ncido, varid, vtypeo))
+       call check_ret(nf90_inq_varid (ncido, 'pfts1d_ityplun', varid))
+       call check_ret(nf90_get_var(ncido, varid, typeo))
+       call check_ret(nf90_inq_varid (ncido, 'pfts1d_wtxy', varid))
+       call check_ret(nf90_get_var(ncido, varid, wto))
     end if
 
     call check_ret(nf90_inq_varid (ncidi, varname, varid))
@@ -1491,7 +1489,7 @@ contains
     character(len=16)   :: logname
     character(len=16)   :: hostname
     character(len=256)  :: str
-    character(len=1500) :: hist
+    character(len=16000) :: hist
 #ifdef _OPENMP
     external :: OMP_GET_MAX_THREADS
     integer :: OMP_GET_MAX_THREADS

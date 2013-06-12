@@ -19,7 +19,7 @@ subroutine CNiniSpecial ()
    use clm_varctl  , only: iulog, use_c13, use_c14
    use clmtype
    use CNSetValueMod
-   use surfrdMod   , only: crop_prog
+   use clm_varpar  , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none

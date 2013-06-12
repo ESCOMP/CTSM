@@ -15,7 +15,7 @@ module clm_initializeMod
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch, &
                                create_glacier_mec_landunit, iulog
-  use clm_varsur      , only : wtxy, vegxy, topoxy
+  use clm_varsur      , only : wt_lunit, wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use ncdio_pio
   use mct_mod
@@ -67,24 +67,26 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use clmtypeInitMod  , only : initClmtype
-    use clm_varpar      , only : maxpatch, clm_varpar_init
-    use clm_varcon      , only : clm_varcon_init
-    use clm_varctl      , only : fsurdat, fatmlndfrc, flndtopo, fglcmask, noland 
-    use pftvarcon       , only : pftconrd
-    use decompInitMod   , only : decompInit_lnd, decompInit_glcp
-    use decompMod       , only : get_proc_bounds
-    use domainMod       , only : domain_check, ldomain, domain_init
-    use surfrdMod       , only : surfrd_get_globmask, surfrd_get_grid, surfrd_get_topo, &
-                                 surfrd_get_data 
-    use controlMod      , only : control_init, control_print, nlfilename
-    use UrbanInputMod   , only : UrbanInput
-    use ncdio_pio       , only : ncd_pio_init
-    use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, clm_a2l, clm_l2a
-    use clm_glclnd      , only : init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
-    use initGridCellsMod, only : initGridCells
+    use clmtypeInitMod   , only : initClmtype
+    use clm_varpar       , only : clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, &
+                                  maxpatch_glcmec
+    use initParametersMod, only : initParameters
+    use clm_varcon       , only : clm_varcon_init, max_lunit
+    use clm_varctl       , only : fsurdat, fatmlndfrc, flndtopo, fglcmask, noland 
+    use pftvarcon        , only : pftconrd
+    use decompInitMod    , only : decompInit_lnd, decompInit_glcp
+    use decompMod        , only : get_proc_bounds
+    use domainMod        , only : domain_check, ldomain, domain_init
+    use surfrdMod        , only : surfrd_get_globmask, surfrd_get_grid, surfrd_get_topo, &
+                                  surfrd_get_data 
+    use controlMod       , only : control_init, control_print, nlfilename
+    use UrbanInputMod    , only : UrbanInput
+    use ncdio_pio        , only : ncd_pio_init
+    use clm_atmlnd       , only : init_atm2lnd_type, init_lnd2atm_type, clm_a2l, clm_l2a
+    use clm_glclnd       , only : init_glc2lnd_type, init_lnd2glc_type, clm_x2s, clm_s2x
+    use initGridCellsMod , only : initGridCells
 #if (defined LCH4)
-    use ch4varcon       , only : ch4conrd
+    use ch4varcon        , only : ch4conrd
 #endif
 !
 ! !ARGUMENTS:
@@ -110,6 +112,10 @@ contains
 
     call t_startf('clm_init1')
 
+#if (defined _OPENMP)
+    call endrun( 'ERROR: OpenMP does NOT work on the CLM4.5 science branch. Set the number of threads for LND to 1 and rerun.' )
+#endif
+
     ! ------------------------------------------------------------------------
     ! Initialize run control variables, timestep
     ! ------------------------------------------------------------------------
@@ -123,6 +129,7 @@ contains
     endif
 
     call control_init()
+    call initParameters()
     call clm_varpar_init()
     call clm_varcon_init()
     call ncd_pio_init()
@@ -183,15 +190,18 @@ contains
 
     call UrbanInput(mode='initialize')
 
-    ! Allocate surface grid dynamic memory (for wtxy and vegxy arrays)
-    ! Allocate additional dynamic memory for glacier_mec topo and thickness
+    ! Allocate surface grid dynamic memory
 
     call get_proc_bounds(begg, endg)
-    allocate (vegxy(begg:endg,maxpatch), wtxy(begg:endg,maxpatch), stat=ier)   
+    allocate (wt_lunit(begg:endg,max_lunit), stat=ier)
+    allocate (wt_nat_pft(begg:endg,natpft_lb:natpft_ub), stat=ier)
+    allocate (wt_cft(begg:endg,cft_lb:cft_ub), stat=ier)
     if (create_glacier_mec_landunit) then
-       allocate (topoxy(begg:endg,maxpatch), stat=ier)
+       allocate (wt_glc_mec(begg:endg,maxpatch_glcmec), stat=ier)
+       allocate (topo_glc_mec(begg:endg,maxpatch_glcmec), stat=ier)
     else
-       allocate (topoxy(1,1), stat=ier)
+       allocate (wt_glc_mec(1,1), stat=ier)
+       allocate (topo_glc_mec(1,1), stat=ier)
     endif
     if (ier /= 0) then
        write(iulog,*)'initialize allocation error'; call endrun()
@@ -202,8 +212,7 @@ contains
 
     call pftconrd()
 
-    ! Read surface dataset and set up vegetation type [vegxy] and 
-    ! weight [wtxy] arrays for [maxpatch] subgrid patches.
+    ! Read surface dataset and set up subgrid weight arrays
     
     call surfrd_get_data(ldomain, fsurdat)
 
@@ -239,9 +248,11 @@ contains
 
     call initGridCells()
 
-    ! Deallocate surface grid dynamic memory (for wtxy and vegxy arrays)
+    ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere
+    ! Note that wt_lunit is kept until the end of initialize2 so we can do some
+    ! consistency checking. 
 
-    deallocate (vegxy, wtxy, topoxy)
+    deallocate (wt_nat_pft, wt_cft, wt_glc_mec, topo_glc_mec)
 
     call t_stopf('clm_init1')
 
@@ -652,6 +663,10 @@ contains
        call create_clm_s2x(init=.true.)
        call t_stopf('init_create_s2x')
     end if
+
+    ! wt_lunit was allocated in initialize1, but needed to be kept around through
+    ! initialize2 for some consistency checking; now it can be deallocated
+    deallocate(wt_lunit)
 
     call t_stopf('clm_init2')
 

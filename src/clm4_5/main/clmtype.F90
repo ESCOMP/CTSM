@@ -17,27 +17,28 @@ module clmtype
 ! landunits types can have values of (see clm_varcon.F90)
 ! -------------------------------------------------------- 
 !   1  => (istsoil)    soil (vegetated or bare soil landunit)
-!   2  => (istice)     land ice
-!   3  => (istdlak)    deep lake
-!   4  => (istslak) shall lake (not currently implemented; SLake implementation has variable depth)
-!   5  => (istwet)     wetland
-!   6  => (isturb)     urban
-!   7  => (istice_mec) land ice (multiple elevation classes) 
-!   8  => (istcrop)    crop (only for crop configuration)
+!   2  => (istcrop)    crop (only for crop configuration)
+!   3  => (istice)     land ice
+!   4  => (istice_mec) land ice (multiple elevation classes) 
+!   5  => (istdlak)    deep lake
+!   6  => (istwet)     wetland
+!   7  => (isturb_tbd) urban tbd
+!   8  => (isturb_hd)  urban hd
+!   9  => (isturb_md) urban md
 ! -------------------------------------------------------- 
 ! column types can have values of
 ! -------------------------------------------------------- 
 !   1  => (istsoil)          soil (vegetated or bare soil)
-!   2  => (istice)           land ice
-!   3  => (istdlak)          deep lake
-!   4  => (istslak)          shallow lake 
-!   5  => (istwet)           wetland
-!   7  => (istice_mec)       land ice (multiple elevation classes)   
-!   61 => (icol_roof)        urban roof
-!   62 => (icol_sunwall)     urban sunwall
-!   63 => (icol_shadewall)   urban shadewall
-!   64 => (icol_road_imperv) urban impervious road
-!   65 => (icol_road_perv)   urban pervious road
+!   2  => (istcrop)          crop (only for crop configuration)
+!   3  => (istice)           land ice
+!   4  => (istice_mec)       land ice (multiple elevation classes)   
+!   5  => (istdlak)          deep lake
+!   6  => (istwet)           wetland
+!   71 => (icol_roof)        urban roof
+!   72 => (icol_sunwall)     urban sunwall
+!   73 => (icol_shadewall)   urban shadewall
+!   74 => (icol_road_imperv) urban impervious road
+!   75 => (icol_road_perv)   urban pervious road
 ! -------------------------------------------------------- 
 ! pft types can have values of
 ! -------------------------------------------------------- 
@@ -2250,7 +2251,7 @@ type, public :: pft_type
    real(r8), pointer :: wtgcell(:)      !weight (relative to gridcell) 
    ! topological mapping functionality
    integer , pointer :: itype(:)        !pft vegetation 
-   integer , pointer :: mxy(:)          !m index for laixy(i,j,m),etc.
+   integer , pointer :: mxy(:)          !m index for laixy(i,j,m),etc. (undefined for special landunits)
    logical , pointer :: active(:)       !true=>do computations on this pft (see reweightMod for details)
 end type pft_type
 
@@ -2308,7 +2309,6 @@ type, public :: landunit_type
    logical , pointer :: lakpoi(:)       !true=>lake point
    logical , pointer :: urbpoi(:)       !true=>urban point
    logical , pointer :: glcmecpoi(:)    !true=>glacier_mec point
-   integer , pointer :: udenstype(:)    !urban density type
    logical , pointer :: active(:)       !true=>do computations on this landunit (see reweightMod for details)
 end type landunit_type
 

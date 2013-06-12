@@ -191,7 +191,7 @@ contains
     use clmtype
     use decompMod , only : get_clump_bounds
     use pftvarcon , only : npcropmin
-    use clm_varcon, only : istsoil, isturb, icol_road_perv
+    use clm_varcon, only : istsoil, icol_road_perv
     use clm_varcon, only : istcrop
 !
 ! !ARGUMENTS:
@@ -256,7 +256,7 @@ contains
           else
              fnl = fnl + 1
              filter(nc)%nolakep(fnl) = p
-             if (lun%itype(l) /= isturb) then
+             if (.not. lun%urbpoi(l)) then
                 fnlu = fnlu + 1
                 filter(nc)%nolakeurbanp(fnlu) = p
              end if
@@ -334,7 +334,7 @@ contains
     f = 0
     fn = 0
     do l = begl,endl
-       if (lun%itype(l) == isturb) then
+       if (lun%urbpoi(l)) then
           f = f + 1
           filter(nc)%urbanl(f) = l
        else
@@ -350,8 +350,8 @@ contains
     f = 0
     fn = 0
     do c = begc,endc
-       l =col%landunit(c)
-       if (lun%itype(l) == isturb) then
+       l = col%landunit(c)
+       if (lun%urbpoi(l)) then
           f = f + 1
           filter(nc)%urbanc(f) = c
        else
@@ -367,8 +367,8 @@ contains
     f = 0
     fn = 0
     do p = begp,endp
-       l =pft%landunit(p)
-       if (lun%itype(l) == isturb .and. pft%active(p)) then
+       l = pft%landunit(p)
+       if (lun%urbpoi(l) .and. pft%active(p)) then
           f = f + 1
           filter(nc)%urbanp(f) = p
        else

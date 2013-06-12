@@ -40,14 +40,14 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
-    use clm_varpar   , only: nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
+    use clm_varpar   , only: nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions, &
+                             crop_prog
    use clm_varctl  , only: iulog
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
 #ifdef NITRIF_DENITRIF
    use clm_varcon, only: nitrif_n2o_loss_frac
 #endif
    use pftvarcon       , only: npcropmin, nc3crop
-   use surfrdMod       , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none

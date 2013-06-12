@@ -59,7 +59,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon        , only : denh2o, denice, wimp, ssi, isturb,istsoil,istdlak
+    use clm_varcon        , only : denh2o, denice, wimp, ssi, istsoil,istdlak
     use clm_time_manager  , only : get_step_size
     use clm_atmlnd        , only : clm_a2l
     use SNICARMod         , only : scvng_fct_mlt_bcphi, scvng_fct_mlt_bcpho, &
@@ -546,7 +546,7 @@ contains
     use clmtype
     use clm_time_manager, only : get_step_size
     use clm_varcon      , only : denice, denh2o, tfrz, istice_mec
-    use clm_varcon      , only : rpi, isturb, istdlak, istsoil, istcrop
+    use clm_varcon      , only : rpi, istdlak, istsoil, istcrop
     use clm_varctl      , only : subgridflag
 !
 ! !ARGUMENTS:
@@ -739,9 +739,9 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon, only : istsoil, isturb, istdlak
+    use clm_varcon, only : istsoil, istdlak
     use SLakeCon  , only : lsadz
-    use clm_varcon, only : istsoil, isturb,istwet,istice, istice_mec
+    use clm_varcon, only : istsoil, istwet,istice, istice_mec
     use clm_varcon, only : istcrop
     use clm_time_manager, only : get_step_size
 !
@@ -770,6 +770,7 @@ contains
     real(r8), pointer :: int_snow(:)       !integrated snowfall [mm]
     integer, pointer :: clandunit(:)       !landunit index for each column
     integer, pointer :: ltype(:)           !landunit type
+    logical , pointer :: urbpoi(:)         ! true => landunit is an urban point
 !
 ! local pointers to implicit inout arguments
 !
@@ -818,6 +819,7 @@ contains
     ! Assign local pointers to derived subtypes (landunit-level)
 
     ltype      => lun%itype
+    urbpoi     =>lun%urbpoi
 
     ! Assign local pointers to derived subtypes (column-level)
 
@@ -881,7 +883,7 @@ contains
        do j = msn_old(c)+1,0
           ! use 0.01 to avoid runaway ice buildup
           if (h2osoi_ice(c,j) <= .01_r8) then
-             if (ltype(l) == istsoil .or. ltype(l)==isturb .or. ltype(l) == istcrop) then
+             if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
 
@@ -907,7 +909,7 @@ contains
                    mss_dst4(c,j+1)  = mss_dst4(c,j+1) + mss_dst4(c,j)
                 end if
 
-             else if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. ltype(l) /= istcrop .and. j /= 0) then
+             else if (ltype(l) /= istsoil .and. .not. urbpoi(l) .and. ltype(l) /= istcrop .and. j /= 0) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
                 dz(c,j+1) = dz(c,j+1) + dz(c,j)
@@ -930,7 +932,7 @@ contains
                    ! urban, soil or crop, the h2osoi_liq and h2osoi_ice associated with this layer is sent 
                    ! to qflx_qrgwl later on in the code.  To keep track of this for the snow balance
                    ! error check, we add this to qflx_sl_top_soil here
-                   if (ltype(l) /= istsoil .and. ltype(l) /= istcrop .and. ltype(l) /= isturb .and. i == 0) then
+                   if (ltype(l) /= istsoil .and. ltype(l) /= istcrop .and. .not. urbpoi(l) .and. i == 0) then
                      qflx_sl_top_soil(c) = (h2osoi_liq(c,i) + h2osoi_ice(c,i))/dtime
                    end if
 
@@ -1001,7 +1003,7 @@ contains
 
           if (h2osno(c) <= 0._r8) snow_depth(c) = 0._r8
              ! this is where water is transfered from layer 0 (snow) to layer 1 (soil)
-             if (ltype(l) == istsoil .or. ltype(l) == isturb .or. ltype(l) == istcrop) then
+             if (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop) then
                 h2osoi_liq(c,0) = 0.0_r8
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + zwliq(c)
           end if

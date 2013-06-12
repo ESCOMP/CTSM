@@ -11,7 +11,7 @@ module subgridAveMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clmtype
-  use clm_varcon, only : spval, isturb,  icol_roof, icol_sunwall, icol_shadewall, &
+  use clm_varcon, only : spval, icol_roof, icol_sunwall, icol_shadewall, &
                          icol_road_perv, icol_road_imperv
   use clm_varctl, only : iulog
   use abortutils, only : endrun
@@ -401,6 +401,7 @@ contains
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -414,6 +415,7 @@ contains
     plandunit  =>pft%landunit
     npfts      =>lun%npfts
     pfti       =>lun%pfti
+    urbpoi     =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -422,7 +424,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -439,7 +441,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -543,6 +545,7 @@ contains
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -556,6 +559,7 @@ contains
     plandunit =>pft%landunit
     npfts     =>lun%npfts
     pfti      =>lun%pfti
+    urbpoi    =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -564,7 +568,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -581,7 +585,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -689,6 +693,7 @@ contains
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -703,6 +708,7 @@ contains
     plandunit =>pft%landunit
     npfts     =>  grc%npfts
     pfti      =>  grc%pfti
+    urbpoi    =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -713,7 +719,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -730,7 +736,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -839,6 +845,7 @@ contains
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -853,6 +860,7 @@ contains
     plandunit    =>pft%landunit
     npfts        =>  grc%npfts
     pfti         =>  grc%pfti
+    urbpoi     =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -863,7 +871,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -880,7 +888,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -978,6 +986,7 @@ contains
     integer , pointer :: coli(:)       ! initial column index in landunit
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -989,6 +998,7 @@ contains
     clandunit  =>col%landunit
     ncolumns   =>lun%ncolumns
     coli       =>lun%coli
+    urbpoi     =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -997,7 +1007,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -1014,7 +1024,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -1100,6 +1110,7 @@ contains
     integer , pointer :: coli(:)       ! initial column index in landunit
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -1111,6 +1122,7 @@ contains
     clandunit  =>col%landunit
     ncolumns   =>lun%ncolumns
     coli       =>lun%coli
+    urbpoi     =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -1119,7 +1131,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -1136,7 +1148,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -1228,6 +1240,7 @@ contains
     integer , pointer :: coli(:)       ! initial column index in gridcell
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -1240,6 +1253,7 @@ contains
     cgridcell  =>col%gridcell
     ncolumns   =>  grc%ncolumns
     coli       =>  grc%coli
+    urbpoi     =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1250,7 +1264,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -1267,7 +1281,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -1359,6 +1373,7 @@ contains
     integer , pointer :: coli(:)       ! initial column index in gridcell
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
@@ -1371,6 +1386,7 @@ contains
     cgridcell  =>col%gridcell
     ncolumns   =>  grc%ncolumns
     coli       =>  grc%coli
+    urbpoi     =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1381,7 +1397,7 @@ contains
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_shadewall) then
@@ -1398,7 +1414,7 @@ contains
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
           l = clandunit(c) 
-          if (ltype(l) == isturb) then
+          if (urbpoi(l)) then
              if (ctype(c) == icol_sunwall) then
                 scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_shadewall) then
@@ -1654,8 +1670,8 @@ contains
 ! each landunit type depending on l2g_scale_type
 !
 ! !USES:
-     use clm_varcon, only : istsoil, istice, istdlak, istslak, istwet, isturb, istice_mec,&
-                            istcrop, max_lunit, spval
+     use clm_varcon, only : istsoil, istcrop, istice, istice_mec, istdlak, istwet, &
+                            isturb_MIN, isturb_MAX, max_lunit, spval
 !
 ! !ARGUMENTS:
      implicit none
@@ -1703,7 +1719,7 @@ contains
         scale_lookup(istice_mec) = 1.0_r8
      else if (l2g_scale_type == 'nonurb') then
         scale_lookup(:) = 1.0_r8
-        scale_lookup(isturb) = spval
+        scale_lookup(isturb_MIN:isturb_MAX) = spval
      else if (l2g_scale_type == 'lake') then
         scale_lookup(istdlak) = 1.0_r8
      else

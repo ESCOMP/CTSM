@@ -104,7 +104,6 @@ module clm_varctl
   logical , public :: glc_smb = .true.                      ! if true, pass surface mass balance info to GLC
                                                             ! if false, pass positive-degree-day info to GLC
   logical , public :: glc_dyntopo = .false.                 ! true => CLM glacier topography changes dynamically
-  real(r8), public, allocatable :: glc_topomax(:)           ! upper limit of each class (m)  (set in surfrd)
   character(len=256), public :: glc_grid = ' '              ! glc_grid used to determine fglcmask  
   character(len=256), public :: fglcmask = ' '              ! glacier mask file name (based on glc_grid)
 !
@@ -217,7 +216,7 @@ contains
 !
 ! !USES:
   use shr_sys_mod  , only : shr_sys_abort
-  use clm_varpar   , only : maxpatch_pft, numpft
+  use clm_varpar   , only : maxpatch_pft, numpft, crop_prog
 !
 ! !ARGUMENTS:
   logical, intent(IN) :: masterproc  ! proc 0 logical for printing msgs
@@ -238,11 +237,11 @@ contains
        allocate_all_vegpfts = .true.
     else
        allocate_all_vegpfts = .false.
-#ifdef CROP
-       write(iulog,*)'maxpatch_pft = ',maxpatch_pft,&
-            ' does NOT equal numpft+1 = ',numpft+1
-       call shr_sys_abort( subname//' ERROR:: Can NOT turn CROP on without all PFTs' )
-#endif
+       if (crop_prog) then
+          write(iulog,*)'maxpatch_pft = ',maxpatch_pft,&
+               ' does NOT equal numpft+1 = ',numpft+1
+          call shr_sys_abort( subname//' ERROR:: Can NOT turn CROP on without all PFTs' )
+       end if
     end if
 
     if (masterproc) then
@@ -253,6 +252,28 @@ contains
           write(iulog,*)'co2_type = ',co2_type,' is not supported'
           call shr_sys_abort( subname//' ERROR:: choices are constant, prognostic or diagnostic' )
        end if
+
+       ! Consistency settings for crop
+
+       if (crop_prog .and. (use_c13 .or. use_c14)) then
+          call shr_sys_abort( subname// &
+               ' ERROR:: CROP and C13/C14 can NOT be on at the same time' )
+       end if
+
+       if (crop_prog .and. .not. create_crop_landunit) then
+          call shr_sys_abort( subname// &
+               ' ERROR: prognostic crop PFTs require create_crop_landunit=.true.' )
+       end if
+
+       if (crop_prog .and. fpftdyn /= ' ') &
+            call shr_sys_abort( subname// &
+            ' ERROR: prognostic crop is incompatible with transient landuse' )
+
+       if (.not. crop_prog .and. irrigate) then
+          call shr_sys_abort( subname// &
+               ' ERROR: irrigate = .true. requires CROP model active.' )
+       end if
+
 
        ! Consistency settings for dynamic land use, etc.
 

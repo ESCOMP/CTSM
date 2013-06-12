@@ -54,7 +54,7 @@ contains
     use decompMod           , only : get_proc_clumps, get_clump_bounds
     use filterMod           , only : filter
     use clm_varpar          , only : nlevsoi, nlevsno, nlevlak, nlevgrnd
-    use clm_varcon          , only : zlnd, istsoil, isturb, denice, denh2o, &
+    use clm_varcon          , only : zlnd, istsoil, denice, denh2o, &
                                      icol_roof, icol_road_imperv, &
                                      icol_road_perv
     use clm_varcon          , only : istcrop
@@ -101,6 +101,7 @@ contains
     real(r8), pointer :: latdeg(:)         ! latitude (degrees)
     integer , pointer :: pcolumn(:)        ! index into column level quantities
     real(r8), pointer :: soilpsi(:,:)      ! soil water potential in each soil layer (MPa)
+    logical , pointer :: urbpoi(:)         ! true => landunit is an urban point
 !
 ! local pointers to implicit out arguments
 !
@@ -141,6 +142,7 @@ contains
     
     lakpoi              =>lun%lakpoi
     itypelun            => lun%itype
+    urbpoi              =>lun%urbpoi
 
     ! Assign local pointers to derived subtypes components (column-level)
 
@@ -243,7 +245,7 @@ contains
 
       do c = begc, endc
           l = clandunit(c)
-          if (itypelun(l) == isturb) then
+          if (urbpoi(l)) then
              ! From Bonan 1996 (LSM technical note)
              frac_sno(c) = min( snow_depth(c)/0.05_r8, 1._r8)
           else

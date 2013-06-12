@@ -45,7 +45,7 @@ contains
 !
 ! !USES:
     use clmtype 
-    use clm_varcon, only : isturb, vkc
+    use clm_varcon, only : vkc
     use decompMod , only : get_proc_bounds
 !
 ! !ARGUMENTS:
@@ -56,6 +56,7 @@ contains
     real(r8), pointer :: ht_roof(:)    ! height of urban roof (m)
     real(r8), pointer :: canyon_hwr(:) ! ratio of building height to street width (-)
     integer , pointer :: ltype(:)      ! landunit type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
 !
 ! local pointers to original implicit out arguments
 !
@@ -91,11 +92,12 @@ contains
     z_d_town   =>lun%z_d_town
     ht_roof    =>lun%ht_roof
     canyon_hwr =>lun%canyon_hwr
+    urbpoi     =>lun%urbpoi
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     do l = begl, endl 
-      if (ltype(l) == isturb) then 
+      if (urbpoi(l)) then
 
          ! Calculate plan area index 
          plan_ai = canyon_hwr(l)/(canyon_hwr(l) + 1._r8)
@@ -149,9 +151,9 @@ contains
 !
 ! !USES:
     use clmtype 
-    use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
+    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, &
                               icol_road_perv, icol_road_imperv, spval, &
-                              udens_base
+                              isturb_MIN
     use decompMod    , only : get_proc_bounds, ldecomp
     use UrbanInputMod, only : urbinp
 !
@@ -168,6 +170,7 @@ contains
     integer , pointer :: ctype(:)               ! column type
     integer , pointer :: ltype(:)               ! landunit type index
     integer , pointer :: lgridcell(:)           ! gridcell of corresponding landunit
+    logical , pointer :: urbpoi(:)              ! true => landunit is an urban point
 !
 ! local pointers to original implicit out arguments
 !
@@ -189,7 +192,6 @@ contains
     real(r8), pointer :: thick_wall(:)          ! thickness of urban wall (m)
     real(r8), pointer :: thick_roof(:)          ! thickness of urban roof (m)
     integer,  pointer :: nlev_improad(:)        ! number of impervious road layers (-)
-    integer,  pointer :: udenstype(:)           ! urban density type
 !
 !
 ! !OTHER LOCAL VARIABLES
@@ -205,10 +207,10 @@ contains
     ! Assign local pointers to derived type members (landunit-level)
 
     ltype               => lun%itype
+    urbpoi              => lun%urbpoi
     lgridcell           =>lun%gridcell
     coli                =>lun%coli
     colf                =>lun%colf
-    udenstype           =>lun%udenstype
     canyon_hwr          =>lun%canyon_hwr
     wtroad_perv         =>lun%wtroad_perv 
     ht_roof             =>lun%ht_roof
@@ -238,9 +240,9 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     do l = begl, endl
-       if (ltype(l) == isturb) then
+       if (urbpoi(l)) then
           g =lun%gridcell(l)
-          dindx = udenstype(l) - udens_base
+          dindx = ltype(l) - isturb_MIN + 1
           canyon_hwr(l)         = urbinp%canyon_hwr(g,dindx)
           wtroad_perv(l)        = urbinp%wtroad_perv(g,dindx)
           ht_roof(l)            = urbinp%ht_roof(g,dindx)
@@ -306,7 +308,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon, only : isturb, spval, icol_road_perv
+    use clm_varcon, only : spval, icol_road_perv
     use decompMod , only : get_proc_bounds
 !
 ! !ARGUMENTS:
@@ -319,6 +321,7 @@ contains
     integer , pointer :: clandunit(:)  ! landunit index of corresponding column
     integer , pointer :: plandunit(:)  ! landunit index of corresponding pft
     integer , pointer :: ctype(:)      ! column type
+    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
 !
 ! local pointers to original implicit out arguments
 !
@@ -371,6 +374,7 @@ contains
     taf                => lps%taf
     qaf                => lps%qaf
     ltype              => lun%itype
+    urbpoi             => lun%urbpoi
     lgridcell          =>lun%gridcell
     t_building         => lps%t_building
     eflx_traffic       => lef%eflx_traffic
@@ -411,7 +415,7 @@ contains
 
     do l = begl, endl 
        g = lgridcell(l)
-       if (ltype(l) == isturb) then 
+       if (urbpoi(l)) then
 #if (defined VANCOUVER)
           taf(l) = 297.56_r8
           qaf(l) = 0.0111_r8
@@ -432,7 +436,7 @@ contains
 
     do c = begc, endc 
        l = clandunit(c)
-       if (ltype(l) == isturb) then 
+       if (urbpoi(l)) then
           eflx_building_heat(c) = 0._r8
           eflx_urban_ac(c) = 0._r8
           eflx_urban_heat(c) = 0._r8
@@ -456,7 +460,7 @@ contains
 
     do p = begp, endp 
        l = plandunit(p)
-       if (ltype(l) /= isturb) then 
+       if (.not. urbpoi(l)) then
           t_ref2m_u(p)     = spval
           t_ref2m_min_u(p) = spval
           t_ref2m_max_u(p) = spval

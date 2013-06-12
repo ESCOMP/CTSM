@@ -159,7 +159,7 @@ subroutine CNPhenologyInit( begp, endp )
 !
 ! !USES:
    use clm_time_manager, only: get_step_size
-   use surfrdMod       , only: crop_prog
+   use clm_varpar      , only: crop_prog
    use clm_varcon      , only: secspday
 !
 ! !ARGUMENTS:

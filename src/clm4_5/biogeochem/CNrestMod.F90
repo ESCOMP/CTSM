@@ -46,7 +46,7 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd, only : clm_a2l
-    use clm_varpar, only : numrad, ndecomp_pools, nlevdecomp
+    use clm_varpar, only : numrad, ndecomp_pools, nlevdecomp, crop_prog
     use decompMod , only : get_proc_bounds
     use clm_time_manager, only : is_restart, get_nstep
     use clm_varcon, only : nlevgrnd
@@ -271,31 +271,31 @@ contains
        end if	
     end if
 
-#if (defined CROP)
-    ! fert_counter
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fert_counter', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fert_counter', data=pepv%fert_counter, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+    if (crop_prog) then
+       ! fert_counter
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='fert_counter', xtype=ncd_double,  &
+               dim1name='pft',long_name='',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='fert_counter', data=pepv%fert_counter, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
-    end if
 
-   ! fert
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='fert', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='fert', data=pnf%fert, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+       ! fert
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='fert', xtype=ncd_double,  &
+               dim1name='pft',long_name='',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='fert', data=pnf%fert, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
     end if
-#endif
 
     ! lgsf
     if (flag == 'define') then
@@ -673,19 +673,19 @@ contains
        end if
     endif
 
-#if (defined CROP)
-    ! grain_flag
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='grain_flag', xtype=ncd_double,  &
-            dim1name='pft',long_name='',units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_io(varname='grain_flag', data=pepv%grain_flag, &
-            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun
+    if (crop_prog) then
+       ! grain_flag
+       if (flag == 'define') then
+          call ncd_defvar(ncid=ncid, varname='grain_flag', xtype=ncd_double,  &
+               dim1name='pft',long_name='',units='')
+       else if (flag == 'read' .or. flag == 'write') then
+          call ncd_io(varname='grain_flag', data=pepv%grain_flag, &
+               dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+          if (flag=='read' .and. .not. readvar) then
+             if (is_restart()) call endrun
+          end if
        end if
     end if
-#endif
 
     !--------------------------------
     ! pft carbon state variables 

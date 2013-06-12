@@ -98,7 +98,7 @@ module clm_driver
   use pftdynMod           , only : pftdyn_cnbal
 #endif
   use dynlandMod          , only : dynland_hwcontent
-  use clm_varcon          , only : zlnd, isturb
+  use clm_varcon          , only : zlnd
   use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep,is_perpetual
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
@@ -205,6 +205,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 !
   integer , pointer :: clandunit(:) ! landunit index associated with each column
   integer , pointer :: itypelun(:)  ! landunit type
+  logical , pointer :: urbpoi(:)    ! true => landunit is an urban point
 !
 ! !OTHER LOCAL VARIABLES:
   integer  :: nstep                    ! time step number
@@ -240,6 +241,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! Assign local pointers to derived subtypes components (landunit-level)
 
   itypelun            => lun%itype
+  urbpoi              =>lun%urbpoi
 
   ! Assign local pointers to derived subtypes components (column-level)
 
@@ -276,10 +278,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   ! ============================================================================
 
   nclumps = get_proc_clumps()
-
-#if (defined _OPENMP)
-  call endrun( 'ERROR: OpenMP does NOT work on the CLM4.5 science branch. Set the number of threads for LND to 1 and rerun.' )
-#endif
 
 !$OMP PARALLEL DO PRIVATE (nc,g,begg,endg,begl,endl,begc,endc,begp,endp)
   do nc = 1,nclumps
@@ -622,7 +620,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call t_startf('snow_init')
      do c = begc,endc
         l = clandunit(c)
-        if (itypelun(l) == isturb) then
+        if (urbpoi(l)) then
            ! Urban landunit use Bonan 1996 (LSM Technical Note)
            cps%frac_sno(c) = min( cps%snow_depth(c)/0.05_r8, 1._r8)
         end if

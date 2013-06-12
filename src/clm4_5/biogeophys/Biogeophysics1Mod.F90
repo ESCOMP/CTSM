@@ -65,7 +65,7 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
-                                    istice, istice_mec, istwet, istsoil, isturb, istdlak, &
+                                    istice, istice_mec, istwet, istsoil, istdlak, &
                                     zlnd, zsno, tfrz, &
                                     icol_roof, icol_sunwall, icol_shadewall,     &
                                     icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
@@ -153,6 +153,7 @@ contains
     real(r8), pointer :: watdry(:,:)      !volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
     real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
     real(r8), pointer :: rootr_road_perv(:,:) !effective fraction of roots in each soil layer for urban pervious road
+    logical , pointer :: urbpoi(:)        ! true => landunit is an urban point
 !
 ! local pointers to implicit out arguments
 !
@@ -241,6 +242,7 @@ contains
     ! Assign local pointers to derived type members (landunit-level)
 
     ityplun       => lun%itype
+    urbpoi        => lun%urbpoi
     z_0_town      =>lun%z_0_town
     z_d_town      =>lun%z_d_town
 
@@ -485,7 +487,7 @@ contains
        ! Ground emissivity - only calculate for non-urban landunits 
        ! Urban emissivities are currently read in from data file
 
-       if (ityplun(l) /= isturb) then
+       if (.not. urbpoi(l)) then
           if (ityplun(l)==istice .or. ityplun(l)==istice_mec) then
              emg(c) = 0.97_r8
           else
@@ -535,13 +537,13 @@ contains
 
        eflx_sh_tot(p) = 0._r8
        l = plandunit(p)
-       if (ityplun(l) == isturb) then
+       if (urbpoi(l)) then
          eflx_sh_tot_u(p) = 0._r8
        else if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then 
          eflx_sh_tot_r(p) = 0._r8
        end if
        eflx_lh_tot(p) = 0._r8
-       if (ityplun(l) == isturb) then
+       if (urbpoi(l)) then
          eflx_lh_tot_u(p) = 0._r8
        else if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then 
          eflx_lh_tot_r(p) = 0._r8
@@ -601,7 +603,7 @@ contains
                 forc_hgt_u_pft(p) = forc_hgt_u(g)
                 forc_hgt_t_pft(p) = forc_hgt_t(g)
                 forc_hgt_q_pft(p) = forc_hgt_q(g)
-              else if (ityplun(l) == isturb) then
+              else if (urbpoi(l)) then
                 forc_hgt_u_pft(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
                 forc_hgt_t_pft(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
                 forc_hgt_q_pft(p) = forc_hgt_q(g) + z_0_town(l) + z_d_town(l)

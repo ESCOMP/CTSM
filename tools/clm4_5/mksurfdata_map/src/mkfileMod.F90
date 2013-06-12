@@ -831,51 +831,51 @@ contains
           if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
                   dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent glacier for each glacier elevation class', units='unitless')
+                  long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
           else
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
                   dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent glacier for each glacier elevation class', units='unitless')
+                  long_name='percent glacier for each glacier elevation class (% of landunit)', units='unitless')
           end if
           
           if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
                   dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent smaller glaciers and ice caps for each glacier elevation class', units='unitless')
+                  long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
           else
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_GIC', xtype=xtype, &
                   dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent smaller glaciers and ice caps for each glacier elevation class', units='unitless')
+                  long_name='percent smaller glaciers and ice caps for each glacier elevation class (% of landunit)', units='unitless')
           end if
           
           if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
                   dim1name='gridcell', dim2name='nglcec', &
-                  long_name='percent ice sheet for each glacier elevation class', units='unitless')
+                  long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
           else
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC_ICESHEET', xtype=xtype, &
                   dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-                  long_name='percent ice sheet for each glacier elevation class', units='unitless')
+                  long_name='percent ice sheet for each glacier elevation class (% of landunit)', units='unitless')
           end if
           
           if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
                   dim1name='gridcell', &
-                  long_name='percent ice caps/glaciers', units='unitless')
+                  long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
           else
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_GIC', xtype=xtype, &
                   dim1name='lsmlon', dim2name='lsmlat', &
-                  long_name='percent ice caps/glaciers', units='unitless')
+                  long_name='percent ice caps/glaciers (% of landunit)', units='unitless')
           end if
           
           if (outnc_1d) then
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
                   dim1name='gridcell', &
-                  long_name='percent ice sheet', units='unitless')
+                  long_name='percent ice sheet (% of landunit)', units='unitless')
           else
              call ncd_defvar(ncid=ncid, varname='PCT_GLC_ICESHEET', xtype=xtype, &
                   dim1name='lsmlon', dim2name='lsmlat', &
-                  long_name='percent ice sheet', units='unitless')
+                  long_name='percent ice sheet (% of landunit)', units='unitless')
           end if
           
           if (outnc_1d) then
@@ -913,14 +913,18 @@ contains
             long_name='percent urban for each density type', units='unitless')
     end if
 
-    if (outnc_1d) then
-       call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
-            dim1name='gridcell',&
-            long_name='urban region ID', units='unitless')
-    else
-       call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='urban region ID', units='unitless')
+    if (.not. dynlanduse) then
+
+       if (outnc_1d) then
+          call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
+               dim1name='gridcell',&
+               long_name='urban region ID', units='unitless')
+       else
+          call ncd_defvar(ncid=ncid, varname='URBAN_REGION_ID', xtype=nf_int, &
+               dim1name='lsmlon', dim2name='lsmlat', &
+               long_name='urban region ID', units='unitless')
+       end if
+
     end if
 
     if (dynlanduse) then

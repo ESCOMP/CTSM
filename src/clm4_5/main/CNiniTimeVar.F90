@@ -17,13 +17,13 @@ subroutine CNiniTimeVar()
    use clm_atmlnd  , only: clm_a2l
    use shr_kind_mod, only: r8 => shr_kind_r8
    use clm_varcon  , only: istsoil, zsoi
-   use clm_varpar  , only: nlevgrnd, nlevsoi, nlevdecomp, ndecomp_pools, nlevdecomp_full
+   use clm_varpar  , only: nlevgrnd, nlevsoi, nlevdecomp, ndecomp_pools, nlevdecomp_full, &
+                           crop_prog
    use clm_varcon  , only: istcrop, c13ratio, c14ratio
    use clm_varctl  , only: use_c13, use_c14
    use pftvarcon   , only: noveg
    use pftvarcon   , only: npcropmin
    use decompMod   , only: get_proc_bounds
-   use surfrdMod   , only: crop_prog
 !
 ! !ARGUMENTS:
    implicit none

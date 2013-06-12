@@ -73,7 +73,8 @@ contains
 ! Allocate memory and read in urban input data
 !
 ! !USES:
-    use clm_varpar, only : numrad, nlevurb, numurbl
+    use clm_varpar, only : numrad, nlevurb
+    use clm_varcon, only : numurbl
     use clm_varctl, only : iulog, fsurdat, single_column
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc

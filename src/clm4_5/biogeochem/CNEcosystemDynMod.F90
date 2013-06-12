@@ -116,7 +116,7 @@ contains
     use CNWoodProductsMod      , only: CNWoodProducts
     use CNSoilLittVertTranspMod, only: CNSoilLittVertTransp
     use perf_mod               , only: t_startf, t_stopf
-    use surfrdMod              , only: crop_prog
+    use clm_varpar             , only: crop_prog
     use shr_sys_mod            , only: shr_sys_flush
 !
 ! !ARGUMENTS:

@@ -107,7 +107,7 @@ contains
     use clmtype
     use clm_varcon      , only : denice, denh2o, wimp, pondmx_urban, &
                                  icol_roof, icol_sunwall, icol_shadewall, &
-                                 icol_road_imperv, icol_road_perv, isturb
+                                 icol_road_imperv, icol_road_perv
                              
     use clm_varpar      , only : nlevsoi, maxpatch_pft
     use clm_time_manager, only : get_step_size
@@ -385,7 +385,7 @@ contains
     use clmtype
     use clm_varcon      , only : icol_roof, icol_road_imperv, icol_sunwall, &
          icol_shadewall, icol_road_perv,denh2o, denice, roverg, wimp, &
-         isturb,istsoil,pc,mu,tfrz, istcrop
+         istsoil,pc,mu,tfrz, istcrop
     use clmtype
     use clm_varctl      , only: iulog
     use clm_time_manager, only : get_step_size
@@ -1351,7 +1351,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv, watmin,isturb,rpi
+    use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv, watmin,rpi
     use clm_varpar  , only : nlevsoi,nlevgrnd
 #if (defined VICHYDRO)
     use clm_varcon  , only : secspday,nlvic
@@ -1414,6 +1414,7 @@ contains
     real(r8), pointer :: zwt(:)            ! water table depth (m)
     real(r8), pointer :: wa(:)             ! water in the unconfined aquifer (mm)
     real(r8), pointer :: qcharge(:)        ! aquifer recharge rate (mm/s)
+    logical , pointer :: urbpoi(:)         ! true => landunit is an urban point
 #if (defined VICHYDRO)
     real(r8), pointer :: moist(:,:)        !soil layer moisture (mm)
     real(r8), pointer :: ice(:,:)          !soil layer moisture (mm)
@@ -1507,6 +1508,7 @@ contains
     qflx_drain_perched    => cwf%qflx_drain_perched
     clandunit      =>col%landunit
     ltype          => lun%itype
+    urbpoi         => lun%urbpoi
     ctype          => col%itype
     snl           => cps%snl
     dz            => cps%dz
@@ -1951,7 +1953,7 @@ contains
        xs1(c)          = max(max(h2osoi_liq(c,1),0._r8)-max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1))),0._r8)
        h2osoi_liq(c,1) = min(max(0._r8,pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)), h2osoi_liq(c,1))
 
-       if (ltype(clandunit(c)) == isturb) then
+       if (urbpoi(clandunit(c))) then
           qflx_rsub_sat(c)     = xs1(c) / dtime
        else
           if(h2osfcflag == 1) then
