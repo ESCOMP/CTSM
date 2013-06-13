@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  clm4_5_12
+Originator(s):  muszala (Stefan Muszala)
+Date: Thu Jun 13 09:41:56 MDT 2013
+One-line Summary: NoVS test, NAG mods and remove TWS from restart file
+
+Purpose of changes: 
+     
+   -Fix (from jedwards) for ERS_D.f10_f10.ICLM45BGCNoVS.yellowstone_intel.clm-rootlit test
+      Previous tags using ICLM45BGCNoVS are suspect!
+   -Since I tested this with NAG there are also port mods to CLM that I had to put in.
+   -Remove TWS from BiogeophysRestMod.F90 per sacks request.  OK'd by swenson.
+   -Update to rtm1_0_29
+
+Requirements for tag: N/A
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID): 1746
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes: N/A
+
+Code reviewed by: self, NoVs error: Charlie Koven and jedwards
+
+List any svn externals directories updated (csm_share, mct, etc.): rtm1_0_28 -> rtm1_0_29
+
+List all files eliminated: N/A
+
+List all files added and what they do: N/A
+
+List all existing files that have been modified, and describe the changes:
+
+-NoVS fix and NAG mods
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+-Nag mods
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4varcon.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/main/histFldsMod.F90
+-remove TWS from restart
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+-update to rtm1_0_29
+M       SVN_EXTERNAL_DIRECTORIES
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   no
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel OK 
+    yellowstone/aux_clm     pgi   OK  
+    frankfurt/aux_clm       intel OK    
+    frankfurt/aux_clm       pgi   OK
+    frankfurt/aux_clm       nag   OK
+
+  CESM history file comparison:
+  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $CESMDATAROOT/ccsm_baselines/ -model clm2)
+
+    yellowstone/aux_clm     intel  OK.  The only differences are in ERS_D.f10_f10.ICLM45BGCNoVS.yellowstone_intel.clm-rootlit.
+         These are expected due to the fix in ch4Mod.F90.
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_11
+
+Changes answers relative to baseline: Only for ERS_D.f10_f10.ICLM45BGCNoVS.yellowstone_intel.clm-rootlit.  Previous
+   versions of this compset should be considered suspect.  Fields that change (119 in total) for this test are:
+
+   ACTUAL_IMMOB, CH4STRESS_SAT, CH4STRESS_UNSAT, CH4_AERE_DEPTH_SAT, CH4_AERE_DEPTH_UNSAT, CH4_EBUL_DEPTH_SAT,
+   CH4_OXID_DEPTH_SAT, CH4_OXID_DEPTH_UNSAT, CH4_PROD_DEPTH_SAT, CH4_SURF_AERE_SAT, CH4_SURF_AERE_UNSAT,
+   CH4_SURF_DIFF_SAT, CH4_SURF_DIFF_UNSAT, CH4_SURF_EBUL_SAT, CH4_TRAN_DEPTH_SAT, CH4_TRAN_DEPTH_UNSAT,
+   COL_CTRUNC, COL_NTRUNC, CONC_CH4_SAT, CONC_CH4_UNSAT, CONC_O2_SAT, CONC_O2_UNSAT, CWDC, CWDC_LOSS,
+   CWDC_TO_LITR2C, CWDC_TO_LITR3C, CWDN, CWDN_TO_LITR2N, CWDN_TO_LITR3N, DENIT, ER, FCH4, FCH4TOCO2,
+   FUELC, F_DENIT, F_N2O_DENIT, F_N2O_NIT, F_NIT, GROSS_NMIN, HR, LAND_UPTAKE, LITHR, LITR1C, LITR1C_TO_SOIL1C,
+   LITR1N, LITR1N_TO_SOIL1N, LITR1_HR, LITR2C, LITR2C_TO_SOIL1C, LITR2N, LITR2N_TO_SOIL1N, LITR2_HR, LITR3C,
+   LITR3C_TO_SOIL2C, LITR3N, LITR3N_TO_SOIL2N, LITR3_HR, LITTERC, LITTERC_HR, LITTERC_LOSS, NBP, NEE, NEM, NEP,
+   NET_NMIN, O2STRESS_SAT, O2_AERE_DEPTH_SAT, O2_DECOMP_DEPTH_SAT, O2_DECOMP_DEPTH_UNSAT, POTENTIAL_IMMOB,
+   POT_F_DENIT, POT_F_NIT, SMINN_TO_SOIL1N_L1, SMINN_TO_SOIL1N_L2, SMINN_TO_SOIL1N_S2, SMINN_TO_SOIL1N_S3,
+   SMINN_TO_SOIL2N_L3, SMINN_TO_SOIL2N_S1, SMINN_TO_SOIL3N_S1, SMINN_TO_SOIL3N_S2, SMIN_NH4, SMIN_NO3,
+   SMIN_NO3_LEACHED, SOIL1C, SOIL1C_TO_SOIL2C, SOIL1C_TO_SOIL3C, SOIL1N, SOIL1N_TO_SOIL2N, SOIL1N_TO_SOIL3N,
+   SOIL1_HR_S2, SOIL1_HR_S3, SOIL2C, SOIL2C_TO_SOIL1C, SOIL2C_TO_SOIL3C, SOIL2N, SOIL2N_TO_SOIL1N,
+   SOIL2N_TO_SOIL3N, SOIL2_HR_S1, SOIL2_HR_S3, SOIL3C, SOIL3C_TO_SOIL1C, SOIL3N, SOIL3N_TO_SOIL1N, SOIL3_HR,
+   SOILC, SOILC_HR, SOILC_LOSS, SOMHR, SR, TOTCOLC, TOTCOLCH4, TOTCOLN, TOTECOSYSC, TOTECOSYSN, TOTLITC, TOTLITN,
+   TOTSOMC, TOTSOMN
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_11
 Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
 Date: Tue Jun 11 20:54:11 MDT 2013

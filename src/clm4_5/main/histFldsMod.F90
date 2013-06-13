@@ -1248,11 +1248,13 @@ contains
             ptr_col=cch4%ch4_oxid_depth_unsat)
    
        call hist_addfld2d (fname='CH4_AERE_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil aerenchyma loss for inundated / lake area (including transpiration flux if activated)', &
+            avgflag='A', long_name='CH4 soil aerenchyma loss for inundated / lake area '// &
+            ' (including transpiration flux if activated)', &
             ptr_col=cch4%ch4_aere_depth_sat)
    
        call hist_addfld2d (fname='CH4_AERE_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil aerenchyma loss for non-inundated area (including transpiration flux if activated)', &
+            avgflag='A', long_name='CH4 soil aerenchyma loss for non-inundated area '// &
+            ' (including transpiration flux if activated)', &
             ptr_col=cch4%ch4_aere_depth_unsat)
    
        call hist_addfld2d (fname='O2_AERE_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &

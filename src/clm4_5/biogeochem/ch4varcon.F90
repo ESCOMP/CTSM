@@ -350,7 +350,9 @@ contains
 
        if (ch4offline) write(iulog,*)'CH4 Model will be running offline and not affect fluxes to atmosphere.'
        if (aereoxid >= 0._r8) write(iulog,*) 'Fixed aerenchyma oxidation has been selected.'
-       if (.not. allowlakeprod) write(iulog,*) 'Lake production has been disabled.  Lakes will not factor into CH4 BGC.  "Sat" history fields will not average over lakes except for concentrations, which will average zero from lakes.'
+       if (.not. allowlakeprod) write(iulog,*) 'Lake production has been disabled. '// &
+          '  Lakes will not factor into CH4 BGC.  "Sat" history fields will not average'// &
+          '  over lakes except for concentrations, which will average zero from lakes.'
        if (.not. replenishlakec .and. .not. ch4offline) write(iulog,*)'LAKE SOIL CARBON WILL NOT BE REPLENISHED BUT INSTEAD ',&
              'WILL BE TRANSIENTLY RELEASED: COUPLED MODEL WILL NOT CONSERVE CARBON IN THIS MODE!'
        write(iulog,*)'Successfully initialized CH4 parameters from namelist.'

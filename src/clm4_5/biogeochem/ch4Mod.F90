@@ -674,7 +674,7 @@ subroutine ch4_prod (lbc, ubc, lbp, ubp, num_methc, filter_methc, num_methp, &
    use ch4varcon,        only : q10ch4base, q10ch4, rootlitfrac, cnscalefactor, mino2lim, & 
                                 f_ch4, lake_decomp_fact, usephfact, anoxicmicrosites, ch4rmcnlim
    use clm_varctl,       only : anoxia
-   use clm_varpar, only : nlevdecomp
+   use clm_varpar, only : nlevdecomp, nlevdecomp_full
 #ifdef CENTURY_DECOMP
    use CNDecompCascadeMod_CENTURY, only : nlev_soildecomp_standard
 #else
@@ -999,7 +999,7 @@ subroutine ch4_prod (lbc, ubc, lbp, ubp, num_methc, filter_methc, num_methp, &
 
          ! Add oxygen demand for nitrification
 #if (defined NITRIF_DENITRIF)
-         if (.not. lake) then
+         if (.not. lake .and. j<= nlevdecomp_full ) then
             o2_decomp_depth(c,j) = o2_decomp_depth(c,j) + pot_f_nit_vr(c,j) * 2.0_r8/14.0_r8
                                                         ! g N/m^3/s           mol O2 / g N
          end if
@@ -2284,11 +2284,14 @@ subroutine ch4_tran (lbc, ubc, num_methc, filter_methc, jwt, dtime_ch4, sat, lak
                   deficit = - conc_ch4_rel(c,j)*epsilon_t(c,j,1)*dz(c,j)  ! Mol/m^2 added
                   if (deficit > 1.e-3_r8 * scale_factor_gasdiff) then
                      if (deficit > 1.e-2_r8) then
-                        write(iulog,*)'Note: sink > source in ch4_tran, sources are changing quickly relative to diffusion timestep, and/or diffusion is rapid.'
+                        write(iulog,*)'Note: sink > source in ch4_tran, sources are changing '// &
+                           ' quickly relative to diffusion timestep, and/or diffusion is rapid.'
                         g = cgridcell(c)
                         write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-                        write(iulog,*)'This typically occurs when there is a larger than normal diffusive flux.'
-                        write(iulog,*)'If this occurs frequently, consider reducing land model (or methane model) timestep, or reducing the max. sink per timestep in the methane model.'
+                        write(iulog,*)'This typically occurs when there is a larger than normal '// &
+                          ' diffusive flux.'
+                        write(iulog,*)'If this occurs frequently, consider reducing land model (or '// &
+                          ' methane model) timestep, or reducing the max. sink per timestep in the methane model.'
                      end if
                      write(iulog,*) 'Negative conc. in ch4tran. c,j,deficit (mol):',c,j,deficit
                   end if
