@@ -18,7 +18,9 @@ module Hydrology2Mod
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: Hydrology2        ! Calculates soil/snow hydrology
+  public :: Hydrology2NoDrainage        ! Calculates soil/snow hydrology without drainage
+  public :: Hydrology2Drainage        ! Calculates soil/snow hydrolog: drainage
+  
 !
 ! !REVISION HISTORY:
 ! 2/28/02 Peter Thornton: Migrated to new data structures.
@@ -38,7 +40,7 @@ contains
 ! !IROUTINE: Hydrology2
 !
 ! !INTERFACE:
-  subroutine Hydrology2(lbc, ubc, lbp, ubp, &
+  subroutine Hydrology2NoDrainage(lbc, ubc, lbp, ubp, &
                         num_nolakec, filter_nolakec, &
                         num_hydrologyc, filter_hydrologyc, &
                         num_urbanc, filter_urbanc, &
@@ -72,7 +74,7 @@ contains
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
-    use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
+    use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff, WaterTable
     use clm_time_manager, only : get_step_size, get_nstep, is_perpetual
 #if (defined VICHYDRO)
     use CLMVICMapMod    , only : CLMVICMap
@@ -370,7 +372,7 @@ contains
 
     ! moved vol_liq from SurfaceRunoff to Infiltration
     call SurfaceRunoff(lbc, ubc, lbp, ubp, num_hydrologyc, filter_hydrologyc, &
-                       num_urbanc, filter_urbanc, icefrac )
+                       num_urbanc, filter_urbanc)
 
     call Infiltration(lbc, ubc,  num_hydrologyc, filter_hydrologyc, &
                       num_urbanc, filter_urbanc, vol_liq)
@@ -383,8 +385,10 @@ contains
     call CLMVICMap(lbc, ubc, num_hydrologyc, filter_hydrologyc)
 #endif
 
-    call Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
-                  num_urbanc, filter_urbanc, vol_liq, icefrac)
+    call WaterTable(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+                  num_urbanc, filter_urbanc)
+                  
+                  
 
     if (.not. is_perpetual()) then
 
@@ -532,14 +536,7 @@ contains
        if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
          t_grnd_r(c) = t_soisno(c,snl(c)+1)
        end if
-       if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
-          .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
-         endwb(c) = h2ocan(c) + h2osno(c)
-       else
-          ! add h2osfc to water balance
-          endwb(c) = h2ocan(c) + h2osno(c) + h2osfc(c) + wa(c)
 
-       end if
     end do
 
     do j = 1, nlevgrnd
@@ -548,83 +545,9 @@ contains
           if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
                .or. ctype(c) == icol_roof) .and. j > nlevurb) then
           else
-            endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
             h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
           end if
        end do
-    end do
-
-    ! Determine wetland and land ice hydrology (must be placed here
-    ! since need snow updated from CombineSnowLayers)
-
-    do fc = 1,num_nolakec
-       c = filter_nolakec(fc)
-       l = clandunit(c)
-       g = cgridcell(c)
-       if (ityplun(l)==istwet .or. ityplun(l)==istice      &
-                              .or. ityplun(l)==istice_mec) then
-          qflx_drain(c)         = 0._r8
-          qflx_drain_perched(c) = 0._r8
-          qflx_h2osfc_surf(c)   = 0._r8
-          qflx_irrig(c)         = 0._r8
-          qflx_surf(c)          = 0._r8
-          qflx_infl(c)          = 0._r8
-          ! add flood water flux to runoff for wetlands/glaciers
-          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
-                          (endwb(c)-begwb(c))/dtime
-          ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
-          ! (Negative qflx_glcice => positive contribution to runoff)
-          ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).
-          !       This code will not work if Hydrology2 is called before Biogeophysics2, or if
-          !        qflx_snwcp_ice has alread been included in qflx_glcice.
-          !       (The snwcp flux is added to qflx_glcice later in this subroutine.)
-
-          if (glc_dyntopo .and. ityplun(l)==istice_mec) then
-             qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice(c)   ! meltwater from melted ice
-          endif
-          fcov(c)       = spval
-          fsat(c)       = spval
-          qcharge(c)    = spval
-          qflx_rsub_sat(c) = spval
-       else if (urbpoi(l) .and. ctype(c) /= icol_road_perv) then
-          fcov(c)               = spval
-          fsat(c)               = spval
-          qflx_drain_perched(c) = 0._r8
-          qflx_h2osfc_surf(c)   = 0._r8
-          qcharge(c)            = spval
-          qflx_rsub_sat(c)      = spval
-       end if
-       ! If snow exceeds the thickness limit in glacier_mec columns, convert to an ice flux.
-       ! For dynamic glacier topography, remove qflx_snwcp_ice from the runoff.
-       ! Note that qflx_glcice can also have a negative component from melting of bare ice,
-       !  as computed in SoilTemperatureMod.F90
-
-       if (ityplun(l)==istice_mec) then
-
-          qflx_glcice_frz(c) = qflx_snwcp_ice(c)
-          qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
-
-          ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
-          ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
-          !  CLM runoff terms are not changed.
- 
-          if (glc_dyntopo) qflx_snwcp_ice(c) = 0._r8
-
-       endif   ! istice_mec
-
-
-       qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
-
-       if ((ityplun(l)==istsoil .or. ityplun(l)==istcrop) &
-           .and. cactive(c)) then
-          qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
-       end if
-       if (urbpoi(l)) then
-         qflx_runoff_u(c) = qflx_runoff(c)
-       else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
-         qflx_runoff_r(c) = qflx_runoff(c)
-       end if
-
     end do
 
 #if (defined CN) 
@@ -867,6 +790,291 @@ contains
        sno_liq_top(c)     = spval
     enddo
 
-  end subroutine Hydrology2
 
+  end subroutine Hydrology2NoDrainage
+
+
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: Hydrology2Drainage
+!
+! !INTERFACE:
+  subroutine Hydrology2Drainage(lbc, ubc, lbp, ubp, &
+                        num_nolakec, filter_nolakec, &
+                        num_hydrologyc, filter_hydrologyc, &
+                        num_urbanc, filter_urbanc)
+!
+! !DESCRIPTION:
+! This is the main subroutine to execute the calculation of soil/snow
+! hydrology
+! muszala March 7 2013 - description needs updating after Jinyun mods.
+! Calling sequence is:
+!  Hydrology2:                 surface hydrology driver
+!    -> Drainage:              subsurface runoff
+!
+! !USES:
+    use clmtype
+    use clm_atmlnd      , only : clm_a2l
+    use clm_varcon      , only : istice, istwet, istsoil, istice_mec, spval, &
+                                 icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
+                                 icol_shadewall, denh2o, denice
+    use clm_varcon      , only : istcrop
+    use clm_varctl      , only : glc_dyntopo
+    use clm_varpar      , only : nlevgrnd, nlevurb
+    use SoilHydrologyMod, only : Drainage
+    use clm_time_manager, only : get_step_size, get_nstep
+
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: lbc, ubc                    ! column bounds
+    integer, intent(in) :: lbp, ubp                    ! pft bounds
+    integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
+    integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
+    integer, intent(in) :: num_hydrologyc              ! number of column soil points in column filter
+    integer, intent(in) :: filter_hydrologyc(ubc-lbc+1)! column filter for soil points
+    integer, intent(in) :: num_urbanc                  ! number of column urban points in column filter
+    integer, intent(in) :: filter_urbanc(ubc-lbc+1)    ! column filter for urban points
+!
+! !CALLED FROM:
+! subroutine clm_driver1
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein
+!
+! !LOCAL VARIABLES:
+!
+! local pointers to implicit in arguments
+!
+    real(r8), pointer :: h2osfc(:)        ! surface water (mm)
+    real(r8), pointer :: qflx_drain_perched(:)    ! sub-surface runoff from perched zwt (mm H2O /s)
+    real(r8), pointer :: qflx_floodg(:)   ! gridcell flux of flood water from RTM
+    logical , pointer :: cactive(:)       ! true=>do computations on this column (see reweightMod for details)
+    real(r8), pointer :: qflx_h2osfc_surf(:)!surface water runoff (mm/s)
+    integer , pointer :: cgridcell(:)     ! column's gridcell
+    integer , pointer :: clandunit(:)     ! column's landunit
+    integer , pointer :: ityplun(:)       ! landunit type
+    integer , pointer :: ctype(:)         ! column type
+    real(r8), pointer :: h2ocan(:)        ! canopy water (mm H2O)
+    real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
+    real(r8), pointer :: forc_rain(:)     ! rain rate [mm/s]
+    real(r8), pointer :: forc_snow(:)     ! snow rate [mm/s]
+    real(r8), pointer :: begwb(:)         ! water mass begining of the time step
+    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+    real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)    
+!
+! local pointers to implicit inout arguments
+!
+    real(r8), pointer :: fcov(:)          ! fractional impermeable area
+    real(r8), pointer :: fsat(:)          ! fractional area with water table at surface
+    real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
+    real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
+    real(r8), pointer :: qflx_rsub_sat(:) ! soil saturation excess [mm h2o/s]
+!
+! local pointers to implicit out arguments
+!
+    real(r8), pointer :: endwb(:)         ! water mass end of the time step
+    real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
+    real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
+    real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]    
+    real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_infl(:)     ! infiltration (mm H2O /s)
+    real(r8), pointer :: qflx_qrgwl(:)    ! qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_irrig(:)    ! irrigation flux (mm H2O /s)
+    real(r8), pointer :: qflx_runoff(:)   ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+    real(r8), pointer :: qflx_runoff_u(:) ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+    real(r8), pointer :: qflx_runoff_r(:) ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+    real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
+
+
+    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s)
+    real(r8), pointer :: qflx_glcice_frz(:) ! ice growth (positive definite) (mm H2O/s)
+    logical , pointer :: urbpoi(:)        ! true => landunit is an urban point
+    
+!
+!
+! !OTHER LOCAL VARIABLES:
+!EOP
+!
+    integer  :: g,l,c,j,fc                 ! indices
+    integer  :: nstep                      ! time step number
+    real(r8) :: dtime                      ! land model time step (sec)
+    real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
+    real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
+
+!-----------------------------------------------------------------------
+
+    ! Assign local pointers to derived subtypes components (gridcell-level)
+
+    forc_rain => clm_a2l%forc_rain
+    forc_snow => clm_a2l%forc_snow
+
+    ! Assign local pointers to derived subtypes components (landunit-level)
+
+    ityplun => lun%itype
+    urbpoi  =>lun%urbpoi
+
+    ! Assign local pointers to derived subtypes components (column-level)
+    dz                => cps%dz
+    h2osfc            => cws%h2osfc
+    qflx_drain_perched=> cwf%qflx_drain_perched
+    qflx_floodg       => clm_a2l%forc_flood
+    cactive           => col%active
+    qflx_h2osfc_surf  => cwf%qflx_h2osfc_surf
+    cgridcell         =>col%gridcell
+    clandunit         =>col%landunit
+    ctype             => col%itype
+    h2ocan            => pws_a%h2ocan
+    h2osno            => cws%h2osno
+    fcov              => cws%fcov
+    fsat              => cws%fsat
+    wa                => cws%wa
+    qcharge           => cws%qcharge
+    h2osoi_ice        => cws%h2osoi_ice
+    h2osoi_liq        => cws%h2osoi_liq
+    h2osoi_vol        => cws%h2osoi_vol    
+    qflx_evap_tot     => pwf_a%qflx_evap_tot
+    qflx_drain        => cwf%qflx_drain
+    qflx_surf         => cwf%qflx_surf
+    qflx_infl         => cwf%qflx_infl
+    qflx_qrgwl        => cwf%qflx_qrgwl
+    qflx_irrig        => cwf%qflx_irrig
+    endwb             => cwbal%endwb
+    begwb             => cwbal%begwb
+    qflx_rsub_sat     => cwf%qflx_rsub_sat
+    qflx_runoff       => cwf%qflx_runoff
+    qflx_runoff_u     => cwf%qflx_runoff_u
+    qflx_runoff_r     => cwf%qflx_runoff_r
+    qflx_snwcp_ice    => pwf_a%qflx_snwcp_ice
+    qflx_glcice       => cwf%qflx_glcice
+    qflx_glcice_frz   => cwf%qflx_glcice_frz
+    
+    ! Determine time step and step size
+
+    nstep = get_nstep()
+    dtime = get_step_size()
+    
+    call Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+                  num_urbanc, filter_urbanc)
+
+
+    do j = 1, nlevgrnd
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
+               .or. ctype(c) == icol_roof) .and. j > nlevurb) then
+          else
+            h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
+          end if
+       end do
+    end do
+
+
+    do fc = 1, num_nolakec
+       
+       c = filter_nolakec(fc)
+       l = clandunit(c)
+
+       if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
+          .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
+         endwb(c) = h2ocan(c) + h2osno(c)
+       else
+          ! add h2osfc to water balance
+          endwb(c) = h2ocan(c) + h2osno(c) + h2osfc(c) + wa(c)
+
+       end if
+
+    end do
+
+    do j = 1, nlevgrnd
+      do fc = 1, num_nolakec
+         c = filter_nolakec(fc)
+         if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
+            .or. ctype(c) == icol_roof) .and. j > nlevurb) then
+               
+         else
+            endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
+         end if
+      end do
+    end do
+
+    ! Determine wetland and land ice hydrology (must be placed here
+    ! since need snow updated from CombineSnowLayers)
+
+    do fc = 1,num_nolakec
+       c = filter_nolakec(fc)
+       l = clandunit(c)
+       g = cgridcell(c)
+       if (ityplun(l)==istwet .or. ityplun(l)==istice      &
+                              .or. ityplun(l)==istice_mec) then
+          qflx_drain(c)         = 0._r8
+          qflx_drain_perched(c) = 0._r8
+          qflx_h2osfc_surf(c)   = 0._r8
+          qflx_irrig(c)         = 0._r8
+          qflx_surf(c)          = 0._r8
+          qflx_infl(c)          = 0._r8
+          ! add flood water flux to runoff for wetlands/glaciers
+          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) + qflx_floodg(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
+                          (endwb(c)-begwb(c))/dtime
+          ! For dynamic topography, add meltwater from glacier_mec ice to the runoff.
+          ! (Negative qflx_glcice => positive contribution to runoff)
+          ! Note: The meltwater contribution is computed in PhaseChanges (part of Biogeophysics2).
+          !       This code will not work if Hydrology2 is called before Biogeophysics2, or if
+          !        qflx_snwcp_ice has alread been included in qflx_glcice.
+          !       (The snwcp flux is added to qflx_glcice later in this subroutine.)
+
+          if (glc_dyntopo .and. ityplun(l)==istice_mec) then
+             qflx_qrgwl(c) = qflx_qrgwl(c) - qflx_glcice(c)   ! meltwater from melted ice
+          endif
+          fcov(c)       = spval
+          fsat(c)       = spval
+          qcharge(c)    = spval
+          qflx_rsub_sat(c) = spval
+       else if (urbpoi(l) .and. ctype(c) /= icol_road_perv) then
+          fcov(c)               = spval
+          fsat(c)               = spval
+          qflx_drain_perched(c) = 0._r8
+          qflx_h2osfc_surf(c)   = 0._r8
+          qcharge(c)            = spval
+          qflx_rsub_sat(c)      = spval
+       end if
+       ! If snow exceeds the thickness limit in glacier_mec columns, convert to an ice flux.
+       ! For dynamic glacier topography, remove qflx_snwcp_ice from the runoff.
+       ! Note that qflx_glcice can also have a negative component from melting of bare ice,
+       !  as computed in SoilTemperatureMod.F90
+
+       if (ityplun(l)==istice_mec) then
+
+          qflx_glcice_frz(c) = qflx_snwcp_ice(c)
+          qflx_glcice(c) = qflx_glcice(c) + qflx_glcice_frz(c)
+
+          ! For dynamic topography, set qflx_snwcp_ice = 0 so that this ice mass does not run off.
+          ! For static topography, qflx_glc_ice is passed to the ice sheet model, but the 
+          !  CLM runoff terms are not changed.
+ 
+          if (glc_dyntopo) qflx_snwcp_ice(c) = 0._r8
+
+       endif   ! istice_mec
+
+
+       qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
+
+       if ((ityplun(l)==istsoil .or. ityplun(l)==istcrop) &
+           .and. cactive(c)) then
+          qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
+       end if
+       if (urbpoi(l)) then
+         qflx_runoff_u(c) = qflx_runoff(c)
+       else if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+         qflx_runoff_r(c) = qflx_runoff(c)
+       end if
+
+    end do
+
+    end subroutine Hydrology2Drainage    
+    
 end module Hydrology2Mod

@@ -3012,6 +3012,7 @@ contains
     allocate(cps%hkdepth(beg:end))
     allocate(cps%wtfact(beg:end))
     allocate(cps%fracice(beg:end,nlevgrnd))
+    allocate(cps%icefrac(beg:end,nlevgrnd))     
     allocate(cps%gwc_thr(beg:end))
     allocate(cps%mss_frc_cly_vld(beg:end))
     allocate(cps%mbl_bsn_fct(beg:end))
@@ -3203,6 +3204,7 @@ contains
     cps%hkdepth(beg:end) = nan
     cps%wtfact(beg:end) = nan
     cps%fracice(beg:end,1:nlevgrnd) = nan
+    cps%icefrac(beg:end,1:nlevgrnd) = nan     
     cps%gwc_thr(beg:end) = nan
     cps%mss_frc_cly_vld(beg:end) = nan
     cps%mbl_bsn_fct(beg:end) = nan
@@ -3843,7 +3845,6 @@ contains
     allocate(cwf%qflx_glcice_melt(beg:end))
     allocate(cwf%glc_rofi(beg:end))
     allocate(cwf%glc_rofl(beg:end))
-    allocate(cwf%qflx_floodc(beg:end))
 
     cwf%qflx_infl(beg:end) = nan
     cwf%qflx_surf(beg:end) = nan
@@ -3885,18 +3886,22 @@ contains
     cwf%qflx_glcice_melt(beg:end) = spval
     cwf%glc_rofi(beg:end)    = nan
     cwf%glc_rofl(beg:end)    = nan
-    cwf%qflx_floodc(beg:end) = spval
+
 
     allocate(cwf%qflx_h2osfc_to_ice(beg:end))
     allocate(cwf%qflx_h2osfc_surf(beg:end))
     allocate(cwf%qflx_snow_h2osfc(beg:end))
     allocate(cwf%qflx_drain_perched(beg:end))
+    allocate(cwf%qflx_deficit(beg:end))    
+    allocate(cwf%qflx_floodc(beg:end))
     allocate(cwf%qflx_snow_melt(beg:end))
 
     cwf%qflx_h2osfc_to_ice(beg:end) = spval
     cwf%qflx_h2osfc_surf(beg:end) = spval
     cwf%qflx_snow_h2osfc(beg:end) = nan
     cwf%qflx_drain_perched(beg:end) = spval
+    cwf%qflx_deficit(beg:end) = spval    
+    cwf%qflx_floodc(beg:end) = spval
     cwf%qflx_snow_melt(beg:end) = spval
   end subroutine init_column_wflux_type
 

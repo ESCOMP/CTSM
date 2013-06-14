@@ -108,7 +108,7 @@ module clm_driver
   use BalanceCheckMod     , only : BeginWaterBalance, BalanceCheck
   use SurfaceRadiationMod , only : SurfaceRadiation
   use Hydrology1Mod       , only : Hydrology1
-  use Hydrology2Mod       , only : Hydrology2
+  use Hydrology2Mod       , only : Hydrology2NoDrainage, Hydrology2Drainage
   use SLakeFluxesMod   , only : SLakeFluxes
   use SLakeTemperatureMod, only : SLakeTemperature
   use SLakeHydrologyMod, only : SLakeHydrology
@@ -120,7 +120,7 @@ module clm_driver
   use pft2colMod          , only : pft2col
 #if (defined CN)
   use CNSetValueMod       , only : CNZeroFluxes_dwt
-  use CNEcosystemDynMod   , only : CNEcosystemDyn
+  use CNEcosystemDynMod   , only : CNEcosystemDynNoLeaching,CNEcosystemDynLeaching
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
                                    CBalanceCheck, NBalanceCheck
@@ -595,14 +595,16 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! Vertical (column) soil and surface hydrology
      ! ============================================================================
 
-     call t_startf('hydro2')
-     call Hydrology2(begc, endc, begp, endp, &
+     call t_startf('hydro2 without drainage')
+     call Hydrology2NoDrainage(begc, endc, begp, endp, &
                      filter(nc)%num_nolakec, filter(nc)%nolakec, &
                      filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
                      filter(nc)%num_urbanc, filter(nc)%urbanc, &
                      filter(nc)%num_snowc, filter(nc)%snowc, &
                      filter(nc)%num_nosnowc, filter(nc)%nosnowc)
-     call t_stopf('hydro2')
+                     
+     call t_stopf('hydro2 without drainage')
+     
 
      ! ============================================================================
      ! Lake hydrology
@@ -648,10 +650,12 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! fully prognostic canopy structure and C-N biogeochemistry
      ! - CNDV defined: prognostic biogeography; else prescribed
      ! - crop model:   crop algorithms called from within CNEcosystemDyn
-     call CNEcosystemDyn(begc,endc,begp,endp,filter(nc)%num_soilc,&
+     call CNEcosystemDynNoLeaching(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp, filter(nc)%num_pcropp, &
                   filter(nc)%pcropp, doalb)
+                  
+                  
      call CNAnnualUpdate(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)
@@ -669,10 +673,31 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      call depvel_compute(begp,endp)
      call t_stopf('depvel')
 
+   ! CH4
+#if (defined LCH4)
+     call t_startf('ch4')
+     call ch4 (begg, endg, begl, endl, begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_lakec, filter(nc)%lakec, filter(nc)%num_soilp, filter(nc)%soilp)
+     call t_stopf('ch4')
+#endif
+     
+     
+     call t_startf('hydro2 drainage')
+     call Hydrology2Drainage(begc, endc, begp, endp, &
+                     filter(nc)%num_nolakec, filter(nc)%nolakec, &
+                     filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
+                     filter(nc)%num_urbanc, filter(nc)%urbanc)                 
+     
+     call t_stopf('hydro2 drainage')     
      ! ============================================================================
      ! Check the energy and water balance, also carbon and nitrogen balance
      ! ============================================================================
-
+#ifdef CN 
+          call CNEcosystemDynLeaching(begc,endc,begp,endp,filter(nc)%num_soilc,&
+                  filter(nc)%soilc, filter(nc)%num_soilp, &
+                  filter(nc)%soilp, filter(nc)%num_pcropp, &
+                  filter(nc)%pcropp, doalb)
+#endif 
      call t_startf('balchk')
      call BalanceCheck(begp, endp, begc, endc, begl, endl, begg, endg)
      call t_stopf('balchk')
@@ -689,13 +714,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      end if
 #endif
 
-   ! CH4
-#if (defined LCH4)
-     call t_startf('ch4')
-     call ch4 (begg, endg, begl, endl, begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
-               filter(nc)%num_lakec, filter(nc)%lakec, filter(nc)%num_soilp, filter(nc)%soilp)
-     call t_stopf('ch4')
-#endif
 
      ! ============================================================================
      ! Determine albedos for next time step

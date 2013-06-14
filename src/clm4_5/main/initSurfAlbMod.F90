@@ -62,7 +62,7 @@ contains
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
 #if (defined CN)
-    use CNEcosystemDynMod   , only : CNEcosystemDyn
+    use CNEcosystemDynMod   , only : CNEcosystemDynNoLeaching, CNEcosystemDynLeaching
     use CNVegStructUpdateMod, only : CNVegStructUpdate
 #else
     use STATICEcosysDynMod  , only : EcosystemDyn, interpMonthlyVeg
@@ -302,9 +302,14 @@ contains
           end if
        end do
 
-       call CNEcosystemDyn(begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
+       call CNEcosystemDynNoLeaching(begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
             filter(nc)%num_soilp, filter(nc)%soilp, &
             filter(nc)%num_pcropp, filter(nc)%pcropp, doalb=.true.)
+
+       call CNEcosystemDynLeaching(begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
+            filter(nc)%num_soilp, filter(nc)%soilp, &
+            filter(nc)%num_pcropp, filter(nc)%pcropp, doalb=.true.)
+            
 #else
        ! this is the default call if CN not set
 
