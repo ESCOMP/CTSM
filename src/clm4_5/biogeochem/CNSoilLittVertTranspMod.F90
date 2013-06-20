@@ -152,14 +152,16 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    ! use different mixing rates for bioturbation and cryoturbation, with fixed bioturbation and cryoturbation set to a maximum depth
    do fc = 1, num_soilc
       c = filter_soilc (fc)
-      if  ( ( max(altmax(c), altmax_lastyear(c)) .le. max_altdepth_cryoturbation ) .and. ( max(altmax(c), altmax_lastyear(c)) .gt. 0._r8) ) then
+      if  ( ( max(altmax(c), altmax_lastyear(c)) .le. max_altdepth_cryoturbation ) .and. &
+         ( max(altmax(c), altmax_lastyear(c)) .gt. 0._r8) ) then
          ! use mixing profile modified slightly from Koven et al. (2009): constant through active layer, linear decrease from base of active layer to zero at a fixed depth
          do j = 1,nlevdecomp+1
             if ( zisoi(j) .lt. max(altmax(c), altmax_lastyear(c)) ) then
                som_diffus_coef(c,j) = cryoturb_diffusion_k 
                som_adv_coef(c,j) = 0._r8
             else
-               som_diffus_coef(c,j) = max(cryoturb_diffusion_k * ( 1._r8 - ( zisoi(j) - max(altmax(c), altmax_lastyear(c)) ) / &
+               som_diffus_coef(c,j) = max(cryoturb_diffusion_k * & 
+                 ( 1._r8 - ( zisoi(j) - max(altmax(c), altmax_lastyear(c)) ) / &
                     ( max_depth_cryoturb - max(altmax(c), altmax_lastyear(c)) ) ), 0._r8)  ! go linearly to zero between ALT and max_depth_cryoturb
                som_adv_coef(c,j) = 0._r8
             endif

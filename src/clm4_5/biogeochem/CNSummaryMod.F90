@@ -37,7 +37,7 @@ contains
 ! !IROUTINE: CSummary
 !
 ! !INTERFACE:
-subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
+subroutine CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, perform pft and column-level carbon
@@ -55,6 +55,8 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft bounds
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -995,17 +997,17 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    end do  ! end of pfts loop
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
-   call p2c(num_soilc, filter_soilc, gpp, col_gpp)
-   call p2c(num_soilc, filter_soilc, ar, col_ar)
-   call p2c(num_soilc, filter_soilc, rr, col_rr)
-   call p2c(num_soilc, filter_soilc, npp, col_npp)
-   call p2c(num_soilc, filter_soilc, vegfire, col_vegfire)
-   call p2c(num_soilc, filter_soilc, wood_harvestc, col_wood_harvestc)
-   call p2c(num_soilc, filter_soilc, totvegc, col_totvegc)
-   call p2c(num_soilc, filter_soilc, totpftc, col_totpftc)
-   call p2c(num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
-   call p2c(num_soilc, filter_soilc, litfall, col_litfall)
-   call p2c(num_soilc, filter_soilc, hrv_xsmrpool_to_atm, col_hrv_xsmrpool_to_atm)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, gpp, col_gpp)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, ar, col_ar)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, rr, col_rr)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, npp, col_npp)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, vegfire, col_vegfire)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, wood_harvestc, col_wood_harvestc)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totvegc, col_totvegc)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totpftc, col_totpftc)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, litfall, col_litfall)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, hrv_xsmrpool_to_atm, col_hrv_xsmrpool_to_atm)
 
    if ( isotope .eq. 'bulk') then
       if (nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
@@ -1374,7 +1376,7 @@ end subroutine CSummary
 ! !IROUTINE: NSummary
 !
 ! !INTERFACE:
-subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
+subroutine NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, perform pft and column-level nitrogen
@@ -1387,6 +1389,8 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft bounds
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -1767,10 +1771,10 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do  ! end of pfts loop
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
-   call p2c(num_soilc, filter_soilc, pft_fire_nloss, col_pft_fire_nloss)
-   call p2c(num_soilc, filter_soilc, wood_harvestn, col_wood_harvestn)
-   call p2c(num_soilc, filter_soilc, totvegn, col_totvegn)
-   call p2c(num_soilc, filter_soilc, totpftn, col_totpftn)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, pft_fire_nloss, col_pft_fire_nloss)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, wood_harvestn, col_wood_harvestn)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totvegn, col_totvegn)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, totpftn, col_totpftn)
 
    ! column loops
    do fc = 1,num_soilc

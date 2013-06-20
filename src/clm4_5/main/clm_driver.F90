@@ -71,7 +71,6 @@ module clm_driver
 ! Second phase of the clm main driver, for handling history and restart file output.
 !
 !  -> write_diagnostic    output diagnostic if appropriate
-!   + inicPerp            initial snow and soil moisture               [is_perpetual]
 !  -> updateAccFlds       update accumulated fields
 !  -> hist_update_hbuf    accumulate history fields for time interval
 !  -> htapes_wrapup       write history tapes if appropriate
@@ -99,10 +98,9 @@ module clm_driver
 #endif
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd
-  use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep,is_perpetual
+  use clm_time_manager    , only : get_step_size,get_curr_date,get_ref_date,get_nstep
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_filename
-  use inicPerpMod         , only : inicPerp  
   use accFldsMod          , only : updateAccFlds
   use clm_driverInitMod   , only : clm_driverInit
   use BalanceCheckMod     , only : BeginWaterBalance, BalanceCheck
@@ -588,7 +586,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! ============================================================================
 
      call t_startf('pft2col')
-     call pft2col(begc, endc, filter(nc)%num_nolakec, filter(nc)%nolakec)
+     call pft2col(begp, endp, begc, endc, filter(nc)%num_nolakec, filter(nc)%nolakec)
      call t_stopf('pft2col')
 
      ! ============================================================================
@@ -777,16 +775,6 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
   call t_startf('wrtdiag')
   call write_diagnostic(wrtdia, nstep)
   call t_stopf('wrtdiag')
-
-  ! ============================================================================
-  ! Read initial snow and soil moisture data at each time step
-  ! ============================================================================
-
-  call t_startf('inicperp')
-  if (is_perpetual()) then
-     call inicPerp()
-  end if
-  call t_stopf('inicperp')
 
   ! ============================================================================
   ! Update accumulators

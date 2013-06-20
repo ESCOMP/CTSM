@@ -115,18 +115,7 @@ contains
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(lbc:ubc)         ! sum of weights
-    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
-    real(r8), pointer :: wtcol(:)      ! weight of pft relative to column
-    integer , pointer :: pcolumn(:)    ! column index of corresponding pft
-    integer , pointer :: npfts(:)      ! number of pfts in column
-    integer , pointer :: pfti(:)       ! initial pft index in column
 !------------------------------------------------------------------------
-
-    pactive  => pft%active
-    wtcol    =>pft%wtcol
-    pcolumn  =>pft%column
-    npfts    =>col%npfts
-    pfti     =>col%pfti
 
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
@@ -140,12 +129,12 @@ contains
     carr(lbc:ubc) = spval
     sumwt(lbc:ubc) = 0._r8
     do p = lbp,ubp
-       if (pactive(p) .and. wtcol(p) /= 0._r8) then
+       if (pft%active(p) .and. pft%wtcol(p) /= 0._r8) then
           if (parr(p) /= spval) then
-             c = pcolumn(p)
+             c = pft%column(p)
              if (sumwt(c) == 0._r8) carr(c) = 0._r8
-             carr(c) = carr(c) + parr(p) * scale_p2c(p) * wtcol(p)
-             sumwt(c) = sumwt(c) + wtcol(p)
+             carr(c) = carr(c) + parr(p) * scale_p2c(p) * pft%wtcol(p)
+             sumwt(c) = sumwt(c) + pft%wtcol(p)
           end if
        end if
     end do
@@ -199,18 +188,7 @@ contains
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(lbc:ubc)         ! sum of weights
-    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
-    real(r8), pointer :: wtcol(:)      ! weight of pft relative to column
-    integer , pointer :: pcolumn(:)    ! column index of corresponding pft
-    integer , pointer :: npfts(:)      ! number of pfts in column
-    integer , pointer :: pfti(:)       ! initial pft index in column
 !------------------------------------------------------------------------
-
-    pactive  => pft%active
-    wtcol    =>pft%wtcol
-    pcolumn  =>pft%column
-    npfts    =>col%npfts
-    pfti     =>col%pfti
 
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
@@ -225,12 +203,12 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do p = lbp,ubp
-          if (pactive(p) .and. wtcol(p) /= 0._r8) then
+          if (pft%active(p) .and. pft%wtcol(p) /= 0._r8) then
              if (parr(p,j) /= spval) then
-                c = pcolumn(p)
+                c = pft%column(p)
                 if (sumwt(c) == 0._r8) carr(c,j) = 0._r8
-                carr(c,j) = carr(c,j) + parr(p,j) * scale_p2c(p) * wtcol(p)
-                sumwt(c) = sumwt(c) + wtcol(p)
+                carr(c,j) = carr(c,j) + parr(p,j) * scale_p2c(p) * pft%wtcol(p)
+                sumwt(c) = sumwt(c) + pft%wtcol(p)
              end if
           end if
        end do
@@ -256,46 +234,30 @@ contains
 ! !IROUTINE: p2c_1d_filter
 !
 ! !INTERFACE:
-  subroutine p2c_1d_filter (numfc, filterc, pftarr, colarr)
+  subroutine p2c_1d_filter (lbp, ubp, lbc, ubc, numfc, filterc,  pftarr, colarr)
 !
 ! !DESCRIPTION:
 ! perform pft to column averaging for single level pft arrays
 !
-! !USES:
-    use clm_varpar, only : max_pft_per_col
-!
 ! !ARGUMENTS:
     implicit none
+    integer , intent(in)  :: lbp, ubp        
+    integer , intent(in)  :: lbc, ubc        
     integer , intent(in)  :: numfc
     integer , intent(in)  :: filterc(numfc)
-    real(r8), pointer     :: pftarr(:)
-    real(r8), pointer     :: colarr(:)
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein 12/03
-!
+    real(r8), intent(in)  :: pftarr(lbp:ubp)
+    real(r8), intent(out) :: colarr(lbc:ubc)
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer :: fc,c,pi,p           ! indices
-    logical , pointer :: pactive(:)! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: npfts(:)
-    integer , pointer :: pfti(:)
-    integer , pointer :: pftf(:)
-    real(r8), pointer :: wtcol(:)
+    integer :: fc,c,p  ! indices
 !-----------------------------------------------------------------------
-
-    pactive => pft%active
-    npfts   =>col%npfts
-    pfti    =>col%pfti
-    pftf    =>col%pftf
-    wtcol   =>pft%wtcol
 
     do fc = 1,numfc
        c = filterc(fc)
        colarr(c) = 0._r8
-       do p = pfti(c), pftf(c)
-          if (pactive(p)) colarr(c) = colarr(c) + pftarr(p) * wtcol(p)
+       do p = col%pfti(c), col%pftf(c)
+          if (pft%active(p)) colarr(c) = colarr(c) + pftarr(p) * pft%wtcol(p)
        end do
     end do
 
@@ -312,9 +274,6 @@ contains
 ! !DESCRIPTION:
 ! perform pft to column averaging for multi level pft arrays
 !
-! !USES:
-    use clm_varpar, only : max_pft_per_col
-
 ! !ARGUMENTS:
     implicit none
     integer , intent(in)  :: lev
@@ -330,25 +289,14 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     integer :: fc,c,pi,p,j    ! indices
-    logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: npfts(:)
-    integer , pointer :: pfti(:)
-    integer , pointer :: pftf(:)
-    real(r8), pointer :: wtcol(:)
 !-----------------------------------------------------------------------
-
-    pactive => pft%active
-    npfts   =>col%npfts
-    pfti    =>col%pfti
-    pftf    =>col%pftf
-    wtcol   =>pft%wtcol
 
     do j = 1,lev
        do fc = 1,numfc
           c = filterc(fc)
           colarr(c,j) = 0._r8
-          do p = pfti(c), pftf(c)
-             if (pactive(p)) colarr(c,j) = colarr(c,j) + pftarr(p,j) * wtcol(p)
+          do p = col%pfti(c), col%pftf(c)
+             if (pft%active(p)) colarr(c,j) = colarr(c,j) + pftarr(p,j) * pft%wtcol(p)
           end do
        end do
     end do
@@ -368,8 +316,6 @@ contains
 ! Perfrom subgrid-average from pfts to landunits
 ! Averaging is only done for points that are not equal to "spval".
 !
-! !USES:
-    use clm_varpar, only : max_pft_per_lu
 !
 ! !ARGUMENTS:
     implicit none
@@ -392,30 +338,7 @@ contains
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
     real(r8) :: scale_p2c(lbc:ubc)     ! scale factor for pft->column mapping
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
-    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
-    real(r8), pointer :: wtlunit(:)    ! weight of pft relative to landunit
-    integer , pointer :: pcolumn(:)    ! column of corresponding pft
-    integer , pointer :: plandunit(:)  ! landunit of corresponding pft
-    integer , pointer :: npfts(:)      ! number of pfts in landunit
-    integer , pointer :: pfti(:)       ! initial pft index in landunit
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    pactive    => pft%active
-    canyon_hwr =>lun%canyon_hwr
-    ltype      => lun%itype
-    ctype      => col%itype
-    clandunit  =>col%landunit
-    wtlunit    =>pft%wtlunit
-    pcolumn    =>pft%column
-    plandunit  =>pft%landunit
-    npfts      =>lun%npfts
-    pfti       =>lun%pfti
-    urbpoi     =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -423,15 +346,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -440,15 +363,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -472,13 +395,13 @@ contains
     larr(:) = spval
     sumwt(:) = 0._r8
     do p = lbp,ubp
-       if (pactive(p) .and. wtlunit(p) /= 0._r8) then
-          c = pcolumn(p)
+       if (pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
+          c = pft%column(p)
           if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
-             l = plandunit(p)
+             l = pft%landunit(p)
              if (sumwt(l) == 0._r8) larr(l) = 0._r8
-             larr(l) = larr(l) + parr(p) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
-             sumwt(l) = sumwt(l) + wtlunit(p)
+             larr(l) = larr(l) + parr(p) * scale_p2c(p) * scale_c2l(c) * pft%wtlunit(p)
+             sumwt(l) = sumwt(l) + pft%wtlunit(p)
           end if
        end if
     end do
@@ -536,30 +459,7 @@ contains
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
     real(r8) :: scale_p2c(lbc:ubc)     ! scale factor for pft->column mapping
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
-    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
-    real(r8), pointer :: wtlunit(:)    ! weight of pft relative to landunit
-    integer , pointer :: pcolumn(:)    ! column of corresponding pft
-    integer , pointer :: plandunit(:)  ! landunit of corresponding pft
-    integer , pointer :: npfts(:)      ! number of pfts in landunit
-    integer , pointer :: pfti(:)       ! initial pft index in landunit
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    pactive    => pft%active
-    canyon_hwr =>lun%canyon_hwr
-    ltype      => lun%itype
-    clandunit  =>col%landunit
-    ctype      => col%itype
-    wtlunit   =>pft%wtlunit
-    pcolumn   =>pft%column
-    plandunit =>pft%landunit
-    npfts     =>lun%npfts
-    pfti      =>lun%pfti
-    urbpoi    =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -567,15 +467,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -584,15 +484,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -617,13 +517,13 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do p = lbp,ubp
-          if (pactive(p) .and. wtlunit(p) /= 0._r8) then
-             c = pcolumn(p)
+          if (pft%active(p) .and. pft%wtlunit(p) /= 0._r8) then
+             c = pft%column(p)
              if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
-                l = plandunit(p)
+                l = pft%landunit(p)
                 if (sumwt(l) == 0._r8) larr(l,j) = 0._r8
-                larr(l,j) = larr(l,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
-                sumwt(l) = sumwt(l) + wtlunit(p)
+                larr(l,j) = larr(l,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * pft%wtlunit(p)
+                sumwt(l) = sumwt(l) + pft%wtlunit(p)
              end if
           end if
        end do
@@ -683,32 +583,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
-    real(r8), pointer :: wtgcell(:)    ! weight of pfts relative to gridcells
-    integer , pointer :: pcolumn(:)    ! column of corresponding pft
-    integer , pointer :: plandunit(:)  ! landunit of corresponding pft
-    integer , pointer :: pgridcell(:)  ! gridcell of corresponding pft
-    integer , pointer :: npfts(:)      ! number of pfts in gridcell
-    integer , pointer :: pfti(:)       ! initial pft index in gridcell
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    pactive    => pft%active
-    canyon_hwr =>lun%canyon_hwr
-    ltype      => lun%itype
-    clandunit  =>col%landunit
-    ctype      => col%itype
-    wtgcell   =>pft%wtgcell
-    pcolumn   =>pft%column
-    pgridcell =>pft%gridcell
-    plandunit =>pft%landunit
-    npfts     =>  grc%npfts
-    pfti      =>  grc%pfti
-    urbpoi    =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -718,15 +593,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -735,15 +610,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -767,14 +642,14 @@ contains
     garr(:) = spval
     sumwt(:) = 0._r8
     do p = lbp,ubp
-       if (pactive(p) .and. wtgcell(p) /= 0._r8) then
-          c = pcolumn(p)
-          l = plandunit(p)
+       if (pft%active(p) .and. pft%wtgcell(p) /= 0._r8) then
+          c = pft%column(p)
+          l = pft%landunit(p)
           if (parr(p) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
-             g = pgridcell(p)
+             g = pft%gridcell(p)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
-             garr(g) = garr(g) + parr(p) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
-             sumwt(g) = sumwt(g) + wtgcell(p)
+             garr(g) = garr(g) + parr(p) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * pft%wtgcell(p)
+             sumwt(g) = sumwt(g) + pft%wtgcell(p)
           end if
        end if
     end do
@@ -835,32 +710,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-    logical , pointer :: pactive(:)    ! true=>do computations on this pft (see reweightMod for details)
-    real(r8), pointer :: wtgcell(:)    ! weight of pfts relative to gridcells
-    integer , pointer :: pcolumn(:)    ! column of corresponding pft
-    integer , pointer :: plandunit(:)  ! landunit of corresponding pft
-    integer , pointer :: pgridcell(:)  ! gridcell of corresponding pft
-    integer , pointer :: npfts(:)      ! number of pfts in gridcell
-    integer , pointer :: pfti(:)       ! initial pft index in gridcell
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    pactive      => pft%active
-    canyon_hwr   =>lun%canyon_hwr
-    ltype        => lun%itype
-    clandunit    =>col%landunit
-    ctype        => col%itype
-    wtgcell      =>pft%wtgcell
-    pcolumn      =>pft%column
-    pgridcell    =>pft%gridcell
-    plandunit    =>pft%landunit
-    npfts        =>  grc%npfts
-    pfti         =>  grc%pfti
-    urbpoi     =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -870,15 +720,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -887,15 +737,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -920,14 +770,14 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do p = lbp,ubp
-          if (pactive(p) .and. wtgcell(p) /= 0._r8) then
-             c = pcolumn(p)
-             l = plandunit(p)
+          if (pft%active(p) .and. pft%wtgcell(p) /= 0._r8) then
+             c = pft%column(p)
+             l = pft%landunit(p)
              if (parr(p,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
-                g = pgridcell(p)
+                g = pft%gridcell(p)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
-                garr(g,j) = garr(g,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
-                sumwt(g) = sumwt(g) + wtgcell(p)
+                garr(g,j) = garr(g,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * pft%wtgcell(p)
+                sumwt(g) = sumwt(g) + pft%wtgcell(p)
              end if
           end if
        end do
@@ -979,26 +829,7 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor for column->landunit mapping
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
-    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
-    real(r8), pointer :: wtlunit(:)    ! weight of landunits relative to gridcells
-    integer , pointer :: clandunit(:)  ! gridcell of corresponding column
-    integer , pointer :: ncolumns(:)   ! number of columns in landunit
-    integer , pointer :: coli(:)       ! initial column index in landunit
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    cactive    => col%active
-    ctype      => col%itype
-    ltype      => lun%itype
-    canyon_hwr =>lun%canyon_hwr
-    wtlunit    =>col%wtlunit
-    clandunit  =>col%landunit
-    ncolumns   =>lun%ncolumns
-    coli       =>lun%coli
-    urbpoi     =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -1006,15 +837,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1023,15 +854,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1046,12 +877,12 @@ contains
     larr(:) = spval
     sumwt(:) = 0._r8
     do c = lbc,ubc
-       if (cactive(c) .and. wtlunit(c) /= 0._r8) then
+       if (col%active(c) .and. pft%wtlunit(c) /= 0._r8) then
           if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
-             l = clandunit(c)
+             l = col%landunit(c)
              if (sumwt(l) == 0._r8) larr(l) = 0._r8
-             larr(l) = larr(l) + carr(c) * scale_c2l(c) * wtlunit(c)
-             sumwt(l) = sumwt(l) + wtlunit(c)
+             larr(l) = larr(l) + carr(c) * scale_c2l(c) * pft%wtlunit(c)
+             sumwt(l) = sumwt(l) + pft%wtlunit(c)
           end if
        end if
     end do
@@ -1103,26 +934,7 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_c2l(lbc:ubc)        ! scale factor for column->landunit mapping
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
-    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
-    real(r8), pointer :: wtlunit(:)    ! weight of column relative to landunit
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: ncolumns(:)   ! number of columns in landunit
-    integer , pointer :: coli(:)       ! initial column index in landunit
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    cactive    => col%active
-    ctype      => col%itype
-    ltype      => lun%itype
-    canyon_hwr =>lun%canyon_hwr
-    wtlunit    =>col%wtlunit
-    clandunit  =>col%landunit
-    ncolumns   =>lun%ncolumns
-    coli       =>lun%coli
-    urbpoi     =>lun%urbpoi
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
@@ -1130,15 +942,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1147,15 +959,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1171,12 +983,12 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do c = lbc,ubc
-          if (cactive(c) .and. wtlunit(c) /= 0._r8) then
+          if (col%active(c) .and. pft%wtlunit(c) /= 0._r8) then
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
-                l = clandunit(c)
+                l = col%landunit(c)
                 if (sumwt(l) == 0._r8) larr(l,j) = 0._r8
-                larr(l,j) = larr(l,j) + carr(c,j) * scale_c2l(c) * wtlunit(c)
-                sumwt(l) = sumwt(l) + wtlunit(c)
+                larr(l,j) = larr(l,j) + carr(c,j) * scale_c2l(c) * pft%wtlunit(c)
+                sumwt(l) = sumwt(l) + pft%wtlunit(c)
              end if
           end if
        end do
@@ -1232,28 +1044,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
-    real(r8), pointer :: wtgcell(:)    ! weight of columns relative to gridcells
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: cgridcell(:)  ! gridcell of corresponding column
-    integer , pointer :: ncolumns(:)   ! number of columns in gridcell
-    integer , pointer :: coli(:)       ! initial column index in gridcell
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    cactive    => col%active
-    ctype      => col%itype
-    ltype      => lun%itype
-    canyon_hwr =>lun%canyon_hwr
-    wtgcell    =>col%wtgcell
-    clandunit  =>col%landunit
-    cgridcell  =>col%gridcell
-    ncolumns   =>  grc%ncolumns
-    coli       =>  grc%coli
-    urbpoi     =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1263,15 +1054,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1280,15 +1071,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1303,13 +1094,13 @@ contains
     garr(:) = spval
     sumwt(:) = 0._r8
     do c = lbc,ubc
-       if (cactive(c) .and. wtgcell(c) /= 0._r8) then
-          l = clandunit(c)
+       if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
+          l = col%landunit(c)
           if (carr(c) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
-             g = cgridcell(c)
+             g = col%gridcell(c)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
-             garr(g) = garr(g) + carr(c) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
-             sumwt(g) = sumwt(g) + wtgcell(c)
+             garr(g) = garr(g) + carr(c) * scale_c2l(c) * scale_l2g(l) * col%wtgcell(c)
+             sumwt(g) = sumwt(g) + col%wtgcell(c)
           end if
        end if
     end do
@@ -1365,28 +1156,7 @@ contains
     real(r8) :: scale_c2l(lbc:ubc)     ! scale factor
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-    logical , pointer :: cactive(:)    ! true=>do computations on this column (see reweightMod for details)
-    real(r8), pointer :: wtgcell(:)    ! weight of columns relative to gridcells
-    integer , pointer :: clandunit(:)  ! landunit of corresponding column
-    integer , pointer :: cgridcell(:)  ! gridcell of corresponding column
-    integer , pointer :: ncolumns(:)   ! number of columns in gridcell
-    integer , pointer :: coli(:)       ! initial column index in gridcell
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
-    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
-
-    cactive    => col%active
-    ctype      => col%itype
-    ltype      => lun%itype
-    canyon_hwr =>lun%canyon_hwr
-    wtgcell    =>col%wtgcell
-    clandunit  =>col%landunit
-    cgridcell  =>col%gridcell
-    ncolumns   =>  grc%ncolumns
-    coli       =>  grc%coli
-    urbpoi     =>lun%urbpoi
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1396,15 +1166,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbanf') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = 3.0 * canyon_hwr(l) 
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * lun%canyon_hwr(l) 
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
                 scale_c2l(c) = 3.0_r8
-             else if (ctype(c) == icol_roof) then
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1413,15 +1183,15 @@ contains
        end do
     else if (c2l_scale_type == 'urbans') then
        do c = lbc,ubc
-          l = clandunit(c) 
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_sunwall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_shadewall) then
-                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
-             else if (ctype(c) == icol_roof) then
+          l = col%landunit(c) 
+          if (lun%urbpoi(l)) then
+             if (col%itype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * lun%canyon_hwr(l)) / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_road_perv .or. col%itype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*lun%canyon_hwr(l) + 1.)
+             else if (col%itype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
           else
@@ -1437,13 +1207,13 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do c = lbc,ubc
-          if (cactive(c) .and. wtgcell(c) /= 0._r8) then
-             l = clandunit(c)
+          if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
+             l = col%landunit(c)
              if (carr(c,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
-                g = cgridcell(c)
+                g = col%gridcell(c)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
-                garr(g,j) = garr(g,j) + carr(c,j) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
-                sumwt(g) = sumwt(g) + wtgcell(c)
+                garr(g,j) = garr(g,j) + carr(c,j) * scale_c2l(c) * scale_l2g(l) * col%wtgcell(c)
+                sumwt(g) = sumwt(g) + col%wtgcell(c)
              end if
           end if
        end do
@@ -1495,30 +1265,19 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-    logical , pointer :: lactive(:)    ! true=>do computations on this landunit (see reweightMod for details)
-    real(r8), pointer :: wtgcell(:)    ! weight of landunits relative to gridcells
-    integer , pointer :: lgridcell(:)  ! gridcell of corresponding landunit
-    integer , pointer :: nlandunits(:) ! number of landunits in gridcell
-    integer , pointer :: luni(:)       ! initial landunit index in gridcell
 !------------------------------------------------------------------------
-
-    lactive    =>lun%active
-    wtgcell    =>lun%wtgcell
-    lgridcell  =>lun%gridcell
-    nlandunits =>  grc%nlandunits
-    luni       =>  grc%luni
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
     garr(:) = spval
     sumwt(:) = 0._r8
     do l = lbl,ubl
-       if (lactive(l) .and. wtgcell(l) /= 0._r8) then
+       if (lun%active(l) .and. lun%wtgcell(l) /= 0._r8) then
           if (larr(l) /= spval .and. scale_l2g(l) /= spval) then
-             g = lgridcell(l)
+             g = lun%gridcell(l)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
-             garr(g) = garr(g) + larr(l) * scale_l2g(l) * wtgcell(l)
-             sumwt(g) = sumwt(g) + wtgcell(l)
+             garr(g) = garr(g) + larr(l) * scale_l2g(l) * lun%wtgcell(l)
+             sumwt(g) = sumwt(g) + lun%wtgcell(l)
           end if
        end if
     end do
@@ -1570,18 +1329,7 @@ contains
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_l2g(lbl:ubl)     ! scale factor
     real(r8) :: sumwt(lbg:ubg)         ! sum of weights
-    logical , pointer :: lactive(:)    ! true=>do computations on this landunit (see reweightMod for details)
-    real(r8), pointer :: wtgcell(:)    ! weight of landunits relative to gridcells
-    integer , pointer :: lgridcell(:)  ! gridcell of corresponding landunit
-    integer , pointer :: nlandunits(:) ! number of landunits in gridcell
-    integer , pointer :: luni(:)       ! initial landunit index in gridcell
 !------------------------------------------------------------------------
-
-    lactive   =>lun%active
-    wtgcell   =>lun%wtgcell
-    lgridcell =>lun%gridcell
-    nlandunits =>  grc%nlandunits
-    luni       =>  grc%luni
 
     call build_scale_l2g(l2g_scale_type, lbl, ubl, scale_l2g)
 
@@ -1589,12 +1337,12 @@ contains
     do j = 1,num2d
        sumwt(:) = 0._r8
        do l = lbl,ubl
-          if (lactive(l) .and. wtgcell(l) /= 0._r8) then
+          if (lun%active(l) .and. lun%wtgcell(l) /= 0._r8) then
              if (larr(l,j) /= spval .and. scale_l2g(l) /= spval) then
-                g = lgridcell(l)
+                g = lun%gridcell(l)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
-                garr(g,j) = garr(g,j) + larr(l,j) * scale_l2g(l) * wtgcell(l)
-                sumwt(g) = sumwt(g) + wtgcell(l)
+                garr(g,j) = garr(g,j) + larr(l,j) * scale_l2g(l) * lun%wtgcell(l)
+                sumwt(g) = sumwt(g) + lun%wtgcell(l)
              end if
           end if
        end do
@@ -1644,15 +1392,12 @@ contains
 !EOP
      real(r8) :: scale_lookup(max_lunit) ! scale factor for each landunit type
      integer  :: l                       ! index
-     integer , pointer :: ltype(:)       ! landunit type
 !-----------------------------------------------------------------------
-
-     ltype      => lun%itype
      
      call create_scale_l2g_lookup(l2g_scale_type, scale_lookup)
 
      do l = lbl,ubl
-        scale_l2g(l) = scale_lookup(ltype(l))
+        scale_l2g(l) = scale_lookup(lun%itype(l))
      end do
 
   end subroutine build_scale_l2g

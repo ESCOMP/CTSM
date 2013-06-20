@@ -584,7 +584,7 @@ contains
     ! lake balance for errsoi is not over pft
     ! therefore obtain column-level radiative temperature
 
-    call p2c(num_nolakec, filter_nolakec, errsoi_pft, errsoi_col)
+    call p2c(lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, errsoi_pft, errsoi_col)
     call t_stopf('bgp2_loop_4')
 
   end subroutine Biogeophysics2

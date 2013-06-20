@@ -253,8 +253,7 @@ contains
 !
 ! !USES:
     use clm_varctl      , only : fsurdat
-    use clm_time_manager, only : get_curr_date, get_step_size, &
-                                 get_perp_date, is_perpetual, get_nstep
+    use clm_time_manager, only : get_curr_date, get_step_size, get_nstep
 !
 ! !ARGUMENTS:
     implicit none
@@ -279,11 +278,7 @@ contains
 
     dtime = get_step_size()
 
-    if ( is_perpetual() ) then
-       call get_perp_date(kyr, kmo, kda, ksec, offset=int(dtime))
-    else
-       call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
-    end if
+    call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
 
     t = (kda-0.5_r8) / ndaypm(kmo)
     it(1) = t + 0.5_r8

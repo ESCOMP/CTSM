@@ -164,7 +164,8 @@ contains
              c = pcolumn(p)
              if (ivt(p) /= noveg) then
                 do j = 1, nlevdecomp
-                   cinput_rootfr(p,j) = ( rootprof_beta(ivt(p)) ** (zisoi(j-1)*100._r8) - rootprof_beta(ivt(p)) ** (zisoi(j)*100._r8) ) &
+                   cinput_rootfr(p,j) = ( rootprof_beta(ivt(p)) ** (zisoi(j-1)*100._r8) - &
+                      rootprof_beta(ivt(p)) ** (zisoi(j)*100._r8) ) &
                         / dzsoi_decomp(j)
                 end do
              else

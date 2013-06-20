@@ -491,7 +491,7 @@ contains
 
     ! Update column level state variables for snow.
 
-    call p2c(num_nolakec, filter_nolakec, qflx_snow_grnd_pft, qflx_snow_grnd_col)
+    call p2c(lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, qflx_snow_grnd_pft, qflx_snow_grnd_col)
 
     ! apply gridcell flood water flux to non-lake columns
     do f = 1, num_nolakec

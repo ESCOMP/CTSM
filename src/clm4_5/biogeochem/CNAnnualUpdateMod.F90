@@ -149,8 +149,8 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
       end do
 
       ! use p2c routine to get selected column-average pft-level fluxes and states
-      call p2c(num_soilc, filter_soilc, annsum_npp, cannsum_npp)
-      call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
+      call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, annsum_npp, cannsum_npp)
+      call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
    end if
 
    end if

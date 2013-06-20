@@ -36,9 +36,9 @@ module CNAllocationMod
    real(r8):: dt                            !decomp timestep (seconds)
    real(r8):: bdnr                          !bulk denitrification rate (1/s)
    real(r8):: dayscrecover                  !number of days to recover negative cpool
-   real(r8), pointer :: arepr(:)            !reproduction allocation coefficient
-   real(r8), pointer :: aroot(:)            !root allocation coefficient
-   real(r8), pointer:: col_plant_ndemand(:) !column-level plant N demand
+   real(r8), allocatable :: arepr(:)             !reproduction allocation coefficient
+   real(r8), allocatable :: aroot(:)             !root allocation coefficient
+   real(r8), allocatable :: col_plant_ndemand(:) !column-level plant N demand
 !  logical :: crop_supln  = .false.         ! Prognostic crop receives supplemental Nitrogen
 !
 ! !REVISION HISTORY:
@@ -829,7 +829,7 @@ subroutine CNAllocation (lbp, ubp, lbc, ubc, &
    end do ! end pft loop
 
    ! now use the p2c routine to get the column-averaged plant_ndemand
-   call p2c(num_soilc,filter_soilc,plant_ndemand,col_plant_ndemand)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, plant_ndemand, col_plant_ndemand)
 
 #ifndef NITRIF_DENITRIF
    ! column loops to resolve plant/heterotroph competition for mineral N

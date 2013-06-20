@@ -412,9 +412,12 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
          !
          ! calculate the N loss from surface runoff, assuming a shallow mixing of surface waters into soil and removal based on runoff
          if ( zisoi(j) .le. depth_runoff_Nloss )  then
-            smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * h2osoi_liq(c,j) / ( surface_water(c) * dz(c,j) )
+            smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * &
+               h2osoi_liq(c,j) / ( surface_water(c) * dz(c,j) )
          elseif ( zisoi(j-1) .lt. depth_runoff_Nloss )  then
-            smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * h2osoi_liq(c,j) * ((depth_runoff_Nloss - zisoi(j-1)) / dz(c,j)) / ( surface_water(c) * (depth_runoff_Nloss-zisoi(j-1) ))
+            smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * &
+               h2osoi_liq(c,j) * ((depth_runoff_Nloss - zisoi(j-1)) / &
+               dz(c,j)) / ( surface_water(c) * (depth_runoff_Nloss-zisoi(j-1) ))
          else
             smin_no3_runoff_vr(c,j) = 0._r8
          endif
@@ -447,7 +450,7 @@ end subroutine CNNLeaching
 ! !IROUTINE: CNNFert
 !
 ! !INTERFACE:
-subroutine CNNFert(num_soilc, filter_soilc)
+subroutine CNNFert(lbp, ubp, lbc, ubc, num_soilc, filter_soilc)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, update the nitrogen fertilizer for crops
@@ -460,6 +463,8 @@ subroutine CNNFert(num_soilc, filter_soilc)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft-index bounds
+   integer, intent(in) :: lbc, ubc        ! column-index bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
 !
@@ -489,7 +494,7 @@ subroutine CNNFert(num_soilc, filter_soilc)
    ! Assign local pointers to derived type arrays (out)
    fert_to_sminn => cnf%fert_to_sminn
 !
-    call p2c(num_soilc,filter_soilc,fert,fert_to_sminn)
+    call p2c(lbp, ubp, lbc, ubc, num_soilc,filter_soilc,fert,fert_to_sminn)
 !
 ! DEBUG...
 !   do fc = 1,num_soilc
@@ -504,7 +509,7 @@ end subroutine CNNFert
 ! !IROUTINE: CNSoyfix
 !
 ! !INTERFACE:
-subroutine CNSoyfix (num_soilc, filter_soilc, num_soilp, filter_soilp)
+subroutine CNSoyfix (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !DESCRIPTION:
 ! This routine handles the fixation of nitrogen for soybeans based on
@@ -520,6 +525,8 @@ subroutine CNSoyfix (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft-index bounds
+   integer, intent(in) :: lbc, ubc        ! column-index bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -649,7 +656,7 @@ subroutine CNSoyfix (num_soilc, filter_soilc, num_soilp, filter_soilp)
       end if
    end do
    
-   call p2c(num_soilc,filter_soilc,soyfixn,soyfixn_to_sminn)
+   call p2c(lbp, ubp, lbc, ubc, num_soilc,filter_soilc,soyfixn,soyfixn_to_sminn)
    
 end subroutine CNSoyfix
 

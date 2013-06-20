@@ -166,9 +166,9 @@ contains
        call t_stopf('CNFixation')
 
        call t_startf('CNMResp')
-       if (crop_prog) call CNNFert(num_soilc,filter_soilc)
+       if (crop_prog) call CNNFert(lbp, ubp, lbc, ubc, num_soilc,filter_soilc)
 
-       if (crop_prog) call CNSoyfix(num_soilc, filter_soilc, num_soilp, filter_soilp)
+       if (crop_prog) call CNSoyfix(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        call CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
        call t_stopf('CNMResp')
@@ -251,7 +251,7 @@ contains
        
        call CNWoodProducts(num_soilc, filter_soilc)
        
-       call CNFireArea(num_soilc, filter_soilc,num_soilp, filter_soilp)
+       call CNFireArea(lbp, ubp, lbc, ubc, num_soilc, filter_soilc,num_soilp, filter_soilp)
 
        call CNFireFluxes(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
@@ -348,15 +348,14 @@ contains
        call CNVegStructUpdate(num_soilp, filter_soilp)
     end if
 
-!       call CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
        
-       call CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, 'bulk')
+       call CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp, 'bulk')
        
-       if ( use_c13 ) call CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, 'c13')
+       if ( use_c13 ) call CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp, 'c13')
 
-       if ( use_c14 ) call CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp, 'c14')
+       if ( use_c14 ) call CSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp, 'c14')
        
-       call NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
+       call NSummary(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
        call t_stopf('CNsum')
 
 !    end if  !end of if-doalb block

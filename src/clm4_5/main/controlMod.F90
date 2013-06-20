@@ -179,7 +179,7 @@ contains
 ! Initialize CLM run control information
 !
 ! !USES:
-    use clm_time_manager , only : set_timemgr_init, is_perpetual, get_timemgr_defaults
+    use clm_time_manager , only : set_timemgr_init, get_timemgr_defaults
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
     use clm_varctl       , only : clmvarctl_init, set_clmvarctl, nsrBranch, nsrStartup, &
@@ -350,19 +350,6 @@ contains
        ! ----------------------------------------------------------------------
 
        call set_timemgr_init( dtime_in=dtime )
-
-#if (defined CNDV)
-       if (is_perpetual()) then
-          write(iulog,*)'RTM or CNDV cannot be defined in perpetual mode'
-          call endrun()
-       end if
-#endif
-       if (is_perpetual()) then
-          if (finidat == ' ') then
-             write(iulog,*)'must specify initial dataset for perpetual mode'
-             call endrun()
-          end if
-       end if
 
        if (urban_traffic) then
           write(iulog,*)'Urban traffic fluxes are not implemented currently'

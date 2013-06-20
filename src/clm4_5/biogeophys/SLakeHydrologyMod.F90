@@ -78,7 +78,7 @@ contains
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, &
                                  SnowWater, BuildSnowFilter
     use SnowHydrologyMod, only : DivideSnowLayers_Lake
-    use clm_time_manager, only : get_step_size, is_perpetual
+    use clm_time_manager, only : get_step_size
     use SNICARMod           , only : SnowAge_grain, snw_rds_min
 !
 ! !ARGUMENTS:
@@ -678,36 +678,18 @@ contains
     end do
 !!!!!!!!!!
 
-    if (.not. is_perpetual()) then
 
-       ! Natural compaction and metamorphosis.
-
-       call SnowCompaction(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
-
-       ! Combine thin snow elements
-
-       call CombineSnowLayers(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
-
-       ! Divide thick snow elements
-
-       call DivideSnowLayers_Lake(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
-
-    else
-
-       do fc = 1, num_shlakesnowc
-          c = filter_shlakesnowc(fc)
-          h2osno(c) = 0._r8
-       end do
-       do j = -nlevsno+1,0
-          do fc = 1, num_shlakesnowc
-             c = filter_shlakesnowc(fc)
-             if (j >= snl(c)+1) then
-                h2osno(c) = h2osno(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
-             end if
-          end do
-       end do
-
-    end if
+    ! Natural compaction and metamorphosis.
+    
+    call SnowCompaction(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
+    
+    ! Combine thin snow elements
+    
+    call CombineSnowLayers(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
+    
+    ! Divide thick snow elements
+    
+    call DivideSnowLayers_Lake(lbc, ubc, num_shlakesnowc, filter_shlakesnowc)
 
     ! Check for single completely unfrozen snow layer over lake.  Modeling this ponding is unnecessary and
     ! can cause instability after the timestep when melt is completed, as the temperature after melt can be

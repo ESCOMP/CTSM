@@ -11,8 +11,8 @@
                <entry testId="293" failType="xFail"> ne16 missing finidat file for 1850</entry>
             </compare>
             <generate>
-               <entry testId="211" failType="xFail"> missing datasets for us20 </entry>
-               <entry testId="291" failType="xFail"> ne16 missing finidat file for 1850</entry>
+               <entry testId="138" failType="xFail"> missing datasets for us20 </entry>
+               <entry testId="186" failType="xFail"> ne16 missing finidat file for 1850</entry>
             </generate>
          </INTEL>
       </yellowstone>

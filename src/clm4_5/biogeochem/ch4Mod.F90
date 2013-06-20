@@ -388,7 +388,7 @@ subroutine ch4 (lbg, ubg, lbl, ubl, lbc, ubc, lbp, ubp, num_soilc, filter_soilc,
    ! Call pft2col for rootfr & grnd_ch4_cond.
    if (nlevdecomp == 1) call p2c (lbp, ubp, lbc, ubc, nlevgrnd, rootfraction, rootfr_col, 'unity')
    ! Needed to use non-filter form above so that spval would be treated properly.
-   call p2c (num_soilc, filter_soilc, grnd_ch4_cond, grnd_ch4_cond_col)
+   call p2c (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, grnd_ch4_cond, grnd_ch4_cond_col)
 
    if (nlevdecomp == 1) then
       ! Check for inactive columns

@@ -128,7 +128,7 @@ end subroutine CNFireInterp
 ! !IROUTINE: CNFireArea
 !
 ! !INTERFACE:
-subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
+subroutine CNFireArea (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !DESCRIPTION:
 ! Computes column-level burned area in each timestep
@@ -147,6 +147,8 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft bounds
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -341,10 +343,10 @@ subroutine CNFireArea (num_soilc, filter_soilc, num_soilp, filter_soilp)
   latdeg     =>  grc%latdeg
  
   !pft to column average 
-  call p2c(num_soilc, filter_soilc, prec10,  prec10_col)
-  call p2c(num_soilc, filter_soilc, prec60,  prec60_col)
-  call p2c(num_soilc, filter_soilc,totvegc, totvegc_col)
-  call p2c(num_soilc, filter_soilc,leafc, leafc_col)
+  call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, prec10,  prec10_col)
+  call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, prec60,  prec60_col)
+  call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc,totvegc, totvegc_col)
+  call p2c(lbp, ubp, lbc, ubc, num_soilc, filter_soilc,leafc, leafc_col)
   call get_curr_date (kyr, kmo, kda, mcsec)
   dayspyr = get_days_per_year()
   ! Get model step size
