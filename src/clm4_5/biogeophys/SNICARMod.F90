@@ -164,7 +164,6 @@ module SNICARMod
   real(r8), pointer :: snowage_tau(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
   real(r8), pointer :: snowage_kappa(:,:,:) ! (idx_rhos_max,idx_Tgrd_max,idx_T_max)
   real(r8), pointer :: snowage_drdt0(:,:,:) ! idx_rhos_max,idx_Tgrd_max,idx_T_max)
- 
 !
 ! !REVISION HISTORY:
 ! Created by Mark Flanner
@@ -245,16 +244,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     !
-    ! local pointers to implicit in arguments
     !
-    integer,  pointer :: snl(:)              ! negative number of snow layers (col) [nbr]
-    real(r8), pointer :: h2osno(:)           ! snow liquid water equivalent (col) [kg/m2]   
-    integer,  pointer :: clandunit(:)        ! corresponding landunit of column (col) [idx] (debugging only)
-    integer,  pointer :: cgridcell(:)        ! columns's gridcell index (col) [idx] (debugging only)
-    integer,  pointer :: ltype(:)            ! landunit type (lnd) (debugging only)
-    real(r8), pointer :: londeg(:)           ! longitude (degrees) (debugging only)
-    real(r8), pointer :: latdeg(:)           ! latitude (degrees) (debugging only)
-    real(r8), pointer :: frac_sno(:)         ! fraction of ground covered by snow (0 to 1)
 !
 ! !OTHER LOCAL VARIABLES:
 !EOP
@@ -372,21 +362,16 @@ contains
     real(r8):: X(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
     real(r8):: Y(-2*nlevsno+1:0)                  ! tri-diag intermediate variable from Toon et al. (2*lyr)
 
-    ! Assign local pointers to derived subtypes components (column-level)
-    ! (CLM-specific)
-    if (flg_snw_ice == 1) then
-       snl            => cps%snl
-       h2osno         => cws%h2osno
-       clandunit      =>col%landunit  ! (debug only)
-       cgridcell      =>col%gridcell  ! (debug only)
-       ltype          => lun%itype       ! (debug only)
-       londeg         =>  grc%londeg        ! (debug only)
-       latdeg         =>  grc%latdeg        ! (debug only)
-    endif
-
-    frac_sno           => cps%frac_sno_eff
-    clandunit      =>col%landunit  
-    ltype          => lun%itype      
+   associate(& 
+   snl         =>   cps%snl          , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
+   h2osno      =>   cws%h2osno       , & ! Input:  [real(r8) (:)]  snow liquid water equivalent (col) [kg/m2]
+   clandunit   =>   col%landunit     , & ! Input:  [integer (:)]  corresponding landunit of column (col) [idx] (debugging only)
+   cgridcell   =>   col%gridcell     , & ! Input:  [integer (:)]  columns's gridcell index (col) [idx] (debugging only)
+   ltype       =>   lun%itype        , & ! Input:  [integer (:)]  landunit type (lnd) (debugging only)     
+   londeg      =>   grc%londeg       , & ! Input:  [real(r8) (:)]  longitude (degrees) (debugging only)    
+   latdeg      =>   grc%latdeg       , & ! Input:  [real(r8) (:)]  latitude (degrees) (debugging only)     
+   frac_sno    =>   cps%frac_sno_eff   & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   )
 
     ! Define constants
     pi = SHR_CONST_PI
@@ -425,7 +410,6 @@ contains
 
           ! Set variables specific to CLM
           if (flg_snw_ice == 1) then
-             ! Assign local (single-column) variables to global values
              ! If there is snow, but zero snow layers, we must create a layer locally.
              ! This layer is presumed to have the fresh snow effective radius.
              if (snl(c_idx) > -1) then
@@ -1044,7 +1028,8 @@ contains
     enddo    ! loop over all columns
 
 
-  end subroutine SNICAR_RT
+    end associate 
+   end subroutine SNICAR_RT
 
 
 !-----------------------------------------------------------------------
@@ -1111,26 +1096,8 @@ contains
 
     ! !LOCAL VARIABLES:
     !
-    ! local pointers to implicit arguments
     !
 
-    real(r8), pointer :: t_soisno(:,:)         ! soil and snow temperature (col,lyr) [K]
-    integer,  pointer :: snl(:)                ! negative number of snow layers (col) [nbr]
-    real(r8), pointer :: t_grnd(:)             ! ground temperature (col) [K]
-    real(r8), pointer :: dz(:,:)               ! layer thickness (col,lyr) [m]
-    real(r8), pointer :: h2osno(:)             ! snow water (col) [mm H2O]
-    real(r8), pointer :: snw_rds(:,:)          ! effective grain radius (col,lyr) [microns, m-6]
-    real(r8), pointer :: snw_rds_top(:)        ! effective grain radius, top layer (col) [microns, m-6]
-    real(r8), pointer :: sno_liq_top(:)        ! liquid water fraction (mass) in top snow layer (col) [frc]
-    real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water content (col,lyr) [kg m-2]
-    real(r8), pointer :: h2osoi_ice(:,:)       ! ice content (col,lyr) [kg m-2]
-    real(r8), pointer :: snot_top(:)           ! snow temperature in top layer (col) [K]
-    real(r8), pointer :: dTdz_top(:)           ! temperature gradient in top layer (col) [K m-1]
-    real(r8), pointer :: qflx_snow_grnd_col(:) ! snow on ground after interception (col) [kg m-2 s-1]
-    real(r8), pointer :: qflx_snwcp_ice(:)     ! excess precipitation due to snow capping [kg m-2 s-1]
-    real(r8), pointer :: qflx_snofrz_lyr(:,:)  ! snow freezing rate (col,lyr) [kg m-2 s-1]
-    logical , pointer :: do_capsnow(:)         ! true => do snow capping
-    real(r8), pointer :: frac_sno(:)           ! fraction of ground covered by snow (0 to 1)
  
     !
     ! !OTHER LOCAL VARIABLES:
@@ -1163,24 +1130,26 @@ contains
     real(r8) :: h2osno_lyr                  ! liquid + solid H2O in snow layer [kg m-2]
     real(r8) :: cdz(-nlevsno+1:0)           ! column average layer thickness [m]
 !--------------------------------------------------------------------------!
-    ! Assign local pointers to derived subtypes components (column-level)
-    t_soisno           => ces%t_soisno
-    snl                => cps%snl
-    t_grnd             => ces%t_grnd
-    dz                 => cps%dz
-    h2osno             => cws%h2osno
-    snw_rds            => cps%snw_rds
-    h2osoi_liq         => cws%h2osoi_liq
-    h2osoi_ice         => cws%h2osoi_ice
-    snot_top           => cps%snot_top
-    dTdz_top           => cps%dTdz_top
-    snw_rds_top        => cps%snw_rds_top
-    sno_liq_top        => cps%sno_liq_top
-    qflx_snow_grnd_col => pwf_a%qflx_snow_grnd
-    qflx_snwcp_ice     => pwf_a%qflx_snwcp_ice
-    qflx_snofrz_lyr    => cwf%qflx_snofrz_lyr
-    do_capsnow         => cps%do_capsnow
-    frac_sno           => cps%frac_sno_eff 
+
+   associate(& 
+   t_soisno          => ces%t_soisno            , & ! Input:  [real(r8) (:,:)]  soil and snow temperature (col,lyr) [K]
+   snl               => cps%snl                 , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
+   t_grnd            => ces%t_grnd              , & ! Input:  [real(r8) (:)]  ground temperature (col) [K]            
+   dz                => cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer thickness (col,lyr) [m]         
+   h2osno            => cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (col) [mm H2O]               
+   snw_rds           => cps%snw_rds             , & ! Input:  [real(r8) (:,:)]  effective grain radius (col,lyr) [microns, m-6]
+   h2osoi_liq        => cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water content (col,lyr) [kg m-2]
+   h2osoi_ice        => cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice content (col,lyr) [kg m-2]        
+   snot_top          => cps%snot_top            , & ! Input:  [real(r8) (:)]  snow temperature in top layer (col) [K] 
+   dTdz_top          => cps%dTdz_top            , & ! Input:  [real(r8) (:)]  temperature gradient in top layer (col) [K m-1]
+   snw_rds_top       => cps%snw_rds_top         , & ! Input:  [real(r8) (:)]  effective grain radius, top layer (col) [microns, m-6]
+   sno_liq_top       => cps%sno_liq_top         , & ! Input:  [real(r8) (:)]  liquid water fraction (mass) in top snow layer (col) [frc]
+   qflx_snow_grnd_col=> pwf_a%qflx_snow_grnd    , & ! Input:  [real(r8) (:)]  snow on ground after interception (col) [kg m-2 s-1]
+   qflx_snwcp_ice    => pwf_a%qflx_snwcp_ice    , & ! Input:  [real(r8) (:)]  excess precipitation due to snow capping [kg m-2 s-1]
+   qflx_snofrz_lyr   => cwf%qflx_snofrz_lyr     , & ! Input:  [real(r8) (:,:)]  snow freezing rate (col,lyr) [kg m-2 s-1]
+   do_capsnow        => cps%do_capsnow          , & ! Input:  [logical (:)]  true => do snow capping                  
+   frac_sno          => cps%frac_sno_eff          & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   )
   
 
     ! set timestep and step interval
@@ -1356,7 +1325,10 @@ contains
        endif
     enddo
         
-  end subroutine SnowAge_grain
+    end associate 
+   end subroutine SnowAge_grain
+
+!-----------------------------------------------------------------------
 
   subroutine SnowOptics_init( )
     use fileutils       , only : getfil

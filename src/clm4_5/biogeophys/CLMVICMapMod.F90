@@ -62,13 +62,7 @@ subroutine initCLMVICMap(c)
 ! Created by Maoyi Huang
 ! 11/13/2012, Maoyi Huang: rewrite the mapping modules in CLM4VIC 
 !
-!local pointers to original implicit in arrays
 
-    real(r8), pointer :: dz(:,:)                    ! layer depth (m)
-    real(r8), pointer :: zi(:,:)                    ! interface level below a "z" level (m)
-    real(r8), pointer :: z(:,:)                     ! layer thickness (m)
-    real(r8), pointer :: depth(:,:)                 ! layer depth of VIC (m)
-    real(r8), pointer :: vic_clm_fract(:,:,:)       ! fraction of VIC layers in clm layers
     real(r8) :: sum_frac(1:nlayer)                  ! sum of fraction for each layer
     real(r8) :: deltal(1:nlayer+1)                  ! temporary
     real(r8) :: zsum                                ! temporary
@@ -80,13 +74,14 @@ subroutine initCLMVICMap(c)
    integer :: i, j, fc
  ! note: in CLM h2osoil_liq unit is kg/m2, in VIC moist is mm
  ! h2osoi_ice is actually water equavlent ice content.
- ! Assign local pointers to derived subtypes components (column-level)
 
-    dz         => cps%dz
-    zi         => cps%zi
-    z          => cps%z
-    depth      => cps%depth
-    vic_clm_fract => cps%vic_clm_fract
+   associate(& 
+   dz                        =>    cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer depth (m)                       
+   zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
+   z                         =>    cps%z                   , & ! Input:  [real(r8) (:,:)]  layer thickness (m)                   
+   depth                     =>    cps%depth               , & ! Input:  [real(r8) (:,:)]  layer depth of VIC (m)                
+   vic_clm_fract             =>    cps%vic_clm_fract         & ! Input:  [real(r8) (:,:,:)]  fraction of VIC layers in clm layers
+   )
 !************************************************************************  
 
 !  set fraction of VIC layer in each CLM layer
@@ -124,7 +119,8 @@ subroutine initCLMVICMap(c)
      lsum = lsum + deltal(i)
    end do                             ! end VIC layer calcultion 
    
-end subroutine initCLMVICMap
+    end associate 
+ end subroutine initCLMVICMap
 
 !-----------------------------------------------------------------------
 !BOP
@@ -154,21 +150,7 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
     integer , intent(in)  :: filter(ubc-lbc+1)      ! column filter for soil points
 
 !
-!local pointers to original implicit in arrays
 
-    real(r8), pointer :: dz(:,:)                    !layer depth (m)
-    real(r8), pointer :: zi(:,:)                    !interface level below a "z" level (m)
-    real(r8), pointer :: z(:,:)                     !layer thickness (m)
-    real(r8), pointer :: h2osoi_liq(:,:)            !liquid water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)            !ice lens (kg/m2)
-    real(r8), pointer :: moist(:,:)                 !liquid water (mm)
-    real(r8), pointer :: ice(:,:)                   !ice lens (mm)
-    real(r8), pointer :: depth(:,:)                 !layer depth of upper layer (m)
-    real(r8), pointer :: max_moist(:,:)             !max layer moist + ice (mm)
-    real(r8), pointer :: moist_vol(:,:)             !volumetric soil moisture for VIC soil layers
-    real(r8), pointer :: h2osoi_vol(:,:)            !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
-    real(r8), pointer :: porosity(:,:)              !soil porisity (1-bulk_density/soil_density)
-    real(r8), pointer :: vic_clm_fract(:,:,:)       !fraction of VIC layers in each CLM layer 
 !
 !local variables
     real(r8) :: ice0(1:nlayer)            ! last step ice lens (mm)  (new)
@@ -177,20 +159,22 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
 
  ! note: in CLM3 h2osoil_liq unit is kg/m2, in VIC moist is mm
  ! h2osoi_ice is actually water equavlent ice content.
- ! Assign local pointers to derived subtypes components (column-level)
-    dz            => cps%dz
-    zi            => cps%zi
-    z             => cps%z
-    h2osoi_liq    => cws%h2osoi_liq
-    h2osoi_ice    => cws%h2osoi_ice
-    moist         => cws%moist
-    ice           => cws%ice
-    h2osoi_vol    => cws%h2osoi_vol
-    moist_vol     => cws%moist_vol
-    porosity      => cps%porosity
-    depth         => cps%depth
-    max_moist     => cps%max_moist
-    vic_clm_fract => cps%vic_clm_fract
+
+   associate(& 
+   dz             => cps%dz           , & ! Input:  [real(r8) (:,:)] layer depth (m)                        
+   zi             => cps%zi           , & ! Input:  [real(r8) (:,:)] interface level below a "z" level (m)  
+   z              => cps%z            , & ! Input:  [real(r8) (:,:)] layer thickness (m)                    
+   h2osoi_liq     => cws%h2osoi_liq   , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
+   h2osoi_ice     => cws%h2osoi_ice   , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
+   moist          => cws%moist        , & ! Input:  [real(r8) (:,:)] liquid water (mm)                      
+   ice            => cws%ice          , & ! Input:  [real(r8) (:,:)] ice lens (mm)                          
+   h2osoi_vol     => cws%h2osoi_vol   , & ! Input:  [real(r8) (:,:)] volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+   moist_vol      => cws%moist_vol    , & ! Input:  [real(r8) (:,:)] volumetric soil moisture for VIC soil layers
+   porosity       => cps%porosity     , & ! Input:  [real(r8) (:,:)] soil porisity (1-bulk_density/soil_density)
+   depth          => cps%depth        , & ! Input:  [real(r8) (:,:)] layer depth of upper layer (m)         
+   max_moist      => cps%max_moist    , & ! Input:  [real(r8) (:,:)] max layer moist + ice (mm)             
+   vic_clm_fract  => cps%vic_clm_fract  & ! Input:  [real(r8) (:,:,:)] fraction of VIC layers in each CLM layer
+   )
 
    ! map CLM to VIC
    do fc = 1, numf
@@ -220,7 +204,8 @@ subroutine CLMVICMap(lbc, ubc, numf, filter)
      moist_vol(c, nlayer+1:nlayert) = h2osoi_vol(c, nlevsoi+1:nlevgrnd)
   end do
 
-end subroutine CLMVICMap
+    end associate 
+ end subroutine CLMVICMap
 
 !-------------------------------------------------------------------
 subroutine linear_interp(x,y, x0, x1, y0, y1)

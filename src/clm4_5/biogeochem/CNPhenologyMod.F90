@@ -57,7 +57,7 @@ module CNPhenologyMod
   integer, parameter :: NOT_Harvested = 999 ! If not harvested yet in year
   integer, parameter :: inNH       = 1      ! Northern Hemisphere
   integer, parameter :: inSH       = 2      ! Southern Hemisphere
-  integer, pointer   :: inhemi(:)           ! Hemisphere that pft is in
+  integer , pointer   :: inhemi (:)            !  [integer (:)]  Hemisphere that pft is in 
   integer            :: minplantjday(0:numpft,inSH) ! minimum planting julian day
   integer            :: maxplantjday(0:numpft,inSH) ! maximum planting julian day
   integer            :: jdayyrstart(inSH)           ! julian day of start of year
@@ -102,13 +102,6 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp, &
 !    routines, and moved onset, offset, background litfall routines into
 !    main phenology call.
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arrays
-!
-! local pointers to implicit in/out scalars
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -263,26 +256,6 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
 ! 3/13/07: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: ivt(:)             ! pft vegetation type
-   ! ecophysiological constants
-   real(r8), pointer :: t_ref2m(:)         ! 2m air temperature (K)
-   real(r8), pointer :: tempavg_t2m(:)     ! temp. avg 2m air temperature (K)
-   real(r8), pointer :: gdd0(:)            ! growing deg. days base 0 deg C (ddays)
-   real(r8), pointer :: gdd8(:)            !    "     "    "    "   8  "  "    "
-   real(r8), pointer :: gdd10(:)           !    "     "    "    "  10  "  "    "
-   real(r8), pointer :: gdd020(:)          ! 20-yr mean of gdd0 (ddays)
-   real(r8), pointer :: gdd820(:)          ! 20-yr mean of gdd8 (ddays)
-   real(r8), pointer :: gdd1020(:)         ! 20-yr mean of gdd10 (ddays)
-   integer , pointer :: pgridcell(:)       ! pft's gridcell index
-!
-! local pointers to implicit in/out scalars
-!
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
    integer :: p                    ! indices
    integer :: fp                   ! lake filter pft index
    integer, save :: nyrs = -999    ! number of years prognostic crop has run
@@ -296,18 +269,19 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
 !EOP
 !-----------------------------------------------------------------------
 
-   ! assign local pointers to derived type arrays
-   ivt                           =>pft%itype
-   t_ref2m                       => pes%t_ref2m
-   tempavg_t2m                   => pepv%tempavg_t2m
+   associate(& 
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   t_ref2m                             =>    pes%t_ref2m                                 , & ! Input:  [real(r8) (:)]  2m air temperature (K)                            
+   tempavg_t2m                         =>    pepv%tempavg_t2m                            , & ! Input:  [real(r8) (:)]  temp. avg 2m air temperature (K)                  
 
-   gdd0                          => pps%gdd0
-   gdd8                          => pps%gdd8
-   gdd10                         => pps%gdd10
-   gdd020                        => pps%gdd020
-   gdd820                        => pps%gdd820
-   gdd1020                       => pps%gdd1020
-   pgridcell                     =>pft%gridcell
+   gdd0                                =>    pps%gdd0                                    , & ! Input:  [real(r8) (:)]  growing deg. days base 0 deg C (ddays)            
+   gdd8                                =>    pps%gdd8                                    , & ! Input:  [real(r8) (:)]     "     "    "    "   8  "  "    "               
+   gdd10                               =>    pps%gdd10                                   , & ! Input:  [real(r8) (:)]     "     "    "    "  10  "  "    "               
+   gdd020                              =>    pps%gdd020                                  , & ! Input:  [real(r8) (:)]  20-yr mean of gdd0 (ddays)                        
+   gdd820                              =>    pps%gdd820                                  , & ! Input:  [real(r8) (:)]  20-yr mean of gdd8 (ddays)                        
+   gdd1020                             =>    pps%gdd1020                                 , & ! Input:  [real(r8) (:)]  20-yr mean of gdd10 (ddays)                       
+   pgridcell                           =>   pft%gridcell                                   & ! Input:  [integer (:)]  pft's gridcell index                               
+   )
 
    ! set time steps
 
@@ -354,7 +328,8 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcrop
       end if
    end do
 
-end subroutine CNPhenologyClimate
+    end associate 
+ end subroutine CNPhenologyClimate
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -383,35 +358,20 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
 ! 10/2/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: ivt(:)       ! pft vegetation type
-   ! ecophysiological constants
-   real(r8), pointer :: evergreen(:) ! binary flag for evergreen leaf habit (0 or 1)
-   real(r8), pointer :: leaf_long(:) ! leaf longevity (yrs)
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: bglfr(:)     ! background litterfall rate (1/s)
-   real(r8), pointer :: bgtr(:)      ! background transfer growth rate (1/s)
-   real(r8), pointer :: lgsf(:)      ! long growing season factor [0-1]
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
    real(r8):: dayspyr                ! Days per year
    integer :: p                      ! indices
    integer :: fp                     ! lake filter pft index
 !EOP
 !-----------------------------------------------------------------------
 
-   ! assign local pointers to derived type arrays
-   ivt       =>pft%itype
-   evergreen => pftcon%evergreen
-   leaf_long => pftcon%leaf_long
-   bglfr     => pepv%bglfr
-   bgtr      => pepv%bgtr
-   lgsf      => pepv%lgsf
+   associate(& 
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   evergreen                           =>    pftcon%evergreen                            , & ! Input:  [real(r8) (:)]  binary flag for evergreen leaf habit (0 or 1)     
+   leaf_long                           =>    pftcon%leaf_long                            , & ! Input:  [real(r8) (:)]  leaf longevity (yrs)                              
+   bglfr                               =>    pepv%bglfr                                  , & ! InOut:  [real(r8) (:)]  background litterfall rate (1/s)                  
+   bgtr                                =>    pepv%bgtr                                   , & ! InOut:  [real(r8) (:)]  background transfer growth rate (1/s)             
+   lgsf                                =>    pepv%lgsf                                     & ! InOut:  [real(r8) (:)]  long growing season factor [0-1]                  
+   )
    dayspyr   = get_days_per_year()
 
    do fp = 1,num_soilp
@@ -423,7 +383,8 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
       end if
    end do
 
-end subroutine CNEvergreenPhenology
+    end associate 
+ end subroutine CNEvergreenPhenology
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -455,92 +416,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! 10/24/03, Peter Thornton: migrated to vector data structures
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-   integer , pointer :: ivt(:)                ! pft vegetation type
-   integer , pointer :: pcolumn(:)            ! pft's column index
-   integer , pointer :: pgridcell(:)          ! pft's gridcell index
-   real(r8), pointer :: latdeg(:)             ! latitude (radians)
-   real(r8), pointer :: decl(:)               ! solar declination (radians)
-   real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-   real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
-   real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
-   real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
-   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
-   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
-   real(r8), pointer :: livecrootc_storage(:) ! (gC/m2) live coarse root C storage
-   real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
-   real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
-   real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
-   real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
-   real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
-   real(r8), pointer :: deadstemn_storage(:)  ! (gN/m2) dead stem N storage
-   real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
-   real(r8), pointer :: deadcrootn_storage(:) ! (gN/m2) dead coarse root N storage
-   ! ecophysiological constants
-   real(r8), pointer :: season_decid(:) ! binary flag for seasonal-deciduous leaf habit (0 or 1)
-   real(r8), pointer :: woody(:)        ! binary flag for woody lifeform (1=woody, 0=not woody)
-!
-! local pointers to implicit in/out scalars
-   real(r8), pointer :: dormant_flag(:)    ! dormancy flag
-   real(r8), pointer :: days_active(:)     ! number of days since last dormancy
-   real(r8), pointer :: onset_flag(:)      ! onset flag
-   real(r8), pointer :: onset_counter(:)   ! onset counter (seconds)
-   real(r8), pointer :: onset_gddflag(:)   ! onset freeze flag
-   real(r8), pointer :: onset_gdd(:)       ! onset growing degree days
-   real(r8), pointer :: offset_flag(:)     ! offset flag
-   real(r8), pointer :: offset_counter(:)  ! offset counter (seconds)
-   real(r8), pointer :: dayl(:)            ! daylength (seconds)
-   real(r8), pointer :: prev_dayl(:)       ! daylength from previous albedo timestep (seconds)
-   real(r8), pointer :: annavg_t2m(:)      ! annual average 2m air temperature (K)
-   real(r8), pointer :: prev_leafc_to_litter(:)  ! previous timestep leaf C litterfall flux (gC/m2/s)
-   real(r8), pointer :: prev_frootc_to_litter(:) ! previous timestep froot C litterfall flux (gC/m2/s)
-   real(r8), pointer :: lgsf(:)            ! long growing season factor [0-1]
-   real(r8), pointer :: bglfr(:)           ! background litterfall rate (1/s)
-   real(r8), pointer :: bgtr(:)            ! background transfer growth rate (1/s)
-   real(r8), pointer :: leafc_xfer_to_leafc(:)
-   real(r8), pointer :: frootc_xfer_to_frootc(:)
-   real(r8), pointer :: livestemc_xfer_to_livestemc(:)
-   real(r8), pointer :: deadstemc_xfer_to_deadstemc(:)
-   real(r8), pointer :: livecrootc_xfer_to_livecrootc(:)
-   real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
-   real(r8), pointer :: leafn_xfer_to_leafn(:)
-   real(r8), pointer :: frootn_xfer_to_frootn(:)
-   real(r8), pointer :: livestemn_xfer_to_livestemn(:)
-   real(r8), pointer :: deadstemn_xfer_to_deadstemn(:)
-   real(r8), pointer :: livecrootn_xfer_to_livecrootn(:)
-   real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)
-   real(r8), pointer :: leafc_xfer(:)      ! (gC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)     ! (gC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)  ! (gC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)  ! (gC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:) ! (gC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:) ! (gC/m2) dead coarse root C transfer
-   real(r8), pointer :: leafn_xfer(:)      ! (gN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)     ! (gN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)  ! (gN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)  ! (gN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:) ! (gN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:) ! (gN/m2) dead coarse root N transfer
-   real(r8), pointer :: leafc_storage_to_xfer(:)
-   real(r8), pointer :: frootc_storage_to_xfer(:)
-   real(r8), pointer :: livestemc_storage_to_xfer(:)
-   real(r8), pointer :: deadstemc_storage_to_xfer(:)
-   real(r8), pointer :: livecrootc_storage_to_xfer(:)
-   real(r8), pointer :: deadcrootc_storage_to_xfer(:)
-   real(r8), pointer :: gresp_storage_to_xfer(:)
-   real(r8), pointer :: leafn_storage_to_xfer(:)
-   real(r8), pointer :: frootn_storage_to_xfer(:)
-   real(r8), pointer :: livestemn_storage_to_xfer(:)
-   real(r8), pointer :: deadstemn_storage_to_xfer(:)
-   real(r8), pointer :: livecrootn_storage_to_xfer(:)
-   real(r8), pointer :: deadcrootn_storage_to_xfer(:)
-#if (defined CNDV)
-   logical , pointer :: pftmayexist(:)     ! exclude seasonal decid pfts from tropics
-#endif
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
    integer :: c,p            !indices
    integer :: fp             !lake filter pft index
    real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
@@ -551,86 +426,85 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-   ivt                           =>pft%itype
-   pcolumn                       =>pft%column
-   pgridcell                     =>pft%gridcell
-   latdeg                        =>  grc%latdeg
-   decl                          => cps%decl
-   t_soisno                      => ces%t_soisno
-   leafc_storage                 => pcs%leafc_storage
-   frootc_storage                => pcs%frootc_storage
-   livestemc_storage             => pcs%livestemc_storage
-   deadstemc_storage             => pcs%deadstemc_storage
-   livecrootc_storage            => pcs%livecrootc_storage
-   deadcrootc_storage            => pcs%deadcrootc_storage
-   gresp_storage                 => pcs%gresp_storage
-   leafn_storage                 => pns%leafn_storage
-   frootn_storage                => pns%frootn_storage
-   livestemn_storage             => pns%livestemn_storage
-   deadstemn_storage             => pns%deadstemn_storage
-   livecrootn_storage            => pns%livecrootn_storage
-   deadcrootn_storage            => pns%deadcrootn_storage
-   season_decid                  => pftcon%season_decid
-   woody                         => pftcon%woody
-
-   ! Assign local pointers to derived type arrays (out)
-   dormant_flag                  => pepv%dormant_flag
-   days_active                   => pepv%days_active
-   onset_flag                    => pepv%onset_flag
-   onset_counter                 => pepv%onset_counter
-   onset_gddflag                 => pepv%onset_gddflag
-   onset_gdd                     => pepv%onset_gdd
-   offset_flag                   => pepv%offset_flag
-   offset_counter                => pepv%offset_counter
-   dayl                          => pepv%dayl
-   prev_dayl                     => pepv%prev_dayl
-   annavg_t2m                    => pepv%annavg_t2m
-   prev_leafc_to_litter          => pepv%prev_leafc_to_litter
-   prev_frootc_to_litter         => pepv%prev_frootc_to_litter
-   bglfr                         => pepv%bglfr
-   bgtr                          => pepv%bgtr
-   lgsf                          => pepv%lgsf
-   leafc_xfer_to_leafc           => pcf%leafc_xfer_to_leafc
-   frootc_xfer_to_frootc         => pcf%frootc_xfer_to_frootc
-   livestemc_xfer_to_livestemc   => pcf%livestemc_xfer_to_livestemc
-   deadstemc_xfer_to_deadstemc   => pcf%deadstemc_xfer_to_deadstemc
-   livecrootc_xfer_to_livecrootc => pcf%livecrootc_xfer_to_livecrootc
-   deadcrootc_xfer_to_deadcrootc => pcf%deadcrootc_xfer_to_deadcrootc
-   leafn_xfer_to_leafn           => pnf%leafn_xfer_to_leafn
-   frootn_xfer_to_frootn         => pnf%frootn_xfer_to_frootn
-   livestemn_xfer_to_livestemn   => pnf%livestemn_xfer_to_livestemn
-   deadstemn_xfer_to_deadstemn   => pnf%deadstemn_xfer_to_deadstemn
-   livecrootn_xfer_to_livecrootn => pnf%livecrootn_xfer_to_livecrootn
-   deadcrootn_xfer_to_deadcrootn => pnf%deadcrootn_xfer_to_deadcrootn
-   leafc_xfer                    => pcs%leafc_xfer
-   frootc_xfer                   => pcs%frootc_xfer
-   livestemc_xfer                => pcs%livestemc_xfer
-   deadstemc_xfer                => pcs%deadstemc_xfer
-   livecrootc_xfer               => pcs%livecrootc_xfer
-   deadcrootc_xfer               => pcs%deadcrootc_xfer
-   leafn_xfer                    => pns%leafn_xfer
-   frootn_xfer                   => pns%frootn_xfer
-   livestemn_xfer                => pns%livestemn_xfer
-   deadstemn_xfer                => pns%deadstemn_xfer
-   livecrootn_xfer               => pns%livecrootn_xfer
-   deadcrootn_xfer               => pns%deadcrootn_xfer
-   leafc_storage_to_xfer         => pcf%leafc_storage_to_xfer
-   frootc_storage_to_xfer        => pcf%frootc_storage_to_xfer
-   livestemc_storage_to_xfer     => pcf%livestemc_storage_to_xfer
-   deadstemc_storage_to_xfer     => pcf%deadstemc_storage_to_xfer
-   livecrootc_storage_to_xfer    => pcf%livecrootc_storage_to_xfer
-   deadcrootc_storage_to_xfer    => pcf%deadcrootc_storage_to_xfer
-   gresp_storage_to_xfer         => pcf%gresp_storage_to_xfer
-   leafn_storage_to_xfer         => pnf%leafn_storage_to_xfer
-   frootn_storage_to_xfer        => pnf%frootn_storage_to_xfer
-   livestemn_storage_to_xfer     => pnf%livestemn_storage_to_xfer
-   deadstemn_storage_to_xfer     => pnf%deadstemn_storage_to_xfer
-   livecrootn_storage_to_xfer    => pnf%livecrootn_storage_to_xfer
-   deadcrootn_storage_to_xfer    => pnf%deadcrootn_storage_to_xfer
+   associate(& 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
+   pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index                               
+   latdeg                              =>    grc%latdeg                                  , & ! Input:  [real(r8) (:)]  latitude (radians)                                
+   decl                                =>    cps%decl                                    , & ! Input:  [real(r8) (:)]  solar declination (radians)                       
+   t_soisno                            =>    ces%t_soisno                                , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+   leafc_storage                       =>    pcs%leafc_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
+   frootc_storage                      =>    pcs%frootc_storage                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
+   livestemc_storage                   =>    pcs%livestemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C storage                       
+   deadstemc_storage                   =>    pcs%deadstemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C storage                       
+   livecrootc_storage                  =>    pcs%livecrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                
+   deadcrootc_storage                  =>    pcs%deadcrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                
+   gresp_storage                       =>    pcs%gresp_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) growth respiration storage                
+   leafn_storage                       =>    pns%leafn_storage                           , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N storage                            
+   frootn_storage                      =>    pns%frootn_storage                          , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N storage                       
+   livestemn_storage                   =>    pns%livestemn_storage                       , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N storage                       
+   deadstemn_storage                   =>    pns%deadstemn_storage                       , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N storage                       
+   livecrootn_storage                  =>    pns%livecrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N storage                
+   deadcrootn_storage                  =>    pns%deadcrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N storage                
+   season_decid                        =>    pftcon%season_decid                         , & ! Input:  [real(r8) (:)]  binary flag for seasonal-deciduous leaf habit (0 or 1)
+   woody                               =>    pftcon%woody                                , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+   dormant_flag                        =>    pepv%dormant_flag                           , & ! InOut:  [real(r8) (:)]  dormancy flag                                     
+   days_active                         =>    pepv%days_active                            , & ! InOut:  [real(r8) (:)]  number of days since last dormancy                
+   onset_flag                          =>    pepv%onset_flag                             , & ! InOut:  [real(r8) (:)]  onset flag                                        
+   onset_counter                       =>    pepv%onset_counter                          , & ! InOut:  [real(r8) (:)]  onset counter (seconds)                           
+   onset_gddflag                       =>    pepv%onset_gddflag                          , & ! InOut:  [real(r8) (:)]  onset freeze flag                                 
+   onset_gdd                           =>    pepv%onset_gdd                              , & ! InOut:  [real(r8) (:)]  onset growing degree days                         
+   offset_flag                         =>    pepv%offset_flag                            , & ! InOut:  [real(r8) (:)]  offset flag                                       
+   offset_counter                      =>    pepv%offset_counter                         , & ! InOut:  [real(r8) (:)]  offset counter (seconds)                          
+   dayl                                =>    pepv%dayl                                   , & ! InOut:  [real(r8) (:)]  daylength (seconds)                               
+   prev_dayl                           =>    pepv%prev_dayl                              , & ! InOut:  [real(r8) (:)]  daylength from previous albedo timestep (seconds) 
+   annavg_t2m                          =>    pepv%annavg_t2m                             , & ! InOut:  [real(r8) (:)]  annual average 2m air temperature (K)             
+   prev_leafc_to_litter                =>    pepv%prev_leafc_to_litter                   , & ! InOut:  [real(r8) (:)]  previous timestep leaf C litterfall flux (gC/m2/s)
+   prev_frootc_to_litter               =>    pepv%prev_frootc_to_litter                  , & ! InOut:  [real(r8) (:)]  previous timestep froot C litterfall flux (gC/m2/s)
+   bglfr                               =>    pepv%bglfr                                  , & ! InOut:  [real(r8) (:)]  background litterfall rate (1/s)                  
+   bgtr                                =>    pepv%bgtr                                   , & ! InOut:  [real(r8) (:)]  background transfer growth rate (1/s)             
+   lgsf                                =>    pepv%lgsf                                   , & ! InOut:  [real(r8) (:)]  long growing season factor [0-1]                  
+   leafc_xfer_to_leafc                 =>    pcf%leafc_xfer_to_leafc                     , & ! InOut:  [real(r8) (:)]                                                    
+   frootc_xfer_to_frootc               =>    pcf%frootc_xfer_to_frootc                   , & ! InOut:  [real(r8) (:)]                                                    
+   livestemc_xfer_to_livestemc         =>    pcf%livestemc_xfer_to_livestemc             , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemc_xfer_to_deadstemc         =>    pcf%deadstemc_xfer_to_deadstemc             , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootc_xfer_to_livecrootc       =>    pcf%livecrootc_xfer_to_livecrootc           , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootc_xfer_to_deadcrootc       =>    pcf%deadcrootc_xfer_to_deadcrootc           , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_xfer_to_leafn                 =>    pnf%leafn_xfer_to_leafn                     , & ! InOut:  [real(r8) (:)]                                                    
+   frootn_xfer_to_frootn               =>    pnf%frootn_xfer_to_frootn                   , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_xfer_to_livestemn         =>    pnf%livestemn_xfer_to_livestemn             , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemn_xfer_to_deadstemn         =>    pnf%deadstemn_xfer_to_deadstemn             , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_xfer_to_livecrootn       =>    pnf%livecrootn_xfer_to_livecrootn           , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootn_xfer_to_deadcrootn       =>    pnf%deadcrootn_xfer_to_deadcrootn           , & ! InOut:  [real(r8) (:)]                                                    
+   leafc_xfer                          =>    pcs%leafc_xfer                              , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   frootc_xfer                         =>    pcs%frootc_xfer                             , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
+   livestemc_xfer                      =>    pcs%livestemc_xfer                          , & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C transfer                      
+   deadstemc_xfer                      =>    pcs%deadstemc_xfer                          , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C transfer                      
+   livecrootc_xfer                     =>    pcs%livecrootc_xfer                         , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
+   deadcrootc_xfer                     =>    pcs%deadcrootc_xfer                         , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
+   leafn_xfer                          =>    pns%leafn_xfer                              , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N transfer                           
+   frootn_xfer                         =>    pns%frootn_xfer                             , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N transfer                      
+   livestemn_xfer                      =>    pns%livestemn_xfer                          , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N transfer                      
+   deadstemn_xfer                      =>    pns%deadstemn_xfer                          , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N transfer                      
+   livecrootn_xfer                     =>    pns%livecrootn_xfer                         , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N transfer               
+   deadcrootn_xfer                     =>    pns%deadcrootn_xfer                         , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer               
+   leafc_storage_to_xfer               =>    pcf%leafc_storage_to_xfer                   , & ! InOut:  [real(r8) (:)]                                                    
+   frootc_storage_to_xfer              =>    pcf%frootc_storage_to_xfer                  , & ! InOut:  [real(r8) (:)]                                                    
+   livestemc_storage_to_xfer           =>    pcf%livestemc_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemc_storage_to_xfer           =>    pcf%deadstemc_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootc_storage_to_xfer          =>    pcf%livecrootc_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootc_storage_to_xfer          =>    pcf%deadcrootc_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
+   gresp_storage_to_xfer               =>    pcf%gresp_storage_to_xfer                   , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_storage_to_xfer               =>    pnf%leafn_storage_to_xfer                   , & ! InOut:  [real(r8) (:)]                                                    
+   frootn_storage_to_xfer              =>    pnf%frootn_storage_to_xfer                  , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_storage_to_xfer           =>    pnf%livestemn_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemn_storage_to_xfer           =>    pnf%deadstemn_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_storage_to_xfer          =>    pnf%livecrootn_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
 #if (defined CNDV)
-   pftmayexist                   => pdgvs%pftmayexist
+   pftmayexist                         =>    pdgvs%pftmayexist                           , & ! InOut:  [logical (:)]  exclude seasonal decid pfts from tropics           
 #endif
+   deadcrootn_storage_to_xfer          =>    pnf%deadcrootn_storage_to_xfer                & ! InOut:  [real(r8) (:)]                                                    
+   )
 
    ! start pft loop
    do fp = 1,num_soilp
@@ -826,7 +700,8 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 
    end do ! end of pft loop
 
-end subroutine CNSeasonDecidPhenology
+    end associate 
+ end subroutine CNSeasonDecidPhenology
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -866,96 +741,6 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 !           seasonal deciduous algorithm.
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: ivt(:)                ! pft vegetation type
-   integer , pointer :: pcolumn(:)            ! pft's column index
-   integer , pointer :: pgridcell(:)          ! pft's gridcell index
-   real(r8), pointer :: latdeg(:)             ! latitude (radians)
-   real(r8), pointer :: decl(:)               ! solar declination (radians)
-   real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
-   real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
-   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
-   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
-   real(r8), pointer :: livecrootc_storage(:) ! (gC/m2) live coarse root C storage
-   real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
-   real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
-   real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
-   real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
-   real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
-   real(r8), pointer :: deadstemn_storage(:)  ! (gN/m2) dead stem N storage
-   real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
-   real(r8), pointer :: deadcrootn_storage(:) ! (gN/m2) dead coarse root N storage
-   real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-   real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
-   real(r8), pointer :: leaf_long(:)          ! leaf longevity (yrs)
-   real(r8), pointer :: stress_decid(:)       ! binary flag for stress-deciduous leaf habit (0 or 1)
-   real(r8), pointer :: woody(:)              ! binary flag for woody lifeform (1=woody, 0=not woody)
-
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: dormant_flag(:)    ! dormancy flag
-   real(r8), pointer :: days_active(:)     ! number of days since last dormancy
-   real(r8), pointer :: onset_flag(:)      ! onset flag
-   real(r8), pointer :: onset_counter(:)   ! onset counter (seconds)
-   real(r8), pointer :: onset_gddflag(:)   ! onset freeze flag
-   real(r8), pointer :: onset_fdd(:)       ! onset freezing degree days counter
-   real(r8), pointer :: onset_gdd(:)       ! onset growing degree days
-   real(r8), pointer :: onset_swi(:)       ! onset soil water index
-   real(r8), pointer :: offset_flag(:)     ! offset flag
-   real(r8), pointer :: offset_counter(:)  ! offset counter (seconds)
-   real(r8), pointer :: dayl(:)            ! daylength (seconds)
-   real(r8), pointer :: offset_fdd(:)      ! offset freezing degree days counter
-   real(r8), pointer :: offset_swi(:)      ! offset soil water index
-   real(r8), pointer :: annavg_t2m(:)      ! annual average 2m air temperature (K)
-   real(r8), pointer :: lgsf(:)            ! long growing season factor [0-1]
-   real(r8), pointer :: bglfr(:)           ! background litterfall rate (1/s)
-   real(r8), pointer :: bgtr(:)            ! background transfer growth rate (1/s)
-   real(r8), pointer :: prev_leafc_to_litter(:)  ! previous timestep leaf C litterfall flux (gC/m2/s)
-   real(r8), pointer :: prev_frootc_to_litter(:) ! previous timestep froot C litterfall flux (gC/m2/s)
-   real(r8), pointer :: leafc_xfer_to_leafc(:)
-   real(r8), pointer :: frootc_xfer_to_frootc(:)
-   real(r8), pointer :: livestemc_xfer_to_livestemc(:)
-   real(r8), pointer :: deadstemc_xfer_to_deadstemc(:)
-   real(r8), pointer :: livecrootc_xfer_to_livecrootc(:)
-   real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
-   real(r8), pointer :: leafn_xfer_to_leafn(:)
-   real(r8), pointer :: frootn_xfer_to_frootn(:)
-   real(r8), pointer :: livestemn_xfer_to_livestemn(:)
-   real(r8), pointer :: deadstemn_xfer_to_deadstemn(:)
-   real(r8), pointer :: livecrootn_xfer_to_livecrootn(:)
-   real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)
-   real(r8), pointer :: leafc_xfer(:)      ! (gC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)     ! (gC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)  ! (gC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)  ! (gC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:) ! (gC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:) ! (gC/m2) dead coarse root C transfer
-   real(r8), pointer :: leafn_xfer(:)      ! (gN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)     ! (gN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)  ! (gN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)  ! (gN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:) ! (gN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:) ! (gN/m2) dead coarse root N transfer
-   real(r8), pointer :: leafc_storage_to_xfer(:)
-   real(r8), pointer :: frootc_storage_to_xfer(:)
-   real(r8), pointer :: livestemc_storage_to_xfer(:)
-   real(r8), pointer :: deadstemc_storage_to_xfer(:)
-   real(r8), pointer :: livecrootc_storage_to_xfer(:)
-   real(r8), pointer :: deadcrootc_storage_to_xfer(:)
-   real(r8), pointer :: gresp_storage_to_xfer(:)
-   real(r8), pointer :: leafn_storage_to_xfer(:)
-   real(r8), pointer :: frootn_storage_to_xfer(:)
-   real(r8), pointer :: livestemn_storage_to_xfer(:)
-   real(r8), pointer :: deadstemn_storage_to_xfer(:)
-   real(r8), pointer :: livecrootn_storage_to_xfer(:)
-   real(r8), pointer :: deadcrootn_storage_to_xfer(:)
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
    real(r8),parameter :: secspqtrday = secspday / 4  ! seconds per quarter day
    integer :: c,p             ! indices
    integer :: fp              ! lake filter pft index
@@ -967,88 +752,88 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    real(r8):: temp            !temporary variable for daylength calculation
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-    ivt                            =>pft%itype
-    pcolumn                        =>pft%column
-    pgridcell                      =>pft%gridcell
-    latdeg                         =>  grc%latdeg
-    decl                           => cps%decl
-    leafc_storage                  => pcs%leafc_storage
-    frootc_storage                 => pcs%frootc_storage
-    livestemc_storage              => pcs%livestemc_storage
-    deadstemc_storage              => pcs%deadstemc_storage
-    livecrootc_storage             => pcs%livecrootc_storage
-    deadcrootc_storage             => pcs%deadcrootc_storage
-    gresp_storage                  => pcs%gresp_storage
-    leafn_storage                  => pns%leafn_storage
-    frootn_storage                 => pns%frootn_storage
-    livestemn_storage              => pns%livestemn_storage
-    deadstemn_storage              => pns%deadstemn_storage
-    livecrootn_storage             => pns%livecrootn_storage
-    deadcrootn_storage             => pns%deadcrootn_storage
-    soilpsi                        => cps%soilpsi
-    t_soisno                       => ces%t_soisno
-    leaf_long                      => pftcon%leaf_long
-    woody                          => pftcon%woody
-    stress_decid                   => pftcon%stress_decid
 
-   ! Assign local pointers to derived type arrays (out)
-    dormant_flag                   => pepv%dormant_flag
-    days_active                    => pepv%days_active
-    onset_flag                     => pepv%onset_flag
-    onset_counter                  => pepv%onset_counter
-    onset_gddflag                  => pepv%onset_gddflag
-    onset_fdd                      => pepv%onset_fdd
-    onset_gdd                      => pepv%onset_gdd
-    onset_swi                      => pepv%onset_swi
-    offset_flag                    => pepv%offset_flag
-    offset_counter                 => pepv%offset_counter
-    dayl                           => pepv%dayl
-    offset_fdd                     => pepv%offset_fdd
-    offset_swi                     => pepv%offset_swi
-    annavg_t2m                     => pepv%annavg_t2m
-    prev_leafc_to_litter           => pepv%prev_leafc_to_litter
-    prev_frootc_to_litter          => pepv%prev_frootc_to_litter
-    lgsf                           => pepv%lgsf
-    bglfr                          => pepv%bglfr
-    bgtr                           => pepv%bgtr
-    leafc_xfer_to_leafc            => pcf%leafc_xfer_to_leafc
-    frootc_xfer_to_frootc          => pcf%frootc_xfer_to_frootc
-    livestemc_xfer_to_livestemc    => pcf%livestemc_xfer_to_livestemc
-    deadstemc_xfer_to_deadstemc    => pcf%deadstemc_xfer_to_deadstemc
-    livecrootc_xfer_to_livecrootc  => pcf%livecrootc_xfer_to_livecrootc
-    deadcrootc_xfer_to_deadcrootc  => pcf%deadcrootc_xfer_to_deadcrootc
-    leafn_xfer_to_leafn            => pnf%leafn_xfer_to_leafn
-    frootn_xfer_to_frootn          => pnf%frootn_xfer_to_frootn
-    livestemn_xfer_to_livestemn    => pnf%livestemn_xfer_to_livestemn
-    deadstemn_xfer_to_deadstemn    => pnf%deadstemn_xfer_to_deadstemn
-    livecrootn_xfer_to_livecrootn  => pnf%livecrootn_xfer_to_livecrootn
-    deadcrootn_xfer_to_deadcrootn  => pnf%deadcrootn_xfer_to_deadcrootn
-    leafc_xfer                     => pcs%leafc_xfer
-    frootc_xfer                    => pcs%frootc_xfer
-    livestemc_xfer                 => pcs%livestemc_xfer
-    deadstemc_xfer                 => pcs%deadstemc_xfer
-    livecrootc_xfer                => pcs%livecrootc_xfer
-    deadcrootc_xfer                => pcs%deadcrootc_xfer
-    leafn_xfer                     => pns%leafn_xfer
-    frootn_xfer                    => pns%frootn_xfer
-    livestemn_xfer                 => pns%livestemn_xfer
-    deadstemn_xfer                 => pns%deadstemn_xfer
-    livecrootn_xfer                => pns%livecrootn_xfer
-    deadcrootn_xfer                => pns%deadcrootn_xfer
-    leafc_storage_to_xfer          => pcf%leafc_storage_to_xfer
-    frootc_storage_to_xfer         => pcf%frootc_storage_to_xfer
-    livestemc_storage_to_xfer      => pcf%livestemc_storage_to_xfer
-    deadstemc_storage_to_xfer      => pcf%deadstemc_storage_to_xfer
-    livecrootc_storage_to_xfer     => pcf%livecrootc_storage_to_xfer
-    deadcrootc_storage_to_xfer     => pcf%deadcrootc_storage_to_xfer
-    gresp_storage_to_xfer          => pcf%gresp_storage_to_xfer
-    leafn_storage_to_xfer          => pnf%leafn_storage_to_xfer
-    frootn_storage_to_xfer         => pnf%frootn_storage_to_xfer
-    livestemn_storage_to_xfer      => pnf%livestemn_storage_to_xfer
-    deadstemn_storage_to_xfer      => pnf%deadstemn_storage_to_xfer
-    livecrootn_storage_to_xfer     => pnf%livecrootn_storage_to_xfer
-    deadcrootn_storage_to_xfer     => pnf%deadcrootn_storage_to_xfer
+   associate(& 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
+   pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index                               
+   latdeg                              =>    grc%latdeg                                  , & ! Input:  [real(r8) (:)]  latitude (radians)                                
+   decl                                =>    cps%decl                                    , & ! Input:  [real(r8) (:)]  solar declination (radians)                       
+   leafc_storage                       =>    pcs%leafc_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
+   frootc_storage                      =>    pcs%frootc_storage                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
+   livestemc_storage                   =>    pcs%livestemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C storage                       
+   deadstemc_storage                   =>    pcs%deadstemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C storage                       
+   livecrootc_storage                  =>    pcs%livecrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                
+   deadcrootc_storage                  =>    pcs%deadcrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                
+   gresp_storage                       =>    pcs%gresp_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) growth respiration storage                
+   leafn_storage                       =>    pns%leafn_storage                           , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N storage                            
+   frootn_storage                      =>    pns%frootn_storage                          , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N storage                       
+   livestemn_storage                   =>    pns%livestemn_storage                       , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N storage                       
+   deadstemn_storage                   =>    pns%deadstemn_storage                       , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N storage                       
+   livecrootn_storage                  =>    pns%livecrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N storage                
+   deadcrootn_storage                  =>    pns%deadcrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N storage                
+   soilpsi                             =>    cps%soilpsi                                 , & ! Input:  [real(r8) (:,:)]  soil water potential in each soil layer (MPa)   
+   t_soisno                            =>    ces%t_soisno                                , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+   leaf_long                           =>    pftcon%leaf_long                            , & ! Input:  [real(r8) (:)]  leaf longevity (yrs)                              
+   woody                               =>    pftcon%woody                                , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+   stress_decid                        =>    pftcon%stress_decid                         , & ! Input:  [real(r8) (:)]  binary flag for stress-deciduous leaf habit (0 or 1)
+   dormant_flag                        =>    pepv%dormant_flag                           , & ! InOut:  [real(r8) (:)]  dormancy flag                                     
+   days_active                         =>    pepv%days_active                            , & ! InOut:  [real(r8) (:)]  number of days since last dormancy                
+   onset_flag                          =>    pepv%onset_flag                             , & ! InOut:  [real(r8) (:)]  onset flag                                        
+   onset_counter                       =>    pepv%onset_counter                          , & ! InOut:  [real(r8) (:)]  onset counter (seconds)                           
+   onset_gddflag                       =>    pepv%onset_gddflag                          , & ! InOut:  [real(r8) (:)]  onset freeze flag                                 
+   onset_fdd                           =>    pepv%onset_fdd                              , & ! InOut:  [real(r8) (:)]  onset freezing degree days counter                
+   onset_gdd                           =>    pepv%onset_gdd                              , & ! InOut:  [real(r8) (:)]  onset growing degree days                         
+   onset_swi                           =>    pepv%onset_swi                              , & ! InOut:  [real(r8) (:)]  onset soil water index                            
+   offset_flag                         =>    pepv%offset_flag                            , & ! InOut:  [real(r8) (:)]  offset flag                                       
+   offset_counter                      =>    pepv%offset_counter                         , & ! InOut:  [real(r8) (:)]  offset counter (seconds)                          
+   dayl                                =>    pepv%dayl                                   , & ! InOut:  [real(r8) (:)]  daylength (seconds)                               
+   offset_fdd                          =>    pepv%offset_fdd                             , & ! InOut:  [real(r8) (:)]  offset freezing degree days counter               
+   offset_swi                          =>    pepv%offset_swi                             , & ! InOut:  [real(r8) (:)]  offset soil water index                           
+   annavg_t2m                          =>    pepv%annavg_t2m                             , & ! InOut:  [real(r8) (:)]  annual average 2m air temperature (K)             
+   prev_leafc_to_litter                =>    pepv%prev_leafc_to_litter                   , & ! InOut:  [real(r8) (:)]  previous timestep leaf C litterfall flux (gC/m2/s)
+   prev_frootc_to_litter               =>    pepv%prev_frootc_to_litter                  , & ! InOut:  [real(r8) (:)]  previous timestep froot C litterfall flux (gC/m2/s)
+   lgsf                                =>    pepv%lgsf                                   , & ! InOut:  [real(r8) (:)]  long growing season factor [0-1]                  
+   bglfr                               =>    pepv%bglfr                                  , & ! InOut:  [real(r8) (:)]  background litterfall rate (1/s)                  
+   bgtr                                =>    pepv%bgtr                                   , & ! InOut:  [real(r8) (:)]  background transfer growth rate (1/s)             
+   leafc_xfer_to_leafc                 =>    pcf%leafc_xfer_to_leafc                     , & ! InOut:  [real(r8) (:)]                                                    
+   frootc_xfer_to_frootc               =>    pcf%frootc_xfer_to_frootc                   , & ! InOut:  [real(r8) (:)]                                                    
+   livestemc_xfer_to_livestemc         =>    pcf%livestemc_xfer_to_livestemc             , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemc_xfer_to_deadstemc         =>    pcf%deadstemc_xfer_to_deadstemc             , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootc_xfer_to_livecrootc       =>    pcf%livecrootc_xfer_to_livecrootc           , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootc_xfer_to_deadcrootc       =>    pcf%deadcrootc_xfer_to_deadcrootc           , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_xfer_to_leafn                 =>    pnf%leafn_xfer_to_leafn                     , & ! InOut:  [real(r8) (:)]                                                    
+   frootn_xfer_to_frootn               =>    pnf%frootn_xfer_to_frootn                   , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_xfer_to_livestemn         =>    pnf%livestemn_xfer_to_livestemn             , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemn_xfer_to_deadstemn         =>    pnf%deadstemn_xfer_to_deadstemn             , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_xfer_to_livecrootn       =>    pnf%livecrootn_xfer_to_livecrootn           , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootn_xfer_to_deadcrootn       =>    pnf%deadcrootn_xfer_to_deadcrootn           , & ! InOut:  [real(r8) (:)]                                                    
+   leafc_xfer                          =>    pcs%leafc_xfer                              , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   frootc_xfer                         =>    pcs%frootc_xfer                             , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
+   livestemc_xfer                      =>    pcs%livestemc_xfer                          , & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C transfer                      
+   deadstemc_xfer                      =>    pcs%deadstemc_xfer                          , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C transfer                      
+   livecrootc_xfer                     =>    pcs%livecrootc_xfer                         , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
+   deadcrootc_xfer                     =>    pcs%deadcrootc_xfer                         , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
+   leafn_xfer                          =>    pns%leafn_xfer                              , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N transfer                           
+   frootn_xfer                         =>    pns%frootn_xfer                             , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N transfer                      
+   livestemn_xfer                      =>    pns%livestemn_xfer                          , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N transfer                      
+   deadstemn_xfer                      =>    pns%deadstemn_xfer                          , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N transfer                      
+   livecrootn_xfer                     =>    pns%livecrootn_xfer                         , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N transfer               
+   deadcrootn_xfer                     =>    pns%deadcrootn_xfer                         , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer               
+   leafc_storage_to_xfer               =>    pcf%leafc_storage_to_xfer                   , & ! InOut:  [real(r8) (:)]                                                    
+   frootc_storage_to_xfer              =>    pcf%frootc_storage_to_xfer                  , & ! InOut:  [real(r8) (:)]                                                    
+   livestemc_storage_to_xfer           =>    pcf%livestemc_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemc_storage_to_xfer           =>    pcf%deadstemc_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootc_storage_to_xfer          =>    pcf%livecrootc_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootc_storage_to_xfer          =>    pcf%deadcrootc_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
+   gresp_storage_to_xfer               =>    pcf%gresp_storage_to_xfer                   , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_storage_to_xfer               =>    pnf%leafn_storage_to_xfer                   , & ! InOut:  [real(r8) (:)]                                                    
+   frootn_storage_to_xfer              =>    pnf%frootn_storage_to_xfer                  , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_storage_to_xfer           =>    pnf%livestemn_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemn_storage_to_xfer           =>    pnf%deadstemn_storage_to_xfer               , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_storage_to_xfer          =>    pnf%livecrootn_storage_to_xfer              , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootn_storage_to_xfer          =>    pnf%deadcrootn_storage_to_xfer                & ! InOut:  [real(r8) (:)]                                                    
+   )
 
    ! set time steps
    dayspyr = get_days_per_year()
@@ -1342,7 +1127,8 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 
    end do ! end of pft loop
 
-end subroutine CNStressDecidPhenology
+    end associate 
+ end subroutine CNStressDecidPhenology
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -1377,7 +1163,6 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
 ! 3/29/11: ekluzek simply logic using pftvarcon arrays
 
 !EOP
-
 ! LOCAL VARAIBLES:
       integer kyr       ! current year
       integer kmo       !         month of year  (1, ..., 12)
@@ -1393,89 +1178,50 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
       real(r8) crmcorn  ! comparitive relative maturity for corn
       real(r8) ndays_on ! number of days to fertilize
 
-! local pointers to implicit in scalars
 
-      integer , pointer :: pgridcell(:)! pft's gridcell index
-      integer , pointer :: pcolumn(:)  ! pft's column index
-      integer , pointer :: ivt(:)      ! pft
-      real(r8), pointer :: hui(:)      ! =gdd since planting (gddplant)
-      real(r8), pointer :: leafout(:)  ! =gdd from top soil layer temperature
-      real(r8), pointer :: tlai(:)     ! one-sided leaf area index, no burying by snow
-      real(r8), pointer :: gdd020(:)   ! 20 yr mean of gdd0
-      real(r8), pointer :: gdd820(:)   ! 20 yr mean of gdd8
-      real(r8), pointer :: gdd1020(:)  ! 20 yr mean of gdd10
-      real(r8), pointer :: a5tmin(:)   ! 5-day running mean of min 2-m temperature
-      real(r8), pointer :: a10tmin(:)  ! 10-day running mean of min 2-m temperature
-      real(r8), pointer :: t10(:)      ! 10-day running mean of the 2 m temperature (K)
-      real(r8), pointer :: t_ref2m_min(:)    !daily minimum of average 2 m height surface air temperature (K)
-      real(r8), pointer :: bgtr(:)           ! background transfer growth rate (1/s)
-      real(r8), pointer :: lgsf(:)           ! long growing season factor [0-1]
-      real(r8), pointer :: offset_flag(:)    ! offset flag
-      real(r8), pointer :: offset_counter(:) ! offset counter
-      real(r8), pointer :: leaf_long(:)      ! leaf longevity (yrs)
-      real(r8), pointer :: leafcn(:)         ! leaf C:N (gC/gN)
-      real(r8), pointer :: fertnitro(:)      ! max fertilizer to be applied in total (kgN/m2)
-! local pointers to implicit out scalars
-      integer , pointer :: idop(:)           ! date of planting
-      integer , pointer :: harvdate(:)       ! harvest date
-      logical , pointer :: croplive(:)       ! Flag, true if planted, not harvested
-      logical , pointer :: cropplant(:)      ! Flag, true if crop may be planted
-      real(r8), pointer :: cumvd(:)          ! cumulative vernalization d?ependence?
-      real(r8), pointer :: hdidx(:)          ! cold hardening index?
-      real(r8), pointer :: vf(:)             ! vernalization factor
-      real(r8), pointer :: gddmaturity(:)    ! gdd needed to harvest
-      real(r8), pointer :: bglfr(:)          ! background litterfall rate (1/s)
-      real(r8), pointer :: huileaf(:)        ! heat unit index needed from planting to leaf emergence
-      real(r8), pointer :: huigrain(:)       ! same to reach vegetative maturity
-      real(r8), pointer :: onset_flag(:)     ! onset flag
-      real(r8), pointer :: onset_counter(:)  ! onset counter
-      real(r8), pointer :: leafc_xfer(:)     ! (gC/m2) leaf C transfer
-      real(r8), pointer :: leafn_xfer(:)     ! (gN/m2) leaf N transfer
-      real(r8), pointer :: dwt_seedc_to_leaf(:) ! (gC/m2/s) seed source to PFT-level
-      real(r8), pointer :: dwt_seedn_to_leaf(:) ! (gN/m2/s) seed source to PFT-level
-      real(r8), pointer :: fert_counter(:)   ! >0 fertilize; <=0 not (seconds)
-      real(r8), pointer :: fert(:)           ! fertilizer applied each timestep (gN/m2/s)
 !------------------------------------------------------------------------
 
-      pgridcell      =>pft%gridcell
-      pcolumn        =>pft%column
-      ivt            =>pft%itype
-      idop           => pps%idop
-      harvdate       => pps%harvdate
-      croplive       => pps%croplive
-      cropplant      => pps%cropplant
-      gddmaturity    => pps%gddmaturity
-      huileaf        => pps%huileaf
-      huigrain       => pps%huigrain
-      hui            => pps%gddplant
-      leafout        => pps%gddtsoi
-      tlai           => pps%tlai
-      gdd020         => pps%gdd020
-      gdd820         => pps%gdd820
-      gdd1020        => pps%gdd1020
-      a5tmin         => pes%a5tmin
-      a10tmin        => pes%a10tmin
-      t10            => pes%t10
-      cumvd          => pps%cumvd
-      hdidx          => pps%hdidx
-      vf             => pps%vf
-      t_ref2m_min    => pes%t_ref2m_min
-      bglfr          => pepv%bglfr
-      bgtr           => pepv%bgtr
-      lgsf           => pepv%lgsf
-      onset_flag     => pepv%onset_flag
-      offset_flag    => pepv%offset_flag
-      onset_counter  => pepv%onset_counter
-      offset_counter => pepv%offset_counter
-      fert_counter   => pepv%fert_counter
-      leafc_xfer     => pcs%leafc_xfer
-      leafn_xfer     => pns%leafn_xfer
-      fert           => pnf%fert
-      leaf_long      => pftcon%leaf_long
-      leafcn         => pftcon%leafcn
-      fertnitro      => pftcon%fertnitro
-      dwt_seedc_to_leaf => ccf%dwt_seedc_to_leaf
-      dwt_seedn_to_leaf => cnf%dwt_seedn_to_leaf
+   associate(& 
+   pgridcell                           =>    pft%gridcell                                , & ! Input:  [integer (:)]  pft's gridcell index                               
+   pcolumn                             =>    pft%column                                  , & ! Input:  [integer (:)]  pft's column index                                 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft                                                
+   idop                                =>    pps%idop                                    , & ! Output: [integer (:)]  date of planting                                   
+   harvdate                            =>    pps%harvdate                                , & ! Output: [integer (:)]  harvest date                                       
+   croplive                            =>    pps%croplive                                , & ! Output: [logical (:)]  Flag, true if planted, not harvested               
+   cropplant                           =>    pps%cropplant                               , & ! Output: [logical (:)]  Flag, true if crop may be planted                  
+   gddmaturity                         =>    pps%gddmaturity                             , & ! Output: [real(r8) (:)]  gdd needed to harvest                             
+   huileaf                             =>    pps%huileaf                                 , & ! Output: [real(r8) (:)]  heat unit index needed from planting to leaf emergence
+   huigrain                            =>    pps%huigrain                                , & ! Output: [real(r8) (:)]  same to reach vegetative maturity                 
+   hui                                 =>    pps%gddplant                                , & ! Input:  [real(r8) (:)]  =gdd since planting (gddplant)                    
+   leafout                             =>    pps%gddtsoi                                 , & ! Input:  [real(r8) (:)]  =gdd from top soil layer temperature              
+   tlai                                =>    pps%tlai                                    , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow     
+   gdd020                              =>    pps%gdd020                                  , & ! Input:  [real(r8) (:)]  20 yr mean of gdd0                                
+   gdd820                              =>    pps%gdd820                                  , & ! Input:  [real(r8) (:)]  20 yr mean of gdd8                                
+   gdd1020                             =>    pps%gdd1020                                 , & ! Input:  [real(r8) (:)]  20 yr mean of gdd10                               
+   a5tmin                              =>    pes%a5tmin                                  , & ! Input:  [real(r8) (:)]  5-day running mean of min 2-m temperature         
+   a10tmin                             =>    pes%a10tmin                                 , & ! Input:  [real(r8) (:)]  10-day running mean of min 2-m temperature        
+   t10                                 =>    pes%t10                                     , & ! Input:  [real(r8) (:)]  10-day running mean of the 2 m temperature (K)    
+   cumvd                               =>    pps%cumvd                                   , & ! Output: [real(r8) (:)]  cumulative vernalization d?ependence?             
+   hdidx                               =>    pps%hdidx                                   , & ! Output: [real(r8) (:)]  cold hardening index?                             
+   vf                                  =>    pps%vf                                      , & ! Output: [real(r8) (:)]  vernalization factor                              
+   t_ref2m_min                         =>    pes%t_ref2m_min                             , & ! Input:  [real(r8) (:)] daily minimum of average 2 m height surface air temperature (K)
+   bglfr                               =>    pepv%bglfr                                  , & ! Output: [real(r8) (:)]  background litterfall rate (1/s)                  
+   bgtr                                =>    pepv%bgtr                                   , & ! Input:  [real(r8) (:)]  background transfer growth rate (1/s)             
+   lgsf                                =>    pepv%lgsf                                   , & ! Input:  [real(r8) (:)]  long growing season factor [0-1]                  
+   onset_flag                          =>    pepv%onset_flag                             , & ! Output: [real(r8) (:)]  onset flag                                        
+   offset_flag                         =>    pepv%offset_flag                            , & ! Input:  [real(r8) (:)]  offset flag                                       
+   onset_counter                       =>    pepv%onset_counter                          , & ! Output: [real(r8) (:)]  onset counter                                     
+   offset_counter                      =>    pepv%offset_counter                         , & ! Input:  [real(r8) (:)]  offset counter                                    
+   fert_counter                        =>    pepv%fert_counter                           , & ! Output: [real(r8) (:)]  >0 fertilize; <=0 not (seconds)                   
+   leafc_xfer                          =>    pcs%leafc_xfer                              , & ! Output: [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   leafn_xfer                          =>    pns%leafn_xfer                              , & ! Output: [real(r8) (:)]  (gN/m2) leaf N transfer                           
+   fert                                =>    pnf%fert                                    , & ! Output: [real(r8) (:)]  fertilizer applied each timestep (gN/m2/s)        
+   leaf_long                           =>    pftcon%leaf_long                            , & ! Input:  [real(r8) (:)]  leaf longevity (yrs)                              
+   leafcn                              =>    pftcon%leafcn                               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                                  
+   fertnitro                           =>    pftcon%fertnitro                            , & ! Input:  [real(r8) (:)]  max fertilizer to be applied in total (kgN/m2)    
+   dwt_seedc_to_leaf                   =>    ccf%dwt_seedc_to_leaf                       , & ! Output: [real(r8) (:)]  (gC/m2/s) seed source to PFT-level                
+   dwt_seedn_to_leaf                   =>    cnf%dwt_seedn_to_leaf                         & ! Output: [real(r8) (:)]  (gN/m2/s) seed source to PFT-level                
+   )
 ! ---------------------------------------
 
       ! get time info
@@ -1834,7 +1580,8 @@ subroutine CropPhenology(num_pcropp, filter_pcropp)
 
       end do ! prognostic crops loop
 
-end subroutine CropPhenology
+    end associate 
+ end subroutine CropPhenology
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -1865,12 +1612,12 @@ subroutine CropPhenologyInit( begp, endp )
 !EOP
 
 ! LOCAL VARAIBLES:
-   real(r8), pointer :: latdeg(:)                   ! latitude (radians)
-   integer , pointer :: pgridcell(:)                ! pft's gridcell index
    integer           :: p,g,n,i                     ! indices
 !------------------------------------------------------------------------
-   latdeg         =>  grc%latdeg
-   pgridcell      =>pft%gridcell
+   associate(& 
+   latdeg    => grc%latdeg      , & ! Output: [real(r8) (:)]  latitude (radians)                                
+   pgridcell => pft%gridcell      & ! Output: [integer (:)]  pft's gridcell index                               
+   )
 
    allocate( inhemi(begp:endp) )
 
@@ -1915,7 +1662,8 @@ subroutine CropPhenologyInit( begp, endp )
    hti   = 1._r8
    tbase = 0._r8
 
-end subroutine CropPhenologyInit
+    end associate 
+ end subroutine CropPhenologyInit
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1949,34 +1697,22 @@ end subroutine CropPhenologyInit
       real(r8) vd, vd1, vd2               ! vernalization dependence
       real(r8) tkil                       ! Freeze kill threshold
       integer  c,g                        ! indices
-! local pointers to implicit in scalars
-      integer , pointer :: pcolumn(:)     ! pft's column index
-      logical , pointer :: croplive(:)    ! Flag, true if planted, not harvested
-      real(r8), pointer :: tlai(:)        ! one-sided leaf area index, no burying by snow
-      real(r8), pointer :: t_ref2m(:)     ! 2 m height surface air temperature (K)
-      real(r8), pointer :: t_ref2m_min(:) !daily minimum of average 2 m height surface air temperature (K)
-      real(r8), pointer :: t_ref2m_max(:) !daily maximum of average 2 m height surface air temperature (K)
-      real(r8), pointer :: snow_depth(:)      ! snow height (m)
-! local pointers to implicit out scalars
-      real(r8), pointer :: vf(:)          ! vernalization factor for cereal
-      real(r8), pointer :: cumvd(:)       ! cumulative vernalization d?ependence?
-      real(r8), pointer :: gddmaturity(:) ! gdd needed to harvest
-      real(r8), pointer :: huigrain(:)    ! heat unit index needed to reach vegetative maturity
-      real(r8), pointer :: hdidx(:)       ! cold hardening index?
 !------------------------------------------------------------------------
 
-        pcolumn     =>pft%column
-        croplive    => pps%croplive
-        hdidx       => pps%hdidx
-        cumvd       => pps%cumvd
-        vf          => pps%vf
-        gddmaturity => pps%gddmaturity
-        huigrain    => pps%huigrain
-        tlai        => pps%tlai
-        t_ref2m     => pes%t_ref2m
-        t_ref2m_min => pes%t_ref2m_min
-        t_ref2m_max => pes%t_ref2m_max
-        snow_depth      => cps%snow_depth
+   associate(& 
+   pcolumn     => pft%column       , & ! Input:  [integer (:)]  pft's column index                                 
+   croplive    => pps%croplive     , & ! Input:  [logical (:)]  Flag, true if planted, not harvested               
+   hdidx       => pps%hdidx        , & ! Output: [real(r8) (:)]  cold hardening index?                             
+   cumvd       => pps%cumvd        , & ! Output: [real(r8) (:)]  cumulative vernalization d?ependence?             
+   vf          => pps%vf           , & ! Output: [real(r8) (:)]  vernalization factor for cereal                   
+   gddmaturity => pps%gddmaturity  , & ! Output: [real(r8) (:)]  gdd needed to harvest                             
+   huigrain    => pps%huigrain     , & ! Output: [real(r8) (:)]  heat unit index needed to reach vegetative maturity
+   tlai        => pps%tlai         , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow     
+   t_ref2m     => pes%t_ref2m      , & ! Input:  [real(r8) (:)]  2 m height surface air temperature (K)            
+   t_ref2m_min => pes%t_ref2m_min  , & ! Input:  [real(r8) (:)] daily minimum of average 2 m height surface air temperature (K)
+   t_ref2m_max => pes%t_ref2m_max  , & ! Input:  [real(r8) (:)] daily maximum of average 2 m height surface air temperature (K)
+   snow_depth  => cps%snow_depth     & ! Input:  [real(r8) (:)]  snow height (m)                                   
+   )
 
         c = pcolumn(p)
 
@@ -2071,7 +1807,8 @@ end subroutine CropPhenologyInit
            end if
         end if
 
-  end subroutine vernalization
+    end associate 
+   end subroutine vernalization
 
 !-----------------------------------------------------------------------
 
@@ -2100,82 +1837,44 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 ! 10/27/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: ivt(:)             ! pft vegetation type
-   real(r8), pointer :: onset_flag(:)      ! onset flag
-   real(r8), pointer :: onset_counter(:)   ! onset days counter
-   real(r8), pointer :: leafc_xfer(:)      ! (gC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)     ! (gC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)  ! (gC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)  ! (gC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:) ! (gC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:) ! (gC/m2) dead coarse root C transfer
-   real(r8), pointer :: leafn_xfer(:)      ! (gN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)     ! (gN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)  ! (gN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)  ! (gN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:) ! (gN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:) ! (gN/m2) dead coarse root N transfer
-   real(r8), pointer :: woody(:)           ! binary flag for woody lifeform (1=woody, 0=not woody)
-   real(r8), pointer :: bgtr(:)            ! background transfer growth rate (1/s)
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: leafc_xfer_to_leafc(:)
-   real(r8), pointer :: frootc_xfer_to_frootc(:)
-   real(r8), pointer :: livestemc_xfer_to_livestemc(:)
-   real(r8), pointer :: deadstemc_xfer_to_deadstemc(:)
-   real(r8), pointer :: livecrootc_xfer_to_livecrootc(:)
-   real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
-   real(r8), pointer :: leafn_xfer_to_leafn(:)
-   real(r8), pointer :: frootn_xfer_to_frootn(:)
-   real(r8), pointer :: livestemn_xfer_to_livestemn(:)
-   real(r8), pointer :: deadstemn_xfer_to_deadstemn(:)
-   real(r8), pointer :: livecrootn_xfer_to_livecrootn(:)
-   real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
    real(r8):: t1           ! temporary variable
 
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers to derived type arrays (in)
-    ivt                            =>pft%itype
-    onset_flag                     => pepv%onset_flag
-    onset_counter                  => pepv%onset_counter
-    leafc_xfer                     => pcs%leafc_xfer
-    frootc_xfer                    => pcs%frootc_xfer
-    livestemc_xfer                 => pcs%livestemc_xfer
-    deadstemc_xfer                 => pcs%deadstemc_xfer
-    livecrootc_xfer                => pcs%livecrootc_xfer
-    deadcrootc_xfer                => pcs%deadcrootc_xfer
-    leafn_xfer                     => pns%leafn_xfer
-    frootn_xfer                    => pns%frootn_xfer
-    livestemn_xfer                 => pns%livestemn_xfer
-    deadstemn_xfer                 => pns%deadstemn_xfer
-    livecrootn_xfer                => pns%livecrootn_xfer
-    deadcrootn_xfer                => pns%deadcrootn_xfer
-    bgtr                           => pepv%bgtr
-    woody                          => pftcon%woody
 
-   ! assign local pointers to derived type arrays (out)
-    leafc_xfer_to_leafc            => pcf%leafc_xfer_to_leafc
-    frootc_xfer_to_frootc          => pcf%frootc_xfer_to_frootc
-    livestemc_xfer_to_livestemc    => pcf%livestemc_xfer_to_livestemc
-    deadstemc_xfer_to_deadstemc    => pcf%deadstemc_xfer_to_deadstemc
-    livecrootc_xfer_to_livecrootc  => pcf%livecrootc_xfer_to_livecrootc
-    deadcrootc_xfer_to_deadcrootc  => pcf%deadcrootc_xfer_to_deadcrootc
-    leafn_xfer_to_leafn            => pnf%leafn_xfer_to_leafn
-    frootn_xfer_to_frootn          => pnf%frootn_xfer_to_frootn
-    livestemn_xfer_to_livestemn    => pnf%livestemn_xfer_to_livestemn
-    deadstemn_xfer_to_deadstemn    => pnf%deadstemn_xfer_to_deadstemn
-    livecrootn_xfer_to_livecrootn  => pnf%livecrootn_xfer_to_livecrootn
-    deadcrootn_xfer_to_deadcrootn  => pnf%deadcrootn_xfer_to_deadcrootn
+   associate(& 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   onset_flag                          =>    pepv%onset_flag                             , & ! Input:  [real(r8) (:)]  onset flag                                        
+   onset_counter                       =>    pepv%onset_counter                          , & ! Input:  [real(r8) (:)]  onset days counter                                
+   leafc_xfer                          =>    pcs%leafc_xfer                              , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   frootc_xfer                         =>    pcs%frootc_xfer                             , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
+   livestemc_xfer                      =>    pcs%livestemc_xfer                          , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C transfer                      
+   deadstemc_xfer                      =>    pcs%deadstemc_xfer                          , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C transfer                      
+   livecrootc_xfer                     =>    pcs%livecrootc_xfer                         , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
+   deadcrootc_xfer                     =>    pcs%deadcrootc_xfer                         , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
+   leafn_xfer                          =>    pns%leafn_xfer                              , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N transfer                           
+   frootn_xfer                         =>    pns%frootn_xfer                             , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N transfer                      
+   livestemn_xfer                      =>    pns%livestemn_xfer                          , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N transfer                      
+   deadstemn_xfer                      =>    pns%deadstemn_xfer                          , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N transfer                      
+   livecrootn_xfer                     =>    pns%livecrootn_xfer                         , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N transfer               
+   deadcrootn_xfer                     =>    pns%deadcrootn_xfer                         , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer               
+   bgtr                                =>    pepv%bgtr                                   , & ! Input:  [real(r8) (:)]  background transfer growth rate (1/s)             
+   woody                               =>    pftcon%woody                                , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+   leafc_xfer_to_leafc                 =>    pcf%leafc_xfer_to_leafc                     , & ! InOut:  [real(r8) (:)]                                                    
+   frootc_xfer_to_frootc               =>    pcf%frootc_xfer_to_frootc                   , & ! InOut:  [real(r8) (:)]                                                    
+   livestemc_xfer_to_livestemc         =>    pcf%livestemc_xfer_to_livestemc             , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemc_xfer_to_deadstemc         =>    pcf%deadstemc_xfer_to_deadstemc             , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootc_xfer_to_livecrootc       =>    pcf%livecrootc_xfer_to_livecrootc           , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootc_xfer_to_deadcrootc       =>    pcf%deadcrootc_xfer_to_deadcrootc           , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_xfer_to_leafn                 =>    pnf%leafn_xfer_to_leafn                     , & ! InOut:  [real(r8) (:)]                                                    
+   frootn_xfer_to_frootn               =>    pnf%frootn_xfer_to_frootn                   , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_xfer_to_livestemn         =>    pnf%livestemn_xfer_to_livestemn             , & ! InOut:  [real(r8) (:)]                                                    
+   deadstemn_xfer_to_deadstemn         =>    pnf%deadstemn_xfer_to_deadstemn             , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_xfer_to_livecrootn       =>    pnf%livecrootn_xfer_to_livecrootn           , & ! InOut:  [real(r8) (:)]                                                    
+   deadcrootn_xfer_to_deadcrootn       =>    pnf%deadcrootn_xfer_to_deadcrootn             & ! InOut:  [real(r8) (:)]                                                    
+   )
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2232,7 +1931,8 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 
    end do ! end pft loop
 
-end subroutine CNOnsetGrowth
+    end associate 
+ end subroutine CNOnsetGrowth
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -2261,80 +1961,42 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 ! 10/27/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: ivt(:)                   ! pft vegetation type
-   real(r8), pointer :: offset_flag(:)           ! offset flag
-   real(r8), pointer :: offset_counter(:)        ! offset days counter
-   real(r8), pointer :: leafc(:)                 ! (gC/m2) leaf C
-   real(r8), pointer :: frootc(:)                ! (gC/m2) fine root C
-   real(r8), pointer :: cpool_to_leafc(:)        ! allocation to leaf C (gC/m2/s)
-   real(r8), pointer :: cpool_to_frootc(:)       ! allocation to fine root C (gC/m2/s)
-!  integer , pointer :: pcolumn(:)               ! pft's column index
-   real(r8), pointer :: grainc(:)                ! (gC/m2) grain C
-   real(r8), pointer :: livestemc(:)             ! (gC/m2) livestem C
-   real(r8), pointer :: cpool_to_grainc(:)       ! allocation to grain C (gC/m2/s)
-   real(r8), pointer :: cpool_to_livestemc(:)    ! allocation to live stem C (gC/m2/s)
-   real(r8), pointer :: livewdcn(:)              ! live wood C:N (gC/gN)
-   real(r8), pointer :: graincn(:)               ! grain C:N (gC/gN)
-   real(r8), pointer :: leafcn(:)                ! leaf C:N (gC/gN)
-   real(r8), pointer :: lflitcn(:)               ! leaf litter C:N (gC/gN)
-   real(r8), pointer :: frootcn(:)               ! fine root C:N (gC/gN)
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: prev_leafc_to_litter(:)  ! previous timestep leaf C litterfall flux (gC/m2/s)
-   real(r8), pointer :: prev_frootc_to_litter(:) ! previous timestep froot C litterfall flux (gC/m2/s)
-   real(r8), pointer :: leafc_to_litter(:)       ! leaf C litterfall (gC/m2/s)
-   real(r8), pointer :: frootc_to_litter(:)      ! fine root C litterfall (gC/m2/s)
-   real(r8), pointer :: leafn_to_litter(:)       ! leaf N litterfall (gN/m2/s)
-   real(r8), pointer :: leafn_to_retransn(:)     ! leaf N to retranslocated N pool (gN/m2/s)
-   real(r8), pointer :: frootn_to_litter(:)      ! fine root N litterfall (gN/m2/s)
-   real(r8), pointer :: livestemc_to_litter(:)   ! live stem C litterfall (gC/m2/s)
-   real(r8), pointer :: grainc_to_food(:)        ! grain C to food (gC/m2/s)
-   real(r8), pointer :: livestemn_to_litter(:)   ! livestem N to litter (gN/m2/s)
-   real(r8), pointer :: grainn_to_food(:)        ! grain N to food (gN/m2/s)
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
    integer :: p, c         ! indices
    integer :: fp           ! lake filter pft index
    real(r8):: t1           ! temporary variable
 
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers to derived type arrays (in)
-    ivt                            =>pft%itype
-    offset_flag                    => pepv%offset_flag
-    offset_counter                 => pepv%offset_counter
-    leafc                          => pcs%leafc
-    frootc                         => pcs%frootc
-    grainc                         => pcs%grainc
-    livestemc                      => pcs%livestemc
-    cpool_to_grainc                => pcf%cpool_to_grainc
-    cpool_to_livestemc             => pcf%cpool_to_livestemc
-    cpool_to_leafc                 => pcf%cpool_to_leafc
-    cpool_to_frootc                => pcf%cpool_to_frootc
-    leafcn                         => pftcon%leafcn
-    lflitcn                        => pftcon%lflitcn
-    frootcn                        => pftcon%frootcn
-    livewdcn                       => pftcon%livewdcn
-    graincn                        => pftcon%graincn
 
-   ! assign local pointers to derived type arrays (out)
-    prev_leafc_to_litter           => pepv%prev_leafc_to_litter
-    prev_frootc_to_litter          => pepv%prev_frootc_to_litter
-    leafc_to_litter                => pcf%leafc_to_litter
-    frootc_to_litter               => pcf%frootc_to_litter
-    livestemc_to_litter            => pcf%livestemc_to_litter
-    grainc_to_food                 => pcf%grainc_to_food
-    livestemn_to_litter            => pnf%livestemn_to_litter
-    grainn_to_food                 => pnf%grainn_to_food
-    leafn_to_litter                => pnf%leafn_to_litter
-    leafn_to_retransn              => pnf%leafn_to_retransn
-    frootn_to_litter               => pnf%frootn_to_litter
+   associate(& 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   offset_flag                         =>    pepv%offset_flag                            , & ! Input:  [real(r8) (:)]  offset flag                                       
+   offset_counter                      =>    pepv%offset_counter                         , & ! Input:  [real(r8) (:)]  offset days counter                               
+   leafc                               =>    pcs%leafc                                   , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
+   frootc                              =>    pcs%frootc                                  , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C                               
+   grainc                              =>    pcs%grainc                                  , & ! Input:  [real(r8) (:)]  (gC/m2) grain C                                   
+   livestemc                           =>    pcs%livestemc                               , & ! Input:  [real(r8) (:)]  (gC/m2) livestem C                                
+   cpool_to_grainc                     =>    pcf%cpool_to_grainc                         , & ! Input:  [real(r8) (:)]  allocation to grain C (gC/m2/s)                   
+   cpool_to_livestemc                  =>    pcf%cpool_to_livestemc                      , & ! Input:  [real(r8) (:)]  allocation to live stem C (gC/m2/s)               
+   cpool_to_leafc                      =>    pcf%cpool_to_leafc                          , & ! Input:  [real(r8) (:)]  allocation to leaf C (gC/m2/s)                    
+   cpool_to_frootc                     =>    pcf%cpool_to_frootc                         , & ! Input:  [real(r8) (:)]  allocation to fine root C (gC/m2/s)               
+   leafcn                              =>    pftcon%leafcn                               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                                  
+   lflitcn                             =>    pftcon%lflitcn                              , & ! Input:  [real(r8) (:)]  leaf litter C:N (gC/gN)                           
+   frootcn                             =>    pftcon%frootcn                              , & ! Input:  [real(r8) (:)]  fine root C:N (gC/gN)                             
+   livewdcn                            =>    pftcon%livewdcn                             , & ! Input:  [real(r8) (:)]  live wood C:N (gC/gN)                             
+   graincn                             =>    pftcon%graincn                              , & ! Input:  [real(r8) (:)]  grain C:N (gC/gN)                                 
+   prev_leafc_to_litter                =>    pepv%prev_leafc_to_litter                   , & ! InOut:  [real(r8) (:)]  previous timestep leaf C litterfall flux (gC/m2/s)
+   prev_frootc_to_litter               =>    pepv%prev_frootc_to_litter                  , & ! InOut:  [real(r8) (:)]  previous timestep froot C litterfall flux (gC/m2/s)
+   leafc_to_litter                     =>    pcf%leafc_to_litter                         , & ! InOut:  [real(r8) (:)]  leaf C litterfall (gC/m2/s)                       
+   frootc_to_litter                    =>    pcf%frootc_to_litter                        , & ! InOut:  [real(r8) (:)]  fine root C litterfall (gC/m2/s)                  
+   livestemc_to_litter                 =>    pcf%livestemc_to_litter                     , & ! InOut:  [real(r8) (:)]  live stem C litterfall (gC/m2/s)                  
+   grainc_to_food                      =>    pcf%grainc_to_food                          , & ! InOut:  [real(r8) (:)]  grain C to food (gC/m2/s)                         
+   livestemn_to_litter                 =>    pnf%livestemn_to_litter                     , & ! InOut:  [real(r8) (:)]  livestem N to litter (gN/m2/s)                    
+   grainn_to_food                      =>    pnf%grainn_to_food                          , & ! InOut:  [real(r8) (:)]  grain N to food (gN/m2/s)                         
+   leafn_to_litter                     =>    pnf%leafn_to_litter                         , & ! InOut:  [real(r8) (:)]  leaf N litterfall (gN/m2/s)                       
+   leafn_to_retransn                   =>    pnf%leafn_to_retransn                       , & ! InOut:  [real(r8) (:)]  leaf N to retranslocated N pool (gN/m2/s)         
+   frootn_to_litter                    =>    pnf%frootn_to_litter                          & ! InOut:  [real(r8) (:)]  fine root N litterfall (gN/m2/s)                  
+   )
 
    ! The litterfall transfer rate starts at 0.0 and increases linearly
    ! over time, with displayed growth going to 0.0 on the last day of litterfall
@@ -2381,7 +2043,8 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 
    end do ! end pft loop
 
-end subroutine CNOffsetLitterfall
+    end associate 
+ end subroutine CNOffsetLitterfall
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -2410,50 +2073,26 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 ! 10/24/03, Peter Thornton: migrated to vector data structures
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   ! pft level
-   integer , pointer :: ivt(:)       ! pft vegetation type
-   real(r8), pointer :: bglfr(:)     ! background litterfall rate (1/s)
-   real(r8), pointer :: leafc(:)     ! (gC/m2) leaf C
-   real(r8), pointer :: frootc(:)    ! (gC/m2) fine root C
-   ! ecophysiological constants
-   real(r8), pointer :: leafcn(:)    ! leaf C:N (gC/gN)
-   real(r8), pointer :: lflitcn(:)   ! leaf litter C:N (gC/gN)
-   real(r8), pointer :: frootcn(:)   ! fine root C:N (gC/gN)
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: leafc_to_litter(:)
-   real(r8), pointer :: frootc_to_litter(:)
-   real(r8), pointer :: leafn_to_litter(:)
-   real(r8), pointer :: leafn_to_retransn(:)
-   real(r8), pointer :: frootn_to_litter(:)
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
 
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers to derived type arrays (in)
-    ivt                            =>pft%itype
-    bglfr                          => pepv%bglfr
-    leafc                          => pcs%leafc
-    frootc                         => pcs%frootc
-    leafcn                         => pftcon%leafcn
-    lflitcn                        => pftcon%lflitcn
-    frootcn                        => pftcon%frootcn
 
-   ! assign local pointers to derived type arrays (out)
-    leafc_to_litter                => pcf%leafc_to_litter
-    frootc_to_litter               => pcf%frootc_to_litter
-    leafn_to_litter                => pnf%leafn_to_litter
-    leafn_to_retransn              => pnf%leafn_to_retransn
-    frootn_to_litter               => pnf%frootn_to_litter
+   associate(& 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   bglfr                               =>    pepv%bglfr                                  , & ! Input:  [real(r8) (:)]  background litterfall rate (1/s)                  
+   leafc                               =>    pcs%leafc                                   , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
+   frootc                              =>    pcs%frootc                                  , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C                               
+   leafcn                              =>    pftcon%leafcn                               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                                  
+   lflitcn                             =>    pftcon%lflitcn                              , & ! Input:  [real(r8) (:)]  leaf litter C:N (gC/gN)                           
+   frootcn                             =>    pftcon%frootcn                              , & ! Input:  [real(r8) (:)]  fine root C:N (gC/gN)                             
+   leafc_to_litter                     =>    pcf%leafc_to_litter                         , & ! InOut:  [real(r8) (:)]                                                    
+   frootc_to_litter                    =>    pcf%frootc_to_litter                        , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_to_litter                     =>    pnf%leafn_to_litter                         , & ! InOut:  [real(r8) (:)]                                                    
+   leafn_to_retransn                   =>    pnf%leafn_to_retransn                       , & ! InOut:  [real(r8) (:)]                                                    
+   frootn_to_litter                    =>    pnf%frootn_to_litter                          & ! InOut:  [real(r8) (:)]                                                    
+   )
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2476,7 +2115,8 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 
    end do
 
-end subroutine CNBackgroundLitterfall
+    end associate 
+ end subroutine CNBackgroundLitterfall
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -2504,32 +2144,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 ! 12/5/03: created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   ! pft level
-   integer , pointer :: ivt(:)         ! pft vegetation type
-   real(r8), pointer :: livestemc(:)   ! (gC/m2) live stem C
-   real(r8), pointer :: livecrootc(:)  ! (gC/m2) live coarse root C
-   real(r8), pointer :: livestemn(:)   ! (gN/m2) live stem N
-   real(r8), pointer :: livecrootn(:)  ! (gN/m2) live coarse root N
-   ! ecophysiological constants
-   real(r8), pointer :: woody(:)       ! binary flag for woody lifeform (1=woody, 0=not woody)
-   real(r8), pointer :: livewdcn(:)    ! live wood (phloem and ray parenchyma) C:N (gC/gN)
-   real(r8), pointer :: deadwdcn(:)    ! dead wood (xylem and heartwood) C:N (gC/gN)
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: livestemc_to_deadstemc(:)
-   real(r8), pointer :: livecrootc_to_deadcrootc(:)
-   real(r8), pointer :: livestemn_to_deadstemn(:)
-   real(r8), pointer :: livestemn_to_retransn(:)
-   real(r8), pointer :: livecrootn_to_deadcrootn(:)
-   real(r8), pointer :: livecrootn_to_retransn(:)
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
    real(r8):: ctovr        ! temporary variable for carbon turnover
@@ -2537,23 +2151,23 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers to derived type arrays (in)
-    ivt                            =>pft%itype
-    livestemc                      => pcs%livestemc
-    livecrootc                     => pcs%livecrootc
-    livestemn                      => pns%livestemn
-    livecrootn                     => pns%livecrootn
-    woody                          => pftcon%woody
-    livewdcn                       => pftcon%livewdcn
-    deadwdcn                       => pftcon%deadwdcn
 
-   ! assign local pointers to derived type arrays (out)
-    livestemc_to_deadstemc         => pcf%livestemc_to_deadstemc
-    livecrootc_to_deadcrootc       => pcf%livecrootc_to_deadcrootc
-    livestemn_to_deadstemn         => pnf%livestemn_to_deadstemn
-    livestemn_to_retransn          => pnf%livestemn_to_retransn
-    livecrootn_to_deadcrootn       => pnf%livecrootn_to_deadcrootn
-    livecrootn_to_retransn         => pnf%livecrootn_to_retransn
+   associate(& 
+   ivt                                 =>    pft%itype                                   , & ! Input:  [integer (:)]  pft vegetation type                                
+   livestemc                           =>    pcs%livestemc                               , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C                               
+   livecrootc                          =>    pcs%livecrootc                              , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C                        
+   livestemn                           =>    pns%livestemn                               , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N                               
+   livecrootn                          =>    pns%livecrootn                              , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N                        
+   woody                               =>    pftcon%woody                                , & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+   livewdcn                            =>    pftcon%livewdcn                             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
+   deadwdcn                            =>    pftcon%deadwdcn                             , & ! Input:  [real(r8) (:)]  dead wood (xylem and heartwood) C:N (gC/gN)       
+   livestemc_to_deadstemc              =>    pcf%livestemc_to_deadstemc                  , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootc_to_deadcrootc            =>    pcf%livecrootc_to_deadcrootc                , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_to_deadstemn              =>    pnf%livestemn_to_deadstemn                  , & ! InOut:  [real(r8) (:)]                                                    
+   livestemn_to_retransn               =>    pnf%livestemn_to_retransn                   , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_to_deadcrootn            =>    pnf%livecrootn_to_deadcrootn                , & ! InOut:  [real(r8) (:)]                                                    
+   livecrootn_to_retransn              =>    pnf%livecrootn_to_retransn                    & ! InOut:  [real(r8) (:)]                                                    
+   )
 
    ! pft loop
    do fp = 1,num_soilp
@@ -2582,7 +2196,8 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 
    end do
 
-end subroutine CNLivewoodTurnover
+    end associate 
+ end subroutine CNLivewoodTurnover
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -2612,79 +2227,38 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 ! 9/8/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
-   integer , pointer :: ivt(:)          ! pft vegetation type
-   real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: leafc_to_litter(:)     ! leaf C litterfall (gC/m2/s)
-   real(r8), pointer :: frootc_to_litter(:)    ! fine root N litterfall (gN/m2/s)
-   real(r8), pointer :: livestemc_to_litter(:) ! live stem C litterfall (gC/m2/s)
-   real(r8), pointer :: grainc_to_food(:)      ! grain C to food (gC/m2/s)
-   real(r8), pointer :: livestemn_to_litter(:) ! livestem N to litter (gN/m2/s)
-   real(r8), pointer :: grainn_to_food(:)      ! grain N to food (gN/m2/s)
-   real(r8), pointer :: leafn_to_litter(:)     ! leaf N litterfall (gN/m2/s)
-   real(r8), pointer :: frootn_to_litter(:)    ! fine root N litterfall (gN/m2/s)
-   real(r8), pointer :: phenology_c_to_litr_met_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
-   real(r8), pointer :: phenology_c_to_litr_cel_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
-   real(r8), pointer :: phenology_c_to_litr_lig_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
-   real(r8), pointer :: phenology_n_to_litr_met_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
-   real(r8), pointer :: phenology_n_to_litr_cel_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
-   real(r8), pointer :: phenology_n_to_litr_lig_n(:,:)             ! N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
-   real(r8), pointer :: lf_flab(:)      ! leaf litter labile fraction
-   real(r8), pointer :: lf_fcel(:)      ! leaf litter cellulose fraction
-   real(r8), pointer :: lf_flig(:)      ! leaf litter lignin fraction
-   real(r8), pointer :: fr_flab(:)      ! fine root litter labile fraction
-   real(r8), pointer :: fr_fcel(:)      ! fine root litter cellulose fraction
-   real(r8), pointer :: fr_flig(:)      ! fine root litter lignin fraction
-   integer , pointer :: npfts(:)        ! number of pfts for each column
-   integer , pointer :: pfti(:)         ! beginning pft index for each column
-!
-! local pointers to implicit in/out scalars
-!
-
-   real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
-   real(r8), pointer :: froot_prof(:,:)         ! (1/m) profile of fine roots
-
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
     integer :: fc,c,pi,p,j       ! indices
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers to derived type arrays (in)
-    pactive                        => pft%active
-    ivt                            =>pft%itype
-    wtcol                          =>pft%wtcol
-    leafc_to_litter                => pcf%leafc_to_litter
-    frootc_to_litter               => pcf%frootc_to_litter
-    livestemc_to_litter            => pcf%livestemc_to_litter
-    grainc_to_food                 => pcf%grainc_to_food
-    livestemn_to_litter            => pnf%livestemn_to_litter
-    grainn_to_food                 => pnf%grainn_to_food
-    leafn_to_litter                => pnf%leafn_to_litter
-    frootn_to_litter               => pnf%frootn_to_litter
-    npfts                          =>col%npfts
-    pfti                           =>col%pfti
-    phenology_c_to_litr_met_c      => ccf%phenology_c_to_litr_met_c
-    phenology_c_to_litr_cel_c      => ccf%phenology_c_to_litr_cel_c
-    phenology_c_to_litr_lig_c      => ccf%phenology_c_to_litr_lig_c
-    phenology_n_to_litr_met_n      => cnf%phenology_n_to_litr_met_n
-    phenology_n_to_litr_cel_n      => cnf%phenology_n_to_litr_cel_n
-    phenology_n_to_litr_lig_n      => cnf%phenology_n_to_litr_lig_n
-    lf_flab                        => pftcon%lf_flab
-    lf_fcel                        => pftcon%lf_fcel
-    lf_flig                        => pftcon%lf_flig
-    fr_flab                        => pftcon%fr_flab
-    fr_fcel                        => pftcon%fr_fcel
-    fr_flig                        => pftcon%fr_flig
-
-   ! assign local pointers to derived type arrays (out)
-
-    leaf_prof                      => pps%leaf_prof
-    froot_prof                     => pps%froot_prof
+   associate(& 
+   pactive                             =>    pft%active                      , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   ivt                                 =>    pft%itype                       , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                               =>    pft%wtcol                       , & ! Input:  [real(r8) (:)]  weight (relative to column) for this pft (0-1)    
+   leafc_to_litter                     =>    pcf%leafc_to_litter             , & ! Input:  [real(r8) (:)]  leaf C litterfall (gC/m2/s)                       
+   frootc_to_litter                    =>    pcf%frootc_to_litter            , & ! Input:  [real(r8) (:)]  fine root N litterfall (gN/m2/s)                  
+   livestemc_to_litter                 =>    pcf%livestemc_to_litter         , & ! Input:  [real(r8) (:)]  live stem C litterfall (gC/m2/s)                  
+   grainc_to_food                      =>    pcf%grainc_to_food              , & ! Input:  [real(r8) (:)]  grain C to food (gC/m2/s)                         
+   livestemn_to_litter                 =>    pnf%livestemn_to_litter         , & ! Input:  [real(r8) (:)]  livestem N to litter (gN/m2/s)                    
+   grainn_to_food                      =>    pnf%grainn_to_food              , & ! Input:  [real(r8) (:)]  grain N to food (gN/m2/s)                         
+   leafn_to_litter                     =>    pnf%leafn_to_litter             , & ! Input:  [real(r8) (:)]  leaf N litterfall (gN/m2/s)                       
+   frootn_to_litter                    =>    pnf%frootn_to_litter            , & ! Input:  [real(r8) (:)]  fine root N litterfall (gN/m2/s)                  
+   npfts                               =>    col%npfts                       , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                                =>    col%pfti                        , & ! Input:  [integer (:)]  beginning pft index for each column                
+   phenology_c_to_litr_met_c           =>    ccf%phenology_c_to_litr_met_c   , & ! Input:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
+   phenology_c_to_litr_cel_c           =>    ccf%phenology_c_to_litr_cel_c   , & ! Input:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
+   phenology_c_to_litr_lig_c           =>    ccf%phenology_c_to_litr_lig_c   , & ! Input:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+   phenology_n_to_litr_met_n           =>    cnf%phenology_n_to_litr_met_n   , & ! Input:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
+   phenology_n_to_litr_cel_n           =>    cnf%phenology_n_to_litr_cel_n   , & ! Input:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
+   phenology_n_to_litr_lig_n           =>    cnf%phenology_n_to_litr_lig_n   , & ! Input:  [real(r8) (:,:)]  N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
+   lf_flab                             =>    pftcon%lf_flab                  , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
+   lf_fcel                             =>    pftcon%lf_fcel                  , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
+   lf_flig                             =>    pftcon%lf_flig                  , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
+   fr_flab                             =>    pftcon%fr_flab                  , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
+   fr_fcel                             =>    pftcon%fr_fcel                  , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
+   fr_flig                             =>    pftcon%fr_flig                  , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
+   leaf_prof                           =>    pps%leaf_prof                   , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof                          =>    pps%froot_prof                    & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   )
     
     do j = 1, nlevdecomp
        do pi = 1,max_pft_per_col
@@ -2775,7 +2349,8 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
        end do
     end do
 
-end subroutine CNLitterToColumn
+    end associate 
+ end subroutine CNLitterToColumn
 !-----------------------------------------------------------------------
 #endif
 

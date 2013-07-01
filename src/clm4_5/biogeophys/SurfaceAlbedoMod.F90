@@ -103,87 +103,6 @@ contains
 !  ground albedo is calculated
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    logical , pointer :: pactive(:)   ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: pgridcell(:) ! gridcell of corresponding pft
-    integer , pointer :: plandunit(:) ! index into landunit level quantities
-    integer , pointer :: itypelun(:)  ! landunit type
-    integer , pointer :: pcolumn(:)   ! column of corresponding pft
-    integer , pointer :: cgridcell(:) ! gridcell of corresponding column
-    real(r8), pointer :: lat(:)       ! gridcell latitude (radians)
-    real(r8), pointer :: lon(:)       ! gridcell longitude (radians)
-    real(r8), pointer :: tlai(:)      ! one-sided leaf area index, no burying by snow
-    real(r8), pointer :: tsai(:)      ! one-sided stem area index, no burying by snow
-    real(r8), pointer :: elai(:)      ! one-sided leaf area index with burying by snow
-    real(r8), pointer :: esai(:)      ! one-sided stem area index with burying by snow
-    real(r8), pointer :: h2osno(:)    ! snow water (mm H2O)
-    real(r8), pointer :: rhol(:,:)    ! leaf reflectance: 1=vis, 2=nir
-    real(r8), pointer :: rhos(:,:)    ! stem reflectance: 1=vis, 2=nir
-    real(r8), pointer :: taul(:,:)    ! leaf transmittance: 1=vis, 2=nir
-    real(r8), pointer :: taus(:,:)    ! stem transmittance: 1=vis, 2=nir
-    integer , pointer :: ivt(:)       ! pft vegetation type
-!
-! local pointers toimplicit out arguments
-!
-    real(r8), pointer :: coszen(:)	    ! cosine of solar zenith angle
-    real(r8), pointer :: albgrd(:,:)        ! ground albedo (direct)
-    real(r8), pointer :: albgri(:,:)        ! ground albedo (diffuse)
-    real(r8), pointer :: albd(:,:)          ! surface albedo (direct)
-    real(r8), pointer :: albi(:,:)          ! surface albedo (diffuse)
-    real(r8), pointer :: fabd(:,:)          ! flux absorbed by canopy per unit direct flux
-    real(r8), pointer :: fabd_sun(:,:)      ! flux absorbed by sunlit canopy per unit direct flux
-    real(r8), pointer :: fabd_sha(:,:)      ! flux absorbed by shaded canopy per unit direct flux
-    real(r8), pointer :: fabi(:,:)          ! flux absorbed by canopy per unit diffuse flux
-    real(r8), pointer :: fabi_sun(:,:)      ! flux absorbed by sunlit canopy per unit diffuse flux
-    real(r8), pointer :: fabi_sha(:,:)      ! flux absorbed by shaded canopy per unit diffuse flux
-    real(r8), pointer :: ftdd(:,:)          ! down direct flux below canopy per unit direct flux
-    real(r8), pointer :: ftid(:,:)          ! down diffuse flux below canopy per unit direct flux
-    real(r8), pointer :: ftii(:,:)          ! down diffuse flux below canopy per unit diffuse flux
-    real(r8), pointer :: vcmaxcintsun(:)    ! leaf to canopy scaling coefficient, sunlit leaf vcmax
-    real(r8), pointer :: vcmaxcintsha(:)    ! leaf to canopy scaling coefficient, shaded leaf vcmax
-    integer , pointer :: ncan(:)            ! number of canopy layers
-    integer , pointer :: nrad(:)            ! number of canopy layers, above snow for radiative transfer
-    real(r8), pointer :: fabd_sun_z(:,:)    ! absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fabd_sha_z(:,:)    ! absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fabi_sun_z(:,:)    ! absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fabi_sha_z(:,:)    ! absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fsun_z(:,:)        ! sunlit fraction of canopy layer
-    real(r8), pointer :: tlai_z(:,:)        ! tlai increment for canopy layer
-    real(r8), pointer :: tsai_z(:,:)        ! tsai increment for canopy layer
-    real(r8), pointer :: decl(:)            ! solar declination angle (radians)
-    real(r8), pointer :: frac_sno(:)        ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water content (col,lyr) [kg/m2]
-    real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens content (col,lyr) [kg/m2]
-    real(r8), pointer :: mss_cnc_bcphi(:,:) ! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_bcpho(:,:) ! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_ocphi(:,:) ! mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_ocpho(:,:) ! mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_dst1(:,:)  ! mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_dst2(:,:)  ! mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_dst3(:,:)  ! mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-    real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
-    real(r8), pointer :: albsod(:,:)        ! direct-beam soil albedo (col,bnd) [frc]
-    real(r8), pointer :: albsoi(:,:)        ! diffuse soil albedo (col,bnd) [frc]
-    real(r8), pointer :: flx_absdv(:,:)     ! direct flux absorption factor (col,lyr): VIS [frc]
-    real(r8), pointer :: flx_absdn(:,:)     ! direct flux absorption factor (col,lyr): NIR [frc]
-    real(r8), pointer :: flx_absiv(:,:)     ! diffuse flux absorption factor (col,lyr): VIS [frc]
-    real(r8), pointer :: flx_absin(:,:)     ! diffuse flux absorption factor (col,lyr): NIR [frc]
-    real(r8), pointer :: snw_rds(:,:)       ! snow grain radius (col,lyr) [microns]
-    real(r8), pointer :: albgrd_pur(:,:)    ! pure snow ground albedo (direct)
-    real(r8), pointer :: albgri_pur(:,:)    ! pure snow ground albedo (diffuse)
-    real(r8), pointer :: albgrd_bc(:,:)     ! ground albedo without BC (direct)
-    real(r8), pointer :: albgri_bc(:,:)     ! ground albedo without BC (diffuse)
-    real(r8), pointer :: albgrd_oc(:,:)     ! ground albedo without OC (direct)
-    real(r8), pointer :: albgri_oc(:,:)     ! ground albedo without OC (diffuse)
-    real(r8), pointer :: albgrd_dst(:,:)    ! ground albedo without dust (direct)
-    real(r8), pointer :: albgri_dst(:,:)    ! ground albedo without dust (diffuse)
-    real(r8), pointer :: albsnd_hst(:,:)    ! snow albedo, direct, for history files (col,bnd) [frc]
-    real(r8), pointer :: albsni_hst(:,:)    ! snow ground albedo, diffuse, for history files (col,bnd) [frc]
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
     real(r8), parameter :: mpe = 1.e-06_r8 ! prevents overflow for division by zero
@@ -237,89 +156,87 @@ contains
     real(r8) :: mss_cnc_aer_in_fdb(lbc:ubc,-nlevsno+1:0,sno_nbr_aer)     ! mass concentration of all aerosol species for feedback calculation (col,lyr,aer) [kg kg-1]
   !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    lat =>  grc%lat
-    lon =>  grc%lon
+   associate(& 
+   lat                       =>     grc%lat                , & ! Input:  [real(r8) (:)]  gridcell latitude (radians)             
+   lon                       =>     grc%lon                , & ! Input:  [real(r8) (:)]  gridcell longitude (radians)            
 
-    ! Assign local pointers to derived subtypes components (landunit level)
 
-    itypelun       => lun%itype
+   itypelun                  =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
 
-    ! Assign local pointers to derived subtypes components (column-level)
 
-    cgridcell      =>col%gridcell
-    h2osno         => cws%h2osno
-    albgrd         => cps%albgrd
-    albgri         => cps%albgri
-    decl           => cps%decl 
-    coszen         => cps%coszen 
-    albsod         => cps%albsod
-    albsoi         => cps%albsoi
-    frac_sno       => cps%frac_sno
-    flx_absdv      => cps%flx_absdv
-    flx_absdn      => cps%flx_absdn
-    flx_absiv      => cps%flx_absiv
-    flx_absin      => cps%flx_absin
-    h2osoi_liq     => cws%h2osoi_liq
-    h2osoi_ice     => cws%h2osoi_ice
-    snw_rds        => cps%snw_rds
-    albgrd_pur     => cps%albgrd_pur
-    albgri_pur     => cps%albgri_pur
-    albgrd_bc      => cps%albgrd_bc
-    albgri_bc      => cps%albgri_bc
-    albgrd_oc      => cps%albgrd_oc
-    albgri_oc      => cps%albgri_oc
-    albgrd_dst     => cps%albgrd_dst
-    albgri_dst     => cps%albgri_dst
-    mss_cnc_bcphi  => cps%mss_cnc_bcphi
-    mss_cnc_bcpho  => cps%mss_cnc_bcpho
-    mss_cnc_ocphi  => cps%mss_cnc_ocphi
-    mss_cnc_ocpho  => cps%mss_cnc_ocpho
-    mss_cnc_dst1   => cps%mss_cnc_dst1
-    mss_cnc_dst2   => cps%mss_cnc_dst2
-    mss_cnc_dst3   => cps%mss_cnc_dst3
-    mss_cnc_dst4   => cps%mss_cnc_dst4
-    albsnd_hst     => cps%albsnd_hst
-    albsni_hst     => cps%albsni_hst
+   cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)]  gridcell of corresponding column         
+   h2osno                    =>    cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct)                
+   albgri                    =>    cps%albgri              , & ! Input:  [real(r8) (:,:)]  ground albedo (diffuse)               
+   decl                      =>    cps%decl                , & ! Input:  [real(r8) (:)]  solar declination angle (radians)       
+   coszen                    =>    cps%coszen              , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
+   albsod                    =>    cps%albsod              , & ! Input:  [real(r8) (:,:)]  direct-beam soil albedo (col,bnd) [frc]
+   albsoi                    =>    cps%albsoi              , & ! Input:  [real(r8) (:,:)]  diffuse soil albedo (col,bnd) [frc]   
+   frac_sno                  =>    cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   flx_absdv                 =>    cps%flx_absdv           , & ! Input:  [real(r8) (:,:)]  direct flux absorption factor (col,lyr): VIS [frc]
+   flx_absdn                 =>    cps%flx_absdn           , & ! Input:  [real(r8) (:,:)]  direct flux absorption factor (col,lyr): NIR [frc]
+   flx_absiv                 =>    cps%flx_absiv           , & ! Input:  [real(r8) (:,:)]  diffuse flux absorption factor (col,lyr): VIS [frc]
+   flx_absin                 =>    cps%flx_absin           , & ! Input:  [real(r8) (:,:)]  diffuse flux absorption factor (col,lyr): NIR [frc]
+   h2osoi_liq                =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water content (col,lyr) [kg/m2]
+   h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens content (col,lyr) [kg/m2]    
+   snw_rds                   =>    cps%snw_rds             , & ! Input:  [real(r8) (:,:)]  snow grain radius (col,lyr) [microns] 
+   albgrd_pur                =>    cps%albgrd_pur          , & ! Input:  [real(r8) (:,:)]  pure snow ground albedo (direct)      
+   albgri_pur                =>    cps%albgri_pur          , & ! Input:  [real(r8) (:,:)]  pure snow ground albedo (diffuse)     
+   albgrd_bc                 =>    cps%albgrd_bc           , & ! Input:  [real(r8) (:,:)]  ground albedo without BC (direct)     
+   albgri_bc                 =>    cps%albgri_bc           , & ! Input:  [real(r8) (:,:)]  ground albedo without BC (diffuse)    
+   albgrd_oc                 =>    cps%albgrd_oc           , & ! Input:  [real(r8) (:,:)]  ground albedo without OC (direct)     
+   albgri_oc                 =>    cps%albgri_oc           , & ! Input:  [real(r8) (:,:)]  ground albedo without OC (diffuse)    
+   albgrd_dst                =>    cps%albgrd_dst          , & ! Input:  [real(r8) (:,:)]  ground albedo without dust (direct)   
+   albgri_dst                =>    cps%albgri_dst          , & ! Input:  [real(r8) (:,:)]  ground albedo without dust (diffuse)  
+   mss_cnc_bcphi             =>    cps%mss_cnc_bcphi       , & ! Input:  [real(r8) (:,:)]  mass concentration of hydrophilic BC (col,lyr) [kg/kg]
+   mss_cnc_bcpho             =>    cps%mss_cnc_bcpho       , & ! Input:  [real(r8) (:,:)]  mass concentration of hydrophobic BC (col,lyr) [kg/kg]
+   mss_cnc_ocphi             =>    cps%mss_cnc_ocphi       , & ! Input:  [real(r8) (:,:)]  mass concentration of hydrophilic OC (col,lyr) [kg/kg]
+   mss_cnc_ocpho             =>    cps%mss_cnc_ocpho       , & ! Input:  [real(r8) (:,:)]  mass concentration of hydrophobic OC (col,lyr) [kg/kg]
+   mss_cnc_dst1              =>    cps%mss_cnc_dst1        , & ! Input:  [real(r8) (:,:)]  mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
+   mss_cnc_dst2              =>    cps%mss_cnc_dst2        , & ! Input:  [real(r8) (:,:)]  mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
+   mss_cnc_dst3              =>    cps%mss_cnc_dst3        , & ! Input:  [real(r8) (:,:)]  mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
+   mss_cnc_dst4              =>    cps%mss_cnc_dst4        , & ! Input:  [real(r8) (:,:)]  mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+   albsnd_hst                =>    cps%albsnd_hst          , & ! Input:  [real(r8) (:,:)]  snow albedo, direct, for history files (col,bnd) [frc]
+   albsni_hst                =>    cps%albsni_hst          , & ! Input:  [real(r8) (:,:)]  snow ground albedo, diffuse, for history files (col,bnd) [frc]
 
-    ! Assign local pointers to derived subtypes components (pft-level)
 
-    pactive   => pft%active
-    plandunit =>pft%landunit
-    pgridcell =>pft%gridcell
-    pcolumn   =>pft%column
-    albd      => pps%albd
-    albi      => pps%albi
-    fabd      => pps%fabd
-    fabd_sun  => pps%fabd_sun
-    fabd_sha  => pps%fabd_sha
-    fabi      => pps%fabi
-    fabi_sun  => pps%fabi_sun
-    fabi_sha  => pps%fabi_sha
-    ftdd      => pps%ftdd
-    ftid      => pps%ftid
-    ftii      => pps%ftii
-    vcmaxcintsun => pps%vcmaxcintsun
-    vcmaxcintsha => pps%vcmaxcintsha
-    ncan      => pps%ncan
-    nrad      => pps%nrad
-    fabd_sun_z  => pps%fabd_sun_z
-    fabd_sha_z  => pps%fabd_sha_z
-    fabi_sun_z  => pps%fabi_sun_z
-    fabi_sha_z  => pps%fabi_sha_z
-    fsun_z      => pps%fsun_z
-    tlai_z    => pps%tlai_z
-    tsai_z    => pps%tsai_z
-    tlai      => pps%tlai
-    tsai      => pps%tsai
-    elai      => pps%elai
-    esai      => pps%esai
-    ivt       =>pft%itype
-    rhol      => pftcon%rhol
-    rhos      => pftcon%rhos
-    taul      => pftcon%taul
-    taus      => pftcon%taus
+   pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   plandunit                 =>   pft%landunit             , & ! Input:  [integer (:)]  index into landunit level quantities     
+   pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  gridcell of corresponding pft            
+   pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  column of corresponding pft              
+   albd                      =>    pps%albd                , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)               
+   albi                      =>    pps%albi                , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)              
+   fabd                      =>    pps%fabd                , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
+   fabd_sun                  =>    pps%fabd_sun            , & ! Input:  [real(r8) (:,:)]  flux absorbed by sunlit canopy per unit direct flux
+   fabd_sha                  =>    pps%fabd_sha            , & ! Input:  [real(r8) (:,:)]  flux absorbed by shaded canopy per unit direct flux
+   fabi                      =>    pps%fabi                , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit diffuse flux
+   fabi_sun                  =>    pps%fabi_sun            , & ! Input:  [real(r8) (:,:)]  flux absorbed by sunlit canopy per unit diffuse flux
+   fabi_sha                  =>    pps%fabi_sha            , & ! Input:  [real(r8) (:,:)]  flux absorbed by shaded canopy per unit diffuse flux
+   ftdd                      =>    pps%ftdd                , & ! Input:  [real(r8) (:,:)]  down direct flux below canopy per unit direct flux
+   ftid                      =>    pps%ftid                , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flux
+   ftii                      =>    pps%ftii                , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flux
+   vcmaxcintsun              =>    pps%vcmaxcintsun        , & ! Input:  [real(r8) (:)]  leaf to canopy scaling coefficient, sunlit leaf vcmax
+   vcmaxcintsha              =>    pps%vcmaxcintsha        , & ! Input:  [real(r8) (:)]  leaf to canopy scaling coefficient, shaded leaf vcmax
+   ncan                      =>    pps%ncan                , & ! Input:  [integer (:)]  number of canopy layers                  
+   nrad                      =>    pps%nrad                , & ! Input:  [integer (:)]  number of canopy layers, above snow for radiative transfer
+   fabd_sun_z                =>    pps%fabd_sun_z          , & ! Input:  [real(r8) (:,:)]  absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
+   fabd_sha_z                =>    pps%fabd_sha_z          , & ! Input:  [real(r8) (:,:)]  absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
+   fabi_sun_z                =>    pps%fabi_sun_z          , & ! Input:  [real(r8) (:,:)]  absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
+   fabi_sha_z                =>    pps%fabi_sha_z          , & ! Input:  [real(r8) (:,:)]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
+   fsun_z                    =>    pps%fsun_z              , & ! Input:  [real(r8) (:,:)]  sunlit fraction of canopy layer       
+   tlai_z                    =>    pps%tlai_z              , & ! Input:  [real(r8) (:,:)]  tlai increment for canopy layer       
+   tsai_z                    =>    pps%tsai_z              , & ! Input:  [real(r8) (:,:)]  tsai increment for canopy layer       
+   tlai                      =>    pps%tlai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow
+   tsai                      =>    pps%tsai                , & ! Input:  [real(r8) (:)]  one-sided stem area index, no burying by snow
+   elai                      =>    pps%elai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
+   esai                      =>    pps%esai                , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
+   ivt                       =>   pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                      
+   rhol                      =>    pftcon%rhol             , & ! Input:  [real(r8) (:,:)]  leaf reflectance: 1=vis, 2=nir        
+   rhos                      =>    pftcon%rhos             , & ! Input:  [real(r8) (:,:)]  stem reflectance: 1=vis, 2=nir        
+   taul                      =>    pftcon%taul             , & ! Input:  [real(r8) (:,:)]  leaf transmittance: 1=vis, 2=nir      
+   taus                      =>    pftcon%taus               & ! Input:  [real(r8) (:,:)]  stem transmittance: 1=vis, 2=nir      
+   )
     
     ! Cosine solar zenith angle for next time step
 
@@ -852,7 +769,8 @@ contains
        end do
     end do
 
-  end subroutine SurfaceAlbedo
+    end associate 
+   end subroutine SurfaceAlbedo
 
 
 !-----------------------------------------------------------------------
@@ -893,27 +811,6 @@ contains
 ! 03/28/08, Mark Flanner: changes for SNICAR
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to original implicit in arguments
-!
-    integer , pointer :: clandunit(:)    ! landunit of corresponding column
-    integer , pointer :: ltype(:)        ! landunit type
-    integer , pointer :: isoicol(:)      ! soil color class
-    real(r8), pointer :: t_grnd(:)       ! ground temperature (Kelvin)
-    real(r8), pointer :: h2osoi_vol(:,:) ! volumetric soil water [m3/m3]
-    real(r8), pointer :: lake_icefrac(:,:)  ! mass fraction of lake layer that is frozen
-    integer , pointer :: snl(:)             ! number of snow layers
-!
-! local pointers to original implicit out arguments
-!
-    real(r8), pointer:: albgrd(:,:)      ! ground albedo (direct)
-    real(r8), pointer:: albgri(:,:)      ! ground albedo (diffuse)
-    ! albsod and albsoi are now clm_type variables so they can be used by SNICAR.
-    real(r8), pointer :: albsod(:,:)        ! soil albedo (direct)
-    real(r8), pointer :: albsoi(:,:)        ! soil albedo (diffuse)
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
     integer, parameter :: nband =numrad ! number of solar radiation waveband classes
@@ -928,22 +825,20 @@ contains
     real(r8) :: sicefr        ! Lake surface ice fraction (based on D. Mironov 2010)
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (column-level)
 
-    clandunit  =>col%landunit
-    isoicol    => cps%isoicol
-    t_grnd     => ces%t_grnd
-    h2osoi_vol => cws%h2osoi_vol
-    albgrd     => cps%albgrd
-    albgri     => cps%albgri
-    albsod     => cps%albsod
-    albsoi     => cps%albsoi
-    snl        => cps%snl
-    lake_icefrac => cws%lake_icefrac
-
-    ! Assign local pointers to derived subtypes components (landunit-level)
-
-    ltype      => lun%itype
+   associate(& 
+   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit of corresponding column         
+   isoicol                   =>    cps%isoicol             , & ! Input:  [integer (:)]  soil color class                         
+   t_grnd                    =>    ces%t_grnd              , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)             
+   h2osoi_vol                =>    cws%h2osoi_vol          , & ! Input:  [real(r8) (:,:)]  volumetric soil water [m3/m3]         
+   albgrd                    =>    cps%albgrd              , & ! Output: [real(r8) (:,:)]  ground albedo (direct)                
+   albgri                    =>    cps%albgri              , & ! Output: [real(r8) (:,:)]  ground albedo (diffuse)               
+   albsod                    =>    cps%albsod              , & ! Output: [real(r8) (:,:)]  soil albedo (direct)                  
+   albsoi                    =>    cps%albsoi              , & ! Output: [real(r8) (:,:)]  soil albedo (diffuse)                 
+   snl                       =>    cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
+   lake_icefrac              =>    cws%lake_icefrac        , & ! Input:  [real(r8) (:,:)]  mass fraction of lake layer that is frozen
+   ltype                     =>    lun%itype                 & ! Input:  [integer (:)]  landunit type                            
+   )
 
     ! Compute soil albedos
 
@@ -1015,7 +910,8 @@ contains
        end do
     end do
 
-  end subroutine SoilAlbedo
+    end associate 
+   end subroutine SoilAlbedo
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1062,41 +958,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in scalars
 !
-    integer , pointer :: pcolumn(:)    ! column of corresponding pft
-    real(r8), pointer :: albgrd(:,:)   ! ground albedo (direct) (column-level)
-    real(r8), pointer :: albgri(:,:)   ! ground albedo (diffuse)(column-level)
-    real(r8), pointer :: t_veg(:)      ! vegetation temperature (Kelvin)
-    real(r8), pointer :: fwet(:)       ! fraction of canopy that is wet (0 to 1)
-    integer , pointer :: ivt(:)        ! pft vegetation type
-    real(r8), pointer :: xl(:)         ! ecophys const - leaf/stem orientation index
-    real(r8), pointer :: elai(:)       ! one-sided leaf area index with burying by snow
-    real(r8), pointer :: esai(:)       ! one-sided stem area index with burying by snow
-    integer , pointer :: nrad(:)       ! number of canopy layers, above snow for radiative transfer
-    real(r8), pointer :: tlai_z(:,:)   ! tlai increment for canopy layer
-    real(r8), pointer :: tsai_z(:,:)   ! tsai increment for canopy layer
 !
-! local pointers to implicit out scalars
 !
-    real(r8), pointer :: albd(:,:)     ! surface albedo (direct)
-    real(r8), pointer :: albi(:,:)     ! surface albedo (diffuse)
-    real(r8), pointer :: fabd(:,:)     ! flux absorbed by canopy per unit direct flux
-    real(r8), pointer :: fabd_sun(:,:) ! flux absorbed by sunlit canopy per unit direct flux
-    real(r8), pointer :: fabd_sha(:,:) ! flux absorbed by shaded canopy per unit direct flux
-    real(r8), pointer :: fabi(:,:)     ! flux absorbed by canopy per unit diffuse flux
-    real(r8), pointer :: fabi_sun(:,:) ! flux absorbed by sunlit canopy per unit diffuse flux
-    real(r8), pointer :: fabi_sha(:,:) ! flux absorbed by shaded canopy per unit diffuse flux
-    real(r8), pointer :: ftdd(:,:)     ! down direct flux below canopy per unit direct flx
-    real(r8), pointer :: ftid(:,:)     ! down diffuse flux below canopy per unit direct flx
-    real(r8), pointer :: ftii(:,:)     ! down diffuse flux below canopy per unit diffuse flx
-    real(r8), pointer :: fabd_sun_z(:,:)! absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fabd_sha_z(:,:)! absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fabi_sun_z(:,:)! absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fabi_sha_z(:,:)! absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
-    real(r8), pointer :: fsun_z(:,:)    ! sunlit fraction of canopy layer
-    real(r8), pointer :: vcmaxcintsun(:) ! leaf to canopy scaling coefficient, sunlit leaf vcmax
-    real(r8), pointer :: vcmaxcintsha(:) ! leaf to canopy scaling coefficient, shaded leaf vcmax
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -1135,41 +999,41 @@ contains
     real(r8) :: extkn                                             ! nitrogen allocation coefficient
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (column-level)
 
-    albgrd  => cps%albgrd
-    albgri  => cps%albgri
+   associate(& 
+   albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct) (column-level) 
+   albgri                    =>    cps%albgri              , & ! Input:  [real(r8) (:,:)]  ground albedo (diffuse)(column-level) 
 
-    ! Assign local pointers to derived subtypes components (pft-level)
 
-    pcolumn  =>pft%column
-    fwet     => pps%fwet
-    t_veg    => pes%t_veg
-    ivt      =>pft%itype
-    elai     => pps%elai
-    esai     => pps%esai
-    albd     => pps%albd
-    albi     => pps%albi
-    fabd     => pps%fabd
-    fabd_sun => pps%fabd_sun
-    fabd_sha => pps%fabd_sha
-    fabi     => pps%fabi
-    fabi_sun => pps%fabi_sun
-    fabi_sha => pps%fabi_sha
-    ftdd     => pps%ftdd
-    ftid     => pps%ftid
-    ftii     => pps%ftii
-    xl       => pftcon%xl
-    nrad     => pps%nrad
-    fabd_sun_z  => pps%fabd_sun_z
-    fabd_sha_z  => pps%fabd_sha_z
-    fabi_sun_z  => pps%fabi_sun_z
-    fabi_sha_z  => pps%fabi_sha_z
-    fsun_z      => pps%fsun_z
-    tlai_z   => pps%tlai_z
-    tsai_z   => pps%tsai_z
-    vcmaxcintsun => pps%vcmaxcintsun
-    vcmaxcintsha => pps%vcmaxcintsha
+   pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  column of corresponding pft              
+   fwet                      =>    pps%fwet                , & ! Input:  [real(r8) (:)]  fraction of canopy that is wet (0 to 1) 
+   t_veg                     =>    pes%t_veg               , & ! Input:  [real(r8) (:)]  vegetation temperature (Kelvin)         
+   ivt                       =>   pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                      
+   elai                      =>    pps%elai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
+   esai                      =>    pps%esai                , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
+   albd                      =>    pps%albd                , & ! Output: [real(r8) (:,:)]  surface albedo (direct)               
+   albi                      =>    pps%albi                , & ! Output: [real(r8) (:,:)]  surface albedo (diffuse)              
+   fabd                      =>    pps%fabd                , & ! Output: [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
+   fabd_sun                  =>    pps%fabd_sun            , & ! Output: [real(r8) (:,:)]  flux absorbed by sunlit canopy per unit direct flux
+   fabd_sha                  =>    pps%fabd_sha            , & ! Output: [real(r8) (:,:)]  flux absorbed by shaded canopy per unit direct flux
+   fabi                      =>    pps%fabi                , & ! Output: [real(r8) (:,:)]  flux absorbed by canopy per unit diffuse flux
+   fabi_sun                  =>    pps%fabi_sun            , & ! Output: [real(r8) (:,:)]  flux absorbed by sunlit canopy per unit diffuse flux
+   fabi_sha                  =>    pps%fabi_sha            , & ! Output: [real(r8) (:,:)]  flux absorbed by shaded canopy per unit diffuse flux
+   ftdd                      =>    pps%ftdd                , & ! Output: [real(r8) (:,:)]  down direct flux below canopy per unit direct flx
+   ftid                      =>    pps%ftid                , & ! Output: [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flx
+   ftii                      =>    pps%ftii                , & ! Output: [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flx
+   xl                        =>    pftcon%xl               , & ! Input:  [real(r8) (:)]  ecophys const - leaf/stem orientation index
+   nrad                      =>    pps%nrad                , & ! Input:  [integer (:)]  number of canopy layers, above snow for radiative transfer
+   fabd_sun_z                =>    pps%fabd_sun_z          , & ! Output: [real(r8) (:,:)]  absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
+   fabd_sha_z                =>    pps%fabd_sha_z          , & ! Output: [real(r8) (:,:)]  absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
+   fabi_sun_z                =>    pps%fabi_sun_z          , & ! Output: [real(r8) (:,:)]  absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
+   fabi_sha_z                =>    pps%fabi_sha_z          , & ! Output: [real(r8) (:,:)]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
+   fsun_z                    =>    pps%fsun_z              , & ! Output: [real(r8) (:,:)]  sunlit fraction of canopy layer       
+   tlai_z                    =>    pps%tlai_z              , & ! Input:  [real(r8) (:,:)]  tlai increment for canopy layer       
+   tsai_z                    =>    pps%tsai_z              , & ! Input:  [real(r8) (:,:)]  tsai increment for canopy layer       
+   vcmaxcintsun              =>    pps%vcmaxcintsun        , & ! Output: [real(r8) (:)]  leaf to canopy scaling coefficient, sunlit leaf vcmax
+   vcmaxcintsha              =>    pps%vcmaxcintsha          & ! Output: [real(r8) (:)]  leaf to canopy scaling coefficient, shaded leaf vcmax
+   )
 
     ! Calculate two-stream parameters that are independent of waveband:
     ! chil, gdir, twostext, avmu, and temp0 and temp2 (used for asu)
@@ -1551,6 +1415,7 @@ contains
        end do   ! end of pft loop
     end do   ! end of radiation band loop
 
-  end subroutine TwoStream
+    end associate 
+   end subroutine TwoStream
 
 end module SurfaceAlbedoMod

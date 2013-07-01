@@ -58,42 +58,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! 8/14/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arrays
-!
-   ! column level
-   real(r8), pointer :: t_soisno(:,:) ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-   ! pft level
-   real(r8), pointer :: t_ref2m(:)    ! 2 m height surface air temperature (Kelvin)
-   real(r8), pointer :: leafn(:)      ! (gN/m2) leaf N
-   real(r8), pointer :: frootn(:)     ! (gN/m2) fine root N
-   real(r8), pointer :: livestemn(:)  ! (gN/m2) live stem N
-   real(r8), pointer :: livecrootn(:) ! (gN/m2) live coarse root N
    real(r8), pointer :: grainn(:)     ! (kgN/m2) grain N
-   real(r8), pointer :: rootfr(:,:)   ! fraction of roots in each soil layer  (nlevgrnd)
-   integer , pointer :: ivt(:)        ! pft vegetation type
-   integer , pointer :: pcolumn(:)    ! index into column level quantities
-   integer , pointer :: plandunit(:)  ! index into landunit level quantities
-   integer , pointer :: clandunit(:)  ! index into landunit level quantities
-   integer , pointer :: itypelun(:)   ! landunit type
-   ! ecophysiological constants
-   real(r8), pointer :: woody(:)      ! binary flag for woody lifeform (1=woody, 0=not woody)
-   logical , pointer :: croplive(:)   ! Flag, true if planted, not harvested
-!
-! local pointers to implicit in/out arrays
-!
-   ! pft level
-   real(r8), pointer :: leaf_mr(:)
-   real(r8), pointer :: froot_mr(:)
-   real(r8), pointer :: livestem_mr(:)
-   real(r8), pointer :: livecroot_mr(:)
-   real(r8), pointer :: grain_mr(:)
-   real(r8), pointer :: lmrsun(:)         ! sunlit leaf maintenance respiration rate (umol CO2/m**2/s)
-   real(r8), pointer :: lmrsha(:)         ! shaded leaf maintenance respiration rate (umol CO2/m**2/s)
-   real(r8), pointer :: laisun(:)         ! sunlit projected leaf area index
-   real(r8), pointer :: laisha(:)         ! shaded projected leaf area index
-   integer , pointer :: frac_veg_nosno(:) ! fraction of vegetation not covered by snow (0 OR 1) [-]
-!
-! !OTHER LOCAL VARIABLES:
    integer :: c,p,j          ! indices
    integer :: fp             ! soil filter pft index
    integer :: fc             ! soil filter column index
@@ -104,32 +69,33 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8):: tcsoi(lbc:ubc,nlevgrnd) ! temperature correction by soil layer (unitless)
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays
-   t_soisno       => ces%t_soisno
-   t_ref2m        => pes%t_ref2m
-   leafn          => pns%leafn
-   frootn         => pns%frootn
-   livestemn      => pns%livestemn
-   livecrootn     => pns%livecrootn
+
+   associate(&    
+   t_soisno       =>    ces%t_soisno         , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+   t_ref2m        =>    pes%t_ref2m          , & ! Input:  [real(r8) (:)]  2 m height surface air temperature (Kelvin)       
+   leafn          =>    pns%leafn            , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N                                    
+   frootn         =>    pns%frootn           , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N                               
+   livestemn      =>    pns%livestemn        , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N                               
+   livecrootn     =>    pns%livecrootn       , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N                        
+   rootfr         =>    pps%rootfr           , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
+   leaf_mr        =>    pcf%leaf_mr          , & ! InOut:  [real(r8) (:)]                                                    
+   froot_mr       =>    pcf%froot_mr         , & ! InOut:  [real(r8) (:)]                                                    
+   livestem_mr    =>    pcf%livestem_mr      , & ! InOut:  [real(r8) (:)]                                                    
+   livecroot_mr   =>    pcf%livecroot_mr     , & ! InOut:  [real(r8) (:)]                                                    
+   grain_mr       =>    pcf%grain_mr         , & ! InOut:  [real(r8) (:)]                                                    
+   lmrsun         =>    pcf%lmrsun           , & ! InOut:  [real(r8) (:)]  sunlit leaf maintenance respiration rate (umol CO2/m**2/s)
+   lmrsha         =>    pcf%lmrsha           , & ! InOut:  [real(r8) (:)]  shaded leaf maintenance respiration rate (umol CO2/m**2/s)
+   laisun         =>    pps%laisun           , & ! InOut:  [real(r8) (:)]  sunlit projected leaf area index                  
+   laisha         =>    pps%laisha           , & ! InOut:  [real(r8) (:)]  shaded projected leaf area index                  
+   frac_veg_nosno =>    pps%frac_veg_nosno   , & ! InOut:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]
+   ivt            =>    pft%itype            , & ! Input:  [integer (:)]  pft vegetation type                                
+   pcolumn        =>    pft%column           , & ! Input:  [integer (:)]  index into column level quantities                 
+   plandunit      =>    pft%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
+   clandunit      =>    col%landunit         , & ! Input:  [integer (:)]  index into landunit level quantities               
+   itypelun       =>    lun%itype            , & ! Input:  [integer (:)]  landunit type                                      
+   woody          =>    pftcon%woody           & ! Input:  [real(r8) (:)]  binary flag for woody lifeform (1=woody, 0=not woody)
+   )
    grainn         => pns%grainn
-   rootfr         => pps%rootfr
-   leaf_mr        => pcf%leaf_mr
-   froot_mr       => pcf%froot_mr
-   livestem_mr    => pcf%livestem_mr
-   livecroot_mr   => pcf%livecroot_mr
-   grain_mr       => pcf%grain_mr
-   lmrsun          => pcf%lmrsun
-   lmrsha          => pcf%lmrsha
-   laisun         => pps%laisun
-   laisha         => pps%laisha
-   frac_veg_nosno => pps%frac_veg_nosno
-   ivt            =>pft%itype
-   pcolumn        =>pft%column
-   plandunit      =>pft%landunit
-   clandunit      =>col%landunit
-   itypelun       => lun%itype
-   woody          => pftcon%woody
-   croplive       => pps%croplive
 
    ! base rate for maintenance respiration is from:
    ! M. Ryan, 1991. Effects of climate change on plant respiration.
@@ -197,7 +163,8 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
       end do
    end do
 
-end subroutine CNMResp
+    end associate 
+ end subroutine CNMResp
 
 #endif
 

@@ -141,9 +141,7 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-! local pointers to implicit out arguments
 !
 ! !OTHER LOCAL VARIABLES:
 !

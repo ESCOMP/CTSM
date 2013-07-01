@@ -106,92 +106,6 @@ contains
 ! Migrated to clm2.1 new data structures by Peter Thornton and M. Vertenstein
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: frac_sno_eff(:)    !eff. fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: frac_sno(:)        ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: h2osfc(:)          ! surface water (mm)
-    real(r8), pointer :: t_h2osfc(:) 	    ! surface water temperature
-    real(r8), pointer :: t_h2osfc_bef(:)    ! saved surface water temperature
-    real(r8), pointer :: frac_h2osfc(:)     ! fraction of ground covered by surface water (0 to 1)
-    real(r8), pointer :: qflx_ev_snow(:)    ! evaporation flux from snow (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_ev_soil(:)    ! evaporation flux from soil (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_ev_h2osfc(:)  ! evaporation flux from soil (W/m**2) [+ to atm]
-    real(r8), pointer :: sabg_soil(:)       ! solar radiation absorbed by soil (W/m**2)
-    real(r8), pointer :: sabg_snow(:)       ! solar radiation absorbed by snow (W/m**2)
-    integer , pointer :: ctype(:)           ! column type
-    integer , pointer :: ltype(:)           ! landunit type
-    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: pcolumn(:)         ! pft's column index
-    integer , pointer :: plandunit(:)       ! pft's landunit index
-    integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    integer , pointer :: npfts(:)           ! column's number of pfts 
-    integer , pointer :: pfti(:)            ! column's beginning pft index 
-    integer , pointer :: snl(:)             ! number of snow layers
-    logical , pointer :: do_capsnow(:)      ! true => do snow capping
-    real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: emg(:)             ! ground emissivity
-    real(r8), pointer :: htvp(:)            ! latent heat of vapor of water (or sublimation) [j/kg]
-    real(r8), pointer :: t_grnd(:)          ! ground temperature (Kelvin)
-    integer , pointer :: frac_veg_nosno(:)  ! fraction of vegetation not covered by snow (0 OR 1 now) [-]
-    real(r8), pointer :: cgrnds(:)          ! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
-    real(r8), pointer :: cgrndl(:)          ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
-    real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
-    real(r8), pointer :: dlrad(:)           ! downward longwave radiation below the canopy [W/m2]
-    real(r8), pointer :: ulrad(:)           ! upward longwave radiation above the canopy [W/m2]
-    real(r8), pointer :: eflx_sh_veg(:)     ! sensible heat flux from leaves (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_veg(:)   ! vegetation evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_tran_veg(:)   ! vegetation transpiration (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_can(:)   ! evaporation from leaves and stems (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: wtcol(:)           ! pft weight relative to column
-    real(r8), pointer :: tssbef(:,:)        ! soil/snow temperature before update
-    real(r8), pointer :: t_soisno(:,:)      ! soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2) (new)
-    real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2) (new)
-    real(r8), pointer :: eflx_building_heat(:)   ! heat flux from urban building interior to walls, roof
-    real(r8), pointer :: eflx_traffic_pft(:)    ! traffic sensible heat flux (W/m**2)
-    real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-    real(r8), pointer :: eflx_heat_from_ac_pft(:) ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
-    real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width (-)
-    logical , pointer :: urbpoi(:)          ! true => landunit is an urban point
- 
-! local pointers to implicit inout arguments
-!
-    real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_snwcp_liq(:)  ! excess rainfall due to snow capping (mm H2O /s)
-    real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s)
-! 
-! local pointers to implicit out arguments
-! 
-    real(r8), pointer :: dt_grnd(:)         ! change in t_grnd, last iteration (Kelvin)
-    real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
-    real(r8), pointer :: eflx_soil_grnd_u(:)! urban soil heat flux (W/m**2) [+ = into soil]
-    real(r8), pointer :: eflx_soil_grnd_r(:)! rural soil heat flux (W/m**2) [+ = into soil]
-    real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_tot_u(:)   ! urban total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_tot_r(:)   ! rural total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
-    real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m**2)  [+ to atm]
-    real(r8), pointer :: eflx_lh_tot_u(:)   ! urban total latent heat flux (W/m**2)  [+ to atm]
-    real(r8), pointer :: eflx_lh_tot_r(:)   ! rural total latent heat flux (W/m**2)  [+ to atm]
-    real(r8), pointer :: qflx_evap_grnd(:)  ! ground surface evaporation rate (mm H2O/s) [+]
-    real(r8), pointer :: qflx_sub_snow(:)   ! sublimation rate from snow pack (mm H2O /s) [+]
-    real(r8), pointer :: qflx_dew_snow(:)   ! surface dew added to snow pack (mm H2O /s) [+]
-    real(r8), pointer :: qflx_dew_grnd(:)   ! ground surface dew formation (mm H2O /s) [+]
-    real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: eflx_lwrad_net(:)  ! net infrared (longwave) rad (W/m**2) [+ = to atm]
-    real(r8), pointer :: eflx_lwrad_net_u(:)  ! urban net infrared (longwave) rad (W/m**2) [+ = to atm]
-    real(r8), pointer :: eflx_lwrad_net_r(:)  ! rural net infrared (longwave) rad (W/m**2) [+ = to atm]
-    real(r8), pointer :: eflx_lh_vege(:)    ! veg evaporation heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_lh_vegt(:)    ! veg transpiration heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_lh_grnd(:)    ! ground evaporation heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: errsoi_pft(:)      ! pft-level soil/lake energy conservation error (W/m**2)
-    real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
     integer  :: p,c,g,j,pi,l         ! indices
@@ -217,93 +131,82 @@ contains
     real(r8) :: fsno_eff
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (gridcell-level)
-
-    forc_lwrad => clm_a2l%forc_lwrad
-
-    ! Assign local pointers to derived subtypes components (landunit-level)
-
-    ltype      => lun%itype
-    urbpoi     => lun%urbpoi
-    canyon_hwr     =>lun%canyon_hwr
-
-    ! Assign local pointers to derived subtypes components (column-level)
-
-    frac_sno_eff  => cps%frac_sno_eff 
-    frac_sno      => cps%frac_sno 
-    h2osfc        => cws%h2osfc
-    frac_h2osfc   => cps%frac_h2osfc
-    t_h2osfc      => ces%t_h2osfc
-    t_h2osfc_bef  => ces%t_h2osfc_bef
-    qflx_ev_snow  => pwf%qflx_ev_snow
-    qflx_ev_soil  => pwf%qflx_ev_soil
-    qflx_ev_h2osfc=> pwf%qflx_ev_h2osfc
-    sabg_soil     => pef%sabg_soil
-    sabg_snow     => pef%sabg_snow
-    ctype      => col%itype
-    npfts      =>col%npfts
-    pfti       =>col%pfti
-    snl        => cps%snl
-    do_capsnow => cps%do_capsnow
-    htvp       => cps%htvp
-    emg        => cps%emg
-    t_grnd     => ces%t_grnd
-    dt_grnd    => ces%dt_grnd
-    t_soisno   => ces%t_soisno
-    tssbef     => ces%tssbef
-    h2osoi_ice => cws%h2osoi_ice
-    h2osoi_liq => cws%h2osoi_liq
-    errsoi_col => cebal%errsoi
-    eflx_building_heat => cef%eflx_building_heat
-
-    ! Assign local pointers to derived subtypes components (pft-level)
-
-    pactive        => pft%active
-    pcolumn        =>pft%column
-    plandunit      =>pft%landunit
-    pgridcell      =>pft%gridcell
-    frac_veg_nosno => pps%frac_veg_nosno
-    sabg           => pef%sabg
-    dlrad          => pef%dlrad
-    ulrad          => pef%ulrad
-    eflx_sh_grnd   => pef%eflx_sh_grnd
-    eflx_sh_veg    => pef%eflx_sh_veg
-    qflx_evap_soi  => pwf%qflx_evap_soi
-    qflx_evap_veg  => pwf%qflx_evap_veg
-    qflx_tran_veg  => pwf%qflx_tran_veg
-    qflx_evap_can  => pwf%qflx_evap_can
-    qflx_snwcp_liq => pwf%qflx_snwcp_liq
-    qflx_snwcp_ice => pwf%qflx_snwcp_ice
-    qflx_evap_tot  => pwf%qflx_evap_tot
-    qflx_evap_grnd => pwf%qflx_evap_grnd
-    qflx_sub_snow  => pwf%qflx_sub_snow
-    qflx_dew_snow  => pwf%qflx_dew_snow
-    qflx_dew_grnd  => pwf%qflx_dew_grnd
-    eflx_soil_grnd => pef%eflx_soil_grnd
-    eflx_soil_grnd_u => pef%eflx_soil_grnd_u
-    eflx_soil_grnd_r => pef%eflx_soil_grnd_r
-    eflx_sh_tot    => pef%eflx_sh_tot
-    eflx_sh_tot_u  => pef%eflx_sh_tot_u
-    eflx_sh_tot_r  => pef%eflx_sh_tot_r
-    eflx_lh_tot    => pef%eflx_lh_tot
-    eflx_lh_tot_u    => pef%eflx_lh_tot_u
-    eflx_lh_tot_r    => pef%eflx_lh_tot_r
-    eflx_lwrad_out => pef%eflx_lwrad_out
-    eflx_lwrad_net => pef%eflx_lwrad_net
-    eflx_lwrad_net_u => pef%eflx_lwrad_net_u
-    eflx_lwrad_net_r => pef%eflx_lwrad_net_r
-    eflx_lh_vege   => pef%eflx_lh_vege
-    eflx_lh_vegt   => pef%eflx_lh_vegt
-    eflx_lh_grnd   => pef%eflx_lh_grnd
-    cgrnds         => pef%cgrnds
-    cgrndl         => pef%cgrndl
-    eflx_sh_grnd   => pef%eflx_sh_grnd
-    qflx_evap_soi  => pwf%qflx_evap_soi
-    errsoi_pft     => pebal%errsoi
-    wtcol          =>pft%wtcol
-    eflx_wasteheat_pft => pef%eflx_wasteheat_pft
-    eflx_heat_from_ac_pft => pef%eflx_heat_from_ac_pft
-    eflx_traffic_pft => pef%eflx_traffic_pft
+   associate(& 
+   forc_lwrad                =>    clm_a2l%forc_lwrad      , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)
+   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+   urbpoi                    =>    lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
+   canyon_hwr                =>   lun%canyon_hwr           , & ! Input:  [real(r8) (:)]  ratio of building height to street width (-)
+   frac_sno_eff              =>    cps%frac_sno_eff        , & ! Input:  [real(r8) (:)] eff. fraction of ground covered by snow (0 to 1)
+   frac_sno                  =>    cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   h2osfc                    =>    cws%h2osfc              , & ! Input:  [real(r8) (:)]  surface water (mm)                      
+   frac_h2osfc               =>    cps%frac_h2osfc         , & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
+   t_h2osfc                  =>    ces%t_h2osfc            , & ! Input:  [real(r8) (:)]  surface water temperature               
+   t_h2osfc_bef              =>    ces%t_h2osfc_bef        , & ! Input:  [real(r8) (:)]  saved surface water temperature         
+   qflx_ev_snow              =>    pwf%qflx_ev_snow        , & ! Input:  [real(r8) (:)]  evaporation flux from snow (W/m**2) [+ to atm]
+   qflx_ev_soil              =>    pwf%qflx_ev_soil        , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+   qflx_ev_h2osfc            =>    pwf%qflx_ev_h2osfc      , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+   sabg_soil                 =>    pef%sabg_soil           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by soil (W/m**2)
+   sabg_snow                 =>    pef%sabg_snow           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by snow (W/m**2)
+   ctype                     =>    col%itype               , & ! Input:  [integer (:)]  column type                              
+   npfts                     =>   col%npfts                , & ! Input:  [integer (:)]  column's number of pfts                  
+   pfti                      =>   col%pfti                 , & ! Input:  [integer (:)]  column's beginning pft index             
+   snl                       =>    cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
+   do_capsnow                =>    cps%do_capsnow          , & ! Input:  [logical (:)]  true => do snow capping                  
+   htvp                      =>    cps%htvp                , & ! Input:  [real(r8) (:)]  latent heat of vapor of water (or sublimation) [j/kg]
+   emg                       =>    cps%emg                 , & ! Input:  [real(r8) (:)]  ground emissivity                       
+   t_grnd                    =>    ces%t_grnd              , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)             
+   dt_grnd                   =>    ces%dt_grnd             , & ! Output: [real(r8) (:)]  change in t_grnd, last iteration (Kelvin)
+   t_soisno                  =>    ces%t_soisno            , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)             
+   tssbef                    =>    ces%tssbef              , & ! Input:  [real(r8) (:,:)]  soil/snow temperature before update   
+   h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2) (new)                
+   h2osoi_liq                =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2) (new)            
+   errsoi_col                =>    cebal%errsoi            , & ! Output: [real(r8) (:)]  column-level soil/lake energy conservation error (W/m**2)
+   eflx_building_heat        =>    cef%eflx_building_heat  , & ! Input:  [real(r8) (:)]  heat flux from urban building interior to walls, roof
+   pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  pft's column index                       
+   plandunit                 =>   pft%landunit             , & ! Input:  [integer (:)]  pft's landunit index                     
+   pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                     
+   frac_veg_nosno            =>    pps%frac_veg_nosno      , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1 now) [-]
+   sabg                      =>    pef%sabg                , & ! Input:  [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)
+   dlrad                     =>    pef%dlrad               , & ! Input:  [real(r8) (:)]  downward longwave radiation below the canopy [W/m2]
+   ulrad                     =>    pef%ulrad               , & ! Input:  [real(r8) (:)]  upward longwave radiation above the canopy [W/m2]
+   eflx_sh_grnd              =>    pef%eflx_sh_grnd        , & ! Input:  [real(r8) (:)]  sensible heat flux from ground (W/m**2) [+ to atm]
+   eflx_sh_veg               =>    pef%eflx_sh_veg         , & ! Input:  [real(r8) (:)]  sensible heat flux from leaves (W/m**2) [+ to atm]
+   qflx_evap_soi             =>    pwf%qflx_evap_soi       , & ! Input:  [real(r8) (:)]  soil evaporation (mm H2O/s) (+ = to atm)
+   qflx_evap_veg             =>    pwf%qflx_evap_veg       , & ! Input:  [real(r8) (:)]  vegetation evaporation (mm H2O/s) (+ = to atm)
+   qflx_tran_veg             =>    pwf%qflx_tran_veg       , & ! Input:  [real(r8) (:)]  vegetation transpiration (mm H2O/s) (+ = to atm)
+   qflx_evap_can             =>    pwf%qflx_evap_can       , & ! Input:  [real(r8) (:)]  evaporation from leaves and stems (mm H2O/s) (+ = to atm)
+   qflx_snwcp_liq            =>    pwf%qflx_snwcp_liq      , & ! Input:  [real(r8) (:)]  excess rainfall due to snow capping (mm H2O /s)
+   qflx_snwcp_ice            =>    pwf%qflx_snwcp_ice      , & ! Input:  [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s)
+   qflx_evap_tot             =>    pwf%qflx_evap_tot       , & ! Output: [real(r8) (:)]  qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+   qflx_evap_grnd            =>    pwf%qflx_evap_grnd      , & ! Output: [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
+   qflx_sub_snow             =>    pwf%qflx_sub_snow       , & ! Output: [real(r8) (:)]  sublimation rate from snow pack (mm H2O /s) [+]
+   qflx_dew_snow             =>    pwf%qflx_dew_snow       , & ! Output: [real(r8) (:)]  surface dew added to snow pack (mm H2O /s) [+]
+   qflx_dew_grnd             =>    pwf%qflx_dew_grnd       , & ! Output: [real(r8) (:)]  ground surface dew formation (mm H2O /s) [+]
+   eflx_soil_grnd            =>    pef%eflx_soil_grnd      , & ! Output: [real(r8) (:)]  soil heat flux (W/m**2) [+ = into soil] 
+   eflx_soil_grnd_u          =>    pef%eflx_soil_grnd_u    , & ! Output: [real(r8) (:)]  urban soil heat flux (W/m**2) [+ = into soil]
+   eflx_soil_grnd_r          =>    pef%eflx_soil_grnd_r    , & ! Output: [real(r8) (:)]  rural soil heat flux (W/m**2) [+ = into soil]
+   eflx_sh_tot               =>    pef%eflx_sh_tot         , & ! Output: [real(r8) (:)]  total sensible heat flux (W/m**2) [+ to atm]
+   eflx_sh_tot_u             =>    pef%eflx_sh_tot_u       , & ! Output: [real(r8) (:)]  urban total sensible heat flux (W/m**2) [+ to atm]
+   eflx_sh_tot_r             =>    pef%eflx_sh_tot_r       , & ! Output: [real(r8) (:)]  rural total sensible heat flux (W/m**2) [+ to atm]
+   eflx_lh_tot               =>    pef%eflx_lh_tot         , & ! Output: [real(r8) (:)]  total latent heat flux (W/m**2)  [+ to atm]
+   eflx_lh_tot_u             =>    pef%eflx_lh_tot_u       , & ! Output: [real(r8) (:)]  urban total latent heat flux (W/m**2)  [+ to atm]
+   eflx_lh_tot_r             =>    pef%eflx_lh_tot_r       , & ! Output: [real(r8) (:)]  rural total latent heat flux (W/m**2)  [+ to atm]
+   eflx_lwrad_out            =>    pef%eflx_lwrad_out      , & ! Output: [real(r8) (:)]  emitted infrared (longwave) radiation (W/m**2)
+   eflx_lwrad_net            =>    pef%eflx_lwrad_net      , & ! Output: [real(r8) (:)]  net infrared (longwave) rad (W/m**2) [+ = to atm]
+   eflx_lwrad_net_u          =>    pef%eflx_lwrad_net_u    , & ! Output: [real(r8) (:)]  urban net infrared (longwave) rad (W/m**2) [+ = to atm]
+   eflx_lwrad_net_r          =>    pef%eflx_lwrad_net_r    , & ! Output: [real(r8) (:)]  rural net infrared (longwave) rad (W/m**2) [+ = to atm]
+   eflx_lh_vege              =>    pef%eflx_lh_vege        , & ! Output: [real(r8) (:)]  veg evaporation heat flux (W/m**2) [+ to atm]
+   eflx_lh_vegt              =>    pef%eflx_lh_vegt        , & ! Output: [real(r8) (:)]  veg transpiration heat flux (W/m**2) [+ to atm]
+   eflx_lh_grnd              =>    pef%eflx_lh_grnd        , & ! Output: [real(r8) (:)]  ground evaporation heat flux (W/m**2) [+ to atm]
+   cgrnds                    =>    pef%cgrnds              , & ! Input:  [real(r8) (:)]  deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
+   cgrndl                    =>    pef%cgrndl              , & ! Input:  [real(r8) (:)]  deriv of soil latent heat flux wrt soil temp [w/m**2/k]
+   errsoi_pft                =>    pebal%errsoi            , & ! Output: [real(r8) (:)]  pft-level soil/lake energy conservation error (W/m**2)
+   wtcol                     =>   pft%wtcol                , & ! Input:  [real(r8) (:)]  pft weight relative to column           
+   eflx_wasteheat_pft        =>    pef%eflx_wasteheat_pft  , & ! Input:  [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+   eflx_heat_from_ac_pft     =>    pef%eflx_heat_from_ac_pft  , & ! Input:  [real(r8) (:)]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
+   eflx_traffic_pft          =>    pef%eflx_traffic_pft      & ! Input:  [real(r8) (:)]  traffic sensible heat flux (W/m**2)     
+   )
 
     ! Get step size
 
@@ -587,6 +490,7 @@ contains
     call p2c(lbp, ubp, lbc, ubc, num_nolakec, filter_nolakec, errsoi_pft, errsoi_col)
     call t_stopf('bgp2_loop_4')
 
-  end subroutine Biogeophysics2
+    end associate 
+   end subroutine Biogeophysics2
 
 end module Biogeophysics2Mod

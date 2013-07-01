@@ -115,34 +115,11 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-    integer , pointer :: pcolumn(:)        ! column index associated with each pft
-    integer , pointer :: clandunit(:)      ! landunit index associated with each column
-    integer , pointer :: ltype(:)          ! landunit type
-    logical , pointer :: lakpoi(:)         ! true => landunit is a lake point
-    real(r8), pointer :: dz(:,:)           ! layer thickness depth (m)
-    real(r8), pointer :: watsat(:,:)       ! volumetric soil water at saturation (porosity) (nlevgrnd)
-    real(r8), pointer :: h2osoi_ice(:,:)   ! ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (kg/m2)
-    real(r8), pointer :: t_lake(:,:)       ! lake temperature (Kelvin)  (1:nlevlak)
-    real(r8), pointer :: t_grnd(:)         ! ground temperature (Kelvin)
-    real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
 !
-! local pointers to implicit out arguments
 !
-    integer , pointer :: snl(:)            ! number of snow layers
-    real(r8), pointer :: t_soisno(:,:)     ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-    real(r8), pointer :: h2osoi_vol(:,:)   ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-    real(r8), pointer :: lake_icefrac(:,:)  ! mass fraction of lake layer that is frozen 
-    real(r8), pointer :: savedtke1(:)       ! top level eddy conductivity (W/mK)
-    real(r8), pointer :: ust_lake(:)        ! friction velocity (m/s)
-    real(r8), pointer :: z0mg(:)               !roughness length over ground, momentum [m]
 
     ! New SNICAR variables
-    real(r8), pointer :: snw_rds(:,:)       ! effective snow grain radius (col,lyr) [microns, m^-6]
-    real(r8), pointer :: snw_rds_top(:)     ! snow grain size, top (col) [microns]
-    real(r8), pointer :: sno_liq_top(:)     ! liquid water fraction (mass) in top snow layer (col) [frc]
 
 !
 !EOP
@@ -163,32 +140,32 @@ contains
                                   'if no inicFile or no valid values for icefrac and soil layers,', &
                                   'for CLM4-LISSS Lake Model.'
 
-    ! Assign local pointers to derived subtypes components (landunit-level)
 
-    ltype      => lun%itype
-    lakpoi     =>lun%lakpoi
+   associate(& 
+   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+   lakpoi                    =>   lun%lakpoi               , & ! Input:  [logical (:)]  true => landunit is a lake point         
 
-    ! Assign local pointers to derived subtypes components (column-level)
 
-    clandunit  =>col%landunit
-    snl        => cps%snl
-    dz         => cps%dz
-    watsat     => cps%watsat
-    h2osoi_ice => cws%h2osoi_ice
-    h2osoi_liq => cws%h2osoi_liq
-    h2osoi_vol => cws%h2osoi_vol
-    h2osno     => cws%h2osno
-    t_soisno   => ces%t_soisno
-    t_lake     => ces%t_lake
-    t_grnd     => ces%t_grnd
-    lake_icefrac => cws%lake_icefrac
-    savedtke1  => cps%savedtke1
-    ust_lake   => cps%ust_lake
-    z0mg       => cps%z0mg
+   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit index associated with each column
+   snl                       =>    cps%snl                 , & ! Output: [integer (:)]  number of snow layers                    
+   dz                        =>    cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer thickness depth (m)             
+   watsat                    =>    cps%watsat              , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity) (nlevgrnd)
+   h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+   h2osoi_liq                =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
+   h2osoi_vol                =>    cws%h2osoi_vol          , & ! Output: [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+   h2osno                    =>    cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   t_soisno                  =>    ces%t_soisno            , & ! Output: [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
+   t_lake                    =>    ces%t_lake              , & ! Input:  [real(r8) (:,:)]  lake temperature (Kelvin)  (1:nlevlak)
+   t_grnd                    =>    ces%t_grnd              , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)             
+   lake_icefrac              =>    cws%lake_icefrac        , & ! Output: [real(r8) (:,:)]  mass fraction of lake layer that is frozen
+   savedtke1                 =>    cps%savedtke1           , & ! Output: [real(r8) (:)]  top level eddy conductivity (W/mK)      
+   ust_lake                  =>    cps%ust_lake            , & ! Output: [real(r8) (:)]  friction velocity (m/s)                 
+   z0mg                      =>    cps%z0mg                , & ! Output: [real(r8) (:)] roughness length over ground, momentum [m]
     ! New SNICAR variables
-    snw_rds          => cps%snw_rds
-    snw_rds_top      => cps%snw_rds_top
-    sno_liq_top      => cps%sno_liq_top
+   snw_rds                   =>    cps%snw_rds             , & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
+   snw_rds_top               =>    cps%snw_rds_top         , & ! Output: [real(r8) (:)]  snow grain size, top (col) [microns]    
+   sno_liq_top               =>    cps%sno_liq_top           & ! Output: [real(r8) (:)]  liquid water fraction (mass) in top snow layer (col) [frc]
+   )
 
     ! Determine subgrid bounds on this processor
 
@@ -307,7 +284,8 @@ contains
     end do
 
 
-  end subroutine makearbinit
+    end associate 
+   end subroutine makearbinit
 
 
 !-----------------------------------------------------------------------
@@ -340,19 +318,9 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-  integer , pointer :: clandunit(:)  ! landunit index associated with each column
-  real(r8), pointer :: snow_depth(:)     ! snow height (m)
-  logical , pointer :: lakpoi(:)     ! true => landunit is a lake point
-  real(r8), pointer :: lake_icefrac(:,:)  ! mass fraction of lake layer that is frozen 
 !
-! local pointers to implicit out arguments
 !
-  integer , pointer :: snl(:)        ! number of snow layers
-  real(r8), pointer :: z(:,:)        ! layer depth  (m) over snow only
-  real(r8), pointer :: dz(:,:)       ! layer thickness depth (m) over snow only
-  real(r8), pointer :: zi(:,:)       ! interface depth (m) over snow only
 !
 !EOP
 !
@@ -360,19 +328,19 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
   integer :: c,l,j      !indices
 !-----------------------------------------------------------------------
 
-  ! Assign local pointers to derived subtypes components (landunit-level)
 
-  lakpoi =>lun%lakpoi
+   associate(& 
+   lakpoi                    =>   lun%lakpoi               , & ! Input:  [logical (:)]  true => landunit is a lake point         
 
-  ! Assign local pointers to derived type members (column-level)
 
-  clandunit =>col%landunit
-  snow_depth    => cps%snow_depth
-  snl       => cps%snl
-  zi        => cps%zi
-  dz        => cps%dz
-  z         => cps%z
-  lake_icefrac => cws%lake_icefrac
+   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit index associated with each column
+   snow_depth                =>    cps%snow_depth          , & ! Input:  [real(r8) (:)]  snow height (m)                         
+   snl                       =>    cps%snl                 , & ! Output: [integer (:)]  number of snow layers                    
+   zi                        =>    cps%zi                  , & ! Output: [real(r8) (:,:)]  interface depth (m) over snow only    
+   dz                        =>    cps%dz                  , & ! Output: [real(r8) (:,:)]  layer thickness depth (m) over snow only
+   z                         =>    cps%z                   , & ! Output: [real(r8) (:,:)]  layer depth  (m) over snow only       
+   lake_icefrac              =>    cws%lake_icefrac          & ! Input:  [real(r8) (:,:)]  mass fraction of lake layer that is frozen
+   )
 
 
   ! Determine snow levels and interfaces for lake points
@@ -451,7 +419,8 @@ subroutine snow_depth2levLake(lbc, ubc, arbinit)
      end if
   end do
 
-end subroutine snow_depth2levLake
+    end associate 
+ end subroutine snow_depth2levLake
 
 !-----------------------------------------------------------------------
 !BOP
@@ -492,37 +461,9 @@ subroutine initTimeConst
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-  integer , pointer :: clandunit(:)       ! landunit index of column
-  integer , pointer :: cgridcell(:)       ! gridcell index of column
-  integer , pointer :: ltype(:)           ! landunit type index
-  real(r8), pointer :: cellsand(:,:)      ! column 3D sand
-  real(r8), pointer :: cellclay(:,:)      ! column 3D clay
-  real(r8), pointer :: cellorg(:,:)       ! column 3D org
-  real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2) (-nlevsno+1:nlevgrnd)    
-  real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2) (-nlevsno+1:nlevgrnd)    
 !
-! local pointers to implicit out arguments
 !
-  real(r8), pointer :: lakedepth(:)       ! variable lake depth (m)
-  real(r8), pointer :: z(:,:)             ! layer depth (m)
-  real(r8), pointer :: zi(:,:)            ! interface level below a "z" level (m)
-  real(r8), pointer :: dz(:,:)            ! layer thickness depth (m)
-  real(r8), pointer :: dz_lake(:,:)       ! layer thickness for lake (m)
-  real(r8), pointer :: z_lake(:,:)        ! layer depth for lake (m)
-  real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevgrnd)  
-  real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity) (nlevgrnd) 
-  real(r8), pointer :: watdry(:,:)        ! btran parameter for btran=0
-  real(r8), pointer :: watopt(:,:)        ! btran parameter for btran = 1
-  real(r8), pointer :: hksat(:,:)         ! hydraulic conductivity at saturation (mm H2O /s) (nlevgrnd) 
-  real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm) (nlevgrnd) 
-  real(r8), pointer :: csol(:,:)          ! heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
-  real(r8), pointer :: tkmg(:,:)          ! thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd) 
-  real(r8), pointer :: tkdry(:,:)         ! thermal conductivity, dry soil (W/m/Kelvin) (nlevgrnd) 
-  real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevgrnd) 
-  real(r8), pointer :: watfc(:,:)         ! volumetric soil water at field capacity (nlevgrnd)
-  real(r8), pointer :: h2osoi_vol(:,:)    !volumetric soil water [m3/m3]  (nlevgrnd)  
 !
 !
 !EOP
@@ -578,37 +519,37 @@ subroutine initTimeConst
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
   call get_proc_global(numg, numl, numc, nump)
 
-  ! Assign local pointers to derived subtypes components (landunit-level)
 
-  ltype           => lun%itype
+   associate(& 
+   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type index                      
 
-  ! Assign local pointers to derived subtypes components (column-level)
 
-  clandunit       =>col%landunit
-  cgridcell       =>col%gridcell
-  z               => cps%z
-  dz              => cps%dz
-  zi              => cps%zi
-  bsw             => cps%bsw
-  watsat          => cps%watsat
-  watdry          => cps%watdry  
-  watopt          => cps%watopt  
-  hksat           => cps%hksat
-  sucsat          => cps%sucsat
-  tkmg            => cps%tkmg
-  tksatu          => cps%tksatu
-  tkdry           => cps%tkdry
-  csol            => cps%csol
-  dz_lake         => cps%dz_lake
-  z_lake          => cps%z_lake
-  cellsand        => cps%cellsand
-  cellclay        => cps%cellclay
-  cellorg         => cps%cellorg
-  lakedepth       => cps%lakedepth
-  watfc           => cps%watfc
-  h2osoi_liq      => cws%h2osoi_liq
-  h2osoi_ice      => cws%h2osoi_ice
-  h2osoi_vol      => cws%h2osoi_vol
+   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  landunit index of column                 
+   cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)]  gridcell index of column                 
+   z                         =>    cps%z                   , & ! Output: [real(r8) (:,:)]  layer depth (m)                       
+   dz                        =>    cps%dz                  , & ! Output: [real(r8) (:,:)]  layer thickness depth (m)             
+   zi                        =>    cps%zi                  , & ! Output: [real(r8) (:,:)]  interface level below a "z" level (m) 
+   bsw                       =>    cps%bsw                 , & ! Output: [real(r8) (:,:)]  Clapp and Hornberger "b" (nlevgrnd)   
+   watsat                    =>    cps%watsat              , & ! Output: [real(r8) (:,:)]  volumetric soil water at saturation (porosity) (nlevgrnd)
+   watdry                    =>    cps%watdry              , & ! Output: [real(r8) (:,:)]  btran parameter for btran=0           
+   watopt                    =>    cps%watopt              , & ! Output: [real(r8) (:,:)]  btran parameter for btran = 1         
+   hksat                     =>    cps%hksat               , & ! Output: [real(r8) (:,:)]  hydraulic conductivity at saturation (mm H2O /s) (nlevgrnd)
+   sucsat                    =>    cps%sucsat              , & ! Output: [real(r8) (:,:)]  minimum soil suction (mm) (nlevgrnd)  
+   tkmg                      =>    cps%tkmg                , & ! Output: [real(r8) (:,:)]  thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd)
+   tksatu                    =>    cps%tksatu              , & ! Output: [real(r8) (:,:)]  thermal conductivity, saturated soil [W/m-K] (new) (nlevgrnd)
+   tkdry                     =>    cps%tkdry               , & ! Output: [real(r8) (:,:)]  thermal conductivity, dry soil (W/m/Kelvin) (nlevgrnd)
+   csol                      =>    cps%csol                , & ! Output: [real(r8) (:,:)]  heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd)
+   dz_lake                   =>    cps%dz_lake             , & ! Output: [real(r8) (:,:)]  layer thickness for lake (m)          
+   z_lake                    =>    cps%z_lake              , & ! Output: [real(r8) (:,:)]  layer depth for lake (m)              
+   cellsand                  =>    cps%cellsand            , & ! Input:  [real(r8) (:,:)]  column 3D sand                        
+   cellclay                  =>    cps%cellclay            , & ! Input:  [real(r8) (:,:)]  column 3D clay                        
+   cellorg                   =>    cps%cellorg             , & ! Input:  [real(r8) (:,:)]  column 3D org                         
+   lakedepth                 =>    cps%lakedepth           , & ! Output: [real(r8) (:)]  variable lake depth (m)                 
+   watfc                     =>    cps%watfc               , & ! Output: [real(r8) (:,:)]  volumetric soil water at field capacity (nlevgrnd)
+   h2osoi_liq                =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2) (-nlevsno+1:nlevgrnd)
+   h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2) (-nlevsno+1:nlevgrnd)
+   h2osoi_vol                =>    cws%h2osoi_vol            & ! Output: [real(r8) (:,:)] volumetric soil water [m3/m3]  (nlevgrnd)
+   )
 
 
    ! Set SLakeCon constants according to namelist fields
@@ -824,6 +765,7 @@ subroutine initTimeConst
    
    if (masterproc) write (iulog,*) 'Successfully initialized time invariant variables for lakes'
 
-end subroutine initTimeConst
+    end associate 
+ end subroutine initTimeConst
 
 end module initSLakeMod

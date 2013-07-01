@@ -72,58 +72,38 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to original implicit in variables
 !
-    real(r8), pointer :: h2osfc(:)             ! surface water (mm)
-    real(r8), pointer :: londeg(:)             ! longitude
-    real(r8), pointer :: latdeg(:)             ! latitude
-    integer , pointer :: cgridcell(:)          ! column's gridcell index
-    integer , pointer :: clandunit(:)          ! column's landunit
-    integer , pointer :: ltype(:)              ! landunit type
-    real(r8), pointer :: h2osno(:)             ! snow water (mm H2O)
-    real(r8), pointer :: h2osoi_ice(:,:)       ! ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
-    real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
-    real(r8), pointer :: wa(:)                 ! water in the unconfined aquifer (mm)
-    integer , pointer :: ctype(:)              ! column type 
-    real(r8), pointer :: zwt(:)                ! water table depth (m)
-    real(r8), pointer :: zi(:,:)               ! interface level below a "z" level (m)
 !
-! local pointers to original implicit out variables
 !
-    real(r8), pointer :: h2ocan_col(:)         ! canopy water (mm H2O) (column level)
-    real(r8), pointer :: begwb(:)              ! water mass begining of the time step
 !
 ! !OTHER LOCAL VARIABLES:
 !
     integer :: c, p, f, j, fc                  ! indices
     real(r8):: h2osoi_vol
-    real(r8), pointer :: dz(:,:), watsat(:,:)
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (column-level)
 
-    h2osfc             => cws%h2osfc
-    londeg             =>  grc%londeg
-    latdeg             =>  grc%latdeg
-    cgridcell          =>col%gridcell
-    clandunit          =>col%landunit
-    ltype              => lun%itype
-    dz                 => cps%dz
-    watsat             => cps%watsat
-    h2osno             => cws%h2osno
-    h2osoi_ice         => cws%h2osoi_ice
-    h2osoi_liq         => cws%h2osoi_liq
-    begwb              => cwbal%begwb
-    h2ocan_col         => pws_a%h2ocan
-    wa                 => cws%wa
-    ctype              => col%itype
-    zwt                => cws%zwt
-    zi                 => cps%zi
+   associate(& 
+   h2osfc                    =>    cws%h2osfc              , & ! Input:  [real(r8) (:)]  surface water (mm)                      
+   londeg                    =>     grc%londeg             , & ! Input:  [real(r8) (:)]  longitude                               
+   latdeg                    =>     grc%latdeg             , & ! Input:  [real(r8) (:)]  latitude                                
+   cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)]  column's gridcell index                  
+   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  column's landunit                        
+   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+   dz                        =>    cps%dz                  , & ! Output: [real(r8) (:,:)]                                        
+   h2osno                    =>    cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   h2osoi_ice                =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+   h2osoi_liq                =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
+   begwb                     =>    cwbal%begwb             , & ! Output: [real(r8) (:)]  water mass begining of the time step    
+   h2ocan_col                =>    pws_a%h2ocan            , & ! Output: [real(r8) (:)]  canopy water (mm H2O) (column level)    
+   wa                        =>    cws%wa                  , & ! Input:  [real(r8) (:)]  water in the unconfined aquifer (mm)    
+   ctype                     =>    col%itype               , & ! Input:  [integer (:)]  column type                              
+   zwt                       =>    cws%zwt                 , & ! Input:  [real(r8) (:)]  water table depth (m)                   
+   zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
 
-    ! Assign local pointers to derived type members (pft-level)
 
-    h2ocan_pft         => pws%h2ocan
+   h2ocan_pft                =>    pws%h2ocan                & ! Input:  [real(r8) (:)]  canopy water (mm H2O) (pft-level)       
+   )
 
     ! Determine beginning water balance for time step
     ! pft-level canopy water averaged to column
@@ -162,7 +142,8 @@ contains
        begwb(c) = h2osno(c)
     end do
 
-  end subroutine BeginWaterBalance
+    end associate 
+   end subroutine BeginWaterBalance
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -216,94 +197,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to original implicit in arguments
 !
-    real(r8), pointer :: tws(:)                !total water storage (mm H2O)
-    real(r8), pointer :: volr(:)               !river water storage (m3)
-    real(r8), pointer :: area(:)               !gridcell area (km2)
-    logical , pointer :: do_capsnow(:)         ! true => do snow capping
-    real(r8), pointer :: qflx_rain_grnd_col(:) ! rain on ground after interception (mm H2O/s) [+]
-    real(r8), pointer :: qflx_snow_grnd_col(:) ! snow on ground after interception (mm H2O/s) [+]
-    real(r8), pointer :: qflx_snow_h2osfc(:)   ! snow falling on surface water (mm/s)
-    real(r8), pointer :: frac_sno_eff(:)       ! effective snow fraction
-    real(r8), pointer :: qflx_h2osfc_to_ice(:) ! conversion of h2osfc to ice
-    real(r8), pointer :: qflx_snow_melt(:)     ! snow melt (net)
-    real(r8), pointer :: frac_sno(:)           ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: qflx_drain_perched(:) ! sub-surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_floodc(:)        ! total runoff due to flooding
-    real(r8), pointer :: qflx_evap_soi(:)      ! soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_h2osfc_surf(:)!surface water runoff (mm/s)
-    real(r8), pointer :: sabg_soil(:)       ! solar radiation absorbed by soil (W/m**2)
-    real(r8), pointer :: sabg_snow(:)       ! solar radiation absorbed by snow (W/m**2)
-    real(r8), pointer :: sabg_chk(:)        ! sum of soil/snow using current fsno, for balance check
-    integer , pointer :: pcolumn(:)         ! pft's column index
-    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
-    logical , pointer :: cactive(:)         ! true=>do computations on this column (see reweightMod for details)
-    integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    integer , pointer :: plandunit(:)       ! pft's landunit index
-    integer , pointer :: cgridcell(:)       ! column's gridcell index
-    integer , pointer :: clandunit(:)       ! column's landunit index
-    integer , pointer :: ltype(:)           ! landunit type 
-    integer , pointer :: ctype(:)           ! column type 
-    real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
-    real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
-    real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: endwb(:)           ! water mass end of the time step
-    real(r8), pointer :: begwb(:)           ! water mass begining of the time step
-    real(r8), pointer :: fsa(:)             ! solar radiation absorbed (total) (W/m**2)
-    real(r8), pointer :: fsr(:)             ! solar radiation reflected (W/m**2)
-    real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: eflx_lwrad_net(:)  ! net infrared (longwave) rad (W/m**2) [+ = to atm]
-    real(r8), pointer :: sabv(:)            ! solar radiation absorbed by vegetation (W/m**2)
-    real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
-    real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_totg(:)    ! total sensible heat flux at grid level (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_dynbal(:)     ! energy conversion flux due to dynamic land cover change(W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m8*2)  [+ to atm]
-    real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
-    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-    real(r8), pointer :: qflx_irrig(:)      ! irrigation flux (mm H2O /s)
-    real(r8), pointer :: qflx_surf(:)       ! surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_qrgwl(:)      ! qflx_surf at glaciers, wetlands, lakes
-    real(r8), pointer :: qflx_drain(:)      ! sub-surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_runoff(:)     ! total runoff (mm H2O /s)
-    real(r8), pointer :: qflx_runoffg(:)    ! total runoff at gridcell level inc land cover change flux (mm H2O /s)
-    real(r8), pointer :: qflx_liq_dynbal(:) ! liq runoff due to dynamic land cover change (mm H2O /s)
-    real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
-    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O /s) [+ if ice grows]
-    real(r8), pointer :: qflx_glcice_frz(:) ! ice growth (mm H2O/s) [+]
-    real(r8), pointer :: qflx_snwcp_iceg(:) ! excess snowfall due to snow cap inc land cover change flux (mm H20/s)
-    real(r8), pointer :: qflx_ice_dynbal(:) ! ice runoff due to dynamic land cover change (mm H2O /s)
-    real(r8), pointer :: forc_solad(:,:)    ! direct beam radiation (vis=forc_sols , nir=forc_soll )
-    real(r8), pointer :: forc_solai(:,:)    ! diffuse radiation     (vis=forc_solsd, nir=forc_solld)
-    real(r8), pointer :: eflx_traffic_pft(:)    ! traffic sensible heat flux (W/m**2)
-    real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-    real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width
-    real(r8), pointer :: eflx_heat_from_ac_pft(:) !sensible heat flux put back into canyon due to removal by AC (W/m**2)
-    real(r8), pointer :: h2osno(:)             ! snow water (mm H2O)
-    real(r8), pointer :: h2osno_old(:)         ! snow water (mm H2O) at previous time step
-    real(r8), pointer :: qflx_dew_snow(:)      ! surface dew added to snow pack (mm H2O /s) [+]
-    real(r8), pointer :: qflx_sub_snow(:)      ! sublimation rate from snow pack (mm H2O /s) [+]
-    real(r8), pointer :: qflx_top_soil(:)      ! net water input into soil from top (mm/s)
-    real(r8), pointer :: qflx_dew_grnd(:)      ! ground surface dew formation (mm H2O /s) [+]
-    real(r8), pointer :: qflx_evap_grnd(:)     ! ground surface evaporation rate (mm H2O/s) [+]
-    real(r8), pointer :: qflx_prec_grnd(:)     ! water onto ground including canopy runoff [kg/(m2 s)]
-    real(r8), pointer :: qflx_snwcp_liq(:)     ! excess liquid water due to snow capping (mm H2O /s) [+]`
-    real(r8), pointer :: qflx_sl_top_soil(:)   ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
-    integer , pointer :: snl(:)                ! number of snow layers
-    logical , pointer :: urbpoi(:)             ! true => landunit is an urban point
 !
-! local pointers to original implicit out arguments
 !
-    real(r8), pointer :: errh2o(:)          ! water conservation error (mm H2O)
-    real(r8), pointer :: errsol(:)          ! solar radiation conservation error (W/m**2)
-    real(r8), pointer :: errlon(:)          ! longwave radiation conservation error (W/m**2)
-    real(r8), pointer :: errseb(:)          ! surface energy conservation error (W/m**2)
-    real(r8), pointer :: netrad(:)          ! net radiation (positive downward) (W/m**2)
-    real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
-    real(r8), pointer :: snow_sources(:)    ! snow sources (mm H2O /s)
-    real(r8), pointer :: snow_sinks(:)      ! snow sinks (mm H2O /s)
-    real(r8), pointer :: errh2osno(:)       ! error in h2osno (kg m-2)
 !
 !EOP
 !
@@ -317,103 +213,100 @@ contains
     real(r8) :: forc_snow_col(lbc:ubc)      ! column level snow rate [mm/s]
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    tws                 =>  grc%tws
-    area                =>  grc%area
-    volr                => clm_a2l%volr
-    do_capsnow          => cps%do_capsnow
-    qflx_rain_grnd_col  => pwf_a%qflx_rain_grnd
-    qflx_snow_grnd_col  => pwf_a%qflx_snow_grnd
-    qflx_snow_h2osfc    => cwf%qflx_snow_h2osfc
-    frac_sno_eff        => cps%frac_sno_eff
-    qflx_h2osfc_to_ice  => cwf%qflx_h2osfc_to_ice
-    frac_sno            => cps%frac_sno 
-    qflx_drain_perched  => cwf%qflx_drain_perched
-    qflx_floodc         => cwf%qflx_floodc
-    qflx_evap_soi       => pwf_a%qflx_evap_soi
-    qflx_h2osfc_surf    => cwf%qflx_h2osfc_surf
-    qflx_snow_melt      => cwf%qflx_snow_melt
-    sabg_soil           => pef%sabg_soil
-    sabg_snow           => pef%sabg_snow
-    sabg_chk            => pef%sabg_chk
-    pcolumn             =>pft%column
-    forc_rain           => clm_a2l%forc_rain
-    forc_snow           => clm_a2l%forc_snow
-    forc_lwrad          => clm_a2l%forc_lwrad
-    forc_solad          => clm_a2l%forc_solad
-    forc_solai          => clm_a2l%forc_solai
+   associate(& 
+   tws                       =>     grc%tws                , & ! Input:  [real(r8) (:)] total water storage (mm H2O)             
+   area                      =>     grc%area               , & ! Input:  [real(r8) (:)] gridcell area (km2)                      
+   volr                      =>    clm_a2l%volr            , & ! Input:  [real(r8) (:)] river water storage (m3)                 
+   do_capsnow                =>    cps%do_capsnow          , & ! Input:  [logical (:)]  true => do snow capping                  
+   qflx_rain_grnd_col        =>    pwf_a%qflx_rain_grnd    , & ! Input:  [real(r8) (:)]  rain on ground after interception (mm H2O/s) [+]
+   qflx_snow_grnd_col        =>    pwf_a%qflx_snow_grnd    , & ! Input:  [real(r8) (:)]  snow on ground after interception (mm H2O/s) [+]
+   qflx_snow_h2osfc          =>    cwf%qflx_snow_h2osfc    , & ! Input:  [real(r8) (:)]  snow falling on surface water (mm/s)    
+   frac_sno_eff              =>    cps%frac_sno_eff        , & ! Input:  [real(r8) (:)]  effective snow fraction                 
+   qflx_h2osfc_to_ice        =>    cwf%qflx_h2osfc_to_ice  , & ! Input:  [real(r8) (:)]  conversion of h2osfc to ice             
+   frac_sno                  =>    cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   qflx_drain_perched        =>    cwf%qflx_drain_perched  , & ! Input:  [real(r8) (:)]  sub-surface runoff (mm H2O /s)          
+   qflx_floodc               =>    cwf%qflx_floodc         , & ! Input:  [real(r8) (:)]  total runoff due to flooding            
+   qflx_evap_soi             =>    pwf_a%qflx_evap_soi     , & ! Input:  [real(r8) (:)]  soil evaporation (mm H2O/s) (+ = to atm)
+   qflx_h2osfc_surf          =>    cwf%qflx_h2osfc_surf    , & ! Input:  [real(r8) (:)] surface water runoff (mm/s)              
+   qflx_snow_melt            =>    cwf%qflx_snow_melt      , & ! Input:  [real(r8) (:)]  snow melt (net)                         
+   sabg_soil                 =>    pef%sabg_soil           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by soil (W/m**2)
+   sabg_snow                 =>    pef%sabg_snow           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by snow (W/m**2)
+   sabg_chk                  =>    pef%sabg_chk            , & ! Input:  [real(r8) (:)]  sum of soil/snow using current fsno, for balance check
+   pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  pft's column index                       
+   forc_rain                 =>    clm_a2l%forc_rain       , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                        
+   forc_snow                 =>    clm_a2l%forc_snow       , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                        
+   forc_lwrad                =>    clm_a2l%forc_lwrad      , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)
+   forc_solad                =>    clm_a2l%forc_solad      , & ! Input:  [real(r8) (:,:)]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+   forc_solai                =>    clm_a2l%forc_solai      , & ! Input:  [real(r8) (:,:)]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
 
-    ! Assign local pointers to derived type scalar members (landunit-level)
 
-    ltype             => lun%itype
-    canyon_hwr        =>lun%canyon_hwr
-    urbpoi            =>lun%urbpoi
+   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+   canyon_hwr                =>   lun%canyon_hwr           , & ! Input:  [real(r8) (:)]  ratio of building height to street width
+   urbpoi                    =>   lun%urbpoi               , & ! Input:  [logical (:)]  true => landunit is an urban point       
 
-    ! Assign local pointers to derived type scalar members (column-level)
 
-    cactive           => col%active
-    ctype             => col%itype
-    cgridcell         =>col%gridcell
-    clandunit         =>col%landunit
-    endwb             => cwbal%endwb
-    begwb             => cwbal%begwb
-    qflx_irrig        => cwf%qflx_irrig
-    qflx_surf         => cwf%qflx_surf
-    qflx_qrgwl        => cwf%qflx_qrgwl
-    qflx_drain        => cwf%qflx_drain
-    qflx_runoff       => cwf%qflx_runoff
-    qflx_snwcp_ice    => pwf_a%qflx_snwcp_ice
-    qflx_evap_tot     => pwf_a%qflx_evap_tot
-    qflx_glcice       => cwf%qflx_glcice
-    qflx_glcice_frz   => cwf%qflx_glcice_frz
-    errh2o            => cwbal%errh2o
-    errsoi_col        => cebal%errsoi
-    h2osno             => cws%h2osno
-    h2osno_old         => cws%h2osno_old
-    qflx_dew_snow      => pwf_a%qflx_dew_snow
-    qflx_sub_snow      => pwf_a%qflx_sub_snow
-    qflx_top_soil      => cwf%qflx_top_soil
-    qflx_evap_grnd     => pwf_a%qflx_evap_grnd
-    qflx_dew_grnd      => pwf_a%qflx_dew_grnd
-    qflx_prec_grnd     => pwf_a%qflx_prec_grnd
-    qflx_snwcp_liq     => pwf_a%qflx_snwcp_liq
-    qflx_sl_top_soil   => cwf%qflx_sl_top_soil
-    snow_sources       => cws%snow_sources
-    snow_sinks         => cws%snow_sinks
-    errh2osno          => cws%errh2osno
-    snl                => cps%snl
+   cactive                   =>    col%active              , & ! Input:  [logical (:)]  true=>do computations on this column (see reweightMod for details)
+   ctype                     =>    col%itype               , & ! Input:  [integer (:)]  column type                              
+   cgridcell                 =>   col%gridcell             , & ! Input:  [integer (:)]  column's gridcell index                  
+   clandunit                 =>   col%landunit             , & ! Input:  [integer (:)]  column's landunit index                  
+   endwb                     =>    cwbal%endwb             , & ! Input:  [real(r8) (:)]  water mass end of the time step         
+   begwb                     =>    cwbal%begwb             , & ! Input:  [real(r8) (:)]  water mass begining of the time step    
+   qflx_irrig                =>    cwf%qflx_irrig          , & ! Input:  [real(r8) (:)]  irrigation flux (mm H2O /s)             
+   qflx_surf                 =>    cwf%qflx_surf           , & ! Input:  [real(r8) (:)]  surface runoff (mm H2O /s)              
+   qflx_qrgwl                =>    cwf%qflx_qrgwl          , & ! Input:  [real(r8) (:)]  qflx_surf at glaciers, wetlands, lakes  
+   qflx_drain                =>    cwf%qflx_drain          , & ! Input:  [real(r8) (:)]  sub-surface runoff (mm H2O /s)          
+   qflx_runoff               =>    cwf%qflx_runoff         , & ! Input:  [real(r8) (:)]  total runoff (mm H2O /s)                
+   qflx_snwcp_ice            =>    pwf_a%qflx_snwcp_ice    , & ! Input:  [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]`
+   qflx_evap_tot             =>    pwf_a%qflx_evap_tot     , & ! Input:  [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+   qflx_glcice               =>    cwf%qflx_glcice         , & ! Input:  [real(r8) (:)]  flux of new glacier ice (mm H2O /s) [+ if ice grows]
+   qflx_glcice_frz           =>    cwf%qflx_glcice_frz     , & ! Input:  [real(r8) (:)]  ice growth (mm H2O/s) [+]               
+   errh2o                    =>    cwbal%errh2o            , & ! Output: [real(r8) (:)]  water conservation error (mm H2O)       
+   errsoi_col                =>    cebal%errsoi            , & ! Output: [real(r8) (:)]  column-level soil/lake energy conservation error (W/m**2)
+   h2osno                    =>    cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   h2osno_old                =>    cws%h2osno_old          , & ! Input:  [real(r8) (:)]  snow water (mm H2O) at previous time step
+   qflx_dew_snow             =>    pwf_a%qflx_dew_snow     , & ! Input:  [real(r8) (:)]  surface dew added to snow pack (mm H2O /s) [+]
+   qflx_sub_snow             =>    pwf_a%qflx_sub_snow     , & ! Input:  [real(r8) (:)]  sublimation rate from snow pack (mm H2O /s) [+]
+   qflx_top_soil             =>    cwf%qflx_top_soil       , & ! Input:  [real(r8) (:)]  net water input into soil from top (mm/s)
+   qflx_evap_grnd            =>    pwf_a%qflx_evap_grnd    , & ! Input:  [real(r8) (:)]  ground surface evaporation rate (mm H2O/s) [+]
+   qflx_dew_grnd             =>    pwf_a%qflx_dew_grnd     , & ! Input:  [real(r8) (:)]  ground surface dew formation (mm H2O /s) [+]
+   qflx_prec_grnd            =>    pwf_a%qflx_prec_grnd    , & ! Input:  [real(r8) (:)]  water onto ground including canopy runoff [kg/(m2 s)]
+   qflx_snwcp_liq            =>    pwf_a%qflx_snwcp_liq    , & ! Input:  [real(r8) (:)]  excess liquid water due to snow capping (mm H2O /s) [+]`
+   qflx_sl_top_soil          =>    cwf%qflx_sl_top_soil    , & ! Input:  [real(r8) (:)]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
+   snow_sources              =>    cws%snow_sources        , & ! Output: [real(r8) (:)]  snow sources (mm H2O /s)                
+   snow_sinks                =>    cws%snow_sinks          , & ! Output: [real(r8) (:)]  snow sinks (mm H2O /s)                  
+   errh2osno                 =>    cws%errh2osno           , & ! Output: [real(r8) (:)]  error in h2osno (kg m-2)                
+   snl                       =>    cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
 
-    ! Assign local pointers to derived type scalar members (pft-level)
 
-    pactive           => pft%active
-    pgridcell         =>pft%gridcell
-    plandunit         =>pft%landunit
-    fsa               => pef%fsa
-    fsr               => pef%fsr
-    eflx_lwrad_out    => pef%eflx_lwrad_out
-    eflx_lwrad_net    => pef%eflx_lwrad_net
-    sabv              => pef%sabv
-    sabg              => pef%sabg
-    eflx_sh_tot       => pef%eflx_sh_tot
-    eflx_lh_tot       => pef%eflx_lh_tot
-    eflx_soil_grnd    => pef%eflx_soil_grnd
-    errsol            => pebal%errsol
-    errseb            => pebal%errseb
-    errlon            => pebal%errlon
-    netrad            => pef%netrad
-    eflx_wasteheat_pft => pef%eflx_wasteheat_pft
-    eflx_heat_from_ac_pft => pef%eflx_heat_from_ac_pft
-    eflx_traffic_pft  => pef%eflx_traffic_pft
+   pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                     
+   plandunit                 =>   pft%landunit             , & ! Input:  [integer (:)]  pft's landunit index                     
+   fsa                       =>    pef%fsa                 , & ! Input:  [real(r8) (:)]  solar radiation absorbed (total) (W/m**2)
+   fsr                       =>    pef%fsr                 , & ! Input:  [real(r8) (:)]  solar radiation reflected (W/m**2)      
+   eflx_lwrad_out            =>    pef%eflx_lwrad_out      , & ! Input:  [real(r8) (:)]  emitted infrared (longwave) radiation (W/m**2)
+   eflx_lwrad_net            =>    pef%eflx_lwrad_net      , & ! Input:  [real(r8) (:)]  net infrared (longwave) rad (W/m**2) [+ = to atm]
+   sabv                      =>    pef%sabv                , & ! Input:  [real(r8) (:)]  solar radiation absorbed by vegetation (W/m**2)
+   sabg                      =>    pef%sabg                , & ! Input:  [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)
+   eflx_sh_tot               =>    pef%eflx_sh_tot         , & ! Input:  [real(r8) (:)]  total sensible heat flux (W/m**2) [+ to atm]
+   eflx_lh_tot               =>    pef%eflx_lh_tot         , & ! Input:  [real(r8) (:)]  total latent heat flux (W/m8*2)  [+ to atm]
+   eflx_soil_grnd            =>    pef%eflx_soil_grnd      , & ! Input:  [real(r8) (:)]  soil heat flux (W/m**2) [+ = into soil] 
+   errsol                    =>    pebal%errsol            , & ! Output: [real(r8) (:)]  solar radiation conservation error (W/m**2)
+   errseb                    =>    pebal%errseb            , & ! Output: [real(r8) (:)]  surface energy conservation error (W/m**2)
+   errlon                    =>    pebal%errlon            , & ! Output: [real(r8) (:)]  longwave radiation conservation error (W/m**2)
+   netrad                    =>    pef%netrad              , & ! Output: [real(r8) (:)]  net radiation (positive downward) (W/m**2)
+   eflx_wasteheat_pft        =>    pef%eflx_wasteheat_pft  , & ! Input:  [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+   eflx_heat_from_ac_pft     =>    pef%eflx_heat_from_ac_pft  , & ! Input:  [real(r8) (:)] sensible heat flux put back into canyon due to removal by AC (W/m**2)
+   eflx_traffic_pft          =>    pef%eflx_traffic_pft    , & ! Input:  [real(r8) (:)]  traffic sensible heat flux (W/m**2)     
 
-    ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    qflx_runoffg       => gwf%qflx_runoffg
-    qflx_liq_dynbal    => gwf%qflx_liq_dynbal
-    qflx_snwcp_iceg    => gwf%qflx_snwcp_iceg
-    qflx_ice_dynbal    => gwf%qflx_ice_dynbal
-    eflx_sh_totg       => gef%eflx_sh_totg
-    eflx_dynbal        => gef%eflx_dynbal
+   qflx_runoffg              =>    gwf%qflx_runoffg        , & ! Input:  [real(r8) (:)]  total runoff at gridcell level inc land cover change flux (mm H2O /s)
+   qflx_liq_dynbal           =>    gwf%qflx_liq_dynbal     , & ! Input:  [real(r8) (:)]  liq runoff due to dynamic land cover change (mm H2O /s)
+   qflx_snwcp_iceg           =>    gwf%qflx_snwcp_iceg     , & ! Input:  [real(r8) (:)]  excess snowfall due to snow cap inc land cover change flux (mm H20/s)
+   qflx_ice_dynbal           =>    gwf%qflx_ice_dynbal     , & ! Input:  [real(r8) (:)]  ice runoff due to dynamic land cover change (mm H2O /s)
+   eflx_sh_totg              =>    gef%eflx_sh_totg        , & ! Input:  [real(r8) (:)]  total sensible heat flux at grid level (W/m**2) [+ to atm]
+   eflx_dynbal               =>    gef%eflx_dynbal           & ! Input:  [real(r8) (:)]  energy conversion flux due to dynamic land cover change(W/m**2) [+ to atm]
+   )
 
     ! Get step size and time step
 
@@ -789,6 +682,7 @@ contains
 100 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' W/m2')
 200 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' mm')
 
-  end subroutine BalanceCheck
+    end associate 
+   end subroutine BalanceCheck
 
 end module BalanceCheckMod

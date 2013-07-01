@@ -58,59 +58,31 @@ contains
 ! 09/24/07 Created by S. Swenson 
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: h2osfc(:)         ! surface water (mm)
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: micro_sigma(:)    ! microtopography pdf sigma (m)
-    real(r8), pointer :: frac_sno(:)       ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: frac_sno_eff(:)       ! eff. fraction of ground covered by snow (0 to 1)
-    integer , pointer :: snl(:)            ! minus number of snow layers
-    real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
-    real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (col,lyr) [kg/m2]
-    real(r8), pointer :: topo_slope(:)     ! topographic slope
-    real(r8), pointer :: topo_ndx(:)       ! topographic slope
-    integer , pointer :: ltype(:)          ! landunit type
-    integer , pointer :: clandunit(:)      ! columns's landunit
-
-!
 !EOP
-!
-! !OTHER LOCAL VARIABLES:
-!
-    integer  :: c,f,l         ! indices
+    integer :: c,f,l          ! indices
     real(r8):: d,fd,dfdd      ! temporary variable for frac_h2oscs iteration
     real(r8):: sigma          ! microtopography pdf sigma in mm
-    real(r8):: min_h2osfc,minslope,maxslope,temp_norm,slopemax
+    real(r8):: min_h2osfc
 
 !-----------------------------------------------------------------------
 
-! Assign local pointers to derived subtypes components (column-level)
-
-    h2osoi_liq          => cws%h2osoi_liq
-    h2osfc              => cws%h2osfc
-    micro_sigma         => cps%micro_sigma
-    topo_slope          => cps%topo_slope
-    topo_ndx            => cps%topo_ndx
-    ltype               => lun%itype
-    clandunit           =>col%landunit
-
-    frac_sno            => cps%frac_sno 
-    frac_sno_eff        => cps%frac_sno_eff
-    snl                 => cps%snl
-    h2osno              => cws%h2osno
+   associate(& 
+   h2osfc                              =>    cws%h2osfc                                  , & ! Input:  [real(r8) (:)]  surface water (mm)                                
+   h2osno                              =>    cws%h2osno                                  , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
+   micro_sigma                         =>    cps%micro_sigma                             , & ! Input:  [real(r8) (:)]  microtopography pdf sigma (m)                     
+   h2osoi_liq                          =>    cws%h2osoi_liq                              , & ! Output: [real(r8) (:,:)]  liquid water (col,lyr) [kg/m2]                  
+   frac_sno                            =>    cps%frac_sno                                , & ! Output: [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   frac_sno_eff                        =>    cps%frac_sno_eff                              & ! Output: [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)  
+   )
  
     ! arbitrary lower limit on h2osfc for safer numerics...
     min_h2osfc=1.e-8_r8
 
     do f = 1, num_h2osfc
        c = filter_h2osfc(f)
-       l = clandunit(c)
+       l = col%landunit(c)
        ! h2osfc only calculated for soil vegetated land units
-       if (ltype(l) == istsoil .or. ltype(l) == istcrop) then
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           !  Use newton-raphson method to iteratively determine frac_h20sfc
           !  based on amount of surface water storage (h2osfc) and 
@@ -140,7 +112,6 @@ contains
           if (.not. present(no_update)) then
 
              ! adjust fh2o, fsno when sum is greater than zero
-             ! energy balance error when h2osno > 0 and snl = 0
              if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno(c) > 0) then
 
                 if (frac_h2osfc(c) > 0.01_r8) then             
@@ -161,6 +132,7 @@ contains
 
     end do
        
+    end associate 
   end subroutine FracH2oSfc
 
 end module H2OSfcMod

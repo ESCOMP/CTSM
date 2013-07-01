@@ -81,31 +81,9 @@ contains
 !
 ! !LOCAL VARIABLES
 !
-! local pointers to implicit in arguments
 !
-    logical , pointer :: pactive(:)         ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: pcolumn(:)         ! pft's column index
-    integer , pointer :: plandunit(:)       ! pft's landunit index
-    integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    integer , pointer :: ityplun(:)         ! landunit type
-    real(r8), pointer :: tlai(:)            ! one-sided leaf area index, no burying by snow
-    real(r8), pointer :: tsai(:)            ! one-sided stem area index, no burying by snow
-    real(r8), pointer :: frac_sno(:)        ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: gwc_thr(:)         ! threshold gravimetric soil moisture based on clay content
-    real(r8), pointer :: forc_rho(:)        ! density (kg/m**3)
-    real(r8), pointer :: fv(:)              ! friction velocity (m/s) (for dust model)
-    real(r8), pointer :: u10(:)             ! 10-m wind (m/s) (created for dust model)
-    real(r8), pointer :: mbl_bsn_fct(:)     ! basin factor
-    real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
-    real(r8), pointer :: h2osoi_vol(:,:)    ! volumetric soil water (0<=h2osoi_vol<=watsat)
-    real(r8), pointer :: h2osoi_liq(:,:)    ! liquid soil water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)    ! frozen soil water (kg/m2)
-    real(r8), pointer :: watsat(:,:)        ! saturated volumetric soil water
 
-! local pointers to implicit out arguments
 !
-    real(r8), pointer :: flx_mss_vrt_dst(:,:)   ! surface dust emission (kg/m**2/s) 
-    real(r8), pointer :: flx_mss_vrt_dst_tot(:) ! total dust flux into atmosphere 
 
 ! !REVISION HISTORY
 ! Created by Sam Levis
@@ -140,49 +118,39 @@ contains
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
-    real(r8), pointer :: wtlunit(:)         ! weight of pft relative to landunit
     real(r8) :: sumwt(lbl:ubl)              ! sum of weights
     logical  :: found                       ! temporary for error check
     integer  :: index
 
 !------------------------------------------------------------------------
 
-    ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    forc_rho        => clm_a2l%forc_rho
-
-    ! Assign local pointers to derived type scalar members (landunit-level)
-
-    ityplun         => lun%itype
-
-    ! Assign local pointers to derived type scalar members (column-level)
-
-    frac_sno        => cps%frac_sno
-    gwc_thr         => cps%gwc_thr
-    mbl_bsn_fct     => cps%mbl_bsn_fct
-    mss_frc_cly_vld => cps%mss_frc_cly_vld
-    h2osoi_vol      => cws%h2osoi_vol
-    h2osoi_liq      => cws%h2osoi_liq
-    h2osoi_ice      => cws%h2osoi_ice
-    watsat          => cps%watsat
-
-    ! Assign local pointers to derived type scalar members (pft-level)
-
-    pactive         => pft%active
-    pgridcell       =>pft%gridcell
-    plandunit       =>pft%landunit
-    pcolumn         =>pft%column
-    tlai            => pps%tlai
-    tsai            => pps%tsai
-    fv              => pps%fv
-    u10             => pps%u10
-    flx_mss_vrt_dst => pdf%flx_mss_vrt_dst
-    flx_mss_vrt_dst_tot => pdf%flx_mss_vrt_dst_tot
-   !local pointers from subgridAveMod/p2l_1d
-    wtlunit         =>pft%wtlunit
+   associate(& 
+   forc_rho              =>    clm_a2l%forc_rho        , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
+   ityplun               =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                                      
+   frac_sno              =>    cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   gwc_thr               =>    cps%gwc_thr             , & ! Input:  [real(r8) (:)]  threshold gravimetric soil moisture based on clay content
+   mbl_bsn_fct           =>    cps%mbl_bsn_fct         , & ! Input:  [real(r8) (:)]  basin factor                                      
+   mss_frc_cly_vld       =>    cps%mss_frc_cly_vld     , & ! Input:  [real(r8) (:)]  [frc] Mass fraction clay limited to 0.20          
+   h2osoi_vol            =>    cws%h2osoi_vol          , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
+   h2osoi_liq            =>    cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid soil water (kg/m2)                       
+   h2osoi_ice            =>    cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  frozen soil water (kg/m2)                       
+   watsat                =>    cps%watsat              , & ! Input:  [real(r8) (:,:)]  saturated volumetric soil water                 
+   pactive               =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pgridcell             =>    pft%gridcell            , & ! Input:  [integer (:)]  pft's gridcell index                               
+   plandunit             =>    pft%landunit            , & ! Input:  [integer (:)]  pft's landunit index                               
+   pcolumn               =>    pft%column              , & ! Input:  [integer (:)]  pft's column index                                 
+   tlai                  =>    pps%tlai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index, no burying by snow     
+   tsai                  =>    pps%tsai                , & ! Input:  [real(r8) (:)]  one-sided stem area index, no burying by snow     
+   fv                    =>    pps%fv                  , & ! Input:  [real(r8) (:)]  friction velocity (m/s) (for dust model)          
+   u10                   =>    pps%u10                 , & ! Input:  [real(r8) (:)]  10-m wind (m/s) (created for dust model)          
+   flx_mss_vrt_dst       =>    pdf%flx_mss_vrt_dst     , & ! Output: [real(r8) (:,:)]  surface dust emission (kg/m**2/s)               
+   flx_mss_vrt_dst_tot   =>    pdf%flx_mss_vrt_dst_tot , & ! Output: [real(r8) (:)]  total dust flux into atmosphere                   
+   wtlunit               =>    pft%wtlunit               & ! Output: [real(r8) (:)]  weight of pft relative to landunit                
+   )
 
     ttlai(:) = 0._r8
-! make lai average at landunit level
+    ! make lai average at landunit level
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        ttlai(p) = tlai(p)+tsai(p)
@@ -378,7 +346,8 @@ contains
        end do
     end do
 
-  end subroutine DustEmission
+    end associate 
+   end subroutine DustEmission
 
 !------------------------------------------------------------------------
 !BOP
@@ -416,20 +385,7 @@ contains
 !
 ! !LOCAL VARIABLES
 !
-! local pointers to implicit in arguments
 !
-    logical , pointer :: pactive(:)     ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: pgridcell(:)   ! pft's gridcell index
-    real(r8), pointer :: forc_t(:)      ! atm temperature (K)
-    real(r8), pointer :: forc_pbot(:)   ! atm pressure (Pa)
-    real(r8), pointer :: forc_rho(:)    ! atm density (kg/m**3)
-    real(r8), pointer :: fv(:)          ! friction velocity (m/s)
-    real(r8), pointer :: ram1(:)        ! aerodynamical resistance (s/m)
-    real(r8), pointer :: vlc_trb(:,:)   ! Turbulent deposn velocity (m/s)
-    real(r8), pointer :: vlc_trb_1(:)   ! Turbulent deposition velocity 1
-    real(r8), pointer :: vlc_trb_2(:)   ! Turbulent deposition velocity 2
-    real(r8), pointer :: vlc_trb_3(:)   ! Turbulent deposition velocity 3
-    real(r8), pointer :: vlc_trb_4(:)   ! Turbulent deposition velocity 4
 !
 ! !REVISION HISTORY
 ! Created by Sam Levis
@@ -457,23 +413,21 @@ contains
     real(r8),parameter::shm_nbr_xpn_lnd=-2._r8/3._r8 ![frc] shm_nbr_xpn over land
 !------------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (gridcell-level)
 
-    forc_pbot => clm_a2l%forc_pbot
-    forc_rho  => clm_a2l%forc_rho
-    forc_t    => clm_a2l%forc_t
-
-    ! Assign local pointers to derived type members (pft-level)
-
-    pactive   => pft%active
-    pgridcell =>pft%gridcell
-    fv        => pps%fv
-    ram1      => pps%ram1
-    vlc_trb   => pdf%vlc_trb
-    vlc_trb_1 => pdf%vlc_trb_1
-    vlc_trb_2 => pdf%vlc_trb_2
-    vlc_trb_3 => pdf%vlc_trb_3
-    vlc_trb_4 => pdf%vlc_trb_4
+   associate(& 
+   forc_pbot   =>    clm_a2l%forc_pbot , & ! Input:  [real(r8) (:)]  atm pressure (Pa)                                 
+   forc_rho    =>    clm_a2l%forc_rho  , & ! Input:  [real(r8) (:)]  atm density (kg/m**3)                             
+   forc_t      =>    clm_a2l%forc_t    , & ! Input:  [real(r8) (:)]  atm temperature (K)                               
+   pactive     =>    pft%active        , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   pgridcell   =>    pft%gridcell      , & ! Input:  [integer (:)]  pft's gridcell index                               
+   fv          =>    pps%fv            , & ! Input:  [real(r8) (:)]  friction velocity (m/s)                           
+   ram1        =>    pps%ram1          , & ! Input:  [real(r8) (:)]  aerodynamical resistance (s/m)                    
+   vlc_trb     =>    pdf%vlc_trb       , & ! Input:  [real(r8) (:,:)]  Turbulent deposn velocity (m/s)                 
+   vlc_trb_1   =>    pdf%vlc_trb_1     , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 1                   
+   vlc_trb_2   =>    pdf%vlc_trb_2     , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 2                   
+   vlc_trb_3   =>    pdf%vlc_trb_3     , & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 3                   
+   vlc_trb_4   =>    pdf%vlc_trb_4       & ! Input:  [real(r8) (:)]  Turbulent deposition velocity 4                   
+   )
 
     do p = lbp,ubp
        if (pactive(p)) then
@@ -547,7 +501,8 @@ contains
        end if
     end do 
 
-  end subroutine DustDryDep
+    end associate 
+   end subroutine DustDryDep
 
 !------------------------------------------------------------------------
 !BOP
@@ -579,13 +534,6 @@ contains
 !
 ! !REVISION HISTORY
 ! Created by Samual Levis
-!
-! !LOCAL VARIABLES
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: mbl_bsn_fct(:) !basin factor
-!
 !
 ! !LOCAL VARIABLES
 !EOP
@@ -648,9 +596,10 @@ contains
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
 !------------------------------------------------------------------------
 
-    ! Assign local pointers to derived type scalar members (column-level)
 
-    mbl_bsn_fct => cps%mbl_bsn_fct
+   associate(& 
+   mbl_bsn_fct  =>  cps%mbl_bsn_fct   & ! Input:  [real(r8) (:)] basin factor                                       
+   )
 
     ! the following comes from (1) szdstlgn.F subroutine ovr_src_snk_frc_get
     !                      and (2) dstszdst.F subroutine dst_szdst_ini
@@ -882,6 +831,7 @@ contains
        stk_crc(m) = vlc_grv(m) / vlc_stk(m)
     end do
 
-  end subroutine Dustini
+    end associate 
+   end subroutine Dustini
 
 end module DUSTMod

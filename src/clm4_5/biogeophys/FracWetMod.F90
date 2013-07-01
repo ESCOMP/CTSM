@@ -57,22 +57,6 @@ contains
 ! 03/08/29 Mariana Vertenstein : Migrated to vectorized code
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    integer , pointer :: frac_veg_nosno(:) ! fraction of veg not covered by snow (0/1 now) [-]
-    real(r8), pointer :: dewmx(:)          ! Maximum allowed dew [mm]
-    real(r8), pointer :: elai(:)           ! one-sided leaf area index with burying by snow
-    real(r8), pointer :: esai(:)           ! one-sided stem area index with burying by snow
-    real(r8), pointer :: h2ocan(:)         ! total canopy water (mm H2O)
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: fwet(:)           ! fraction of canopy that is wet (0 to 1)
-    real(r8), pointer :: fdry(:)           ! fraction of foliage that is green and dry [-] (new)
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
     integer  :: fp,p             ! indices
@@ -80,15 +64,16 @@ contains
     real(r8) :: dewmxi           ! inverse of maximum allowed dew [1/mm]
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (pft-level)
 
-    frac_veg_nosno => pps%frac_veg_nosno
-    dewmx => pps%dewmx
-    elai => pps%elai
-    esai => pps%esai
-    h2ocan => pws%h2ocan
-    fwet => pps%fwet
-    fdry => pps%fdry
+   associate(& 
+   frac_veg_nosno     => pps%frac_veg_nosno , & ! Input:  [integer (:)]  fraction of veg not covered by snow (0/1 now) [-]
+   dewmx              => pps%dewmx          , & ! Input:  [real(r8) (:)]  Maximum allowed dew [mm]                
+   elai               => pps%elai           , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
+   esai               => pps%esai           , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
+   h2ocan             => pws%h2ocan         , & ! Input:  [real(r8) (:)]  total canopy water (mm H2O)             
+   fwet               => pps%fwet           , & ! Output: [real(r8) (:)]  fraction of canopy that is wet (0 to 1) 
+   fdry               => pps%fdry             & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
+   )
 
     ! Compute fraction of canopy that is wet and dry
 
@@ -114,6 +99,7 @@ contains
        end if
     end do
 
-  end subroutine FracWet
+    end associate 
+   end subroutine FracWet
 
 end module FracWetMod

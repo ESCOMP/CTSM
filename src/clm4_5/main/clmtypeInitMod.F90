@@ -18,8 +18,6 @@ module clmtypeInitMod
 #if (defined VICHYDRO)
   use clm_varpar  , only : nlayer, nlayert
 #endif
-  use clm_varctl  , only : use_c13, use_c14
-
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -203,15 +201,11 @@ contains
     call init_pft_cstate_type(begp, endp, pcs)
     call init_pft_cstate_type(begc, endc, pcs_a)
     
-    if ( use_c13 ) then       
-       call init_pft_cstate_type(begp, endp, pc13s)
-       call init_pft_cstate_type(begc, endc, pc13s_a)
-    endif
+    call init_pft_cstate_type(begp, endp, pc13s)
+    call init_pft_cstate_type(begc, endc, pc13s_a)
 
-    if ( use_c14 ) then
-       call init_pft_cstate_type(begp, endp, pc14s)
-       call init_pft_cstate_type(begc, endc, pc14s_a)
-    endif
+    call init_pft_cstate_type(begp, endp, pc14s)
+    call init_pft_cstate_type(begc, endc, pc14s_a)
 
     ! pft nitrogen state variables at the pft level and averaged to the column
 
@@ -236,15 +230,11 @@ contains
     call init_pft_cflux_type(begp, endp, pcf)
     call init_pft_cflux_type(begc, endc, pcf_a)
     
-    if ( use_c13 ) then       
-       call init_pft_cflux_type(begp, endp, pc13f)
-       call init_pft_cflux_type(begc, endc, pc13f_a)
-    endif
+    call init_pft_cflux_type(begp, endp, pc13f)
+    call init_pft_cflux_type(begc, endc, pc13f_a)
     
-    if ( use_c14 ) then
-       call init_pft_cflux_type(begp, endp, pc14f)
-       call init_pft_cflux_type(begc, endc, pc14f_a)
-    endif
+    call init_pft_cflux_type(begp, endp, pc14f)
+    call init_pft_cflux_type(begc, endc, pc14f_a)
 
     ! pft nitrogen flux variables at pft level and averaged to column
 
@@ -283,13 +273,9 @@ contains
 
     call init_column_cstate_type(begc, endc, ccs)
     
-    if ( use_c13 ) then       
-       call init_column_cstate_type(begc, endc, cc13s)
-    endif
+    call init_column_cstate_type(begc, endc, cc13s)
 
-    if ( use_c14 ) then       
-       call init_column_cstate_type(begc, endc, cc14s)
-    endif
+    call init_column_cstate_type(begc, endc, cc14s)
 
     ! column nitrogen state variables at column level
 
@@ -307,13 +293,9 @@ contains
 
     call init_column_cflux_type(begc, endc, ccf)
     
-    if ( use_c13 ) then       
-       call init_column_cflux_type(begc, endc, cc13f)
-    endif
-    
-    if ( use_c14 ) then       
-       call init_column_cflux_type(begc, endc, cc14f)
-    endif
+    call init_column_cflux_type(begc, endc, cc13f)
+  
+    call init_column_cflux_type(begc, endc, cc14f)
 
 #if (defined LCH4)
     ! column CH4 flux variables at column level
@@ -980,31 +962,31 @@ contains
     allocate(pps%ram1_lake(beg:end))
     allocate(pps%rh_leaf(beg:end))
     allocate(pps%rhaf(beg:end))
+    allocate(pps%gddmaturity(beg:end))
+    allocate(pps%huileaf(beg:end))
+    allocate(pps%huigrain(beg:end))
+    allocate(pps%gddplant(beg:end))
+    allocate(pps%gddtsoi(beg:end))
+    allocate(pps%croplive(beg:end))
+    allocate(pps%peaklai(beg:end))
+    allocate(pps%aleafi(beg:end))
+    allocate(pps%astemi(beg:end))
+    allocate(pps%aleaf(beg:end))
+    allocate(pps%astem(beg:end))
+    allocate(pps%gdd0(beg:end))
+    allocate(pps%gdd8(beg:end))
+    allocate(pps%gdd10(beg:end))
+    allocate(pps%gdd020(beg:end))
+    allocate(pps%gdd820(beg:end))
+    allocate(pps%gdd1020(beg:end))
+    allocate(pps%harvdate(beg:end))  !,numpft)) ! crop rotation
+    allocate(pps%htmx(beg:end))
     if ( crop_prog )then
        allocate(pps%hdidx(beg:end))
        allocate(pps%cumvd(beg:end))
-       allocate(pps%htmx(beg:end))
        allocate(pps%vf(beg:end))
-       allocate(pps%gddmaturity(beg:end))
-       allocate(pps%gdd0(beg:end))
-       allocate(pps%gdd8(beg:end))
-       allocate(pps%gdd10(beg:end))
-       allocate(pps%gdd020(beg:end))
-       allocate(pps%gdd820(beg:end))
-       allocate(pps%gdd1020(beg:end))
-       allocate(pps%gddplant(beg:end))
-       allocate(pps%gddtsoi(beg:end))
-       allocate(pps%huileaf(beg:end))
-       allocate(pps%huigrain(beg:end))
-       allocate(pps%aleafi(beg:end))
-       allocate(pps%astemi(beg:end))
-       allocate(pps%aleaf(beg:end))
-       allocate(pps%astem(beg:end))
-       allocate(pps%croplive(beg:end))
        allocate(pps%cropplant(beg:end)) !,numpft)) ! make 2-D if using
-       allocate(pps%harvdate(beg:end))  !,numpft)) ! crop rotation
        allocate(pps%idop(beg:end))
-       allocate(pps%peaklai(beg:end))
     end if
     allocate(pps%vds(beg:end))
     allocate(pps%forc_hgt_u_pft(beg:end))
@@ -1015,10 +997,8 @@ contains
     ! 4/14/05: PET
     ! Adding isotope code
     
-    if ( use_c13 ) then       
-       allocate(pps%alphapsnsun(beg:end))
-       allocate(pps%alphapsnsha(beg:end))
-    endif
+    allocate(pps%alphapsnsun(beg:end))
+    allocate(pps%alphapsnsha(beg:end))
 
     allocate(pps%sandfrac(beg:end))
     allocate(pps%clayfrac(beg:end))
@@ -1108,45 +1088,39 @@ contains
     pps%ram1_lake(beg:end) = nan
     pps%rh_leaf(beg:end) = spval
     pps%rhaf(beg:end)    = spval
+    pps%gddmaturity(beg:end) = spval
+    pps%huileaf(beg:end)     = nan
+    pps%huigrain(beg:end)    = nan
+    pps%gddplant(beg:end)    = spval
+    pps%gddtsoi(beg:end)     = spval
+    pps%croplive(beg:end)    = .false.
+    pps%peaklai(beg:end)     = 0
+    pps%aleafi(beg:end)      = nan
+    pps%astemi(beg:end)      = nan
+    pps%aleaf(beg:end)       = nan
+    pps%astem(beg:end)       = nan
+    pps%gdd0(beg:end)        = spval
+    pps%gdd8(beg:end)        = spval
+    pps%gdd10(beg:end)       = spval
+    pps%gdd020(beg:end)      = spval
+    pps%gdd820(beg:end)      = spval
+    pps%gdd1020(beg:end)     = spval
+    pps%harvdate(beg:end)    = huge(1)
+    pps%htmx(beg:end)        = 0.0_r8
     if ( crop_prog )then
        pps%hdidx(beg:end)       = nan
        pps%cumvd(beg:end)       = nan
-       pps%htmx(beg:end)        = 0.0_r8
        pps%vf(beg:end)          = 0.0_r8
-       pps%gddmaturity(beg:end) = spval
-       pps%gdd0(beg:end)        = spval
-       pps%gdd8(beg:end)        = spval
-       pps%gdd10(beg:end)       = spval
-       pps%gdd020(beg:end)      = spval
-       pps%gdd820(beg:end)      = spval
-       pps%gdd1020(beg:end)     = spval
-       pps%gddplant(beg:end)    = spval
-       pps%gddtsoi(beg:end)     = spval
-       pps%huileaf(beg:end)     = nan
-       pps%huigrain(beg:end)    = nan
-       pps%aleafi(beg:end)      = nan
-       pps%astemi(beg:end)      = nan
-       pps%aleaf(beg:end)       = nan
-       pps%astem(beg:end)       = nan
-       pps%croplive(beg:end)    = .false.
        pps%cropplant(beg:end)   = .false.
-       pps%harvdate(beg:end)    = huge(1)
        pps%idop(beg:end)        = huge(1)
-       pps%peaklai(beg:end)     = 0
     end if
     pps%vds(beg:end) = nan
     pps%forc_hgt_u_pft(beg:end) = nan
     pps%forc_hgt_t_pft(beg:end) = nan
     pps%forc_hgt_q_pft(beg:end) = nan
-    ! 4/14/05: PET
-    ! Adding isotope code    ! EBK Check this!
-    !!!pps%cisun(beg:end) = spval
-    !!!pps%cisha(beg:end) = spval
     
-    if ( use_c13 ) then       
-       pps%alphapsnsun(beg:end) = spval
-       pps%alphapsnsha(beg:end) = spval
-    endif
+    pps%alphapsnsun(beg:end) = spval
+    pps%alphapsnsha(beg:end) = spval
 
 #if defined (LCH4)
     ! CH4 code
@@ -1210,9 +1184,7 @@ contains
     allocate(pepv%gpp(beg:end))
     allocate(pepv%availc(beg:end))
     allocate(pepv%xsmrpool_recover(beg:end))
-    if ( use_c13 ) then
-       allocate(pepv%xsmrpool_c13ratio(beg:end))
-    endif
+    allocate(pepv%xsmrpool_c13ratio(beg:end))
     allocate(pepv%alloc_pnow(beg:end))
     allocate(pepv%c_allometry(beg:end))
     allocate(pepv%n_allometry(beg:end))
@@ -1234,15 +1206,11 @@ contains
     allocate(pepv%tempsum_litfall(beg:end))
     allocate(pepv%annsum_litfall(beg:end))
 #endif
-    if ( use_c13 ) then
-       allocate(pepv%rc13_canair(beg:end))
-       allocate(pepv%rc13_psnsun(beg:end))
-       allocate(pepv%rc13_psnsha(beg:end))
-    endif
+    allocate(pepv%rc13_canair(beg:end))
+    allocate(pepv%rc13_psnsun(beg:end))
+    allocate(pepv%rc13_psnsha(beg:end))
     
-    if ( use_c14 ) then
-       allocate(pepv%rc14_atm(beg:end))
-    endif
+    allocate(pepv%rc14_atm(beg:end))
 
     pepv%dormant_flag(beg:end) = nan
     pepv%days_active(beg:end) = nan
@@ -1268,9 +1236,7 @@ contains
     pepv%gpp(beg:end) = nan
     pepv%availc(beg:end) = nan
     pepv%xsmrpool_recover(beg:end) = nan
-    if ( use_c13 ) then
-       pepv%xsmrpool_c13ratio(beg:end) = nan
-    endif
+    pepv%xsmrpool_c13ratio(beg:end) = nan
     pepv%alloc_pnow(beg:end) = nan
     pepv%c_allometry(beg:end) = nan
     pepv%n_allometry(beg:end) = nan
@@ -1292,18 +1258,11 @@ contains
     pepv%tempsum_litfall(beg:end) = nan
     pepv%annsum_litfall(beg:end) = nan
 #endif
-    if ( use_c13 ) then
-       pepv%rc13_canair(beg:end) = spval
-       pepv%rc13_psnsun(beg:end) = spval
-       pepv%rc13_psnsha(beg:end) = spval
-    endif
+    pepv%rc13_canair(beg:end) = spval
+    pepv%rc13_psnsun(beg:end) = spval
+    pepv%rc13_psnsha(beg:end) = spval
 
-    if ( use_c14 ) then
-       pepv%rc14_atm(beg:end) = nan
-       ! pepv%rc14_canair(beg:end) = nan
-       ! pepv%rc14_psnsun(beg:end) = nan
-       ! pepv%rc14_psnsha(beg:end) = nan
-    endif
+    pepv%rc14_atm(beg:end) = nan
     
   end subroutine init_pft_epv_type
 
@@ -1640,11 +1599,9 @@ contains
     allocate(pcs%totvegc(beg:end))
     allocate(pcs%totpftc(beg:end))
     allocate(pcs%leafcmax(beg:end))
-    if ( crop_prog )then
-       allocate(pcs%grainc(beg:end))
-       allocate(pcs%grainc_storage(beg:end))
-       allocate(pcs%grainc_xfer(beg:end))
-    end if
+    allocate(pcs%grainc(beg:end))
+    allocate(pcs%grainc_storage(beg:end))
+    allocate(pcs%grainc_xfer(beg:end))
 #ifdef CN
     allocate(pcs%woodc(beg:end))
 #endif
@@ -1677,11 +1634,9 @@ contains
     pcs%totvegc(beg:end) = nan
     pcs%totpftc(beg:end) = nan
     pcs%leafcmax(beg:end) = nan
-    if ( crop_prog )then
-       pcs%grainc(beg:end)         = nan
-       pcs%grainc_storage(beg:end) = nan
-       pcs%grainc_xfer(beg:end)    = nan
-    end if
+    pcs%grainc(beg:end)         = nan
+    pcs%grainc_storage(beg:end) = nan
+    pcs%grainc_xfer(beg:end)    = nan
 #ifdef CN
     pcs%woodc(beg:end) = nan
 #endif
@@ -1712,11 +1667,9 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    if ( crop_prog )then
-       allocate(pns%grainn(beg:end))
-       allocate(pns%grainn_storage(beg:end))
-       allocate(pns%grainn_xfer(beg:end))
-    end if
+    allocate(pns%grainn(beg:end))
+    allocate(pns%grainn_storage(beg:end))
+    allocate(pns%grainn_xfer(beg:end))
     allocate(pns%leafn(beg:end))
     allocate(pns%leafn_storage(beg:end))
     allocate(pns%leafn_xfer(beg:end))
@@ -1743,11 +1696,9 @@ contains
     allocate(pns%totvegn(beg:end))
     allocate(pns%totpftn(beg:end))
 
-    if ( crop_prog )then
-       pns%grainn(beg:end)         = nan
-       pns%grainn_storage(beg:end) = nan
-       pns%grainn_xfer(beg:end)    = nan
-    end if
+    pns%grainn(beg:end)         = nan
+    pns%grainn_storage(beg:end) = nan
+    pns%grainn_xfer(beg:end)    = nan
     pns%leafn(beg:end) = nan
     pns%leafn_storage(beg:end) = nan
     pns%leafn_xfer(beg:end) = nan
@@ -2265,18 +2216,16 @@ contains
     allocate(pcf%pft_cinputs(beg:end))
     allocate(pcf%pft_coutputs(beg:end))
     allocate(pcf%pft_fire_closs(beg:end))
-    if ( crop_prog )then
-       allocate(pcf%xsmrpool_to_atm(beg:end))
-       allocate(pcf%grainc_xfer_to_grainc(beg:end))
-       allocate(pcf%livestemc_to_litter(beg:end))
-       allocate(pcf%grainc_to_food(beg:end))
-       allocate(pcf%cpool_to_grainc(beg:end))
-       allocate(pcf%cpool_to_grainc_storage(beg:end))
-       allocate(pcf%cpool_grain_gr(beg:end))
-       allocate(pcf%cpool_grain_storage_gr(beg:end))
-       allocate(pcf%transfer_grain_gr(beg:end))
-       allocate(pcf%grainc_storage_to_xfer(beg:end))
-    end if
+    allocate(pcf%cpool_to_grainc(beg:end))
+    allocate(pcf%cpool_to_grainc_storage(beg:end))
+    allocate(pcf%livestemc_to_litter(beg:end))
+    allocate(pcf%grainc_to_food(beg:end))
+    allocate(pcf%grainc_xfer_to_grainc(beg:end))
+    allocate(pcf%cpool_grain_gr(beg:end))
+    allocate(pcf%cpool_grain_storage_gr(beg:end))
+    allocate(pcf%transfer_grain_gr(beg:end))
+    allocate(pcf%xsmrpool_to_atm(beg:end))
+    allocate(pcf%grainc_storage_to_xfer(beg:end))
 #ifdef CN
     allocate(pcf%frootc_alloc(beg:end))
     allocate(pcf%frootc_loss(beg:end))
@@ -2486,18 +2435,16 @@ contains
     pcf%pft_cinputs(beg:end) = nan
     pcf%pft_coutputs(beg:end) = nan
     pcf%pft_fire_closs(beg:end) = nan
-    if ( crop_prog )then
-       pcf%xsmrpool_to_atm(beg:end)         = nan
-       pcf%grainc_xfer_to_grainc(beg:end)   = nan
-       pcf%livestemc_to_litter(beg:end)     = nan
-       pcf%grainc_to_food(beg:end)          = nan
-       pcf%cpool_to_grainc(beg:end)         = nan
-       pcf%cpool_to_grainc_storage(beg:end) = nan
-       pcf%cpool_grain_gr(beg:end)          = nan
-       pcf%cpool_grain_storage_gr(beg:end)  = nan
-       pcf%transfer_grain_gr(beg:end)       = nan
-       pcf%grainc_storage_to_xfer(beg:end)  = nan
-    end if
+    pcf%cpool_to_grainc(beg:end)         = nan
+    pcf%cpool_to_grainc_storage(beg:end) = nan
+    pcf%livestemc_to_litter(beg:end)     = nan
+    pcf%grainc_to_food(beg:end)          = nan
+    pcf%grainc_xfer_to_grainc(beg:end)   = nan
+    pcf%cpool_grain_gr(beg:end)          = nan
+    pcf%cpool_grain_storage_gr(beg:end)  = nan
+    pcf%transfer_grain_gr(beg:end)       = nan
+    pcf%xsmrpool_to_atm(beg:end)         = nan
+    pcf%grainc_storage_to_xfer(beg:end)  = nan
 #if (defined CN)
     pcf%frootc_alloc(beg:end) = nan
     pcf%frootc_loss(beg:end) = nan
@@ -2664,13 +2611,13 @@ contains
     allocate(pnf%pft_noutputs(beg:end))
     allocate(pnf%wood_harvestn(beg:end))
     allocate(pnf%pft_fire_nloss(beg:end))
+    allocate(pnf%npool_to_grainn(beg:end))
+    allocate(pnf%npool_to_grainn_storage(beg:end))
+    allocate(pnf%livestemn_to_litter(beg:end))
+    allocate(pnf%grainn_to_food(beg:end))
+    allocate(pnf%grainn_xfer_to_grainn(beg:end))
+    allocate(pnf%grainn_storage_to_xfer(beg:end))
     if ( crop_prog )then
-       allocate(pnf%grainn_xfer_to_grainn(beg:end))
-       allocate(pnf%livestemn_to_litter(beg:end))
-       allocate(pnf%grainn_to_food(beg:end))
-       allocate(pnf%npool_to_grainn(beg:end))
-       allocate(pnf%npool_to_grainn_storage(beg:end))
-       allocate(pnf%grainn_storage_to_xfer(beg:end))
        allocate(pnf%fert(beg:end))
        allocate(pnf%soyfixn(beg:end))
     end if
@@ -2799,12 +2746,12 @@ contains
     pnf%pft_noutputs(beg:end) = nan
     pnf%wood_harvestn(beg:end) = nan
     pnf%pft_fire_nloss(beg:end) = nan
+    pnf%npool_to_grainn(beg:end)         = nan
+    pnf%npool_to_grainn_storage(beg:end) = nan
+    pnf%livestemn_to_litter(beg:end)     = nan
+    pnf%grainn_to_food(beg:end)          = nan
     if ( crop_prog )then
        pnf%grainn_xfer_to_grainn(beg:end)   = nan
-       pnf%livestemn_to_litter(beg:end)     = nan
-       pnf%grainn_to_food(beg:end)          = nan
-       pnf%npool_to_grainn(beg:end)         = nan
-       pnf%npool_to_grainn_storage(beg:end) = nan
        pnf%grainn_storage_to_xfer(beg:end)  = nan
        pnf%fert(beg:end)                    = nan
        pnf%soyfixn(beg:end)                 = nan

@@ -85,71 +85,7 @@ contains
 ! 03/28/08, Mark Flanner: Added aerosol deposition and flushing with meltwater
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: qflx_snow_melt(:)   ! net snow melt
-    integer, pointer :: clandunit(:)         ! columns's landunit
-    integer, pointer :: ltype(:)             ! landunit type
-    real(r8), pointer :: frac_sno_eff(:)     ! eff. fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: frac_sno(:)         ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: int_snow(:)         ! integrated snowfall [mm]
-    real(r8), pointer :: h2osno(:)           ! snow water (mm H2O)
-    real(r8), pointer :: qflx_ev_snow(:)     ! evaporation flux from snow (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_ev_soil(:)     ! evaporation flux from soil (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_soi(:)    ! evaporation flux from soil (W/m**2) [+ to atm]
-    integer , pointer :: snl(:)              !number of snow layers
-    logical , pointer :: do_capsnow(:)       !true => do snow capping
-    real(r8), pointer :: qflx_snomelt(:)     !snow melt (mm H2O /s)
-    real(r8), pointer :: qflx_rain_grnd(:)   !rain on ground after interception (mm H2O/s) [+]
-    real(r8), pointer :: qflx_sub_snow(:)    !sublimation rate from snow pack (mm H2O /s) [+]
-    real(r8), pointer :: qflx_evap_grnd(:)   !ground surface evaporation rate (mm H2O/s) [+]
-    real(r8), pointer :: qflx_dew_snow(:)    !surface dew added to snow pack (mm H2O /s) [+]
-    real(r8), pointer :: qflx_dew_grnd(:)    !ground surface dew formation (mm H2O /s) [+]
-    real(r8), pointer :: dz(:,:)             !layer depth (m)
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: qflx_top_soil(:)     !net water input into soil from top (mm/s)
-!
-! local pointers to implicit inout arguments
-!
-    real(r8), pointer :: h2osoi_ice(:,:)     !ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)     !liquid water (kg/m2)
-    integer , pointer :: cgridcell(:)        ! columns's gridcell (col) 
-    real(r8), pointer :: mss_bcphi(:,:)      ! hydrophillic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_bcpho(:,:)      ! hydrophobic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocphi(:,:)      ! hydrophillic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocpho(:,:)      ! hydrophobic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst1(:,:)       ! mass of dust species 1 in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst2(:,:)       ! mass of dust species 2 in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst3(:,:)       ! mass of dust species 3 in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst4(:,:)       ! mass of dust species 4 in snow (col,lyr) [kg]
-    real(r8), pointer :: flx_bc_dep_dry(:)   ! dry BC deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_bc_dep_wet(:)   ! wet BC deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_bc_dep(:)       ! total BC deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_bc_dep_pho(:)   ! hydrophobic BC deposition (col) [kg m-1 s-1]
-    real(r8), pointer :: flx_bc_dep_phi(:)   ! hydrophillic BC deposition (col) [kg m-1 s-1]
-    real(r8), pointer :: flx_oc_dep_dry(:)   ! dry OC deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_oc_dep_wet(:)   ! wet OC deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_oc_dep(:)       ! total OC deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_oc_dep_pho(:)   ! hydrophobic OC deposition (col) [kg m-1 s-1]
-    real(r8), pointer :: flx_oc_dep_phi(:)   ! hydrophillic OC deposition (col) [kg m-1 s-1]
-    real(r8), pointer :: flx_dst_dep_dry1(:) ! dry dust (species 1) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_wet1(:) ! wet dust (species 1) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_dry2(:) ! dry dust (species 2) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_wet2(:) ! wet dust (species 2) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_dry3(:) ! dry dust (species 3) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_wet3(:) ! wet dust (species 3) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_dry4(:) ! dry dust (species 4) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep_wet4(:) ! wet dust (species 4) deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: flx_dst_dep(:)      ! total dust deposition (col) [kg m-2 s-1]
-    real(r8), pointer :: forc_aer(:,:)       ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
-!
     integer  :: c, j, fc, l                        !do loop/array indices
     real(r8) :: dtime                              !land model time step (sec)
     real(r8) :: qin(lbc:ubc)                       !water flow into the elmement (mm/s) 
@@ -179,59 +115,59 @@ contains
  
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtype components (column-level)
-
-    frac_sno_eff     => cps%frac_sno_eff 
-    frac_sno         => cps%frac_sno 
-    clandunit        =>col%landunit
-    ltype            => lun%itype
-    int_snow         => cws%int_snow
-    h2osno           => cws%h2osno
-    qflx_ev_snow     => pwf_a%qflx_ev_snow
-    qflx_ev_soil     => pwf_a%qflx_ev_soil
-    qflx_evap_soi    => pwf_a%qflx_evap_soi
-    qflx_snow_melt   => cwf%qflx_snow_melt
-    snl              => cps%snl
-    do_capsnow       => cps%do_capsnow
-    qflx_snomelt     => cwf%qflx_snomelt
-    qflx_rain_grnd   => pwf_a%qflx_rain_grnd
-    qflx_sub_snow    => pwf_a%qflx_sub_snow
-    qflx_evap_grnd   => pwf_a%qflx_evap_grnd
-    qflx_dew_snow    => pwf_a%qflx_dew_snow
-    qflx_dew_grnd    => pwf_a%qflx_dew_grnd
-    qflx_top_soil    => cwf%qflx_top_soil
-    dz               => cps%dz
-    h2osoi_ice       => cws%h2osoi_ice
-    h2osoi_liq       => cws%h2osoi_liq
-    cgridcell        =>col%gridcell
-    mss_bcphi        => cps%mss_bcphi
-    mss_bcpho        => cps%mss_bcpho
-    mss_ocphi        => cps%mss_ocphi
-    mss_ocpho        => cps%mss_ocpho
-    mss_dst1         => cps%mss_dst1
-    mss_dst2         => cps%mss_dst2
-    mss_dst3         => cps%mss_dst3
-    mss_dst4         => cps%mss_dst4
-    flx_bc_dep       => cwf%flx_bc_dep
-    flx_bc_dep_wet   => cwf%flx_bc_dep_wet
-    flx_bc_dep_dry   => cwf%flx_bc_dep_dry
-    flx_bc_dep_phi   => cwf%flx_bc_dep_phi
-    flx_bc_dep_pho   => cwf%flx_bc_dep_pho
-    flx_oc_dep       => cwf%flx_oc_dep
-    flx_oc_dep_wet   => cwf%flx_oc_dep_wet
-    flx_oc_dep_dry   => cwf%flx_oc_dep_dry
-    flx_oc_dep_phi   => cwf%flx_oc_dep_phi
-    flx_oc_dep_pho   => cwf%flx_oc_dep_pho
-    flx_dst_dep      => cwf%flx_dst_dep
-    flx_dst_dep_wet1 => cwf%flx_dst_dep_wet1
-    flx_dst_dep_dry1 => cwf%flx_dst_dep_dry1
-    flx_dst_dep_wet2 => cwf%flx_dst_dep_wet2
-    flx_dst_dep_dry2 => cwf%flx_dst_dep_dry2
-    flx_dst_dep_wet3 => cwf%flx_dst_dep_wet3
-    flx_dst_dep_dry3 => cwf%flx_dst_dep_dry3
-    flx_dst_dep_wet4 => cwf%flx_dst_dep_wet4
-    flx_dst_dep_dry4 => cwf%flx_dst_dep_dry4
-    forc_aer         => clm_a2l%forc_aer
+   associate(& 
+   frac_sno_eff        => cps%frac_sno_eff        , & ! Input:  [real(r8) (:)]  eff. fraction of ground covered by snow (0 to 1)
+   frac_sno            => cps%frac_sno            , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   clandunit           => col%landunit            , & ! Input:  [integer (:)]  columns's landunit                       
+   ltype               => lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+   int_snow            => cws%int_snow            , & ! Input:  [real(r8) (:)]  integrated snowfall [mm]                
+   h2osno              => cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   qflx_ev_snow        => pwf_a%qflx_ev_snow      , & ! Input:  [real(r8) (:)]  evaporation flux from snow (W/m**2) [+ to atm]
+   qflx_ev_soil        => pwf_a%qflx_ev_soil      , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+   qflx_evap_soi       => pwf_a%qflx_evap_soi     , & ! Input:  [real(r8) (:)]  evaporation flux from soil (W/m**2) [+ to atm]
+   qflx_snow_melt      => cwf%qflx_snow_melt      , & ! Input:  [real(r8) (:)]  net snow melt                           
+   snl                 => cps%snl                 , & ! Input:  [integer (:)] number of snow layers                     
+   do_capsnow          => cps%do_capsnow          , & ! Input:  [logical (:)] true => do snow capping                   
+   qflx_snomelt        => cwf%qflx_snomelt        , & ! Input:  [real(r8) (:)] snow melt (mm H2O /s)                    
+   qflx_rain_grnd      => pwf_a%qflx_rain_grnd    , & ! Input:  [real(r8) (:)] rain on ground after interception (mm H2O/s) [+]
+   qflx_sub_snow       => pwf_a%qflx_sub_snow     , & ! Input:  [real(r8) (:)] sublimation rate from snow pack (mm H2O /s) [+]
+   qflx_evap_grnd      => pwf_a%qflx_evap_grnd    , & ! Input:  [real(r8) (:)] ground surface evaporation rate (mm H2O/s) [+]
+   qflx_dew_snow       => pwf_a%qflx_dew_snow     , & ! Input:  [real(r8) (:)] surface dew added to snow pack (mm H2O /s) [+]
+   qflx_dew_grnd       => pwf_a%qflx_dew_grnd     , & ! Input:  [real(r8) (:)] ground surface dew formation (mm H2O /s) [+]
+   qflx_top_soil       => cwf%qflx_top_soil       , & ! Output: [real(r8) (:)] net water input into soil from top (mm/s)
+   dz                  => cps%dz                  , & ! Input:  [real(r8) (:,:)] layer depth (m)                        
+   h2osoi_ice          => cws%h2osoi_ice          , & ! Output: [real(r8) (:,:)] ice lens (kg/m2)                       
+   h2osoi_liq          => cws%h2osoi_liq          , & ! Output: [real(r8) (:,:)] liquid water (kg/m2)                   
+   cgridcell           => col%gridcell            , & ! Output: [integer (:)]  columns's gridcell (col)                 
+   mss_bcphi           => cps%mss_bcphi           , & ! Output: [real(r8) (:,:)]  hydrophillic BC mass in snow (col,lyr) [kg]
+   mss_bcpho           => cps%mss_bcpho           , & ! Output: [real(r8) (:,:)]  hydrophobic BC mass in snow (col,lyr) [kg]
+   mss_ocphi           => cps%mss_ocphi           , & ! Output: [real(r8) (:,:)]  hydrophillic OC mass in snow (col,lyr) [kg]
+   mss_ocpho           => cps%mss_ocpho           , & ! Output: [real(r8) (:,:)]  hydrophobic OC mass in snow (col,lyr) [kg]
+   mss_dst1            => cps%mss_dst1            , & ! Output: [real(r8) (:,:)]  mass of dust species 1 in snow (col,lyr) [kg]
+   mss_dst2            => cps%mss_dst2            , & ! Output: [real(r8) (:,:)]  mass of dust species 2 in snow (col,lyr) [kg]
+   mss_dst3            => cps%mss_dst3            , & ! Output: [real(r8) (:,:)]  mass of dust species 3 in snow (col,lyr) [kg]
+   mss_dst4            => cps%mss_dst4            , & ! Output: [real(r8) (:,:)]  mass of dust species 4 in snow (col,lyr) [kg]
+   flx_bc_dep          => cwf%flx_bc_dep          , & ! Output: [real(r8) (:)]  total BC deposition (col) [kg m-2 s-1]  
+   flx_bc_dep_wet      => cwf%flx_bc_dep_wet      , & ! Output: [real(r8) (:)]  wet BC deposition (col) [kg m-2 s-1]    
+   flx_bc_dep_dry      => cwf%flx_bc_dep_dry      , & ! Output: [real(r8) (:)]  dry BC deposition (col) [kg m-2 s-1]    
+   flx_bc_dep_phi      => cwf%flx_bc_dep_phi      , & ! Output: [real(r8) (:)]  hydrophillic BC deposition (col) [kg m-1 s-1]
+   flx_bc_dep_pho      => cwf%flx_bc_dep_pho      , & ! Output: [real(r8) (:)]  hydrophobic BC deposition (col) [kg m-1 s-1]
+   flx_oc_dep          => cwf%flx_oc_dep          , & ! Output: [real(r8) (:)]  total OC deposition (col) [kg m-2 s-1]  
+   flx_oc_dep_wet      => cwf%flx_oc_dep_wet      , & ! Output: [real(r8) (:)]  wet OC deposition (col) [kg m-2 s-1]    
+   flx_oc_dep_dry      => cwf%flx_oc_dep_dry      , & ! Output: [real(r8) (:)]  dry OC deposition (col) [kg m-2 s-1]    
+   flx_oc_dep_phi      => cwf%flx_oc_dep_phi      , & ! Output: [real(r8) (:)]  hydrophillic OC deposition (col) [kg m-1 s-1]
+   flx_oc_dep_pho      => cwf%flx_oc_dep_pho      , & ! Output: [real(r8) (:)]  hydrophobic OC deposition (col) [kg m-1 s-1]
+   flx_dst_dep         => cwf%flx_dst_dep         , & ! Output: [real(r8) (:)]  total dust deposition (col) [kg m-2 s-1]
+   flx_dst_dep_wet1    => cwf%flx_dst_dep_wet1    , & ! Output: [real(r8) (:)]  wet dust (species 1) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_dry1    => cwf%flx_dst_dep_dry1    , & ! Output: [real(r8) (:)]  dry dust (species 1) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_wet2    => cwf%flx_dst_dep_wet2    , & ! Output: [real(r8) (:)]  wet dust (species 2) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_dry2    => cwf%flx_dst_dep_dry2    , & ! Output: [real(r8) (:)]  dry dust (species 2) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_wet3    => cwf%flx_dst_dep_wet3    , & ! Output: [real(r8) (:)]  wet dust (species 3) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_dry3    => cwf%flx_dst_dep_dry3    , & ! Output: [real(r8) (:)]  dry dust (species 3) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_wet4    => cwf%flx_dst_dep_wet4    , & ! Output: [real(r8) (:)]  wet dust (species 4) deposition (col) [kg m-2 s-1]
+   flx_dst_dep_dry4    => cwf%flx_dst_dep_dry4    , & ! Output: [real(r8) (:)]  dry dust (species 4) deposition (col) [kg m-2 s-1]
+   forc_aer            => clm_a2l%forc_aer          & ! Output: [real(r8) (:,:)]  aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   )
 
     ! Determine model time step
 
@@ -523,7 +459,8 @@ contains
        mss_dst4(c,snl(c)+1) = mss_dst4(c,snl(c)+1) + (flx_dst_dep_dry4(c) + flx_dst_dep_wet4(c))*dtime
     end do
 
-  end subroutine SnowWater
+    end associate 
+   end subroutine SnowWater
 
 !-----------------------------------------------------------------------
 !BOP
@@ -565,31 +502,8 @@ contains
 ! 2/29/08, David Lawrence: Revised snow overburden to be include 0.5 weight of current layer
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in scalars
-!
-    real(r8), pointer :: frac_sno(:)       !snow covered fraction
-    real(r8), pointer :: swe_old(:,:)      !initial swe values
-    real(r8), pointer :: int_snow(:)       !integrated snowfall [mm]
-    real(r8), pointer :: n_melt(:)         !SCA shape parameter
-    integer,  pointer :: snl(:)            !number of snow layers
-!
-! local pointers to implicit in arguments
-!
-    integer,  pointer :: imelt(:,:)        !flag for melting (=1), freezing (=2), Not=0
-    real(r8), pointer :: frac_iceold(:,:)  !fraction of ice relative to the tot water
-    real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
-!
-! local pointers to implicit inout arguments
-!
-    real(r8), pointer :: dz(:,:)           !layer depth (m)
-!
-!
 ! !OTHER LOCAL VARIABLES:
 !EOP
-!
     integer :: j, l, c, fc                   ! indices
     real(r8):: dtime                         ! land model time step (sec)
     real(r8), parameter :: c2 = 23.e-3_r8    ! [m3/kg]
@@ -611,30 +525,26 @@ contains
     real(r8) :: bi     ! partial density of ice [kg/m3]
     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
     real(r8) :: fsno_melt
-    integer, pointer :: clandunit(:)       !landunit index for each column
-    integer, pointer :: ltype(:)           !landunit type
-    real(r8), pointer :: snow_depth(:)         ! snow height (m)
 
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes (column-level)
 
-    snow_depth      => cps%snow_depth
-    frac_sno    => cps%frac_sno_eff 
-    swe_old     => cws%swe_old
-    int_snow    => cws%int_snow
-    ltype       => lun%itype
-    clandunit   =>col%landunit
-    n_melt      => cps%n_melt
-    snl         => cps%snl
-    dz          => cps%dz
-    imelt       => cps%imelt
-    frac_iceold => cps%frac_iceold
-    t_soisno    => ces%t_soisno
-    h2osoi_ice  => cws%h2osoi_ice
-    h2osoi_liq  => cws%h2osoi_liq
-    clandunit   =>col%landunit
-    ltype       => lun%itype
+   associate(& 
+   snow_depth   => cps%snow_depth          , & ! Input:  [real(r8) (:)]  snow height (m)                         
+   frac_sno     => cps%frac_sno_eff        , & ! Input:  [real(r8) (:)] snow covered fraction                    
+   swe_old      => cws%swe_old             , & ! Input:  [real(r8) (:,:)] initial swe values                     
+   int_snow     => cws%int_snow            , & ! Input:  [real(r8) (:)] integrated snowfall [mm]                 
+   ltype        => lun%itype               , & ! Input:  [integer (:)] landunit type                             
+   clandunit    => col%landunit            , & ! Input:  [integer (:)] landunit index for each column            
+   n_melt       => cps%n_melt              , & ! Input:  [real(r8) (:)] SCA shape parameter                      
+   snl          => cps%snl                 , & ! Input:  [integer (:)] number of snow layers                     
+   dz           => cps%dz                  , & ! Input:  [real(r8) (:,:)] layer depth (m)                        
+   imelt        => cps%imelt               , & ! Input:  [integer (:,:)] flag for melting (=1), freezing (=2), Not=0
+   frac_iceold  => cps%frac_iceold         , & ! Input:  [real(r8) (:,:)] fraction of ice relative to the tot water
+   t_soisno     => ces%t_soisno            , & ! Input:  [real(r8) (:,:)] soil temperature (Kelvin)              
+   h2osoi_ice   => cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
+   h2osoi_liq   => cws%h2osoi_liq            & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
+   )
 
     ! Get time step
 
@@ -721,7 +631,8 @@ contains
        end do
     end do
 
-  end subroutine SnowCompaction
+    end associate 
+   end subroutine SnowCompaction
 
 !-----------------------------------------------------------------------
 !BOP
@@ -762,45 +673,7 @@ contains
 ! 05/20/10, Zack Subin: Adjust minimum thickness for snow layers over lakes to be + lsadz
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: frac_sno(:)       !fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: frac_sno_eff(:)   !fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: int_snow(:)       !integrated snowfall [mm]
-    integer, pointer :: clandunit(:)       !landunit index for each column
-    integer, pointer :: ltype(:)           !landunit type
-    logical , pointer :: urbpoi(:)         ! true => landunit is an urban point
-!
-! local pointers to implicit inout arguments
-!
-    integer , pointer :: snl(:)            !number of snow layers
-    real(r8), pointer :: h2osno(:)         !snow water (mm H2O)
-    real(r8), pointer :: snow_depth(:)         !snow height (m)
-    real(r8), pointer :: dz(:,:)           !layer depth (m)
-    real(r8), pointer :: zi(:,:)           !interface level below a "z" level (m)
-    real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: z(:,:)          ! layer thickness (m)
-    real(r8), pointer :: mss_bcphi(:,:)  ! hydrophilic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_bcpho(:,:)  ! hydrophobic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocphi(:,:)  ! hydrophilic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocpho(:,:)  ! hydrophobic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst1(:,:)   ! dust species 1 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst2(:,:)   ! dust species 2 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst3(:,:)   ! dust species 3 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
-    real(r8), pointer :: qflx_sl_top_soil(:) ! liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
-!
     integer :: c, fc                 ! column indices
     integer :: i,k                   ! loop indices
     integer :: j,l                   ! node indices
@@ -816,36 +689,34 @@ contains
     data dzmin /0.010_r8, 0.015_r8, 0.025_r8, 0.055_r8, 0.115_r8/
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes (landunit-level)
 
-    ltype      => lun%itype
-    urbpoi     =>lun%urbpoi
-
-    ! Assign local pointers to derived subtypes (column-level)
-
-    frac_sno       => cps%frac_sno
-    frac_sno_eff   => cps%frac_sno_eff 
-    int_snow       => cws%int_snow
-    clandunit  =>col%landunit
-    snl        => cps%snl
-    snow_depth     => cps%snow_depth
-    h2osno     => cws%h2osno
-    dz         => cps%dz
-    zi         => cps%zi
-    z          => cps%z
-    t_soisno   => ces%t_soisno
-    h2osoi_ice => cws%h2osoi_ice
-    h2osoi_liq => cws%h2osoi_liq
-    mss_bcphi  => cps%mss_bcphi
-    mss_bcpho  => cps%mss_bcpho
-    mss_ocphi  => cps%mss_ocphi
-    mss_ocpho  => cps%mss_ocpho
-    mss_dst1   => cps%mss_dst1
-    mss_dst2   => cps%mss_dst2
-    mss_dst3   => cps%mss_dst3
-    mss_dst4   => cps%mss_dst4
-    snw_rds    => cps%snw_rds
-    qflx_sl_top_soil => cwf%qflx_sl_top_soil
+   associate(& 
+   ltype               => lun%itype               , & ! Input:  [integer (:)] landunit type                             
+   urbpoi              => lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
+   frac_sno            => cps%frac_sno            , & ! Input:  [real(r8) (:)] fraction of ground covered by snow (0 to 1)
+   frac_sno_eff        => cps%frac_sno_eff        , & ! Input:  [real(r8) (:)] fraction of ground covered by snow (0 to 1)
+   int_snow            => cws%int_snow            , & ! Input:  [real(r8) (:)] integrated snowfall [mm]                 
+   clandunit           => col%landunit            , & ! Input:  [integer (:)] landunit index for each column            
+   snl                 => cps%snl                 , & ! Input:  [integer (:)] number of snow layers                     
+   snow_depth          => cps%snow_depth          , & ! Input:  [real(r8) (:)] snow height (m)                          
+   h2osno              => cws%h2osno              , & ! Input:  [real(r8) (:)] snow water (mm H2O)                      
+   dz                  => cps%dz                  , & ! Input:  [real(r8) (:,:)] layer depth (m)                        
+   zi                  => cps%zi                  , & ! Input:  [real(r8) (:,:)] interface level below a "z" level (m)  
+   z                   => cps%z                   , & ! Output: [real(r8) (:,:)]  layer thickness (m)                   
+   t_soisno            => ces%t_soisno            , & ! Input:  [real(r8) (:,:)] soil temperature (Kelvin)              
+   h2osoi_ice          => cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
+   h2osoi_liq          => cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
+   mss_bcphi           => cps%mss_bcphi           , & ! Output: [real(r8) (:,:)]  hydrophilic BC mass in snow (col,lyr) [kg]
+   mss_bcpho           => cps%mss_bcpho           , & ! Output: [real(r8) (:,:)]  hydrophobic BC mass in snow (col,lyr) [kg]
+   mss_ocphi           => cps%mss_ocphi           , & ! Output: [real(r8) (:,:)]  hydrophilic OC mass in snow (col,lyr) [kg]
+   mss_ocpho           => cps%mss_ocpho           , & ! Output: [real(r8) (:,:)]  hydrophobic OC mass in snow (col,lyr) [kg]
+   mss_dst1            => cps%mss_dst1            , & ! Output: [real(r8) (:,:)]  dust species 1 mass in snow (col,lyr) [kg]
+   mss_dst2            => cps%mss_dst2            , & ! Output: [real(r8) (:,:)]  dust species 2 mass in snow (col,lyr) [kg]
+   mss_dst3            => cps%mss_dst3            , & ! Output: [real(r8) (:,:)]  dust species 3 mass in snow (col,lyr) [kg]
+   mss_dst4            => cps%mss_dst4            , & ! Output: [real(r8) (:,:)]  dust species 4 mass in snow (col,lyr) [kg]
+   snw_rds             => cps%snw_rds             , & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
+   qflx_sl_top_soil    => cwf%qflx_sl_top_soil      & ! Output: [real(r8) (:)]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
+   )
 
     ! Determine model time step
 
@@ -1128,7 +999,8 @@ contains
        end do
     end do
 
-  end subroutine CombineSnowLayers
+    end associate 
+   end subroutine CombineSnowLayers
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1163,28 +1035,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit inout arguments
 !
-    real(r8), pointer :: frac_sno(:)       !fraction of ground covered by snow (0 to 1)
-    integer , pointer :: snl(:)            !number of snow layers
-    real(r8), pointer :: dz(:,:)           !layer depth (m)
-    real(r8), pointer :: zi(:,:)           !interface level below a "z" level (m)
-    real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
 !
-! local pointers to implicit out arguments
 !
-    real(r8), pointer :: z(:,:)          ! layer thickness (m)
-    real(r8), pointer :: mss_bcphi(:,:)  ! hydrophilic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_bcpho(:,:)  ! hydrophobic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocphi(:,:)  ! hydrophilic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocpho(:,:)  ! hydrophobic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst1(:,:)   ! dust species 1 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst2(:,:)   ! dust species 2 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst3(:,:)   ! dust species 3 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -1223,25 +1076,26 @@ contains
 
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtype components (column-level)
 
-    frac_sno   => cps%frac_sno_eff 
-    snl        => cps%snl
-    dz         => cps%dz
-    zi         => cps%zi
-    z          => cps%z
-    t_soisno   => ces%t_soisno
-    h2osoi_ice => cws%h2osoi_ice
-    h2osoi_liq => cws%h2osoi_liq
-    mss_bcphi  => cps%mss_bcphi
-    mss_bcpho  => cps%mss_bcpho
-    mss_ocphi  => cps%mss_ocphi
-    mss_ocpho  => cps%mss_ocpho
-    mss_dst1   => cps%mss_dst1
-    mss_dst2   => cps%mss_dst2
-    mss_dst3   => cps%mss_dst3
-    mss_dst4   => cps%mss_dst4
-    snw_rds    => cps%snw_rds
+   associate(& 
+   frac_sno   => cps%frac_sno_eff        , & ! Output: [real(r8) (:)] fraction of ground covered by snow (0 to 1)
+   snl        => cps%snl                 , & ! Output: [integer (:)] number of snow layers                     
+   dz         => cps%dz                  , & ! Output: [real(r8) (:,:)] layer depth (m)                        
+   zi         => cps%zi                  , & ! Output: [real(r8) (:,:)] interface level below a "z" level (m)  
+   z          => cps%z                   , & ! Output: [real(r8) (:,:)]  layer thickness (m)                   
+   t_soisno   => ces%t_soisno            , & ! Output: [real(r8) (:,:)] soil temperature (Kelvin)              
+   h2osoi_ice => cws%h2osoi_ice          , & ! Output: [real(r8) (:,:)] ice lens (kg/m2)                       
+   h2osoi_liq => cws%h2osoi_liq          , & ! Output: [real(r8) (:,:)] liquid water (kg/m2)                   
+   mss_bcphi  => cps%mss_bcphi           , & ! Output: [real(r8) (:,:)]  hydrophilic BC mass in snow (col,lyr) [kg]
+   mss_bcpho  => cps%mss_bcpho           , & ! Output: [real(r8) (:,:)]  hydrophobic BC mass in snow (col,lyr) [kg]
+   mss_ocphi  => cps%mss_ocphi           , & ! Output: [real(r8) (:,:)]  hydrophilic OC mass in snow (col,lyr) [kg]
+   mss_ocpho  => cps%mss_ocpho           , & ! Output: [real(r8) (:,:)]  hydrophobic OC mass in snow (col,lyr) [kg]
+   mss_dst1   => cps%mss_dst1            , & ! Output: [real(r8) (:,:)]  dust species 1 mass in snow (col,lyr) [kg]
+   mss_dst2   => cps%mss_dst2            , & ! Output: [real(r8) (:,:)]  dust species 2 mass in snow (col,lyr) [kg]
+   mss_dst3   => cps%mss_dst3            , & ! Output: [real(r8) (:,:)]  dust species 3 mass in snow (col,lyr) [kg]
+   mss_dst4   => cps%mss_dst4            , & ! Output: [real(r8) (:,:)]  dust species 4 mass in snow (col,lyr) [kg]
+   snw_rds    => cps%snw_rds               & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
+   )
     
 
     ! Begin calculation - note that the following column loops are only invoked
@@ -1640,7 +1494,8 @@ contains
        end do
     end do
 
-  end subroutine DivideSnowLayers
+    end associate 
+   end subroutine DivideSnowLayers
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1742,8 +1597,6 @@ contains
 ! 2003 July 31: Forrest Hoffman
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arguments
-    integer , pointer :: snl(:)                        ! number of snow layers
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -1751,17 +1604,13 @@ contains
     integer  :: fc, c
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtype components (column-level)
-
-    snl => cps%snl
-
     ! Build snow/no-snow filters for other subroutines
 
     num_snowc = 0
     num_nosnowc = 0
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
-       if (snl(c) < 0) then
+       if (cps%snl(c) < 0) then
           num_snowc = num_snowc + 1
           filter_snowc(num_snowc) = c
        else
@@ -1770,7 +1619,7 @@ contains
        end if
     end do
 
-  end subroutine BuildSnowFilter
+   end subroutine BuildSnowFilter
 
 !!!!!!!!!!!!!!!!!!! New subroutine for lakes
 !-----------------------------------------------------------------------
@@ -1810,27 +1659,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit inout arguments
 !
-    integer , pointer :: snl(:)            !number of snow layers
-    real(r8), pointer :: dz(:,:)           !layer depth (m)
-    real(r8), pointer :: zi(:,:)           !interface level below a "z" level (m)
-    real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
 !
-! local pointers to implicit out arguments
 !
-    real(r8), pointer :: z(:,:)          ! layer thickness (m)
-    real(r8), pointer :: mss_bcphi(:,:)  ! hydrophilic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_bcpho(:,:)  ! hydrophobic BC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocphi(:,:)  ! hydrophilic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_ocpho(:,:)  ! hydrophobic OC mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst1(:,:)   ! dust species 1 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst2(:,:)   ! dust species 2 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst3(:,:)   ! dust species 3 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
-    real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -1871,24 +1702,25 @@ contains
     real(r8) :: dztot(lbc:ubc), snwicetot(lbc:ubc), snwliqtot(lbc:ubc)
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtype components (column-level)
 
-    snl        => cps%snl
-    dz         => cps%dz
-    zi         => cps%zi
-    z          => cps%z
-    t_soisno   => ces%t_soisno
-    h2osoi_ice => cws%h2osoi_ice
-    h2osoi_liq => cws%h2osoi_liq
-    mss_bcphi  => cps%mss_bcphi
-    mss_bcpho  => cps%mss_bcpho
-    mss_ocphi  => cps%mss_ocphi
-    mss_ocpho  => cps%mss_ocpho
-    mss_dst1   => cps%mss_dst1
-    mss_dst2   => cps%mss_dst2
-    mss_dst3   => cps%mss_dst3
-    mss_dst4   => cps%mss_dst4
-    snw_rds    => cps%snw_rds
+   associate(& 
+   snl        =>    cps%snl        , & ! Input:  [integer (:)] number of snow layers                     
+   dz         =>    cps%dz         , & ! Input:  [real(r8) (:,:)] layer depth (m)                        
+   zi         =>    cps%zi         , & ! Input:  [real(r8) (:,:)] interface level below a "z" level (m)  
+   z          =>    cps%z          , & ! Output: [real(r8) (:,:)]  layer thickness (m)                   
+   t_soisno   =>    ces%t_soisno   , & ! Input:  [real(r8) (:,:)] soil temperature (Kelvin)              
+   h2osoi_ice =>    cws%h2osoi_ice , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
+   h2osoi_liq =>    cws%h2osoi_liq , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
+   mss_bcphi  =>    cps%mss_bcphi  , & ! Output: [real(r8) (:,:)]  hydrophilic BC mass in snow (col,lyr) [kg]
+   mss_bcpho  =>    cps%mss_bcpho  , & ! Output: [real(r8) (:,:)]  hydrophobic BC mass in snow (col,lyr) [kg]
+   mss_ocphi  =>    cps%mss_ocphi  , & ! Output: [real(r8) (:,:)]  hydrophilic OC mass in snow (col,lyr) [kg]
+   mss_ocpho  =>    cps%mss_ocpho  , & ! Output: [real(r8) (:,:)]  hydrophobic OC mass in snow (col,lyr) [kg]
+   mss_dst1   =>    cps%mss_dst1   , & ! Output: [real(r8) (:,:)]  dust species 1 mass in snow (col,lyr) [kg]
+   mss_dst2   =>    cps%mss_dst2   , & ! Output: [real(r8) (:,:)]  dust species 2 mass in snow (col,lyr) [kg]
+   mss_dst3   =>    cps%mss_dst3   , & ! Output: [real(r8) (:,:)]  dust species 3 mass in snow (col,lyr) [kg]
+   mss_dst4   =>    cps%mss_dst4   , & ! Output: [real(r8) (:,:)]  dust species 4 mass in snow (col,lyr) [kg]
+   snw_rds    =>    cps%snw_rds      & ! Output: [real(r8) (:,:)]  effective snow grain radius (col,lyr) [microns, m^-6]
+   )
     
 
     ! Initialize for consistency check
@@ -2329,7 +2161,8 @@ contains
        end do
     end do
 
-  end subroutine DivideSnowLayers_Lake
+    end associate 
+   end subroutine DivideSnowLayers_Lake
 !!!!!!!!!!!!!!!!!!!!! End new subroutine
 
 

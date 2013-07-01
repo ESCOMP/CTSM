@@ -60,46 +60,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 ! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-#if (defined CNDV)
-   real(r8), pointer :: allom2(:)     ! ecophys const
-   real(r8), pointer :: allom3(:)     ! ecophys const
-   real(r8), pointer :: nind(:)       ! number of individuals (#/m**2)
-   real(r8), pointer :: fpcgrid(:)    ! fractional area of pft (pft area/nat veg area)
-#endif
-   integer , pointer :: ivt(:)        ! pft vegetation type
-   integer , pointer :: pcolumn(:)    ! column index associated with each pft
-   integer , pointer :: pgridcell(:)  ! pft's gridcell index
-   real(r8), pointer :: snow_depth(:)     ! snow height (m)
-   real(r8), pointer :: leafc(:)      ! (gC/m2) leaf C
-   real(r8), pointer :: deadstemc(:)  ! (gC/m2) dead stem C
-   real(r8), pointer :: woody(:)      !binary flag for woody lifeform (1=woody, 0=not woody)
-   real(r8), pointer :: slatop(:)     !specific leaf area at top of canopy, projected area basis [m^2/gC]
-   real(r8), pointer :: dsladlai(:)   !dSLA/dLAI, projected area basis [m^2/gC]
-   real(r8), pointer :: z0mr(:)       !ratio of momentum roughness length to canopy top height (-)
-   real(r8), pointer :: displar(:)    !ratio of displacement height to canopy top height (-)
-   real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft-level [m]
-   real(r8), pointer :: dwood(:)      ! density of wood (gC/m^3)
-   real(r8), pointer :: farea_burned(:)   !F. Li and S. Levis
-! 
-! local pointers to implicit in/out scalars
-!
-   integer , pointer :: frac_veg_nosno_alb(:) ! frac of vegetation not covered by snow [-]
-   real(r8), pointer :: tlai(:) !one-sided leaf area index, no burying by snow
-   real(r8), pointer :: tsai(:) !one-sided stem area index, no burying by snow
-   real(r8), pointer :: htop(:) !canopy top (m)
-   real(r8), pointer :: hbot(:) !canopy bottom (m)
-   real(r8), pointer :: elai(:)     ! one-sided leaf area index with burying by snow
-   real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
-   real(r8), pointer :: htmx(:)     ! max hgt attained by a crop during yr (m)
-   integer , pointer :: peaklai(:)  ! 1: max allowed lai; 0: not at max
-   integer , pointer :: harvdate(:) ! harvest date
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
    integer :: p,c,g        !indices
    integer :: fp           !lake filter indices
    real(r8):: taper        ! ratio of height:radius_breast_height (tree allometry)
@@ -126,39 +86,38 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 !   noncrop tsai_alpha,tsai_min = 0.5,1.0  (includes bare soil and urban)
 !-------------------------------------------------------------------------------
 
-   ! assign local pointers to derived type arrays (in)
+   associate(& 
 #if (defined CNDV)
-    allom2                         => dgv_pftcon%allom2
-    allom3                         => dgv_pftcon%allom3
-    nind                           => pdgvs%nind
-    fpcgrid                        => pdgvs%fpcgrid
+   allom2              =>  dgv_pftcon%allom2        , & ! Input:  [real(r8) (:)]  ecophys const                                     
+   allom3              =>  dgv_pftcon%allom3        , & ! Input:  [real(r8) (:)]  ecophys const                                     
+   nind                =>  pdgvs%nind               , & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
+   fpcgrid             =>  pdgvs%fpcgrid            , & ! Input:  [real(r8) (:)]  fractional area of pft (pft area/nat veg area)    
 #endif
-    ivt                            =>pft%itype
-    pcolumn                        =>pft%column
-    pgridcell                      =>pft%gridcell
-    leafc                          => pcs%leafc
-    deadstemc                      => pcs%deadstemc
-    snow_depth                         => cps%snow_depth
-    woody                          => pftcon%woody
-    slatop                         => pftcon%slatop
-    dsladlai                       => pftcon%dsladlai
-    z0mr                           => pftcon%z0mr
-    displar                        => pftcon%displar
-    dwood                          => pftcon%dwood
-    farea_burned                   => cps%farea_burned
-
-   ! assign local pointers to derived type arrays (out)
-    tlai                           => pps%tlai
-    tsai                           => pps%tsai
-    htop                           => pps%htop
-    hbot                           => pps%hbot
-    elai                           => pps%elai
-    esai                           => pps%esai
-    frac_veg_nosno_alb             => pps%frac_veg_nosno_alb
-    htmx                           => pps%htmx
-    peaklai                        => pps%peaklai
-    harvdate                       => pps%harvdate
-    forc_hgt_u_pft                 => pps%forc_hgt_u_pft
+   ivt                 =>  pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                                
+   pcolumn             =>  pft%column               , & ! Input:  [integer (:)]  column index associated with each pft              
+   pgridcell           =>  pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                               
+   leafc               =>  pcs%leafc                , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
+   deadstemc           =>  pcs%deadstemc            , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C                               
+   snow_depth          =>  cps%snow_depth           , & ! Input:  [real(r8) (:)]  snow height (m)                                   
+   woody               =>  pftcon%woody             , & ! Input:  [real(r8) (:)] binary flag for woody lifeform (1=woody, 0=not woody)
+   slatop              =>  pftcon%slatop            , & ! Input:  [real(r8) (:)] specific leaf area at top of canopy, projected area basis [m^2/gC]
+   dsladlai            =>  pftcon%dsladlai          , & ! Input:  [real(r8) (:)] dSLA/dLAI, projected area basis [m^2/gC]           
+   z0mr                =>  pftcon%z0mr              , & ! Input:  [real(r8) (:)] ratio of momentum roughness length to canopy top height (-)
+   displar             =>  pftcon%displar           , & ! Input:  [real(r8) (:)] ratio of displacement height to canopy top height (-)
+   dwood               =>  pftcon%dwood             , & ! Input:  [real(r8) (:)]  density of wood (gC/m^3)                          
+   farea_burned        =>  cps%farea_burned         , & ! Input:  [real(r8) (:)] F. Li and S. Levis                                 
+   tlai                =>  pps%tlai                 , & ! InOut:  [real(r8) (:)] one-sided leaf area index, no burying by snow      
+   tsai                =>  pps%tsai                 , & ! InOut:  [real(r8) (:)] one-sided stem area index, no burying by snow      
+   htop                =>  pps%htop                 , & ! InOut:  [real(r8) (:)] canopy top (m)                                     
+   hbot                =>  pps%hbot                 , & ! InOut:  [real(r8) (:)] canopy bottom (m)                                  
+   elai                =>  pps%elai                 , & ! InOut:  [real(r8) (:)]  one-sided leaf area index with burying by snow    
+   esai                =>  pps%esai                 , & ! InOut:  [real(r8) (:)]  one-sided stem area index with burying by snow    
+   frac_veg_nosno_alb  =>  pps%frac_veg_nosno_alb   , & ! InOut:  [integer (:)]  frac of vegetation not covered by snow [-]         
+   htmx                =>  pps%htmx                 , & ! InOut:  [real(r8) (:)]  max hgt attained by a crop during yr (m)          
+   peaklai             =>  pps%peaklai              , & ! InOut:  [integer (:)]  1: max allowed lai; 0: not at max                  
+   harvdate            =>  pps%harvdate             , & ! InOut:  [integer (:)]  harvest date                                       
+   forc_hgt_u_pft      =>  pps%forc_hgt_u_pft         & ! Input:  [real(r8) (:)]  observational height of wind at pft-level [m]     
+   )
 
    dt = real( get_rad_step_size(), r8 )
 
@@ -317,7 +276,8 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
    end do
 
-end subroutine CNVegStructUpdate
+    end associate 
+ end subroutine CNVegStructUpdate
 !-----------------------------------------------------------------------
 #endif
 

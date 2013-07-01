@@ -1,4 +1,167 @@
 ===============================================================
+Tag name:  clm4_5_15
+Originator(s):  muszala (Stefan Muszala)
+Date: Mon Jul  1 10:44:05 MDT 2013
+One-line Summary: complete associate refactor for pointers in clm4_5 source
+
+Purpose of changes:  Refactor all clm4_5 source so that pointers assignements are
+   placed in associate blocks at the start of a subroutine.  This allows us to 
+   get rid of pointer declarations, makes the code easier to modify, makes the
+   code more robust and sets us up for future interface refactorings.  The refactor is
+   explained in more detail in models/lnd/clm/tools/clm4_5/refactorTools/README.
+
+-    real(r8), pointer :: fdry(:)           ! fraction of foliage that is green and dry [-] (new)
+-    fdry => pps%fdry
++   associate(& 
++   fdry               => pps%fdry             & ! Output: [real(r8) (:)]  fraction of foliage that is green and dry [-] (new)
++   )
+ ...
+-  end subroutine FracWet
++    end associate 
++   end subroutine FracWet
+
+Requirements for tag: N/A
+
+Test level of tag: standard
+
+Bugs fixed (include bugzilla ID): N/A
+
+Known bugs (include bugzilla ID): N/A
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: N/A
+
+Describe any changes made to the namelist: N/A
+
+List any changes to the defaults for the boundary datasets: N/A
+
+Describe any substantial timing or memory changes:  BGC compsets will see increases
+   in memory (highwater) use.  This can be seen in memcomp portions of testing with
+   one specific example.  Something to keep track of.
+
+      FAIL  ERS.f19_g16.I1850CLM45BGC.yellowstone_intel.clm-default.GC.4515preIntel.memcomp.clm4_5_14 
+         - highwater goes from 166 MB in clm4_5_14 to 236 MB in clm4_5_15
+      FAIL  ERS.f19_g16.I1850CLM45BGC.yellowstone_intel.rtm-rtmOff.GC.4515preIntel.memcomp.clm4_5_14 
+      FAIL  ERS.f19_g16.I1850CLM45BGC.yellowstone_intel.rtm-rtmOnFloodOnEffvelOff.GC.4515preIntel.memcomp.clm4_5_14 
+      FAIL  ERS.f19_g16.I1850CLM45BGC.yellowstone_intel.rtm-rtmOnFloodOnEffvelOn.GC.4515preIntel.memcomp.clm4_5_14 
+      FAIL  ERS.f19_g16.I1850CLM45BGC.yellowstone_intel.rtm-rtmOnIceOn.GC.4515preIntel.memcomp.clm4_5_14 
+      FAIL  ERS.f19_g16_r01.I1850CLM45BGC.yellowstone_intel.rtm-rtmOnFloodOnEffvelOff.GC.4515preIntel.memcomp.clm4_5_14 
+
+Code reviewed by: self, mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): N/A
+
+List all files eliminated: N/A
+
+List all files added and what they do: 
+
+A       models/lnd/clm/tools/clm4_5/refactorTools/associate/refactor_new.pl
+A       models/lnd/clm/tools/clm4_5/refactorTools/associate/README
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNGapMortalityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNitrifDenitrifMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNGRespMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CropRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/initch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNBalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate3Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNFireMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNMRespMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeMod_BGC.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/MEGANFactorsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVerticalProfileMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCIsoFluxMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPrecisionControlMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/ch4Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSummaryMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DUSTMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVLightMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNPhenologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNCStateUpdate3Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/VOCEmissionMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNrestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAnnualUpdateMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNStateUpdate2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDecompCascadeMod_CENTURY.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNNDynamicsMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNAllocationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/DryDepVelocity.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNEcosystemDynMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSetValueMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNVegStructUpdateMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNSoilLittVertTranspMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNDVEstablishmentMod.F90
+M       models/lnd/clm/src/clm4_5/biogeochem/CNC14DecayMod.F90
+M       models/lnd/clm/src/clm4_5/main/clmtypeInitMod.F90
+M       models/lnd/clm/src/clm4_5/main/pftdynMod.F90
+M       models/lnd/clm/src/clm4_5/main/clm_atmlnd.F90
+M       models/lnd/clm/src/clm4_5/main/mkarbinitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BalanceCheckMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInputMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SnowHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/FrictionVelocityMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/TridiagonalMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeHydrologyMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology1Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BiogeophysRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/ActiveLayerMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/clm_driverInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CLMVICMapMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeTemperatureMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/BareGroundFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SNICARMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/CanopyFluxesMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceRadiationMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/initSLakeMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/H2OSfcMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Biogeophysics2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/FracWetMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/UrbanInitMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SLakeRestMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SurfaceAlbedoMod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/Hydrology2Mod.F90
+M       models/lnd/clm/src/clm4_5/biogeophys/SoilHydrologyMod.F90
+
+Machines testing ran on:  (Tests in priority order)
+  build-namelist unit tester:   OK
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       OK
+    yellowstone/aux_clm     pgi         OK
+    frankfurt/aux_clm       intel       OK
+    frankfurt/aux_clm       pgi         OK
+    frankfurt/aux_clm       nag         OK
+
+  CESM history file comparison:
+
+    yellowstone/aux_clm                 OK
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_14
+
+Changes answers relative to baseline: NO
+
+===============================================================
+===============================================================
 Tag name:  clm4_5_14
 Originator(s):  muszala (Stefan Muszala)
 Date:  Thu Jun 20 07:51:54 MDT 2013

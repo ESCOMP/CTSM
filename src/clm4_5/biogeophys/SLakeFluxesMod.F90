@@ -46,7 +46,6 @@ contains
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use clm_time_manager       , only : get_step_size
     use clm_varpar         , only : nlevlak
     use clm_varcon         , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair, &
                                     sb, vkc, grav, denh2o, tfrz, spval, zsno
@@ -72,87 +71,11 @@ contains
 ! Author: Zack Subin, 2009
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: sabg_chk(:)        ! sum of soil/snow using current fsno, for balance check
-    integer , pointer :: pcolumn(:)         ! pft's column index
-    integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    integer , pointer :: cgridcell(:)       ! column's gridcell index
-    real(r8), pointer :: forc_t(:)          ! atmospheric temperature (Kelvin)
-    real(r8), pointer :: forc_pbot(:)       ! atmospheric pressure (Pa)
-    real(r8), pointer :: forc_hgt_u_pft(:)  ! observational height of wind at pft level [m]
-    real(r8), pointer :: forc_hgt_t_pft(:)  ! observational height of temperature at pft level [m]
-    real(r8), pointer :: forc_hgt_q_pft(:)  ! observational height of specific humidity at pft level [m]
-    real(r8), pointer :: forc_th(:)         ! atmospheric potential temperature (Kelvin)
-    real(r8), pointer :: forc_q(:)          ! atmospheric specific humidity (kg/kg)
-    real(r8), pointer :: forc_u(:)          ! atmospheric wind speed in east direction (m/s)
-    real(r8), pointer :: forc_v(:)          ! atmospheric wind speed in north direction (m/s)
-    real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: forc_rho(:)        ! density (kg/m**3)
-    real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
-    real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
-    real(r8), pointer :: t_grnd(:)          ! ground temperature (Kelvin)
-    real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
-    real(r8), pointer :: lat(:)             ! latitude (radians)
-    real(r8), pointer :: dz(:,:)            ! layer thickness for soil or snow (m)
-    real(r8), pointer :: dz_lake(:,:)       ! layer thickness for lake (m)
-    real(r8), pointer :: t_soisno(:,:)      ! soil (or snow) temperature (Kelvin)
-    real(r8), pointer :: t_lake(:,:)        ! lake temperature (Kelvin)
-    integer , pointer :: snl(:)             ! number of snow layers
-    real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2)
-    real(r8), pointer :: savedtke1(:)       ! top level eddy conductivity from previous timestep (W/mK)
-    real(r8), pointer :: lakedepth(:)       ! variable lake depth (m)
-    real(r8), pointer :: lakefetch(:)       ! lake fetch from surface data (m)
-! variables needed for SNICAR
-    real(r8), pointer :: sabg_lyr(:,:)      ! absorbed solar radiation (pft,lyr) [W/m2]
-!   Calculation of beta depending on NIR fraction of sabg
-    real(r8), pointer :: fsds_nir_d(:)    ! incident direct beam nir solar radiation (W/m**2)
-    real(r8), pointer :: fsds_nir_i(:)    ! incident diffuse nir solar radiation (W/m**2)
-    real(r8), pointer :: fsr_nir_d(:)     ! reflected direct beam nir solar radiation (W/m**2)
-    real(r8), pointer :: fsr_nir_i(:)     ! reflected diffuse nir solar radiation (W/m**2)
-
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: qflx_prec_grnd(:)  ! water onto ground including canopy runoff [kg/(m2 s)]
-    real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-    real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: eflx_lwrad_net(:)  ! net infrared (longwave) rad (W/m**2) [+ = to atm]
-    real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
-    real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m8*2)  [+ to atm]
-    real(r8), pointer :: eflx_lh_grnd(:)    ! ground evaporation heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: t_veg(:)           ! vegetation temperature (Kelvin)
-    real(r8), pointer :: t_ref2m(:)         ! 2 m height surface air temperature (Kelvin)
-    real(r8), pointer :: q_ref2m(:)         ! 2 m height surface specific humidity (kg/kg)
-    real(r8), pointer :: rh_ref2m(:)        ! 2 m height surface relative humidity (%)
-    real(r8), pointer :: taux(:)            ! wind (shear) stress: e-w (kg/m/s**2)
-    real(r8), pointer :: tauy(:)            ! wind (shear) stress: n-s (kg/m/s**2)
-    real(r8), pointer :: ram1(:)            ! aerodynamical resistance (s/m)
-    real(r8), pointer :: ram1_lake(:)       ! aerodynamical resistance (s/m)
-    real(r8), pointer :: ws(:)              ! surface friction velocity (m/s)
-    real(r8), pointer :: ks(:)              ! coefficient passed to SLakeTemperature
-                                            !     for calculation of decay of eddy diffusivity with depth
-    real(r8), pointer :: eflx_gnet(:)       ! net heat flux into ground (W/m**2)
-    real(r8), pointer :: ust_lake(:)        ! friction velocity (m/s)
     real(r8), pointer :: z0mg_col(:)        ! roughness length over ground, momentum [m]
     real(r8), pointer :: z0hg_col(:)        ! roughness length over ground, sensible heat [m]
     real(r8), pointer :: z0qg_col(:)        ! roughness length over ground, latent heat [m]
-    real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]
-    real(r8), pointer :: qflx_snwcp_liq(:)  ! excess rainfall due to snow capping (mm H2O /s) [+]
-
-#ifdef LCH4
-    real(r8), pointer :: lake_raw(:)        ! aerodynamic resistance for moisture (s/m)
-#endif
 !
 !EOP
-!
-! !OTHER LOCAL VARIABLES:
-!
     integer , parameter  :: niters = 4    ! maximum number of iterations for surface temperature
     real(r8), parameter :: beta1 = 1._r8  ! coefficient of convective velocity (in computing W_*) [-]
     real(r8), parameter :: zii = 1000._r8 ! convective boundary height [m]
@@ -163,7 +86,6 @@ contains
     integer  :: iter                    ! iteration index
     integer  :: nmozsgn(lbp:ubp)        ! number of times moz changes sign
     integer  :: jtop(lbc:ubc)           ! top level for each column (no longer all 1)
-    real(r8) :: dtime                   ! land model time step (sec)
     real(r8) :: ax                      ! used in iteration loop for calculating t_grnd (numerator of NR solution)
     real(r8) :: bx                      ! used in iteration loop for calculating t_grnd (denomin. of NR solution)
     real(r8) :: degdT                   ! d(eg)/dT
@@ -227,85 +149,73 @@ contains
 
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (gridcell-level)
+   associate(& 
+   snl                                 =>    cps%snl                                     , & ! Input:  [integer (:)]  number of snow layers                              
+   forc_t                              =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)]  atmospheric temperature (Kelvin)                  
+   forc_pbot                           =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   forc_th                             =>    clm_a2l%forc_th                             , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (Kelvin)        
+   forc_q                              =>    clm_a2l%forc_q                              , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)             
+   forc_u                              =>    clm_a2l%forc_u                              , & ! Input:  [real(r8) (:)]  atmospheric wind speed in east direction (m/s)    
+   forc_v                              =>    clm_a2l%forc_v                              , & ! Input:  [real(r8) (:)]  atmospheric wind speed in north direction (m/s)   
+   forc_rho                            =>    clm_a2l%forc_rho                            , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
+   forc_lwrad                          =>    clm_a2l%forc_lwrad                          , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)   
+   forc_snow                           =>    clm_a2l%forc_snow                           , & ! Input:  [real(r8) (:)]  snow rate [mm/s]                                  
+   forc_rain                           =>    clm_a2l%forc_rain                           , & ! Input:  [real(r8) (:)]  rain rate [mm/s]                                  
+   forc_hgt_u_pft                      =>    pps%forc_hgt_u_pft                          , & ! Input:  [real(r8) (:)]  observational height of wind at pft level [m]     
+   forc_hgt_t_pft                      =>    pps%forc_hgt_t_pft                          , & ! Input:  [real(r8) (:)]  observational height of temperature at pft level [m]
+   forc_hgt_q_pft                      =>    pps%forc_hgt_q_pft                          , & ! Input:  [real(r8) (:)]  observational height of specific humidity at pft level [m]
+   dz                                  =>    cps%dz                                      , & ! Input:  [real(r8) (:,:)]  layer thickness for soil or snow (m)            
+   dz_lake                             =>    cps%dz_lake                                 , & ! Input:  [real(r8) (:,:)]  layer thickness for lake (m)                    
+   fsds_nir_d                          =>    pef%fsds_nir_d                              , & ! Input:  [real(r8) (:)]  incident direct beam nir solar radiation (W/m**2) 
+   fsds_nir_i                          =>    pef%fsds_nir_i                              , & ! Input:  [real(r8) (:)]  incident diffuse nir solar radiation (W/m**2)     
+   fsr_nir_d                           =>    pef%fsr_nir_d                               , & ! Input:  [real(r8) (:)]  reflected direct beam nir solar radiation (W/m**2)
+   fsr_nir_i                           =>    pef%fsr_nir_i                               , & ! Input:  [real(r8) (:)]  reflected diffuse nir solar radiation (W/m**2)    
+   sabg_lyr                            =>    pef%sabg_lyr                                , & ! Input:  [real(r8) (:,:)]  absorbed solar radiation (pft,lyr) [W/m2]       
+   sabg_chk                            =>    pef%sabg_chk                                , & ! Input:  [real(r8) (:)]  sum of soil/snow using current fsno, for balance check
+   sabg                                =>    pef%sabg                                    , & ! Input:  [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)       
+   savedtke1                           =>    cps%savedtke1                               , & ! Input:  [real(r8) (:)]  top level eddy conductivity from previous timestep (W/mK)
+   lakedepth                           =>    cps%lakedepth                               , & ! Input:  [real(r8) (:)]  variable lake depth (m)                           
+   lakefetch                           =>    cps%lakefetch                               , & ! Input:  [real(r8) (:)]  lake fetch from surface data (m)                  
+#ifdef LCH4
+   lake_raw                            =>    cch4%lake_raw                               , & ! Output: [real(r8) (:)]  aerodynamic resistance for moisture (s/m)         
+#endif
+   qflx_prec_grnd                      =>    pwf%qflx_prec_grnd                          , & ! Output: [real(r8) (:)]  water onto ground including canopy runoff [kg/(m2 s)]
+   qflx_evap_soi                       =>    pwf%qflx_evap_soi                           , & ! Output: [real(r8) (:)]  soil evaporation (mm H2O/s) (+ = to atm)          
+   qflx_evap_tot                       =>    pwf%qflx_evap_tot                           , & ! Output: [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+   qflx_snwcp_ice                      =>    pwf%qflx_snwcp_ice                          , & ! Output: [real(r8) (:)]  excess snowfall due to snow capping (mm H2O /s) [+]
+   qflx_snwcp_liq                      =>    pwf%qflx_snwcp_liq                          , & ! Output: [real(r8) (:)]  excess rainfall due to snow capping (mm H2O /s) [+] 
+   eflx_lwrad_out                      =>    pef%eflx_lwrad_out                          , & ! Output: [real(r8) (:)]  emitted infrared (longwave) radiation (W/m**2)    
+   eflx_lwrad_net                      =>    pef%eflx_lwrad_net                          , & ! Output: [real(r8) (:)]  net infrared (longwave) rad (W/m**2) [+ = to atm] 
+   eflx_soil_grnd                      =>    pef%eflx_soil_grnd                          , & ! Output: [real(r8) (:)]  soil heat flux (W/m**2) [+ = into soil]           
+   eflx_lh_tot                         =>    pef%eflx_lh_tot                             , & ! Output: [real(r8) (:)]  total latent heat flux (W/m8*2)  [+ to atm]       
+   eflx_lh_grnd                        =>    pef%eflx_lh_grnd                            , & ! Output: [real(r8) (:)]  ground evaporation heat flux (W/m**2) [+ to atm]  
+   eflx_sh_grnd                        =>    pef%eflx_sh_grnd                            , & ! Output: [real(r8) (:)]  sensible heat flux from ground (W/m**2) [+ to atm]
+   eflx_sh_tot                         =>    pef%eflx_sh_tot                             , & ! Output: [real(r8) (:)]  total sensible heat flux (W/m**2) [+ to atm]      
+   eflx_gnet                           =>    pef%eflx_gnet                               , & ! Output: [real(r8) (:)]  net heat flux into ground (W/m**2)                
+   taux                                =>    pmf%taux                                    , & ! Output: [real(r8) (:)]  wind (shear) stress: e-w (kg/m/s**2)              
+   tauy                                =>    pmf%tauy                                    , & ! Output: [real(r8) (:)]  wind (shear) stress: n-s (kg/m/s**2)              
+   ram1                                =>    pps%ram1                                    , & ! Output: [real(r8) (:)]  aerodynamical resistance (s/m)                    
+   ram1_lake                           =>    pps%ram1_lake                               , & ! Output: [real(r8) (:)]  aerodynamical resistance (s/m)                    
+   h2osoi_liq                          =>    cws%h2osoi_liq                              , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                            
+   h2osoi_ice                          =>    cws%h2osoi_ice                              , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                                
+   t_veg                               =>    pes%t_veg                                   , & ! Output: [real(r8) (:)]  vegetation temperature (Kelvin)                   
+   t_grnd                              =>    ces%t_grnd                                  , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)                       
+   t_soisno                            =>    ces%t_soisno                                , & ! Input:  [real(r8) (:,:)]  soil (or snow) temperature (Kelvin)             
+   t_lake                              =>    ces%t_lake                                  , & ! Input:  [real(r8) (:,:)]  lake temperature (Kelvin)                       
+   t_ref2m                             =>    pes%t_ref2m                                 , & ! Output: [real(r8) (:)]  2 m height surface air temperature (Kelvin)       
+   q_ref2m                             =>    pes%q_ref2m                                 , & ! Output: [real(r8) (:)]  2 m height surface specific humidity (kg/kg)      
+   rh_ref2m                            =>    pes%rh_ref2m                                , & ! Output: [real(r8) (:)]  2 m height surface relative humidity (%)          
+   ws                                  =>    cps%ws                                      , & ! Output: [real(r8) (:)]  surface friction velocity (m/s)                   
+   ks                                  =>    cps%ks                                      , & ! Output: [real(r8) (:)]  coefficient passed to SLakeTemperature            
+   ust_lake                            =>    cps%ust_lake                                  & ! Output: [real(r8) (:)]  friction velocity (m/s)                           
+   )
 
-    forc_t         => clm_a2l%forc_t
-    forc_pbot      => clm_a2l%forc_pbot
-    forc_th        => clm_a2l%forc_th
-    forc_q         => clm_a2l%forc_q
-    forc_u         => clm_a2l%forc_u
-    forc_v         => clm_a2l%forc_v
-    forc_rho       => clm_a2l%forc_rho
-    forc_lwrad     => clm_a2l%forc_lwrad
-    forc_snow      => clm_a2l%forc_snow
-    forc_rain      => clm_a2l%forc_rain
-    lat            =>  grc%lat
-
-    ! Assign local pointers to derived type members (column-level)
-
-    cgridcell      =>col%gridcell
-    dz             => cps%dz
-    dz_lake        => cps%dz_lake
-    t_soisno       => ces%t_soisno
-    t_lake         => ces%t_lake
-    snl            => cps%snl
-    h2osoi_liq     => cws%h2osoi_liq
-    h2osoi_ice     => cws%h2osoi_ice
-    t_grnd         => ces%t_grnd
-    ws             => cps%ws
-    ks             => cps%ks
-    savedtke1      => cps%savedtke1
-    ust_lake       => cps%ust_lake
-    z0mg_col       => cps%z0mg
+    ! TODO 
+    ! the following cause a crash if they are set as associated
+    ! TODO
+    Z0mg_col       => cps%z0mg
     z0hg_col       => cps%z0hg
     z0qg_col       => cps%z0qg
-    lakedepth      => cps%lakedepth
-    lakefetch      => cps%lakefetch
-#ifdef LCH4
-    lake_raw       => cch4%lake_raw
-#endif
-    sabg_chk       => pef%sabg_chk
-
-    ! Assign local pointers to derived type members (pft-level)
-
-    pcolumn        =>pft%column
-    pgridcell      =>pft%gridcell
-    sabg           => pef%sabg
-    t_ref2m        => pes%t_ref2m
-    q_ref2m        => pes%q_ref2m
-    t_veg          => pes%t_veg
-    eflx_lwrad_out => pef%eflx_lwrad_out
-    eflx_lwrad_net => pef%eflx_lwrad_net
-    eflx_soil_grnd => pef%eflx_soil_grnd
-    eflx_lh_tot    => pef%eflx_lh_tot
-    eflx_lh_grnd   => pef%eflx_lh_grnd
-    eflx_sh_grnd   => pef%eflx_sh_grnd
-    eflx_sh_tot    => pef%eflx_sh_tot
-    ram1           => pps%ram1
-    ram1_lake      => pps%ram1_lake
-    taux           => pmf%taux
-    tauy           => pmf%tauy
-    qflx_prec_grnd => pwf%qflx_prec_grnd
-    qflx_evap_soi  => pwf%qflx_evap_soi
-    qflx_evap_tot  => pwf%qflx_evap_tot
-    eflx_gnet      => pef%eflx_gnet
-    forc_hgt_u_pft => pps%forc_hgt_u_pft
-    forc_hgt_t_pft => pps%forc_hgt_t_pft
-    forc_hgt_q_pft => pps%forc_hgt_q_pft
-    rh_ref2m       => pes%rh_ref2m
-    sabg_lyr       => pef%sabg_lyr
-    ! For calculation of NIR fraction of sabg
-    fsds_nir_d    => pef%fsds_nir_d
-    fsds_nir_i    => pef%fsds_nir_i
-    fsr_nir_d     => pef%fsr_nir_d
-    fsr_nir_i     => pef%fsr_nir_i
-    qflx_snwcp_ice => pwf%qflx_snwcp_ice
-    qflx_snwcp_liq => pwf%qflx_snwcp_liq
-
-
-    ! Determine step size
-
-    dtime = get_step_size()
 
     ! Begin calculations
 
@@ -313,8 +223,8 @@ contains
 
     do fp = 1, num_lakep
        p = filter_lakep(fp)
-       c = pcolumn(p)
-       g = cgridcell(c)
+       c = pft%column(p)
+       g = col%gridcell(c)
 
        ! Set fetch for prognostic roughness length-- if not found in surface data.
        ! This is poorly constrained, and should eventually be based on global lake data
@@ -397,8 +307,8 @@ contains
 
     do fp = 1, num_lakep
        p = filter_lakep(fp)
-       c = pcolumn(p)
-       g = pgridcell(p)
+       c = pft%column(p)
+       g = pft%gridcell(p)
 
        nmozsgn(p) = 0
        obuold(p) = 0._r8
@@ -456,8 +366,8 @@ contains
 
        do fp = 1, fncopy
           p = fpcopy(fp)
-          c = pcolumn(p)
-          g = pgridcell(p)
+          c = pft%column(p)
+          g = pft%gridcell(p)
 
           tgbef(c) = t_grnd(c)
           if (t_grnd(c) > tfrz .and. t_lake(c,1) > tfrz .and. snl(c) == 0) then
@@ -610,8 +520,8 @@ contains
 
     do fp = 1, num_lakep
        p = filter_lakep(fp)
-       c = pcolumn(p)
-       g = pgridcell(p)
+       c = pft%column(p)
+       g = pft%gridcell(p)
 
        ! If there is snow on the ground or lake is frozen and t_grnd > tfrz: reset t_grnd = tfrz.
        ! Re-evaluate ground fluxes.
@@ -699,7 +609,7 @@ contains
        u2m = max(0.1_r8,ustar(p)/vkc*log(2._r8/z0mg(p)))
 
        ws(c) = 1.2e-03_r8 * u2m
-       ks(c) = 6.6_r8*sqrt(abs(sin(lat(g))))*(u2m**(-1.84_r8))
+       ks(c) = 6.6_r8*sqrt(abs(sin(grc%lat(g))))*(u2m**(-1.84_r8))
 
        ! Update column roughness lengths and friction velocity
        z0mg_col(c) = z0mg(p)
@@ -713,8 +623,8 @@ contains
 
     do fp = 1, num_lakep
        p = filter_lakep(fp)
-       c = pcolumn(p)
-       g = pgridcell(p)
+       c = pft%column(p)
+       g = pft%gridcell(p)
        t_veg(p) = forc_t(g)
        eflx_lwrad_net(p)  = eflx_lwrad_out(p) - forc_lwrad(g)
        qflx_prec_grnd(p) = forc_rain(g) + forc_snow(g)
@@ -726,6 +636,7 @@ contains
        
     end do
 
+    end associate 
   end subroutine SLakeFluxes
 
 end module SLakeFluxesMod

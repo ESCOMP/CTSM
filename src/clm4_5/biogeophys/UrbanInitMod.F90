@@ -51,17 +51,9 @@ contains
 ! !ARGUMENTS:
     implicit none
 !
-! local pointers to original implicit in arguments (urban clump)
 !
-    real(r8), pointer :: ht_roof(:)    ! height of urban roof (m)
-    real(r8), pointer :: canyon_hwr(:) ! ratio of building height to street width (-)
-    integer , pointer :: ltype(:)      ! landunit type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
 !
-! local pointers to original implicit out arguments
 !
-    real(r8), pointer :: z_0_town(:)   ! urban landunit momentum roughness length (m)
-    real(r8), pointer :: z_d_town(:)   ! urban landunit displacement height (m)
 !
 ! !CALLED FROM:
 ! subroutine initialize
@@ -85,14 +77,15 @@ contains
     integer  :: begg, endg                 ! clump beginning and ending gridcell indices
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (landunit level)
 
-    ltype      => lun%itype
-    z_0_town   =>lun%z_0_town
-    z_d_town   =>lun%z_d_town
-    ht_roof    =>lun%ht_roof
-    canyon_hwr =>lun%canyon_hwr
-    urbpoi     =>lun%urbpoi
+   associate(& 
+   ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+   z_0_town                  =>   lun%z_0_town             , & ! Output: [real(r8) (:)]  urban landunit momentum roughness length (m)
+   z_d_town                  =>   lun%z_d_town             , & ! Output: [real(r8) (:)]  urban landunit displacement height (m)  
+   ht_roof                   =>   lun%ht_roof              , & ! Input:  [real(r8) (:)]  height of urban roof (m)                
+   canyon_hwr                =>   lun%canyon_hwr           , & ! Input:  [real(r8) (:)]  ratio of building height to street width (-)
+   urbpoi                    =>   lun%urbpoi                 & ! Input:  [logical (:)]  true => landunit is an urban point       
+   )
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -136,7 +129,8 @@ contains
       end if
    end do
 
- end subroutine UrbanInitAero
+    end associate 
+  end subroutine UrbanInitAero
 
 !-----------------------------------------------------------------------
 !BOP
@@ -162,36 +156,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to original implicit in arguments
 !
-    integer , pointer :: gdc(:)                 ! grid index for landunit 
-    integer , pointer :: coli(:)                ! beginning column index for landunit 
-    integer , pointer :: colf(:)                ! ending column index for landunit
-    integer , pointer :: ctype(:)               ! column type
-    integer , pointer :: ltype(:)               ! landunit type index
-    integer , pointer :: lgridcell(:)           ! gridcell of corresponding landunit
-    logical , pointer :: urbpoi(:)              ! true => landunit is an urban point
 !
-! local pointers to original implicit out arguments
 !
-    real(r8), pointer :: canyon_hwr(:)          ! urban canyon height to width ratio
-    real(r8), pointer :: emg(:)                 ! ground emissivity
-    real(r8), pointer :: wtroad_perv(:)         ! weight of pervious column to total road
-    real(r8), pointer :: ht_roof(:)             ! height of urban roof (m)
-    real(r8), pointer :: wtlunit_roof(:)        ! weight of roof with respect to landunit
-    real(r8), pointer :: wind_hgt_canyon(:)     ! height above road at which wind in canyon is to be computed (m)
-    real(r8), pointer :: eflx_traffic_factor(:) ! multiplicative factor for sensible heat flux from urban traffic
-    real(r8), pointer :: t_building_max(:)      ! maximum internal building temperature (K)
-    real(r8), pointer :: t_building_min(:)      ! minimum internal building temperature (K)
-    real(r8), pointer :: tk_wall(:,:)           ! thermal conductivity of urban wall (W/m/K)
-    real(r8), pointer :: tk_roof(:,:)           ! thermal conductivity of urban roof (W/m/K)
-    real(r8), pointer :: tk_improad(:,:)        ! thermal conductivity of urban impervious road (W/m/K)
-    real(r8), pointer :: cv_wall(:,:)           ! thermal conductivity of urban wall (J/m^3/K)
-    real(r8), pointer :: cv_roof(:,:)           ! thermal conductivity of urban roof (J/m^3/K)
-    real(r8), pointer :: cv_improad(:,:)        ! thermal conductivity of urban impervious road (J/m^3/K)
-    real(r8), pointer :: thick_wall(:)          ! thickness of urban wall (m)
-    real(r8), pointer :: thick_roof(:)          ! thickness of urban roof (m)
-    integer,  pointer :: nlev_improad(:)        ! number of impervious road layers (-)
 !
 !
 ! !OTHER LOCAL VARIABLES
@@ -204,36 +171,32 @@ contains
     integer  :: begg, endg                ! clump beginning and ending gridcell indices
     integer  :: dindx                     ! urban density type index
 
-    ! Assign local pointers to derived type members (landunit-level)
-
-    ltype               => lun%itype
-    urbpoi              => lun%urbpoi
-    lgridcell           =>lun%gridcell
-    coli                =>lun%coli
-    colf                =>lun%colf
-    canyon_hwr          =>lun%canyon_hwr
-    wtroad_perv         =>lun%wtroad_perv 
-    ht_roof             =>lun%ht_roof
-    wtlunit_roof        =>lun%wtlunit_roof
-    wind_hgt_canyon     =>lun%wind_hgt_canyon
-    eflx_traffic_factor => lef%eflx_traffic_factor
-    t_building_max      => lps%t_building_max
-    t_building_min      => lps%t_building_min
-    canyon_hwr          =>lun%canyon_hwr
-    tk_wall             => lps%tk_wall
-    tk_roof             => lps%tk_roof
-    tk_improad          => lps%tk_improad
-    cv_wall             => lps%cv_wall
-    cv_roof             => lps%cv_roof
-    cv_improad          => lps%cv_improad
-    thick_wall          => lps%thick_wall
-    thick_roof          => lps%thick_roof
-    nlev_improad        => lps%nlev_improad
-
-    ! Assign local pointers to derived type members (column-level)
-
-    ctype               => col%itype
-    emg                 => cps%emg
+   associate(& 
+   ltype               =>   lun%itype               , & ! Input:  [integer (:)]  landunit type index                      
+   urbpoi              =>   lun%urbpoi              , & ! Input:  [logical (:)]  true => landunit is an urban point       
+   lgridcell           =>   lun%gridcell            , & ! Input:  [integer (:)]  gridcell of corresponding landunit       
+   coli                =>   lun%coli                , & ! Input:  [integer (:)]  beginning column index for landunit      
+   colf                =>   lun%colf                , & ! Input:  [integer (:)]  ending column index for landunit         
+   wtroad_perv         =>   lun%wtroad_perv         , & ! Output: [real(r8) (:)]  weight of pervious column to total road 
+   ht_roof             =>   lun%ht_roof             , & ! Output: [real(r8) (:)]  height of urban roof (m)                
+   wtlunit_roof        =>   lun%wtlunit_roof        , & ! Output: [real(r8) (:)]  weight of roof with respect to landunit 
+   wind_hgt_canyon     =>   lun%wind_hgt_canyon     , & ! Output: [real(r8) (:)]  height above road at which wind in canyon is to be computed (m)
+   eflx_traffic_factor =>   lef%eflx_traffic_factor , & ! Output: [real(r8) (:)]  multiplicative factor for sensible heat flux from urban traffic
+   t_building_max      =>   lps%t_building_max      , & ! Output: [real(r8) (:)]  maximum internal building temperature (K)
+   t_building_min      =>   lps%t_building_min      , & ! Output: [real(r8) (:)]  minimum internal building temperature (K)
+   canyon_hwr          =>   lun%canyon_hwr          , & ! Output: [real(r8) (:)]  urban canyon height to width ratio      
+   tk_wall             =>   lps%tk_wall             , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban wall (W/m/K)
+   tk_roof             =>   lps%tk_roof             , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban roof (W/m/K)
+   tk_improad          =>   lps%tk_improad          , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban impervious road (W/m/K)
+   cv_wall             =>   lps%cv_wall             , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban wall (J/m^3/K)
+   cv_roof             =>   lps%cv_roof             , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban roof (J/m^3/K)
+   cv_improad          =>   lps%cv_improad          , & ! Output: [real(r8) (:,:)]  thermal conductivity of urban impervious road (J/m^3/K)
+   thick_wall          =>   lps%thick_wall          , & ! Output: [real(r8) (:)]  thickness of urban wall (m)             
+   thick_roof          =>   lps%thick_roof          , & ! Output: [real(r8) (:)]  thickness of urban roof (m)             
+   nlev_improad        =>   lps%nlev_improad        , & ! Output: [integer (:)]  number of impervious road layers (-)     
+   ctype               =>   col%itype               , & ! Input:  [integer (:)]  column type                              
+   emg                 =>   cps%emg                   & ! Output: [real(r8) (:)]  ground emissivity                       
+   )
     
    ! Initialize time constant urban variables
 
@@ -293,7 +256,8 @@ contains
        end if
     end do
 
-  end subroutine UrbanInitTimeConst
+    end associate 
+   end subroutine UrbanInitTimeConst
 
 !-----------------------------------------------------------------------
 !BOP
@@ -314,44 +278,9 @@ contains
 ! !ARGUMENTS:
     implicit none
 !
-! local pointers to original implicit in arguments (urban clump)
 !
-    integer , pointer :: ltype(:)      ! landunit type
-    integer , pointer :: lgridcell(:)  ! gridcell of corresponding landunit
-    integer , pointer :: clandunit(:)  ! landunit index of corresponding column
-    integer , pointer :: plandunit(:)  ! landunit index of corresponding pft
-    integer , pointer :: ctype(:)      ! column type
-    logical , pointer :: urbpoi(:)     ! true => landunit is an urban point
 !
-! local pointers to original implicit out arguments
 !
-    real(r8), pointer :: taf(:)                ! urban canopy air temperature (K)
-    real(r8), pointer :: qaf(:)                ! urban canopy air specific humidity (kg/kg)
-    real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to walls, roof (W/m**2)
-    real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
-    real(r8), pointer :: eflx_urban_heat(:)    ! urban heating flux (W/m**2)
-    real(r8), pointer :: fcov(:)               ! fractional impermeable area
-    real(r8), pointer :: fsat(:)               ! fractional area with water table at surface
-    real(r8), pointer :: qcharge(:)            ! aquifer recharge rate (mm/s)
-    real(r8), pointer :: t_building(:)         ! internal building temperature (K)
-    real(r8), pointer :: eflx_traffic(:)       ! traffic sensible heat flux (W/m**2)
-    real(r8), pointer :: eflx_wasteheat(:)     ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-    real(r8), pointer :: eflx_wasteheat_pft(:) ! sensible heat flux from urban heating/cooling sources of waste heat at pft level (W/m**2)
-    real(r8), pointer :: eflx_heat_from_ac_pft(:) ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
-    real(r8), pointer :: eflx_traffic_pft(:)   ! sensible heat flux from traffic (W/m**2)
-    real(r8), pointer :: eflx_anthro(:)        ! total anthropogenic heat flux (W/m**2)
-    real(r8), pointer :: t_ref2m_u(:)          ! Urban 2 m height surface air temperature (Kelvin)
-    real(r8), pointer :: t_ref2m_min_u(:)      ! Urban daily minimum of average 2 m height surface air temperature (K)
-    real(r8), pointer :: t_ref2m_max_u(:)      ! Urban daily maximum of average 2 m height surface air temperature (K)
-    real(r8), pointer :: rh_ref2m_u(:)         ! Urban 2 m height surface relative humidity (%)
-    real(r8), pointer :: t_grnd_u(:)           ! Urban ground temperature (Kelvin)
-    real(r8), pointer :: qflx_runoff_u(:)      ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
-    real(r8), pointer :: fsa_u(:)              ! Urban absorbed solar radiation (W/m**2)
-    real(r8), pointer :: eflx_lwrad_net_u(:)   ! Urban net longwave radiation (W/m**2)
-    real(r8), pointer :: eflx_lh_tot_u(:)      ! Urban latent heat flux (W/m**2)
-    real(r8), pointer :: eflx_sh_tot_u(:)      ! Urban sensible heat flux (W/m**2)
-    real(r8), pointer :: eflx_soil_grnd_u(:)   ! Urban ground heat flux (W/m**2)
-    real(r8), pointer :: eflx_snomelt_u(:)     ! Urban snow melt heat flux (W/m**2)
 !
 ! !CALLED FROM:
 ! subroutine initialize
@@ -369,47 +298,42 @@ contains
     integer :: begg, endg    ! clump beginning and ending gridcell indices
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (landunit level)
 
-    taf                => lps%taf
-    qaf                => lps%qaf
-    ltype              => lun%itype
-    urbpoi             => lun%urbpoi
-    lgridcell          =>lun%gridcell
-    t_building         => lps%t_building
-    eflx_traffic       => lef%eflx_traffic
-    eflx_wasteheat     => lef%eflx_wasteheat
-
-    ! Assign local pointers to derived type members (column level)
-
-    clandunit          =>col%landunit
-    eflx_building_heat => cef%eflx_building_heat
-    eflx_urban_ac      => cef%eflx_urban_ac
-    eflx_urban_heat    => cef%eflx_urban_heat
-    fcov               => cws%fcov
-    fsat               => cws%fsat
-    qcharge            => cws%qcharge
-    ctype              => col%itype
-    t_grnd_u           => ces%t_grnd_u
-    qflx_runoff_u      => cwf%qflx_runoff_u
-    eflx_snomelt_u     => cef%eflx_snomelt_u
-
-    ! Assign local pointers to derived type members (pft level)
-
-    t_ref2m_u          => pes%t_ref2m_u
-    t_ref2m_min_u      => pes%t_ref2m_min_u
-    t_ref2m_max_u      => pes%t_ref2m_max_u
-    rh_ref2m_u         => pes%rh_ref2m_u
-    plandunit          =>pft%landunit
-    eflx_wasteheat_pft => pef%eflx_wasteheat_pft
-    eflx_heat_from_ac_pft => pef%eflx_heat_from_ac_pft
-    eflx_traffic_pft => pef%eflx_traffic_pft
-    eflx_anthro => pef%eflx_anthro
-    fsa_u              => pef%fsa_u
-    eflx_lwrad_net_u   => pef%eflx_lwrad_net_u
-    eflx_lh_tot_u      => pef%eflx_lh_tot_u
-    eflx_sh_tot_u      => pef%eflx_sh_tot_u
-    eflx_soil_grnd_u   => pef%eflx_soil_grnd_u
+   associate(& 
+   taf                  =>  lps%taf                  , & ! Output: [real(r8) (:)]  urban canopy air temperature (K)        
+   qaf                  =>  lps%qaf                  , & ! Output: [real(r8) (:)]  urban canopy air specific humidity (kg/kg)
+   ltype                =>  lun%itype                , & ! Input:  [integer (:)]  landunit type                            
+   urbpoi               =>  lun%urbpoi               , & ! Input:  [logical (:)]  true => landunit is an urban point       
+   lgridcell            =>  lun%gridcell             , & ! Input:  [integer (:)]  gridcell of corresponding landunit       
+   t_building           =>  lps%t_building           , & ! Output: [real(r8) (:)]  internal building temperature (K)       
+   eflx_traffic         =>  lef%eflx_traffic         , & ! Output: [real(r8) (:)]  traffic sensible heat flux (W/m**2)     
+   eflx_wasteheat       =>  lef%eflx_wasteheat       , & ! Output: [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+   clandunit            =>  col%landunit             , & ! Input:  [integer (:)]  landunit index of corresponding column   
+   eflx_building_heat   =>  cef%eflx_building_heat   , & ! Output: [real(r8) (:)]  heat flux from urban building interior to walls, roof (W/m**2)
+   eflx_urban_ac        =>  cef%eflx_urban_ac        , & ! Output: [real(r8) (:)]  urban air conditioning flux (W/m**2)    
+   eflx_urban_heat      =>  cef%eflx_urban_heat      , & ! Output: [real(r8) (:)]  urban heating flux (W/m**2)             
+   fcov                 =>  cws%fcov                 , & ! Output: [real(r8) (:)]  fractional impermeable area             
+   fsat                 =>  cws%fsat                 , & ! Output: [real(r8) (:)]  fractional area with water table at surface
+   qcharge              =>  cws%qcharge              , & ! Output: [real(r8) (:)]  aquifer recharge rate (mm/s)            
+   ctype                =>  col%itype                , & ! Input:  [integer (:)]  column type                              
+   t_grnd_u             =>  ces%t_grnd_u             , & ! Output: [real(r8) (:)]  Urban ground temperature (Kelvin)       
+   qflx_runoff_u        =>  cwf%qflx_runoff_u        , & ! Output: [real(r8) (:)]  Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+   eflx_snomelt_u       =>  cef%eflx_snomelt_u       , & ! Output: [real(r8) (:)]  Urban snow melt heat flux (W/m**2)      
+   t_ref2m_u            =>  pes%t_ref2m_u            , & ! Output: [real(r8) (:)]  Urban 2 m height surface air temperature (Kelvin)
+   t_ref2m_min_u        =>  pes%t_ref2m_min_u        , & ! Output: [real(r8) (:)]  Urban daily minimum of average 2 m height surface air temperature (K)
+   t_ref2m_max_u        =>  pes%t_ref2m_max_u        , & ! Output: [real(r8) (:)]  Urban daily maximum of average 2 m height surface air temperature (K)
+   rh_ref2m_u           =>  pes%rh_ref2m_u           , & ! Output: [real(r8) (:)]  Urban 2 m height surface relative humidity (%)
+   plandunit            =>  pft%landunit             , & ! Input:  [integer (:)]  landunit index of corresponding pft      
+   eflx_wasteheat_pft   =>  pef%eflx_wasteheat_pft   , & ! Output: [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat at pft level (W/m**2)
+   eflx_heat_from_ac_pft=>  pef%eflx_heat_from_ac_pft, & ! Output: [real(r8) (:)]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
+   eflx_traffic_pft     =>  pef%eflx_traffic_pft     , & ! Output: [real(r8) (:)]  sensible heat flux from traffic (W/m**2)
+   eflx_anthro          =>  pef%eflx_anthro          , & ! Output: [real(r8) (:)]  total anthropogenic heat flux (W/m**2)  
+   fsa_u                =>  pef%fsa_u                , & ! Output: [real(r8) (:)]  Urban absorbed solar radiation (W/m**2) 
+   eflx_lwrad_net_u     =>  pef%eflx_lwrad_net_u     , & ! Output: [real(r8) (:)]  Urban net longwave radiation (W/m**2)   
+   eflx_lh_tot_u        =>  pef%eflx_lh_tot_u        , & ! Output: [real(r8) (:)]  Urban latent heat flux (W/m**2)         
+   eflx_sh_tot_u        =>  pef%eflx_sh_tot_u        , & ! Output: [real(r8) (:)]  Urban sensible heat flux (W/m**2)       
+   eflx_soil_grnd_u     =>  pef%eflx_soil_grnd_u       & ! Output: [real(r8) (:)]  Urban ground heat flux (W/m**2)         
+   )
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -477,6 +401,7 @@ contains
        end if
     end do
     
-  end subroutine UrbanInitTimeVar
+    end associate 
+   end subroutine UrbanInitTimeVar
   
 end module UrbanInitMod

@@ -61,82 +61,6 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 ! 3/29/04: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arrays
-   real(r8), pointer :: fire_mortality_c_to_cwdc(:,:)                   ! C fluxes associated with fire mortality to CWD pool (gC/m3/s)
-   real(r8), pointer :: m_decomp_cpools_to_fire_vr(:,:,:)               ! vertically-resolved decomposing C fire loss (gC/m3/s)
-   real(r8), pointer :: m_deadcrootc_storage_to_fire(:)
-   real(r8), pointer :: m_deadcrootc_to_fire(:)
-   real(r8), pointer :: m_deadcrootc_xfer_to_fire(:)
-   real(r8), pointer :: m_deadstemc_storage_to_fire(:)
-   real(r8), pointer :: m_deadstemc_to_fire(:)
-   real(r8), pointer :: m_deadstemc_xfer_to_fire(:)
-   real(r8), pointer :: m_frootc_storage_to_fire(:)
-   real(r8), pointer :: m_frootc_to_fire(:)
-   real(r8), pointer :: m_frootc_xfer_to_fire(:)
-   real(r8), pointer :: m_gresp_storage_to_fire(:)
-   real(r8), pointer :: m_gresp_xfer_to_fire(:)
-   real(r8), pointer :: m_leafc_storage_to_fire(:)
-   real(r8), pointer :: m_leafc_to_fire(:)
-   real(r8), pointer :: m_leafc_xfer_to_fire(:)
-   real(r8), pointer :: m_livecrootc_storage_to_fire(:)
-   real(r8), pointer :: m_livecrootc_to_fire(:)
-   real(r8), pointer :: m_livecrootc_xfer_to_fire(:)
-   real(r8), pointer :: m_livestemc_storage_to_fire(:)
-   real(r8), pointer :: m_livestemc_to_fire(:)
-   real(r8), pointer :: m_livestemc_xfer_to_fire(:)
-   !
-   real(r8), pointer :: m_leafc_to_litter_fire(:)   
-   real(r8), pointer :: m_leafc_storage_to_litter_fire(:)                
-   real(r8), pointer :: m_leafc_xfer_to_litter_fire(:)  
-   real(r8), pointer :: m_livestemc_to_litter_fire(:)    
-   real(r8), pointer :: m_livestemc_storage_to_litter_fire(:)        
-   real(r8), pointer :: m_livestemc_xfer_to_litter_fire(:) 
-   real(r8), pointer :: m_livestemc_to_deadstemc_fire(:)    
-   real(r8), pointer :: m_deadstemc_to_litter_fire(:) 
-   real(r8), pointer :: m_deadstemc_storage_to_litter_fire(:)           
-   real(r8), pointer :: m_deadstemc_xfer_to_litter_fire(:) 
-   real(r8), pointer :: m_frootc_to_litter_fire(:)        
-   real(r8), pointer :: m_frootc_storage_to_litter_fire(:)  
-   real(r8), pointer :: m_frootc_xfer_to_litter_fire(:)
-   real(r8), pointer :: m_livecrootc_to_litter_fire(:)    
-   real(r8), pointer :: m_livecrootc_storage_to_litter_fire(:)      
-   real(r8), pointer :: m_livecrootc_xfer_to_litter_fire(:)
-   real(r8), pointer :: m_livecrootc_to_deadcrootc_fire(:)    
-   real(r8), pointer :: m_deadcrootc_to_litter_fire(:)        
-   real(r8), pointer :: m_deadcrootc_storage_to_litter_fire(:)  
-   real(r8), pointer :: m_deadcrootc_xfer_to_litter_fire(:)
-   real(r8), pointer :: m_gresp_storage_to_litter_fire(:)      
-   real(r8), pointer :: m_gresp_xfer_to_litter_fire(:) 
-   !
-   real(r8), pointer :: m_c_to_litr_met_fire(:,:)
-   real(r8), pointer :: m_c_to_litr_cel_fire(:,:)
-   real(r8), pointer :: m_c_to_litr_lig_fire(:,:)
-! local pointers to implicit in/out arrays
-   real(r8), pointer :: decomp_cpools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
-   real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
-   real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
-   real(r8), pointer :: deadcrootc_xfer(:)    ! (gC/m2) dead coarse root C transfer
-   real(r8), pointer :: deadstemc(:)          ! (gC/m2) dead stem C
-   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
-   real(r8), pointer :: deadstemc_xfer(:)     ! (gC/m2) dead stem C transfer
-   real(r8), pointer :: frootc(:)             ! (gC/m2) fine root C
-   real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
-   real(r8), pointer :: frootc_xfer(:)        ! (gC/m2) fine root C transfer
-   real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
-   real(r8), pointer :: gresp_xfer(:)         ! (gC/m2) growth respiration transfer
-   real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
-   real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
-   real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
-   real(r8), pointer :: livecrootc(:)         ! (gC/m2) live coarse root C
-   real(r8), pointer :: livecrootc_storage(:) ! (gC/m2) live coarse root C storage
-   real(r8), pointer :: livecrootc_xfer(:)    ! (gC/m2) live coarse root C transfer
-   real(r8), pointer :: livestemc(:)          ! (gC/m2) live stem C
-   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
-   real(r8), pointer :: livestemc_xfer(:)     ! (gC/m2) live stem C transfer
-!
-! local pointers to implicit out arrays
-!
-! !OTHER LOCAL VARIABLES:
    type(pft_cflux_type), pointer :: pcisof
    type(pft_cstate_type), pointer :: pcisos
    type(column_cflux_type), pointer :: ccisof
@@ -168,80 +92,76 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
       call endrun('CNCIsoStateUpdate3Mod: iso must be bulk, c13 or c14')
    end select
 
-    ! assign local pointers at the column level
-    fire_mortality_c_to_cwdc       => ccisof%fire_mortality_c_to_cwdc
-    m_decomp_cpools_to_fire_vr     => ccisof%m_decomp_cpools_to_fire_vr
-    decomp_cpools_vr               => ccisos%decomp_cpools_vr
-    m_c_to_litr_met_fire           => ccisof%m_c_to_litr_met_fire
-    m_c_to_litr_cel_fire           => ccisof%m_c_to_litr_cel_fire
-    m_c_to_litr_lig_fire           => ccisof%m_c_to_litr_lig_fire
-
-    ! assign local pointers at the pft level
-    m_leafc_to_fire                => pcisof%m_leafc_to_fire
-    m_leafc_storage_to_fire        => pcisof%m_leafc_storage_to_fire
-    m_leafc_xfer_to_fire           => pcisof%m_leafc_xfer_to_fire
-    m_livestemc_to_fire            => pcisof%m_livestemc_to_fire
-    m_livestemc_storage_to_fire    => pcisof%m_livestemc_storage_to_fire
-    m_livestemc_xfer_to_fire       => pcisof%m_livestemc_xfer_to_fire
-    m_deadstemc_to_fire            => pcisof%m_deadstemc_to_fire
-    m_deadstemc_storage_to_fire    => pcisof%m_deadstemc_storage_to_fire
-    m_deadstemc_xfer_to_fire       => pcisof%m_deadstemc_xfer_to_fire
-    m_frootc_to_fire               => pcisof%m_frootc_to_fire
-    m_frootc_storage_to_fire       => pcisof%m_frootc_storage_to_fire
-    m_frootc_xfer_to_fire          => pcisof%m_frootc_xfer_to_fire
-    m_livecrootc_to_fire           => pcisof%m_livecrootc_to_fire
-    m_livecrootc_storage_to_fire   => pcisof%m_livecrootc_storage_to_fire
-    m_livecrootc_xfer_to_fire      => pcisof%m_livecrootc_xfer_to_fire
-    m_deadcrootc_to_fire           => pcisof%m_deadcrootc_to_fire
-    m_deadcrootc_storage_to_fire   => pcisof%m_deadcrootc_storage_to_fire
-    m_deadcrootc_xfer_to_fire      => pcisof%m_deadcrootc_xfer_to_fire
-    m_gresp_storage_to_fire        => pcisof%m_gresp_storage_to_fire
-    m_gresp_xfer_to_fire           => pcisof%m_gresp_xfer_to_fire
-
-    m_leafc_to_litter_fire               => pcisof%m_leafc_to_litter_fire
-    m_leafc_storage_to_litter_fire      => pcisof%m_leafc_storage_to_litter_fire
-    m_leafc_xfer_to_litter_fire         => pcisof%m_leafc_xfer_to_litter_fire
-    m_livestemc_to_litter_fire          => pcisof%m_livestemc_to_litter_fire
-    m_livestemc_storage_to_litter_fire  => pcisof%m_livestemc_storage_to_litter_fire
-    m_livestemc_xfer_to_litter_fire     => pcisof%m_livestemc_xfer_to_litter_fire
-    m_livestemc_to_deadstemc_fire       => pcisof%m_livestemc_to_deadstemc_fire
-    m_deadstemc_to_litter_fire          => pcisof%m_deadstemc_to_litter_fire
-    m_deadstemc_storage_to_litter_fire  => pcisof%m_deadstemc_storage_to_litter_fire
-    m_deadstemc_xfer_to_litter_fire     => pcisof%m_deadstemc_xfer_to_litter_fire
-    m_frootc_to_litter_fire             => pcisof%m_frootc_to_litter_fire
-    m_frootc_storage_to_litter_fire     => pcisof%m_frootc_storage_to_litter_fire
-    m_frootc_xfer_to_litter_fire        => pcisof%m_frootc_xfer_to_litter_fire
-    m_livecrootc_to_litter_fire         => pcisof%m_livecrootc_to_litter_fire
-    m_livecrootc_storage_to_litter_fire => pcisof%m_livecrootc_storage_to_litter_fire
-    m_livecrootc_xfer_to_litter_fire    => pcisof%m_livecrootc_xfer_to_litter_fire
-    m_livecrootc_to_deadcrootc_fire     => pcisof%m_livecrootc_to_deadcrootc_fire
-    m_deadcrootc_to_litter_fire         => pcisof%m_deadcrootc_to_litter_fire
-    m_deadcrootc_storage_to_litter_fire => pcisof%m_deadcrootc_storage_to_litter_fire
-    m_deadcrootc_xfer_to_litter_fire    => pcisof%m_deadcrootc_xfer_to_litter_fire
-    m_gresp_storage_to_litter_fire      => pcisof%m_gresp_storage_to_litter_fire
-    m_gresp_xfer_to_litter_fire         => pcisof%m_gresp_xfer_to_litter_fire
-    
-
-    deadcrootc                     => pcisos%deadcrootc
-    deadcrootc_storage             => pcisos%deadcrootc_storage
-    deadcrootc_xfer                => pcisos%deadcrootc_xfer
-    deadstemc                      => pcisos%deadstemc
-    deadstemc_storage              => pcisos%deadstemc_storage
-    deadstemc_xfer                 => pcisos%deadstemc_xfer
-    frootc                         => pcisos%frootc
-    frootc_storage                 => pcisos%frootc_storage
-    frootc_xfer                    => pcisos%frootc_xfer
-    gresp_storage                  => pcisos%gresp_storage
-    gresp_xfer                     => pcisos%gresp_xfer
-    leafc                          => pcisos%leafc
-    leafc_storage                  => pcisos%leafc_storage
-    leafc_xfer                     => pcisos%leafc_xfer
-    livecrootc                     => pcisos%livecrootc
-    livecrootc_storage             => pcisos%livecrootc_storage
-    livecrootc_xfer                => pcisos%livecrootc_xfer
-    livestemc                      => pcisos%livestemc
-    livestemc_storage              => pcisos%livestemc_storage
-    livestemc_xfer                 => pcisos%livestemc_xfer
+   associate(& 
+   fire_mortality_c_to_cwdc            =>    ccisof%fire_mortality_c_to_cwdc             , & ! Input:  [real(r8) (:,:)]  C fluxes associated with fire mortality to CWD pool (gC/m3/s)
+   m_decomp_cpools_to_fire_vr          =>    ccisof%m_decomp_cpools_to_fire_vr           , & ! Input:  [real(r8) (:,:,:)]  vertically-resolved decomposing C fire loss (gC/m3/s)
+   decomp_cpools_vr                    =>    ccisos%decomp_cpools_vr                     , & ! InOut:  [real(r8) (:,:,:)]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
+   m_c_to_litr_met_fire                =>    ccisof%m_c_to_litr_met_fire                 , & ! Input:  [real(r8) (:,:)]                                                  
+   m_c_to_litr_cel_fire                =>    ccisof%m_c_to_litr_cel_fire                 , & ! Input:  [real(r8) (:,:)]                                                  
+   m_c_to_litr_lig_fire                =>    ccisof%m_c_to_litr_lig_fire                 , & ! Input:  [real(r8) (:,:)]                                                  
+   m_leafc_to_fire                     =>    pcisof%m_leafc_to_fire                      , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_storage_to_fire             =>    pcisof%m_leafc_storage_to_fire              , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_xfer_to_fire                =>    pcisof%m_leafc_xfer_to_fire                 , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_to_fire                 =>    pcisof%m_livestemc_to_fire                  , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_storage_to_fire         =>    pcisof%m_livestemc_storage_to_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_xfer_to_fire            =>    pcisof%m_livestemc_xfer_to_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_to_fire                 =>    pcisof%m_deadstemc_to_fire                  , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_storage_to_fire         =>    pcisof%m_deadstemc_storage_to_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_xfer_to_fire            =>    pcisof%m_deadstemc_xfer_to_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_to_fire                    =>    pcisof%m_frootc_to_fire                     , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_storage_to_fire            =>    pcisof%m_frootc_storage_to_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_xfer_to_fire               =>    pcisof%m_frootc_xfer_to_fire                , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_to_fire                =>    pcisof%m_livecrootc_to_fire                 , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_storage_to_fire        =>    pcisof%m_livecrootc_storage_to_fire         , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_xfer_to_fire           =>    pcisof%m_livecrootc_xfer_to_fire            , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_to_fire                =>    pcisof%m_deadcrootc_to_fire                 , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_storage_to_fire        =>    pcisof%m_deadcrootc_storage_to_fire         , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_xfer_to_fire           =>    pcisof%m_deadcrootc_xfer_to_fire            , & ! Input:  [real(r8) (:)]                                                    
+   m_gresp_storage_to_fire             =>    pcisof%m_gresp_storage_to_fire              , & ! Input:  [real(r8) (:)]                                                    
+   m_gresp_xfer_to_fire                =>    pcisof%m_gresp_xfer_to_fire                 , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_to_litter_fire              =>    pcisof%m_leafc_to_litter_fire               , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_storage_to_litter_fire      =>    pcisof%m_leafc_storage_to_litter_fire       , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_xfer_to_litter_fire         =>    pcisof%m_leafc_xfer_to_litter_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_to_litter_fire          =>    pcisof%m_livestemc_to_litter_fire           , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_storage_to_litter_fire  =>    pcisof%m_livestemc_storage_to_litter_fire   , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_xfer_to_litter_fire     =>    pcisof%m_livestemc_xfer_to_litter_fire      , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_to_deadstemc_fire       =>    pcisof%m_livestemc_to_deadstemc_fire        , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_to_litter_fire          =>    pcisof%m_deadstemc_to_litter_fire           , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_storage_to_litter_fire  =>    pcisof%m_deadstemc_storage_to_litter_fire   , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_xfer_to_litter_fire     =>    pcisof%m_deadstemc_xfer_to_litter_fire      , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_to_litter_fire             =>    pcisof%m_frootc_to_litter_fire              , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_storage_to_litter_fire     =>    pcisof%m_frootc_storage_to_litter_fire      , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_xfer_to_litter_fire        =>    pcisof%m_frootc_xfer_to_litter_fire         , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_to_litter_fire         =>    pcisof%m_livecrootc_to_litter_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_storage_to_litter_fire  =>    pcisof%m_livecrootc_storage_to_litter_fire  , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_xfer_to_litter_fire    =>    pcisof%m_livecrootc_xfer_to_litter_fire     , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_to_deadcrootc_fire     =>    pcisof%m_livecrootc_to_deadcrootc_fire      , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_to_litter_fire         =>    pcisof%m_deadcrootc_to_litter_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_storage_to_litter_fire  =>    pcisof%m_deadcrootc_storage_to_litter_fire  , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_xfer_to_litter_fire    =>    pcisof%m_deadcrootc_xfer_to_litter_fire     , & ! Input:  [real(r8) (:)]                                                    
+   m_gresp_storage_to_litter_fire      =>    pcisof%m_gresp_storage_to_litter_fire       , & ! Input:  [real(r8) (:)]                                                    
+   m_gresp_xfer_to_litter_fire         =>    pcisof%m_gresp_xfer_to_litter_fire          , & ! Input:  [real(r8) (:)]                                                    
+   deadcrootc                          =>    pcisos%deadcrootc                           , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C                        
+   deadcrootc_storage                  =>    pcisos%deadcrootc_storage                   , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                
+   deadcrootc_xfer                     =>    pcisos%deadcrootc_xfer                      , & ! InOut:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
+   deadstemc                           =>    pcisos%deadstemc                            , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C                               
+   deadstemc_storage                   =>    pcisos%deadstemc_storage                    , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C storage                       
+   deadstemc_xfer                      =>    pcisos%deadstemc_xfer                       , & ! InOut:  [real(r8) (:)]  (gC/m2) dead stem C transfer                      
+   frootc                              =>    pcisos%frootc                               , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C                               
+   frootc_storage                      =>    pcisos%frootc_storage                       , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C storage                       
+   frootc_xfer                         =>    pcisos%frootc_xfer                          , & ! InOut:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
+   gresp_storage                       =>    pcisos%gresp_storage                        , & ! InOut:  [real(r8) (:)]  (gC/m2) growth respiration storage                
+   gresp_xfer                          =>    pcisos%gresp_xfer                           , & ! InOut:  [real(r8) (:)]  (gC/m2) growth respiration transfer               
+   leafc                               =>    pcisos%leafc                                , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C                                    
+   leafc_storage                       =>    pcisos%leafc_storage                        , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C storage                            
+   leafc_xfer                          =>    pcisos%leafc_xfer                           , & ! InOut:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   livecrootc                          =>    pcisos%livecrootc                           , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C                        
+   livecrootc_storage                  =>    pcisos%livecrootc_storage                   , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C storage                
+   livecrootc_xfer                     =>    pcisos%livecrootc_xfer                      , & ! InOut:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
+   livestemc                           =>    pcisos%livestemc                            , & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C                               
+   livestemc_storage                   =>    pcisos%livestemc_storage                    , & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C storage                       
+   livestemc_xfer                      =>    pcisos%livestemc_xfer                         & ! InOut:  [real(r8) (:)]  (gC/m2) live stem C transfer                      
+   )
 
     ! set time steps
     dt = real( get_step_size(), r8 )
@@ -324,7 +244,8 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, isoto
 
     end do ! end of pft loop
 
-end subroutine CStateUpdate3
+    end associate 
+ end subroutine CStateUpdate3
 !-----------------------------------------------------------------------
 #endif
 

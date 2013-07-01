@@ -66,50 +66,7 @@ contains
 ! 09/07 , Sam Levis: as 10/05 but with current CN
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    logical , pointer :: pftmayexist(:)   ! exclude seasonal decid pfts from tropics [1=true, 0=false]
-    integer , pointer :: plandunit(:)     ! landunit of corresponding pft
-    integer , pointer :: pgridcell(:)     ! gridcell of corresponding pft
-    integer , pointer :: ltype(:)         ! landunit type for corresponding pft
-    real(r8), pointer :: tmomin20(:)      ! 20-yr running mean of tmomin
-    real(r8), pointer :: agdd20(:)        ! 20-yr running mean of agdd
-    real(r8), pointer :: agddtw(:)        ! accumulated growing degree days above twmax
-    real(r8), pointer :: prec365(:)       ! 365-day running mean of tot. precipitation
-    real(r8), pointer :: slatop(:)    !specific leaf area at top of canopy, projected area basis [m^2/gC]
-    real(r8), pointer :: dsladlai(:)  !dSLA/dLAI, projected area basis [m^2/gC]
-    real(r8), pointer :: woody(:)         ! ecophys const - woody pft or not
-    real(r8), pointer :: crownarea_max(:) ! ecophys const - tree maximum crown area [m2]
-    real(r8), pointer :: twmax(:)         ! ecophys const - upper limit of temperature of the warmest month
-    real(r8), pointer :: reinickerp(:)    ! ecophys const - parameter in allometric equation
-    real(r8), pointer :: dwood(:)         ! ecophys const - wood density (gC/m3)
-    real(r8), pointer :: allom1(:)        ! ecophys const - parameter in allometric
-    real(r8), pointer :: tcmin(:)         ! ecophys const - minimum coldest monthly mean temperature
-    real(r8), pointer :: tcmax(:)         ! ecophys const - maximum coldest monthly mean temperature
-    real(r8), pointer :: gddmin(:)        ! ecophys const - minimum growing degree days (at or above 5 C)
-    real(r8), pointer :: leafcmax(:)      ! (gC/m2) ann max leaf C
-    real(r8), pointer :: deadstemc(:)     ! (gC/m2) dead stem C
-    real(r8), pointer :: annsum_npp(:)         ! annual sum NPP (gC/m2/yr)
-    real(r8), pointer :: annsum_litfall(:)     ! annual sum litfall (gC/m2/yr)
-!
-! local pointers to implicit in/out arguments
-!
-    integer , pointer :: ivt(:)           ! vegetation type for this pft
-    logical , pointer :: present(:)       ! true=> PFT present in patch
-    real(r8), pointer :: nind(:)          ! number of individuals (#/m**2)
-!
-! local pointers to implicit out arguments
-!
-    real(r8), pointer :: fpcgrid(:)       ! foliar projective cover on gridcell (fraction)
-    real(r8), pointer :: crownarea(:)     ! area that each individual tree takes up (m^2)
-    real(r8), pointer :: greffic(:)       ! lpj's growth efficiency
-    real(r8), pointer :: heatstress(:)
-!
 !EOP
-!
-! !OTHER LOCAL VARIABLES:
-!
     integer  :: g,l,p,m                        ! indices
     integer  :: fn, filterg(ubg-lbg+1)         ! local gridcell filter for error check
 !
@@ -155,47 +112,39 @@ contains
     real(r8), parameter :: estab_max = 0.24_r8
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (gridcell-level)
 
-    agdd20        => gdgvs%agdd20
-    tmomin20      => gdgvs%tmomin20
-
-    ! Assign local pointers to derived type members (landunit-level)
-
-    ltype => lun%itype
-
-    ! Assign local pointers to derived type members (pft-level)
-
-    ivt           =>pft%itype
-    pgridcell     =>pft%gridcell
-    plandunit     =>pft%landunit
-    present       => pdgvs%present
-    nind          => pdgvs%nind
-    fpcgrid       => pdgvs%fpcgrid
-    crownarea     => pdgvs%crownarea
-    greffic       => pdgvs%greffic
-    heatstress    => pdgvs%heatstress
-    annsum_npp     => pepv%annsum_npp
-    annsum_litfall => pepv%annsum_litfall
-    prec365       => pdgvs%prec365
-    agddtw        => pdgvs%agddtw
-    pftmayexist   => pdgvs%pftmayexist
-
-    ! Assign local pointers to derived type members (vegetation types)
-
-    crownarea_max => dgv_pftcon%crownarea_max
-    twmax         => dgv_pftcon%twmax
-    reinickerp    => dgv_pftcon%reinickerp
-    allom1        => dgv_pftcon%allom1
-    tcmax         => dgv_pftcon%tcmax
-    tcmin         => dgv_pftcon%tcmin
-    gddmin        => dgv_pftcon%gddmin
-    leafcmax      => pcs%leafcmax
-    deadstemc     => pcs%deadstemc
-    slatop        => pftcon%slatop
-    dsladlai      => pftcon%dsladlai
-    dwood         => pftcon%dwood
-    woody         => pftcon%woody
+   associate(& 
+   agdd20                              =>    gdgvs%agdd20                                , & ! Input:  [real(r8) (:)]  20-yr running mean of agdd                        
+   tmomin20                            =>    gdgvs%tmomin20                              , & ! Input:  [real(r8) (:)]  20-yr running mean of tmomin                      
+   ltype                               =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type for corresponding pft                
+   ivt                                 =>   pft%itype                                    , & ! InOut:  [integer (:)]  vegetation type for this pft                       
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
+   plandunit                           =>   pft%landunit                                 , & ! Input:  [integer (:)]  landunit of corresponding pft                      
+   present                             =>    pdgvs%present                               , & ! InOut:  [logical (:)]  true=> PFT present in patch                        
+   nind                                =>    pdgvs%nind                                  , & ! InOut:  [real(r8) (:)]  number of individuals (#/m**2)                    
+   fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Output: [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
+   crownarea                           =>    pdgvs%crownarea                             , & ! Output: [real(r8) (:)]  area that each individual tree takes up (m^2)     
+   greffic                             =>    pdgvs%greffic                               , & ! Output: [real(r8) (:)]  lpj's growth efficiency                           
+   heatstress                          =>    pdgvs%heatstress                            , & ! Output: [real(r8) (:)]                                                    
+   annsum_npp                          =>    pepv%annsum_npp                             , & ! Input:  [real(r8) (:)]  annual sum NPP (gC/m2/yr)                         
+   annsum_litfall                      =>    pepv%annsum_litfall                         , & ! Input:  [real(r8) (:)]  annual sum litfall (gC/m2/yr)                     
+   prec365                             =>    pdgvs%prec365                               , & ! Input:  [real(r8) (:)]  365-day running mean of tot. precipitation        
+   agddtw                              =>    pdgvs%agddtw                                , & ! Input:  [real(r8) (:)]  accumulated growing degree days above twmax       
+   pftmayexist                         =>    pdgvs%pftmayexist                           , & ! Input:  [logical (:)]  exclude seasonal decid pfts from tropics [1=true, 0=false]
+   crownarea_max                       =>    dgv_pftcon%crownarea_max                    , & ! Input:  [real(r8) (:)]  ecophys const - tree maximum crown area [m2]      
+   twmax                               =>    dgv_pftcon%twmax                            , & ! Input:  [real(r8) (:)]  ecophys const - upper limit of temperature of the warmest month
+   reinickerp                          =>    dgv_pftcon%reinickerp                       , & ! Input:  [real(r8) (:)]  ecophys const - parameter in allometric equation  
+   allom1                              =>    dgv_pftcon%allom1                           , & ! Input:  [real(r8) (:)]  ecophys const - parameter in allometric           
+   tcmax                               =>    dgv_pftcon%tcmax                            , & ! Input:  [real(r8) (:)]  ecophys const - maximum coldest monthly mean temperature
+   tcmin                               =>    dgv_pftcon%tcmin                            , & ! Input:  [real(r8) (:)]  ecophys const - minimum coldest monthly mean temperature
+   gddmin                              =>    dgv_pftcon%gddmin                           , & ! Input:  [real(r8) (:)]  ecophys const - minimum growing degree days (at or above 5 C)
+   leafcmax                            =>    pcs%leafcmax                                , & ! Input:  [real(r8) (:)]  (gC/m2) ann max leaf C                            
+   deadstemc                           =>    pcs%deadstemc                               , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C                               
+   slatop                              =>    pftcon%slatop                               , & ! Input:  [real(r8) (:)] specific leaf area at top of canopy, projected area basis [m^2/gC]
+   dsladlai                            =>    pftcon%dsladlai                             , & ! Input:  [real(r8) (:)] dSLA/dLAI, projected area basis [m^2/gC]           
+   dwood                               =>    pftcon%dwood                                , & ! Input:  [real(r8) (:)]  ecophys const - wood density (gC/m3)              
+   woody                               =>    pftcon%woody                                  & ! Input:  [real(r8) (:)]  ecophys const - woody pft or not                  
+   )
 
     ! **********************************************************************
     ! Slevis version of LPJ's subr. bioclim
@@ -516,7 +465,8 @@ contains
        call endrun
     end if
 
-  end subroutine Establishment
+    end associate 
+   end subroutine Establishment
 
 #endif
 

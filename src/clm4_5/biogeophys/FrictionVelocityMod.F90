@@ -88,26 +88,6 @@ contains
 ! Created by Mariana Vertenstein
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-   integer , pointer :: ngridcell(:)      !pft/landunit gridcell index
-   real(r8), pointer :: forc_hgt_u_pft(:) !observational height of wind at pft level [m]
-   real(r8), pointer :: forc_hgt_t_pft(:) !observational height of temperature at pft level [m]
-   real(r8), pointer :: forc_hgt_q_pft(:) !observational height of specific humidity at pft level [m]
-   integer , pointer :: pfti(:)           !beginning pfti index for landunit
-   integer , pointer :: pftf(:)           !final pft index for landunit
-!
-! local pointers to implicit out arguments
-!
-   real(r8), pointer :: u10(:)         ! 10-m wind (m/s) (for dust model)
-   real(r8), pointer :: fv(:)          ! friction velocity (m/s) (for dust model)
-   real(r8), pointer :: vds(:)         ! dry deposition velocity term (m/s) (for SO4 NH4NO3)
-   real(r8), pointer :: u10_clm(:)     ! 10-m wind (m/s)
-   real(r8), pointer :: va(:)          ! atmospheric wind speed plus convective velocity (m/s)
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
    real(r8), parameter :: zetam = 1.574_r8 ! transition point of flux-gradient relation (wind profile)
@@ -125,38 +105,28 @@ contains
    real(r8) :: vds_tmp                     ! Temporary for dry deposition velocity
 !------------------------------------------------------------------------------
 
-   ! Assign local pointers to derived type members (gridcell-level)
-
-   if (present(landunit_index)) then
-     ngridcell  =>lun%gridcell
-   else
-     ngridcell  =>pft%gridcell
-   end if
-
-   vds        => pps%vds
-   u10        => pps%u10
-   u10_clm    => pps%u10_clm
-   va         => pps%va
-   fv         => pps%fv
-
-   ! Assign local pointers to derived type members (pft or landunit-level)
-
-   pfti             =>lun%pfti
-   pftf             =>lun%pftf
-
-   ! Assign local pointers to derived type members (pft-level)
-
-   forc_hgt_u_pft => pps%forc_hgt_u_pft
-   forc_hgt_t_pft => pps%forc_hgt_t_pft
-   forc_hgt_q_pft => pps%forc_hgt_q_pft
+   associate(& 
+   vds             => pps%vds            , & ! Output: [real(r8) (:)]  dry deposition velocity term (m/s) (for SO4 NH4NO3)
+   u10             => pps%u10            , & ! Output: [real(r8) (:)]  10-m wind (m/s) (for dust model)        
+   u10_clm         => pps%u10_clm        , & ! Output: [real(r8) (:)]  10-m wind (m/s)                         
+   va              => pps%va             , & ! Output: [real(r8) (:)]  atmospheric wind speed plus convective velocity (m/s)
+   fv              => pps%fv             , & ! Output: [real(r8) (:)]  friction velocity (m/s) (for dust model)
+   pfti            => lun%pfti           , & ! Input:  [integer (:)] beginning pfti index for landunit         
+   pftf            => lun%pftf           , & ! Input:  [integer (:)] final pft index for landunit              
+   forc_hgt_u_pft  => pps%forc_hgt_u_pft , & ! Input:  [real(r8) (:)] observational height of wind at pft level [m]
+   forc_hgt_t_pft  => pps%forc_hgt_t_pft , & ! Input:  [real(r8) (:)] observational height of temperature at pft level [m]
+   forc_hgt_q_pft  => pps%forc_hgt_q_pft   & ! Input:  [real(r8) (:)] observational height of specific humidity at pft level [m]
+   )
 
    ! Adjustment factors for unstable (moz < 0) or stable (moz > 0) conditions.
 
-#if (!defined PERGRO)
-
    do f = 1, fn
       n = filtern(f)
-      g = ngridcell(n)
+      if (present(landunit_index)) then
+         g = lun%gridcell(n) 
+      else
+         g = pft%gridcell(n)  
+      end if
 
       ! Wind profile
 
@@ -423,189 +393,9 @@ contains
       end if
 
    end do
-#endif
 
-
-#if (defined PERGRO)
-
-   !===============================================================================
-   ! The following only applies when PERGRO is defined
-   !===============================================================================
-
-   do f = 1, fn
-      n = filtern(f)
-      g = ngridcell(n)
-
-      if (present(landunit_index)) then
-        zldis(n) = forc_hgt_u_pft(pfti(n))-displa(n)
-      else
-        zldis(n) = forc_hgt_u_pft(n)-displa(n)
-      end if
-      zeta(n) = zldis(n)/obu(n)
-      if (zeta(n) < -zetam) then           ! zeta < -1
-         ustar(n) = vkc * um(n) / log(-zetam*obu(n)/z0m(n))
-      else if (zeta(n) < 0._r8) then         ! -1 <= zeta < 0
-         ustar(n) = vkc * um(n) / log(zldis(n)/z0m(n))
-      else if (zeta(n) <= 1._r8) then        !  0 <= ztea <= 1
-         ustar(n)=vkc * um(n)/log(zldis(n)/z0m(n))
-      else                             !  1 < zeta, phi=5+zeta
-         ustar(n)=vkc * um(n)/log(obu(n)/z0m(n))
-      endif
-
-! Calculate a 10-m wind (10m + z0m + d)
-! For now, this will not be the same as the 10-m wind calculated for the dust 
-! model because the CLM stability functions are used here, not the LSM stability
-! functions used in the dust model. We will eventually change the dust model to be 
-! consistent with the following formulation.
-! Note that the 10-m wind calculated this way could actually be larger than the
-! atmospheric forcing wind because 1) this includes the convective velocity, 2)
-! this includes the 1 m/s minimum wind threshold
-
-! If forcing height is less than or equal to 10m, then set 10-m wind to um
-      if (present(landunit_index)) then
-        do pp = pfti(n),pftf(n)
-          if (zldis(n)-z0m(n) .le. 10._r8) then
-            u10_clm(pp) = um(n)
-          else
-            if (zeta(n) < -zetam) then
-              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n))) ) )
-            else if (zeta(n) < 0._r8) then
-              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
-            else if (zeta(n) <=  1._r8) then
-              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
-            else
-              u10_clm(pp) = um(n) - ( ustar(n)/vkc*(log(obu(n)/(10._r8+z0m(n))) ) )
-            end if
-          end if
-          va(pp) = um(n)
-        end do
-      else
-        if (zldis(n)-z0m(n) .le. 10._r8) then
-          u10_clm(n) = um(n)
-        else
-          if (zeta(n) < -zetam) then
-            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(-zetam*obu(n)/(10._r8+z0m(n))) ) )
-          else if (zeta(n) < 0._r8) then
-            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
-          else if (zeta(n) <=  1._r8) then
-            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(zldis(n)/(10._r8+z0m(n))) ) )
-          else
-            u10_clm(n) = um(n) - ( ustar(n)/vkc*(log(obu(n)/(10._r8+z0m(n))) ) )
-          end if
-        end if
-        va(n) = um(n)
-      end if
-
-      if (present(landunit_index)) then
-        zldis(n) = forc_hgt_t_pft(pfti(n))-displa(n)
-      else
-        zldis(n) = forc_hgt_t_pft(n)-displa(n)
-      end if
-      zeta(n) = zldis(n)/obu(n)
-      if (zeta(n) < -zetat) then
-         temp1(n)=vkc/log(-zetat*obu(n)/z0h(n))
-      else if (zeta(n) < 0._r8) then
-         temp1(n)=vkc/log(zldis(n)/z0h(n))
-      else if (zeta(n) <= 1._r8) then
-         temp1(n)=vkc/log(zldis(n)/z0h(n))
-      else
-         temp1(n)=vkc/log(obu(n)/z0h(n))
-      end if
-
-      if (present(landunit_index)) then
-        zldis(n) = forc_hgt_q_pft(pfti(n))-displa(n)
-      else
-        zldis(n) = forc_hgt_q_pft(n)-displa(n)
-      end if
-      zeta(n) = zldis(n)/obu(n)
-      if (zeta(n) < -zetat) then
-         temp2(n)=vkc/log(-zetat*obu(n)/z0q(n))
-      else if (zeta(n) < 0._r8) then
-         temp2(n)=vkc/log(zldis(n)/z0q(n))
-      else if (zeta(n) <= 1._r8) then
-         temp2(n)=vkc/log(zldis(n)/z0q(n))
-      else
-         temp2(n)=vkc/log(obu(n)/z0q(n))
-      end if
-
-      zldis(n) = 2.0_r8 + z0h(n)
-      zeta(n) = zldis(n)/obu(n)
-      if (zeta(n) < -zetat) then
-         temp12m(n)=vkc/log(-zetat*obu(n)/z0h(n))
-      else if (zeta(n) < 0._r8) then
-         temp12m(n)=vkc/log(zldis(n)/z0h(n))
-      else if (zeta(n) <= 1._r8) then
-         temp12m(n)=vkc/log(zldis(n)/z0h(n))
-      else
-         temp12m(n)=vkc/log(obu(n)/z0h(n))
-      end if
-
-      zldis(n) = 2.0_r8 + z0q(n)
-      zeta(n) = zldis(n)/obu(n)
-      if (zeta(n) < -zetat) then
-         temp22m(n)=vkc/log(-zetat*obu(n)/z0q(n))
-      else if (zeta(n) < 0._r8) then
-         temp22m(n)=vkc/log(zldis(n)/z0q(n))
-      else if (zeta(n) <= 1._r8) then
-         temp22m(n)=vkc/log(zldis(n)/z0q(n))
-      else
-         temp22m(n)=vkc/log(obu(n)/z0q(n))
-      end if
-      ! diagnose 10-m wind for dust model (dstmbl.F)
-      ! Notes from C. Zender's dst.F:
-      ! According to Bon96 p. 62, the displacement height d (here displa) is
-      ! 0.0 <= d <= 0.34 m in dust source regions (i.e., regions w/o trees).
-      ! Therefore d <= 0.034*z1 and may safely be neglected.
-      ! Code from LSM routine SurfaceTemperature was used to obtain u10
-
-      if (present(landunit_index)) then
-        zldis(n) = forc_hgt_u_pft(pfti(n))-displa(n)
-      else
-        zldis(n) = forc_hgt_u_pft(n)-displa(n)
-      end if 
-      zeta(n) = zldis(n)/obu(n)
-      if (min(zeta(n), 1._r8) < 0._r8) then
-         tmp1 = (1._r8 - 16._r8*min(zeta(n),1._r8))**0.25_r8
-         tmp2 = log((1._r8+tmp1*tmp1)/2._r8)
-         tmp3 = log((1._r8+tmp1)/2._r8)
-         fmnew = 2._r8*tmp3 + tmp2 - 2._r8*atan(tmp1) + 1.5707963_r8
-      else
-         fmnew = -5._r8*min(zeta(n),1._r8)
-      endif
-      if (iter == 1) then
-         fm(n) = fmnew
-      else
-         fm(n) = 0.5_r8 * (fm(n)+fmnew)
-      end if
-      zeta10 = min(10._r8/obu(n), 1._r8)
-      if (zeta(n) == 0._r8) zeta10 = 0._r8
-      if (zeta10 < 0._r8) then
-         tmp1 = (1.0_r8 - 16.0 * zeta10)**0.25_r8
-         tmp2 = log((1.0_r8 + tmp1*tmp1)/2.0_r8)
-         tmp3 = log((1.0_r8 + tmp1)/2.0_r8)
-         fm10 = 2.0_r8*tmp3 + tmp2 - 2.0_r8*atan(tmp1) + 1.5707963_r8
-      else                ! not stable
-         fm10 = -5.0_r8 * zeta10
-      end if
-      if (present(landunit_index)) then
-        tmp4 = log( max( 1.0_r8, forc_hgt_u_pft(pfti(n)) / 10._r8 ) )
-      else
-        tmp4 = log( max( 1.0_r8, forc_hgt_u_pft(n) / 10._r8 ) )
-      end if
-      if (present(landunit_index)) then
-        do pp = pfti(n),pftf(n)
-          u10(pp) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
-          fv(pp)  = ustar(n)
-        end do 
-      else
-        u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
-        fv(n)  = ustar(n)
-      end if
-   end do
-
-#endif
-
-   end subroutine FrictionVelocity
+ end associate
+end subroutine FrictionVelocity
 
 !------------------------------------------------------------------------------
 !BOP
@@ -739,9 +529,6 @@ contains
     endif
 
     rib=grav*zldis*dthv/(thv*um*um)
-#if (defined PERGRO)
-    rib = 0._r8
-#endif
 
     if (rib >= 0._r8) then      ! neutral or stable
        zeta = rib*log(zldis/z0m)/(1._r8-5._r8*min(rib,0.19_r8))

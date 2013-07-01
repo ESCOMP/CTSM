@@ -134,63 +134,21 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-    integer , pointer :: pcolumn(:)         ! pft's column index
-    integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    integer , pointer :: cgridcell(:)       ! column's gridcell index
-    real(r8), pointer :: t_grnd(:)          ! ground temperature (Kelvin)
-    real(r8), pointer :: h2osno(:)          ! snow water (mm H2O)
-    real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
-    real(r8), pointer :: dz(:,:)            ! layer thickness for snow & soil (m)
-    real(r8), pointer :: dz_lake(:,:)       ! layer thickness for lake (m)
-    real(r8), pointer :: z(:,:)             ! layer depth for snow & soil (m)
-    real(r8), pointer :: zi(:,:)            ! interface level below a "z" level (m)
                                             ! Note: this is defined for -nlevsno, unlike
                                             ! the other z and dz variables
-    real(r8), pointer :: z_lake(:,:)        ! layer depth for lake (m)
-    real(r8), pointer :: ws(:)              ! surface friction velocity (m/s)
-    real(r8), pointer :: ks(:)              ! coefficient passed to SLakeTemperature
                                             !     for calculation of decay of eddy diffusivity with depth
-    integer , pointer :: snl(:)             ! negative of number of snow layers
-    real(r8), pointer :: lakedepth(:)       ! column lake depth (m)
-    real(r8), pointer :: etal(:)            ! extinction coefficient from surface data (1/m)
     ! variables needed for SNICAR
-    real(r8), pointer :: sabg_lyr(:,:)      ! absorbed solar radiation (pft,lyr) [W/m2]
     !   Calculation of beta depending on NIR fraction of sabg
-    real(r8), pointer :: fsds_nir_d(:)    ! incident direct beam nir solar radiation (W/m**2)
-    real(r8), pointer :: fsds_nir_i(:)    ! incident diffuse nir solar radiation (W/m**2)
-    real(r8), pointer :: fsr_nir_d(:)     ! reflected direct beam nir solar radiation (W/m**2)
-    real(r8), pointer :: fsr_nir_i(:)     ! reflected diffuse nir solar radiation (W/m**2)
     ! New for CH4 Model
 #ifdef LCH4
-    real(r8), pointer :: lake_raw(:)        !aerodynamic resistance for moisture (s/m)
 #endif
 !
-! local pointers to implicit out arguments
 !
-    real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_soil_grnd(:)  ! heat flux into snow / lake (W/m**2) [+ = into soil]
                                             ! Here this includes the whole lake radiation absorbed.
-    real(r8), pointer :: eflx_grnd_lake(:)  ! net heat flux into lake / snow surface, excluding light transmission (W/m**2)
-    real(r8), pointer :: eflx_gnet(:)       ! net heat flux into ground (W/m**2) at the surface interface
-    real(r8), pointer :: errsoi(:)          ! soil/lake energy conservation error (W/m**2)
-    real(r8), pointer :: t_lake(:,:)        ! lake temperature (Kelvin)
-    real(r8), pointer :: t_soisno(:,:)      ! soil (or snow) temperature (Kelvin)
-    real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2) [for snow & soil layers]
-    real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2) [for snow & soil layers]
-    real(r8), pointer :: lake_icefrac(:,:)  ! mass fraction of lake layer that is frozen
-    real(r8), pointer :: lake_icethick(:)   ! ice thickness (m) (integrated if lakepuddling)
-    real(r8), pointer :: savedtke1(:)       ! top level eddy conductivity (W/mK)
-    real(r8), pointer :: frac_iceold(:,:)   ! fraction of ice relative to the tot water
-    real(r8), pointer :: qflx_snofrz_col(:) !column-integrated snow freezing rate (kg m-2 s-1) [+]
     ! New for CLM 4
-    real(r8), pointer :: hc_soi(:)          ! soil heat content (MJ/m2)
-    real(r8), pointer :: hc_soisno(:)       ! soil plus snow plus lake heat content (MJ/m2)
     ! For CH4 Model
 #ifdef LCH4
-    real(r8), pointer :: grnd_ch4_cond(:)   ! tracer heat conductance for ground [m/s]
                                             ! This will be calculated with the total lake thermal resistance
                                             ! and the aerodyn. resist. (calc in SLakeFluxes).
                                             ! In lakes, the column variable only is used.
@@ -284,53 +242,50 @@ contains
 
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (column-level)
-
-    cgridcell      =>col%gridcell
-    dz             => cps%dz
-    z              => cps%z
-    t_lake         => ces%t_lake
-    h2osno         => cws%h2osno
-    t_grnd         => ces%t_grnd
-    errsoi         => cebal%errsoi
-    ws             => cps%ws
-    ks             => cps%ks
-    dz_lake        => cps%dz_lake
-    z_lake         => cps%z_lake
-    t_soisno       => ces%t_soisno
-    snl            => cps%snl
-    h2osoi_liq     => cws%h2osoi_liq
-    h2osoi_ice     => cws%h2osoi_ice
-    lake_icefrac   => cws%lake_icefrac
-    lake_icethick  => cws%lake_icethick
-    savedtke1      => cps%savedtke1
-    frac_iceold   => cps%frac_iceold
-    lakedepth      => cps%lakedepth
-    etal           => cps%etal
-    hc_soi         => ces%hc_soi
-    hc_soisno      => ces%hc_soisno
-#ifdef LCH4
-    lake_raw       => cch4%lake_raw
-    grnd_ch4_cond  => pps_a%grnd_ch4_cond
+   associate(& 
+   cgridcell           =>   col%gridcell            , & ! Input:  [integer (:)]  column's gridcell index                  
+   dz                  =>   cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer thickness for snow & soil (m)   
+   z                   =>   cps%z                   , & ! Input:  [real(r8) (:,:)]  layer depth for snow & soil (m)       
+   t_lake              =>   ces%t_lake              , & ! Output: [real(r8) (:,:)]  lake temperature (Kelvin)             
+   h2osno              =>   cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   t_grnd              =>   ces%t_grnd              , & ! Input:  [real(r8) (:)]  ground temperature (Kelvin)             
+   errsoi              =>   cebal%errsoi            , & ! Output: [real(r8) (:)]  soil/lake energy conservation error (W/m**2)
+   ws                  =>   cps%ws                  , & ! Input:  [real(r8) (:)]  surface friction velocity (m/s)         
+   ks                  =>   cps%ks                  , & ! Input:  [real(r8) (:)]  coefficient passed to SLakeTemperature  
+   dz_lake             =>   cps%dz_lake             , & ! Input:  [real(r8) (:,:)]  layer thickness for lake (m)          
+   z_lake              =>   cps%z_lake              , & ! Input:  [real(r8) (:,:)]  layer depth for lake (m)              
+   t_soisno            =>   ces%t_soisno            , & ! Output: [real(r8) (:,:)]  soil (or snow) temperature (Kelvin)   
+   snl                 =>   cps%snl                 , & ! Input:  [integer (:)]  negative of number of snow layers        
+   h2osoi_liq          =>   cws%h2osoi_liq          , & ! Output: [real(r8) (:,:)]  liquid water (kg/m2) [for snow & soil layers]
+   h2osoi_ice          =>   cws%h2osoi_ice          , & ! Output: [real(r8) (:,:)]  ice lens (kg/m2) [for snow & soil layers]
+   lake_icefrac        =>   cws%lake_icefrac        , & ! Output: [real(r8) (:,:)]  mass fraction of lake layer that is frozen
+   lake_icethick       =>   cws%lake_icethick       , & ! Output: [real(r8) (:)]  ice thickness (m) (integrated if lakepuddling)
+   savedtke1           =>   cps%savedtke1           , & ! Output: [real(r8) (:)]  top level eddy conductivity (W/mK)      
+   frac_iceold         =>   cps%frac_iceold         , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
+   lakedepth           =>   cps%lakedepth           , & ! Input:  [real(r8) (:)]  column lake depth (m)                   
+   etal                =>   cps%etal                , & ! Input:  [real(r8) (:)]  extinction coefficient from surface data (1/m)
+   hc_soi              =>   ces%hc_soi              , & ! Output: [real(r8) (:)]  soil heat content (MJ/m2)               
+   hc_soisno           =>   ces%hc_soisno           , & ! Output: [real(r8) (:)]  soil plus snow plus lake heat content (MJ/m2)
+#if (defined LCH4)
+   lake_raw            =>   cch4%lake_raw           , & ! Input:  [real(r8) (:)] aerodynamic resistance for moisture (s/m)
+   grnd_ch4_cond       =>   pps_a%grnd_ch4_cond     , & ! Output: [real(r8) (:)]  tracer heat conductance for ground [m/s]
 #endif
-    qflx_snofrz_col=> cwf%qflx_snofrz_col
-
-    ! Assign local pointers to derived type members (pft-level)
-
-    pcolumn        =>pft%column
-    pgridcell      =>pft%gridcell
-    sabg           => pef%sabg
-    eflx_soil_grnd => pef%eflx_soil_grnd
-    eflx_sh_grnd   => pef%eflx_sh_grnd
-    eflx_sh_tot    => pef%eflx_sh_tot
-    eflx_gnet      => pef%eflx_gnet
-    eflx_grnd_lake => pef%eflx_grnd_lake
-    sabg_lyr       => pef%sabg_lyr
-    ! For calculation of NIR fraction of sabg
-     fsds_nir_d    => pef%fsds_nir_d
-     fsds_nir_i    => pef%fsds_nir_i
-     fsr_nir_d     => pef%fsr_nir_d
-     fsr_nir_i     => pef%fsr_nir_i
+   qflx_snofrz_col     =>   cwf%qflx_snofrz_col     , & ! Output: [real(r8) (:)] column-integrated snow freezing rate (kg m-2 s-1) [+]
+   pcolumn             =>   pft%column              , & ! Input:  [integer (:)]  pft's column index                       
+   pgridcell           =>   pft%gridcell            , & ! Input:  [integer (:)]  pft's gridcell index                     
+   sabg                =>   pef%sabg                , & ! Input:  [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)
+   eflx_soil_grnd      =>   pef%eflx_soil_grnd      , & ! Output: [real(r8) (:)]  heat flux into snow / lake (W/m**2) [+ = into soil]
+   eflx_sh_grnd        =>   pef%eflx_sh_grnd        , & ! Output: [real(r8) (:)]  sensible heat flux from ground (W/m**2) [+ to atm]
+   eflx_sh_tot         =>   pef%eflx_sh_tot         , & ! Output: [real(r8) (:)]  total sensible heat flux (W/m**2) [+ to atm]
+   eflx_gnet           =>   pef%eflx_gnet           , & ! Output: [real(r8) (:)]  net heat flux into ground (W/m**2) at the surface interface
+   eflx_grnd_lake      =>   pef%eflx_grnd_lake      , & ! Output: [real(r8) (:)]  net heat flux into lake / snow surface, excluding light transmission (W/m**2)
+   sabg_lyr            =>   pef%sabg_lyr            , & ! Input:  [real(r8) (:,:)]  absorbed solar radiation (pft,lyr) [W/m2]
+   ! For calculation of NIR fraction of sabg
+   fsds_nir_d          =>   pef%fsds_nir_d          , & ! Input:  [real(r8) (:)]  incident direct beam nir solar radiation (W/m**2)
+   fsds_nir_i          =>   pef%fsds_nir_i          , & ! Input:  [real(r8) (:)]  incident diffuse nir solar radiation (W/m**2)
+   fsr_nir_d           =>   pef%fsr_nir_d           , & ! Input:  [real(r8) (:)]  reflected direct beam nir solar radiation (W/m**2)
+   fsr_nir_i           =>   pef%fsr_nir_i             & ! Input:  [real(r8) (:)]  reflected diffuse nir solar radiation (W/m**2)
+   )
 
     ! 1!) Initialization
     ! Determine step size
@@ -1101,7 +1056,8 @@ contains
        end do
     end do
 
-  end subroutine SLakeTemperature
+    end associate 
+   end subroutine SLakeTemperature
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !-----------------------------------------------------------------------
@@ -1156,23 +1112,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to original implicit in scalars
 !
-    integer , pointer :: snl(:)           ! number of snow layers
 !
-! local pointers to original implicit in arrays
 !
-    real(r8), pointer :: watsat(:,:)      ! volumetric soil water at saturation (porosity)
-    real(r8), pointer :: tksatu(:,:)      ! thermal conductivity, saturated soil [W/m-K]
-    real(r8), pointer :: tkmg(:,:)        ! thermal conductivity, soil minerals  [W/m-K]
-    real(r8), pointer :: tkdry(:,:)       ! thermal conductivity, dry soil (W/m/Kelvin)
-    real(r8), pointer :: csol(:,:)        ! heat capacity, soil solids (J/m**3/Kelvin)
-    real(r8), pointer :: dz(:,:)          ! layer thickness (m)
-    real(r8), pointer :: zi(:,:)          ! interface level below a "z" level (m)
-    real(r8), pointer :: z(:,:)           ! layer depth (m)
-    real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
 !
 !EOP
 !
@@ -1189,20 +1131,21 @@ contains
     real(r8) :: xicevol                   ! (virtual excess ice volume per nominal soil volume)
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (column-level)
 
-    snl        => cps%snl
-    watsat     => cps%watsat
-    tksatu     => cps%tksatu
-    tkmg       => cps%tkmg
-    tkdry      => cps%tkdry
-    csol       => cps%csol
-    dz         => cps%dz
-    zi         => cps%zi
-    z          => cps%z
-    t_soisno   => ces%t_soisno
-    h2osoi_liq => cws%h2osoi_liq
-    h2osoi_ice => cws%h2osoi_ice
+   associate(& 
+   snl         => cps%snl        , & ! Input:  [integer (:)]  number of snow layers                    
+   watsat      => cps%watsat     , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity)
+   tksatu      => cps%tksatu     , & ! Input:  [real(r8) (:,:)]  thermal conductivity, saturated soil [W/m-K]
+   tkmg        => cps%tkmg       , & ! Input:  [real(r8) (:,:)]  thermal conductivity, soil minerals  [W/m-K]
+   tkdry       => cps%tkdry      , & ! Input:  [real(r8) (:,:)]  thermal conductivity, dry soil (W/m/Kelvin)
+   csol        => cps%csol       , & ! Input:  [real(r8) (:,:)]  heat capacity, soil solids (J/m**3/Kelvin)
+   dz          => cps%dz         , & ! Input:  [real(r8) (:,:)]  layer thickness (m)                   
+   zi          => cps%zi         , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
+   z           => cps%z          , & ! Input:  [real(r8) (:,:)]  layer depth (m)                       
+   t_soisno    => ces%t_soisno   , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)             
+   h2osoi_liq  => cws%h2osoi_liq , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
+   h2osoi_ice  => cws%h2osoi_ice   & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+   )
 
     ! Thermal conductivity of soil from Farouki (1981)
 
@@ -1308,7 +1251,8 @@ contains
        end do
     end do
 
-  end subroutine SoilThermProp_Lake
+    end associate 
+   end subroutine SoilThermProp_Lake
 
 
 !-----------------------------------------------------------------------
@@ -1359,40 +1303,18 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to original implicit in scalars
 !
-    integer , pointer :: snl(:)           ! number of snow layers
 !
-! local pointers to original implicit inout scalars
 !
-    real(r8), pointer :: snow_depth(:)        ! snow height (m)
-    real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
     ! Needed in case snow height is less than critical value.
 !
-! local pointers to original implicit out scalars
 !
-    real(r8), pointer :: qflx_snow_melt(:)! net snow melt
-    real(r8), pointer :: qflx_snomelt(:)  ! snow melt (mm H2O /s)
-    real(r8), pointer :: eflx_snomelt(:)  ! snow melt heat flux (W/m**2)
-    real(r8), pointer :: qflx_snofrz_col(:)!column-integrated snow freezing rate (kg m-2 s-1) [+]
 !
-! local pointers to original implicit in arrays
 !
-    real(r8), pointer :: dz(:,:)          ! layer thickness (m)
-    real(r8), pointer :: dz_lake(:,:)     ! lake layer thickness (m)
 !
-! local pointers to original implicit inout arrays
 !
-    real(r8), pointer :: t_soisno(:,:)     ! soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)   ! ice lens (kg/m2)
-    real(r8), pointer :: lake_icefrac(:,:) ! mass fraction of lake layer that is frozen
-    real(r8), pointer :: t_lake(:,:)       ! lake temperature (Kelvin)
-    real(r8), pointer :: qflx_snofrz_lyr(:,:)  !snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
 !
-! local pointers to original implicit out arrays
 !
-    integer, pointer :: imelt(:,:)        ! flag for melting (=1), freezing (=2), Not=0 (new)
     ! Only needed for snow layers
 !
 !EOP
@@ -1409,27 +1331,27 @@ contains
     real(r8), parameter :: smallnumber = 1.e-12_r8 ! The above actually was enough to cause a 0.1 W/m^2 energy imbalance
                                                    ! when the bottom lake layer started freezing in a 50m Arctic lake
     logical  :: dophasechangeflag
-    
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived subtypes components (column-level)
 
-    qflx_snow_melt => cwf%qflx_snow_melt
-    snl          => cps%snl
-    h2osno       => cws%h2osno
-    snow_depth       => cps%snow_depth
-    qflx_snomelt => cwf%qflx_snomelt
-    eflx_snomelt => cef%eflx_snomelt
-    h2osoi_liq   => cws%h2osoi_liq
-    h2osoi_ice   => cws%h2osoi_ice
-    imelt        => cps%imelt
-    t_soisno     => ces%t_soisno
-    dz           => cps%dz
-    lake_icefrac => cws%lake_icefrac
-    t_lake       => ces%t_lake
-    dz_lake      => cps%dz_lake
-    qflx_snofrz_lyr => cwf%qflx_snofrz_lyr
-    qflx_snofrz_col=> cwf%qflx_snofrz_col
+   associate(& 
+   qflx_snow_melt  => cwf%qflx_snow_melt      , & ! Output: [real(r8) (:)]  net snow melt                           
+   snl             => cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
+   h2osno          => cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   snow_depth      => cps%snow_depth          , & ! Input:  [real(r8) (:)]  snow height (m)                         
+   qflx_snomelt    => cwf%qflx_snomelt        , & ! Output: [real(r8) (:)]  snow melt (mm H2O /s)                   
+   eflx_snomelt    => cef%eflx_snomelt        , & ! Output: [real(r8) (:)]  snow melt heat flux (W/m**2)            
+   h2osoi_liq      => cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
+   h2osoi_ice      => cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+   imelt           => cps%imelt               , & ! Output: [integer (:,:)]  flag for melting (=1), freezing (=2), Not=0 (new)
+   t_soisno        => ces%t_soisno            , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)             
+   dz              => cps%dz                  , & ! Input:  [real(r8) (:,:)]  layer thickness (m)                   
+   lake_icefrac    => cws%lake_icefrac        , & ! Input:  [real(r8) (:,:)]  mass fraction of lake layer that is frozen
+   t_lake          => ces%t_lake              , & ! Input:  [real(r8) (:,:)]  lake temperature (Kelvin)             
+   dz_lake         => cps%dz_lake             , & ! Input:  [real(r8) (:,:)]  lake layer thickness (m)              
+   qflx_snofrz_lyr => cwf%qflx_snofrz_lyr     , & ! Input:  [real(r8) (:,:)] snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
+   qflx_snofrz_col => cwf%qflx_snofrz_col       & ! Output: [real(r8) (:)] column-integrated snow freezing rate (kg m-2 s-1) [+]
+   )
 
     ! Get step size
 
@@ -1581,6 +1503,7 @@ contains
     end do
 !!!
 
-   end subroutine PhaseChange_Lake
+    end associate 
+    end subroutine PhaseChange_Lake
 
 end module SLakeTemperatureMod

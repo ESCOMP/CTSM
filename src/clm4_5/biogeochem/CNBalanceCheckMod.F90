@@ -59,11 +59,7 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
 ! 2/4/05: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arrays
-   real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
 !
-! local pointers to implicit out arrays
-   real(r8), pointer :: col_begcb(:)   ! carbon mass, beginning of time step (gC/m**2)
 
 !
 ! !OTHER LOCAL VARIABLES:
@@ -72,9 +68,10 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
 !
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers at the column level
-   col_begcb                      => ccbal%begcb
-   totcolc                        => ccs%totcolc
+   associate(& 
+   col_begcb                      =>    ccbal%begcb                  , & ! Output: [real(r8) (:)]  carbon mass, beginning of time step (gC/m**2)
+   totcolc                        =>    ccs%totcolc                    & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
+   )
 
    ! column loop
    do fc = 1,num_soilc
@@ -88,7 +85,8 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
    end do ! end of columns loop
  
 
-end subroutine BeginCBalance
+    end associate 
+ end subroutine BeginCBalance
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -119,11 +117,7 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
 ! 2/4/05: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arrays
-   real(r8), pointer :: totcoln(:)            ! (gN/m2) total column nitrogen, incl veg
 !
-! local pointers to implicit out arrays
-   real(r8), pointer :: col_begnb(:)   ! nitrogen mass, beginning of time step (gN/m**2)
 !
 
 ! !OTHER LOCAL VARIABLES:
@@ -132,9 +126,10 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
 !
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers at the column level
-   col_begnb                      => cnbal%begnb
-   totcoln                        => cns%totcoln
+   associate(& 
+   col_begnb                      =>    cnbal%begnb                  , & ! Output: [real(r8) (:)]  nitrogen mass, beginning of time step (gN/m**2)
+   totcoln                        =>    cns%totcoln                    & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
+   )
 
    ! column loop
    do fc = 1,num_soilc
@@ -147,7 +142,8 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
 
    end do ! end of columns loop
  
-end subroutine BeginNBalance
+    end associate 
+ end subroutine BeginNBalance
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -179,22 +175,7 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arrays
-   real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
-   real(r8), pointer :: gpp(:)            ! (gC/m2/s) gross primary production 
-   real(r8), pointer :: er(:)            ! (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
-   real(r8), pointer :: col_fire_closs(:) ! (gC/m2/s) total column-level fire C loss
-   real(r8), pointer :: col_hrv_xsmrpool_to_atm(:)  ! excess MR pool harvest mortality (gC/m2/s)
-   real(r8), pointer :: dwt_closs(:)              ! (gC/m2/s) total carbon loss from product pools and conversion
-   real(r8), pointer :: product_closs(:)      ! (gC/m2/s) total wood product carbon loss
-   real(r8), pointer :: som_c_leached(:)    ! total SOM C loss from vertical transport (gC/m^2/s)
 !
-! local pointers to implicit out arrays
-   real(r8), pointer :: col_cinputs(:)  ! (gC/m2/s) total column-level carbon inputs (for balance check)
-   real(r8), pointer :: col_coutputs(:) ! (gC/m2/s) total column-level carbon outputs (for balance check)
-   real(r8), pointer :: col_begcb(:)    ! carbon mass, beginning of time step (gC/m**2)
-   real(r8), pointer :: col_endcb(:)    ! carbon mass, end of time step (gC/m**2)
-   real(r8), pointer :: col_errcb(:)    ! carbon balance error for the timestep (gC/m**2)
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: c,err_index  ! indices
@@ -204,21 +185,21 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
 
-   ! assign local pointers to column-level arrays
-   totcolc                        => ccs%totcolc
-   gpp                            => pcf_a%gpp
-   er                             => ccf%er
-   col_fire_closs                 => ccf%col_fire_closs
-   col_hrv_xsmrpool_to_atm        => pcf_a%hrv_xsmrpool_to_atm
-   dwt_closs                      => ccf%dwt_closs
-   product_closs                  => ccf%product_closs
-   
-   col_cinputs                    => ccf%col_cinputs
-   col_coutputs                   => ccf%col_coutputs
-   col_begcb                      => ccbal%begcb
-   col_endcb                      => ccbal%endcb
-   col_errcb                      => ccbal%errcb
-   som_c_leached                  => ccf%som_c_leached
+   associate(& 
+   totcolc                        =>    ccs%totcolc                  , & ! Input:  [real(r8) (:)]  (gC/m2) total column carbon, incl veg and cpool
+   gpp                            =>    pcf_a%gpp                    , & ! Input:  [real(r8) (:)]  (gC/m2/s) gross primary production      
+   er                             =>    ccf%er                       , & ! Input:  [real(r8) (:)]  (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
+   col_fire_closs                 =>    ccf%col_fire_closs           , & ! Input:  [real(r8) (:)]  (gC/m2/s) total column-level fire C loss
+   col_hrv_xsmrpool_to_atm        =>    pcf_a%hrv_xsmrpool_to_atm    , & ! Input:  [real(r8) (:)]  excess MR pool harvest mortality (gC/m2/s)
+   dwt_closs                      =>    ccf%dwt_closs                , & ! Input:  [real(r8) (:)]  (gC/m2/s) total carbon loss from product pools and conversion
+   product_closs                  =>    ccf%product_closs            , & ! Input:  [real(r8) (:)]  (gC/m2/s) total wood product carbon loss
+   col_cinputs                    =>    ccf%col_cinputs              , & ! Output: [real(r8) (:)]  (gC/m2/s) total column-level carbon inputs (for balance check)
+   col_coutputs                   =>    ccf%col_coutputs             , & ! Output: [real(r8) (:)]  (gC/m2/s) total column-level carbon outputs (for balance check)
+   col_begcb                      =>    ccbal%begcb                  , & ! Output: [real(r8) (:)]  carbon mass, beginning of time step (gC/m**2)
+   col_endcb                      =>    ccbal%endcb                  , & ! Output: [real(r8) (:)]  carbon mass, end of time step (gC/m**2) 
+   col_errcb                      =>    ccbal%errcb                  , & ! Output: [real(r8) (:)]  carbon balance error for the timestep (gC/m**2)
+   som_c_leached                  =>    ccf%som_c_leached              & ! Input:  [real(r8) (:)]  total SOM C loss from vertical transport (gC/m^2/s)
+   )
    
    
    ! set time steps
@@ -269,7 +250,8 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    end if
    
 
-end subroutine CBalanceCheck
+    end associate 
+ end subroutine CBalanceCheck
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -302,69 +284,38 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 ! 12/9/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arrays
-   real(r8), pointer :: totcoln(:)               ! (gN/m2) total column nitrogen, incl veg
-   real(r8), pointer :: ndep_to_sminn(:)         ! atmospheric N deposition to soil mineral N (gN/m2/s)
-   real(r8), pointer :: nfix_to_sminn(:)         ! symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s) 
-   real(r8), pointer :: fert_to_sminn(:)
-   real(r8), pointer :: soyfixn_to_sminn(:)
-   real(r8), pointer :: supplement_to_sminn(:)   ! supplemental N supply (gN/m2/s)
-   real(r8), pointer :: denit(:)                 ! total rate of denitrification (gN/m2/s)
-#ifndef NITRIF_DENITRIF
-   real(r8), pointer :: sminn_leached(:)         ! soil mineral N pool loss to leaching (gN/m2/s)
-#else
-   real(r8), pointer :: smin_no3_leached(:)      ! soil mineral NO3 pool loss to leaching (gN/m2/s)
-   real(r8), pointer :: smin_no3_runoff(:)       ! soil mineral NO3 pool loss to runoff (gN/m2/s)
-   real(r8), pointer :: f_n2o_nit(:)             ! flux of N2o from nitrification [gN/m^2/s]
-#endif
-   real(r8), pointer :: col_fire_nloss(:)        ! total column-level fire N loss (gN/m2/s)
-   real(r8), pointer :: dwt_nloss(:)              ! (gN/m2/s) total nitrogen loss from product pools and conversion
-   real(r8), pointer :: product_nloss(:)          ! (gN/m2/s) total wood product nitrogen loss
-   real(r8), pointer :: som_n_leached(:)    ! total SOM N loss from vertical transport
-!
-! local pointers to implicit in/out arrays
-!
-! local pointers to implicit out arrays
-   real(r8), pointer :: col_ninputs(:)           ! column-level N inputs (gN/m2/s)
-   real(r8), pointer :: col_noutputs(:)          ! column-level N outputs (gN/m2/s)
-   real(r8), pointer :: col_begnb(:)             ! nitrogen mass, beginning of time step (gN/m**2)
-   real(r8), pointer :: col_endnb(:)             ! nitrogen mass, end of time step (gN/m**2)
-   real(r8), pointer :: col_errnb(:)             ! nitrogen balance error for the timestep (gN/m**2)
-
-! !OTHER LOCAL VARIABLES:
    integer :: c,err_index,j    ! indices
    integer :: fc             ! lake filter indices
    logical :: err_found      ! error flag
    real(r8):: dt             ! radiation time step (seconds)
 !EOP
 !-----------------------------------------------------------------------
-    ! assign local pointers to column-level arrays
    
-   totcoln                        => cns%totcoln
-   ndep_to_sminn                  => cnf%ndep_to_sminn
-   nfix_to_sminn                  => cnf%nfix_to_sminn
-   fert_to_sminn                  => cnf%fert_to_sminn
-   soyfixn_to_sminn               => cnf%soyfixn_to_sminn
-   supplement_to_sminn            => cnf%supplement_to_sminn
-   denit                          => cnf%denit
+   associate(& 
+   totcoln                        =>    cns%totcoln                  , & ! Input:  [real(r8) (:)]  (gN/m2) total column nitrogen, incl veg 
+   ndep_to_sminn                  =>    cnf%ndep_to_sminn            , & ! Input:  [real(r8) (:)]  atmospheric N deposition to soil mineral N (gN/m2/s)
+   nfix_to_sminn                  =>    cnf%nfix_to_sminn            , & ! Input:  [real(r8) (:)]  symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)
+   fert_to_sminn                  =>    cnf%fert_to_sminn            , & ! Input:  [real(r8) (:)]                                          
+   soyfixn_to_sminn               =>    cnf%soyfixn_to_sminn         , & ! Input:  [real(r8) (:)]                                          
+   supplement_to_sminn            =>    cnf%supplement_to_sminn      , & ! Input:  [real(r8) (:)]  supplemental N supply (gN/m2/s)         
+   denit                          =>    cnf%denit                    , & ! Input:  [real(r8) (:)]  total rate of denitrification (gN/m2/s) 
 #ifndef NITRIF_DENITRIF
-   sminn_leached                  => cnf%sminn_leached
+   sminn_leached                  =>    cnf%sminn_leached            , & ! Input:  [real(r8) (:)]  soil mineral N pool loss to leaching (gN/m2/s)
 #else
-   smin_no3_leached               => cnf%smin_no3_leached
-   smin_no3_runoff                => cnf%smin_no3_runoff
-   f_n2o_nit                      => cnf%f_n2o_nit
+   smin_no3_leached               =>    cnf%smin_no3_leached         , & ! Input:  [real(r8) (:)]  soil mineral NO3 pool loss to leaching (gN/m2/s)
+   smin_no3_runoff                =>    cnf%smin_no3_runoff          , & ! Input:  [real(r8) (:)]  soil mineral NO3 pool loss to runoff (gN/m2/s)
+   f_n2o_nit                      =>    cnf%f_n2o_nit                , & ! Input:  [real(r8) (:)]  flux of N2o from nitrification [gN/m^2/s]
 #endif
-   col_fire_nloss                 => cnf%col_fire_nloss
-   dwt_nloss                      => cnf%dwt_nloss
-   product_nloss                  => cnf%product_nloss
-   som_n_leached                  => cnf%som_n_leached
-   
-   col_ninputs                    => cnf%col_ninputs
-   col_noutputs                   => cnf%col_noutputs
-   col_begnb                      => cnbal%begnb
-   col_endnb                      => cnbal%endnb
-   col_errnb                      => cnbal%errnb
+   col_fire_nloss                 =>    cnf%col_fire_nloss           , & ! Input:  [real(r8) (:)]  total column-level fire N loss (gN/m2/s)
+   dwt_nloss                      =>    cnf%dwt_nloss                , & ! Input:  [real(r8) (:)]  (gN/m2/s) total nitrogen loss from product pools and conversion
+   product_nloss                  =>    cnf%product_nloss            , & ! Input:  [real(r8) (:)]  (gN/m2/s) total wood product nitrogen loss
+   som_n_leached                  =>    cnf%som_n_leached            , & ! Input:  [real(r8) (:)]  total SOM N loss from vertical transport
+   col_ninputs                    =>    cnf%col_ninputs              , & ! Output: [real(r8) (:)]  column-level N inputs (gN/m2/s)         
+   col_noutputs                   =>    cnf%col_noutputs             , & ! Output: [real(r8) (:)]  column-level N outputs (gN/m2/s)        
+   col_begnb                      =>    cnbal%begnb                  , & ! Output: [real(r8) (:)]  nitrogen mass, beginning of time step (gN/m**2)
+   col_endnb                      =>    cnbal%endnb                  , & ! Output: [real(r8) (:)]  nitrogen mass, end of time step (gN/m**2)
+   col_errnb                      =>    cnbal%errnb                    & ! Output: [real(r8) (:)]  nitrogen balance error for the timestep (gN/m**2)
+   )
    
    ! set time steps
    dt = real( get_step_size(), r8 )
@@ -424,7 +375,8 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
       call endrun
    end if
    
- end subroutine NBalanceCheck
+    end associate 
+  end subroutine NBalanceCheck
  !-----------------------------------------------------------------------
 #endif
  

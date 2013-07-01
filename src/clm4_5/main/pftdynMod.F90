@@ -48,11 +48,11 @@ module pftdynMod
 !EOP
 !
 ! ! PRIVATE TYPES
-  integer , pointer   :: yearspft(:)
-  real(r8), pointer   :: wtpft1(:,:)      ! weight of each pft relative to the natural veg landunit, time 1
-  real(r8), pointer   :: wtpft2(:,:)      ! weight of each pft relative to the natural veg landunit, time 2
-  real(r8), pointer   :: harvest(:)   
-  real(r8), pointer   :: wtcol_old(:)
+  integer  , allocatable   :: yearspft (:) !  [integer (:)] 
+  real(r8) , allocatable   :: wtpft1 (:,:)       !  [real(r8) (:,:)]  weight of each pft relative to the natural veg landunit, time 1 
+  real(r8) , allocatable   :: wtpft2 (:,:)       !  [real(r8) (:,:)]  weight of each pft relative to the natural veg landunit, time 2 
+  real(r8) , allocatable   :: harvest (:) !  [real(r8) (:)]    
+  real(r8) , allocatable   :: wtcol_old (:) !  [real(r8) (:)] 
   integer :: nt1
   integer :: nt2
   integer :: ntimes
@@ -104,13 +104,15 @@ contains
     integer  :: begl,endl                       ! beg/end indices for land landunits
     integer  :: begc,endc                       ! beg/end indices for land columns
     integer  :: begp,endp                       ! beg/end indices for land pfts
-    real(r8), pointer :: pctnatveg(:)       ! percent of gcell is natural vegetation landunit
-    real(r8), pointer :: pctcrop(:)         ! percent of gcell is crop landunit
-    real(r8), pointer :: pctgla(:)          ! percent of gcell is glacier
-    real(r8), pointer :: pctlak(:)          ! percent of gcell is lake
-    real(r8), pointer :: pctwet(:)          ! percent of gcell is wetland
-    real(r8), pointer :: pcturb(:,:)        ! percent of gcell is urbanized
-    real(r8), pointer :: pcturb_tot(:)      ! percent of grid cell is urban (sum over density classes)
+    ! leave the following as pointers instead of changing to allocatable since the ncd_io
+    ! interface expects a pointer type
+    real(r8) , pointer :: pctnatveg (:)        !  [real(r8) (:)]  percent of gcell is natural vegetation landunit 
+    real(r8) , pointer :: pctcrop (:)          !  [real(r8) (:)]  percent of gcell is crop landunit 
+    real(r8) , pointer :: pctgla (:)           !  [real(r8) (:)]  percent of gcell is glacier 
+    real(r8) , pointer :: pctlak (:)           !  [real(r8) (:)]  percent of gcell is lake 
+    real(r8) , pointer :: pctwet (:)           !  [real(r8) (:)]  percent of gcell is wetland 
+    real(r8) , pointer :: pcturb (:,:)         !  [real(r8) (:,:)]  percent of gcell is urbanized 
+    real(r8) , pointer :: pcturb_tot (:)       !  [real(r8) (:)]  percent of grid cell is urban (sum over density classes) 
     character(len=256) :: locfn                 ! local file name
     character(len= 32) :: subname='pftdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
@@ -460,7 +462,7 @@ contains
     integer  :: i,j,m,n
     integer  :: err, ierr, ret
     real(r8) :: sumpct,sumerr                     ! temporary
-    real(r8), pointer :: arrayl(:,:)              ! temporary array
+    real(r8) , pointer :: arrayl (:,:)               !  [real(r8) (:,:)]  temporary array 
     logical  :: readvar
    
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
@@ -500,7 +502,7 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    real(r8), pointer :: arrayl(:)                   ! temporary array
+    real(r8) , pointer :: arrayl (:)                    !  [real(r8) (:)]  temporary array 
     logical :: readvar 
     character(len=32) :: subname='pftdyn_getharvest' ! subroutine name
 !-----------------------------------------------------------------------
@@ -752,9 +754,6 @@ contains
     real(r8) :: leafc_seed, leafn_seed
     real(r8) :: deadstemc_seed, deadstemn_seed
     real(r8), pointer :: dwt_ptr0, dwt_ptr1, dwt_ptr2, dwt_ptr3, ptr
-    integer , pointer :: ivt(:)    ! pft vegetation type added by F. Li and S. Levis
-    real(r8),   pointer :: lfpftd(:)       !F. Li and S. Levis
-    integer          , pointer   :: pcolumn(:)   ! column of corresponding pft
     character(len=32) :: subname='pftdyn_cbal' ! subroutine name
     !!! C13
     real(r8), allocatable :: dwt_leafc13_seed(:)     ! pft-level mass gain due to seeding of new area
@@ -793,9 +792,11 @@ contains
     
     ! Set pointers into derived type
 
-    pcolumn => pft%column
-    lfpftd  => pps%lfpftd     ! F. Li and S. Levis
-    ivt     =>pft%itype           ! F. Li and S. Levis
+   associate(& 
+   pcolumn                             =>    pft%column              , & !  [integer (:)]  column of corresponding pft                               
+   lfpftd                              =>    pps%lfpftd              , & !  [real(r8) (:)] F. Li and S. Levis                                        
+   ivt                                 =>   pft%itype                  & !  [integer (:)]  pft vegetation type added by F. Li and S. Levis           
+   )
 
     ! Allocate pft-level mass loss arrays
     allocate(dwt_leafc_seed(begp:endp), stat=ier)
@@ -1175,19 +1176,8 @@ contains
                 if ( use_c14 ) then
                    pc14f%psnsun(p) = 0._r8
                    pc14f%psnsha(p) = 0._r8
-                   
                    pepv%rc14_atm(p) = c14ratio
-                   
-                   ! pps%alphapsnsun(p) = 0._r8
-                   ! pps%alphapsnsha(p) = 0._r8
-                   
-                   ! pepv%xsmrpool_c14ratio(p) = c14ratio
-                   
                    pepv%rc14_atm(p) = 0._r8
-                   
-                   ! pepv%rc14_canair(p) = 0._r8
-                   ! pepv%rc14_psnsun(p) = 0._r8
-                   ! pepv%rc14_psnsha(p) = 0._r8
                 endif
                 
              end if  ! end initialization of new pft
@@ -2869,7 +2859,8 @@ contains
        deallocate(prod100_c14flux)
     endif
     
-  end subroutine pftdyn_cnbal
+    end associate 
+   end subroutine pftdyn_cnbal
 #endif
 
 #if (defined CNDV)
@@ -3031,98 +3022,10 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arrays
-   integer , pointer :: pgridcell(:)   ! pft-level index into gridcell-level quantities
-   integer , pointer :: ivt(:)         ! pft vegetation type
 
-   real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
-   real(r8), pointer :: frootc(:)             ! (gC/m2) fine root C
-   real(r8), pointer :: livestemc(:)          ! (gC/m2) live stem C
-   real(r8), pointer :: deadstemc(:)          ! (gC/m2) dead stem C
-   real(r8), pointer :: livecrootc(:)         ! (gC/m2) live coarse root C
-   real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
-   real(r8), pointer :: xsmrpool(:)           ! (gC/m2) abstract C pool to meet excess MR demand
-   real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
-   real(r8), pointer :: frootc_storage(:)     ! (gC/m2) fine root C storage
-   real(r8), pointer :: livestemc_storage(:)  ! (gC/m2) live stem C storage
-   real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
-   real(r8), pointer :: livecrootc_storage(:) ! (gC/m2) live coarse root C storage
-   real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
-   real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
-   real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
-   real(r8), pointer :: frootc_xfer(:)        ! (gC/m2) fine root C transfer
-   real(r8), pointer :: livestemc_xfer(:)     ! (gC/m2) live stem C transfer
-   real(r8), pointer :: deadstemc_xfer(:)     ! (gC/m2) dead stem C transfer
-   real(r8), pointer :: livecrootc_xfer(:)    ! (gC/m2) live coarse root C transfer
-   real(r8), pointer :: deadcrootc_xfer(:)    ! (gC/m2) dead coarse root C transfer
-   real(r8), pointer :: gresp_xfer(:)         ! (gC/m2) growth respiration transfer
-   real(r8), pointer :: leafn(:)              ! (gN/m2) leaf N
-   real(r8), pointer :: frootn(:)             ! (gN/m2) fine root N
-   real(r8), pointer :: livestemn(:)          ! (gN/m2) live stem N
-   real(r8), pointer :: deadstemn(:)          ! (gN/m2) dead stem N
-   real(r8), pointer :: livecrootn(:)         ! (gN/m2) live coarse root N
-   real(r8), pointer :: deadcrootn(:)         ! (gN/m2) dead coarse root N
-   real(r8), pointer :: retransn(:)           ! (gN/m2) plant pool of retranslocated N
-   real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
-   real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
-   real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
-   real(r8), pointer :: deadstemn_storage(:)  ! (gN/m2) dead stem N storage
-   real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
-   real(r8), pointer :: deadcrootn_storage(:) ! (gN/m2) dead coarse root N storage
-   real(r8), pointer :: leafn_xfer(:)         ! (gN/m2) leaf N transfer
-   real(r8), pointer :: frootn_xfer(:)        ! (gN/m2) fine root N transfer
-   real(r8), pointer :: livestemn_xfer(:)     ! (gN/m2) live stem N transfer
-   real(r8), pointer :: deadstemn_xfer(:)     ! (gN/m2) dead stem N transfer
-   real(r8), pointer :: livecrootn_xfer(:)    ! (gN/m2) live coarse root N transfer
-   real(r8), pointer :: deadcrootn_xfer(:)    ! (gN/m2) dead coarse root N transfer
 !
-! local pointers to implicit in/out arrays
 !
-! local pointers to implicit out arrays
-   real(r8), pointer :: hrv_leafc_to_litter(:)
-   real(r8), pointer :: hrv_frootc_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_to_prod10c(:)
-   real(r8), pointer :: hrv_deadstemc_to_prod100c(:)
-   real(r8), pointer :: hrv_livecrootc_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_to_litter(:)
-   real(r8), pointer :: hrv_xsmrpool_to_atm(:)
-   real(r8), pointer :: hrv_leafc_storage_to_litter(:)
-   real(r8), pointer :: hrv_frootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_storage_to_litter(:)
-   real(r8), pointer :: hrv_livecrootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_gresp_storage_to_litter(:)
-   real(r8), pointer :: hrv_leafc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_frootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livecrootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_gresp_xfer_to_litter(:)
-   real(r8), pointer :: hrv_leafn_to_litter(:)
-   real(r8), pointer :: hrv_frootn_to_litter(:)
-   real(r8), pointer :: hrv_livestemn_to_litter(:)
-   real(r8), pointer :: hrv_deadstemn_to_prod10n(:)
-   real(r8), pointer :: hrv_deadstemn_to_prod100n(:)
-   real(r8), pointer :: hrv_livecrootn_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootn_to_litter(:)
-   real(r8), pointer :: hrv_retransn_to_litter(:)
-   real(r8), pointer :: hrv_leafn_storage_to_litter(:)
-   real(r8), pointer :: hrv_frootn_storage_to_litter(:)
-   real(r8), pointer :: hrv_livestemn_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadstemn_storage_to_litter(:)
-   real(r8), pointer :: hrv_livecrootn_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootn_storage_to_litter(:)
-   real(r8), pointer :: hrv_leafn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_frootn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livestemn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadstemn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livecrootn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootn_xfer_to_litter(:)
 !
-! !OTHER LOCAL VARIABLES:
    integer :: p                         ! pft index
    integer :: g                         ! gridcell index
    integer :: fp                        ! pft filter index
@@ -3132,92 +3035,92 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
 
-   ! assign local pointers to pft-level arrays
-   pgridcell                      =>pft%gridcell
-   
-   ivt                            =>pft%itype
-   leafc                          => pcs%leafc
-   frootc                         => pcs%frootc
-   livestemc                      => pcs%livestemc
-   deadstemc                      => pcs%deadstemc
-   livecrootc                     => pcs%livecrootc
-   deadcrootc                     => pcs%deadcrootc
-   xsmrpool                       => pcs%xsmrpool
-   leafc_storage                  => pcs%leafc_storage
-   frootc_storage                 => pcs%frootc_storage
-   livestemc_storage              => pcs%livestemc_storage
-   deadstemc_storage              => pcs%deadstemc_storage
-   livecrootc_storage             => pcs%livecrootc_storage
-   deadcrootc_storage             => pcs%deadcrootc_storage
-   gresp_storage                  => pcs%gresp_storage
-   leafc_xfer                     => pcs%leafc_xfer
-   frootc_xfer                    => pcs%frootc_xfer
-   livestemc_xfer                 => pcs%livestemc_xfer
-   deadstemc_xfer                 => pcs%deadstemc_xfer
-   livecrootc_xfer                => pcs%livecrootc_xfer
-   deadcrootc_xfer                => pcs%deadcrootc_xfer
-   gresp_xfer                     => pcs%gresp_xfer
-   leafn                          => pns%leafn
-   frootn                         => pns%frootn
-   livestemn                      => pns%livestemn
-   deadstemn                      => pns%deadstemn
-   livecrootn                     => pns%livecrootn
-   deadcrootn                     => pns%deadcrootn
-   retransn                       => pns%retransn
-   leafn_storage                  => pns%leafn_storage
-   frootn_storage                 => pns%frootn_storage
-   livestemn_storage              => pns%livestemn_storage
-   deadstemn_storage              => pns%deadstemn_storage
-   livecrootn_storage             => pns%livecrootn_storage
-   deadcrootn_storage             => pns%deadcrootn_storage
-   leafn_xfer                     => pns%leafn_xfer
-   frootn_xfer                    => pns%frootn_xfer
-   livestemn_xfer                 => pns%livestemn_xfer
-   deadstemn_xfer                 => pns%deadstemn_xfer
-   livecrootn_xfer                => pns%livecrootn_xfer
-   deadcrootn_xfer                => pns%deadcrootn_xfer
-   hrv_leafc_to_litter              => pcf%hrv_leafc_to_litter
-   hrv_frootc_to_litter             => pcf%hrv_frootc_to_litter
-   hrv_livestemc_to_litter          => pcf%hrv_livestemc_to_litter
-   hrv_deadstemc_to_prod10c         => pcf%hrv_deadstemc_to_prod10c
-   hrv_deadstemc_to_prod100c        => pcf%hrv_deadstemc_to_prod100c
-   hrv_livecrootc_to_litter         => pcf%hrv_livecrootc_to_litter
-   hrv_deadcrootc_to_litter         => pcf%hrv_deadcrootc_to_litter
-   hrv_xsmrpool_to_atm              => pcf%hrv_xsmrpool_to_atm
-   hrv_leafc_storage_to_litter      => pcf%hrv_leafc_storage_to_litter
-   hrv_frootc_storage_to_litter     => pcf%hrv_frootc_storage_to_litter
-   hrv_livestemc_storage_to_litter  => pcf%hrv_livestemc_storage_to_litter
-   hrv_deadstemc_storage_to_litter  => pcf%hrv_deadstemc_storage_to_litter
-   hrv_livecrootc_storage_to_litter => pcf%hrv_livecrootc_storage_to_litter
-   hrv_deadcrootc_storage_to_litter => pcf%hrv_deadcrootc_storage_to_litter
-   hrv_gresp_storage_to_litter      => pcf%hrv_gresp_storage_to_litter
-   hrv_leafc_xfer_to_litter         => pcf%hrv_leafc_xfer_to_litter
-   hrv_frootc_xfer_to_litter        => pcf%hrv_frootc_xfer_to_litter
-   hrv_livestemc_xfer_to_litter     => pcf%hrv_livestemc_xfer_to_litter
-   hrv_deadstemc_xfer_to_litter     => pcf%hrv_deadstemc_xfer_to_litter
-   hrv_livecrootc_xfer_to_litter    => pcf%hrv_livecrootc_xfer_to_litter
-   hrv_deadcrootc_xfer_to_litter    => pcf%hrv_deadcrootc_xfer_to_litter
-   hrv_gresp_xfer_to_litter         => pcf%hrv_gresp_xfer_to_litter
-   hrv_leafn_to_litter              => pnf%hrv_leafn_to_litter
-   hrv_frootn_to_litter             => pnf%hrv_frootn_to_litter
-   hrv_livestemn_to_litter          => pnf%hrv_livestemn_to_litter
-   hrv_deadstemn_to_prod10n         => pnf%hrv_deadstemn_to_prod10n
-   hrv_deadstemn_to_prod100n        => pnf%hrv_deadstemn_to_prod100n
-   hrv_livecrootn_to_litter         => pnf%hrv_livecrootn_to_litter
-   hrv_deadcrootn_to_litter         => pnf%hrv_deadcrootn_to_litter
-   hrv_retransn_to_litter           => pnf%hrv_retransn_to_litter
-   hrv_leafn_storage_to_litter      => pnf%hrv_leafn_storage_to_litter
-   hrv_frootn_storage_to_litter     => pnf%hrv_frootn_storage_to_litter
-   hrv_livestemn_storage_to_litter  => pnf%hrv_livestemn_storage_to_litter
-   hrv_deadstemn_storage_to_litter  => pnf%hrv_deadstemn_storage_to_litter
-   hrv_livecrootn_storage_to_litter => pnf%hrv_livecrootn_storage_to_litter
-   hrv_deadcrootn_storage_to_litter => pnf%hrv_deadcrootn_storage_to_litter
-   hrv_leafn_xfer_to_litter         => pnf%hrv_leafn_xfer_to_litter
-   hrv_frootn_xfer_to_litter        => pnf%hrv_frootn_xfer_to_litter
-   hrv_livestemn_xfer_to_litter     => pnf%hrv_livestemn_xfer_to_litter
-   hrv_deadstemn_xfer_to_litter     => pnf%hrv_deadstemn_xfer_to_litter
-   hrv_livecrootn_xfer_to_litter    => pnf%hrv_livecrootn_xfer_to_litter
-   hrv_deadcrootn_xfer_to_litter    => pnf%hrv_deadcrootn_xfer_to_litter
+   associate(& 
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  pft-level index into gridcell-level quantities     
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   leafc                               =>    pcs%leafc                                   , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C                                    
+   frootc                              =>    pcs%frootc                                  , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C                               
+   livestemc                           =>    pcs%livestemc                               , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C                               
+   deadstemc                           =>    pcs%deadstemc                               , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C                               
+   livecrootc                          =>    pcs%livecrootc                              , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C                        
+   deadcrootc                          =>    pcs%deadcrootc                              , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C                        
+   xsmrpool                            =>    pcs%xsmrpool                                , & ! Input:  [real(r8) (:)]  (gC/m2) abstract C pool to meet excess MR demand  
+   leafc_storage                       =>    pcs%leafc_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
+   frootc_storage                      =>    pcs%frootc_storage                          , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C storage                       
+   livestemc_storage                   =>    pcs%livestemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C storage                       
+   deadstemc_storage                   =>    pcs%deadstemc_storage                       , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C storage                       
+   livecrootc_storage                  =>    pcs%livecrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C storage                
+   deadcrootc_storage                  =>    pcs%deadcrootc_storage                      , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C storage                
+   gresp_storage                       =>    pcs%gresp_storage                           , & ! Input:  [real(r8) (:)]  (gC/m2) growth respiration storage                
+   leafc_xfer                          =>    pcs%leafc_xfer                              , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C transfer                           
+   frootc_xfer                         =>    pcs%frootc_xfer                             , & ! Input:  [real(r8) (:)]  (gC/m2) fine root C transfer                      
+   livestemc_xfer                      =>    pcs%livestemc_xfer                          , & ! Input:  [real(r8) (:)]  (gC/m2) live stem C transfer                      
+   deadstemc_xfer                      =>    pcs%deadstemc_xfer                          , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C transfer                      
+   livecrootc_xfer                     =>    pcs%livecrootc_xfer                         , & ! Input:  [real(r8) (:)]  (gC/m2) live coarse root C transfer               
+   deadcrootc_xfer                     =>    pcs%deadcrootc_xfer                         , & ! Input:  [real(r8) (:)]  (gC/m2) dead coarse root C transfer               
+   gresp_xfer                          =>    pcs%gresp_xfer                              , & ! Input:  [real(r8) (:)]  (gC/m2) growth respiration transfer               
+   leafn                               =>    pns%leafn                                   , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N                                    
+   frootn                              =>    pns%frootn                                  , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N                               
+   livestemn                           =>    pns%livestemn                               , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N                               
+   deadstemn                           =>    pns%deadstemn                               , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N                               
+   livecrootn                          =>    pns%livecrootn                              , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N                        
+   deadcrootn                          =>    pns%deadcrootn                              , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N                        
+   retransn                            =>    pns%retransn                                , & ! Input:  [real(r8) (:)]  (gN/m2) plant pool of retranslocated N            
+   leafn_storage                       =>    pns%leafn_storage                           , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N storage                            
+   frootn_storage                      =>    pns%frootn_storage                          , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N storage                       
+   livestemn_storage                   =>    pns%livestemn_storage                       , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N storage                       
+   deadstemn_storage                   =>    pns%deadstemn_storage                       , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N storage                       
+   livecrootn_storage                  =>    pns%livecrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N storage                
+   deadcrootn_storage                  =>    pns%deadcrootn_storage                      , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N storage                
+   leafn_xfer                          =>    pns%leafn_xfer                              , & ! Input:  [real(r8) (:)]  (gN/m2) leaf N transfer                           
+   frootn_xfer                         =>    pns%frootn_xfer                             , & ! Input:  [real(r8) (:)]  (gN/m2) fine root N transfer                      
+   livestemn_xfer                      =>    pns%livestemn_xfer                          , & ! Input:  [real(r8) (:)]  (gN/m2) live stem N transfer                      
+   deadstemn_xfer                      =>    pns%deadstemn_xfer                          , & ! Input:  [real(r8) (:)]  (gN/m2) dead stem N transfer                      
+   livecrootn_xfer                     =>    pns%livecrootn_xfer                         , & ! Input:  [real(r8) (:)]  (gN/m2) live coarse root N transfer               
+   deadcrootn_xfer                     =>    pns%deadcrootn_xfer                         , & ! Input:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer               
+   hrv_leafc_to_litter                 =>    pcf%hrv_leafc_to_litter                     , & ! Output: [real(r8) (:)]                                                    
+   hrv_frootc_to_litter                =>    pcf%hrv_frootc_to_litter                    , & ! Output: [real(r8) (:)]                                                    
+   hrv_livestemc_to_litter             =>    pcf%hrv_livestemc_to_litter                 , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemc_to_prod10c            =>    pcf%hrv_deadstemc_to_prod10c                , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemc_to_prod100c           =>    pcf%hrv_deadstemc_to_prod100c               , & ! Output: [real(r8) (:)]                                                    
+   hrv_livecrootc_to_litter            =>    pcf%hrv_livecrootc_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadcrootc_to_litter            =>    pcf%hrv_deadcrootc_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_xsmrpool_to_atm                 =>    pcf%hrv_xsmrpool_to_atm                     , & ! Output: [real(r8) (:)]                                                    
+   hrv_leafc_storage_to_litter         =>    pcf%hrv_leafc_storage_to_litter             , & ! Output: [real(r8) (:)]                                                    
+   hrv_frootc_storage_to_litter        =>    pcf%hrv_frootc_storage_to_litter            , & ! Output: [real(r8) (:)]                                                    
+   hrv_livestemc_storage_to_litter     =>    pcf%hrv_livestemc_storage_to_litter         , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemc_storage_to_litter     =>    pcf%hrv_deadstemc_storage_to_litter         , & ! Output: [real(r8) (:)]                                                    
+   hrv_livecrootc_storage_to_litter    =>    pcf%hrv_livecrootc_storage_to_litter        , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadcrootc_storage_to_litter    =>    pcf%hrv_deadcrootc_storage_to_litter        , & ! Output: [real(r8) (:)]                                                    
+   hrv_gresp_storage_to_litter         =>    pcf%hrv_gresp_storage_to_litter             , & ! Output: [real(r8) (:)]                                                    
+   hrv_leafc_xfer_to_litter            =>    pcf%hrv_leafc_xfer_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_frootc_xfer_to_litter           =>    pcf%hrv_frootc_xfer_to_litter               , & ! Output: [real(r8) (:)]                                                    
+   hrv_livestemc_xfer_to_litter        =>    pcf%hrv_livestemc_xfer_to_litter            , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemc_xfer_to_litter        =>    pcf%hrv_deadstemc_xfer_to_litter            , & ! Output: [real(r8) (:)]                                                    
+   hrv_livecrootc_xfer_to_litter       =>    pcf%hrv_livecrootc_xfer_to_litter           , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadcrootc_xfer_to_litter       =>    pcf%hrv_deadcrootc_xfer_to_litter           , & ! Output: [real(r8) (:)]                                                    
+   hrv_gresp_xfer_to_litter            =>    pcf%hrv_gresp_xfer_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_leafn_to_litter                 =>    pnf%hrv_leafn_to_litter                     , & ! Output: [real(r8) (:)]                                                    
+   hrv_frootn_to_litter                =>    pnf%hrv_frootn_to_litter                    , & ! Output: [real(r8) (:)]                                                    
+   hrv_livestemn_to_litter             =>    pnf%hrv_livestemn_to_litter                 , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemn_to_prod10n            =>    pnf%hrv_deadstemn_to_prod10n                , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemn_to_prod100n           =>    pnf%hrv_deadstemn_to_prod100n               , & ! Output: [real(r8) (:)]                                                    
+   hrv_livecrootn_to_litter            =>    pnf%hrv_livecrootn_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadcrootn_to_litter            =>    pnf%hrv_deadcrootn_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_retransn_to_litter              =>    pnf%hrv_retransn_to_litter                  , & ! Output: [real(r8) (:)]                                                    
+   hrv_leafn_storage_to_litter         =>    pnf%hrv_leafn_storage_to_litter             , & ! Output: [real(r8) (:)]                                                    
+   hrv_frootn_storage_to_litter        =>    pnf%hrv_frootn_storage_to_litter            , & ! Output: [real(r8) (:)]                                                    
+   hrv_livestemn_storage_to_litter     =>    pnf%hrv_livestemn_storage_to_litter         , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemn_storage_to_litter     =>    pnf%hrv_deadstemn_storage_to_litter         , & ! Output: [real(r8) (:)]                                                    
+   hrv_livecrootn_storage_to_litter    =>    pnf%hrv_livecrootn_storage_to_litter        , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadcrootn_storage_to_litter    =>    pnf%hrv_deadcrootn_storage_to_litter        , & ! Output: [real(r8) (:)]                                                    
+   hrv_leafn_xfer_to_litter            =>    pnf%hrv_leafn_xfer_to_litter                , & ! Output: [real(r8) (:)]                                                    
+   hrv_frootn_xfer_to_litter           =>    pnf%hrv_frootn_xfer_to_litter               , & ! Output: [real(r8) (:)]                                                    
+   hrv_livestemn_xfer_to_litter        =>    pnf%hrv_livestemn_xfer_to_litter            , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadstemn_xfer_to_litter        =>    pnf%hrv_deadstemn_xfer_to_litter            , & ! Output: [real(r8) (:)]                                                    
+   hrv_livecrootn_xfer_to_litter       =>    pnf%hrv_livecrootn_xfer_to_litter           , & ! Output: [real(r8) (:)]                                                    
+   hrv_deadcrootn_xfer_to_litter       =>    pnf%hrv_deadcrootn_xfer_to_litter             & ! Output: [real(r8) (:)]                                                    
+   )
 
 
    days_per_year = get_days_per_year()
@@ -3308,7 +3211,8 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    call CNHarvestPftToColumn(num_soilc, filter_soilc)
 
-end subroutine CNHarvest
+    end associate 
+ end subroutine CNHarvest
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -3340,160 +3244,84 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in scalars
-   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
-   integer , pointer :: ivt(:)      ! pft vegetation type
-   real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
-   real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
-   real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
-   real(r8), pointer :: fr_flab(:)  ! fine root litter labile fraction
-   real(r8), pointer :: fr_fcel(:)  ! fine root litter cellulose fraction
-   real(r8), pointer :: fr_flig(:)  ! fine root litter lignin fraction
-   integer , pointer :: npfts(:)    ! number of pfts for each column
-   integer , pointer :: pfti(:)     ! beginning pft index for each column
-   real(r8), pointer :: hrv_leafc_to_litter(:)
-   real(r8), pointer :: hrv_frootc_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_to_litter(:)
-   real(r8), pointer :: phrv_deadstemc_to_prod10c(:)
-   real(r8), pointer :: phrv_deadstemc_to_prod100c(:)
-   real(r8), pointer :: hrv_livecrootc_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_to_litter(:)
-   real(r8), pointer :: hrv_leafc_storage_to_litter(:)
-   real(r8), pointer :: hrv_frootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_storage_to_litter(:)
-   real(r8), pointer :: hrv_livecrootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_gresp_storage_to_litter(:)
-   real(r8), pointer :: hrv_leafc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_frootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livecrootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_gresp_xfer_to_litter(:)
-   real(r8), pointer :: hrv_leafn_to_litter(:)
-   real(r8), pointer :: hrv_frootn_to_litter(:)
-   real(r8), pointer :: hrv_livestemn_to_litter(:)
-   real(r8), pointer :: phrv_deadstemn_to_prod10n(:)
-   real(r8), pointer :: phrv_deadstemn_to_prod100n(:)
-   real(r8), pointer :: hrv_livecrootn_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootn_to_litter(:)
-   real(r8), pointer :: hrv_retransn_to_litter(:)
-   real(r8), pointer :: hrv_leafn_storage_to_litter(:)
-   real(r8), pointer :: hrv_frootn_storage_to_litter(:)
-   real(r8), pointer :: hrv_livestemn_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadstemn_storage_to_litter(:)
-   real(r8), pointer :: hrv_livecrootn_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootn_storage_to_litter(:)
-   real(r8), pointer :: hrv_leafn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_frootn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livestemn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadstemn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livecrootn_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootn_xfer_to_litter(:)
-   real(r8), pointer :: harvest_c_to_litr_met_c(:,:)               ! C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
-   real(r8), pointer :: harvest_c_to_litr_cel_c(:,:)               ! C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
-   real(r8), pointer :: harvest_c_to_litr_lig_c(:,:)               ! C fluxes associated with harvest to litter lignin pool (gC/m3/s)
-   real(r8), pointer :: harvest_c_to_cwdc(:,:)                     ! C fluxes associated with harvest to CWD pool (gC/m3/s)
-   real(r8), pointer :: harvest_n_to_litr_met_n(:,:)               ! N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
-   real(r8), pointer :: harvest_n_to_litr_cel_n(:,:)               ! N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
-   real(r8), pointer :: harvest_n_to_litr_lig_n(:,:)               ! N fluxes associated with harvest to litter lignin pool (gN/m3/s)
-   real(r8), pointer :: harvest_n_to_cwdn(:,:)                     ! N fluxes associated with harvest to CWD pool (gN/m3/s)
-!
-! local pointers to implicit in/out arrays
-   real(r8), pointer :: chrv_deadstemc_to_prod10c(:)
-   real(r8), pointer :: chrv_deadstemc_to_prod100c(:)
-   real(r8), pointer :: chrv_deadstemn_to_prod10n(:)
-   real(r8), pointer :: chrv_deadstemn_to_prod100n(:)
-   real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
-   real(r8), pointer :: froot_prof(:,:)         ! (1/m) profile of fine roots
-   real(r8), pointer :: croot_prof(:,:)         ! (1/m) profile of coarse roots
-   real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
-!
-! local pointers to implicit out arrays
 !
 !
-! !OTHER LOCAL VARIABLES:
+!
+!
    integer :: fc,c,pi,p,j               ! indices
 !EOP
 !-----------------------------------------------------------------------
 
-   ! assign local pointers
-   lf_flab                        => pftcon%lf_flab
-   lf_fcel                        => pftcon%lf_fcel
-   lf_flig                        => pftcon%lf_flig
-   fr_flab                        => pftcon%fr_flab
-   fr_fcel                        => pftcon%fr_fcel
-   fr_flig                        => pftcon%fr_flig
-
-   ! assign local pointers to column-level arrays
-   npfts                          =>col%npfts
-   pfti                           =>col%pfti
-   chrv_deadstemc_to_prod10c        => ccf%hrv_deadstemc_to_prod10c
-   chrv_deadstemc_to_prod100c       => ccf%hrv_deadstemc_to_prod100c
-   chrv_deadstemn_to_prod10n        => cnf%hrv_deadstemn_to_prod10n
-   chrv_deadstemn_to_prod100n       => cnf%hrv_deadstemn_to_prod100n
-   harvest_c_to_litr_met_c          => ccf%harvest_c_to_litr_met_c
-   harvest_c_to_litr_cel_c          => ccf%harvest_c_to_litr_cel_c
-   harvest_c_to_litr_lig_c          => ccf%harvest_c_to_litr_lig_c
-   harvest_c_to_cwdc                => ccf%harvest_c_to_cwdc
-   harvest_n_to_litr_met_n          => cnf%harvest_n_to_litr_met_n
-   harvest_n_to_litr_cel_n          => cnf%harvest_n_to_litr_cel_n
-   harvest_n_to_litr_lig_n          => cnf%harvest_n_to_litr_lig_n
-   harvest_n_to_cwdn                => cnf%harvest_n_to_cwdn
-
-
-   ! assign local pointers to pft-level arrays
-   pactive                        => pft%active
-   ivt                            =>pft%itype
-   wtcol                          =>pft%wtcol
-   hrv_leafc_to_litter              => pcf%hrv_leafc_to_litter
-   hrv_frootc_to_litter             => pcf%hrv_frootc_to_litter
-   hrv_livestemc_to_litter          => pcf%hrv_livestemc_to_litter
-   phrv_deadstemc_to_prod10c        => pcf%hrv_deadstemc_to_prod10c
-   phrv_deadstemc_to_prod100c       => pcf%hrv_deadstemc_to_prod100c
-   hrv_livecrootc_to_litter         => pcf%hrv_livecrootc_to_litter
-   hrv_deadcrootc_to_litter         => pcf%hrv_deadcrootc_to_litter
-   hrv_leafc_storage_to_litter      => pcf%hrv_leafc_storage_to_litter
-   hrv_frootc_storage_to_litter     => pcf%hrv_frootc_storage_to_litter
-   hrv_livestemc_storage_to_litter  => pcf%hrv_livestemc_storage_to_litter
-   hrv_deadstemc_storage_to_litter  => pcf%hrv_deadstemc_storage_to_litter
-   hrv_livecrootc_storage_to_litter => pcf%hrv_livecrootc_storage_to_litter
-   hrv_deadcrootc_storage_to_litter => pcf%hrv_deadcrootc_storage_to_litter
-   hrv_gresp_storage_to_litter      => pcf%hrv_gresp_storage_to_litter
-   hrv_leafc_xfer_to_litter         => pcf%hrv_leafc_xfer_to_litter
-   hrv_frootc_xfer_to_litter        => pcf%hrv_frootc_xfer_to_litter
-   hrv_livestemc_xfer_to_litter     => pcf%hrv_livestemc_xfer_to_litter
-   hrv_deadstemc_xfer_to_litter     => pcf%hrv_deadstemc_xfer_to_litter
-   hrv_livecrootc_xfer_to_litter    => pcf%hrv_livecrootc_xfer_to_litter
-   hrv_deadcrootc_xfer_to_litter    => pcf%hrv_deadcrootc_xfer_to_litter
-   hrv_gresp_xfer_to_litter         => pcf%hrv_gresp_xfer_to_litter
-   hrv_leafn_to_litter              => pnf%hrv_leafn_to_litter
-   hrv_frootn_to_litter             => pnf%hrv_frootn_to_litter
-   hrv_livestemn_to_litter          => pnf%hrv_livestemn_to_litter
-   phrv_deadstemn_to_prod10n        => pnf%hrv_deadstemn_to_prod10n
-   phrv_deadstemn_to_prod100n       => pnf%hrv_deadstemn_to_prod100n
-   hrv_livecrootn_to_litter         => pnf%hrv_livecrootn_to_litter
-   hrv_deadcrootn_to_litter         => pnf%hrv_deadcrootn_to_litter
-   hrv_retransn_to_litter           => pnf%hrv_retransn_to_litter
-   hrv_leafn_storage_to_litter      => pnf%hrv_leafn_storage_to_litter
-   hrv_frootn_storage_to_litter     => pnf%hrv_frootn_storage_to_litter
-   hrv_livestemn_storage_to_litter  => pnf%hrv_livestemn_storage_to_litter
-   hrv_deadstemn_storage_to_litter  => pnf%hrv_deadstemn_storage_to_litter
-   hrv_livecrootn_storage_to_litter => pnf%hrv_livecrootn_storage_to_litter
-   hrv_deadcrootn_storage_to_litter => pnf%hrv_deadcrootn_storage_to_litter
-   hrv_leafn_xfer_to_litter         => pnf%hrv_leafn_xfer_to_litter
-   hrv_frootn_xfer_to_litter        => pnf%hrv_frootn_xfer_to_litter
-   hrv_livestemn_xfer_to_litter     => pnf%hrv_livestemn_xfer_to_litter
-   hrv_deadstemn_xfer_to_litter     => pnf%hrv_deadstemn_xfer_to_litter
-   hrv_livecrootn_xfer_to_litter    => pnf%hrv_livecrootn_xfer_to_litter
-   hrv_deadcrootn_xfer_to_litter    => pnf%hrv_deadcrootn_xfer_to_litter
-   leaf_prof                      => pps%leaf_prof
-   froot_prof                     => pps%froot_prof
-   croot_prof                     => pps%croot_prof
-   stem_prof                      => pps%stem_prof
+   associate(& 
+   lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
+   lf_fcel                             =>    pftcon%lf_fcel                              , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
+   lf_flig                             =>    pftcon%lf_flig                              , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
+   fr_flab                             =>    pftcon%fr_flab                              , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
+   fr_fcel                             =>    pftcon%fr_fcel                              , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
+   fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
+   npfts                               =>   col%npfts                                    , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                                =>   col%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for each column                
+   chrv_deadstemc_to_prod10c           =>    ccf%hrv_deadstemc_to_prod10c                , & ! InOut:  [real(r8) (:)]                                                    
+   chrv_deadstemc_to_prod100c          =>    ccf%hrv_deadstemc_to_prod100c               , & ! InOut:  [real(r8) (:)]                                                    
+   chrv_deadstemn_to_prod10n           =>    cnf%hrv_deadstemn_to_prod10n                , & ! InOut:  [real(r8) (:)]                                                    
+   chrv_deadstemn_to_prod100n          =>    cnf%hrv_deadstemn_to_prod100n               , & ! InOut:  [real(r8) (:)]                                                    
+   harvest_c_to_litr_met_c             =>    ccf%harvest_c_to_litr_met_c                 , & ! Input:  [real(r8) (:,:)]  C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
+   harvest_c_to_litr_cel_c             =>    ccf%harvest_c_to_litr_cel_c                 , & ! Input:  [real(r8) (:,:)]  C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
+   harvest_c_to_litr_lig_c             =>    ccf%harvest_c_to_litr_lig_c                 , & ! Input:  [real(r8) (:,:)]  C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+   harvest_c_to_cwdc                   =>    ccf%harvest_c_to_cwdc                       , & ! Input:  [real(r8) (:,:)]  C fluxes associated with harvest to CWD pool (gC/m3/s)
+   harvest_n_to_litr_met_n             =>    cnf%harvest_n_to_litr_met_n                 , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
+   harvest_n_to_litr_cel_n             =>    cnf%harvest_n_to_litr_cel_n                 , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
+   harvest_n_to_litr_lig_n             =>    cnf%harvest_n_to_litr_lig_n                 , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to litter lignin pool (gN/m3/s)
+   harvest_n_to_cwdn                   =>    cnf%harvest_n_to_cwdn                       , & ! Input:  [real(r8) (:,:)]  N fluxes associated with harvest to CWD pool (gN/m3/s)
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
+   hrv_leafc_to_litter                 =>    pcf%hrv_leafc_to_litter                     , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootc_to_litter                =>    pcf%hrv_frootc_to_litter                    , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemc_to_litter             =>    pcf%hrv_livestemc_to_litter                 , & ! Input:  [real(r8) (:)]                                                    
+   phrv_deadstemc_to_prod10c           =>    pcf%hrv_deadstemc_to_prod10c                , & ! Input:  [real(r8) (:)]                                                    
+   phrv_deadstemc_to_prod100c          =>    pcf%hrv_deadstemc_to_prod100c               , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootc_to_litter            =>    pcf%hrv_livecrootc_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootc_to_litter            =>    pcf%hrv_deadcrootc_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafc_storage_to_litter         =>    pcf%hrv_leafc_storage_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootc_storage_to_litter        =>    pcf%hrv_frootc_storage_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemc_storage_to_litter     =>    pcf%hrv_livestemc_storage_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadstemc_storage_to_litter     =>    pcf%hrv_deadstemc_storage_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootc_storage_to_litter    =>    pcf%hrv_livecrootc_storage_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootc_storage_to_litter    =>    pcf%hrv_deadcrootc_storage_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   hrv_gresp_storage_to_litter         =>    pcf%hrv_gresp_storage_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafc_xfer_to_litter            =>    pcf%hrv_leafc_xfer_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootc_xfer_to_litter           =>    pcf%hrv_frootc_xfer_to_litter               , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemc_xfer_to_litter        =>    pcf%hrv_livestemc_xfer_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadstemc_xfer_to_litter        =>    pcf%hrv_deadstemc_xfer_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootc_xfer_to_litter       =>    pcf%hrv_livecrootc_xfer_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootc_xfer_to_litter       =>    pcf%hrv_deadcrootc_xfer_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   hrv_gresp_xfer_to_litter            =>    pcf%hrv_gresp_xfer_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafn_to_litter                 =>    pnf%hrv_leafn_to_litter                     , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootn_to_litter                =>    pnf%hrv_frootn_to_litter                    , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemn_to_litter             =>    pnf%hrv_livestemn_to_litter                 , & ! Input:  [real(r8) (:)]                                                    
+   phrv_deadstemn_to_prod10n           =>    pnf%hrv_deadstemn_to_prod10n                , & ! Input:  [real(r8) (:)]                                                    
+   phrv_deadstemn_to_prod100n          =>    pnf%hrv_deadstemn_to_prod100n               , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootn_to_litter            =>    pnf%hrv_livecrootn_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootn_to_litter            =>    pnf%hrv_deadcrootn_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_retransn_to_litter              =>    pnf%hrv_retransn_to_litter                  , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafn_storage_to_litter         =>    pnf%hrv_leafn_storage_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootn_storage_to_litter        =>    pnf%hrv_frootn_storage_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemn_storage_to_litter     =>    pnf%hrv_livestemn_storage_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadstemn_storage_to_litter     =>    pnf%hrv_deadstemn_storage_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootn_storage_to_litter    =>    pnf%hrv_livecrootn_storage_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootn_storage_to_litter    =>    pnf%hrv_deadcrootn_storage_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafn_xfer_to_litter            =>    pnf%hrv_leafn_xfer_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootn_xfer_to_litter           =>    pnf%hrv_frootn_xfer_to_litter               , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemn_xfer_to_litter        =>    pnf%hrv_livestemn_xfer_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadstemn_xfer_to_litter        =>    pnf%hrv_deadstemn_xfer_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootn_xfer_to_litter       =>    pnf%hrv_livecrootn_xfer_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootn_xfer_to_litter       =>    pnf%hrv_deadcrootn_xfer_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   leaf_prof                           =>    pps%leaf_prof                               , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof                          =>    pps%froot_prof                              , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   croot_prof                          =>    pps%croot_prof                              , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of coarse roots                   
+   stem_prof                           =>    pps%stem_prof                                 & ! InOut:  [real(r8) (:,:)]  (1/m) profile of stems                          
+   )
 
    do j = 1, nlevdecomp
       do pi = 1,maxpatch_pft
@@ -3655,7 +3483,8 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
       
    end do
    
- end subroutine CNHarvestPftToColumn
+    end associate 
+  end subroutine CNHarvestPftToColumn
 !-----------------------------------------------------------------------
 #endif
 

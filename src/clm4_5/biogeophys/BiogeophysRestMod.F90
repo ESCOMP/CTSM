@@ -83,29 +83,24 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
 !
-! local pointers to implicit in arguments
 !
     real(r8) :: maxwatsat                 !maximum porosity    
     real(r8) :: excess                    !excess volumetric soil water
     real(r8) :: totwat                    !total soil water (mm)
     real(r8) :: maxdiff                   !maximum difference in PFT weights
-    real(r8), pointer :: wtgcell(:)       ! Grid cell weights for PFT
-    real(r8), pointer :: wtlunit(:)       ! Land-unit weights for PFT
-    real(r8), pointer :: wtcol(:)         ! Column weights for PFT
     integer :: p,c,l,g,j,iv ! indices
-    real(r8), pointer :: zi(:,:)          ! interface level below a "z" level (m)
     integer :: nlevs        ! number of layers
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
-    character(len=128) :: varname         ! temporary
-    integer , pointer :: clandunit(:)     ! landunit of corresponding column
-    integer , pointer :: ltype(:)         ! landunit type
-    integer , pointer :: ctype(:)         ! column type
-    real(r8), pointer   :: temp2d(:,:)    ! temporary for zisno
+    real(r8), pointer :: wtgcell(:)       ! grid cell weights for pft
+    real(r8), pointer :: wtlunit(:)       ! land-unit weights for pft
+    real(r8), pointer :: wtcol(:)         ! column weights for pft
+    real(r8), pointer :: temp2d(:,:)      ! temporary for zisno
     real(r8), parameter :: adiff = 5.e-04_r8   ! tolerance of acceptible difference
+    character(len=128) :: varname         ! temporary
     character(len=7)  :: filetypes(0:3)
     character(len=32) :: fileusing
     character(len=*), parameter :: sub="BiogeophysRest"
@@ -115,13 +110,12 @@ contains
     filetypes(nsrContinue) = "restart"
     filetypes(nsrBranch)   = "nrevsn"
 
-    ! Set pointers into derived type
-
-    ltype      => lun%itype
-    clandunit  => col%landunit
-    clandunit  => col%landunit
-    zi         => cps%zi
-    ctype      => col%itype
+    associate(& 
+    ltype                     =>    lun%itype               , & ! Input:  [integer (:)]  landunit type                            
+    clandunit                 =>    col%landunit            , & ! Input:  [integer (:)]  landunit of corresponding column         
+    zi                        =>    cps%zi                  , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m) 
+    ctype                     =>    col%itype                 & ! Input:  [integer (:)]  column type                              
+    )
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -2433,7 +2427,8 @@ contains
     !-- SNICAR variables
 
 
-  end subroutine BiogeophysRest
+    end associate 
+   end subroutine BiogeophysRest
 
 !-----------------------------------------------------------------------
 !BOP

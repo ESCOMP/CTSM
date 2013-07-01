@@ -64,31 +64,7 @@ contains
 ! 2005.10: Sam Levis updated to work with CN
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    integer , pointer :: ivt(:)       ! pft vegetation type
-    integer , pointer :: pgridcell(:) ! gridcell index of corresponding pft
-    integer , pointer :: tree(:)      ! ecophys const - tree pft or not
-    real(r8), pointer :: slatop(:)    !specific leaf area at top of canopy, projected area basis [m^2/gC]
-    real(r8), pointer :: dsladlai(:)  !dSLA/dLAI, projected area basis [m^2/gC]
-    real(r8), pointer :: woody(:)     ! ecophys const - woody pft or not
-    real(r8), pointer :: leafcmax(:)  ! (gC/m2) leaf C storage
-    real(r8), pointer :: deadstemc(:)     ! (gC/m2) dead stem C
-    real(r8), pointer :: dwood(:)         ! ecophys const - wood density (gC/m3)
-    real(r8), pointer :: reinickerp(:)    ! ecophys const - parameter in allomet
-    real(r8), pointer :: crownarea_max(:) ! ecophys const - tree maximum crown a
-    real(r8), pointer :: allom1(:)        ! ecophys const - parameter in allomet
-
-! local pointers to implicit inout arguments
-!
-    real(r8), pointer :: crownarea(:) ! area that each individual tree takes up (m^2)
-    real(r8), pointer :: fpcgrid(:)   ! foliar projective cover on gridcell (fraction)
-    real(r8), pointer :: nind(:)      ! number of individuals
-!
 !EOP
-!
-! !OTHER LOCAL VARIABLES:
     real(r8), parameter :: fpc_tree_max = 0.95_r8 !maximum total tree FPC
     integer  :: p,fp, g                           ! indices
     real(r8) :: fpc_tree_total(lbg:ubg)
@@ -111,23 +87,23 @@ contains
 
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type scalar members
-
-    ivt           =>pft%itype
-    pgridcell     =>pft%gridcell
-    nind          => pdgvs%nind
-    fpcgrid       => pdgvs%fpcgrid
-    leafcmax      => pcs%leafcmax
-    deadstemc     => pcs%deadstemc
-    crownarea     => pdgvs%crownarea
-    crownarea_max => dgv_pftcon%crownarea_max
-    reinickerp    => dgv_pftcon%reinickerp
-    allom1        => dgv_pftcon%allom1
-    dwood         => pftcon%dwood
-    slatop        => pftcon%slatop
-    dsladlai      => pftcon%dsladlai
-    woody         => pftcon%woody
-    tree          => pftcon%tree
+   associate(& 
+   ivt           =>    pft%itype                 , & ! Input:  [integer (:)]  pft vegetation type                                
+   pgridcell     =>    pft%gridcell              , & ! Input:  [integer (:)]  gridcell index of corresponding pft                
+   nind          =>    pdgvs%nind                , & ! Input:  [real(r8) (:)]  number of individuals                             
+   fpcgrid       =>    pdgvs%fpcgrid             , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
+   leafcmax      =>    pcs%leafcmax              , & ! Input:  [real(r8) (:)]  (gC/m2) leaf C storage                            
+   deadstemc     =>    pcs%deadstemc             , & ! Input:  [real(r8) (:)]  (gC/m2) dead stem C                               
+   crownarea     =>    pdgvs%crownarea           , & ! Input:  [real(r8) (:)]  area that each individual tree takes up (m^2)     
+   crownarea_max =>    dgv_pftcon%crownarea_max  , & ! Input:  [real(r8) (:)]  ecophys const - tree maximum crown a              
+   reinickerp    =>    dgv_pftcon%reinickerp     , & ! Input:  [real(r8) (:)]  ecophys const - parameter in allomet              
+   allom1        =>    dgv_pftcon%allom1         , & ! Input:  [real(r8) (:)]  ecophys const - parameter in allomet              
+   dwood         =>    pftcon%dwood              , & ! Input:  [real(r8) (:)]  ecophys const - wood density (gC/m3)              
+   slatop        =>    pftcon%slatop             , & ! Input:  [real(r8) (:)] specific leaf area at top of canopy, projected area basis [m^2/gC]
+   dsladlai      =>    pftcon%dsladlai           , & ! Input:  [real(r8) (:)] dSLA/dLAI, projected area basis [m^2/gC]           
+   woody         =>    pftcon%woody              , & ! Input:  [real(r8) (:)]  ecophys const - woody pft or not                  
+   tree          =>    pftcon%tree                 & ! Input:  [integer (:)]  ecophys const - tree pft or not                    
+   )
 
     taper = 200._r8 ! make a global constant; used in Establishment + ?
 
@@ -271,7 +247,8 @@ contains
 
     end do
 
-  end subroutine Light
+    end associate 
+   end subroutine Light
 
 #endif
 

@@ -75,16 +75,6 @@ subroutine CNZeroFluxes(num_filterc, filterc, num_filterp, filterp)
 ! 9/04/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-!
-! local pointers to implicit in/out scalars
-!
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !-----------------------------------------------------------------------
 
@@ -137,16 +127,6 @@ subroutine CNZeroFluxes_dwt( begc, endc, begp, endp )
 ! 3/23/09: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-!
-! local pointers to implicit in/out scalars
-!
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
     integer  :: c, p, j          ! indices
 !EOP
 !-----------------------------------------------------------------------
@@ -285,7 +265,6 @@ subroutine CNSetPps(num, filter, val, pps)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i,j     ! loop index
@@ -319,7 +298,6 @@ subroutine CNSetPepv (num, filter, val, pepv)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i     ! loop index
@@ -409,7 +387,6 @@ subroutine CNSetPcs (num, filter, val, pcs)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i     ! loop index
@@ -483,7 +460,6 @@ subroutine CNSetPns(num, filter, val, pns)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i     ! loop index
@@ -552,7 +528,6 @@ subroutine CNSetPcf(num, filter, val, pcf)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i     ! loop index
@@ -781,7 +756,6 @@ subroutine CNSetPnf(num, filter, val, pnf)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i     ! loop index
@@ -952,7 +926,6 @@ subroutine CNSetCps(num, filter, val, cps)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i,j     ! loop index
@@ -1021,7 +994,6 @@ subroutine CNSetCcs(num, filter, val, ccs)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i,j,k     ! loop index
@@ -1098,7 +1070,6 @@ subroutine CNSetCns(num, filter, val, cns)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: fi,i,j,k     ! loop index
@@ -1180,9 +1151,6 @@ subroutine CNSetCcf(num, filter, val, ccf)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
-!
-! !OTHER LOCAL VARIABLES:
    integer :: fi,i,j,k,l     ! loop index
 !EOP
 !------------------------------------------------------------------------
@@ -1305,9 +1273,6 @@ subroutine CNSetCnf(num, filter, val, cnf)
 ! Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in/out arrays
-!
-! !OTHER LOCAL VARIABLES:
    integer :: fi,i,j,k,l     ! loop index
 !EOP
 !------------------------------------------------------------------------

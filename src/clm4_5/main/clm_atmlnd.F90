@@ -162,9 +162,7 @@ contains
   allocate(a2l%forc_snow(beg:end))
   allocate(a2l%forc_ndep(beg:end))
   allocate(a2l%rainf(beg:end))
-  if ( use_c13 ) then
-     allocate(a2l%forc_pc13o2(beg:end))
-  endif
+  allocate(a2l%forc_pc13o2(beg:end))
   allocate(a2l%forc_po2(beg:end))
   allocate(a2l%forc_flood(beg:end))
   allocate(a2l%volr(beg:end))

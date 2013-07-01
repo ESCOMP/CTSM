@@ -37,8 +37,6 @@ module UrbanMod
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan and Mariana Vertenstein and Keith Oleson 04/2003
 !
-!EOP
-!
 ! PRIVATE MEMBER FUNCTIONS
   private :: view_factor      ! View factors for road and one wall
   private :: incident_direct  ! Direct beam solar rad incident on walls and road in urban canyon 
@@ -49,26 +47,26 @@ module UrbanMod
 ! PRIVATE TYPES
   private
   type urban_clump_t
-     real(r8), pointer :: canyon_hwr(:)            ! ratio of building height to street width 
-     real(r8), pointer :: wtroad_perv(:)           ! weight of pervious road wrt total road
-     real(r8), pointer :: ht_roof(:)               ! height of urban roof (m)
-     real(r8), pointer :: wtlunit_roof(:)          ! weight of roof with respect to landunit
-     real(r8), pointer :: wind_hgt_canyon(:)       ! height above road at which wind in canyon is to be computed (m)
-     real(r8), pointer :: em_roof(:)               ! roof emissivity
-     real(r8), pointer :: em_improad(:)            ! impervious road emissivity
-     real(r8), pointer :: em_perroad(:)            ! pervious road emissivity
-     real(r8), pointer :: em_wall(:)               ! wall emissivity
-     real(r8), pointer :: alb_roof_dir(:,:)        ! direct  roof albedo
-     real(r8), pointer :: alb_roof_dif(:,:)        ! diffuse roof albedo
-     real(r8), pointer :: alb_improad_dir(:,:)     ! direct  impervious road albedo
-     real(r8), pointer :: alb_improad_dif(:,:)     ! diffuse impervious road albedo
-     real(r8), pointer :: alb_perroad_dir(:,:)     ! direct  pervious road albedo
-     real(r8), pointer :: alb_perroad_dif(:,:)     ! diffuse pervious road albedo
-     real(r8), pointer :: alb_wall_dir(:,:)        ! direct  wall albedo
-     real(r8), pointer :: alb_wall_dif(:,:)        ! diffuse wall albedo
+     real(r8), allocatable :: canyon_hwr(:)            ! ratio of building height to street width 
+     real(r8), allocatable :: wtroad_perv(:)           ! weight of pervious road wrt total road
+     real(r8), allocatable :: ht_roof(:)               ! height of urban roof (m)
+     real(r8), allocatable :: wtlunit_roof(:)          ! weight of roof with respect to landunit
+     real(r8), allocatable :: wind_hgt_canyon(:)       ! height above road at which wind in canyon is to be computed (m)
+     real(r8), allocatable :: em_roof(:)               ! roof emissivity
+     real(r8), allocatable :: em_improad(:)            ! impervious road emissivity
+     real(r8), allocatable :: em_perroad(:)            ! pervious road emissivity
+     real(r8), allocatable :: em_wall(:)               ! wall emissivity
+     real(r8), allocatable :: alb_roof_dir(:,:)        ! direct  roof albedo
+     real(r8), allocatable :: alb_roof_dif(:,:)        ! diffuse roof albedo
+     real(r8), allocatable :: alb_improad_dir(:,:)     ! direct  impervious road albedo
+     real(r8), allocatable :: alb_improad_dif(:,:)     ! diffuse impervious road albedo
+     real(r8), allocatable :: alb_perroad_dir(:,:)     ! direct  pervious road albedo
+     real(r8), allocatable :: alb_perroad_dif(:,:)     ! diffuse pervious road albedo
+     real(r8), allocatable :: alb_wall_dir(:,:)        ! direct  wall albedo
+     real(r8), allocatable :: alb_wall_dif(:,:)        ! diffuse wall albedo
   end type urban_clump_t
 
-  type (urban_clump_t), private, pointer :: urban_clump(:)  ! array of urban clumps for this processor
+  type (urban_clump_t), private, allocatable :: urban_clump(:)  ! array of urban clumps for this processor
 
   integer,  private, parameter :: noonsec   = isecspday / 2 ! seconds at local noon
 !----------------------------------------------------------------------- 
@@ -117,57 +115,7 @@ contains
 ! 01/2008, Erik Kluzek:         Migrated to clm3.5.15
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to original implicit in arguments
-!
-    integer , pointer :: pgridcell(:) ! gridcell of corresponding pft
-    integer , pointer :: lgridcell(:) ! gridcell of corresponding landunit
-    integer , pointer :: clandunit(:) ! column's landunit
-    integer , pointer :: cgridcell(:) ! gridcell of corresponding column
-    integer , pointer :: coli(:)      ! beginning column index for landunit 
-    integer , pointer :: colf(:)      ! ending column index for landunit
-    integer , pointer :: ctype(:)     ! column type
-    integer , pointer :: pcolumn(:)   ! column of corresponding pft
     real(r8), pointer :: czen(:)      ! cosine of solar zenith angle for each column
-    real(r8), pointer :: lat(:)       ! latitude (radians)
-    real(r8), pointer :: lon(:)       ! longitude (radians)
-    real(r8), pointer :: frac_sno(:)  ! fraction of ground covered by snow (0 to 1)
-!
-! local pointers to original implicit out arguments
-!
-    real(r8), pointer :: albgrd(:,:)  ! ground albedo (direct)
-    real(r8), pointer :: albgri(:,:)  ! ground albedo (diffuse)
-    real(r8), pointer :: albd(:,:)    ! surface albedo (direct)
-    real(r8), pointer :: albi(:,:)    ! surface albedo (diffuse)
-    real(r8), pointer :: fabd(:,:)    ! flux absorbed by veg per unit direct  flux
-    real(r8), pointer :: fabd_sun(:,:)! flux absorbed by sunlit leaf per unit direct flux
-    real(r8), pointer :: fabd_sha(:,:)! flux absorbed by shaded leaf per unit direct flux
-    real(r8), pointer :: fabi(:,:)    ! flux absorbed by veg per unit diffuse flux
-    real(r8), pointer :: fabi_sun(:,:)! flux absorbed by sunlit leaf per unit diffuse flux
-    real(r8), pointer :: fabi_sha(:,:)! flux absorbed by shaded leaf per unit diffuse flux
-    real(r8), pointer :: ftdd(:,:)    ! down direct  flux below veg per unit dir flx
-    real(r8), pointer :: ftid(:,:)    ! down diffuse flux below veg per unit dir flx
-    real(r8), pointer :: ftii(:,:)    ! down diffuse flux below veg per unit dif flx
-    real(r8), pointer :: fsun(:)      ! sunlit fraction of canopy
-    real(r8), pointer :: vf_sr(:)     ! view factor of sky for road
-    real(r8), pointer :: vf_wr(:)     ! view factor of one wall for road
-    real(r8), pointer :: vf_sw(:)     ! view factor of sky for one wall
-    real(r8), pointer :: vf_rw(:)     ! view factor of road for one wall
-    real(r8), pointer :: vf_ww(:)     ! view factor of opposing wall for one wall
-    real(r8), pointer :: sabs_roof_dir(:,:)       ! direct  solar absorbed  by roof per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_roof_dif(:,:)       ! diffuse solar absorbed  by roof per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_sunwall_dir(:,:)    ! direct  solar absorbed  by sunwall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_sunwall_dif(:,:)    ! diffuse solar absorbed  by sunwall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_shadewall_dir(:,:)  ! direct  solar absorbed  by shadewall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_shadewall_dif(:,:)  ! diffuse solar absorbed  by shadewall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_improad_dir(:,:)    ! direct  solar absorbed  by impervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_improad_dif(:,:)    ! diffuse solar absorbed  by impervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_perroad_dir(:,:)    ! direct  solar absorbed  by pervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_perroad_dif(:,:)    ! diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
-!
-!
-! !OTHER LOCAL VARIABLES
-!EOP
 !
     real(r8) :: coszen(num_urbanl)                 ! cosine solar zenith angle
     real(r8) :: coszen_pft(num_urbanp)             ! cosine solar zenith angle for next time step (pft level)
@@ -207,84 +155,64 @@ contains
     real(r8) :: sref_improad_dif(num_urbanl,numrad)   ! diffuse solar reflected by impervious road per unit ground area per unit incident flux   
     real(r8) :: sref_perroad_dir(num_urbanl,numrad)   ! direct  solar reflected by pervious road per unit ground area per unit incident flux   
     real(r8) :: sref_perroad_dif(num_urbanl,numrad)   ! diffuse solar reflected by pervious road per unit ground area per unit incident flux   
-    real(r8), pointer :: canyon_hwr(:)             ! ratio of building height to street width
-    real(r8), pointer :: wtroad_perv(:)            ! weight of pervious road wrt total road
-    real(r8), pointer :: alb_roof_dir(:,:)         ! direct roof albedo
-    real(r8), pointer :: alb_roof_dif(:,:)         ! diffuse roof albedo
-    real(r8), pointer :: alb_improad_dir(:,:)      ! direct impervious road albedo
-    real(r8), pointer :: alb_perroad_dir(:,:)      ! direct pervious road albedo
-    real(r8), pointer :: alb_improad_dif(:,:)      ! diffuse imprevious road albedo
-    real(r8), pointer :: alb_perroad_dif(:,:)      ! diffuse pervious road albedo
-    real(r8), pointer :: alb_wall_dir(:,:)         ! direct wall albedo
-    real(r8), pointer :: alb_wall_dif(:,:)         ! diffuse wall albedo
 !-----------------------------------------------------------------------
 
-    ! Assign pointers into module urban clumps
+    associate(&
+   vf_sr                               =>    lps%vf_sr                                   , & ! Output: [real(r8) (:)]  view factor of sky for road                       
+   vf_wr                               =>    lps%vf_wr                                   , & ! Output: [real(r8) (:)]  view factor of one wall for road                  
+   vf_sw                               =>    lps%vf_sw                                   , & ! Output: [real(r8) (:)]  view factor of sky for one wall                   
+   vf_rw                               =>    lps%vf_rw                                   , & ! Output: [real(r8) (:)]  view factor of road for one wall                  
+   vf_ww                               =>    lps%vf_ww                                   , & ! Output: [real(r8) (:)]  view factor of opposing wall for one wall         
+   sabs_roof_dir                       =>    lps%sabs_roof_dir                           , & ! Output: [real(r8) (:,:)]  direct  solar absorbed  by roof per unit ground area per unit incident flux
+   sabs_roof_dif                       =>    lps%sabs_roof_dif                           , & ! Output: [real(r8) (:,:)]  diffuse solar absorbed  by roof per unit ground area per unit incident flux
+   sabs_sunwall_dir                    =>    lps%sabs_sunwall_dir                        , & ! Output: [real(r8) (:,:)]  direct  solar absorbed  by sunwall per unit wall area per unit incident flux
+   sabs_sunwall_dif                    =>    lps%sabs_sunwall_dif                        , & ! Output: [real(r8) (:,:)]  diffuse solar absorbed  by sunwall per unit wall area per unit incident flux
+   sabs_shadewall_dir                  =>    lps%sabs_shadewall_dir                      , & ! Output: [real(r8) (:,:)]  direct  solar absorbed  by shadewall per unit wall area per unit incident flux
+   sabs_shadewall_dif                  =>    lps%sabs_shadewall_dif                      , & ! Output: [real(r8) (:,:)]  diffuse solar absorbed  by shadewall per unit wall area per unit incident flux
+   sabs_improad_dir                    =>    lps%sabs_improad_dir                        , & ! Output: [real(r8) (:,:)]  direct  solar absorbed  by impervious road per unit ground area per unit incident flux
+   sabs_improad_dif                    =>    lps%sabs_improad_dif                        , & ! Output: [real(r8) (:,:)]  diffuse solar absorbed  by impervious road per unit ground area per unit incident flux
+   sabs_perroad_dir                    =>    lps%sabs_perroad_dir                        , & ! Output: [real(r8) (:,:)]  direct  solar absorbed  by pervious road per unit ground area per unit incident flux
+   sabs_perroad_dif                    =>    lps%sabs_perroad_dif                        , & ! Output: [real(r8) (:,:)]  diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
+   albd                                =>    pps%albd                                    , & ! Output: [real(r8) (:,:)]  surface albedo (direct)                         
+   albi                                =>    pps%albi                                    , & ! Output: [real(r8) (:,:)]  surface albedo (diffuse)                        
+   fabd                                =>    pps%fabd                                    , & ! Output: [real(r8) (:,:)]  flux absorbed by veg per unit direct  flux      
+   fabd_sun                            =>    pps%fabd_sun                                , & ! Output: [real(r8) (:,:)]  flux absorbed by sunlit leaf per unit direct flux
+   fabd_sha                            =>    pps%fabd_sha                                , & ! Output: [real(r8) (:,:)]  flux absorbed by shaded leaf per unit direct flux
+   fabi                                =>    pps%fabi                                    , & ! Output: [real(r8) (:,:)]  flux absorbed by veg per unit diffuse flux      
+   fabi_sun                            =>    pps%fabi_sun                                , & ! Output: [real(r8) (:,:)]  flux absorbed by sunlit leaf per unit diffuse flux
+   fabi_sha                            =>    pps%fabi_sha                                , & ! Output: [real(r8) (:,:)]  flux absorbed by shaded leaf per unit diffuse flux
+   ftdd                                =>    pps%ftdd                                    , & ! Output: [real(r8) (:,:)]  down direct  flux below veg per unit dir flx    
+   ftid                                =>    pps%ftid                                    , & ! Output: [real(r8) (:,:)]  down diffuse flux below veg per unit dir flx    
+   ftii                                =>    pps%ftii                                    , & ! Output: [real(r8) (:,:)]  down diffuse flux below veg per unit dif flx    
+   fsun                                =>    pps%fsun                                    , & ! Output: [real(r8) (:)]  sunlit fraction of canopy                         
+   lat                                 =>    grc%lat                                     , & ! Input:  [real(r8) (:)]  latitude (radians)                                
+   lon                                 =>    grc%lon                                     , & ! Input:  [real(r8) (:)]  longitude (radians)                               
+   lgridcell                           =>   lun%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding landunit                 
+   coli                                =>   lun%coli                                     , & ! Input:  [integer (:)]  beginning column index for landunit                
+   colf                                =>   lun%colf                                     , & ! Input:  [integer (:)]  ending column index for landunit                   
+   ctype                               =>    col%itype                                   , & ! Input:  [integer (:)]  column type                                        
+   frac_sno                            =>    cps%frac_sno                                , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  column's landunit                                  
+   cgridcell                           =>   col%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding column                   
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
+   pcolumn                             =>   pft%column                                   , & ! Input:  [integer (:)]  column of corresponding pft                        
+   canyon_hwr                          =>    urban_clump(nc)%canyon_hwr                  , & ! Output: [real(r8) (:)]  ratio of building height to street width          
+   wtroad_perv                         =>    urban_clump(nc)%wtroad_perv                 , & ! Output: [real(r8) (:)]  weight of pervious road wrt total road            
+   alb_roof_dir                        =>    urban_clump(nc)%alb_roof_dir                , & ! Output: [real(r8) (:,:)]  direct roof albedo                              
+   alb_roof_dif                        =>    urban_clump(nc)%alb_roof_dif                , & ! Output: [real(r8) (:,:)]  diffuse roof albedo                             
+   alb_improad_dir                     =>    urban_clump(nc)%alb_improad_dir             , & ! Output: [real(r8) (:,:)]  direct impervious road albedo                   
+   alb_improad_dif                     =>    urban_clump(nc)%alb_improad_dif             , & ! Output: [real(r8) (:,:)]  diffuse imprevious road albedo                  
+   alb_perroad_dir                     =>    urban_clump(nc)%alb_perroad_dir             , & ! Output: [real(r8) (:,:)]  direct pervious road albedo                     
+   alb_perroad_dif                     =>    urban_clump(nc)%alb_perroad_dif             , & ! Output: [real(r8) (:,:)]  diffuse pervious road albedo                    
+   alb_wall_dir                        =>    urban_clump(nc)%alb_wall_dir                , & ! Output: [real(r8) (:,:)]  direct wall albedo                              
+   alb_wall_dif                        =>    urban_clump(nc)%alb_wall_dif                , & ! Output: [real(r8) (:,:)]  diffuse wall albedo                             
+   albgrd                              =>    cps%albgrd                                  , & ! Output: [real(r8) (:,:)]  ground albedo (direct)                          
+   albgri                              =>    cps%albgri                                    & ! Output: [real(r8) (:,:)]  ground albedo (diffuse)                         
+   )
 
-    canyon_hwr         => urban_clump(nc)%canyon_hwr
-    wtroad_perv        => urban_clump(nc)%wtroad_perv
-    alb_roof_dir       => urban_clump(nc)%alb_roof_dir
-    alb_roof_dif       => urban_clump(nc)%alb_roof_dif  
-    alb_improad_dir    => urban_clump(nc)%alb_improad_dir  
-    alb_improad_dif    => urban_clump(nc)%alb_improad_dif  
-    alb_perroad_dir    => urban_clump(nc)%alb_perroad_dir  
-    alb_perroad_dif    => urban_clump(nc)%alb_perroad_dif  
-    alb_wall_dir       => urban_clump(nc)%alb_wall_dir  
-    alb_wall_dif       => urban_clump(nc)%alb_wall_dif  
-
-    ! Assign gridcell level pointers
-
-    lat                =>  grc%lat
-    lon                =>  grc%lon
-
-    ! Assign landunit level pointer
-
-    lgridcell          =>lun%gridcell
-    coli               =>lun%coli
-    colf               =>lun%colf
-    vf_sr              => lps%vf_sr
-    vf_wr              => lps%vf_wr
-    vf_sw              => lps%vf_sw
-    vf_rw              => lps%vf_rw
-    vf_ww              => lps%vf_ww
-    sabs_roof_dir      => lps%sabs_roof_dir
-    sabs_roof_dif      => lps%sabs_roof_dif
-    sabs_sunwall_dir   => lps%sabs_sunwall_dir
-    sabs_sunwall_dif   => lps%sabs_sunwall_dif
-    sabs_shadewall_dir => lps%sabs_shadewall_dir
-    sabs_shadewall_dif => lps%sabs_shadewall_dif
-    sabs_improad_dir   => lps%sabs_improad_dir
-    sabs_improad_dif   => lps%sabs_improad_dif
-    sabs_perroad_dir   => lps%sabs_perroad_dir
-    sabs_perroad_dif   => lps%sabs_perroad_dif
-
-    ! Assign column level pointers
-
-    ctype              => col%itype
-    albgrd             => cps%albgrd
-    albgri             => cps%albgri
-    frac_sno           => cps%frac_sno
-    clandunit          =>col%landunit
-    cgridcell          =>col%gridcell
-    czen               => cps%coszen
-
-    ! Assign pft  level pointers
-
-    pgridcell          =>pft%gridcell
-    pcolumn            =>pft%column
-    albd               => pps%albd
-    albi               => pps%albi
-    fabd               => pps%fabd
-    fabd_sun           => pps%fabd_sun
-    fabd_sha           => pps%fabd_sha
-    fabi               => pps%fabi
-    fabi_sun           => pps%fabi_sun
-    fabi_sha           => pps%fabi_sha
-    ftdd               => pps%ftdd
-    ftid               => pps%ftid
-    ftii               => pps%ftii
-    fsun               => pps%fsun
-
+    !TODO: this must be kept as a pointer - putting it as an assoicate completely breaks things
+    czen => cps%coszen
+    !TODO
 
     ! ----------------------------------------------------------------------------
     ! Solar declination and cosine solar zenith angle and zenith angle for 
@@ -500,6 +428,7 @@ contains
        end do
     end if
 
+  end associate
   end subroutine UrbanAlbedo
 
 !-----------------------------------------------------------------------
@@ -537,19 +466,7 @@ contains
 ! Author: Keith Oleson 9/2005
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-    integer , pointer :: coli(:)      ! beginning column index for landunit
-    integer , pointer :: colf(:)      ! ending column index for landunit
-    real(r8), pointer :: h2osno(:)    ! snow water (mm H2O)
-    integer , pointer :: ctype(:)     ! column type
-!
-!
-! !OTHER LOCAL VARIABLES:
-!EOP
     integer  :: fl,c,l              ! indices
-!
-! variables and constants for snow albedo calculation
 !
 ! These values are derived from Marshall (1989) assuming soot content of 1.5e-5 
 ! (three times what LSM uses globally). Note that snow age effects are ignored here.
@@ -557,15 +474,13 @@ contains
     real(r8), parameter :: snal1 = 0.56_r8 ! nir albedo of urban snow
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (landunit level)
 
-    coli       =>lun%coli
-    colf       =>lun%colf
-
-    ! Assign local pointers to derived subtypes components (column-level)
-
-    ctype      => col%itype
-    h2osno     => cws%h2osno
+   associate(& 
+   coli                                =>   lun%coli                                     , & ! Input:  [integer (:)]  beginning column index for landunit                
+   colf                                =>   lun%colf                                     , & ! Input:  [integer (:)]  ending column index for landunit                   
+   ctype                               =>    col%itype                                   , & ! Input:  [integer (:)]  column type                                        
+   h2osno                              =>    cws%h2osno                                    & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
+   )
 
     ! this code assumes that numrad = 2 , with the following
     ! index values: 1 = visible, 2 = NIR
@@ -599,6 +514,7 @@ contains
        end do
     end do
 
+    end associate 
   end subroutine UrbanSnowAlbedo
 
 !-----------------------------------------------------------------------
@@ -650,81 +566,6 @@ contains
 ! 01/2008, Erik Kluzek:         Migrated to clm3.5.15
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to original implicit in arguments (urban clump)
-!
-    real(r8), pointer :: canyon_hwr(:)           ! ratio of building height to street width
-    real(r8), pointer :: wtroad_perv(:)          ! weight of pervious road wrt total road
-    real(r8), pointer :: em_roof(:)              ! roof emissivity
-    real(r8), pointer :: em_improad(:)           ! impervious road emissivity
-    real(r8), pointer :: em_perroad(:)           ! pervious road emissivity
-    real(r8), pointer :: em_wall(:)              ! wall emissivity
-!
-! local pointers to original implicit in arguments (clmtype)
-!
-    integer , pointer :: pgridcell(:)            ! gridcell of corresponding pft
-    integer , pointer :: pcolumn(:)              ! column of corresponding pft
-    integer , pointer :: lgridcell(:)            ! gridcell of corresponding landunit
-    integer , pointer :: ctype(:)                ! column type
-    integer , pointer :: coli(:)                 ! beginning column index for landunit 
-    integer , pointer :: colf(:)                 ! ending column index for landunit
-    integer , pointer :: pfti(:)                 ! beginning pfti index for landunit 
-    integer , pointer :: pftf(:)                 ! ending pftf index for landunit
-    real(r8), pointer :: londeg(:)               ! longitude (degrees)
-    real(r8), pointer :: forc_lwrad(:)           ! downward infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: forc_solad(:,:)         ! direct beam radiation  (vis=forc_sols , nir=forc_soll ) (W/m**2)
-    real(r8), pointer :: forc_solai(:,:)         ! diffuse beam radiation (vis=forc_sols , nir=forc_soll ) (W/m**2)
-    real(r8), pointer :: forc_solar(:)           ! incident solar radiation (W/m**2)
-    real(r8), pointer :: albd(:,:)               ! surface albedo (direct)
-    real(r8), pointer :: albi(:,:)               ! surface albedo (diffuse)
-    real(r8), pointer :: t_grnd(:)               ! ground temperature (K)
-    real(r8), pointer :: frac_sno(:)             ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: t_ref2m(:)              ! 2 m height surface air temperature (K)
-    real(r8), pointer :: vf_sr(:)                ! view factor of sky for road
-    real(r8), pointer :: vf_wr(:)                ! view factor of one wall for road
-    real(r8), pointer :: vf_sw(:)                ! view factor of sky for one wall
-    real(r8), pointer :: vf_rw(:)                ! view factor of road for one wall
-    real(r8), pointer :: vf_ww(:)                ! view factor of opposing wall for one wall
-    real(r8), pointer :: sabs_roof_dir(:,:)      ! direct  solar absorbed  by roof per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_roof_dif(:,:)      ! diffuse solar absorbed  by roof per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_sunwall_dir(:,:)   ! direct  solar absorbed  by sunwall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_sunwall_dif(:,:)   ! diffuse solar absorbed  by sunwall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_shadewall_dir(:,:) ! direct  solar absorbed  by shadewall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_shadewall_dif(:,:) ! diffuse solar absorbed  by shadewall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_improad_dir(:,:)   ! direct  solar absorbed  by impervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_improad_dif(:,:)   ! diffuse solar absorbed  by impervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_perroad_dir(:,:)   ! direct  solar absorbed  by pervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_perroad_dif(:,:)   ! diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
-!
-! local pointers to original implicit out arguments (clmtype)
-!
-    real(r8), pointer :: sabg(:)                 ! solar radiation absorbed by ground (W/m**2)
-    real(r8), pointer :: sabv(:)                 ! solar radiation absorbed by vegetation (W/m**2)
-    real(r8), pointer :: fsa(:)                  ! solar radiation absorbed (total) (W/m**2)
-    real(r8), pointer :: fsa_u(:)                ! urban solar radiation absorbed (total) (W/m**2)
-    real(r8), pointer :: fsr(:)                  ! solar radiation reflected (total) (W/m**2)
-    real(r8), pointer :: fsds_vis_d(:)           ! incident direct beam vis solar radiation (W/m**2)
-    real(r8), pointer :: fsds_nir_d(:)           ! incident direct beam nir solar radiation (W/m**2)
-    real(r8), pointer :: fsds_vis_i(:)           ! incident diffuse vis solar radiation (W/m**2)
-    real(r8), pointer :: fsds_nir_i(:)           ! incident diffuse nir solar radiation (W/m**2)
-    real(r8), pointer :: fsr_vis_d(:)            ! reflected direct beam vis solar radiation (W/m**2)
-    real(r8), pointer :: fsr_nir_d(:)            ! reflected direct beam nir solar radiation (W/m**2)
-    real(r8), pointer :: fsr_vis_i(:)            ! reflected diffuse vis solar radiation (W/m**2)
-    real(r8), pointer :: fsr_nir_i(:)            ! reflected diffuse nir solar radiation (W/m**2)
-    real(r8), pointer :: fsds_vis_d_ln(:)        ! incident direct beam vis solar rad at local noon (W/m**2)
-    real(r8), pointer :: fsds_vis_i_ln(:)        ! incident diffuse beam vis solar rad at local noon (W/m**2)
-    real(r8), pointer :: parveg_ln(:)            ! absorbed par by vegetation at local noon (W/m**2)
-    real(r8), pointer :: fsds_nir_d_ln(:)        ! incident direct beam nir solar rad at local noon (W/m**2)
-    real(r8), pointer :: fsr_vis_d_ln(:)         ! reflected direct beam vis solar rad at local noon (W/m**2)
-    real(r8), pointer :: fsr_nir_d_ln(:)         ! reflected direct beam nir solar rad at local noon (W/m**2)
-    real(r8), pointer :: eflx_lwrad_out(:)       ! emitted infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: eflx_lwrad_net(:)       ! net infrared (longwave) rad (W/m**2) [+ = to atm]
-    real(r8), pointer :: eflx_lwrad_net_u(:)     ! urban net infrared (longwave) rad (W/m**2) [+ = to atm]
-!
-!
-! !OTHER LOCAL VARIABLES
-!EOP
-!
     integer  :: fp,fl,p,c,l,g              ! indices
     integer  :: local_secp1                ! seconds into current date in local time
     real(r8) :: dtime                      ! land model time step (sec)
@@ -757,83 +598,69 @@ contains
     real(r8) :: em_perroad_s(num_urbanl)   ! pervious road emissivity with snow effects
 !-----------------------------------------------------------------------
 
-    ! Assign pointers into module urban clumps
-
-    if( num_urbanl > 0 )then
-       canyon_hwr         => urban_clump(nc)%canyon_hwr
-       wtroad_perv        => urban_clump(nc)%wtroad_perv
-       em_roof            => urban_clump(nc)%em_roof
-       em_improad         => urban_clump(nc)%em_improad
-       em_perroad         => urban_clump(nc)%em_perroad
-       em_wall            => urban_clump(nc)%em_wall
-    end if
-
-    ! Assign local pointers to multi-level derived type members (gridcell level)
-    
-    londeg        =>  grc%londeg
-    forc_solad    => clm_a2l%forc_solad
-    forc_solai    => clm_a2l%forc_solai
-    forc_solar    => clm_a2l%forc_solar
-    forc_lwrad    => clm_a2l%forc_lwrad
-
-    ! Assign local pointers to derived type members (landunit level)
-
-    pfti           =>lun%pfti
-    pftf           =>lun%pftf
-    coli           =>lun%coli
-    colf           =>lun%colf
-    lgridcell      =>lun%gridcell
-    vf_sr          => lps%vf_sr
-    vf_wr          => lps%vf_wr
-    vf_sw          => lps%vf_sw
-    vf_rw          => lps%vf_rw
-    vf_ww          => lps%vf_ww
-    sabs_roof_dir      => lps%sabs_roof_dir
-    sabs_roof_dif      => lps%sabs_roof_dif
-    sabs_sunwall_dir   => lps%sabs_sunwall_dir
-    sabs_sunwall_dif   => lps%sabs_sunwall_dif
-    sabs_shadewall_dir => lps%sabs_shadewall_dir
-    sabs_shadewall_dif => lps%sabs_shadewall_dif
-    sabs_improad_dir   => lps%sabs_improad_dir
-    sabs_improad_dif   => lps%sabs_improad_dif
-    sabs_perroad_dir   => lps%sabs_perroad_dir
-    sabs_perroad_dif   => lps%sabs_perroad_dif
-
-    ! Assign local pointers to derived type members (column level)
-
-    ctype          => col%itype
-    t_grnd         => ces%t_grnd 
-    frac_sno       => cps%frac_sno
-
-    ! Assign local pointers to derived type members (pft level)
-
-    pgridcell      =>pft%gridcell
-    pcolumn        =>pft%column
-    albd           => pps%albd
-    albi           => pps%albi
-    sabg           => pef%sabg
-    sabv           => pef%sabv
-    fsa            => pef%fsa
-    fsa_u          => pef%fsa_u
-    fsr            => pef%fsr
-    fsds_vis_d     => pef%fsds_vis_d
-    fsds_nir_d     => pef%fsds_nir_d
-    fsds_vis_i     => pef%fsds_vis_i
-    fsds_nir_i     => pef%fsds_nir_i
-    fsr_vis_d      => pef%fsr_vis_d
-    fsr_nir_d      => pef%fsr_nir_d
-    fsr_vis_i      => pef%fsr_vis_i
-    fsr_nir_i      => pef%fsr_nir_i
-    fsds_vis_d_ln  => pef%fsds_vis_d_ln
-    fsds_nir_d_ln  => pef%fsds_nir_d_ln
-    fsds_vis_i_ln  => pef%fsds_vis_i_ln
-    parveg_ln      => pef%parveg_ln
-    fsr_vis_d_ln   => pef%fsr_vis_d_ln
-    fsr_nir_d_ln   => pef%fsr_nir_d_ln
-    eflx_lwrad_out => pef%eflx_lwrad_out 
-    eflx_lwrad_net => pef%eflx_lwrad_net
-    eflx_lwrad_net_u => pef%eflx_lwrad_net_u
-    t_ref2m        => pes%t_ref2m
+   associate(& 
+   canyon_hwr                          =>    urban_clump(nc)%canyon_hwr                  , & ! Input:  [real(r8) (:)]  ratio of building height to street width          
+   wtroad_perv                         =>    urban_clump(nc)%wtroad_perv                 , & ! Input:  [real(r8) (:)]  weight of pervious road wrt total road            
+   em_roof                             =>    urban_clump(nc)%em_roof                     , & ! Input:  [real(r8) (:)]  roof emissivity                                   
+   em_improad                          =>    urban_clump(nc)%em_improad                  , & ! Input:  [real(r8) (:)]  impervious road emissivity                        
+   em_perroad                          =>    urban_clump(nc)%em_perroad                  , & ! Input:  [real(r8) (:)]  pervious road emissivity                          
+   em_wall                             =>    urban_clump(nc)%em_wall                     , & ! Input:  [real(r8) (:)]  wall emissivity                                   
+   londeg                              =>    grc%londeg                                  , & ! Input:  [real(r8) (:)]  longitude (degrees)                               
+   forc_solad                          =>    clm_a2l%forc_solad                          , & ! Input:  [real(r8) (:,:)]  direct beam radiation  (vis=forc_sols , nir=forc_soll ) (W/m**2)
+   forc_solai                          =>    clm_a2l%forc_solai                          , & ! Input:  [real(r8) (:,:)]  diffuse beam radiation (vis=forc_sols , nir=forc_soll ) (W/m**2)
+   forc_solar                          =>    clm_a2l%forc_solar                          , & ! Input:  [real(r8) (:)]  incident solar radiation (W/m**2)                 
+   forc_lwrad                          =>    clm_a2l%forc_lwrad                          , & ! Input:  [real(r8) (:)]  downward infrared (longwave) radiation (W/m**2)   
+   pfti                                =>   lun%pfti                                     , & ! Input:  [integer (:)]  beginning pfti index for landunit                  
+   pftf                                =>   lun%pftf                                     , & ! Input:  [integer (:)]  ending pftf index for landunit                     
+   coli                                =>   lun%coli                                     , & ! Input:  [integer (:)]  beginning column index for landunit                
+   colf                                =>   lun%colf                                     , & ! Input:  [integer (:)]  ending column index for landunit                   
+   lgridcell                           =>   lun%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding landunit                 
+   vf_sr                               =>    lps%vf_sr                                   , & ! Input:  [real(r8) (:)]  view factor of sky for road                       
+   vf_wr                               =>    lps%vf_wr                                   , & ! Input:  [real(r8) (:)]  view factor of one wall for road                  
+   vf_sw                               =>    lps%vf_sw                                   , & ! Input:  [real(r8) (:)]  view factor of sky for one wall                   
+   vf_rw                               =>    lps%vf_rw                                   , & ! Input:  [real(r8) (:)]  view factor of road for one wall                  
+   vf_ww                               =>    lps%vf_ww                                   , & ! Input:  [real(r8) (:)]  view factor of opposing wall for one wall         
+   sabs_roof_dir                       =>    lps%sabs_roof_dir                           , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by roof per unit ground area per unit incident flux
+   sabs_roof_dif                       =>    lps%sabs_roof_dif                           , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by roof per unit ground area per unit incident flux
+   sabs_sunwall_dir                    =>    lps%sabs_sunwall_dir                        , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by sunwall per unit wall area per unit incident flux
+   sabs_sunwall_dif                    =>    lps%sabs_sunwall_dif                        , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by sunwall per unit wall area per unit incident flux
+   sabs_shadewall_dir                  =>    lps%sabs_shadewall_dir                      , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by shadewall per unit wall area per unit incident flux
+   sabs_shadewall_dif                  =>    lps%sabs_shadewall_dif                      , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by shadewall per unit wall area per unit incident flux
+   sabs_improad_dir                    =>    lps%sabs_improad_dir                        , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by impervious road per unit ground area per unit incident flux
+   sabs_improad_dif                    =>    lps%sabs_improad_dif                        , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by impervious road per unit ground area per unit incident flux
+   sabs_perroad_dir                    =>    lps%sabs_perroad_dir                        , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by pervious road per unit ground area per unit incident flux
+   sabs_perroad_dif                    =>    lps%sabs_perroad_dif                        , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
+   ctype                               =>    col%itype                                   , & ! Input:  [integer (:)]  column type                                        
+   t_grnd                              =>    ces%t_grnd                                  , & ! Input:  [real(r8) (:)]  ground temperature (K)                            
+   frac_sno                            =>    cps%frac_sno                                , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
+   pcolumn                             =>   pft%column                                   , & ! Input:  [integer (:)]  column of corresponding pft                        
+   albd                                =>    pps%albd                                    , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)                         
+   albi                                =>    pps%albi                                    , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)                        
+   sabg                                =>    pef%sabg                                    , & ! Output: [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)       
+   sabv                                =>    pef%sabv                                    , & ! Output: [real(r8) (:)]  solar radiation absorbed by vegetation (W/m**2)   
+   fsa                                 =>    pef%fsa                                     , & ! Output: [real(r8) (:)]  solar radiation absorbed (total) (W/m**2)         
+   fsa_u                               =>    pef%fsa_u                                   , & ! Output: [real(r8) (:)]  urban solar radiation absorbed (total) (W/m**2)   
+   fsr                                 =>    pef%fsr                                     , & ! Output: [real(r8) (:)]  solar radiation reflected (total) (W/m**2)        
+   fsds_vis_d                          =>    pef%fsds_vis_d                              , & ! Output: [real(r8) (:)]  incident direct beam vis solar radiation (W/m**2) 
+   fsds_nir_d                          =>    pef%fsds_nir_d                              , & ! Output: [real(r8) (:)]  incident direct beam nir solar radiation (W/m**2) 
+   fsds_vis_i                          =>    pef%fsds_vis_i                              , & ! Output: [real(r8) (:)]  incident diffuse vis solar radiation (W/m**2)     
+   fsds_nir_i                          =>    pef%fsds_nir_i                              , & ! Output: [real(r8) (:)]  incident diffuse nir solar radiation (W/m**2)     
+   fsr_vis_d                           =>    pef%fsr_vis_d                               , & ! Output: [real(r8) (:)]  reflected direct beam vis solar radiation (W/m**2)
+   fsr_nir_d                           =>    pef%fsr_nir_d                               , & ! Output: [real(r8) (:)]  reflected direct beam nir solar radiation (W/m**2)
+   fsr_vis_i                           =>    pef%fsr_vis_i                               , & ! Output: [real(r8) (:)]  reflected diffuse vis solar radiation (W/m**2)    
+   fsr_nir_i                           =>    pef%fsr_nir_i                               , & ! Output: [real(r8) (:)]  reflected diffuse nir solar radiation (W/m**2)    
+   fsds_vis_d_ln                       =>    pef%fsds_vis_d_ln                           , & ! Output: [real(r8) (:)]  incident direct beam vis solar rad at local noon (W/m**2)
+   fsds_nir_d_ln                       =>    pef%fsds_nir_d_ln                           , & ! Output: [real(r8) (:)]  incident direct beam nir solar rad at local noon (W/m**2)
+   fsds_vis_i_ln                       =>    pef%fsds_vis_i_ln                           , & ! Output: [real(r8) (:)]  incident diffuse beam vis solar rad at local noon (W/m**2)
+   parveg_ln                           =>    pef%parveg_ln                               , & ! Output: [real(r8) (:)]  absorbed par by vegetation at local noon (W/m**2) 
+   fsr_vis_d_ln                        =>    pef%fsr_vis_d_ln                            , & ! Output: [real(r8) (:)]  reflected direct beam vis solar rad at local noon (W/m**2)
+   fsr_nir_d_ln                        =>    pef%fsr_nir_d_ln                            , & ! Output: [real(r8) (:)]  reflected direct beam nir solar rad at local noon (W/m**2)
+   eflx_lwrad_out                      =>    pef%eflx_lwrad_out                          , & ! Output: [real(r8) (:)]  emitted infrared (longwave) radiation (W/m**2)    
+   eflx_lwrad_net                      =>    pef%eflx_lwrad_net                          , & ! Output: [real(r8) (:)]  net infrared (longwave) rad (W/m**2) [+ = to atm] 
+   eflx_lwrad_net_u                    =>    pef%eflx_lwrad_net_u                        , & ! Output: [real(r8) (:)]  urban net infrared (longwave) rad (W/m**2) [+ = to atm]
+   t_ref2m                             =>    pes%t_ref2m                                   & ! Input:  [real(r8) (:)]  2 m height surface air temperature (K)            
+   )
 
     ! Define fields that appear on the restart file for non-urban landunits 
 
@@ -1018,6 +845,7 @@ contains
        
     end do ! end loop over urban landunits
 
+    end associate 
   end subroutine UrbanRadiation
 
 !-----------------------------------------------------------------------
@@ -1063,14 +891,6 @@ contains
     integer , intent(in)  :: filter_urbanl(ubl-lbl+1) ! urban landunit filter
     real(r8), intent(in)  :: canyon_hwr(num_urbanl)   ! ratio of building height to street width
 !
-! local pointers to original implicit out arguments (clmtype)
-!
-    real(r8), pointer :: vf_sr(:)     ! view factor of sky for road
-    real(r8), pointer :: vf_wr(:)     ! view factor of one wall for road
-    real(r8), pointer :: vf_sw(:)     ! view factor of sky for one wall
-    real(r8), pointer :: vf_rw(:)     ! view factor of road for one wall
-    real(r8), pointer :: vf_ww(:)     ! view factor of opposing wall for one wall
-!
 ! !CALLED FROM:
 ! subroutine UrbanAlbedo in this module
 !
@@ -1079,20 +899,18 @@ contains
 ! 03/2003, Mariana Vertenstein: Migrated to clm2.2 
 ! 01/2008, Erik Kluzek:         Migrated to clm3.5.15
 !
-!
 ! !LOCAL VARIABLES:
-!EOP
     integer :: l, fl   ! indices
     real(r8) :: sum    ! sum of view factors for wall or road
 !-----------------------------------------------------------------------
 
-    ! Assign landunit level pointer
-
-    vf_sr  => lps%vf_sr
-    vf_wr  => lps%vf_wr
-    vf_sw  => lps%vf_sw
-    vf_rw  => lps%vf_rw
-    vf_ww  => lps%vf_ww
+   associate(& 
+   vf_sr                               =>    lps%vf_sr                                   , & ! Output: [real(r8) (:)]  view factor of sky for road                       
+   vf_wr                               =>    lps%vf_wr                                   , & ! Output: [real(r8) (:)]  view factor of one wall for road                  
+   vf_sw                               =>    lps%vf_sw                                   , & ! Output: [real(r8) (:)]  view factor of sky for one wall                   
+   vf_rw                               =>    lps%vf_rw                                   , & ! Output: [real(r8) (:)]  view factor of road for one wall                  
+   vf_ww                               =>    lps%vf_ww                                     & ! Output: [real(r8) (:)]  view factor of opposing wall for one wall         
+   )
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
@@ -1133,6 +951,7 @@ contains
 
     end do
 
+    end associate 
   end subroutine view_factor
 
 !-----------------------------------------------------------------------
@@ -1195,11 +1014,8 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!
 ! !LOCAL VARIABLES:
-!EOP
     integer  :: l,i,ib             ! indices
-!KO   logical  :: numchk = .true.     ! true => perform numerical check of analytical solution
     logical  :: numchk = .false.   ! true => perform numerical check of analytical solution
     real(r8) :: theta0(num_urbanl) ! critical canyon orientation for which road is no longer illuminated
     real(r8) :: tanzen(num_urbanl) ! tan(zenith angle)
@@ -1318,7 +1134,6 @@ contains
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
 !
-!
 ! !ARGUMENTS:
     implicit none
     integer,  intent(in)  :: lbl, ubl                           ! landunit-index bounds
@@ -1330,29 +1145,23 @@ contains
     real(r8), intent(out) :: sdif_sunwall(num_urbanl, numrad)   ! diffuse solar radiation (per unit wall area) incident on sunlit wall
     real(r8), intent(out) :: sdif_shadewall(num_urbanl, numrad) ! diffuse solar radiation (per unit wall area) incident on shaded wall
 !
-! local pointers to original implicit in arguments (clmtype)
-!
-    real(r8), pointer :: vf_sr(:)     ! view factor of sky for road
-    real(r8), pointer :: vf_sw(:)     ! view factor of sky for one wall
-!
 ! !CALLED FROM:
 ! subroutine UrbanAlbedo in this module
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!
 ! !LOCAL VARIABLES:
-!EOP
     integer  :: l, fl, ib       ! indices      
     real(r8) :: err(num_urbanl) ! energy conservation error (W/m**2)
     real(r8) :: swall_projected ! diffuse solar radiation (per unit ground area) incident on wall (W/m**2)
 !-----------------------------------------------------------------------
 
-    ! Assign landunit level pointer
 
-    vf_sr              => lps%vf_sr
-    vf_sw              => lps%vf_sw
+   associate(& 
+   vf_sr                               =>    lps%vf_sr                                   , & ! Input:  [real(r8) (:)]  view factor of sky for road                       
+   vf_sw                               =>    lps%vf_sw                                     & ! Input:  [real(r8) (:)]  view factor of sky for one wall                   
+   )
 
     do ib = 1, numrad
 
@@ -1380,6 +1189,7 @@ contains
 
     end do
 
+    end associate 
   end subroutine incident_diffuse
 
 !-----------------------------------------------------------------------
@@ -1440,23 +1250,7 @@ contains
     real(r8), intent(inout) :: sref_roof_dir(num_urbanl, numrad)      ! direct  solar rad reflected by roof (per unit ground area) per unit incident flux
     real(r8), intent(inout) :: sref_roof_dif(num_urbanl, numrad)      ! diffuse solar rad reflected by roof (per unit ground area)  per unit incident flux
 !
-! local pointers to original implicit in arguments (clmtype)
 !
-    real(r8), pointer :: vf_sr(:)     ! view factor of sky for road
-    real(r8), pointer :: vf_wr(:)     ! view factor of one wall for road
-    real(r8), pointer :: vf_sw(:)     ! view factor of sky for one wall
-    real(r8), pointer :: vf_rw(:)     ! view factor of road for one wall
-    real(r8), pointer :: vf_ww(:)     ! view factor of opposing wall for one wall
-    real(r8), pointer :: sabs_roof_dir(:,:)      ! direct  solar absorbed  by roof per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_roof_dif(:,:)      ! diffuse solar absorbed  by roof per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_sunwall_dir(:,:)   ! direct  solar absorbed  by sunwall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_sunwall_dif(:,:)   ! diffuse solar absorbed  by sunwall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_shadewall_dir(:,:) ! direct  solar absorbed  by shadewall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_shadewall_dif(:,:) ! diffuse solar absorbed  by shadewall per unit wall area per unit incident flux
-    real(r8), pointer :: sabs_improad_dir(:,:)   ! direct  solar absorbed  by impervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_improad_dif(:,:)   ! diffuse solar absorbed  by impervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_perroad_dir(:,:)   ! direct  solar absorbed  by pervious road per unit ground area per unit incident flux
-    real(r8), pointer :: sabs_perroad_dif(:,:)   ! diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
 !
 ! !CALLED FROM:
 ! subroutine UrbanAlbedo in this module
@@ -1464,10 +1258,7 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!
 ! !LOCAL VARIABLES
-!EOP
-!
     real(r8) :: wtroad_imperv(num_urbanl)           ! weight of impervious road wrt total road
     real(r8) :: sabs_canyon_dir(num_urbanl)         ! direct solar rad absorbed by canyon per unit incident flux
     real(r8) :: sabs_canyon_dif(num_urbanl)         ! diffuse solar rad absorbed by canyon per unit incident flux
@@ -1547,23 +1338,23 @@ contains
     real(r8), parameter :: errcrit  = .00001_r8     ! error criteria
 !-----------------------------------------------------------------------
 
-    ! Assign landunit level pointer
-
-    vf_sr              => lps%vf_sr
-    vf_wr              => lps%vf_wr
-    vf_sw              => lps%vf_sw
-    vf_rw              => lps%vf_rw
-    vf_ww              => lps%vf_ww
-    sabs_roof_dir      => lps%sabs_roof_dir
-    sabs_roof_dif      => lps%sabs_roof_dif
-    sabs_sunwall_dir   => lps%sabs_sunwall_dir
-    sabs_sunwall_dif   => lps%sabs_sunwall_dif
-    sabs_shadewall_dir => lps%sabs_shadewall_dir
-    sabs_shadewall_dif => lps%sabs_shadewall_dif
-    sabs_improad_dir   => lps%sabs_improad_dir
-    sabs_improad_dif   => lps%sabs_improad_dif
-    sabs_perroad_dir   => lps%sabs_perroad_dir
-    sabs_perroad_dif   => lps%sabs_perroad_dif
+   associate(& 
+   vf_sr                               =>    lps%vf_sr                                   , & ! Input:  [real(r8) (:)]  view factor of sky for road                       
+   vf_wr                               =>    lps%vf_wr                                   , & ! Input:  [real(r8) (:)]  view factor of one wall for road                  
+   vf_sw                               =>    lps%vf_sw                                   , & ! Input:  [real(r8) (:)]  view factor of sky for one wall                   
+   vf_rw                               =>    lps%vf_rw                                   , & ! Input:  [real(r8) (:)]  view factor of road for one wall                  
+   vf_ww                               =>    lps%vf_ww                                   , & ! Input:  [real(r8) (:)]  view factor of opposing wall for one wall         
+   sabs_roof_dir                       =>    lps%sabs_roof_dir                           , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by roof per unit ground area per unit incident flux
+   sabs_roof_dif                       =>    lps%sabs_roof_dif                           , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by roof per unit ground area per unit incident flux
+   sabs_sunwall_dir                    =>    lps%sabs_sunwall_dir                        , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by sunwall per unit wall area per unit incident flux
+   sabs_sunwall_dif                    =>    lps%sabs_sunwall_dif                        , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by sunwall per unit wall area per unit incident flux
+   sabs_shadewall_dir                  =>    lps%sabs_shadewall_dir                      , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by shadewall per unit wall area per unit incident flux
+   sabs_shadewall_dif                  =>    lps%sabs_shadewall_dif                      , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by shadewall per unit wall area per unit incident flux
+   sabs_improad_dir                    =>    lps%sabs_improad_dir                        , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by impervious road per unit ground area per unit incident flux
+   sabs_improad_dif                    =>    lps%sabs_improad_dif                        , & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by impervious road per unit ground area per unit incident flux
+   sabs_perroad_dir                    =>    lps%sabs_perroad_dir                        , & ! Input:  [real(r8) (:,:)]  direct  solar absorbed  by pervious road per unit ground area per unit incident flux
+   sabs_perroad_dif                    =>    lps%sabs_perroad_dif                          & ! Input:  [real(r8) (:,:)]  diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
+   )
 
     ! Calculate impervious road
 
@@ -1947,6 +1738,7 @@ contains
 
     end do   ! end of radiation band loop
 
+    end associate 
   end subroutine net_solar
 
 !-----------------------------------------------------------------------
@@ -2004,13 +1796,7 @@ contains
     real(r8), intent(out) :: lwup_shadewall(num_urbanl)  ! upward longwave radiation (per unit wall area), shaded wall (W/m**2)
     real(r8), intent(out) :: lwup_canyon(num_urbanl)     ! upward longwave radiation for canyon, per unit ground area (W/m**2)
 !
-! local pointers to original implicit in arguments (clmtype)
 !
-    real(r8), pointer :: vf_sr(:)     ! view factor of sky for road
-    real(r8), pointer :: vf_wr(:)     ! view factor of one wall for road
-    real(r8), pointer :: vf_sw(:)     ! view factor of sky for one wall
-    real(r8), pointer :: vf_rw(:)     ! view factor of road for one wall
-    real(r8), pointer :: vf_ww(:)     ! view factor of opposing wall for one wall
 !
 ! !CALLED FROM:
 ! subroutine UrbanRadiation in this module
@@ -2018,9 +1804,7 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!
 ! !LOCAL VARIABLES:
-!EOP
     real(r8) :: lwdown_road(num_urbanl)         ! atmospheric longwave radiation for total road (W/m**2)
     real(r8) :: lwdown_sunwall(num_urbanl)      ! atmospheric longwave radiation (per unit wall area) for sunlit wall (W/m**2)
     real(r8) :: lwdown_shadewall(num_urbanl)    ! atmospheric longwave radiation (per unit wall area) for shaded wall (W/m**2)
@@ -2082,13 +1866,13 @@ contains
     real(r8) :: wtroad_imperv(num_urbanl)       ! weight of impervious road wrt total road
 !-----------------------------------------------------------------------
 
-    ! Assign landunit level pointer
-
-    vf_sr              => lps%vf_sr
-    vf_wr              => lps%vf_wr
-    vf_sw              => lps%vf_sw
-    vf_rw              => lps%vf_rw
-    vf_ww              => lps%vf_ww
+   associate(& 
+   vf_sr                               =>    lps%vf_sr                                   , & ! Input:  [real(r8) (:)]  view factor of sky for road                       
+   vf_wr                               =>    lps%vf_wr                                   , & ! Input:  [real(r8) (:)]  view factor of one wall for road                  
+   vf_sw                               =>    lps%vf_sw                                   , & ! Input:  [real(r8) (:)]  view factor of sky for one wall                   
+   vf_rw                               =>    lps%vf_rw                                   , & ! Input:  [real(r8) (:)]  view factor of road for one wall                  
+   vf_ww                               =>    lps%vf_ww                                     & ! Input:  [real(r8) (:)]  view factor of opposing wall for one wall         
+   )
 
     ! Calculate impervious road
 
@@ -2339,6 +2123,7 @@ contains
        lwnet_roof(l) = lwup_roof(l) - lwdown(l)
     end do
 
+    end associate 
   end subroutine net_longwave
 
 !-----------------------------------------------------------------------
@@ -2370,19 +2155,6 @@ contains
 ! Author: Mariana Vertenstein 04/2003
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to original implicit in arguments
-!
-    integer , pointer :: coli(:)         ! beginning column index for landunit 
-    integer , pointer :: colf(:)         ! ending column index for landunit
-    integer , pointer :: lgridcell(:)    ! gridcell of corresponding landunit
-    integer , pointer :: ctype(:)        ! column type
-    integer , pointer :: ltype(:)        ! landunit type index
-!
-!
-! !OTHER LOCAL VARIABLES
-!EOP
-!
     integer :: nc,fl,ib,l,c,p,g          ! indices
     integer :: nclumps                   ! number of clumps on processor 
     integer :: num_urbanl                ! number of per-clump urban landunits
@@ -2390,16 +2162,14 @@ contains
     integer :: dindx                     ! urban density type index
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (landunit-level)
 
-    coli         =>lun%coli
-    colf         =>lun%colf
-    lgridcell    =>lun%gridcell
-    ltype        =>lun%itype
-
-    ! Assign local pointers to derived type members (column-level)
-
-    ctype      => col%itype
+   associate(& 
+   coli                                =>   lun%coli                                     , & ! Input:  [integer (:)]  beginning column index for landunit                
+   colf                                =>   lun%colf                                     , & ! Input:  [integer (:)]  ending column index for landunit                   
+   lgridcell                           =>   lun%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding landunit                 
+   ltype                               =>   lun%itype                                    , & ! Input:  [integer (:)]  landunit type index                                
+   ctype                               =>    col%itype                                     & ! Input:  [integer (:)]  column type                                        
+   )
 
     ! Allocate memory 
 
@@ -2485,6 +2255,7 @@ contains
        end do
     end do   ! end of loop over clumps
 
+    end associate 
   end subroutine UrbanClumpInit
 
 !-----------------------------------------------------------------------
@@ -2540,99 +2311,6 @@ contains
 ! Author: Keith Oleson 10/2005
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to original implicit in arguments (urban clump)
-!
-    real(r8), pointer :: ht_roof(:)         ! height of urban roof (m)
-    real(r8), pointer :: wtlunit_roof(:)    ! weight of roof with respect to landunit
-    real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width
-    real(r8), pointer :: wtroad_perv(:)     ! weight of pervious road wrt total road
-    real(r8), pointer :: wind_hgt_canyon(:) ! height above road at which wind in canyon is to be computed (m)
-!
-! local pointers to original implicit in arguments (clmtype)
-!
-    real(r8), pointer :: forc_u(:)     ! atmospheric wind speed in east direction (m/s)
-    real(r8), pointer :: forc_v(:)     ! atmospheric wind speed in north direction (m/s)
-    real(r8), pointer :: forc_rho(:)   ! density (kg/m**3)
-    real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft-level (m)
-    real(r8), pointer :: forc_hgt_t_pft(:) ! observational height of temperature at pft-level (m)
-    real(r8), pointer :: forc_q(:)     ! atmospheric specific humidity (kg/kg)
-    real(r8), pointer :: forc_t(:)     ! atmospheric temperature (K)
-    real(r8), pointer :: forc_th(:)    ! atmospheric potential temperature (K)
-    real(r8), pointer :: forc_pbot(:)  ! atmospheric pressure (Pa)
-
-    real(r8), pointer :: z_0_town(:)   ! momentum roughness length of urban landunit (m)
-    real(r8), pointer :: z_d_town(:)   ! displacement height of urban landunit (m)
-
-    integer , pointer :: pgridcell(:)  ! gridcell of corresponding pft
-    integer , pointer :: pcolumn(:)    ! column of corresponding pft
-    integer , pointer :: lgridcell(:)  ! gridcell of corresponding landunit
-    integer , pointer :: plandunit(:)  ! pft's landunit index
-    integer , pointer :: ctype(:)      ! column type
-    integer , pointer :: coli(:)       ! beginning column index for landunit 
-    integer , pointer :: colf(:)       ! ending column index for landunit
-    integer , pointer :: pfti(:)       ! beginning pft index for landunit 
-    integer , pointer :: pftf(:)       ! ending pft index for landunit
-
-    real(r8), pointer :: taf(:)        ! urban canopy air temperature (K)
-    real(r8), pointer :: qaf(:)        ! urban canopy air specific humidity (kg/kg)
-    integer , pointer :: npfts(:)      ! landunit's number of pfts (columns)
-    real(r8), pointer :: t_grnd(:)     ! ground surface temperature (K)
-    real(r8), pointer :: qg(:)         ! specific humidity at ground surface (kg/kg)
-    real(r8), pointer :: htvp(:)       ! latent heat of evaporation (/sublimation) (J/kg)
-    real(r8), pointer :: dqgdT(:)      ! temperature derivative of "qg"
-    real(r8), pointer :: eflx_traffic(:)        ! traffic sensible heat flux (W/m**2)
-    real(r8), pointer :: eflx_traffic_factor(:) ! multiplicative urban traffic factor for sensible heat flux
-    real(r8), pointer :: eflx_wasteheat(:)      ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-    real(r8), pointer :: eflx_heat_from_ac(:)   ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
-    real(r8), pointer :: t_soisno(:,:)          ! soil temperature (K)
-    real(r8), pointer :: eflx_urban_ac(:)     ! urban air conditioning flux (W/m**2)
-    real(r8), pointer :: eflx_urban_heat(:)   ! urban heating flux (W/m**2)
-    real(r8), pointer :: londeg(:)            ! longitude (degrees)
-    real(r8), pointer :: h2osoi_ice(:,:)      ! ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)      ! liquid water (kg/m2)
-    real(r8), pointer :: frac_sno(:)          ! fraction of ground covered by snow (0 to 1)
-    real(r8), pointer :: snow_depth(:)            ! snow height (m)
-    real(r8), pointer :: h2osno(:)            ! snow water (mm H2O)
-    integer , pointer :: snl(:)               ! number of snow layers
-    real(r8), pointer :: rootr_road_perv(:,:) ! effective fraction of roots in each soil layer for urban pervious road
-    real(r8), pointer :: soilalpha_u(:)       ! Urban factor that reduces ground saturated specific humidity (-)
-!
-! local pointers to original implicit out arguments
-!
-    real(r8), pointer :: dlrad(:)         ! downward longwave radiation below the canopy (W/m**2)
-    real(r8), pointer :: ulrad(:)         ! upward longwave radiation above the canopy (W/m**2)
-    real(r8), pointer :: cgrnds(:)        ! deriv, of soil sensible heat flux wrt soil temp (W/m**2/K)
-    real(r8), pointer :: cgrndl(:)        ! deriv of soil latent heat flux wrt soil temp (W/m**2/K)
-    real(r8), pointer :: cgrnd(:)         ! deriv. of soil energy flux wrt to soil temp (W/m**2/K)
-    real(r8), pointer :: taux(:)          ! wind (shear) stress: e-w (kg/m/s**2)
-    real(r8), pointer :: tauy(:)          ! wind (shear) stress: n-s (kg/m/s**2)
-    real(r8), pointer :: eflx_sh_grnd(:)  ! sensible heat flux from ground (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_tot(:)   ! total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_tot_u(:) ! urban total sensible heat flux (W/m**2) [+ to atm]
-    real(r8), pointer :: qflx_evap_soi(:) ! soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_tran_veg(:) ! vegetation transpiration (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_veg(:) ! vegetation evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-    real(r8), pointer :: t_ref2m(:)       ! 2 m height surface air temperature (K)
-    real(r8), pointer :: q_ref2m(:)       ! 2 m height surface specific humidity (kg/kg)
-    real(r8), pointer :: t_ref2m_u(:)     ! Urban 2 m height surface air temperature (K)
-    real(r8), pointer :: t_veg(:)         ! vegetation temperature (K)
-    real(r8), pointer :: ram1(:)          ! aerodynamical resistance (s/m)
-    real(r8), pointer :: rootr(:,:)       ! effective fraction of roots in each soil layer
-    real(r8), pointer :: psnsun(:)        ! sunlit leaf photosynthesis (umol CO2 /m**2/ s)
-    real(r8), pointer :: psnsha(:)        ! shaded leaf photosynthesis (umol CO2 /m**2/ s)
-    real(r8), pointer :: t_building(:)    ! internal building temperature (K)
-    real(r8), pointer :: rh_ref2m(:)      ! 2 m height surface relative humidity (%)
-    real(r8), pointer :: rh_ref2m_u(:)    ! Urban 2 m height surface relative humidity (%)
-    real(r8), pointer :: eflx_sh_snow(:)          ! sensible heat flux from snow (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_soil(:)          ! sensible heat flux from soil (W/m**2) [+ to atm]
-    real(r8), pointer :: eflx_sh_h2osfc(:)        ! sensible heat flux from soil (W/m**2) [+ to atm]
-!
-!
-! !OTHER LOCAL VARIABLES
-!EOP
-!
     character(len=*), parameter :: sub="UrbanFluxes"
     integer  :: fp,fc,fl,f,p,c,l,g,j,pi,i     ! indices
                                  
@@ -2728,101 +2406,84 @@ contains
 
 !-----------------------------------------------------------------------
 
-    ! Assign pointers into module urban clumps
-
-    if ( num_urbanl > 0 )then
-       ht_roof            => urban_clump(nc)%ht_roof
-       wtlunit_roof       => urban_clump(nc)%wtlunit_roof
-       canyon_hwr         => urban_clump(nc)%canyon_hwr
-       wtroad_perv        => urban_clump(nc)%wtroad_perv
-       wind_hgt_canyon    => urban_clump(nc)%wind_hgt_canyon
-    end if
-
-    ! Assign local pointers to multi-level derived type members (gridcell level)
-
-    forc_t     => clm_a2l%forc_t
-    forc_th    => clm_a2l%forc_th
-    forc_u     => clm_a2l%forc_u
-    forc_v     => clm_a2l%forc_v
-    forc_rho   => clm_a2l%forc_rho
-    forc_q     => clm_a2l%forc_q
-    forc_pbot  => clm_a2l%forc_pbot
-    londeg     =>  grc%londeg
-
-    ! Assign local pointers to derived type members (landunit level)
-
-    pfti                =>lun%pfti
-    pftf                =>lun%pftf
-    coli                =>lun%coli
-    colf                =>lun%colf
-    lgridcell           =>lun%gridcell
-    z_0_town            =>lun%z_0_town
-    z_d_town            =>lun%z_d_town
-    taf                 => lps%taf
-    qaf                 => lps%qaf
-    npfts               =>lun%npfts
-    eflx_traffic        => lef%eflx_traffic
-    eflx_traffic_factor => lef%eflx_traffic_factor
-    eflx_wasteheat      => lef%eflx_wasteheat
-    eflx_heat_from_ac   => lef%eflx_heat_from_ac
-    t_building          => lps%t_building
-
-    ! Assign local pointers to derived type members (column level)
-
-    ctype              => col%itype
-    t_grnd             => ces%t_grnd
-    qg                 => cws%qg
-    htvp               => cps%htvp
-    dqgdT              => cws%dqgdT
-    t_soisno           => ces%t_soisno
-    eflx_urban_ac      => cef%eflx_urban_ac
-    eflx_urban_heat    => cef%eflx_urban_heat
-    h2osoi_ice         => cws%h2osoi_ice
-    h2osoi_liq         => cws%h2osoi_liq
-    frac_sno           => cps%frac_sno
-    snow_depth             => cps%snow_depth
-    h2osno             => cws%h2osno
-    snl                => cps%snl
-    rootr_road_perv    => cps%rootr_road_perv
-    soilalpha_u        => cws%soilalpha_u
-
-    ! Assign local pointers to derived type members (pft level)
-
-    pgridcell      =>pft%gridcell
-    pcolumn        =>pft%column
-    plandunit      =>pft%landunit
-    ram1           => pps%ram1
-    dlrad          => pef%dlrad
-    ulrad          => pef%ulrad
-    cgrnds         => pef%cgrnds
-    cgrndl         => pef%cgrndl
-    cgrnd          => pef%cgrnd
-    taux           => pmf%taux
-    tauy           => pmf%tauy
-    eflx_sh_grnd   => pef%eflx_sh_grnd
-    eflx_sh_tot    => pef%eflx_sh_tot
-    eflx_sh_tot_u  => pef%eflx_sh_tot_u
-    qflx_evap_soi  => pwf%qflx_evap_soi
-    qflx_tran_veg  => pwf%qflx_tran_veg
-    qflx_evap_veg  => pwf%qflx_evap_veg
-    qflx_evap_tot  => pwf%qflx_evap_tot
-    t_ref2m        => pes%t_ref2m
-    q_ref2m        => pes%q_ref2m
-    t_ref2m_u      => pes%t_ref2m_u
-    t_veg          => pes%t_veg
-    rootr          => pps%rootr
-    psnsun         => pcf%psnsun
-    psnsha         => pcf%psnsha
-    forc_hgt_u_pft => pps%forc_hgt_u_pft
-    forc_hgt_t_pft => pps%forc_hgt_t_pft
-    forc_hgt_u_pft => pps%forc_hgt_u_pft
-    forc_hgt_t_pft => pps%forc_hgt_t_pft
-    rh_ref2m => pes%rh_ref2m
-    rh_ref2m_u     => pes%rh_ref2m_u
-
-    eflx_sh_snow   => pef%eflx_sh_snow
-    eflx_sh_soil   => pef%eflx_sh_soil
-    eflx_sh_h2osfc => pef%eflx_sh_h2osfc
+   associate(& 
+   ht_roof                             =>    urban_clump(nc)%ht_roof                     , & ! Input:  [real(r8) (:)]  height of urban roof (m)                          
+   wtlunit_roof                        =>    urban_clump(nc)%wtlunit_roof                , & ! Input:  [real(r8) (:)]  weight of roof with respect to landunit           
+   canyon_hwr                          =>    urban_clump(nc)%canyon_hwr                  , & ! Input:  [real(r8) (:)]  ratio of building height to street width          
+   wtroad_perv                         =>    urban_clump(nc)%wtroad_perv                 , & ! Input:  [real(r8) (:)]  weight of pervious road wrt total road            
+   wind_hgt_canyon                     =>    urban_clump(nc)%wind_hgt_canyon             , & ! Input:  [real(r8) (:)]  height above road at which wind in canyon is to be computed (m)
+   forc_t                              =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)]  atmospheric temperature (K)                       
+   forc_th                             =>    clm_a2l%forc_th                             , & ! Input:  [real(r8) (:)]  atmospheric potential temperature (K)             
+   forc_u                              =>    clm_a2l%forc_u                              , & ! Input:  [real(r8) (:)]  atmospheric wind speed in east direction (m/s)    
+   forc_v                              =>    clm_a2l%forc_v                              , & ! Input:  [real(r8) (:)]  atmospheric wind speed in north direction (m/s)   
+   forc_rho                            =>    clm_a2l%forc_rho                            , & ! Input:  [real(r8) (:)]  density (kg/m**3)                                 
+   forc_q                              =>    clm_a2l%forc_q                              , & ! Input:  [real(r8) (:)]  atmospheric specific humidity (kg/kg)             
+   forc_pbot                           =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   londeg                              =>    grc%londeg                                  , & ! Input:  [real(r8) (:)]  longitude (degrees)                               
+   pfti                                =>   lun%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for landunit                   
+   pftf                                =>   lun%pftf                                     , & ! Input:  [integer (:)]  ending pft index for landunit                      
+   coli                                =>   lun%coli                                     , & ! Input:  [integer (:)]  beginning column index for landunit                
+   colf                                =>   lun%colf                                     , & ! Input:  [integer (:)]  ending column index for landunit                   
+   lgridcell                           =>   lun%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding landunit                 
+   z_0_town                            =>   lun%z_0_town                                 , & ! Input:  [real(r8) (:)]  momentum roughness length of urban landunit (m)   
+   z_d_town                            =>   lun%z_d_town                                 , & ! Input:  [real(r8) (:)]  displacement height of urban landunit (m)         
+   taf                                 =>    lps%taf                                     , & ! Input:  [real(r8) (:)]  urban canopy air temperature (K)                  
+   qaf                                 =>    lps%qaf                                     , & ! Input:  [real(r8) (:)]  urban canopy air specific humidity (kg/kg)        
+   npfts                               =>   lun%npfts                                    , & ! Input:  [integer (:)]  landunit's number of pfts (columns)                
+   eflx_traffic                        =>    lef%eflx_traffic                            , & ! Input:  [real(r8) (:)]  traffic sensible heat flux (W/m**2)               
+   eflx_traffic_factor                 =>    lef%eflx_traffic_factor                     , & ! Input:  [real(r8) (:)]  multiplicative urban traffic factor for sensible heat flux
+   eflx_wasteheat                      =>    lef%eflx_wasteheat                          , & ! Input:  [real(r8) (:)]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+   eflx_heat_from_ac                   =>    lef%eflx_heat_from_ac                       , & ! Input:  [real(r8) (:)]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
+   t_building                          =>    lps%t_building                              , & ! Output: [real(r8) (:)]  internal building temperature (K)                 
+   ctype                               =>    col%itype                                   , & ! Input:  [integer (:)]  column type                                        
+   t_grnd                              =>    ces%t_grnd                                  , & ! Input:  [real(r8) (:)]  ground surface temperature (K)                    
+   qg                                  =>    cws%qg                                      , & ! Input:  [real(r8) (:)]  specific humidity at ground surface (kg/kg)       
+   htvp                                =>    cps%htvp                                    , & ! Input:  [real(r8) (:)]  latent heat of evaporation (/sublimation) (J/kg)  
+   dqgdT                               =>    cws%dqgdT                                   , & ! Input:  [real(r8) (:)]  temperature derivative of "qg"                    
+   t_soisno                            =>    ces%t_soisno                                , & ! Input:  [real(r8) (:,:)]  soil temperature (K)                            
+   eflx_urban_ac                       =>    cef%eflx_urban_ac                           , & ! Input:  [real(r8) (:)]  urban air conditioning flux (W/m**2)              
+   eflx_urban_heat                     =>    cef%eflx_urban_heat                         , & ! Input:  [real(r8) (:)]  urban heating flux (W/m**2)                       
+   h2osoi_ice                          =>    cws%h2osoi_ice                              , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                                
+   h2osoi_liq                          =>    cws%h2osoi_liq                              , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                            
+   frac_sno                            =>    cps%frac_sno                                , & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)       
+   snow_depth                          =>    cps%snow_depth                              , & ! Input:  [real(r8) (:)]  snow height (m)                                   
+   h2osno                              =>    cws%h2osno                                  , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                               
+   snl                                 =>    cps%snl                                     , & ! Input:  [integer (:)]  number of snow layers                              
+   rootr_road_perv                     =>    cps%rootr_road_perv                         , & ! Input:  [real(r8) (:,:)]  effective fraction of roots in each soil layer for urban pervious road
+   soilalpha_u                         =>    cws%soilalpha_u                             , & ! Input:  [real(r8) (:)]  Urban factor that reduces ground saturated specific humidity (-)
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
+   pcolumn                             =>   pft%column                                   , & ! Input:  [integer (:)]  column of corresponding pft                        
+   plandunit                           =>   pft%landunit                                 , & ! Input:  [integer (:)]  pft's landunit index                               
+   ram1                                =>    pps%ram1                                    , & ! Output: [real(r8) (:)]  aerodynamical resistance (s/m)                    
+   dlrad                               =>    pef%dlrad                                   , & ! Output: [real(r8) (:)]  downward longwave radiation below the canopy (W/m**2)
+   ulrad                               =>    pef%ulrad                                   , & ! Output: [real(r8) (:)]  upward longwave radiation above the canopy (W/m**2)
+   cgrnds                              =>    pef%cgrnds                                  , & ! Output: [real(r8) (:)]  deriv, of soil sensible heat flux wrt soil temp (W/m**2/K)
+   cgrndl                              =>    pef%cgrndl                                  , & ! Output: [real(r8) (:)]  deriv of soil latent heat flux wrt soil temp (W/m**2/K)
+   cgrnd                               =>    pef%cgrnd                                   , & ! Output: [real(r8) (:)]  deriv. of soil energy flux wrt to soil temp (W/m**2/K)
+   taux                                =>    pmf%taux                                    , & ! Output: [real(r8) (:)]  wind (shear) stress: e-w (kg/m/s**2)              
+   tauy                                =>    pmf%tauy                                    , & ! Output: [real(r8) (:)]  wind (shear) stress: n-s (kg/m/s**2)              
+   eflx_sh_grnd                        =>    pef%eflx_sh_grnd                            , & ! Output: [real(r8) (:)]  sensible heat flux from ground (W/m**2) [+ to atm]
+   eflx_sh_tot                         =>    pef%eflx_sh_tot                             , & ! Output: [real(r8) (:)]  total sensible heat flux (W/m**2) [+ to atm]      
+   eflx_sh_tot_u                       =>    pef%eflx_sh_tot_u                           , & ! Output: [real(r8) (:)]  urban total sensible heat flux (W/m**2) [+ to atm]
+   qflx_evap_soi                       =>    pwf%qflx_evap_soi                           , & ! Output: [real(r8) (:)]  soil evaporation (mm H2O/s) (+ = to atm)          
+   qflx_tran_veg                       =>    pwf%qflx_tran_veg                           , & ! Output: [real(r8) (:)]  vegetation transpiration (mm H2O/s) (+ = to atm)  
+   qflx_evap_veg                       =>    pwf%qflx_evap_veg                           , & ! Output: [real(r8) (:)]  vegetation evaporation (mm H2O/s) (+ = to atm)    
+   qflx_evap_tot                       =>    pwf%qflx_evap_tot                           , & ! Output: [real(r8) (:)]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg     
+   t_ref2m                             =>    pes%t_ref2m                                 , & ! Output: [real(r8) (:)]  2 m height surface air temperature (K)            
+   q_ref2m                             =>    pes%q_ref2m                                 , & ! Output: [real(r8) (:)]  2 m height surface specific humidity (kg/kg)      
+   t_ref2m_u                           =>    pes%t_ref2m_u                               , & ! Output: [real(r8) (:)]  Urban 2 m height surface air temperature (K)      
+   t_veg                               =>    pes%t_veg                                   , & ! Output: [real(r8) (:)]  vegetation temperature (K)                        
+   rootr                               =>    pps%rootr                                   , & ! Output: [real(r8) (:,:)]  effective fraction of roots in each soil layer  
+   psnsun                              =>    pcf%psnsun                                  , & ! Output: [real(r8) (:)]  sunlit leaf photosynthesis (umol CO2 /m**2/ s)    
+   psnsha                              =>    pcf%psnsha                                  , & ! Output: [real(r8) (:)]  shaded leaf photosynthesis (umol CO2 /m**2/ s)    
+   forc_hgt_u_pft                      =>    pps%forc_hgt_u_pft                          , & ! Input:  [real(r8) (:)]  observational height of wind at pft-level (m)     
+   forc_hgt_t_pft                      =>    pps%forc_hgt_t_pft                          , & ! Input:  [real(r8) (:)]  observational height of temperature at pft-level (m)
+   rh_ref2m                            =>    pes%rh_ref2m                                , & ! Output: [real(r8) (:)]  2 m height surface relative humidity (%)          
+   rh_ref2m_u                          =>    pes%rh_ref2m_u                              , & ! Output: [real(r8) (:)]  Urban 2 m height surface relative humidity (%)    
+   eflx_sh_snow                        =>    pef%eflx_sh_snow                            , & ! Output: [real(r8) (:)]  sensible heat flux from snow (W/m**2) [+ to atm]  
+   eflx_sh_soil                        =>    pef%eflx_sh_soil                            , & ! Output: [real(r8) (:)]  sensible heat flux from soil (W/m**2) [+ to atm]  
+   eflx_sh_h2osfc                      =>    pef%eflx_sh_h2osfc                            & ! Output: [real(r8) (:)]  sensible heat flux from soil (W/m**2) [+ to atm]  
+   )
     ! Define fields that appear on the restart file for non-urban landunits 
 
     do fl = 1,num_nourbanl
@@ -3474,6 +3135,7 @@ contains
 
     end do
 
+    end associate 
   end subroutine UrbanFluxes
 
 end module UrbanMod

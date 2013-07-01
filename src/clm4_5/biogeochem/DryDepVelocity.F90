@@ -75,6 +75,7 @@ CONTAINS
   ! computes the dry deposition velocity of tracers
   !----------------------------------------------------------------------- 
   subroutine depvel_compute( lbp , ubp ) 
+
     use shr_const_mod     , only :  tmelt => shr_const_tkfrz
     use seq_drydep_mod    , only :  seq_drydep_setHCoeff, mapping, drat, foxd, &
                                     rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, &
@@ -97,40 +98,11 @@ CONTAINS
     integer, intent(in) :: lbp, ubp                    ! pft bounds
 
     ! ------------------------ local variables ------------------------ 
-    ! local pointers to implicit in arguments 
-    logical , pointer :: pactive(:)       ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: plandunit(:)     !pft's landunit index
-    integer , pointer :: ivt(:)           !landunit type
-    integer , pointer :: pgridcell(:)     !pft's gridcell index
-    real(r8), pointer :: elai(:)          !one-sided leaf area index with burying by snow 
-    real(r8), pointer :: forc_t(:)        !atmospheric temperature (Kelvin) 
-    real(r8), pointer :: forc_q(:)        !atmospheric specific humidity (kg/kg) 
-    real(r8), pointer :: forc_psrf(:)     !surface pressure (Pa) 
-    real(r8), pointer :: latdeg(:)        !latitude (degrees) 
-    real(r8), pointer :: londeg(:)        !longitude (degrees) 
-    real(r8), pointer :: forc_rain(:)     !rain rate [mm/s] 
-    real(r8), pointer :: forc_solad(:,:)  !direct beam radiation (visible only) 
-    real(r8), pointer :: forc_solai(:,:)  !direct beam radiation (visible only) 
-    real(r8), pointer :: ram1(:)          !aerodynamical resistance 
-    real(r8), pointer :: vds(:)           !aerodynamical resistance 
-    real(r8), pointer :: rssun(:)         !stomatal resistance 
-    real(r8), pointer :: rssha(:)         !shaded stomatal resistance (s/m) 
-    real(r8), pointer :: fsun(:)          !sunlit fraction of canopy 
-    real(r8), pointer :: rb1(:)           !leaf boundary layer resistance [s/m]
-    real(r8), pointer :: annlai(:,:)      !12 months of monthly lai from input data set 
-    real(r8), pointer :: mlaidiff(:)      !difference in lai between month one and month two 
-    real(r8), pointer :: velocity(:,:)
-    real(r8), pointer :: snow_depth(:)        ! snow height (m)
-    logical , pointer :: urbpoi(:)        ! true => landunit is an urban point
 
-    integer, pointer :: pcolumn(:)        ! column index associated with each pft
     integer :: c
-    integer , pointer :: itypelun(:) 	   ! landunit type
 
-    real(r8), pointer :: h2osoi_vol(:,:)    ! volumetric soil water (0<=h2osoi_vol<=watsat)
     real(r8) :: soilw, var_soilw, fact_h2, dv_soil_h2
 
-    ! new local variables  
     integer :: pi,g, l
     integer :: ispec 
     integer :: length 
@@ -166,8 +138,6 @@ CONTAINS
     real(r8), parameter :: rain_threshold      = 1.e-7_r8  ! of the order of 1cm/day expressed in m/s
 
     ! local arrays: dependent on species only 
-    ! 
-
     real(r8), dimension(n_drydep) :: rsmx !vegetative resistance (plant mesophyll) 
     real(r8), dimension(n_drydep) :: rclx  !lower canopy resistance  
     real(r8), dimension(n_drydep) :: rlux  !vegetative resistance (upper canopy) 
@@ -194,45 +164,36 @@ CONTAINS
     !----------------------------------------------------------------------- 
     if ( n_drydep == 0 .or. drydep_method /= DD_XLND ) return
 
-    ! local pointers to original implicit out arrays 
+   associate(& 
+   forc_t      =>    clm_a2l%forc_t                              , & ! Input:  [real(r8) (:)] atmospheric temperature (Kelvin)                   
+   forc_q      =>    clm_a2l%forc_q                              , & ! Input:  [real(r8) (:)] atmospheric specific humidity (kg/kg)              
+   forc_psrf   =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)] surface pressure (Pa)                              
+   forc_rain   =>    clm_a2l%forc_rain                           , & ! Input:  [real(r8) (:)] rain rate [mm/s]                                   
+   latdeg      =>     grc%latdeg                                 , & ! Input:  [real(r8) (:)] latitude (degrees)                                 
+   londeg      =>     grc%londeg                                 , & ! Input:  [real(r8) (:)] longitude (degrees)                                
+   urbpoi      =>     lun%urbpoi                                 , & ! Input:  [logical (:)]  true => landunit is an urban point                 
+   pactive     =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   ivt         =>   pft%itype                                    , & ! Input:  [integer (:)] landunit type                                       
+   elai        =>    pps%elai                                    , & ! Input:  [real(r8) (:)] one-sided leaf area index with burying by snow     
+   ram1        =>    pps%ram1                                    , & ! Input:  [real(r8) (:)] aerodynamical resistance                           
+   vds         =>    pps%vds                                     , & ! Input:  [real(r8) (:)] aerodynamical resistance                           
+   fsun        =>    pps%fsun                                    , & ! Input:  [real(r8) (:)] sunlit fraction of canopy                          
+   rssun       =>    pps%rssun                                   , & ! Input:  [real(r8) (:)] stomatal resistance                                
+   rssha       =>    pps%rssha                                   , & ! Input:  [real(r8) (:)] shaded stomatal resistance (s/m)                   
+   rb1         =>    pps%rb1                                     , & ! Input:  [real(r8) (:)] leaf boundary layer resistance [s/m]               
+   mlaidiff    =>    pps%mlaidiff                                , & ! Input:  [real(r8) (:)] difference in lai between month one and month two  
+   annlai      =>    pps%annlai                                  , & ! Input:  [real(r8) (:,:)] 12 months of monthly lai from input data set     
+   forc_solai  =>    clm_a2l%forc_solai                          , & ! Input:  [real(r8) (:,:)] direct beam radiation (visible only)             
+   forc_solad  =>    clm_a2l%forc_solad                          , & ! Input:  [real(r8) (:,:)] direct beam radiation (visible only)             
+   pgridcell   =>   pft%gridcell                                 , & ! Input:  [integer (:)] pft's gridcell index                                
+   plandunit   =>   pft%landunit                                 , & ! Input:  [integer (:)] pft's landunit index                                
+   pcolumn     =>   pft%column                                   , & ! Input:  [integer (:)]  column index associated with each pft              
+   itypelun    =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type                                      
+   h2osoi_vol  =>    cws%h2osoi_vol                              , & ! Input:  [real(r8) (:,:)]  volumetric soil water (0<=h2osoi_vol<=watsat)   
+   velocity    =>    pdd%drydepvel                               , & ! Input:  [real(r8) (:,:)]  cm/sec                                                 
+   snow_depth  =>    cps%snow_depth                                & ! Input:  [real(r8) (:)]  snow height (m)                                   
+   )
 
-    ! Assign local pointers to derived subtypes components (column-level) 
-    forc_t     => clm_a2l%forc_t
-    forc_q     => clm_a2l%forc_q
-    forc_psrf  => clm_a2l%forc_pbot
-    forc_rain  => clm_a2l%forc_rain 
-
-    latdeg     =>  grc%latdeg
-    londeg     =>  grc%londeg
-    urbpoi     =>  lun%urbpoi
-    pactive    => pft%active
-    ivt        =>pft%itype
-    elai       => pps%elai 
-    ram1       => pps%ram1 
-    vds        => pps%vds
-    fsun       => pps%fsun 
-    rssun      => pps%rssun 
-    rssha      => pps%rssha 
-    rb1        => pps%rb1 
-    mlaidiff   => pps%mlaidiff 
-    annlai     => pps%annlai    
-
-    forc_solai => clm_a2l%forc_solai 
-    forc_solad => clm_a2l%forc_solad
-
-    pgridcell  =>pft%gridcell
-    plandunit  =>pft%landunit
-
-    pcolumn    =>pft%column
-    itypelun   => lun%itype
-
-    h2osoi_vol => cws%h2osoi_vol
-
-    velocity   => pdd%drydepvel ! cm/sec
-
-    snow_depth        => cps%snow_depth
-
-    ! Assign local pointers to original implicit out arrays 
     !_________________________________________________________________ 
     ! 
     ! Begin loop through pfts 
@@ -568,6 +529,7 @@ CONTAINS
 
     end do pft_loop
 
+    end associate 
   end subroutine depvel_compute
 
 end module DryDepVelocity                    

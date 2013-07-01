@@ -43,8 +43,6 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-
-!
 ! !IROUTINE: CNSoilLittVertTransp
 !
 ! !INTERFACE:
@@ -75,8 +73,6 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
 !EOP
    ! real(r8) :: som_diffus_coef (lbc:ubc,1:nlevdecomp+1)     ! diffusivity (m2/s)  
    ! real(r8) :: som_adv_coef(lbc:ubc,1:nlevdecomp+1)         ! advective flux (m/s)
-   real(r8), pointer :: som_adv_coef(:,:)                     ! SOM advective flux (m/s)
-   real(r8), pointer :: som_diffus_coef(:,:)                  ! SOM diffusivity due to bio/cryo-turbation (m2/s)
    real(r8) :: diffus (lbc:ubc,1:nlevdecomp+1)                ! diffusivity (m2/s)  (includes spinup correction, if any)
    real(r8) :: adv_flux(lbc:ubc,1:nlevdecomp+1)               ! advective flux (m/s)  (includes spinup correction, if any)
    real(r8) :: aaa                                            ! "A" function in Patankar
@@ -97,43 +93,33 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    real(r8) :: pe_m1     (lbc:ubc,1:nlevdecomp+1)             ! Peclet # for previous j
    real(r8) :: dz_node(1:nlevdecomp+1)                        ! difference between nodes
    real(r8) :: epsilon_t (lbc:ubc,1:nlevdecomp+1,1:ndecomp_pools) !
-   real(r8) :: conc_trcr(lbc:ubc,0:nlevdecomp+1)  
+   real(r8) :: conc_trcr(lbc:ubc,0:nlevdecomp+1)              !
    real(r8), pointer :: conc_ptr(:,:,:)                       ! pointer for concentration state variable being transported
    real(r8), pointer :: source(:,:,:)                         ! pointer for source term
-   logical, pointer  :: is_cwd(:)                             ! TRUE => pool is a cwd pool
+   real(r8), pointer :: trcr_tendency_ptr(:,:,:)              ! pointer to store the vertical tendency (gain/loss due to vertical transport)
    real(r8) :: a_p_0
    real(r8) :: deficit
-   real(r8), pointer :: trcr_tendency_ptr(:,:,:)              ! pointer to store the vertical tendency 
-                                                              ! (gain/loss due to vertical transport)
-   real(r8), pointer :: altmax(:)                             ! maximum annual depth of thaw
-   real(r8), pointer :: altmax_lastyear(:)                    ! prior year maximum annual depth of thaw
-
-
    integer :: ntype
-   integer :: i_type,s,fc,c,j,l          ! indices
-   integer :: jtop(lbc:ubc)              ! top level at each column
-   real(r8) :: dtime                     ! land model time step (sec)
+   integer :: i_type,s,fc,c,j,l         ! indices
+   integer :: jtop(lbc:ubc)             ! top level at each column
+   real(r8):: dtime                     ! land model time step (sec)
    integer :: zerolev_diffus
-   real(r8), pointer :: spinup_factor(:) ! spinup accelerated decomposition factor, used to accelerate transport as well
-   real(r8) :: spinup_term               ! spinup accelerated decomposition factor, used to accelerate transport as well
-   real(r8) :: epsilon                   ! small number
-
+   real(r8):: spinup_term               ! spinup accelerated decomposition factor, used to accelerate transport as well
+   real(r8):: epsilon                   ! small number
 !EOP
 !-----------------------------------------------------------------------
-   
-
-
 
    ! Set statement functions
    aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patankar, Table 5.2, pg 95
-   
-   is_cwd                                  => decomp_cascade_con%is_cwd
-   spinup_factor                           => decomp_cascade_con%spinup_factor
-   altmax                          => cps%altmax
-   altmax_lastyear                 => cps%altmax_lastyear
-   som_adv_coef                    => cps%som_adv_coef
-   som_diffus_coef                 => cps%som_diffus_coef
-
+  
+   associate(&
+   is_cwd           => decomp_cascade_con%is_cwd        , & !  [logical (:)]  TRUE => pool is a cwd pool                                
+   spinup_factor    => decomp_cascade_con%spinup_factor , & !  [real(r8) (:)]  spinup accelerated decomposition factor, used to accelerate transport as well
+   altmax           => cps%altmax                       , & !  [real(r8) (:)]  maximum annual depth of thaw                             
+   altmax_lastyear  => cps%altmax_lastyear              , & !  [real(r8) (:)]  prior year maximum annual depth of thaw                  
+   som_adv_coef     => cps%som_adv_coef                 , & !  [real(r8) (:,:)]  SOM advective flux (m/s)                               
+   som_diffus_coef  => cps%som_diffus_coef                & !  [real(r8) (:,:)]  SOM diffusivity due to bio/cryo-turbation (m2/s)       
+   )
    
    dtime = get_step_size()
    
@@ -428,8 +414,8 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
       
    end do  ! i_type
    
+ end associate
 end subroutine CNSoilLittVertTransp
  
 #endif
 end module CNSoilLittVertTranspMod
-

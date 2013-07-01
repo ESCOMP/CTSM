@@ -75,7 +75,6 @@ subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    integer :: fp,pi,l
    integer :: fc,cc,j
 
-   integer,  pointer :: cascade_donor_pool(:)             ! which pool is C taken from for a given decomposition step
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -96,8 +95,11 @@ subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    case default
       call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
    end select
-   cascade_donor_pool                => decomp_cascade_con%cascade_donor_pool
-	
+
+   associate(&
+   cascade_donor_pool  =>  decomp_cascade_con%cascade_donor_pool  & !  [integer (:)]  which pool is C taken from for a given decomposition step 
+   )
+
    ! pft-level non-mortality fluxes
    
    call CIsoFluxCalc(pcisof%leafc_xfer_to_leafc, pcf%leafc_xfer_to_leafc, &
@@ -368,6 +370,7 @@ subroutine CIsoFlux1(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    end do
 
 
+ end associate
 end subroutine CIsoFlux1
 !-----------------------------------------------------------------------
 
@@ -687,7 +690,6 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
 ! !REVISION HISTORY:
 !
 ! !LOCAL VARIABLES:
-! !OTHER LOCAL VARIABLES:
    type(pft_type), pointer :: p
    type(column_type), pointer :: c
    type(pft_cflux_type), pointer :: pcisof
@@ -696,18 +698,6 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    type(column_cstate_type), pointer :: ccisos
    integer :: fp,pi,l,pp
    integer :: fc,cc,j
-   real(r8), pointer :: ptrp(:)         ! pointer to input pft array
-   real(r8), pointer :: ptrc(:)         ! pointer to output column array
-
-   real(r8), pointer :: croot_prof(:,:) ! (1/m) profile of coarse roots
-   real(r8), pointer :: stem_prof(:,:)  ! (1/m) profile of stems
-   integer , pointer :: npfts(:)        ! number of pfts for each column
-   integer , pointer :: pfti(:)         ! beginning pft index for each column
-   real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
-   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
-
-
-!
 !EOP
 !-----------------------------------------------------------------------
 	! set local pointers
@@ -727,13 +717,15 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
    case default
       call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
    end select
-   croot_prof                     => pps%croot_prof
-   stem_prof                      => pps%stem_prof
-   npfts                          =>col%npfts
-   pfti                           =>col%pfti
-   wtcol                          =>pft%wtcol
-   pactive                        => pft%active
 
+   associate(&
+   croot_prof =>   pps%croot_prof , & !  [real(r8) (:,:)]  (1/m) profile of coarse roots                          
+   stem_prof  =>   pps%stem_prof  , & !  [real(r8) (:,:)]  (1/m) profile of stems                                 
+   npfts      =>   col%npfts      , & !  [integer (:)]  number of pfts for each column                            
+   pfti       =>   col%pfti       , & !  [integer (:)]  beginning pft index for each column                       
+   wtcol      =>   pft%wtcol      , & !  [real(r8) (:)]  weight (relative to column) for this pft (0-1)           
+   pactive    =>   pft%active       & !  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   )
 	
    ! pft-level fire mortality fluxes
    
@@ -858,8 +850,7 @@ subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp, isotope)
       end do
    end do
 
-
-                    
+ end associate
 end subroutine CIsoFlux3
 !-----------------------------------------------------------------------
 
@@ -892,32 +883,11 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
 ! 9/8/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
 !
-   integer , pointer :: ivt(:)          ! pft vegetation type
-   real(r8), pointer :: wtcol(:)        ! weight (relative to column) for this pft (0-1)
-   logical , pointer :: pactive(:)      ! true=>do computations on this pft (see reweightMod for details)
-   real(r8), pointer :: leafc_to_litter(:)
-   real(r8), pointer :: frootc_to_litter(:)
-   real(r8), pointer :: lf_flab(:)      ! leaf litter labile fraction
-   real(r8), pointer :: lf_fcel(:)      ! leaf litter cellulose fraction
-   real(r8), pointer :: lf_flig(:)      ! leaf litter lignin fraction
-   real(r8), pointer :: fr_flab(:)      ! fine root litter labile fraction
-   real(r8), pointer :: fr_fcel(:)      ! fine root litter cellulose fraction
-   real(r8), pointer :: fr_flig(:)      ! fine root litter lignin fraction
-   integer , pointer :: npfts(:)        ! number of pfts for each column
-   integer , pointer :: pfti(:)         ! beginning pft index for each column
 !
-! local pointers to implicit in/out scalars
 !
-   real(r8), pointer :: phenology_c_to_litr_met_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
-   real(r8), pointer :: phenology_c_to_litr_cel_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
-   real(r8), pointer :: phenology_c_to_litr_lig_c(:,:)             ! C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
 
-   real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
-   real(r8), pointer :: froot_prof(:,:)         ! (1/m) profile of fine roots
 !
-! local pointers to implicit out scalars
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -938,28 +908,26 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
        call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
     end select
 
-   ! assign local pointers to derived type arrays (in)
-    ivt                            =>pft%itype
-    wtcol                          =>pft%wtcol
-    pactive                        => pft%active
-    leafc_to_litter                => pcisof%leafc_to_litter
-    frootc_to_litter               => pcisof%frootc_to_litter
-    npfts                          =>col%npfts
-    pfti                           =>col%pfti
-    lf_flab                        => pftcon%lf_flab
-    lf_fcel                        => pftcon%lf_fcel
-    lf_flig                        => pftcon%lf_flig
-    fr_flab                        => pftcon%fr_flab
-    fr_fcel                        => pftcon%fr_fcel
-    fr_flig                        => pftcon%fr_flig
-
-   ! assign local pointers to derived type arrays (out)
-    phenology_c_to_litr_met_c         => ccisof%phenology_c_to_litr_met_c
-    phenology_c_to_litr_cel_c         => ccisof%phenology_c_to_litr_cel_c
-    phenology_c_to_litr_lig_c         => ccisof%phenology_c_to_litr_lig_c
-
-    leaf_prof                      => pps%leaf_prof
-    froot_prof                     => pps%froot_prof
+   associate(& 
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  weight (relative to column) for this pft (0-1)    
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   leafc_to_litter                     =>    pcisof%leafc_to_litter                      , & ! Input:  [real(r8) (:)]                                                    
+   frootc_to_litter                    =>    pcisof%frootc_to_litter                     , & ! Input:  [real(r8) (:)]                                                    
+   npfts                               =>   col%npfts                                    , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                                =>   col%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for each column                
+   lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
+   lf_fcel                             =>    pftcon%lf_fcel                              , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
+   lf_flig                             =>    pftcon%lf_flig                              , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
+   fr_flab                             =>    pftcon%fr_flab                              , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
+   fr_fcel                             =>    pftcon%fr_fcel                              , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
+   fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
+   phenology_c_to_litr_met_c           =>    ccisof%phenology_c_to_litr_met_c            , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
+   phenology_c_to_litr_cel_c           =>    ccisof%phenology_c_to_litr_cel_c            , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
+   phenology_c_to_litr_lig_c           =>    ccisof%phenology_c_to_litr_lig_c            , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+   leaf_prof                           =>    pps%leaf_prof                               , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof                          =>    pps%froot_prof                                & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   )
 
     do j = 1, nlevdecomp
        do pi = 1,max_pft_per_col
@@ -992,7 +960,8 @@ subroutine CNCIsoLitterToColumn (num_soilc, filter_soilc, isotope)
        
     end do
     
-  end subroutine CNCIsoLitterToColumn
+    end associate 
+   end subroutine CNCIsoLitterToColumn
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -1025,50 +994,8 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in scalars
-   integer , pointer :: ivt(:)      ! pft vegetation type
-   real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
-   real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
-   real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
-   real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
-   real(r8), pointer :: fr_flab(:)  ! fine root litter labile fraction
-   real(r8), pointer :: fr_fcel(:)  ! fine root litter cellulose fraction
-   real(r8), pointer :: fr_flig(:)  ! fine root litter lignin fraction
-   integer , pointer :: npfts(:)    ! number of pfts for each column
-   integer , pointer :: pfti(:)     ! beginning pft index for each column
-   real(r8), pointer :: m_leafc_to_litter(:)
-   real(r8), pointer :: m_frootc_to_litter(:)
-   real(r8), pointer :: m_livestemc_to_litter(:)
-   real(r8), pointer :: m_deadstemc_to_litter(:)
-   real(r8), pointer :: m_livecrootc_to_litter(:)
-   real(r8), pointer :: m_deadcrootc_to_litter(:)
-   real(r8), pointer :: m_leafc_storage_to_litter(:)
-   real(r8), pointer :: m_frootc_storage_to_litter(:)
-   real(r8), pointer :: m_livestemc_storage_to_litter(:)
-   real(r8), pointer :: m_deadstemc_storage_to_litter(:)
-   real(r8), pointer :: m_livecrootc_storage_to_litter(:)
-   real(r8), pointer :: m_deadcrootc_storage_to_litter(:)
-   real(r8), pointer :: m_gresp_storage_to_litter(:)
-   real(r8), pointer :: m_leafc_xfer_to_litter(:)
-   real(r8), pointer :: m_frootc_xfer_to_litter(:)
-   real(r8), pointer :: m_livestemc_xfer_to_litter(:)
-   real(r8), pointer :: m_deadstemc_xfer_to_litter(:)
-   real(r8), pointer :: m_livecrootc_xfer_to_litter(:)
-   real(r8), pointer :: m_deadcrootc_xfer_to_litter(:)
-   real(r8), pointer :: m_gresp_xfer_to_litter(:)
 !
-! local pointers to implicit in/out arrays
-   real(r8), pointer :: gap_mortality_c_to_litr_met_c(:,:)         ! C fluxes associated with gap mortality to litter metabolic pool (gC/m3/s)
-   real(r8), pointer :: gap_mortality_c_to_litr_cel_c(:,:)         ! C fluxes associated with gap mortality to litter cellulose pool (gC/m3/s)
-   real(r8), pointer :: gap_mortality_c_to_litr_lig_c(:,:)         ! C fluxes associated with gap mortality to litter lignin pool (gC/m3/s)
-   real(r8), pointer :: gap_mortality_c_to_cwdc(:,:)               ! C fluxes associated with gap mortality to CWD pool (gC/m3/s)
-   real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
-   real(r8), pointer :: froot_prof(:,:)         ! (1/m) profile of fine roots
-   real(r8), pointer :: croot_prof(:,:)         ! (1/m) profile of coarse roots
-   real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
 !
-! local pointers to implicit out arrays
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -1090,50 +1017,47 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
        call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
     end select
 
-   ! assign local pointers
-   lf_flab                        => pftcon%lf_flab
-   lf_fcel                        => pftcon%lf_fcel
-   lf_flig                        => pftcon%lf_flig
-   fr_flab                        => pftcon%fr_flab
-   fr_fcel                        => pftcon%fr_fcel
-   fr_flig                        => pftcon%fr_flig
-
-   ! assign local pointers to column-level arrays
-   npfts                          =>col%npfts
-   pfti                           =>col%pfti
-   gap_mortality_c_to_litr_met_c  => ccisof%gap_mortality_c_to_litr_met_c
-   gap_mortality_c_to_litr_cel_c  => ccisof%gap_mortality_c_to_litr_cel_c
-   gap_mortality_c_to_litr_lig_c  => ccisof%gap_mortality_c_to_litr_lig_c
-   gap_mortality_c_to_cwdc        => ccisof%gap_mortality_c_to_cwdc
-
-   ! assign local pointers to pft-level arrays
-   ivt                            =>pft%itype
-   wtcol                          =>pft%wtcol
-   pactive                        => pft%active
-   m_leafc_to_litter              => pcisof%m_leafc_to_litter
-   m_frootc_to_litter             => pcisof%m_frootc_to_litter
-   m_livestemc_to_litter          => pcisof%m_livestemc_to_litter
-   m_deadstemc_to_litter          => pcisof%m_deadstemc_to_litter
-   m_livecrootc_to_litter         => pcisof%m_livecrootc_to_litter
-   m_deadcrootc_to_litter         => pcisof%m_deadcrootc_to_litter
-   m_leafc_storage_to_litter      => pcisof%m_leafc_storage_to_litter
-   m_frootc_storage_to_litter     => pcisof%m_frootc_storage_to_litter
-   m_livestemc_storage_to_litter  => pcisof%m_livestemc_storage_to_litter
-   m_deadstemc_storage_to_litter  => pcisof%m_deadstemc_storage_to_litter
-   m_livecrootc_storage_to_litter => pcisof%m_livecrootc_storage_to_litter
-   m_deadcrootc_storage_to_litter => pcisof%m_deadcrootc_storage_to_litter
-   m_gresp_storage_to_litter      => pcisof%m_gresp_storage_to_litter
-   m_leafc_xfer_to_litter         => pcisof%m_leafc_xfer_to_litter
-   m_frootc_xfer_to_litter        => pcisof%m_frootc_xfer_to_litter
-   m_livestemc_xfer_to_litter     => pcisof%m_livestemc_xfer_to_litter
-   m_deadstemc_xfer_to_litter     => pcisof%m_deadstemc_xfer_to_litter
-   m_livecrootc_xfer_to_litter    => pcisof%m_livecrootc_xfer_to_litter
-   m_deadcrootc_xfer_to_litter    => pcisof%m_deadcrootc_xfer_to_litter
-   m_gresp_xfer_to_litter         => pcisof%m_gresp_xfer_to_litter
-   leaf_prof                      => pps%leaf_prof
-   froot_prof                     => pps%froot_prof
-   croot_prof                     => pps%croot_prof
-   stem_prof                      => pps%stem_prof
+   associate(& 
+   lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
+   lf_fcel                             =>    pftcon%lf_fcel                              , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
+   lf_flig                             =>    pftcon%lf_flig                              , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
+   fr_flab                             =>    pftcon%fr_flab                              , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
+   fr_fcel                             =>    pftcon%fr_fcel                              , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
+   fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
+   npfts                               =>   col%npfts                                    , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                                =>   col%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for each column                
+   gap_mortality_c_to_litr_met_c       =>    ccisof%gap_mortality_c_to_litr_met_c        , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with gap mortality to litter metabolic pool (gC/m3/s)
+   gap_mortality_c_to_litr_cel_c       =>    ccisof%gap_mortality_c_to_litr_cel_c        , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with gap mortality to litter cellulose pool (gC/m3/s)
+   gap_mortality_c_to_litr_lig_c       =>    ccisof%gap_mortality_c_to_litr_lig_c        , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with gap mortality to litter lignin pool (gC/m3/s)
+   gap_mortality_c_to_cwdc             =>    ccisof%gap_mortality_c_to_cwdc              , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with gap mortality to CWD pool (gC/m3/s)
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   m_leafc_to_litter                   =>    pcisof%m_leafc_to_litter                    , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_to_litter                  =>    pcisof%m_frootc_to_litter                   , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_to_litter               =>    pcisof%m_livestemc_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_to_litter               =>    pcisof%m_deadstemc_to_litter                , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_to_litter              =>    pcisof%m_livecrootc_to_litter               , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_to_litter              =>    pcisof%m_deadcrootc_to_litter               , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_storage_to_litter           =>    pcisof%m_leafc_storage_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_storage_to_litter          =>    pcisof%m_frootc_storage_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_storage_to_litter       =>    pcisof%m_livestemc_storage_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_storage_to_litter       =>    pcisof%m_deadstemc_storage_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_storage_to_litter      =>    pcisof%m_livecrootc_storage_to_litter       , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_storage_to_litter      =>    pcisof%m_deadcrootc_storage_to_litter       , & ! Input:  [real(r8) (:)]                                                    
+   m_gresp_storage_to_litter           =>    pcisof%m_gresp_storage_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   m_leafc_xfer_to_litter              =>    pcisof%m_leafc_xfer_to_litter               , & ! Input:  [real(r8) (:)]                                                    
+   m_frootc_xfer_to_litter             =>    pcisof%m_frootc_xfer_to_litter              , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemc_xfer_to_litter          =>    pcisof%m_livestemc_xfer_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemc_xfer_to_litter          =>    pcisof%m_deadstemc_xfer_to_litter           , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootc_xfer_to_litter         =>    pcisof%m_livecrootc_xfer_to_litter          , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootc_xfer_to_litter         =>    pcisof%m_deadcrootc_xfer_to_litter          , & ! Input:  [real(r8) (:)]                                                    
+   m_gresp_xfer_to_litter              =>    pcisof%m_gresp_xfer_to_litter               , & ! Input:  [real(r8) (:)]                                                    
+   leaf_prof                           =>    pps%leaf_prof                               , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof                          =>    pps%froot_prof                              , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   croot_prof                          =>    pps%croot_prof                              , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of coarse roots                   
+   stem_prof                           =>    pps%stem_prof                                 & ! InOut:  [real(r8) (:,:)]  (1/m) profile of stems                          
+   )
 
    do j = 1, nlevdecomp
       do pi = 1,maxpatch_pft
@@ -1211,7 +1135,8 @@ subroutine CNCIsoGapPftToColumn (num_soilc, filter_soilc, isotope)
       end do
    end do
 
-end subroutine CNCIsoGapPftToColumn
+    end associate 
+ end subroutine CNCIsoGapPftToColumn
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -1244,53 +1169,8 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in scalars
-   integer , pointer :: ivt(:)      ! pft vegetation type
-   real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
-   logical , pointer :: pactive(:)  ! true=>do computations on this pft (see reweightMod for details)
-   real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
-   real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
-   real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
-   real(r8), pointer :: fr_flab(:)  ! fine root litter labile fraction
-   real(r8), pointer :: fr_fcel(:)  ! fine root litter cellulose fraction
-   real(r8), pointer :: fr_flig(:)  ! fine root litter lignin fraction
-   integer , pointer :: npfts(:)    ! number of pfts for each column
-   integer , pointer :: pfti(:)     ! beginning pft index for each column
-   real(r8), pointer :: hrv_leafc_to_litter(:)
-   real(r8), pointer :: hrv_frootc_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_to_litter(:)
-   real(r8), pointer :: phrv_deadstemc_to_prod10c(:)
-   real(r8), pointer :: phrv_deadstemc_to_prod100c(:)
-   real(r8), pointer :: hrv_livecrootc_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_to_litter(:)
-   real(r8), pointer :: hrv_leafc_storage_to_litter(:)
-   real(r8), pointer :: hrv_frootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_storage_to_litter(:)
-   real(r8), pointer :: hrv_livecrootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_storage_to_litter(:)
-   real(r8), pointer :: hrv_gresp_storage_to_litter(:)
-   real(r8), pointer :: hrv_leafc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_frootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livestemc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadstemc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_livecrootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_deadcrootc_xfer_to_litter(:)
-   real(r8), pointer :: hrv_gresp_xfer_to_litter(:)
 !
-! local pointers to implicit in/out arrays
-   real(r8), pointer :: chrv_deadstemc_to_prod10c(:)
-   real(r8), pointer :: chrv_deadstemc_to_prod100c(:)
-   real(r8), pointer :: harvest_c_to_litr_met_c(:,:)               ! C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
-   real(r8), pointer :: harvest_c_to_litr_cel_c(:,:)               ! C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
-   real(r8), pointer :: harvest_c_to_litr_lig_c(:,:)               ! C fluxes associated with harvest to litter lignin pool (gC/m3/s)
-   real(r8), pointer :: harvest_c_to_cwdc(:,:)                     ! C fluxes associated with harvest to CWD pool (gC/m3/s)
-   real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
-   real(r8), pointer :: froot_prof(:,:)         ! (1/m) profile of fine roots
-   real(r8), pointer :: croot_prof(:,:)         ! (1/m) profile of coarse roots
-   real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
 !
-! local pointers to implicit out arrays
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -1311,53 +1191,50 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
        call endrun('CNCIsoFluxMod: iso must be either c13 or c14')
     end select
 
-   ! assign local pointers
-   lf_flab                        => pftcon%lf_flab
-   lf_fcel                        => pftcon%lf_fcel
-   lf_flig                        => pftcon%lf_flig
-   fr_flab                        => pftcon%fr_flab
-   fr_fcel                        => pftcon%fr_fcel
-   fr_flig                        => pftcon%fr_flig
-
-   ! assign local pointers to column-level arrays
-   npfts                          =>col%npfts
-   pfti                           =>col%pfti
-   chrv_deadstemc_to_prod10c        => ccisof%hrv_deadstemc_to_prod10c
-   chrv_deadstemc_to_prod100c       => ccisof%hrv_deadstemc_to_prod100c
-   harvest_c_to_litr_met_c          => ccisof%harvest_c_to_litr_met_c
-   harvest_c_to_litr_cel_c          => ccisof%harvest_c_to_litr_cel_c
-   harvest_c_to_litr_lig_c          => ccisof%harvest_c_to_litr_lig_c
-   harvest_c_to_cwdc                => ccisof%harvest_c_to_cwdc
-
-   ! assign local pointers to pft-level arrays
-   ivt                            =>pft%itype
-   wtcol                          =>pft%wtcol
-   pactive                        => pft%active
-   hrv_leafc_to_litter              => pcisof%hrv_leafc_to_litter
-   hrv_frootc_to_litter             => pcisof%hrv_frootc_to_litter
-   hrv_livestemc_to_litter          => pcisof%hrv_livestemc_to_litter
-   phrv_deadstemc_to_prod10c        => pcisof%hrv_deadstemc_to_prod10c
-   phrv_deadstemc_to_prod100c       => pcisof%hrv_deadstemc_to_prod100c
-   hrv_livecrootc_to_litter         => pcisof%hrv_livecrootc_to_litter
-   hrv_deadcrootc_to_litter         => pcisof%hrv_deadcrootc_to_litter
-   hrv_leafc_storage_to_litter      => pcisof%hrv_leafc_storage_to_litter
-   hrv_frootc_storage_to_litter     => pcisof%hrv_frootc_storage_to_litter
-   hrv_livestemc_storage_to_litter  => pcisof%hrv_livestemc_storage_to_litter
-   hrv_deadstemc_storage_to_litter  => pcisof%hrv_deadstemc_storage_to_litter
-   hrv_livecrootc_storage_to_litter => pcisof%hrv_livecrootc_storage_to_litter
-   hrv_deadcrootc_storage_to_litter => pcisof%hrv_deadcrootc_storage_to_litter
-   hrv_gresp_storage_to_litter      => pcisof%hrv_gresp_storage_to_litter
-   hrv_leafc_xfer_to_litter         => pcisof%hrv_leafc_xfer_to_litter
-   hrv_frootc_xfer_to_litter        => pcisof%hrv_frootc_xfer_to_litter
-   hrv_livestemc_xfer_to_litter     => pcisof%hrv_livestemc_xfer_to_litter
-   hrv_deadstemc_xfer_to_litter     => pcisof%hrv_deadstemc_xfer_to_litter
-   hrv_livecrootc_xfer_to_litter    => pcisof%hrv_livecrootc_xfer_to_litter
-   hrv_deadcrootc_xfer_to_litter    => pcisof%hrv_deadcrootc_xfer_to_litter
-   hrv_gresp_xfer_to_litter         => pcisof%hrv_gresp_xfer_to_litter
-   leaf_prof                      => pps%leaf_prof
-   froot_prof                     => pps%froot_prof
-   croot_prof                     => pps%croot_prof
-   stem_prof                      => pps%stem_prof
+   associate(& 
+   lf_flab                             =>    pftcon%lf_flab                              , & ! Input:  [real(r8) (:)]  leaf litter labile fraction                       
+   lf_fcel                             =>    pftcon%lf_fcel                              , & ! Input:  [real(r8) (:)]  leaf litter cellulose fraction                    
+   lf_flig                             =>    pftcon%lf_flig                              , & ! Input:  [real(r8) (:)]  leaf litter lignin fraction                       
+   fr_flab                             =>    pftcon%fr_flab                              , & ! Input:  [real(r8) (:)]  fine root litter labile fraction                  
+   fr_fcel                             =>    pftcon%fr_fcel                              , & ! Input:  [real(r8) (:)]  fine root litter cellulose fraction               
+   fr_flig                             =>    pftcon%fr_flig                              , & ! Input:  [real(r8) (:)]  fine root litter lignin fraction                  
+   npfts                               =>   col%npfts                                    , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                                =>   col%pfti                                     , & ! Input:  [integer (:)]  beginning pft index for each column                
+   chrv_deadstemc_to_prod10c           =>    ccisof%hrv_deadstemc_to_prod10c             , & ! InOut:  [real(r8) (:)]                                                    
+   chrv_deadstemc_to_prod100c          =>    ccisof%hrv_deadstemc_to_prod100c            , & ! InOut:  [real(r8) (:)]                                                    
+   harvest_c_to_litr_met_c             =>    ccisof%harvest_c_to_litr_met_c              , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with harvest to litter metabolic pool (gC/m3/s)
+   harvest_c_to_litr_cel_c             =>    ccisof%harvest_c_to_litr_cel_c              , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with harvest to litter cellulose pool (gC/m3/s)
+   harvest_c_to_litr_lig_c             =>    ccisof%harvest_c_to_litr_lig_c              , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with harvest to litter lignin pool (gC/m3/s)
+   harvest_c_to_cwdc                   =>    ccisof%harvest_c_to_cwdc                    , & ! InOut:  [real(r8) (:,:)]  C fluxes associated with harvest to CWD pool (gC/m3/s)
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type                                
+   wtcol                               =>   pft%wtcol                                    , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
+   pactive                             =>    pft%active                                  , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   hrv_leafc_to_litter                 =>    pcisof%hrv_leafc_to_litter                  , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootc_to_litter                =>    pcisof%hrv_frootc_to_litter                 , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemc_to_litter             =>    pcisof%hrv_livestemc_to_litter              , & ! Input:  [real(r8) (:)]                                                    
+   phrv_deadstemc_to_prod10c           =>    pcisof%hrv_deadstemc_to_prod10c             , & ! Input:  [real(r8) (:)]                                                    
+   phrv_deadstemc_to_prod100c          =>    pcisof%hrv_deadstemc_to_prod100c            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootc_to_litter            =>    pcisof%hrv_livecrootc_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootc_to_litter            =>    pcisof%hrv_deadcrootc_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafc_storage_to_litter         =>    pcisof%hrv_leafc_storage_to_litter          , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootc_storage_to_litter        =>    pcisof%hrv_frootc_storage_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemc_storage_to_litter     =>    pcisof%hrv_livestemc_storage_to_litter      , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadstemc_storage_to_litter     =>    pcisof%hrv_deadstemc_storage_to_litter      , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootc_storage_to_litter    =>    pcisof%hrv_livecrootc_storage_to_litter     , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootc_storage_to_litter    =>    pcisof%hrv_deadcrootc_storage_to_litter     , & ! Input:  [real(r8) (:)]                                                    
+   hrv_gresp_storage_to_litter         =>    pcisof%hrv_gresp_storage_to_litter          , & ! Input:  [real(r8) (:)]                                                    
+   hrv_leafc_xfer_to_litter            =>    pcisof%hrv_leafc_xfer_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   hrv_frootc_xfer_to_litter           =>    pcisof%hrv_frootc_xfer_to_litter            , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livestemc_xfer_to_litter        =>    pcisof%hrv_livestemc_xfer_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadstemc_xfer_to_litter        =>    pcisof%hrv_deadstemc_xfer_to_litter         , & ! Input:  [real(r8) (:)]                                                    
+   hrv_livecrootc_xfer_to_litter       =>    pcisof%hrv_livecrootc_xfer_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   hrv_deadcrootc_xfer_to_litter       =>    pcisof%hrv_deadcrootc_xfer_to_litter        , & ! Input:  [real(r8) (:)]                                                    
+   hrv_gresp_xfer_to_litter            =>    pcisof%hrv_gresp_xfer_to_litter             , & ! Input:  [real(r8) (:)]                                                    
+   leaf_prof                           =>    pps%leaf_prof                               , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof                          =>    pps%froot_prof                              , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   croot_prof                          =>    pps%croot_prof                              , & ! InOut:  [real(r8) (:,:)]  (1/m) profile of coarse roots                   
+   stem_prof                           =>    pps%stem_prof                                 & ! InOut:  [real(r8) (:,:)]  (1/m) profile of stems                          
+   )
 
    do j = 1, nlevdecomp
       do pi = 1,maxpatch_pft
@@ -1455,7 +1332,8 @@ subroutine CNCIsoHarvestPftToColumn (num_soilc, filter_soilc, isotope)
       
    end do
    
- end subroutine CNCIsoHarvestPftToColumn
+    end associate 
+  end subroutine CNCIsoHarvestPftToColumn
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -1476,14 +1354,14 @@ subroutine CIsoFluxCalc(ciso_flux, ctot_flux, ciso_state, ctot_state, &
 !
 ! !ARGUMENTS:
    implicit none
-   real(r8), pointer   :: ciso_flux(:)      !OUTPUT isoC flux
-   real(r8), pointer   :: ctot_flux(:)      !INPUT  totC flux
-   real(r8), pointer   :: ciso_state(:)     !INPUT  isoC state, upstream pool
-   real(r8), pointer   :: ctot_state(:)     !INPUT  totC state, upstream pool
-   real(r8), intent(in):: frax_c13          ! fractionation factor (1 = no fractionation) for C13
-   integer, intent(in) :: num               ! number of filter members
-   integer, intent(in) :: filter(:)         ! filter indices
-   integer, intent(in) :: diag              ! 0=no diagnostics, 1=print diagnostics
+   real(r8), intent(out), pointer :: ciso_flux(:)      ! isoC flux
+   real(r8), intent(in) , pointer :: ctot_flux(:)      ! totC flux
+   real(r8), intent(in) , pointer :: ciso_state(:)     ! isoC state, upstream pool
+   real(r8), intent(in) , pointer :: ctot_state(:)     ! totC state, upstream pool
+   real(r8), intent(in) :: frax_c13          ! fractionation factor (1 = no fractionation) for C13
+   integer , intent(in) :: num               ! number of filter members
+   integer , intent(in) :: filter(:)         ! filter indices
+   integer , intent(in) :: diag              ! 0=no diagnostics, 1=print diagnostics
    character(len=*), intent(in) :: isotope  ! 'c13' or 'c14'
 
 !
@@ -1521,14 +1399,10 @@ subroutine CIsoFluxCalc(ciso_flux, ctot_flux, ciso_state, ctot_state, &
       ! put diagnostic print statements here for isoC flux calculations
       end if
    end do
+
 end subroutine CIsoFluxCalc
 !-----------------------------------------------------------------------
-
-
-
-
 
 #endif
 
 end module CNCIsoFluxMod
- 

@@ -33,18 +33,13 @@ module CNDecompCascadeMod_CENTURY
    public:: init_decompcascade, decomp_rate_constants
 !
 ! !PUBLIC DATA MEMBERS:
-#if (defined VERTSOILC)
-   real(r8), public :: decomp_depth_efolding = 0.5_r8        ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
-#endif
-
-   logical, public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
-   real(r8), public :: normalization_tref = 15._r8           ! reference temperature for normalizaion (degrees C)
-   logical, public :: use_century_tfunc = .false.
-#ifdef LCH4
-   logical,  public :: anoxia_wtsat = .false.                ! true ==> weight anoxia by inundated fraction
-#endif
-   real(r8), public :: froz_q10 = 1.5_r8                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
-   integer, public :: nlev_soildecomp_standard               ! used here and in ch4Mod
+   real(r8), public :: decomp_depth_efolding = 0.5_r8         ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
+   logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
+   real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
+   logical , public :: use_century_tfunc = .false.
+   logical , public :: anoxia_wtsat = .false.                 ! true ==> weight anoxia by inundated fraction
+   real(r8), public :: froz_q10 = 1.5_r8                      ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
+   integer , public :: nlev_soildecomp_standard               ! used here and in ch4Mod
 
    !! parameters for AD spinup
    real(r8), public, parameter :: spinup_vector(nsompools) = (/ 1.0_r8, 15.0_r8, 675.0_r8 /) ! multipliers for soil decomp during accelerated spinup
@@ -84,28 +79,10 @@ subroutine init_decompcascade(begc, endc)
    integer  :: begc, endc       ! per-proc beginning and ending column indices
 
    !-- properties of each pathway along decomposition cascade 
-   character(len=8), pointer :: cascade_step_name(:)       ! name of transition
-   real(r8), pointer :: rf_decomp_cascade(:,:,:)           ! respired fraction in decomposition step (frac)
-   integer,  pointer :: cascade_donor_pool(:)              ! which pool is C taken from for a given decomposition step
-   integer,  pointer :: cascade_receiver_pool(:)           ! which pool is C added to for a given decomposition step
-   real(r8), pointer :: pathfrac_decomp_cascade(:,:,:)     ! what fraction of C leaving a given pool passes through a given transition (frac)
+   real(r8) , pointer :: rf_decomp_cascade (:,:,:)            !  [real(r8) (:,:,:)]  respired fraction in decomposition step (frac) 
+   integer ,  pointer :: cascade_donor_pool (:)               !  [integer (:)]  which pool is C taken from for a given decomposition step 
+   real(r8) , pointer :: pathfrac_decomp_cascade (:,:,:)      !  [real(r8) (:,:,:)]  what fraction of C leaving a given pool passes through a given transition (frac) 
    !-- properties of each decomposing pool
-   logical,  pointer :: floating_cn_ratio_decomp_pools(:)  ! TRUE => pool has fixed C:N ratio
-   character(len=8), pointer :: decomp_pool_name_restart(:)! name of pool for restart files
-   character(len=8), pointer :: decomp_pool_name_history(:)! name of pool for history files
-   character(len=20), pointer :: decomp_pool_name_long(:)  ! name of pool for netcdf long names
-   character(len=8), pointer :: decomp_pool_name_short(:)  ! name of pool for netcdf short names
-   logical, pointer :: is_litter(:)                        ! TRUE => pool is a litter pool
-   logical, pointer :: is_soil(:)                          ! TRUE => pool is a soil pool
-   logical, pointer :: is_cwd(:)                           ! TRUE => pool is a cwd pool
-   real(r8), pointer :: initial_cn_ratio(:)                ! c:n ratio for initialization of pools
-   real(r8), pointer :: initial_stock(:)                   ! initial concentration for seeding at spinup
-   logical, pointer :: is_metabolic(:)                     ! TRUE => pool is metabolic material
-   logical, pointer :: is_cellulose(:)                     ! TRUE => pool is cellulose
-   logical, pointer :: is_lignin(:)                        ! TRUE => pool is lignin
-   real(r8), pointer :: cellclay(:,:)                      ! column 3D clay
-   real(r8), pointer :: cellsand(:,:)                      ! column 3D sand
-   real(r8), pointer :: spinup_factor(:)                   ! factor for AD spinup associated with each pool
    real(r8) :: rf_l1s1
    real(r8) :: rf_l2s1
    real(r8) :: rf_l3s2
@@ -147,28 +124,29 @@ subroutine init_decompcascade(begc, endc)
    integer :: c, j     ! indices
    real(r8) :: t       ! temporary variable
 
-
-   cascade_step_name                       => decomp_cascade_con%cascade_step_name
-   rf_decomp_cascade                       => cps%rf_decomp_cascade
-   cascade_donor_pool                      => decomp_cascade_con%cascade_donor_pool
-   cascade_receiver_pool                   => decomp_cascade_con%cascade_receiver_pool
-   pathfrac_decomp_cascade                 => cps%pathfrac_decomp_cascade
-   floating_cn_ratio_decomp_pools          => decomp_cascade_con%floating_cn_ratio_decomp_pools
-   decomp_pool_name_restart                => decomp_cascade_con%decomp_pool_name_restart
-   decomp_pool_name_history                => decomp_cascade_con%decomp_pool_name_history
-   decomp_pool_name_long                   => decomp_cascade_con%decomp_pool_name_long
-   decomp_pool_name_short                  => decomp_cascade_con%decomp_pool_name_short
-   is_litter                               => decomp_cascade_con%is_litter
-   is_soil                                 => decomp_cascade_con%is_soil
-   is_cwd                                  => decomp_cascade_con%is_cwd
-   initial_cn_ratio                        => decomp_cascade_con%initial_cn_ratio
-   initial_stock                           => decomp_cascade_con%initial_stock
-   is_metabolic                            => decomp_cascade_con%is_metabolic
-   is_cellulose                            => decomp_cascade_con%is_cellulose
-   is_lignin                               => decomp_cascade_con%is_lignin
-   cellclay                                => cps%cellclay
-   cellsand                                => cps%cellsand
-   spinup_factor                           => decomp_cascade_con%spinup_factor
+   associate(&
+   cascade_step_name                   =>    decomp_cascade_con%cascade_step_name        , & !  [character(len=8) (:)]  name of transition                               
+   rf_decomp_cascade                   =>    cps%rf_decomp_cascade                       , & !  [real(r8) (:,:,:)]  respired fraction in decomposition step (frac)       
+   cascade_donor_pool                  =>    decomp_cascade_con%cascade_donor_pool       , & !  [integer (:)]  which pool is C taken from for a given decomposition step 
+   cascade_receiver_pool               =>    decomp_cascade_con%cascade_receiver_pool    , & !  [integer (:)]  which pool is C added to for a given decomposition step   
+   pathfrac_decomp_cascade             =>    cps%pathfrac_decomp_cascade                 , & !  [real(r8) (:,:,:)]  what fraction of C leaving a given pool passes through a given transition (frac)
+   floating_cn_ratio_decomp_pools      =>    decomp_cascade_con%floating_cn_ratio_decomp_pools  , & !  [logical (:)]  TRUE => pool has fixed C:N ratio                          
+   decomp_pool_name_restart            =>    decomp_cascade_con%decomp_pool_name_restart  , & !  [character(len=8) (:)]  name of pool for restart files                   
+   decomp_pool_name_history            =>    decomp_cascade_con%decomp_pool_name_history  , & !  [character(len=8) (:)]  name of pool for history files                   
+   decomp_pool_name_long               =>    decomp_cascade_con%decomp_pool_name_long    , & !  [character(len=20) (:)]  name of pool for netcdf long names              
+   decomp_pool_name_short              =>    decomp_cascade_con%decomp_pool_name_short   , & !  [character(len=8) (:)]  name of pool for netcdf short names              
+   is_litter                           =>    decomp_cascade_con%is_litter                , & !  [logical (:)]  TRUE => pool is a litter pool                             
+   is_soil                             =>    decomp_cascade_con%is_soil                  , & !  [logical (:)]  TRUE => pool is a soil pool                               
+   is_cwd                              =>    decomp_cascade_con%is_cwd                   , & !  [logical (:)]  TRUE => pool is a cwd pool                                
+   initial_cn_ratio                    =>    decomp_cascade_con%initial_cn_ratio         , & !  [real(r8) (:)]  c:n ratio for initialization of pools                    
+   initial_stock                       =>    decomp_cascade_con%initial_stock            , & !  [real(r8) (:)]  initial concentration for seeding at spinup              
+   is_metabolic                        =>    decomp_cascade_con%is_metabolic             , & !  [logical (:)]  TRUE => pool is metabolic material                        
+   is_cellulose                        =>    decomp_cascade_con%is_cellulose             , & !  [logical (:)]  TRUE => pool is cellulose                                 
+   is_lignin                           =>    decomp_cascade_con%is_lignin                , & !  [logical (:)]  TRUE => pool is lignin                                    
+   cellclay                            =>    cps%cellclay                                , & !  [real(r8) (:,:)]  column 3D clay                                         
+   cellsand                            =>    cps%cellsand                                , & !  [real(r8) (:,:)]  column 3D sand                                         
+   spinup_factor                       =>    decomp_cascade_con%spinup_factor              & !  [real(r8) (:)]  factor for AD spinup associated with each pool           
+   )
 
    !------- time-constant coefficients ---------- !
    ! set soil organic matter compartment C:N ratios
@@ -394,11 +372,8 @@ subroutine init_decompcascade(begc, endc)
    pathfrac_decomp_cascade(begc:endc,1:nlevdecomp,i_cwdl3) = cwd_flig
 
 
+ end associate
 end subroutine init_decompcascade
-
-
-
-
 
 !-----------------------------------------------------------------------
 !BOP
@@ -432,28 +407,12 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 ! !REVISION HISTORY:
 !
    ! column level
-   real(r8), pointer :: decomp_k(:,:,:)   ! rate constant for decomposition (1./sec)
-   real(r8), pointer :: t_scalar(:,:)     ! soil temperature scalar for decomp
-   real(r8), pointer :: w_scalar(:,:)     ! soil water scalar for decomp
-   real(r8), pointer :: o_scalar(:,:)     ! fraction by which decomposition is limited by anoxia
-
-   real(r8), pointer :: dz(:,:)           ! soil layer thickness (m)
-   real(r8), pointer :: t_soisno(:,:)     ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-   real(r8), pointer :: sucsat(:,:)      ! minimum soil suction (mm)
-   real(r8), pointer :: soilpsi(:,:)      ! soil water potential in each soil layer (MPa)
-#ifdef LCH4
-   real(r8), pointer :: o2stress_unsat(:,:) ! Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
-   real(r8), pointer :: o2stress_sat(:,:) ! Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
-   real(r8), pointer :: finundated(:)     ! fractional inundated area
-#endif
-   integer, pointer :: alt_indx(:)        ! current depth of thaw
-
+   real(r8) , pointer :: o_scalar (:,:)      !  [real(r8) (:,:)]  fraction by which decomposition is limited by anoxia 
+   real(r8) , pointer :: finundated (:)      !  [real(r8) (:)]  fractional inundated area 
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
 !
    real(r8):: frw(lbc:ubc)          ! rooting fraction weight
-   real(r8), pointer:: fr(:,:)      ! column-level rooting fraction by soil depth
    real(r8):: minpsi, maxpsi        ! limits for soil water scalar for decomp
    real(r8):: psi                   ! temporary soilpsi for water scalar
    !   real(r8):: w_scalar(lbc:ubc,1:nlevdecomp)     !soil water scalar for decomp
@@ -490,30 +449,26 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 
    real(r8) :: normalization_factor ! factor by which to offset the decomposition rates frm century to a q10 formulation
    real(r8):: days_per_year         ! days per year
-
-
-#if (defined VERTSOILC)
+   real(r8) , pointer:: fr (:,:)    ! column-level rooting fraction by soil depth 
    real(r8) :: depth_scalar(lbc:ubc,1:nlevdecomp) 
-#endif
 
    !----- CENTURY T response function
    catanf(t1) = 11.75_r8 +(29.7_r8 / SHR_CONST_PI) * atan( SHR_CONST_PI * 0.031_r8  * ( t1 - 15.4_r8 ))
 
-   ! Assign local pointers to derived type arrays
-   t_soisno              => ces%t_soisno
-   sucsat            => cps%sucsat
-   soilpsi               => cps%soilpsi
-   dz                    => cps%dz
-   t_scalar           => ccf%t_scalar
-   w_scalar           => ccf%w_scalar
-   o_scalar           => ccf%o_scalar
-   decomp_k              => ccf%decomp_k
-#ifdef LCH4
-   o2stress_sat          => cch4%o2stress_sat
-   o2stress_unsat        => cch4%o2stress_unsat
-   finundated            => cws%finundated
-#endif
-   alt_indx              => cps%alt_indx
+   associate(&
+   t_soisno                            =>    ces%t_soisno                                , & !  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
+   sucsat                              =>    cps%sucsat                                  , & !  [real(r8) (:,:)]  minimum soil suction (mm)                              
+   soilpsi                             =>    cps%soilpsi                                 , & !  [real(r8) (:,:)]  soil water potential in each soil layer (MPa)          
+   dz                                  =>    cps%dz                                      , & !  [real(r8) (:,:)]  soil layer thickness (m)                               
+   t_scalar                            =>    ccf%t_scalar                                , & !  [real(r8) (:,:)]  soil temperature scalar for decomp                     
+   w_scalar                            =>    ccf%w_scalar                                , & !  [real(r8) (:,:)]  soil water scalar for decomp                           
+   o_scalar                            =>    ccf%o_scalar                                , & !  [real(r8) (:,:)]  fraction by which decomposition is limited by anoxia   
+   decomp_k                            =>    ccf%decomp_k                                , & !  [real(r8) (:,:,:)]  rate constant for decomposition (1./sec)             
+   o2stress_sat                        =>    cch4%o2stress_sat                           , & !  [real(r8) (:,:)]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
+   o2stress_unsat                      =>    cch4%o2stress_unsat                         , & !  [real(r8) (:,:)]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
+   finundated                          =>    cws%finundated                              , & !  [real(r8) (:)]  fractional inundated area                                
+   alt_indx                            =>    cps%alt_indx                                  & !  [integer (:)]  current depth of thaw                                     
+   )
 
    if ( use_century_tfunc .and. normalize_q10_to_century_tfunc ) then
       call endrun( 'ERROR: cannot have both use_century_tfunc and normalize_q10_to_century_tfunc set as true' )
@@ -831,11 +786,11 @@ endif
 #endif
 
 
-end subroutine decomp_rate_constants
+    end associate 
+ end subroutine decomp_rate_constants
 
 #endif
 
 #endif
 
 end module CNDecompCascadeMod_CENTURY
-

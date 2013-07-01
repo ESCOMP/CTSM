@@ -70,26 +70,21 @@ subroutine CNNDeposition( lbc, ubc )
 ! 11/06/09: Copy to all columns NOT just over soil. S. Levis
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
 !
-   real(r8), pointer :: forc_ndep(:)  ! nitrogen deposition rate (gN/m2/s)
-   integer , pointer :: gridcell(:)   ! index into gridcell level quantities
 !
-! local pointers to implicit out scalars
 !
-   real(r8), pointer :: ndep_to_sminn(:)
 !
 ! !OTHER LOCAL VARIABLES:
    integer :: g,c                    ! indices
 
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-   forc_ndep     => clm_a2l%forc_ndep
-   gridcell      =>col%gridcell
+   associate(& 
+   forc_ndep                           =>    clm_a2l%forc_ndep                           , & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)                
+   gridcell                            =>   col%gridcell                                 , & ! Input:  [integer (:)]  index into gridcell level quantities               
 
-   ! Assign local pointers to derived type arrays (out)
-   ndep_to_sminn => cnf%ndep_to_sminn
+   ndep_to_sminn                       =>    cnf%ndep_to_sminn                             & ! Output: [real(r8) (:)]                                                    
+   )
 
    ! Loop through columns
    do c = lbc, ubc
@@ -99,7 +94,8 @@ subroutine CNNDeposition( lbc, ubc )
       
    end do
 
-end subroutine CNNDeposition
+    end associate 
+ end subroutine CNNDeposition
 
 !-----------------------------------------------------------------------
 !BOP
@@ -119,8 +115,6 @@ subroutine CNNFixation(num_soilc, filter_soilc)
    use clm_time_manager, only: get_days_per_year, get_step_size
    use shr_sys_mod     , only: shr_sys_flush
    use clm_varcon      , only: secspday, spval
-
-
 !
 ! !ARGUMENTS:
    implicit none
@@ -137,32 +131,18 @@ subroutine CNNFixation(num_soilc, filter_soilc)
 !               maybe more realistic - setting to constant 0.4 gN/m2/yr.
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   real(r8), pointer :: cannsum_npp(:) ! nitrogen deposition rate (gN/m2/s)
-!
-! local pointers to implicit out scalars
-!
-   real(r8), pointer :: nfix_to_sminn(:)      ! symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s) 
-   real(r8), pointer :: col_lag_npp(:)        ! (gC/m2/s) lagged net primary production
-
-!
-! !OTHER LOCAL VARIABLES:
    integer  :: c,fc                  ! indices
    real(r8) :: t                     ! temporary
    real(r8) :: dayspyr               ! days per year
 
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-   cannsum_npp   => cps%cannsum_npp
 
-   ! Assign local pointers to derived type arrays (out)
-   nfix_to_sminn => cnf%nfix_to_sminn
-
-   if (nfix_timeconst .gt. 0._r8 .and. nfix_timeconst .lt. 500._r8 ) then
-      col_lag_npp                    => cps%col_lag_npp
-   endif
+   associate(& 
+   cannsum_npp    => cps%cannsum_npp   , & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)                
+   nfix_to_sminn  => cnf%nfix_to_sminn , & ! Output: [real(r8) (:)]  symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)
+   col_lag_npp    => cps%col_lag_npp     & ! Output: [real(r8) (:)]  (gC/m2/s) lagged net primary production           
+   )
 
    dayspyr = get_days_per_year()
 
@@ -197,7 +177,8 @@ subroutine CNNFixation(num_soilc, filter_soilc)
       end do
    endif
    
-end subroutine CNNFixation
+    end associate 
+ end subroutine CNNFixation
 
 !-----------------------------------------------------------------------
 !BOP
@@ -229,62 +210,32 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 ! 6/9/04: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
-   real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
-   !!! awaiting_new_frozen_hydrolgy real(r8), pointer :: qflx_drain_perched(:)  ! sub-surface runoff from perched wt (mm H2O /s)
-   real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
-   real(r8), pointer :: sminn_vr(:,:)         ! (gN/m3) soil mineral N
-!
-! local pointers to implicit out scalars
-!
-#ifndef NITRIF_DENITRIF
-   real(r8), pointer :: sminn_leached_vr(:,:) ! rate of mineral N leaching (gN/m3/s)
-#else
-   real(r8), pointer :: smin_no3_leached_vr(:,:) ! rate of mineral NO3 leaching (gN/m3/s)
-   real(r8), pointer :: smin_no3_runoff_vr(:,:)  ! rate of mineral NO3 loss with runoff (gN/m3/s)
-   real(r8), pointer :: smin_no3_vr(:,:)
-#endif
-   real(r8), pointer :: dz(:,:)          !layer thickness (m)
-!
-! !OTHER LOCAL VARIABLES:
    integer  :: j,c,fc             ! indices
    real(r8) :: dt                 ! radiation time step (seconds)
    real(r8) :: tot_water(lbc:ubc) ! total column liquid water (kg water/m2)
    real(r8) :: surface_water(lbc:ubc) ! liquid water to shallow surface depth (kg water/m2)
-#ifndef NITRIF_DENITRIF
    real(r8) :: sf                 ! soluble fraction of mineral N (unitless)
-#else
    real(r8) :: sf_no3             ! soluble fraction of NO3 (unitless)
-#endif
-   real(r8) :: disn_conc          ! dissolved mineral N concentration
-                                  ! (gN/kg water)
-   !
-   !
+   real(r8) :: disn_conc          ! dissolved mineral N concentration (gN/kg water)
    real(r8), parameter :: depth_runoff_Nloss = 0.05 ! (m) depth over which runoff mixes with soil water for N loss to runoff
    real(r8) :: drain_tot(lbc:ubc)  ! total drainage flux (mm H2O /s)
-   !
-   !
-
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-   h2osoi_liq       => cws%h2osoi_liq
-   qflx_drain       => cwf%qflx_drain
-   !!! awaiting_new_frozen_hydrolgy qflx_drain_perched       => cwf%qflx_drain_perched
-   qflx_surf        => cwf%qflx_surf
-   sminn_vr         => cns%sminn_vr
-   ! Assign local pointers to derived type arrays (out)
-#ifndef NITRIF_DENITRIF
-   sminn_leached_vr => cnf%sminn_leached_vr
-#else
-   smin_no3_leached_vr => cnf%smin_no3_leached_vr
-   smin_no3_runoff_vr  => cnf%smin_no3_runoff_vr
-   smin_no3_vr         => cns%smin_no3_vr
-#endif
-   dz               => cps%dz
 
+   associate(& 
+   h2osoi_liq         => cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
+   qflx_drain         => cwf%qflx_drain          , & ! Input:  [real(r8) (:)]  sub-surface runoff (mm H2O /s)                    
+   qflx_surf          => cwf%qflx_surf           , & ! Input:  [real(r8) (:)]  surface runoff (mm H2O /s)                        
+   sminn_vr           => cns%sminn_vr            , & ! Input:  [real(r8) (:,:)]  (gN/m3) soil mineral N                          
+#ifndef NITRIF_DENITRIF
+   sminn_leached_vr   => cnf%sminn_leached_vr    , & ! Output: [real(r8) (:,:)]  rate of mineral N leaching (gN/m3/s)            
+#else
+   smin_no3_leached_vr=> cnf%smin_no3_leached_vr , & ! Output: [real(r8) (:,:)]  rate of mineral NO3 leaching (gN/m3/s)          
+   smin_no3_runoff_vr => cnf%smin_no3_runoff_vr  , & ! Output: [real(r8) (:,:)]  rate of mineral NO3 loss with runoff (gN/m3/s)  
+   smin_no3_vr        => cns%smin_no3_vr         , & ! Output: [real(r8) (:,:)]                                                  
+#endif 
+   dz                 => cps%dz                    & ! Output: [real(r8) (:,:)] layer thickness (m)                              
+   )
 
    ! set time steps
    dt = real( get_step_size(), r8 )
@@ -442,7 +393,8 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    end do
 #endif
 
-end subroutine CNNLeaching
+    end associate 
+ end subroutine CNNLeaching
 
 !-----------------------------------------------------------------------
 !BOP
@@ -475,26 +427,17 @@ subroutine CNNFert(lbp, ubp, lbc, ubc, num_soilc, filter_soilc)
 ! 4/27/09: Created by Beth Drewniak
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   real(r8), pointer :: fert(:)  ! nitrogen fertilizer rate (gN/m2/s)
-!
-! local pointers to implicit out scalars
-!
-   real(r8), pointer :: fert_to_sminn(:)
-!
-! !OTHER LOCAL VARIABLES:
    integer :: c,fc                 ! indices
 
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-   fert          => pnf%fert
-!
-   ! Assign local pointers to derived type arrays (out)
-   fert_to_sminn => cnf%fert_to_sminn
-!
-    call p2c(lbp, ubp, lbc, ubc, num_soilc,filter_soilc,fert,fert_to_sminn)
+
+   associate(&   
+   fert          =>    pnf%fert          , & ! Input:  [real(r8) (:)]  nitrogen fertilizer rate (gN/m2/s)                
+   fert_to_sminn =>    cnf%fert_to_sminn   & ! Output: [real(r8) (:)]                                                    
+   )
+
+   call p2c(lbp, ubp, lbc, ubc, num_soilc,filter_soilc,fert,fert_to_sminn)
 !
 ! DEBUG...
 !   do fc = 1,num_soilc
@@ -502,7 +445,8 @@ subroutine CNNFert(lbp, ubp, lbc, ubc, num_soilc, filter_soilc)
 !      write(*,*) "fert_to_sminn = ",c, fert_to_sminn(c), fert(p)
 !   end do
 
-end subroutine CNNFert
+    end associate 
+ end subroutine CNNFert
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -540,23 +484,6 @@ subroutine CNSoyfix (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, fil
 ! 10/27/03: Created by Beth Drewniak
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: ivt(:)             ! pft vegetation type
-   integer , pointer :: pcolumn(:)         ! pft's column index
-   real(r8), pointer :: fpg(:)             ! fraction of potential gpp (no units)
-   real(r8), pointer :: wf(:)              ! soil water as frac. of whc for top 0.5 m
-   real(r8), pointer :: plant_ndemand(:)   ! N flux required to support initial GPP (gN/m2/s)
-   real(r8), pointer :: sminn(:)           ! (kgN/m2) soil mineral N
-   real(r8), pointer :: hui(:)             ! =gdd since planting (gddplant)
-   real(r8), pointer :: gddmaturity(:)     ! gdd needed to harvest
-   logical , pointer :: croplive(:)        ! true if planted and not harvested
-
-! local pointers to implicit out arrays
-   real(r8), pointer :: soyfixn(:)         ! nitrogen fixed to each soybean crop
-   real(r8), pointer :: soyfixn_to_sminn(:)
-
-! !OTHER LOCAL VARIABLES:
    integer :: fp,p,c
    real(r8):: fxw,fxn,fxg,fxr             ! soil water factor, nitrogen factor, growth stage factor
    real(r8):: soy_ndemand                 ! difference between nitrogen supply and demand
@@ -566,20 +493,20 @@ subroutine CNSoyfix (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, fil
    real(r8):: GDDfracthreshold3, GDDfracthreshold4
 !EOP
 !-----------------------------------------------------------------------
-   ! Assign local pointers to derived type arrays (in)
-   ivt                         =>pft%itype
-   pcolumn                     =>pft%column
-   fpg                         => cps%fpg
-   wf                          => cps%wf
-   plant_ndemand               => pepv%plant_ndemand
-   sminn                       => cns%sminn
-   hui                         => pps%gddplant
-   gddmaturity                 => pps%gddmaturity
-   croplive                    => pps%croplive
 
-   ! Assign local pointers to derived type arrays (out)
-   soyfixn                     => pnf%soyfixn
-   soyfixn_to_sminn            => cnf%soyfixn_to_sminn
+   associate(& 
+   ivt              =>  pft%itype            , & ! Input:  [integer (:)]  pft vegetation type                                
+   pcolumn          =>  pft%column           , & ! Input:  [integer (:)]  pft's column index                                 
+   fpg              =>  cps%fpg              , & ! Input:  [real(r8) (:)]  fraction of potential gpp (no units)              
+   wf               =>  cps%wf               , & ! Input:  [real(r8) (:)]  soil water as frac. of whc for top 0.5 m          
+   plant_ndemand    =>  pepv%plant_ndemand   , & ! Input:  [real(r8) (:)]  N flux required to support initial GPP (gN/m2/s)  
+   sminn            =>  cns%sminn            , & ! Input:  [real(r8) (:)]  (kgN/m2) soil mineral N                           
+   hui              =>  pps%gddplant         , & ! Input:  [real(r8) (:)]  =gdd since planting (gddplant)                    
+   gddmaturity      =>  pps%gddmaturity      , & ! Input:  [real(r8) (:)]  gdd needed to harvest                             
+   croplive         =>  pps%croplive         , & ! Input:  [logical (:)]  true if planted and not harvested                  
+   soyfixn          =>  pnf%soyfixn          , & ! Output: [real(r8) (:)]  nitrogen fixed to each soybean crop               
+   soyfixn_to_sminn =>  cnf%soyfixn_to_sminn   & ! Output: [real(r8) (:)]                                                    
+   )
 
    sminnthreshold1 = 30._r8
    sminnthreshold2 = 10._r8
@@ -658,7 +585,8 @@ subroutine CNSoyfix (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, fil
    
    call p2c(lbp, ubp, lbc, ubc, num_soilc,filter_soilc,soyfixn,soyfixn_to_sminn)
    
-end subroutine CNSoyfix
+    end associate 
+ end subroutine CNSoyfix
 
 #endif
 

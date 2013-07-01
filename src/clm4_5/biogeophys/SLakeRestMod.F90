@@ -73,9 +73,6 @@ contains
     character(len=128) :: varname         ! temporary
 !-----------------------------------------------------------------------
 
-    ! Set pointers into derived type
-
-
     ! Note t_lake is already in BiogeophysRest.
 
     ! column water state variable - lake_icefrac

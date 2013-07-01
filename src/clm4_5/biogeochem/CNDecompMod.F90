@@ -75,53 +75,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
 ! 8/15/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   ! all c pools involved in decomposition
-   real(r8), pointer :: decomp_cpools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
-   ! all n pools involved in decomposition
-   real(r8), pointer :: decomp_npools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
-
-   integer, pointer :: clandunit(:)      ! index into landunit level quantities
-   integer , pointer :: itypelun(:)      ! landunit type
-   ! pft level
-   real(r8), pointer :: rootfr(:,:)      ! fraction of roots in each soil layer  (nlevgrnd)
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: fpi_vr(:,:)                            ! fraction of potential immobilization (no units)
-   real(r8), pointer :: decomp_cascade_hr_vr(:,:,:)            ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
-   real(r8), pointer :: decomp_cascade_ctransfer_vr(:,:,:)     ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
-   real(r8), pointer :: decomp_pools_hr(:,:)                   ! het. resp. from decomposing C pools (gC/m2/s)
-   real(r8), pointer :: decomp_cascade_ctransfer(:,:)          ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
-   real(r8), pointer :: decomp_cascade_ntransfer_vr(:,:,:)     ! vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
-   real(r8), pointer :: decomp_cascade_sminn_flux_vr(:,:,:)    ! vert-res mineral N flux for transition along decomposition cascade (gN/m3/s)
-
-   real(r8), pointer :: potential_immob_vr(:,:)
-#ifndef NITRIF_DENITRIF
-   real(r8), pointer :: sminn_to_denit_decomp_cascade_vr(:,:,:)
-   real(r8), pointer :: sminn_to_denit_excess_vr(:,:)
-#endif
-   real(r8), pointer :: gross_nmin_vr(:,:)
-   real(r8), pointer :: net_nmin_vr(:,:)
-   real(r8), pointer :: gross_nmin(:)            ! gross rate of N mineralization (gN/m2/s)
-   real(r8), pointer :: net_nmin(:)              ! net rate of N mineralization (gN/m2/s)
-   ! For methane code
-#ifdef LCH4
-   real(r8), pointer :: fphr(:,:)                ! fraction of potential SOM + LITTER heterotrophic respiration
-   real(r8), pointer :: w_scalar(:,:)            ! fraction by which decomposition is limited by moisture availability
-#endif
-   real(r8), pointer :: decomp_k(:,:,:)                       ! rate constant for decomposition (1./sec)
-   real(r8), pointer :: rf_decomp_cascade(:,:,:)              ! respired fraction in decomposition step (frac)
-   integer,  pointer :: cascade_donor_pool(:)                 ! which pool is C taken from for a given decomposition step
-   integer,  pointer :: cascade_receiver_pool(:)              ! which pool is C added to for a given decomposition step
-   real(r8), pointer :: pathfrac_decomp_cascade(:,:,:)        ! what fraction of C leaving a given pool passes through a given transition (frac)
-   logical,  pointer :: floating_cn_ratio_decomp_pools(:)     ! TRUE => pool has fixed C:N ratio
-
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
    integer :: c,j,k,l,m          !indices
    integer :: fc           !lake filter column index
    real(r8):: p_decomp_cpool_loss(lbc:ubc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
@@ -130,66 +83,53 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    real(r8):: ratio        !temporary variable
    real(r8):: dnp          !denitrification proportion
    real(r8):: cn_decomp_pools(lbc:ubc,1:nlevdecomp,1:ndecomp_pools)
-   real(r8), pointer :: initial_cn_ratio(:)               ! c:n ratio for initialization of pools
    integer, parameter :: i_atm = 0
-   integer, pointer :: altmax_indx(:)                  ! maximum annual depth of thaw
-   integer, pointer :: altmax_lastyear_indx(:)         ! prior year maximum annual depth of thaw
 
 
    ! For methane code
-#ifndef NITRIF_DENITRIF
    real(r8):: phr_vr(lbc:ubc,1:nlevdecomp)       !potential HR (gC/m3/s)
-#else
-   real(r8), pointer :: phr_vr(:,:)              !potential HR (gC/m3/s)
-#endif
    real(r8):: hrsum(lbc:ubc,1:nlevdecomp)        !sum of HR (gC/m2/s)
    
    !EOP
    !-----------------------------------------------------------------------
    
-   decomp_cpools_vr              => ccs%decomp_cpools_vr
-   decomp_cascade_hr_vr          => ccf%decomp_cascade_hr_vr
-   decomp_cascade_ctransfer_vr   => ccf%decomp_cascade_ctransfer_vr
-   decomp_npools_vr              => cns%decomp_npools_vr
-   decomp_cascade_ntransfer_vr   => cnf%decomp_cascade_ntransfer_vr
-   decomp_cascade_sminn_flux_vr  => cnf%decomp_cascade_sminn_flux_vr
-   fpi_vr                => cps%fpi_vr
-   potential_immob_vr    => cnf%potential_immob_vr
-   
-   decomp_k                        => ccf%decomp_k
-   rf_decomp_cascade               => cps%rf_decomp_cascade
-   cascade_donor_pool              => decomp_cascade_con%cascade_donor_pool
-   cascade_receiver_pool           => decomp_cascade_con%cascade_receiver_pool
-   pathfrac_decomp_cascade         => cps%pathfrac_decomp_cascade
-   floating_cn_ratio_decomp_pools  => decomp_cascade_con%floating_cn_ratio_decomp_pools
-   initial_cn_ratio                => decomp_cascade_con%initial_cn_ratio
-   altmax_indx                     => cps%altmax_indx
-   altmax_lastyear_indx            => cps%altmax_lastyear_indx
-   
+   associate(& 
+   decomp_cpools_vr                    =>    ccs%decomp_cpools_vr                        , & ! Input:  [real(r8) (:,:,:)]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
+   decomp_cascade_hr_vr                =>    ccf%decomp_cascade_hr_vr                    , & ! InOut:  [real(r8) (:,:,:)]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
+   decomp_cascade_ctransfer_vr         =>    ccf%decomp_cascade_ctransfer_vr             , & ! InOut:  [real(r8) (:,:,:)]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
+   decomp_npools_vr                    =>    cns%decomp_npools_vr                        , & ! Input:  [real(r8) (:,:,:)]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
+   decomp_cascade_ntransfer_vr         =>    cnf%decomp_cascade_ntransfer_vr             , & ! InOut:  [real(r8) (:,:,:)]  vert-res transfer of N from donor to receiver pool along decomp. cascade (gN/m3/s)
+   decomp_cascade_sminn_flux_vr        =>    cnf%decomp_cascade_sminn_flux_vr            , & ! InOut:  [real(r8) (:,:,:)]  vert-res mineral N flux for transition along decomposition cascade (gN/m3/s)
+   fpi_vr                              =>    cps%fpi_vr                                  , & ! InOut:  [real(r8) (:,:)]  fraction of potential immobilization (no units) 
+   potential_immob_vr                  =>    cnf%potential_immob_vr                      , & ! InOut:  [real(r8) (:,:)]                                                  
+   decomp_k                            =>    ccf%decomp_k                                , & ! InOut:  [real(r8) (:,:,:)]  rate constant for decomposition (1./sec)      
+   rf_decomp_cascade                   =>    cps%rf_decomp_cascade                       , & ! InOut:  [real(r8) (:,:,:)]  respired fraction in decomposition step (frac)
+   cascade_donor_pool                  =>    decomp_cascade_con%cascade_donor_pool       , & ! InOut:  [integer (:)]  which pool is C taken from for a given decomposition step
+   cascade_receiver_pool               =>    decomp_cascade_con%cascade_receiver_pool    , & ! InOut:  [integer (:)]  which pool is C added to for a given decomposition step
+   pathfrac_decomp_cascade             =>    cps%pathfrac_decomp_cascade                 , & ! InOut:  [real(r8) (:,:,:)]  what fraction of C leaving a given pool passes through a given transition (frac)
+   floating_cn_ratio_decomp_pools      =>    decomp_cascade_con%floating_cn_ratio_decomp_pools  , & ! InOut:  [logical (:)]  TRUE => pool has fixed C:N ratio                   
+   initial_cn_ratio                    =>    decomp_cascade_con%initial_cn_ratio         , & ! Output: [real(r8) (:)]  c:n ratio for initialization of pools             
+   altmax_indx                         =>    cps%altmax_indx                             , & ! Output: [integer (:)]  maximum annual depth of thaw                       
+   altmax_lastyear_indx                =>    cps%altmax_lastyear_indx                    , & ! Output: [integer (:)]  prior year maximum annual depth of thaw            
 #ifndef NITRIF_DENITRIF
-   sminn_to_denit_decomp_cascade_vr   => cnf%sminn_to_denit_decomp_cascade_vr
-   sminn_to_denit_excess_vr => cnf%sminn_to_denit_excess_vr
+   sminn_to_denit_decomp_cascade_vr    =>    cnf%sminn_to_denit_decomp_cascade_vr        , & ! InOut:  [real(r8) (:,:,:)] 
 #else
-   phr_vr                   => ccf%phr_vr
+   phr_vr                              =>    ccf%phr_vr                                  , & ! Output: [real(r8) (:,:)] potential HR (gC/m3/s)                           
 #endif
-   gross_nmin_vr            => cnf%gross_nmin_vr
-   net_nmin_vr              => cnf%net_nmin_vr
-   gross_nmin               => cnf%gross_nmin
-   net_nmin                 => cnf%net_nmin
-   ! For methane code
+   gross_nmin_vr                       =>    cnf%gross_nmin_vr                           , & ! InOut:  [real(r8) (:,:)]                                                  
+   net_nmin_vr                         =>    cnf%net_nmin_vr                             , & ! InOut:  [real(r8) (:,:)]                                                  
+   gross_nmin                          =>    cnf%gross_nmin                              , & ! InOut:  [real(r8) (:)]  gross rate of N mineralization (gN/m2/s)          
+   net_nmin                            =>    cnf%net_nmin                                , & ! InOut:  [real(r8) (:)]  net rate of N mineralization (gN/m2/s)            
 #ifdef LCH4
-   fphr               => cch4%fphr
-   w_scalar           => ccf%w_scalar
+   fphr                                =>    cch4%fphr                                   , & ! InOut:  [real(r8) (:,:)]  fraction of potential SOM + LITTER heterotrophic respiration
+   w_scalar                            =>    ccf%w_scalar                                , & ! InOut:  [real(r8) (:,:)]  fraction by which decomposition is limited by moisture availability
 #endif
-   
-   rootfr                => pps%rootfr
-   clandunit             =>col%landunit
-   itypelun              => lun%itype
-   
-   
+   rootfr                              =>    pps%rootfr                                  , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
+   clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  index into landunit level quantities               
+   itypelun                            =>    lun%itype                                     & ! Input:  [integer (:)]  landunit type                                      
+   )
    
    call decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
-   
    
    ! set initial values for potential C and N fluxes
    p_decomp_cpool_loss(:,:,:) = 0._r8
@@ -432,7 +372,8 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
       end do
    end do
    
- end subroutine CNDecompAlloc
+    end associate 
+  end subroutine CNDecompAlloc
  
  
 #endif

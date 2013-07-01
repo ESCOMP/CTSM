@@ -69,18 +69,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-   integer , pointer :: mxy(:)         ! pft m index (for laixy(i,j,m),etc.)
-   integer , pointer :: pgridcell(:)   ! gridcell of corresponding pft
-   real(r8), pointer :: fpcgrid(:)     ! foliar projective cover on gridcell (fraction)
-   real(r8), pointer :: agdd(:)        ! accumulated growing degree days above 5
-   real(r8), pointer :: t_mo_min(:)    ! annual min of t_mo (Kelvin)
 !
-! local pointers to implicit inout arguments
 !
-   real(r8), pointer :: tmomin20(:)         ! 20-yr running mean of tmomin
-   real(r8), pointer :: agdd20(:)           ! 20-yr running mean of agdd
 !
 !EOP
 !
@@ -88,18 +79,16 @@ contains
     integer  :: g,p                    ! indices
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (gridcell-level)
 
-    agdd20    => gdgvs%agdd20
-    tmomin20  => gdgvs%tmomin20
-
-    ! Assign local pointers to derived type members (pft-level)
-
-    mxy       =>pft%mxy
-    pgridcell =>pft%gridcell
-    fpcgrid   => pdgvs%fpcgrid
-    t_mo_min  => pdgvs%t_mo_min
-    agdd      => pdgvs%agdd
+   associate(& 
+   agdd20                              =>    gdgvs%agdd20                                , & ! Input:  [real(r8) (:)]  20-yr running mean of agdd                        
+   tmomin20                            =>    gdgvs%tmomin20                              , & ! Input:  [real(r8) (:)]  20-yr running mean of tmomin                      
+   mxy                                 =>   pft%mxy                                      , & ! Input:  [integer (:)]  pft m index (for laixy(i,j,m),etc.)                
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell of corresponding pft                      
+   fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
+   t_mo_min                            =>    pdgvs%t_mo_min                              , & ! Input:  [real(r8) (:)]  annual min of t_mo (Kelvin)                       
+   agdd                                =>    pdgvs%agdd                                    & ! Input:  [real(r8) (:)]  accumulated growing degree days above 5           
+   )
 
     ! *************************************************************************
     ! S. Levis version of LPJ's routine climate20: 'Returns' tmomin20 & agdd20
@@ -137,6 +126,7 @@ contains
        pcs%leafcmax(p) = 0._r8
        pdgvs%t_mo_min(p) = 1.0e+36_r8
     end do
+    end associate 
   end subroutine dv
 
 !-----------------------------------------------------------------------
@@ -174,14 +164,7 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to implicit in arguments
 !
-   logical , pointer :: ifspecial(:)        ! true=>landunit is not vegetated (landunit-level)
-   integer , pointer :: pgridcell(:)        ! gridcell index of corresponding pft (pft-level)
-   integer , pointer :: plandunit(:)        ! landunit index of corresponding pft (pft-level)
-   integer , pointer :: mxy(:)              ! pft m index (for laixy(i,j,m),etc.)
-   real(r8), pointer :: fpcgrid(:)          ! foliar projective cover on gridcell (fraction)
-   real(r8), pointer :: nind(:)             ! number of individuals (#/m**2)
 !
 !EOP
 !
@@ -207,25 +190,22 @@ contains
     character(len=  8) :: curtime      ! current time
     character(len= 10) :: basedate     ! base date (yyyymmdd)
     character(len=  8) :: basesec      ! base seconds
-    real(r8), pointer :: rbuf2dg(:,:)  ! temporary
+    real(r8) , pointer :: rbuf2dg (:,:)   ! Input:  [real(r8) (:,:)]  temporary 
     character(len=32) :: subname='histCNDV'
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (gridcell-level)
 
     ! NONE
 
-    ! Assign local pointers to derived type members (landunit-level)
 
-    ifspecial  =>lun%ifspecial
-
-    ! Assign local pointers to derived subtypes components (pft-level)
-
-    mxy       =>pft%mxy
-    pgridcell =>pft%gridcell
-    plandunit =>pft%landunit
-    fpcgrid   => pdgvs%fpcgrid
-    nind      => pdgvs%nind
+   associate(& 
+   ifspecial                           =>   lun%ifspecial                                , & ! Input:  [logical (:)]  true=>landunit is not vegetated (landunit-level)   
+   mxy                                 =>   pft%mxy                                      , & ! Input:  [integer (:)]  pft m index (for laixy(i,j,m),etc.)                
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell index of corresponding pft (pft-level)    
+   plandunit                           =>   pft%landunit                                 , & ! Input:  [integer (:)]  landunit index of corresponding pft (pft-level)    
+   fpcgrid                             =>    pdgvs%fpcgrid                               , & ! Input:  [real(r8) (:)]  foliar projective cover on gridcell (fraction)    
+   nind                                =>    pdgvs%nind                                    & ! Input:  [real(r8) (:)]  number of individuals (#/m**2)                    
+   )
 
     ! Determine subgrid bounds for this processor and allocate dynamic memory
 
@@ -467,6 +447,7 @@ contains
             trim(dgvm_fn), 'at nstep = ',get_nstep()
     end if
 
+    end associate 
   end subroutine histCNDV
 
 !-----------------------------------------------------------------------
@@ -536,16 +517,15 @@ contains
 ! Author: Forrest Hoffman
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in arguments
-    logical , pointer :: present(:)     ! whether this pft present in patch
 !EOP
 !
 ! !LOCAL VARIABLES:
     integer :: p
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (pft-level)
-    present   => pdgvs%present
+   associate(& 
+   present                             =>    pdgvs%present                                 & ! Input:  [logical (:)]  whether this pft present in patch                  
+   )
 
     num_natvegp = 0
     do p = lbp,ubp
@@ -555,6 +535,7 @@ contains
        end if
     end do
 
+    end associate 
   end subroutine BuildNatVegFilter
 
 #endif

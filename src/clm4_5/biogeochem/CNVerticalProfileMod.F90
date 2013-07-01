@@ -72,28 +72,6 @@ contains
     ! 10/5/2010: created by C. Koven to calculate vertical profiles for distributing soil and litter C and N
     !
     ! !LOCAL VARIABLES:
-    ! local pointers to implicit in scalars
-    !
-    ! column level
-    real(r8), pointer :: t_soisno(:,:)           ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-    real(r8), pointer :: nfixation_prof(:,:)     ! (1/m) profile for N fixation additions
-    real(r8), pointer :: ndep_prof(:,:)          ! (1/m) profile for N fixation additions
-    integer, pointer :: altmax_lastyear_indx(:)  ! frost table depth (m)
-    integer , pointer :: npfts(:)                ! number of pfts for each column
-    integer , pointer :: pfti(:)                 ! beginning pft index for each column
-    
-    ! pft level
-    integer , pointer :: ivt(:)                  ! pft vegetation type
-    real(r8), pointer :: rootfr(:,:)             ! fraction of roots in each soil layer  (nlevgrnd)
-    integer , pointer :: pcolumn(:)              ! pft's column index
-    real(r8), pointer :: leaf_prof(:,:)          ! (1/m) profile of leaves
-    real(r8), pointer :: froot_prof(:,:)         ! (1/m) profile of fine roots
-    real(r8), pointer :: croot_prof(:,:)         ! (1/m) profile of coarse roots
-    real(r8), pointer :: stem_prof(:,:)          ! (1/m) profile of stems
-    real(r8), pointer :: wtcol(:)                ! pft weight relative to column (0-1)
-    logical , pointer :: pactive(:)              ! true=>do computations on this pft (see reweightMod for details)
-
-    ! local variables
     real(r8) :: surface_prof(1:nlevdecomp)
     real(r8) :: surface_prof_tot
     real(r8) :: rootfr_tot
@@ -111,24 +89,24 @@ contains
     real(r8) :: nfixation_prof_sum
     real(r8) :: delta = 1.e-10
     character(len=32) :: subname = 'decomp_vertprofiles'
+!-----------------------------------------------------------------------
 
-    ! assign local pointers at the column level    
-    nfixation_prof                    => cps%nfixation_prof
-    ndep_prof                         => cps%ndep_prof
-    altmax_lastyear_indx              => cps%altmax_lastyear_indx
-    npfts                             =>col%npfts
-    pfti                              =>col%pfti
-    
-    ! assign local pointers at the pft level
-    ivt                               =>pft%itype
-    leaf_prof                         => pps%leaf_prof
-    froot_prof                        => pps%froot_prof
-    croot_prof                        => pps%croot_prof
-    stem_prof                         => pps%stem_prof
-    pcolumn                           =>pft%column
-    rootfr                            => pps%rootfr
-    wtcol                             =>pft%wtcol
-    pactive                           => pft%active
+   associate(& 
+   nfixation_prof        => cps%nfixation_prof        , & ! Input:  [real(r8) (:,:)]  (1/m) profile for N fixation additions          
+   ndep_prof             => cps%ndep_prof             , & ! Input:  [real(r8) (:,:)]  (1/m) profile for N fixation additions          
+   altmax_lastyear_indx  => cps%altmax_lastyear_indx  , & ! Input:  [integer (:)]  frost table depth (m)                              
+   npfts                 => col%npfts                 , & ! Input:  [integer (:)]  number of pfts for each column                     
+   pfti                  => col%pfti                  , & ! Input:  [integer (:)]  beginning pft index for each column                
+   ivt                   => pft%itype                 , & ! Input:  [integer (:)]  pft vegetation type                                
+   leaf_prof             => pps%leaf_prof             , & ! Input:  [real(r8) (:,:)]  (1/m) profile of leaves                         
+   froot_prof            => pps%froot_prof            , & ! Input:  [real(r8) (:,:)]  (1/m) profile of fine roots                     
+   croot_prof            => pps%croot_prof            , & ! Input:  [real(r8) (:,:)]  (1/m) profile of coarse roots                   
+   stem_prof             => pps%stem_prof             , & ! Input:  [real(r8) (:,:)]  (1/m) profile of stems                          
+   pcolumn               => pft%column                , & ! Input:  [integer (:)]  pft's column index                                 
+   rootfr                => pps%rootfr                , & ! Input:  [real(r8) (:,:)]  fraction of roots in each soil layer  (nlevgrnd)
+   wtcol                 => pft%wtcol                 , & ! Input:  [real(r8) (:)]  pft weight relative to column (0-1)               
+   pactive               => pft%active                  & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   )
 
 
 #ifdef VERTSOILC
@@ -310,7 +288,8 @@ contains
     end do
 
 
-  end subroutine decomp_vertprofiles
+    end associate 
+   end subroutine decomp_vertprofiles
   
     
 #endif

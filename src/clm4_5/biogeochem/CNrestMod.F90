@@ -69,20 +69,13 @@ contains
 ! !REVISION HISTORY:
 ! Author: Peter Thornton
 !
-!
-!Other local variables
+! !LOCAL VARIABLES:
     real(r8) :: c3_del13c     ! typical del13C for C3 photosynthesis (permil, relative to PDB)
     real(r8) :: c4_del13c     ! typical del13C for C4 photosynthesis (permil, relative to PDB)
     real(r8) :: c3_r1         ! isotope ratio (13c/12c) for C3 photosynthesis
     real(r8) :: c4_r1         ! isotope ratio (13c/12c) for C4 photosynthesis
     real(r8) :: c3_r2         ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
     real(r8) :: c4_r2         ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
-!   real(r8), pointer :: rc13_annsum_npp(:)
-!   real(r8), pointer :: rc13_cannsum_npp(:)
-   type(pft_cstate_type), pointer :: pcisos
-   type(pft_cstate_type), pointer :: pcbulks
-! !LOCAL VARIABLES:
-!EOP
     integer :: c,p,j,k,i,l           ! indices 
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices 
@@ -91,14 +84,17 @@ contains
     real(r8):: m            ! multiplier for the exit_spinup code
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
+    type(pft_cstate_type), pointer :: pcisos
+    type(pft_cstate_type), pointer :: pcbulks
     integer , pointer :: iptemp(:) ! pointer to memory to be allocated
-    integer :: ier                 ! error status
     real(r8), pointer :: ptr1d(:), ptr2d(:,:) !temporary arrays for slicing larger arrays
+    integer :: ier                 ! error status
     integer  :: nstep                    ! time step number
     integer  :: restart_file_spinup_state  ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     logical :: exit_spinup = .false.
     logical :: enter_spinup = .false.
     integer :: decomp_cascade_state, restart_file_decomp_cascade_state      ! flags for comparing the model and restart decomposition cascades
+!EOP
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -106,9 +102,6 @@ contains
        pcisos =>  pc13s
        pcbulks =>pcs
     endif
-    ! Set pointers into derived type
-
-
 
     ! Determine necessary subgrid bounds
 

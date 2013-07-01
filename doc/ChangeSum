@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_15      muszala 07/01/2013 complete associate refactor for pointers in clm4_5 source
    clm4_5_14      muszala 06/20/2013 preparation for associate refactor in clm4_5_15
    clm4_5_13        andre 06/14/2013 hydrology reordering from Jinyun Tang
    clm4_5_12      muszala 06/13/2013 NoVS test, NAG mods and remove TWS from restart file

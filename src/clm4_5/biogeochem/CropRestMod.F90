@@ -78,7 +78,6 @@ contains
     real(r8):: m                          ! multiplier for the exit_spinup code
     logical :: readvar                    ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
-    integer , pointer :: iptemp(:)        ! pointer to memory to be allocated
     integer :: ier                        ! error status
 !-----------------------------------------------------------------------
 
@@ -731,4 +730,3 @@ contains
 #endif
 
 end module CropRestMod
-

@@ -36,13 +36,13 @@ module MEGANFactorsMod
   integer :: npfts ! number of plant function types
 !
   type emis_eff_t
-     real(r8), pointer :: eff(:) ! emissions efficiency factor
+     real(r8) , pointer :: eff (:)  !  [real(r8) (:)]  emissions efficiency factor 
      real(r8) :: wght            ! molecular weight
      integer :: class_num        ! MEGAN class number
   endtype emis_eff_t
 !
-  type(emis_eff_t), pointer :: comp_factors_table(:)  ! hash table of MEGAN factors (points to an array of pointers)
-  integer, pointer :: hash_table_indices(:)           ! pointer to hash table indices
+  type(emis_eff_t) , pointer :: comp_factors_table (:)   !  [type(emis_eff_t) (:)]  hash table of MEGAN factors (points to an array of pointers) 
+  integer , pointer :: hash_table_indices (:)            !  [integer (:)]  pointer to hash table indices 
   integer, parameter :: tbl_hash_sz = 2**16           ! hash table size
 !
   character(len=32), allocatable :: comp_names(:)     ! MEGAN compound names
@@ -315,5 +315,3 @@ contains
   end function gen_hashkey
 
 end module MEGANFactorsMod
-
-

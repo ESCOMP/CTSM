@@ -65,40 +65,9 @@ contains
 !
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to original implicit in variables
-!
-    logical , pointer :: pactive(:)            ! true=>do computations on this pft (see reweightMod for details)
-    integer , pointer :: snl(:)                ! number of snow layers
-    real(r8), pointer :: h2osno(:)             ! snow water (mm H2O)
-    integer , pointer :: frac_veg_nosno_alb(:) ! fraction of vegetation not covered by snow (0 OR 1) [-]
-    integer , pointer :: frac_veg_nosno(:)     ! fraction of vegetation not covered by snow (0 OR 1 now) [-] (pft-level)
-    real(r8), pointer :: h2osoi_ice(:,:)       ! ice lens (kg/m2)
-    real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
-!
-! local pointers to original implicit out variables
-!
-    logical , pointer :: do_capsnow(:)         ! true => do snow capping
-    real(r8), pointer :: h2osno_old(:)         ! snow water (mm H2O) at previous time step
-    real(r8), pointer :: frac_iceold(:,:)      ! fraction of ice relative to the tot water
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
     integer :: g, l, c, p, f, j, fc         ! indices
-
-    real(r8), pointer :: qflx_glcice(:)     ! flux of new glacier ice (mm H2O/s) [+ = ice grows]
-    real(r8), pointer :: eflx_bot(:)        ! heat flux from beneath soil/ice column (W/m**2)
-    real(r8), pointer :: glc_topo(:)        ! sfc elevation for glacier_mec column (m)
-    real(r8), pointer :: forc_t(:)          ! atmospheric temperature (Kelvin)
-    real(r8), pointer :: forc_th(:)         ! atmospheric potential temperature (Kelvin)
-    real(r8), pointer :: forc_q(:)          ! atmospheric specific humidity (kg/kg)
-    real(r8), pointer :: forc_pbot(:)       ! atmospheric pressure (Pa)
-    real(r8), pointer :: forc_rho(:)        ! atmospheric density (kg/m**3)
-    integer , pointer :: cgridcell(:)       ! column's gridcell
-    integer , pointer :: clandunit(:)       ! column's landunit
-    integer , pointer :: plandunit(:)       ! pft's landunit
-    integer , pointer :: ityplun(:)         ! landunit type
 
     ! temporaries for topo downscaling
     real(r8) :: hsurf_g,hsurf_c,Hbot
@@ -109,36 +78,30 @@ contains
 
 !-----------------------------------------------------------------------
 
-    ! Assign local pointers to derived type members (landunit-level)
-
-    ityplun            => lun%itype
-
-    ! Assign local pointers to derived type members (column-level)
-
-    snl                => cps%snl
-    h2osno             => cws%h2osno
-    h2osno_old         => cws%h2osno_old
-    do_capsnow         => cps%do_capsnow
-    frac_iceold        => cps%frac_iceold
-    h2osoi_ice         => cws%h2osoi_ice
-    h2osoi_liq         => cws%h2osoi_liq
-    frac_veg_nosno_alb => pps%frac_veg_nosno_alb
-    frac_veg_nosno     => pps%frac_veg_nosno
-    qflx_glcice        => cwf%qflx_glcice
-    eflx_bot           => cef%eflx_bot
-    glc_topo           => cps%glc_topo
-    forc_t             => ces%forc_t
-    forc_th            => ces%forc_th
-    forc_q             => cws%forc_q
-    forc_pbot          => cps%forc_pbot
-    forc_rho           => cps%forc_rho
-    clandunit          =>col%landunit
-    cgridcell          =>col%gridcell
-
-    ! Assign local pointers to derived type members (pft-level)
-
-    pactive            => pft%active
-    plandunit          =>pft%landunit
+   associate(& 
+   ityplun            => lun%itype               , & ! Output: [integer (:)]  landunit type                            
+   snl                => cps%snl                 , & ! Input:  [integer (:)]  number of snow layers                    
+   h2osno             => cws%h2osno              , & ! Input:  [real(r8) (:)]  snow water (mm H2O)                     
+   h2osno_old         => cws%h2osno_old          , & ! Output: [real(r8) (:)]  snow water (mm H2O) at previous time step
+   do_capsnow         => cps%do_capsnow          , & ! Output: [logical (:)]  true => do snow capping                  
+   frac_iceold        => cps%frac_iceold         , & ! Output: [real(r8) (:,:)]  fraction of ice relative to the tot water
+   h2osoi_ice         => cws%h2osoi_ice          , & ! Input:  [real(r8) (:,:)]  ice lens (kg/m2)                      
+   h2osoi_liq         => cws%h2osoi_liq          , & ! Input:  [real(r8) (:,:)]  liquid water (kg/m2)                  
+   frac_veg_nosno_alb => pps%frac_veg_nosno_alb  , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1) [-]
+   frac_veg_nosno     => pps%frac_veg_nosno      , & ! Input:  [integer (:)]  fraction of vegetation not covered by snow (0 OR 1 now) [-] (pft-level)
+   qflx_glcice        => cwf%qflx_glcice         , & ! Output: [real(r8) (:)]  flux of new glacier ice (mm H2O/s) [+ = ice grows]
+   eflx_bot           => cef%eflx_bot            , & ! Output: [real(r8) (:)]  heat flux from beneath soil/ice column (W/m**2)
+   glc_topo           => cps%glc_topo            , & ! Output: [real(r8) (:)]  sfc elevation for glacier_mec column (m)
+   forc_t             => ces%forc_t              , & ! Output: [real(r8) (:)]  atmospheric temperature (Kelvin)        
+   forc_th            => ces%forc_th             , & ! Output: [real(r8) (:)]  atmospheric potential temperature (Kelvin)
+   forc_q             => cws%forc_q              , & ! Output: [real(r8) (:)]  atmospheric specific humidity (kg/kg)   
+   forc_pbot          => cps%forc_pbot           , & ! Output: [real(r8) (:)]  atmospheric pressure (Pa)               
+   forc_rho           => cps%forc_rho            , & ! Output: [real(r8) (:)]  atmospheric density (kg/m**3)           
+   clandunit          => col%landunit            , & ! Output: [integer (:)]  column's landunit                        
+   cgridcell          => col%gridcell            , & ! Output: [integer (:)]  column's gridcell                        
+   pactive            => pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   plandunit          => pft%landunit              & ! Output: [integer (:)]  pft's landunit                           
+   )
 
     do c = lbc, ubc
 
@@ -240,6 +203,7 @@ contains
 
     enddo    ! num_nolakec
 
-  end subroutine clm_driverInit
+    end associate 
+   end subroutine clm_driverInit
 
 end module clm_driverInitMod

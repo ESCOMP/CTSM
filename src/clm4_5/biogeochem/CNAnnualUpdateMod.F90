@@ -59,56 +59,29 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
 ! 10/1/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-!
-   integer , pointer :: pcolumn(:)               ! index into column level
-                                                 ! quantities
-!
-! local pointers to implicit in/out scalars
-!
-   real(r8), pointer :: annsum_counter(:)        ! seconds since last annual accumulator turnover
-   real(r8), pointer :: tempsum_potential_gpp(:) ! temporary annual sum of potential GPP
-   real(r8), pointer :: annsum_potential_gpp(:)  ! annual sum of potential GPP
-   real(r8), pointer :: tempmax_retransn(:)      ! temporary annual max of retranslocated N pool (gN/m2)
-   real(r8), pointer :: annmax_retransn(:)       ! annual max of retranslocated N pool (gN/m2)
-   real(r8), pointer :: tempavg_t2m(:)           ! temporary average 2m air temperature (K)
-   real(r8), pointer :: annavg_t2m(:)            ! annual average 2m air temperature (K)
-   real(r8), pointer :: tempsum_npp(:)           ! temporary sum NPP (gC/m2/yr)
-   real(r8), pointer :: annsum_npp(:)            ! annual sum NPP (gC/m2/yr)
-   real(r8), pointer :: cannsum_npp(:)           ! column annual sum NPP (gC/m2/yr)
-   real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
-#if (defined CNDV)
-   real(r8), pointer :: tempsum_litfall(:)       ! temporary sum litfall (gC/m2/yr)
-   real(r8), pointer :: annsum_litfall(:)        ! annual sum litfall (gC/m2/yr)
-#endif
-!
-! local pointers to implicit out scalars
-!
-!
-! !OTHER LOCAL VARIABLES:
    integer :: c,p          ! indices
    integer :: fp,fc        ! lake filter indices
    real(r8):: dt           ! radiation time step (seconds)
-
 !EOP
 !-----------------------------------------------------------------------
-   ! assign local pointers to derived type arrays
-   annsum_counter        => cps%annsum_counter
-   tempsum_potential_gpp => pepv%tempsum_potential_gpp
-   annsum_potential_gpp  => pepv%annsum_potential_gpp
-   tempmax_retransn      => pepv%tempmax_retransn
-   annmax_retransn       => pepv%annmax_retransn
-   tempavg_t2m           => pepv%tempavg_t2m
-   annavg_t2m            => pepv%annavg_t2m
-   tempsum_npp           => pepv%tempsum_npp
-   annsum_npp            => pepv%annsum_npp
-   cannsum_npp           => cps%cannsum_npp
-   cannavg_t2m           => cps%cannavg_t2m
+   associate(& 
+   annsum_counter            => cps%annsum_counter         , & ! InOut:  [real(r8) (:)]  seconds since last annual accumulator turnover
+   tempsum_potential_gpp     => pepv%tempsum_potential_gpp , & ! InOut:  [real(r8) (:)]  temporary annual sum of potential GPP   
+   annsum_potential_gpp      => pepv%annsum_potential_gpp  , & ! InOut:  [real(r8) (:)]  annual sum of potential GPP             
+   tempmax_retransn          => pepv%tempmax_retransn      , & ! InOut:  [real(r8) (:)]  temporary annual max of retranslocated N pool (gN/m2)
+   annmax_retransn           => pepv%annmax_retransn       , & ! InOut:  [real(r8) (:)]  annual max of retranslocated N pool (gN/m2)
+   tempavg_t2m               => pepv%tempavg_t2m           , & ! InOut:  [real(r8) (:)]  temporary average 2m air temperature (K)
+   annavg_t2m                => pepv%annavg_t2m            , & ! InOut:  [real(r8) (:)]  annual average 2m air temperature (K)   
+   tempsum_npp               => pepv%tempsum_npp           , & ! InOut:  [real(r8) (:)]  temporary sum NPP (gC/m2/yr)            
+   annsum_npp                => pepv%annsum_npp            , & ! InOut:  [real(r8) (:)]  annual sum NPP (gC/m2/yr)               
+   cannsum_npp               => cps%cannsum_npp            , & ! InOut:  [real(r8) (:)]  column annual sum NPP (gC/m2/yr)        
+   cannavg_t2m               => cps%cannavg_t2m            , & ! InOut:  [real(r8) (:)] annual average of 2m air temperature, averaged from pft-level (K)
 #if (defined CNDV)
-   tempsum_litfall       => pepv%tempsum_litfall
-   annsum_litfall        => pepv%annsum_litfall
+   tempsum_litfall           => pepv%tempsum_litfall       , & ! InOut:  [real(r8) (:)]  temporary sum litfall (gC/m2/yr)        
+   annsum_litfall            => pepv%annsum_litfall        , & ! InOut:  [real(r8) (:)]  annual sum litfall (gC/m2/yr)           
 #endif
-   pcolumn               =>pft%column
+   pcolumn                   => pft%column                 & ! Input:  [integer (:)]  index into column level                  
+   )
 
    ! set time steps
    dt = real( get_step_size(), r8 )
@@ -161,7 +134,8 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
       if (annsum_counter(c) >= get_days_per_year() * secspday) annsum_counter(c) = 0._r8
    end do
 
-end subroutine CNAnnualUpdate
+    end associate 
+ end subroutine CNAnnualUpdate
 !-----------------------------------------------------------------------
 #endif
 

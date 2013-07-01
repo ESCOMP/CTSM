@@ -31,8 +31,6 @@ module VOCEmissionMod
   save
 
   logical, parameter :: debug = .false.
-
-!
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: VOCEmission
@@ -109,78 +107,8 @@ contains
 !                           and read in MEGAN factors from file.
 !
 ! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    integer , pointer :: pgridcell(:)     ! gridcell index of corresponding pft
-    integer , pointer :: pcolumn(:)       ! column index of corresponding pft
-    integer , pointer :: ivt(:)           ! pft vegetation type for current
-    integer , pointer :: clandunit(:)     ! gridcell of corresponding column
-    integer , pointer :: ltype(:)         ! landunit type
-    real(r8), pointer :: t_veg(:)         ! pft vegetation temperature (Kelvin)
-    real(r8), pointer :: fsun(:)          ! sunlit fraction of canopy
-    real(r8), pointer :: elai(:)          ! one-sided leaf area index with burying by snow
-    real(r8), pointer :: clayfrac(:)      ! fraction of soil that is clay
-    real(r8), pointer :: sandfrac(:)      ! fraction of soil that is sand
-    real(r8), pointer :: forc_solad(:,:)  ! direct beam radiation (visible only)
-    real(r8), pointer :: forc_solai(:,:)  ! diffuse radiation     (visible only)
-    real(r8), pointer :: elai_p(:)        ! one-sided leaf area index from previous timestep
-    real(r8), pointer :: t_veg24(:)       ! avg pft vegetation temperature for last 24 hrs
-    real(r8), pointer :: t_veg240(:)      ! avg pft vegetation temperature for last 240 hrs
-    real(r8), pointer :: fsun24(:)        ! sunlit fraction of canopy last 24 hrs
-    real(r8), pointer :: fsun240(:)       ! sunlit fraction of canopy last 240 hrs
-    real(r8), pointer :: forc_solad24(:)  ! direct beam radiation last 24hrs  (visible only)
-    real(r8), pointer :: forc_solai24(:)  ! diffuse radiation  last 24hrs     (visible only)
-    real(r8), pointer :: forc_solad240(:) ! direct beam radiation last 240hrs (visible only)
-    real(r8), pointer :: forc_solai240(:) ! diffuse radiation  last 240hrs    (visible only)
-    real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (m3/m3)
-    real(r8), pointer :: h2osoi_ice(:,:)  ! ice soil content (kg/m3)
-    real(r8), pointer :: dz(:,:)          ! depth of layer (m)
-    real(r8), pointer :: bsw(:,:)         ! Clapp and Hornberger "b" (nlevgrnd)
-    real(r8), pointer :: watsat(:,:)      ! volumetric soil water at saturation (porosity) (nlevgrnd)
-    real(r8), pointer :: sucsat(:,:)      ! minimum soil suction (mm) (nlevgrnd)
-    real(r8), pointer :: cisun_z(:,:)     ! sunlit intracellular CO2 (Pa)
-    real(r8), pointer :: cisha_z(:,:)     ! shaded intracellular CO2 (Pa)
-    real(r8), pointer :: forc_pbot(:)     ! atmospheric pressure (Pa)
-!
-! local pointers to original implicit out arrays
-!
-    real(r8), pointer :: vocflx(:,:)      ! VOC flux [moles/m2/sec]
-    real(r8), pointer :: vocflx_tot(:)    ! VOC flux [moles/m2/sec]
-
-    type(megan_out_type), pointer :: meg_out(:) ! fluxes for CLM history 
-
-    real(r8), pointer :: gamma_out(:)
-    real(r8), pointer :: gammaT_out(:)
-    real(r8), pointer :: gammaP_out(:)
-    real(r8), pointer :: gammaL_out(:)
-    real(r8), pointer :: gammaA_out(:)
-    real(r8), pointer :: gammaS_out(:)
-    real(r8), pointer :: gammaC_out(:)
-
-    real(r8), pointer :: Eopt_out(:)     
-    real(r8), pointer :: topt_out(:)
-    real(r8), pointer :: alpha_out(:)
-    real(r8), pointer :: cp_out(:)
-    real(r8), pointer :: paru_out(:)
-    real(r8), pointer :: par24u_out(:)
-    real(r8), pointer :: par240u_out(:)
-    real(r8), pointer :: para_out(:)
-    real(r8), pointer :: par24a_out(:)
-    real(r8), pointer :: par240a_out(:)
-
-!
-!
-! !OTHER LOCAL VARIABLES:
-!
     integer  :: fp,p,g,c                ! indices
     real(r8) :: epsilon                 ! emission factor [ug m-2 h-1]
-    real(r8) :: par_sun                 ! temporary
-    real(r8) :: par24_sun               ! temporary
-    real(r8) :: par240_sun              ! temporary
-    real(r8) :: par_sha                 ! temporary
-    real(r8) :: par24_sha               ! temporary
-    real(r8) :: par240_sha              ! temporary
     real(r8) :: gamma                   ! activity factor (accounting for light, T, age, LAI conditions)
     real(r8) :: gamma_p                 ! activity factor for PPFD
     real(r8) :: gamma_l                 ! activity factor for PPFD & LAI
@@ -188,6 +116,12 @@ contains
     real(r8) :: gamma_a                 ! activity factor for leaf age
     real(r8) :: gamma_sm                ! activity factor for soil moisture
     real(r8) :: gamma_c                 ! activity factor for CO2 (only isoprene)
+    real(r8) :: par_sun                 ! temporary
+    real(r8) :: par24_sun               ! temporary
+    real(r8) :: par240_sun              ! temporary
+    real(r8) :: par_sha                 ! temporary
+    real(r8) :: par24_sha               ! temporary
+    real(r8) :: par240_sha              ! temporary
     
     integer :: class_num, n_meg_comps, imech, imeg, ii
     character(len=16) :: mech_name
@@ -203,7 +137,7 @@ contains
 !    real(r8) :: root_depth(0:numpft)    ! Root depth [m]
     character(len=32), parameter :: subname = "VOCEmission"
 !
-!!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !
 !    ! root depth (m) (defined based on Zeng et al., 2001, cf Guenther 2006)
 !    root_depth(noveg)                                     = 0._r8   ! bare-soil
@@ -217,70 +151,62 @@ contains
 !-----------------------------------------------------------------------
     if ( shr_megan_mechcomps_n < 1) return
 
-    clandunit  =>col%landunit
-    ltype      => lun%itype
-    ! Assign local pointers to derived type members (gridcell-level)
-    forc_solad => clm_a2l%forc_solad
-    forc_solai => clm_a2l%forc_solai
-    forc_pbot  => clm_a2l%forc_pbot
-
-    ! Assign local pointers to derived subtypes components (column-level)
-    h2osoi_vol       => cws%h2osoi_vol
-    h2osoi_ice       => cws%h2osoi_ice
-    dz               => cps%dz
-    bsw              => cps%bsw
-    watsat           => cps%watsat
-    sucsat           => cps%sucsat
-
-    ! Assign local pointers to derived subtypes components (pft-level)
-
-    pgridcell        =>pft%gridcell
-    pcolumn          =>pft%column
-    ivt              =>pft%itype
-    t_veg            => pes%t_veg
-    fsun             => pps%fsun
-    elai             => pps%elai
-    clayfrac         => pps%clayfrac
-    sandfrac         => pps%sandfrac
-
-    cisun_z          => pcf%cisun_z
-    cisha_z          => pcf%cisha_z
     if ( nlevcan /= 1 )then
        call endrun( subname//' error: can NOT work without nlevcan == 1' )
     end if
 
-    vocflx           => pvf%vocflx
-    vocflx_tot       => pvf%vocflx_tot
-    meg_out          => pvf%meg
-
-    gammaL_out       => pvf%gammaL_out
-    gammaT_out       => pvf%gammaT_out
-    gammaP_out       => pvf%gammaP_out
-    gammaA_out       => pvf%gammaA_out
-    gammaS_out       => pvf%gammaS_out
-    gammaC_out       => pvf%gammaC_out
-    gamma_out        => pvf%gamma_out
-
-    Eopt_out         => pvf%Eopt_out
-    topt_out         => pvf%topt_out
-    alpha_out        => pvf%alpha_out
-    cp_out           => pvf%cp_out
-    paru_out         => pvf%paru_out
-    par24u_out       => pvf%par24u_out
-    par240u_out      => pvf%par240u_out
-    para_out         => pvf%para_out
-    par24a_out       => pvf%par24a_out
-    par240a_out      => pvf%par240a_out
-
-    t_veg24          => pvs%t_veg24
-    t_veg240         => pvs%t_veg240
-    forc_solad24     => pvs%fsd24
-    forc_solad240    => pvs%fsd240
-    forc_solai24     => pvs%fsi24
-    forc_solai240    => pvs%fsi240
-    fsun24           => pvs%fsun24
-    fsun240          => pvs%fsun240
-    elai_p           => pvs%elai_p
+   associate(& 
+   clandunit                           =>   col%landunit                                 , & ! Input:  [integer (:)]  gridcell of corresponding column                   
+   ltype                               =>    lun%itype                                   , & ! Input:  [integer (:)]  landunit type                                      
+   forc_solad                          =>    clm_a2l%forc_solad                          , & ! Input:  [real(r8) (:,:)]  direct beam radiation (visible only)            
+   forc_solai                          =>    clm_a2l%forc_solai                          , & ! Input:  [real(r8) (:,:)]  diffuse radiation     (visible only)            
+   forc_pbot                           =>    clm_a2l%forc_pbot                           , & ! Input:  [real(r8) (:)]  atmospheric pressure (Pa)                         
+   forc_solad24                        =>    pvs%fsd24                                   , & ! Input:  [real(r8) (:)]  direct beam radiation last 24hrs  (visible only)  
+   forc_solad240                       =>    pvs%fsd240                                  , & ! Input:  [real(r8) (:)]  direct beam radiation last 240hrs (visible only)  
+   forc_solai24                        =>    pvs%fsi24                                   , & ! Input:  [real(r8) (:)]  diffuse radiation  last 24hrs     (visible only)  
+   forc_solai240                       =>    pvs%fsi240                                  , & ! Input:  [real(r8) (:)]  diffuse radiation  last 240hrs    (visible only)  
+   t_veg24                             =>    pvs%t_veg24                                 , & ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 24 hrs    
+   t_veg240                            =>    pvs%t_veg240                                , & ! Input:  [real(r8) (:)]  avg pft vegetation temperature for last 240 hrs   
+   fsun24                              =>    pvs%fsun24                                  , & ! Input:  [real(r8) (:)]  sunlit fraction of canopy last 24 hrs             
+   fsun240                             =>    pvs%fsun240                                 , & ! Input:  [real(r8) (:)]  sunlit fraction of canopy last 240 hrs            
+   elai_p                              =>    pvs%elai_p                                  , & ! Input:  [real(r8) (:)]  one-sided leaf area index from previous timestep  
+   h2osoi_vol                          =>    cws%h2osoi_vol                              , & ! Input:  [real(r8) (:,:)]  volumetric soil water (m3/m3)                   
+   h2osoi_ice                          =>    cws%h2osoi_ice                              , & ! Input:  [real(r8) (:,:)]  ice soil content (kg/m3)                        
+   dz                                  =>    cps%dz                                      , & ! Input:  [real(r8) (:,:)]  depth of layer (m)                              
+   bsw                                 =>    cps%bsw                                     , & ! Input:  [real(r8) (:,:)]  Clapp and Hornberger "b" (nlevgrnd)             
+   watsat                              =>    cps%watsat                                  , & ! Input:  [real(r8) (:,:)]  volumetric soil water at saturation (porosity) (nlevgrnd)
+   sucsat                              =>    cps%sucsat                                  , & ! Input:  [real(r8) (:,:)]  minimum soil suction (mm) (nlevgrnd)            
+   pgridcell                           =>   pft%gridcell                                 , & ! Input:  [integer (:)]  gridcell index of corresponding pft                
+   pcolumn                             =>   pft%column                                   , & ! Input:  [integer (:)]  column index of corresponding pft                  
+   ivt                                 =>   pft%itype                                    , & ! Input:  [integer (:)]  pft vegetation type for current                    
+   t_veg                               =>    pes%t_veg                                   , & ! Input:  [real(r8) (:)]  pft vegetation temperature (Kelvin)               
+   fsun                                =>    pps%fsun                                    , &! Input:  [real(r8) (:)]  sunlit fraction of canopy                         
+   elai                                =>    pps%elai                                    , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow    
+   clayfrac                            =>    pps%clayfrac                                , & ! Input:  [real(r8) (:)]  fraction of soil that is clay                     
+   sandfrac                            =>    pps%sandfrac                                , & ! Input:  [real(r8) (:)]  fraction of soil that is sand                     
+   cisun_z                             =>    pcf%cisun_z                                 , & ! Input:  [real(r8) (:,:)]  sunlit intracellular CO2 (Pa)                   
+   cisha_z                             =>    pcf%cisha_z                                 , & ! Input:  [real(r8) (:,:)]  shaded intracellular CO2 (Pa)                   
+   vocflx                              =>    pvf%vocflx                                  , & ! Output: [real(r8) (:,:)]  VOC flux [moles/m2/sec]                         
+   vocflx_tot                          =>    pvf%vocflx_tot                              , & ! Output: [real(r8) (:)]  VOC flux [moles/m2/sec]                           
+   meg_out                             =>    pvf%meg                                     , & ! Output: [type(megan_out_type) (:)]  fluxes for CLM history                
+   gammaL_out                          =>    pvf%gammaL_out                              , & ! Output: [real(r8) (:)]                                                    
+   gammaT_out                          =>    pvf%gammaT_out                              , & ! Output: [real(r8) (:)]                                                    
+   gammaP_out                          =>    pvf%gammaP_out                              , & ! Output: [real(r8) (:)]                                                    
+   gammaA_out                          =>    pvf%gammaA_out                              , & ! Output: [real(r8) (:)]                                                    
+   gammaS_out                          =>    pvf%gammaS_out                              , & ! Output: [real(r8) (:)]                                                    
+   gammaC_out                          =>    pvf%gammaC_out                              , & ! Output: [real(r8) (:)]                                                    
+   gamma_out                           =>    pvf%gamma_out                               , & ! Output: [real(r8) (:)]                                                    
+   Eopt_out                            =>    pvf%Eopt_out                                , & ! Output: [real(r8) (:)]                                                    
+   topt_out                            =>    pvf%topt_out                                , & ! Output: [real(r8) (:)]                                                    
+   alpha_out                           =>    pvf%alpha_out                               , & ! Output: [real(r8) (:)]                                                    
+   cp_out                              =>    pvf%cp_out                                  , & ! Output: [real(r8) (:)]                                                    
+   paru_out                            =>    pvf%paru_out                                , & ! Output: [real(r8) (:)]                                                    
+   par24u_out                          =>    pvf%par24u_out                              , & ! Output: [real(r8) (:)]                                                    
+   par240u_out                         =>    pvf%par240u_out                             , & ! Output: [real(r8) (:)]                                                    
+   para_out                            =>    pvf%para_out                                , & ! Output: [real(r8) (:)]                                                    
+   par24a_out                          =>    pvf%par24a_out                              , & ! Output: [real(r8) (:)]                                                    
+   par240a_out                         =>    pvf%par240a_out                               & ! Output: [real(r8) (:)]                                                    
+   )
 
     ! initialize variables which get passed to the atmosphere
     vocflx(lbp:ubp,:) = 0._r8
@@ -445,6 +371,7 @@ contains
 
     enddo ! fp 
 
+  end associate
   end subroutine VOCEmission
 !-----------------------------------------------------------------------
 
@@ -522,19 +449,18 @@ function get_map_EF(ivt_in,g_in)
 !
 ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
-
-    ! varibles in
     integer, intent(in) :: ivt_in
     integer, intent(in) :: g_in
+!
+! !LOCAL VARIABLES:
     real(r8)            :: get_map_EF
-
-    real(r8), pointer :: efisop(:,:)      ! emission factors for isoprene for each pft [ug m-2 h-1]
-
-    ! assign local pointer
-    efisop     => gve%efisop
+    real(r8), pointer   :: efisop(:,:)   
 !-----------------------------------------------------------------------
+
+    ! TODO the model crashes if efisop is replaced by an associate block
+    efisop     => gve%efisop ! Output: [real(r8) (:,:)]  emission factors for isoprene for each pft [ug m-2 h-1]
+    ! TODO
+
     get_map_EF = 0._r8
     
     if (     ivt_in == ndllf_evr_tmp_tree  &
@@ -586,10 +512,6 @@ end function get_map_EF
 !
 ! !ARGUMENTS:
     implicit none
-!
-! !LOCAL VARIABLES:
-
-    ! varibles in
     real(r8),intent(in) :: par_sun_in
     real(r8),intent(in) :: par24_sun_in
     real(r8),intent(in) :: par240_sun_in
@@ -601,22 +523,19 @@ end function get_map_EF
     real(r8),intent(in) :: forc_solad240_in
     real(r8),intent(in) :: forc_solai240_in
     real(r8),intent(in) :: LDF_in
-
-    real(r8),intent(out) :: cp                      ! temporary
-    real(r8),intent(out) :: alpha                   ! temporary
+    real(r8),intent(out):: cp                      ! temporary
+    real(r8),intent(out):: alpha                   ! temporary
+!
+! !LOCAL VARIABLES:
     real(r8) :: gamma_p_LDF             ! activity factor for PPFD
     real(r8) :: get_gamma_P             ! return value
-
-    real(r8), parameter :: ca1 = 0.004_r8                  ! empirical coefficent for alpha
-    real(r8), parameter :: ca2 = 0.0005_r8                 ! empirical coefficent for alpha
-    real(r8), parameter :: ca3 = 0.0468_r8                 ! empirical coefficent for cp
-    real(r8), parameter :: par0_sun = 200._r8              ! std conditions for past 24 hrs [umol/m2/s]
-    real(r8), parameter :: par0_shade = 50._r8             ! std conditions for past 24 hrs [umol/m2/s]
-    real(r8), parameter :: alpha_fix = 0.001_r8            ! empirical coefficient
-    real(r8), parameter :: cp_fix = 1.21_r8                ! empirical coefficient
-!
-! local pointers to implicit in arguments
-!
+    real(r8), parameter :: ca1 = 0.004_r8        ! empirical coefficent for alpha
+    real(r8), parameter :: ca2 = 0.0005_r8       ! empirical coefficent for alpha
+    real(r8), parameter :: ca3 = 0.0468_r8       ! empirical coefficent for cp
+    real(r8), parameter :: par0_sun = 200._r8    ! std conditions for past 24 hrs [umol/m2/s]
+    real(r8), parameter :: par0_shade = 50._r8   ! std conditions for past 24 hrs [umol/m2/s]
+    real(r8), parameter :: alpha_fix = 0.001_r8  ! empirical coefficient
+    real(r8), parameter :: cp_fix = 1.21_r8      ! empirical coefficient
 !-----------------------------------------------------------------------
 
   if ( (fsun240_in > 0._r8) .and. (fsun240_in < 1._r8) .and.  (forc_solad240_in > 0._r8) &

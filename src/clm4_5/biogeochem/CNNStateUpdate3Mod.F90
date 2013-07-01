@@ -60,88 +60,6 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! 8/1/03: Created by Peter Thornton
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
-#ifndef NITRIF_DENITRIF
-   real(r8), pointer :: sminn_leached_vr(:,:) 
-#else
-   real(r8), pointer :: smin_no3_leached_vr(:,:) 
-   real(r8), pointer :: smin_no3_runoff_vr(:,:)     ! vertically-resolved rate of mineral NO3 loss with runoff (gN/m3/s)
-   real(r8), pointer :: smin_no3_vr(:,:) 
-   real(r8), pointer :: smin_nh4_vr(:,:) 
-#endif
-   real(r8), pointer :: m_leafn_to_fire(:)             
-   real(r8), pointer :: m_leafn_storage_to_fire(:)     
-   real(r8), pointer :: m_leafn_xfer_to_fire(:)       
-   real(r8), pointer :: m_livestemn_to_fire(:)         
-   real(r8), pointer :: m_livestemn_storage_to_fire(:) 
-   real(r8), pointer :: m_livestemn_xfer_to_fire(:)    
-   real(r8), pointer :: m_deadstemn_to_fire(:)         
-   real(r8), pointer :: m_deadstemn_storage_to_fire(:) 
-   real(r8), pointer :: m_deadstemn_xfer_to_fire(:)    
-   real(r8), pointer :: m_frootn_to_fire(:)            
-   real(r8), pointer :: m_frootn_storage_to_fire(:)    
-   real(r8), pointer :: m_frootn_xfer_to_fire(:)       
-   real(r8), pointer :: m_livecrootn_to_fire(:)       
-   real(r8), pointer :: m_livecrootn_storage_to_fire(:)
-   real(r8), pointer :: m_livecrootn_xfer_to_fire(:)  
-   real(r8), pointer :: m_deadcrootn_to_fire(:)  
-   real(r8), pointer :: m_deadcrootn_storage_to_fire(:)
-   real(r8), pointer :: m_deadcrootn_xfer_to_fire(:)   
-   real(r8), pointer :: m_retransn_to_fire(:)          
-   real(r8), pointer :: m_decomp_npools_to_fire_vr(:,:,:) 
- 
-   real(r8), pointer :: m_leafn_to_litter_fire(:)   
-   real(r8), pointer :: m_leafn_storage_to_litter_fire(:)                
-   real(r8), pointer :: m_leafn_xfer_to_litter_fire(:)  
-   real(r8), pointer :: m_livestemn_to_litter_fire(:)    
-   real(r8), pointer :: m_livestemn_storage_to_litter_fire(:)        
-   real(r8), pointer :: m_livestemn_xfer_to_litter_fire(:) 
-   real(r8), pointer :: m_livestemn_to_deadstemn_fire(:)    
-   real(r8), pointer :: m_deadstemn_to_litter_fire(:) 
-   real(r8), pointer :: m_deadstemn_storage_to_litter_fire(:)           
-   real(r8), pointer :: m_deadstemn_xfer_to_litter_fire(:) 
-   real(r8), pointer :: m_frootn_to_litter_fire(:)        
-   real(r8), pointer :: m_frootn_storage_to_litter_fire(:)  
-   real(r8), pointer :: m_frootn_xfer_to_litter_fire(:)
-   real(r8), pointer :: m_livecrootn_to_litter_fire(:)    
-   real(r8), pointer :: m_livecrootn_storage_to_litter_fire(:)      
-   real(r8), pointer :: m_livecrootn_xfer_to_litter_fire(:)
-   real(r8), pointer :: m_livecrootn_to_deadcrootn_fire(:)    
-   real(r8), pointer :: m_deadcrootn_to_litter_fire(:)        
-   real(r8), pointer :: m_deadcrootn_storage_to_litter_fire(:)  
-   real(r8), pointer :: m_deadcrootn_xfer_to_litter_fire(:)
-   real(r8), pointer :: m_retransn_to_litter_fire(:)      
-   real(r8), pointer :: m_n_to_litr_met_fire(:,:)
-   real(r8), pointer :: m_n_to_litr_cel_fire(:,:)
-   real(r8), pointer :: m_n_to_litr_lig_fire(:,:)
-   real(r8), pointer :: fire_mortality_n_to_cwdn(:,:)              ! N fluxes associated with fire mortality to CWD pool (gN/m3/s)
-!
-! local pointers to implicit in/out scalars
-   real(r8), pointer :: sminn_vr(:,:)              ! (gN/m3) soil mineral N
-   real(r8), pointer :: decomp_npools_vr(:,:,:)    ! (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
-   real(r8), pointer :: deadcrootn(:)         ! (gN/m2) dead coarse root N
-   real(r8), pointer :: deadcrootn_storage(:) ! (gN/m2) dead coarse root N storage
-   real(r8), pointer :: deadcrootn_xfer(:)    ! (gN/m2) dead coarse root N transfer
-   real(r8), pointer :: deadstemn(:)          ! (gN/m2) dead stem N
-   real(r8), pointer :: deadstemn_storage(:)  ! (gN/m2) dead stem N storage
-   real(r8), pointer :: deadstemn_xfer(:)     ! (gN/m2) dead stem N transfer
-   real(r8), pointer :: frootn(:)             ! (gN/m2) fine root N
-   real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
-   real(r8), pointer :: frootn_xfer(:)        ! (gN/m2) fine root N transfer
-   real(r8), pointer :: leafn(:)              ! (gN/m2) leaf N
-   real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
-   real(r8), pointer :: leafn_xfer(:)         ! (gN/m2) leaf N transfer
-   real(r8), pointer :: livecrootn(:)         ! (gN/m2) live coarse root N
-   real(r8), pointer :: livecrootn_storage(:) ! (gN/m2) live coarse root N storage
-   real(r8), pointer :: livecrootn_xfer(:)    ! (gN/m2) live coarse root N transfer
-   real(r8), pointer :: livestemn(:)          ! (gN/m2) live stem N
-   real(r8), pointer :: livestemn_storage(:)  ! (gN/m2) live stem N storage
-   real(r8), pointer :: livestemn_xfer(:)     ! (gN/m2) live stem N transfer
-   real(r8), pointer :: retransn(:)           ! (gN/m2) plant pool of retranslocated N
-!
-! local pointers to implicit out scalars
-!
-! !OTHER LOCAL VARIABLES:
    integer :: c,p,j,l,k        ! indices
    integer :: fp,fc      ! lake filter indices
    real(r8):: dt         ! radiation time step (seconds)
@@ -149,85 +67,82 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !EOP
 !-----------------------------------------------------------------------
 
-    ! assign local pointers at the column level
-    fire_mortality_n_to_cwdn       => cnf%fire_mortality_n_to_cwdn
+   associate(& 
+   fire_mortality_n_to_cwdn            =>    cnf%fire_mortality_n_to_cwdn                , & ! Input:  [real(r8) (:,:)]  N fluxes associated with fire mortality to CWD pool (gN/m3/s)
 #ifndef NITRIF_DENITRIF
-    sminn_leached_vr                  => cnf%sminn_leached_vr
+   sminn_leached_vr                    =>    cnf%sminn_leached_vr                        , & ! Input:  [real(r8) (:,:)]                                                  
 #else
-    smin_no3_leached_vr               => cnf%smin_no3_leached_vr
-    smin_no3_runoff_vr                => cnf%smin_no3_runoff_vr
-    smin_no3_vr                       => cns%smin_no3_vr
-    smin_nh4_vr                       => cns%smin_nh4_vr
+   smin_no3_leached_vr                 =>    cnf%smin_no3_leached_vr                     , & ! Input:  [real(r8) (:,:)]                                                  
+   smin_no3_runoff_vr                  =>    cnf%smin_no3_runoff_vr                      , & ! Input:  [real(r8) (:,:)]  vertically-resolved rate of mineral NO3 loss with runoff (gN/m3/s)
+   smin_no3_vr                         =>    cns%smin_no3_vr                             , & ! Input:  [real(r8) (:,:)]                                                  
+   smin_nh4_vr                         =>    cns%smin_nh4_vr                             , & ! Input:  [real(r8) (:,:)]                                                  
 #endif
-    m_decomp_npools_to_fire_vr            => cnf%m_decomp_npools_to_fire_vr
-    m_n_to_litr_met_fire                  => cnf%m_n_to_litr_met_fire
-    m_n_to_litr_cel_fire                  => cnf%m_n_to_litr_cel_fire
-    m_n_to_litr_lig_fire                  => cnf%m_n_to_litr_lig_fire
-   
-    decomp_npools_vr                           => cns%decomp_npools_vr
-    sminn_vr                          => cns%sminn_vr
-
-    ! assign local pointers at the pft level
-   m_leafn_to_fire                => pnf%m_leafn_to_fire
-    m_leafn_storage_to_fire        => pnf%m_leafn_storage_to_fire
-    m_leafn_xfer_to_fire           => pnf%m_leafn_xfer_to_fire
-    m_livestemn_to_fire            => pnf%m_livestemn_to_fire
-    m_livestemn_storage_to_fire    => pnf%m_livestemn_storage_to_fire
-    m_livestemn_xfer_to_fire       => pnf%m_livestemn_xfer_to_fire
-    m_deadstemn_to_fire            => pnf%m_deadstemn_to_fire
-    m_deadstemn_storage_to_fire    => pnf%m_deadstemn_storage_to_fire
-    m_deadstemn_xfer_to_fire       => pnf%m_deadstemn_xfer_to_fire
-    m_frootn_to_fire               => pnf%m_frootn_to_fire
-    m_frootn_storage_to_fire       => pnf%m_frootn_storage_to_fire
-    m_frootn_xfer_to_fire          => pnf%m_frootn_xfer_to_fire
-    m_livecrootn_to_fire           => pnf%m_livecrootn_to_fire
-    m_livecrootn_storage_to_fire   => pnf%m_livecrootn_storage_to_fire
-    m_livecrootn_xfer_to_fire      => pnf%m_livecrootn_xfer_to_fire
-    m_deadcrootn_to_fire           => pnf%m_deadcrootn_to_fire
-    m_deadcrootn_storage_to_fire   => pnf%m_deadcrootn_storage_to_fire
-    m_deadcrootn_xfer_to_fire      => pnf%m_deadcrootn_xfer_to_fire
-    m_retransn_to_fire             => pnf%m_retransn_to_fire
-    m_leafn_to_litter_fire                => pnf%m_leafn_to_litter_fire
-    m_leafn_storage_to_litter_fire        => pnf%m_leafn_storage_to_litter_fire
-    m_leafn_xfer_to_litter_fire           => pnf%m_leafn_xfer_to_litter_fire
-    m_livestemn_to_litter_fire            => pnf%m_livestemn_to_litter_fire
-    m_livestemn_storage_to_litter_fire    => pnf%m_livestemn_storage_to_litter_fire
-    m_livestemn_xfer_to_litter_fire       => pnf%m_livestemn_xfer_to_litter_fire
-    m_livestemn_to_deadstemn_fire         => pnf%m_livestemn_to_deadstemn_fire
-    m_deadstemn_to_litter_fire            => pnf%m_deadstemn_to_litter_fire
-    m_deadstemn_storage_to_litter_fire    => pnf%m_deadstemn_storage_to_litter_fire
-    m_deadstemn_xfer_to_litter_fire       =>pnf%m_deadstemn_xfer_to_litter_fire
-    m_frootn_to_litter_fire               => pnf%m_frootn_to_litter_fire
-    m_frootn_storage_to_litter_fire       => pnf%m_frootn_storage_to_litter_fire
-    m_frootn_xfer_to_litter_fire          => pnf%m_frootn_xfer_to_litter_fire
-    m_livecrootn_to_litter_fire           => pnf%m_livecrootn_to_litter_fire
-    m_livecrootn_storage_to_litter_fire   => pnf%m_livecrootn_storage_to_litter_fire
-    m_livecrootn_xfer_to_litter_fire      => pnf%m_livecrootn_xfer_to_litter_fire
-    m_livecrootn_to_deadcrootn_fire       => pnf%m_livecrootn_to_deadcrootn_fire
-    m_deadcrootn_to_litter_fire           => pnf%m_deadcrootn_to_litter_fire
-    m_deadcrootn_storage_to_litter_fire   => pnf%m_deadcrootn_storage_to_litter_fire
-    m_deadcrootn_xfer_to_litter_fire      => pnf%m_deadcrootn_xfer_to_litter_fire
-    m_retransn_to_litter_fire             => pnf%m_retransn_to_litter_fire
-
-    deadcrootn                     => pns%deadcrootn
-    deadcrootn_storage             => pns%deadcrootn_storage
-    deadcrootn_xfer                => pns%deadcrootn_xfer
-    deadstemn                      => pns%deadstemn
-    deadstemn_storage              => pns%deadstemn_storage
-    deadstemn_xfer                 => pns%deadstemn_xfer
-    frootn                         => pns%frootn
-    frootn_storage                 => pns%frootn_storage
-    frootn_xfer                    => pns%frootn_xfer
-    leafn                          => pns%leafn
-    leafn_storage                  => pns%leafn_storage
-    leafn_xfer                     => pns%leafn_xfer
-    livecrootn                     => pns%livecrootn
-    livecrootn_storage             => pns%livecrootn_storage
-    livecrootn_xfer                => pns%livecrootn_xfer
-    livestemn                      => pns%livestemn
-    livestemn_storage              => pns%livestemn_storage
-    livestemn_xfer                 => pns%livestemn_xfer
-    retransn                       => pns%retransn
+   m_decomp_npools_to_fire_vr          =>    cnf%m_decomp_npools_to_fire_vr              , & ! Input:  [real(r8) (:,:,:)]                                                
+   m_n_to_litr_met_fire                =>    cnf%m_n_to_litr_met_fire                    , & ! Input:  [real(r8) (:,:)]                                                  
+   m_n_to_litr_cel_fire                =>    cnf%m_n_to_litr_cel_fire                    , & ! Input:  [real(r8) (:,:)]                                                  
+   m_n_to_litr_lig_fire                =>    cnf%m_n_to_litr_lig_fire                    , & ! Input:  [real(r8) (:,:)]                                                  
+   decomp_npools_vr                    =>    cns%decomp_npools_vr                        , & ! InOut:  [real(r8) (:,:,:)]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
+   sminn_vr                            =>    cns%sminn_vr                                , & ! InOut:  [real(r8) (:,:)]  (gN/m3) soil mineral N                          
+   m_leafn_to_fire                     =>    pnf%m_leafn_to_fire                         , & ! Input:  [real(r8) (:)]                                                    
+   m_leafn_storage_to_fire             =>    pnf%m_leafn_storage_to_fire                 , & ! Input:  [real(r8) (:)]                                                    
+   m_leafn_xfer_to_fire                =>    pnf%m_leafn_xfer_to_fire                    , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_to_fire                 =>    pnf%m_livestemn_to_fire                     , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_storage_to_fire         =>    pnf%m_livestemn_storage_to_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_xfer_to_fire            =>    pnf%m_livestemn_xfer_to_fire                , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemn_to_fire                 =>    pnf%m_deadstemn_to_fire                     , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemn_storage_to_fire         =>    pnf%m_deadstemn_storage_to_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemn_xfer_to_fire            =>    pnf%m_deadstemn_xfer_to_fire                , & ! Input:  [real(r8) (:)]                                                    
+   m_frootn_to_fire                    =>    pnf%m_frootn_to_fire                        , & ! Input:  [real(r8) (:)]                                                    
+   m_frootn_storage_to_fire            =>    pnf%m_frootn_storage_to_fire                , & ! Input:  [real(r8) (:)]                                                    
+   m_frootn_xfer_to_fire               =>    pnf%m_frootn_xfer_to_fire                   , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_to_fire                =>    pnf%m_livecrootn_to_fire                    , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_storage_to_fire        =>    pnf%m_livecrootn_storage_to_fire            , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_xfer_to_fire           =>    pnf%m_livecrootn_xfer_to_fire               , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootn_to_fire                =>    pnf%m_deadcrootn_to_fire                    , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootn_storage_to_fire        =>    pnf%m_deadcrootn_storage_to_fire            , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootn_xfer_to_fire           =>    pnf%m_deadcrootn_xfer_to_fire               , & ! Input:  [real(r8) (:)]                                                    
+   m_retransn_to_fire                  =>    pnf%m_retransn_to_fire                      , & ! Input:  [real(r8) (:)]                                                    
+   m_leafn_to_litter_fire              =>    pnf%m_leafn_to_litter_fire                  , & ! Input:  [real(r8) (:)]                                                    
+   m_leafn_storage_to_litter_fire      =>    pnf%m_leafn_storage_to_litter_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_leafn_xfer_to_litter_fire         =>    pnf%m_leafn_xfer_to_litter_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_to_litter_fire          =>    pnf%m_livestemn_to_litter_fire              , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_storage_to_litter_fire  =>    pnf%m_livestemn_storage_to_litter_fire      , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_xfer_to_litter_fire     =>    pnf%m_livestemn_xfer_to_litter_fire         , & ! Input:  [real(r8) (:)]                                                    
+   m_livestemn_to_deadstemn_fire       =>    pnf%m_livestemn_to_deadstemn_fire           , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemn_to_litter_fire          =>    pnf%m_deadstemn_to_litter_fire              , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemn_storage_to_litter_fire  =>    pnf%m_deadstemn_storage_to_litter_fire      , & ! Input:  [real(r8) (:)]                                                    
+   m_deadstemn_xfer_to_litter_fire     =>   pnf%m_deadstemn_xfer_to_litter_fire          , & ! Input:  [real(r8) (:)]                                                    
+   m_frootn_to_litter_fire             =>    pnf%m_frootn_to_litter_fire                 , & ! Input:  [real(r8) (:)]                                                    
+   m_frootn_storage_to_litter_fire     =>    pnf%m_frootn_storage_to_litter_fire         , & ! Input:  [real(r8) (:)]                                                    
+   m_frootn_xfer_to_litter_fire        =>    pnf%m_frootn_xfer_to_litter_fire            , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_to_litter_fire         =>    pnf%m_livecrootn_to_litter_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_storage_to_litter_fire  =>    pnf%m_livecrootn_storage_to_litter_fire     , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_xfer_to_litter_fire    =>    pnf%m_livecrootn_xfer_to_litter_fire        , & ! Input:  [real(r8) (:)]                                                    
+   m_livecrootn_to_deadcrootn_fire     =>    pnf%m_livecrootn_to_deadcrootn_fire         , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootn_to_litter_fire         =>    pnf%m_deadcrootn_to_litter_fire             , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootn_storage_to_litter_fire  =>    pnf%m_deadcrootn_storage_to_litter_fire     , & ! Input:  [real(r8) (:)]                                                    
+   m_deadcrootn_xfer_to_litter_fire    =>    pnf%m_deadcrootn_xfer_to_litter_fire        , & ! Input:  [real(r8) (:)]                                                    
+   m_retransn_to_litter_fire           =>    pnf%m_retransn_to_litter_fire               , & ! Input:  [real(r8) (:)]                                                    
+   deadcrootn                          =>    pns%deadcrootn                              , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N                        
+   deadcrootn_storage                  =>    pns%deadcrootn_storage                      , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N storage                
+   deadcrootn_xfer                     =>    pns%deadcrootn_xfer                         , & ! InOut:  [real(r8) (:)]  (gN/m2) dead coarse root N transfer               
+   deadstemn                           =>    pns%deadstemn                               , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N                               
+   deadstemn_storage                   =>    pns%deadstemn_storage                       , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N storage                       
+   deadstemn_xfer                      =>    pns%deadstemn_xfer                          , & ! InOut:  [real(r8) (:)]  (gN/m2) dead stem N transfer                      
+   frootn                              =>    pns%frootn                                  , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N                               
+   frootn_storage                      =>    pns%frootn_storage                          , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N storage                       
+   frootn_xfer                         =>    pns%frootn_xfer                             , & ! InOut:  [real(r8) (:)]  (gN/m2) fine root N transfer                      
+   leafn                               =>    pns%leafn                                   , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N                                    
+   leafn_storage                       =>    pns%leafn_storage                           , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N storage                            
+   leafn_xfer                          =>    pns%leafn_xfer                              , & ! InOut:  [real(r8) (:)]  (gN/m2) leaf N transfer                           
+   livecrootn                          =>    pns%livecrootn                              , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N                        
+   livecrootn_storage                  =>    pns%livecrootn_storage                      , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N storage                
+   livecrootn_xfer                     =>    pns%livecrootn_xfer                         , & ! InOut:  [real(r8) (:)]  (gN/m2) live coarse root N transfer               
+   livestemn                           =>    pns%livestemn                               , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N                               
+   livestemn_storage                   =>    pns%livestemn_storage                       , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N storage                       
+   livestemn_xfer                      =>    pns%livestemn_xfer                          , & ! InOut:  [real(r8) (:)]  (gN/m2) live stem N transfer                      
+   retransn                            =>    pns%retransn                                  & ! InOut:  [real(r8) (:)]  (gN/m2) plant pool of retranslocated N            
+   )
 
    ! set time steps
    dt = real( get_step_size(), r8 )
@@ -325,7 +240,8 @@ subroutine NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    end do
 
-end subroutine NStateUpdate3
+    end associate 
+ end subroutine NStateUpdate3
 !-----------------------------------------------------------------------
 #endif
 

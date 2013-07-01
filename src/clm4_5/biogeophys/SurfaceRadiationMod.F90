@@ -106,110 +106,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-! local pointers to original implicit in arguments
 !
-     real(r8), pointer :: albsod(:,:)      ! direct-beam soil albedo (col,bnd) [frc]
-     real(r8), pointer :: albsoi(:,:)      ! diffuse soil albedo (col,bnd) [frc]
-     real(r8), pointer :: sabg_soil(:)     ! solar radiation absorbed by soil (W/m**2)
-     real(r8), pointer :: sabg_snow(:)     ! solar radiation absorbed by snow (W/m**2)
-     logical , pointer :: pactive(:)       ! true=>do computations on this pft (see reweightMod for details)
-     integer , pointer :: ivt(:)           ! pft vegetation type
-     integer , pointer :: pcolumn(:)       ! pft's column index
-     integer , pointer :: pgridcell(:)     ! pft's gridcell index
-     real(r8), pointer :: elai(:)          ! one-sided leaf area index with burying by snow
-     real(r8), pointer :: esai(:)          ! one-sided stem area index with burying by snow
-     real(r8), pointer :: londeg(:)        ! longitude (degrees)
-     real(r8), pointer :: latdeg(:)        ! latitude (degrees)
-     real(r8), pointer :: coszen(:)	   ! cosine of solar zenith angle
-     real(r8), pointer :: forc_solad(:,:)  ! direct beam radiation (W/m**2)
-     real(r8), pointer :: forc_solai(:,:)  ! diffuse radiation (W/m**2)
-     real(r8), pointer :: fabd(:,:)        ! flux absorbed by canopy per unit direct flux
-     real(r8), pointer :: fabd_sun(:,:)    ! flux absorbed by sunlit canopy per unit direct flux
-     real(r8), pointer :: fabd_sha(:,:)    ! flux absorbed by shaded canopy per unit direct flux
-     real(r8), pointer :: fabi(:,:)        ! flux absorbed by canopy per unit diffuse flux
-     real(r8), pointer :: fabi_sun(:,:)    ! flux absorbed by sunlit canopy per unit diffuse flux
-     real(r8), pointer :: fabi_sha(:,:)    ! flux absorbed by shaded canopy per unit diffuse flux
-     real(r8), pointer :: ftdd(:,:)        ! down direct flux below canopy per unit direct flux
-     real(r8), pointer :: ftid(:,:)        ! down diffuse flux below canopy per unit direct flux
-     real(r8), pointer :: ftii(:,:)        ! down diffuse flux below canopy per unit diffuse flux
-     integer , pointer :: nrad(:)          ! number of canopy layers, above snow for radiative transfer
-     real(r8), pointer :: fabd_sun_z(:,:)  ! absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
-     real(r8), pointer :: fabd_sha_z(:,:)  ! absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
-     real(r8), pointer :: fabi_sun_z(:,:)  ! absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
-     real(r8), pointer :: fabi_sha_z(:,:)  ! absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
-     real(r8), pointer :: fsun_z(:,:)      ! sunlit fraction of canopy layer
-     real(r8), pointer :: tlai_z(:,:)      ! tlai increment for canopy layer
-     real(r8), pointer :: tsai_z(:,:)      ! tsai increment for canopy layer
-     real(r8), pointer :: albgrd(:,:)      ! ground albedo (direct)
-     real(r8), pointer :: albgri(:,:)      ! ground albedo (diffuse)
-     real(r8), pointer :: albd(:,:)        ! surface albedo (direct)
-     real(r8), pointer :: albi(:,:)        ! surface albedo (diffuse)
 !
-! local pointers to original implicit out arguments
 !
-     real(r8), pointer :: fsun(:)          ! sunlit fraction of canopy
-     real(r8), pointer :: laisun(:)        ! sunlit leaf area
-     real(r8), pointer :: laisha(:)        ! shaded leaf area
-     real(r8), pointer :: laisun_z(:,:)    ! sunlit leaf area for canopy layer
-     real(r8), pointer :: laisha_z(:,:)    ! shaded leaf area for canopy layer
-     real(r8), pointer :: parsun_z(:,:)    ! absorbed PAR for sunlit leaves in canopy layer
-     real(r8), pointer :: parsha_z(:,:)    ! absorbed PAR for shaded leaves in canopy layer
-     real(r8), pointer :: sabg(:)          ! solar radiation absorbed by ground (W/m**2)
-     real(r8), pointer :: sabv(:)          ! solar radiation absorbed by vegetation (W/m**2)
-     real(r8), pointer :: fsa(:)           ! solar radiation absorbed (total) (W/m**2)
-     real(r8), pointer :: fsa_r(:)         ! rural solar radiation absorbed (total) (W/m**2)
-     integer , pointer :: ityplun(:)       ! landunit type
-     integer , pointer :: plandunit(:)     ! index into landunit level quantities
-     real(r8), pointer :: fsr(:)           ! solar radiation reflected (W/m**2)
-     real(r8), pointer :: fsds_vis_d(:)    ! incident direct beam vis solar radiation (W/m**2)
-     real(r8), pointer :: fsds_nir_d(:)    ! incident direct beam nir solar radiation (W/m**2)
-     real(r8), pointer :: fsds_vis_i(:)    ! incident diffuse vis solar radiation (W/m**2)
-     real(r8), pointer :: fsds_nir_i(:)    ! incident diffuse nir solar radiation (W/m**2)
-     real(r8), pointer :: fsr_vis_d(:)     ! reflected direct beam vis solar radiation (W/m**2)
-     real(r8), pointer :: fsr_nir_d(:)     ! reflected direct beam nir solar radiation (W/m**2)
-     real(r8), pointer :: fsr_vis_i(:)     ! reflected diffuse vis solar radiation (W/m**2)
-     real(r8), pointer :: fsr_nir_i(:)     ! reflected diffuse nir solar radiation (W/m**2)
-     real(r8), pointer :: fsds_vis_d_ln(:) ! incident direct beam vis solar rad at local noon (W/m**2)
-     real(r8), pointer :: fsds_nir_d_ln(:) ! incident direct beam nir solar rad at local noon (W/m**2)
-     real(r8), pointer :: fsr_vis_d_ln(:)  ! reflected direct beam vis solar rad at local noon (W/m**2)
-     real(r8), pointer :: fsr_nir_d_ln(:)  ! reflected direct beam nir solar rad at local noon (W/m**2)
-     real(r8), pointer :: fsds_vis_i_ln(:) ! incident diffuse beam vis solar rad at local noon (W/m**2)
-     real(r8), pointer :: parveg_ln(:)     ! absorbed par by vegetation at local noon (W/m**2)
-     real(r8), pointer :: flx_absdv(:,:)   ! direct flux absorption factor (col,lyr): VIS [frc]
-     real(r8), pointer :: flx_absdn(:,:)   ! direct flux absorption factor (col,lyr): NIR [frc]
-     real(r8), pointer :: flx_absiv(:,:)   ! diffuse flux absorption factor (col,lyr): VIS [frc]
-     real(r8), pointer :: flx_absin(:,:)   ! diffuse flux absorption factor (col,lyr): NIR [frc]
-     integer , pointer :: snl(:)           ! negative number of snow layers [nbr]
-     real(r8), pointer :: albgrd_pur(:,:)    ! pure snow ground albedo (direct)
-     real(r8), pointer :: albgri_pur(:,:)    ! pure snow ground albedo (diffuse)
-     real(r8), pointer :: albgrd_bc(:,:)     ! ground albedo without BC (direct) (col,bnd)
-     real(r8), pointer :: albgri_bc(:,:)     ! ground albedo without BC (diffuse) (col,bnd)
-     real(r8), pointer :: albgrd_oc(:,:)     ! ground albedo without OC (direct) (col,bnd)
-     real(r8), pointer :: albgri_oc(:,:)     ! ground albedo without OC (diffuse) (col,bnd)
-     real(r8), pointer :: albgrd_dst(:,:)    ! ground albedo without dust (direct) (col,bnd)
-     real(r8), pointer :: albgri_dst(:,:)    ! ground albedo without dust (diffuse) (col,bnd)
-     real(r8), pointer :: albsnd_hst(:,:)    ! snow albedo, direct, for history files (col,bnd) [frc]
-     real(r8), pointer :: albsni_hst(:,:)    ! snow ground albedo, diffuse, for history files (col,bnd
-     real(r8), pointer :: sabg_lyr(:,:)      ! absorbed radiative flux (pft,lyr) [W/m2]
-     real(r8), pointer :: sabg_pen(:)        ! (rural) shortwave radiation penetrating top soisno layer [W/m2]
-     real(r8), pointer :: sfc_frc_aer(:)     ! surface forcing of snow with all aerosols (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_bc(:)      ! surface forcing of snow with BC (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_oc(:)      ! surface forcing of snow with OC (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_dst(:)     ! surface forcing of snow with dust (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_aer_sno(:) ! surface forcing of snow with all aerosols, averaged only when snow is present (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_bc_sno(:)  ! surface forcing of snow with BC, averaged only when snow is present (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_oc_sno(:)  ! surface forcing of snow with OC, averaged only when snow is present (pft) [W/m2]
-     real(r8), pointer :: sfc_frc_dst_sno(:) ! surface forcing of snow with dust, averaged only when snow is present (pft) [W/m2]
-     real(r8), pointer :: frac_sno(:)      ! fraction of ground covered by snow (0 to 1)
-     real(r8), pointer :: fsr_sno_vd(:)    ! reflected visible, direct radiation from snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsr_sno_nd(:)    ! reflected near-IR, direct radiation from snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsr_sno_vi(:)    ! reflected visible, diffuse radiation from snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsr_sno_ni(:)    ! reflected near-IR, diffuse radiation from snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsds_sno_vd(:)   ! incident visible, direct radiation on snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsds_sno_nd(:)   ! incident near-IR, direct radiation on snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsds_sno_vi(:)   ! incident visible, diffuse radiation on snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: fsds_sno_ni(:)   ! incident near-IR, diffuse radiation on snow (for history files) (pft) [W/m2]
-     real(r8), pointer :: snow_depth(:)        ! snow height (m)
 
 !
 !
@@ -249,119 +148,108 @@ contains
      integer  :: nstep               ! time step number
 !------------------------------------------------------------------------------
 
-     ! Assign local pointers to multi-level derived type members (gridcell level)
 
-     londeg        =>  grc%londeg
-     latdeg        =>  grc%latdeg
-     forc_solad    => clm_a2l%forc_solad
-     forc_solai    => clm_a2l%forc_solai
-
-     ! Assign local pointers to multi-level derived type members (landunit level)
-
-     ityplun       => lun%itype
-
-     ! Assign local pointers to multi-level derived type members (column level)
-
-     albgrd        => cps%albgrd
-     albgri        => cps%albgri
-     coszen        => cps%coszen
-
-     ! Assign local pointers to derived type members (pft-level)
-
-     albsod        => cps%albsod
-     albsoi        => cps%albsoi
-     sabg_soil     => pef%sabg_soil
-     sabg_snow     => pef%sabg_snow
-     pactive       => pft%active
-     plandunit     =>pft%landunit
-     ivt           =>pft%itype
-     pcolumn       =>pft%column
-     pgridcell     =>pft%gridcell
-     elai          => pps%elai
-     esai          => pps%esai
-     laisun        => pps%laisun
-     laisha        => pps%laisha
-     laisun_z      => pps%laisun_z
-     laisha_z      => pps%laisha_z
-     albd          => pps%albd
-     albi          => pps%albi
-     fabd          => pps%fabd
-     fabd_sun      => pps%fabd_sun
-     fabd_sha      => pps%fabd_sha
-     fabi          => pps%fabi
-     fabi_sun      => pps%fabi_sun
-     fabi_sha      => pps%fabi_sha
-     ftdd          => pps%ftdd
-     ftid          => pps%ftid
-     ftii          => pps%ftii
-     nrad          => pps%nrad
-     fabd_sun_z    => pps%fabd_sun_z
-     fabd_sha_z    => pps%fabd_sha_z
-     fabi_sun_z    => pps%fabi_sun_z
-     fabi_sha_z    => pps%fabi_sha_z
-     fsun_z        => pps%fsun_z
-     tlai_z        => pps%tlai_z
-     tsai_z        => pps%tsai_z
-     fsun          => pps%fsun
-     sabg          => pef%sabg
-     sabv          => pef%sabv
-     snow_depth        => cps%snow_depth
-     fsa           => pef%fsa
-     fsa_r         => pef%fsa_r
-     fsr           => pef%fsr
-     parsun_z      => pef%parsun_z
-     parsha_z      => pef%parsha_z
-     fsds_vis_d    => pef%fsds_vis_d
-     fsds_nir_d    => pef%fsds_nir_d
-     fsds_vis_i    => pef%fsds_vis_i
-     fsds_nir_i    => pef%fsds_nir_i
-     fsr_vis_d     => pef%fsr_vis_d
-     fsr_nir_d     => pef%fsr_nir_d
-     fsr_vis_i     => pef%fsr_vis_i
-     fsr_nir_i     => pef%fsr_nir_i
-     fsds_vis_d_ln => pef%fsds_vis_d_ln
-     fsds_nir_d_ln => pef%fsds_nir_d_ln
-     parveg_ln     => pef%parveg_ln
-     fsds_vis_i_ln => pef%fsds_vis_i_ln
-     fsr_vis_d_ln  => pef%fsr_vis_d_ln
-     fsr_nir_d_ln  => pef%fsr_nir_d_ln
-     
-     ! Assign local pointers to derived type members (ecophysiological)
-
-     frac_sno         => cps%frac_sno
-     flx_absdv        => cps%flx_absdv
-     flx_absdn        => cps%flx_absdn
-     flx_absiv        => cps%flx_absiv
-     flx_absin        => cps%flx_absin
-     sabg_lyr         => pef%sabg_lyr
-     sabg_pen         => pef%sabg_pen
-     snl              => cps%snl
-     sfc_frc_aer      => pef%sfc_frc_aer
-     sfc_frc_aer_sno  => pef%sfc_frc_aer_sno
-     albgrd_pur       => cps%albgrd_pur
-     albgri_pur       => cps%albgri_pur
-     sfc_frc_bc       => pef%sfc_frc_bc
-     sfc_frc_bc_sno   => pef%sfc_frc_bc_sno
-     albgrd_bc        => cps%albgrd_bc
-     albgri_bc        => cps%albgri_bc
-     sfc_frc_oc       => pef%sfc_frc_oc
-     sfc_frc_oc_sno   => pef%sfc_frc_oc_sno
-     albgrd_oc        => cps%albgrd_oc
-     albgri_oc        => cps%albgri_oc
-     sfc_frc_dst      => pef%sfc_frc_dst
-     sfc_frc_dst_sno  => pef%sfc_frc_dst_sno
-     albgrd_dst       => cps%albgrd_dst
-     albgri_dst       => cps%albgri_dst
-     albsnd_hst       => cps%albsnd_hst
-     albsni_hst       => cps%albsni_hst
-     fsr_sno_vd       => pef%fsr_sno_vd
-     fsr_sno_nd       => pef%fsr_sno_nd
-     fsr_sno_vi       => pef%fsr_sno_vi
-     fsr_sno_ni       => pef%fsr_sno_ni
-     fsds_sno_vd      => pef%fsds_sno_vd
-     fsds_sno_nd      => pef%fsds_sno_nd
-     fsds_sno_vi      => pef%fsds_sno_vi
-     fsds_sno_ni      => pef%fsds_sno_ni
+   associate(& 
+   londeg                    =>     grc%londeg             , & ! Input:  [real(r8) (:)]  longitude (degrees)                     
+   latdeg                    =>     grc%latdeg             , & ! Input:  [real(r8) (:)]  latitude (degrees)                      
+   forc_solad                =>    clm_a2l%forc_solad      , & ! Input:  [real(r8) (:,:)]  direct beam radiation (W/m**2)        
+   forc_solai                =>    clm_a2l%forc_solai      , & ! Input:  [real(r8) (:,:)]  diffuse radiation (W/m**2)            
+   ityplun                   =>    lun%itype               , & ! Output: [integer (:)]  landunit type                            
+   albgrd                    =>    cps%albgrd              , & ! Input:  [real(r8) (:,:)]  ground albedo (direct)                
+   albgri                    =>    cps%albgri              , & ! Input:  [real(r8) (:,:)]  ground albedo (diffuse)               
+   coszen                    =>    cps%coszen              , & ! Input:  [real(r8) (:)]  cosine of solar zenith angle            
+   albsod                    =>    cps%albsod              , & ! Input:  [real(r8) (:,:)]  direct-beam soil albedo (col,bnd) [frc]
+   albsoi                    =>    cps%albsoi              , & ! Input:  [real(r8) (:,:)]  diffuse soil albedo (col,bnd) [frc]   
+   sabg_soil                 =>    pef%sabg_soil           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by soil (W/m**2)
+   sabg_snow                 =>    pef%sabg_snow           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by snow (W/m**2)
+   pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
+   plandunit                 =>   pft%landunit             , & ! Output: [integer (:)]  index into landunit level quantities     
+   ivt                       =>   pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                      
+   pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  pft's column index                       
+   pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  pft's gridcell index                     
+   elai                      =>    pps%elai                , & ! Input:  [real(r8) (:)]  one-sided leaf area index with burying by snow
+   esai                      =>    pps%esai                , & ! Input:  [real(r8) (:)]  one-sided stem area index with burying by snow
+   laisun                    =>    pps%laisun              , & ! Output: [real(r8) (:)]  sunlit leaf area                        
+   laisha                    =>    pps%laisha              , & ! Output: [real(r8) (:)]  shaded leaf area                        
+   laisun_z                  =>    pps%laisun_z            , & ! Output: [real(r8) (:,:)]  sunlit leaf area for canopy layer     
+   laisha_z                  =>    pps%laisha_z            , & ! Output: [real(r8) (:,:)]  shaded leaf area for canopy layer     
+   albd                      =>    pps%albd                , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)               
+   albi                      =>    pps%albi                , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)              
+   fabd                      =>    pps%fabd                , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
+   fabd_sun                  =>    pps%fabd_sun            , & ! Input:  [real(r8) (:,:)]  flux absorbed by sunlit canopy per unit direct flux
+   fabd_sha                  =>    pps%fabd_sha            , & ! Input:  [real(r8) (:,:)]  flux absorbed by shaded canopy per unit direct flux
+   fabi                      =>    pps%fabi                , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit diffuse flux
+   fabi_sun                  =>    pps%fabi_sun            , & ! Input:  [real(r8) (:,:)]  flux absorbed by sunlit canopy per unit diffuse flux
+   fabi_sha                  =>    pps%fabi_sha            , & ! Input:  [real(r8) (:,:)]  flux absorbed by shaded canopy per unit diffuse flux
+   ftdd                      =>    pps%ftdd                , & ! Input:  [real(r8) (:,:)]  down direct flux below canopy per unit direct flux
+   ftid                      =>    pps%ftid                , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flux
+   ftii                      =>    pps%ftii                , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flux
+   nrad                      =>    pps%nrad                , & ! Input:  [integer (:)]  number of canopy layers, above snow for radiative transfer
+   fabd_sun_z                =>    pps%fabd_sun_z          , & ! Input:  [real(r8) (:,:)]  absorbed sunlit leaf direct  PAR (per unit lai+sai) for each canopy layer
+   fabd_sha_z                =>    pps%fabd_sha_z          , & ! Input:  [real(r8) (:,:)]  absorbed shaded leaf direct  PAR (per unit lai+sai) for each canopy layer
+   fabi_sun_z                =>    pps%fabi_sun_z          , & ! Input:  [real(r8) (:,:)]  absorbed sunlit leaf diffuse PAR (per unit lai+sai) for each canopy layer
+   fabi_sha_z                =>    pps%fabi_sha_z          , & ! Input:  [real(r8) (:,:)]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
+   fsun_z                    =>    pps%fsun_z              , & ! Input:  [real(r8) (:,:)]  sunlit fraction of canopy layer       
+   tlai_z                    =>    pps%tlai_z              , & ! Input:  [real(r8) (:,:)]  tlai increment for canopy layer       
+   tsai_z                    =>    pps%tsai_z              , & ! Input:  [real(r8) (:,:)]  tsai increment for canopy layer       
+   fsun                      =>    pps%fsun                , & ! Output: [real(r8) (:)]  sunlit fraction of canopy               
+   sabg                      =>    pef%sabg                , & ! Output: [real(r8) (:)]  solar radiation absorbed by ground (W/m**2)
+   sabv                      =>    pef%sabv                , & ! Output: [real(r8) (:)]  solar radiation absorbed by vegetation (W/m**2)
+   snow_depth                =>    cps%snow_depth          , & ! Output: [real(r8) (:)]  snow height (m)                         
+   fsa                       =>    pef%fsa                 , & ! Output: [real(r8) (:)]  solar radiation absorbed (total) (W/m**2)
+   fsa_r                     =>    pef%fsa_r               , & ! Output: [real(r8) (:)]  rural solar radiation absorbed (total) (W/m**2)
+   fsr                       =>    pef%fsr                 , & ! Output: [real(r8) (:)]  solar radiation reflected (W/m**2)      
+   parsun_z                  =>    pef%parsun_z            , & ! Output: [real(r8) (:,:)]  absorbed PAR for sunlit leaves in canopy layer
+   parsha_z                  =>    pef%parsha_z            , & ! Output: [real(r8) (:,:)]  absorbed PAR for shaded leaves in canopy layer
+   fsds_vis_d                =>    pef%fsds_vis_d          , & ! Output: [real(r8) (:)]  incident direct beam vis solar radiation (W/m**2)
+   fsds_nir_d                =>    pef%fsds_nir_d          , & ! Output: [real(r8) (:)]  incident direct beam nir solar radiation (W/m**2)
+   fsds_vis_i                =>    pef%fsds_vis_i          , & ! Output: [real(r8) (:)]  incident diffuse vis solar radiation (W/m**2)
+   fsds_nir_i                =>    pef%fsds_nir_i          , & ! Output: [real(r8) (:)]  incident diffuse nir solar radiation (W/m**2)
+   fsr_vis_d                 =>    pef%fsr_vis_d           , & ! Output: [real(r8) (:)]  reflected direct beam vis solar radiation (W/m**2)
+   fsr_nir_d                 =>    pef%fsr_nir_d           , & ! Output: [real(r8) (:)]  reflected direct beam nir solar radiation (W/m**2)
+   fsr_vis_i                 =>    pef%fsr_vis_i           , & ! Output: [real(r8) (:)]  reflected diffuse vis solar radiation (W/m**2)
+   fsr_nir_i                 =>    pef%fsr_nir_i           , & ! Output: [real(r8) (:)]  reflected diffuse nir solar radiation (W/m**2)
+   fsds_vis_d_ln             =>    pef%fsds_vis_d_ln       , & ! Output: [real(r8) (:)]  incident direct beam vis solar rad at local noon (W/m**2)
+   fsds_nir_d_ln             =>    pef%fsds_nir_d_ln       , & ! Output: [real(r8) (:)]  incident direct beam nir solar rad at local noon (W/m**2)
+   parveg_ln                 =>    pef%parveg_ln           , & ! Output: [real(r8) (:)]  absorbed par by vegetation at local noon (W/m**2)
+   fsds_vis_i_ln             =>    pef%fsds_vis_i_ln       , & ! Output: [real(r8) (:)]  incident diffuse beam vis solar rad at local noon (W/m**2)
+   fsr_vis_d_ln              =>    pef%fsr_vis_d_ln        , & ! Output: [real(r8) (:)]  reflected direct beam vis solar rad at local noon (W/m**2)
+   fsr_nir_d_ln              =>    pef%fsr_nir_d_ln        , & ! Output: [real(r8) (:)]  reflected direct beam nir solar rad at local noon (W/m**2)
+   frac_sno                  =>    cps%frac_sno            , & ! Output: [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+   flx_absdv                 =>    cps%flx_absdv           , & ! Output: [real(r8) (:,:)]  direct flux absorption factor (col,lyr): VIS [frc]
+   flx_absdn                 =>    cps%flx_absdn           , & ! Output: [real(r8) (:,:)]  direct flux absorption factor (col,lyr): NIR [frc]
+   flx_absiv                 =>    cps%flx_absiv           , & ! Output: [real(r8) (:,:)]  diffuse flux absorption factor (col,lyr): VIS [frc]
+   flx_absin                 =>    cps%flx_absin           , & ! Output: [real(r8) (:,:)]  diffuse flux absorption factor (col,lyr): NIR [frc]
+   sabg_lyr                  =>    pef%sabg_lyr            , & ! Output: [real(r8) (:,:)]  absorbed radiative flux (pft,lyr) [W/m2]
+   sabg_pen                  =>    pef%sabg_pen            , & ! Output: [real(r8) (:)]  (rural) shortwave radiation penetrating top soisno layer [W/m2]
+   snl                       =>    cps%snl                 , & ! Output: [integer (:)]  negative number of snow layers [nbr]     
+   sfc_frc_aer               =>    pef%sfc_frc_aer         , & ! Output: [real(r8) (:)]  surface forcing of snow with all aerosols (pft) [W/m2]
+   sfc_frc_aer_sno           =>    pef%sfc_frc_aer_sno     , & ! Output: [real(r8) (:)]  surface forcing of snow with all aerosols, averaged only when snow is present (pft) [W/m2]
+   albgrd_pur                =>    cps%albgrd_pur          , & ! Output: [real(r8) (:,:)]  pure snow ground albedo (direct)      
+   albgri_pur                =>    cps%albgri_pur          , & ! Output: [real(r8) (:,:)]  pure snow ground albedo (diffuse)     
+   sfc_frc_bc                =>    pef%sfc_frc_bc          , & ! Output: [real(r8) (:)]  surface forcing of snow with BC (pft) [W/m2]
+   sfc_frc_bc_sno            =>    pef%sfc_frc_bc_sno      , & ! Output: [real(r8) (:)]  surface forcing of snow with BC, averaged only when snow is present (pft) [W/m2]
+   albgrd_bc                 =>    cps%albgrd_bc           , & ! Output: [real(r8) (:,:)]  ground albedo without BC (direct) (col,bnd)
+   albgri_bc                 =>    cps%albgri_bc           , & ! Output: [real(r8) (:,:)]  ground albedo without BC (diffuse) (col,bnd)
+   sfc_frc_oc                =>    pef%sfc_frc_oc          , & ! Output: [real(r8) (:)]  surface forcing of snow with OC (pft) [W/m2]
+   sfc_frc_oc_sno            =>    pef%sfc_frc_oc_sno      , & ! Output: [real(r8) (:)]  surface forcing of snow with OC, averaged only when snow is present (pft) [W/m2]
+   albgrd_oc                 =>    cps%albgrd_oc           , & ! Output: [real(r8) (:,:)]  ground albedo without OC (direct) (col,bnd)
+   albgri_oc                 =>    cps%albgri_oc           , & ! Output: [real(r8) (:,:)]  ground albedo without OC (diffuse) (col,bnd)
+   sfc_frc_dst               =>    pef%sfc_frc_dst         , & ! Output: [real(r8) (:)]  surface forcing of snow with dust (pft) [W/m2]
+   sfc_frc_dst_sno           =>    pef%sfc_frc_dst_sno     , & ! Output: [real(r8) (:)]  surface forcing of snow with dust, averaged only when snow is present (pft) [W/m2]
+   albgrd_dst                =>    cps%albgrd_dst          , & ! Output: [real(r8) (:,:)]  ground albedo without dust (direct) (col,bnd)
+   albgri_dst                =>    cps%albgri_dst          , & ! Output: [real(r8) (:,:)]  ground albedo without dust (diffuse) (col,bnd)
+   albsnd_hst                =>    cps%albsnd_hst          , & ! Output: [real(r8) (:,:)]  snow albedo, direct, for history files (col,bnd) [frc]
+   albsni_hst                =>    cps%albsni_hst          , & ! Output: [real(r8) (:,:)]  snow ground albedo, diffuse, for history files (col,bnd
+   fsr_sno_vd                =>    pef%fsr_sno_vd          , & ! Output: [real(r8) (:)]  reflected visible, direct radiation from snow (for history files) (pft) [W/m2]
+   fsr_sno_nd                =>    pef%fsr_sno_nd          , & ! Output: [real(r8) (:)]  reflected near-IR, direct radiation from snow (for history files) (pft) [W/m2]
+   fsr_sno_vi                =>    pef%fsr_sno_vi          , & ! Output: [real(r8) (:)]  reflected visible, diffuse radiation from snow (for history files) (pft) [W/m2]
+   fsr_sno_ni                =>    pef%fsr_sno_ni          , & ! Output: [real(r8) (:)]  reflected near-IR, diffuse radiation from snow (for history files) (pft) [W/m2]
+   fsds_sno_vd               =>    pef%fsds_sno_vd         , & ! Output: [real(r8) (:)]  incident visible, direct radiation on snow (for history files) (pft) [W/m2]
+   fsds_sno_nd               =>    pef%fsds_sno_nd         , & ! Output: [real(r8) (:)]  incident near-IR, direct radiation on snow (for history files) (pft) [W/m2]
+   fsds_sno_vi               =>    pef%fsds_sno_vi         , & ! Output: [real(r8) (:)]  incident visible, diffuse radiation on snow (for history files) (pft) [W/m2]
+   fsds_sno_ni               =>    pef%fsds_sno_ni           & ! Output: [real(r8) (:)]  incident near-IR, diffuse radiation on snow (for history files) (pft) [W/m2]
+   )
 
      ! Determine seconds off current time step
      
@@ -702,6 +590,7 @@ contains
         end if
      end do 
 
-   end subroutine SurfaceRadiation
+    end associate 
+    end subroutine SurfaceRadiation
 
 end module SurfaceRadiationMod

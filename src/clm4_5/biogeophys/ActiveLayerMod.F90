@@ -61,18 +61,8 @@ contains
 ! 6/27/2011 Created by C. Koven
 !
 ! !LOCAL VARIABLES:
-! local pointers to implicit in scalars
 !
 ! column level
-    real(r8), pointer :: t_soisno(:,:)          ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-    real(r8), pointer :: alt(:)                 ! current depth of thaw
-    real(r8), pointer :: altmax(:)              ! maximum annual depth of thaw
-    real(r8), pointer :: altmax_lastyear(:)     ! prior year maximum annual depth of thaw
-    integer, pointer :: alt_indx(:)             ! current depth of thaw
-    integer, pointer :: altmax_indx(:)          ! maximum annual depth of thaw
-    integer, pointer :: altmax_lastyear_indx(:) ! prior year maximum annual depth of thaw
-    real(r8), pointer :: lat(:)                 ! gridcell latitude (radians)
-    integer , pointer :: cgridcell(:)           ! gridcell index of column
     
     ! local variables
     integer  :: c, j, fc, g                     ! counters
@@ -86,18 +76,17 @@ contains
     logical  :: found_thawlayer                 ! used to break loop when first unfrozen layer reached
     real(r8) :: t1, t2, z1, z2                  ! temporary variables
     
-    ! Assign local pointers to derived type arrays
-    t_soisno                               => ces%t_soisno
-    alt                                    => cps%alt
-    altmax                                 => cps%altmax
-    altmax_lastyear                        => cps%altmax_lastyear
-    alt_indx                               => cps%alt_indx
-    altmax_indx                            => cps%altmax_indx
-    altmax_lastyear_indx                   => cps%altmax_lastyear_indx
-    
-    ! Assign local pointers to derived subtypes components (gridcell-level and mapping)
-    lat             =>  grc%lat
-    cgridcell       =>col%gridcell
+   associate(& 
+   t_soisno                       =>    ces%t_soisno                                     , & ! Input:  [real(r8) (:,:)]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)                    
+   alt                            =>    cps%alt                                          , & ! Input:  [real(r8) (:)]  current depth of thaw                                                 
+   altmax                         =>    cps%altmax                                       , & ! Input:  [real(r8) (:)]  maximum annual depth of thaw                                          
+   altmax_lastyear                =>    cps%altmax_lastyear                              , & ! Input:  [real(r8) (:)]  prior year maximum annual depth of thaw                               
+   alt_indx                       =>    cps%alt_indx                                     , & ! Input:  [integer (:)]  current depth of thaw                                                  
+   altmax_indx                    =>    cps%altmax_indx                                  , & ! Input:  [integer (:)]  maximum annual depth of thaw                                           
+   altmax_lastyear_indx           =>    cps%altmax_lastyear_indx                         , & ! Input:  [integer (:)]  prior year maximum annual depth of thaw                                
+   lat                            =>    grc%lat                                          , & ! Input:  [real(r8) (:)]  gridcell latitude (radians)                                           
+   cgridcell                      =>    col%gridcell                                       & ! Input:  [integer (:)]  gridcell index of column                                               
+   )
     
     
     ! on a set annual timestep, update annual maxima
@@ -172,7 +161,8 @@ contains
        
     end do
     
-  end subroutine alt_calc
+    end associate 
+   end subroutine alt_calc
   
   
 end module ActiveLayerMod
