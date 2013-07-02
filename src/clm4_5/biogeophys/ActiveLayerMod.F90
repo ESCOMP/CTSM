@@ -37,6 +37,16 @@ contains
 !  define active layer thickness similarly to frost_table, except set as deepest thawed layer and define on nlevgrnd
 !  also update annual maxima, and keep track of prior year for rooting memory
 !
+!  Note (WJS, 6-12-13): This routine just operates over active soil columns. However,
+!  because of its placement in the driver sequence (it is called very early in each
+!  timestep, before weights are adjusted and filters are updated), it effectively operates
+!  over the active columns from the previous time step. (This isn't really an issue now,
+!  but could become one when we have dynamic landunits.) As long as the output variables
+!  computed here are initialized to valid values over non-active points, this shouldn't be
+!  a problem - it will just mean that values are not quite what they should be in the
+!  first timestep a point becomes active. Currently, it seems that these variables ARE
+!  initialized to valid values, so I think this is okay.
+!
 ! !USES:
     use clmtype
     use clm_varpar      , only : nlevgrnd

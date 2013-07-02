@@ -68,6 +68,10 @@ contains
 !    -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
 !    -> TwoStream:    absorbed, reflected, transmitted solar fluxes (vis dir,vis dif, nir dir, nir dif)
 !
+! Note that this is called with the "inactive_and_active" version of the filters, because
+! the variables computed here are needed over inactive points that might later become
+! active (due to landuse change). Thus, this routine cannot depend on variables that are
+! only computed over active points.
 
 ! !USES:
     use clmtype
@@ -201,7 +205,6 @@ contains
    albsni_hst                =>    cps%albsni_hst          , & ! Input:  [real(r8) (:,:)]  snow ground albedo, diffuse, for history files (col,bnd) [frc]
 
 
-   pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
    plandunit                 =>   pft%landunit             , & ! Input:  [integer (:)]  index into landunit level quantities     
    pgridcell                 =>   pft%gridcell             , & ! Input:  [integer (:)]  gridcell of corresponding pft            
    pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  column of corresponding pft              
@@ -256,10 +259,8 @@ contains
 
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
-!      if (pwtgcell(p)>0._r8) then ! "if" added due to chg in filter definition
        g = pgridcell(p)
        coszen_pft(p) = coszen_gcell(g)
-!      end if ! then removed for CNDV (and dyn. landuse?) cases to work
     end do
 
     ! Initialize output because solar radiation only done if coszen > 0
@@ -288,7 +289,6 @@ contains
        end do
        do fp = 1,num_nourbanp
           p = filter_nourbanp(fp)
-!         if (pwtgcell(p)>0._r8) then ! "if" added due to chg in filter definition
           albd(p,ib) = 1._r8
           albi(p,ib) = 1._r8
           fabd(p,ib) = 0._r8
@@ -313,7 +313,6 @@ contains
 !               tsai_z(p,iv) = 0._r8
 !            end do
 !         end if
-!         end if ! then removed for CNDV (and dyn. landuse?) cases to work
        end do
     end do
 
@@ -549,8 +548,7 @@ contains
           if (coszen_pft(p) > 0._r8) then
              if ((itypelun(plandunit(p)) == istsoil .or.  &
                   itypelun(plandunit(p)) == istcrop     ) &
-                 .and. (elai(p) + esai(p)) > 0._r8        &
-                 .and. pactive(p)) then
+                 .and. (elai(p) + esai(p)) > 0._r8) then
                 num_vegsol = num_vegsol + 1
                 filter_vegsol(num_vegsol) = p
              else

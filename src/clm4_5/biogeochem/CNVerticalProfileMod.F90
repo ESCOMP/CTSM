@@ -42,10 +42,22 @@ contains
 ! !IROUTINE: decomp_vertprofiles
 !
 ! !INTERFACE:
-  subroutine decomp_vertprofiles(lbp, ubp, lbc,ubc,num_soilc,filter_soilc,num_soilp,filter_soilp)
+  subroutine decomp_vertprofiles(lbp, ubp, lbc, ubc,num_soilc,filter_soilc,num_soilp,filter_soilp)
 !
 ! !DESCRIPTION:
 !
+!  calculate vertical profiles for distributing soil and litter C and N
+!
+!  Note (WJS, 6-12-13): Because of this routine's placement in the driver sequence (it is
+!  called very early in each timestep, before weights are adjusted and filters are
+!  updated), it may be necessary for this routine to compute values over inactive as well
+!  as active points (since some inactive points may soon become active) - so that's what
+!  is done now. Currently, it seems to be okay to do this, because the variables computed
+!  here seem to only depend on quantities that are valid over inactive as well as active
+!  points. However, note that this routine is (mistakenly) called from two places
+!  currently - the above note applies to its call from the driver, but its call from
+!  CNDecompMod uses the standard filters that just apply over active points
+! 
 ! !USES:
     use clmtype
     use clm_time_manager, only: get_step_size
@@ -138,8 +150,8 @@ contains
           end do
        else
           ! use beta distribution parameter from Jackson et al., 1996
-          do p = lbp, ubp
-             c = pcolumn(p)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              if (ivt(p) /= noveg) then
                 do j = 1, nlevdecomp
                    cinput_rootfr(p,j) = ( rootprof_beta(ivt(p)) ** (zisoi(j-1)*100._r8) - &
@@ -188,7 +200,7 @@ contains
           leaf_prof(p,1) = 1./dzsoi_decomp(1)
           stem_prof(p,1) = 1./dzsoi_decomp(1)
        endif
-       
+
     end do
 
     !! aggregate root profile to column
@@ -198,11 +210,9 @@ contains
           c = filter_soilc(fc)
           if (pi <=  npfts(c)) then
              p = pfti(c) + pi - 1
-             if (pactive(p)) then
-                do j = 1,nlevdecomp
-                   col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * wtcol(p)
-                end do
-             end if
+             do j = 1,nlevdecomp
+                col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * wtcol(p)
+             end do
           end if
        end do
     end do

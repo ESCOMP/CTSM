@@ -162,7 +162,6 @@ contains
    albsoi                    =>    cps%albsoi              , & ! Input:  [real(r8) (:,:)]  diffuse soil albedo (col,bnd) [frc]   
    sabg_soil                 =>    pef%sabg_soil           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by soil (W/m**2)
    sabg_snow                 =>    pef%sabg_snow           , & ! Input:  [real(r8) (:)]  solar radiation absorbed by snow (W/m**2)
-   pactive                   =>    pft%active              , & ! Input:  [logical (:)]  true=>do computations on this pft (see reweightMod for details)
    plandunit                 =>   pft%landunit             , & ! Output: [integer (:)]  index into landunit level quantities     
    ivt                       =>   pft%itype                , & ! Input:  [integer (:)]  pft vegetation type                      
    pcolumn                   =>   pft%column               , & ! Input:  [integer (:)]  pft's column index                       
@@ -260,30 +259,26 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        ! was redundant b/c filter already included wt>0; 
-        ! not redundant anymore with chg in filter definition
-        if (pactive(p)) then
-           sabg_soil(p)  = 0._r8
-           sabg_snow(p)  = 0._r8
-           sabg(p)       = 0._r8
-           sabv(p)       = 0._r8
-           fsa(p)        = 0._r8
-           l = plandunit(p)
-           if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
-             fsa_r(p)      = 0._r8
-           end if
-           sabg_lyr(p,:) = 0._r8
-           sabg_pur(p)   = 0._r8
-           sabg_bc(p)    = 0._r8
-           sabg_oc(p)    = 0._r8
-           sabg_dst(p)   = 0._r8
-           do iv = 1, nrad(p)
-              parsun_z(p,iv) = 0._r8
-              parsha_z(p,iv) = 0._r8
-              laisun_z(p,iv) = 0._r8
-              laisha_z(p,iv) = 0._r8
-           end do
+        sabg_soil(p)  = 0._r8
+        sabg_snow(p)  = 0._r8
+        sabg(p)       = 0._r8
+        sabv(p)       = 0._r8
+        fsa(p)        = 0._r8
+        l = plandunit(p)
+        if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+           fsa_r(p)      = 0._r8
         end if
+        sabg_lyr(p,:) = 0._r8
+        sabg_pur(p)   = 0._r8
+        sabg_bc(p)    = 0._r8
+        sabg_oc(p)    = 0._r8
+        sabg_dst(p)   = 0._r8
+        do iv = 1, nrad(p)
+           parsun_z(p,iv) = 0._r8
+           parsha_z(p,iv) = 0._r8
+           laisun_z(p,iv) = 0._r8
+           laisha_z(p,iv) = 0._r8
+        end do
      end do 
 
      ! Loop over pfts to calculate laisun_z and laisha_z for each layer.
@@ -293,22 +288,18 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pactive(p)) then
-
-           laisun(p) = 0._r8
-           laisha(p) = 0._r8
-           do iv = 1, nrad(p)
-              laisun_z(p,iv) = tlai_z(p,iv) * fsun_z(p,iv)
-              laisha_z(p,iv) = tlai_z(p,iv) * (1._r8 - fsun_z(p,iv))
-              laisun(p) = laisun(p) + laisun_z(p,iv) 
-              laisha(p) = laisha(p) + laisha_z(p,iv) 
-           end do
-           if (elai(p) > 0._r8) then
-              fsun(p) = laisun(p) / elai(p)
-           else
-              fsun(p) = 0._r8
-           end if
-        
+        laisun(p) = 0._r8
+        laisha(p) = 0._r8
+        do iv = 1, nrad(p)
+           laisun_z(p,iv) = tlai_z(p,iv) * fsun_z(p,iv)
+           laisha_z(p,iv) = tlai_z(p,iv) * (1._r8 - fsun_z(p,iv))
+           laisun(p) = laisun(p) + laisun_z(p,iv) 
+           laisha(p) = laisha(p) + laisha_z(p,iv) 
+        end do
+        if (elai(p) > 0._r8) then
+           fsun(p) = laisun(p) / elai(p)
+        else
+           fsun(p) = 0._r8
         end if
      end do
         
@@ -316,82 +307,80 @@ contains
      do ib = 1, nband
         do fp = 1,num_nourbanp
            p = filter_nourbanp(fp)
-           if (pactive(p)) then
-              c = pcolumn(p)
-              l = plandunit(p)
-              g = pgridcell(p)
+           c = pcolumn(p)
+           l = plandunit(p)
+           g = pgridcell(p)
 
-              ! Absorbed by canopy
-              
-              cad(p,ib) = forc_solad(g,ib)*fabd(p,ib)
-              cai(p,ib) = forc_solai(g,ib)*fabi(p,ib)
-              sabv(p) = sabv(p) + cad(p,ib) + cai(p,ib)
-              fsa(p)  = fsa(p)  + cad(p,ib) + cai(p,ib)
-              if (ib == 1) then
-                parveg(p) = cad(p,ib) + cai(p,ib)
-              end if
-              if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
-                fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
-              end if
+           ! Absorbed by canopy
 
-              ! Absorbed PAR profile through canopy
-              ! If sun/shade big leaf code, nrad=1 and fluxes from SurfaceAlbedo
-              ! are canopy integrated so that layer values equal big leaf values.
-              
-              if (ib == 1) then
-                 do iv = 1, nrad(p)
-                    parsun_z(p,iv) = forc_solad(g,ib)*fabd_sun_z(p,iv) + forc_solai(g,ib)*fabi_sun_z(p,iv)
-                    parsha_z(p,iv) = forc_solad(g,ib)*fabd_sha_z(p,iv) + forc_solai(g,ib)*fabi_sha_z(p,iv)
-                 end do
-              end if
+           cad(p,ib) = forc_solad(g,ib)*fabd(p,ib)
+           cai(p,ib) = forc_solai(g,ib)*fabi(p,ib)
+           sabv(p) = sabv(p) + cad(p,ib) + cai(p,ib)
+           fsa(p)  = fsa(p)  + cad(p,ib) + cai(p,ib)
+           if (ib == 1) then
+              parveg(p) = cad(p,ib) + cai(p,ib)
+           end if
+           if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+              fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
+           end if
 
-              ! Transmitted = solar fluxes incident on ground
+           ! Absorbed PAR profile through canopy
+           ! If sun/shade big leaf code, nrad=1 and fluxes from SurfaceAlbedo
+           ! are canopy integrated so that layer values equal big leaf values.
 
-              trd(p,ib) = forc_solad(g,ib)*ftdd(p,ib)
-              tri(p,ib) = forc_solad(g,ib)*ftid(p,ib) + forc_solai(g,ib)*ftii(p,ib)
+           if (ib == 1) then
+              do iv = 1, nrad(p)
+                 parsun_z(p,iv) = forc_solad(g,ib)*fabd_sun_z(p,iv) + forc_solai(g,ib)*fabi_sun_z(p,iv)
+                 parsha_z(p,iv) = forc_solad(g,ib)*fabd_sha_z(p,iv) + forc_solai(g,ib)*fabi_sha_z(p,iv)
+              end do
+           end if
 
-              ! Solar radiation absorbed by ground surface
-              
-              ! calculate absorbed solar by soil/snow separately
-              absrad  = trd(p,ib)*(1._r8-albsod(c,ib)) + tri(p,ib)*(1._r8-albsoi(c,ib))
-              sabg_soil(p) = sabg_soil(p) + absrad
-              absrad  = trd(p,ib)*(1._r8-albsnd_hst(c,ib)) + tri(p,ib)*(1._r8-albsni_hst(c,ib))
-              sabg_snow(p) = sabg_snow(p) + absrad
-              absrad  = trd(p,ib)*(1._r8-albgrd(c,ib)) + tri(p,ib)*(1._r8-albgri(c,ib))
-              sabg(p) = sabg(p) + absrad
-              fsa(p)  = fsa(p)  + absrad
-              if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
-                fsa_r(p)  = fsa_r(p)  + absrad
-              end if
-              if (snl(c) == 0) then
-                 sabg_snow(p) = sabg(p)
-                 sabg_soil(p) = sabg(p)
-              endif
-              ! if no subgrid fluxes, make sure to set both components equal to weighted average
-              if (subgridflag == 0) then 
-                 sabg_snow(p) = sabg(p)
-                 sabg_soil(p) = sabg(p)
-              endif
+           ! Transmitted = solar fluxes incident on ground
+
+           trd(p,ib) = forc_solad(g,ib)*ftdd(p,ib)
+           tri(p,ib) = forc_solad(g,ib)*ftid(p,ib) + forc_solai(g,ib)*ftii(p,ib)
+
+           ! Solar radiation absorbed by ground surface
+
+           ! calculate absorbed solar by soil/snow separately
+           absrad  = trd(p,ib)*(1._r8-albsod(c,ib)) + tri(p,ib)*(1._r8-albsoi(c,ib))
+           sabg_soil(p) = sabg_soil(p) + absrad
+           absrad  = trd(p,ib)*(1._r8-albsnd_hst(c,ib)) + tri(p,ib)*(1._r8-albsni_hst(c,ib))
+           sabg_snow(p) = sabg_snow(p) + absrad
+           absrad  = trd(p,ib)*(1._r8-albgrd(c,ib)) + tri(p,ib)*(1._r8-albgri(c,ib))
+           sabg(p) = sabg(p) + absrad
+           fsa(p)  = fsa(p)  + absrad
+           if (ityplun(l)==istsoil .or. ityplun(l)==istcrop) then
+              fsa_r(p)  = fsa_r(p)  + absrad
+           end if
+           if (snl(c) == 0) then
+              sabg_snow(p) = sabg(p)
+              sabg_soil(p) = sabg(p)
+           endif
+           ! if no subgrid fluxes, make sure to set both components equal to weighted average
+           if (subgridflag == 0) then 
+              sabg_snow(p) = sabg(p)
+              sabg_soil(p) = sabg(p)
+           endif
 
 #if (defined SNICAR_FRC)
-              ! Solar radiation absorbed by ground surface without BC
-              absrad_bc = trd(p,ib)*(1._r8-albgrd_bc(c,ib)) + tri(p,ib)*(1._r8-albgri_bc(c,ib))
-              sabg_bc(p) = sabg_bc(p) + absrad_bc
+           ! Solar radiation absorbed by ground surface without BC
+           absrad_bc = trd(p,ib)*(1._r8-albgrd_bc(c,ib)) + tri(p,ib)*(1._r8-albgri_bc(c,ib))
+           sabg_bc(p) = sabg_bc(p) + absrad_bc
 
-              ! Solar radiation absorbed by ground surface without OC
-              absrad_oc = trd(p,ib)*(1._r8-albgrd_oc(c,ib)) + tri(p,ib)*(1._r8-albgri_oc(c,ib))
-              sabg_oc(p) = sabg_oc(p) + absrad_oc
+           ! Solar radiation absorbed by ground surface without OC
+           absrad_oc = trd(p,ib)*(1._r8-albgrd_oc(c,ib)) + tri(p,ib)*(1._r8-albgri_oc(c,ib))
+           sabg_oc(p) = sabg_oc(p) + absrad_oc
 
-              ! Solar radiation absorbed by ground surface without dust
-              absrad_dst = trd(p,ib)*(1._r8-albgrd_dst(c,ib)) + tri(p,ib)*(1._r8-albgri_dst(c,ib))
-              sabg_dst(p) = sabg_dst(p) + absrad_dst
+           ! Solar radiation absorbed by ground surface without dust
+           absrad_dst = trd(p,ib)*(1._r8-albgrd_dst(c,ib)) + tri(p,ib)*(1._r8-albgri_dst(c,ib))
+           sabg_dst(p) = sabg_dst(p) + absrad_dst
 
-              ! Solar radiation absorbed by ground surface without any aerosols
-              absrad_pur = trd(p,ib)*(1._r8-albgrd_pur(c,ib)) + tri(p,ib)*(1._r8-albgri_pur(c,ib))
-              sabg_pur(p) = sabg_pur(p) + absrad_pur
+           ! Solar radiation absorbed by ground surface without any aerosols
+           absrad_pur = trd(p,ib)*(1._r8-albgrd_pur(c,ib)) + tri(p,ib)*(1._r8-albgri_pur(c,ib))
+           sabg_pur(p) = sabg_pur(p) + absrad_pur
 #endif
 
-           end if
         end do ! end of pft loop
      end do ! end nbands loop   
 
@@ -400,194 +389,190 @@ contains
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-           if (pactive(p)) then
-           c = pcolumn(p)
-           l = plandunit(p)
-           sabg_snl_sum = 0._r8
+        c = pcolumn(p)
+        l = plandunit(p)
+        sabg_snl_sum = 0._r8
 
-           ! CASE1: No snow layers: all energy is absorbed in top soil layer
-           if (snl(c) == 0) then
-              sabg_lyr(p,:) = 0._r8
-              sabg_lyr(p,1) = sabg(p)
-              sabg_snl_sum  = sabg_lyr(p,1)
-   
+        ! CASE1: No snow layers: all energy is absorbed in top soil layer
+        if (snl(c) == 0) then
+           sabg_lyr(p,:) = 0._r8
+           sabg_lyr(p,1) = sabg(p)
+           sabg_snl_sum  = sabg_lyr(p,1)
+
            ! CASE 2: Snow layers present: absorbed radiation is scaled according to 
            ! flux factors computed by SNICAR
-           else
-              do i = -nlevsno+1,1,1
-                 sabg_lyr(p,i) = flx_absdv(c,i)*trd(p,1) + flx_absdn(c,i)*trd(p,2) + &
-                                 flx_absiv(c,i)*tri(p,1) + flx_absin(c,i)*tri(p,2)
-                 ! summed radiation in active snow layers:
-                 if (i >= snl(c)+1) then
-                    sabg_snl_sum = sabg_snl_sum + sabg_lyr(p,i)
-                 endif
-              enddo
-   
-              ! Error handling: The situation below can occur when solar radiation is 
-              ! NOT computed every timestep.
-              ! When the number of snow layers has changed in between computations of the 
-              ! absorbed solar energy in each layer, we must redistribute the absorbed energy
-              ! to avoid physically unrealistic conditions. The assumptions made below are 
-              ! somewhat arbitrary, but this situation does not arise very frequently. 
-              ! This error handling is implemented to accomodate any value of the
-              ! radiation frequency.
-              ! change condition to match sabg_snow isntead of sabg
-              if (abs(sabg_snl_sum-sabg_snow(p)) > 0.00001_r8) then
+        else
+           do i = -nlevsno+1,1,1
+              sabg_lyr(p,i) = flx_absdv(c,i)*trd(p,1) + flx_absdn(c,i)*trd(p,2) + &
+                   flx_absiv(c,i)*tri(p,1) + flx_absin(c,i)*tri(p,2)
+              ! summed radiation in active snow layers:
+              if (i >= snl(c)+1) then
+                 sabg_snl_sum = sabg_snl_sum + sabg_lyr(p,i)
+              endif
+           enddo
+
+           ! Error handling: The situation below can occur when solar radiation is 
+           ! NOT computed every timestep.
+           ! When the number of snow layers has changed in between computations of the 
+           ! absorbed solar energy in each layer, we must redistribute the absorbed energy
+           ! to avoid physically unrealistic conditions. The assumptions made below are 
+           ! somewhat arbitrary, but this situation does not arise very frequently. 
+           ! This error handling is implemented to accomodate any value of the
+           ! radiation frequency.
+           ! change condition to match sabg_snow isntead of sabg
+           if (abs(sabg_snl_sum-sabg_snow(p)) > 0.00001_r8) then
+              if (snl(c) == 0) then
+                 sabg_lyr(p,-4:0) = 0._r8
+                 sabg_lyr(p,1) = sabg(p)
+              elseif (snl(c) == -1) then
+                 sabg_lyr(p,-4:-1) = 0._r8
+                 sabg_lyr(p,0) = sabg_snow(p)*0.6_r8
+                 sabg_lyr(p,1) = sabg_snow(p)*0.4_r8
+              else
+                 sabg_lyr(p,:) = 0._r8
+                 sabg_lyr(p,snl(c)+1) = sabg_snow(p)*0.75_r8
+                 sabg_lyr(p,snl(c)+2) = sabg_snow(p)*0.25_r8
+              endif
+           endif
+
+           ! If shallow snow depth, all solar radiation absorbed in top or top two snow layers
+           ! to prevent unrealistic timestep soil warming 
+           if (subgridflag == 0) then 
+              if (snow_depth(c) < 0.10_r8) then
                  if (snl(c) == 0) then
                     sabg_lyr(p,-4:0) = 0._r8
                     sabg_lyr(p,1) = sabg(p)
                  elseif (snl(c) == -1) then
                     sabg_lyr(p,-4:-1) = 0._r8
-                    sabg_lyr(p,0) = sabg_snow(p)*0.6_r8
-                    sabg_lyr(p,1) = sabg_snow(p)*0.4_r8
+                    sabg_lyr(p,0) = sabg(p)
+                    sabg_lyr(p,1) = 0._r8
                  else
                     sabg_lyr(p,:) = 0._r8
-                    sabg_lyr(p,snl(c)+1) = sabg_snow(p)*0.75_r8
-                    sabg_lyr(p,snl(c)+2) = sabg_snow(p)*0.25_r8
-                 endif
-              endif
-
-              ! If shallow snow depth, all solar radiation absorbed in top or top two snow layers
-              ! to prevent unrealistic timestep soil warming 
-              if (subgridflag == 0) then 
-                 if (snow_depth(c) < 0.10_r8) then
-                    if (snl(c) == 0) then
-                       sabg_lyr(p,-4:0) = 0._r8
-                       sabg_lyr(p,1) = sabg(p)
-                    elseif (snl(c) == -1) then
-                       sabg_lyr(p,-4:-1) = 0._r8
-                       sabg_lyr(p,0) = sabg(p)
-                       sabg_lyr(p,1) = 0._r8
-                    else
-                       sabg_lyr(p,:) = 0._r8
-                       sabg_lyr(p,snl(c)+1) = sabg(p)*0.75_r8
-                       sabg_lyr(p,snl(c)+2) = sabg(p)*0.25_r8
-                    endif
+                    sabg_lyr(p,snl(c)+1) = sabg(p)*0.75_r8
+                    sabg_lyr(p,snl(c)+2) = sabg(p)*0.25_r8
                  endif
               endif
            endif
+        endif
 
-           ! This situation should not happen:
-           if (abs(sum(sabg_lyr(p,:))-sabg_snow(p)) > 0.00001_r8) then
-              write(iulog,*) "SNICAR ERROR: Absorbed ground radiation not equal to summed snow layer radiation. pft = ",   &
-                             p," Col= ", c, " Diff= ",sum(sabg_lyr(p,:))-sabg_snow(p), &
-                             " sabg_snow(p)= ", sabg_snow(p), " sabg_sum(p)= ", &
-                             sum(sabg_lyr(p,:)), " snl(c)= ", snl(c)
-              write(iulog,*) "flx_absdv1= ", trd(p,1)*(1.-albgrd(c,1)), "flx_absdv2= ", sum(flx_absdv(c,:))*trd(p,1)
-              write(iulog,*) "flx_absiv1= ", tri(p,1)*(1.-albgri(c,1))," flx_absiv2= ", sum(flx_absiv(c,:))*tri(p,1)
-              write(iulog,*) "flx_absdn1= ", trd(p,2)*(1.-albgrd(c,2))," flx_absdn2= ", sum(flx_absdn(c,:))*trd(p,2)
-              write(iulog,*) "flx_absin1= ", tri(p,2)*(1.-albgri(c,2))," flx_absin2= ", sum(flx_absin(c,:))*tri(p,2)
-   
-              write(iulog,*) "albgrd_nir= ", albgrd(c,2)
-              write(iulog,*) "coszen= ", coszen(c)
-              call endrun()
-           endif
+        ! This situation should not happen:
+        if (abs(sum(sabg_lyr(p,:))-sabg_snow(p)) > 0.00001_r8) then
+           write(iulog,*) "SNICAR ERROR: Absorbed ground radiation not equal to summed snow layer radiation. pft = ",   &
+                p," Col= ", c, " Diff= ",sum(sabg_lyr(p,:))-sabg_snow(p), &
+                " sabg_snow(p)= ", sabg_snow(p), " sabg_sum(p)= ", &
+                sum(sabg_lyr(p,:)), " snl(c)= ", snl(c)
+           write(iulog,*) "flx_absdv1= ", trd(p,1)*(1.-albgrd(c,1)), "flx_absdv2= ", sum(flx_absdv(c,:))*trd(p,1)
+           write(iulog,*) "flx_absiv1= ", tri(p,1)*(1.-albgri(c,1))," flx_absiv2= ", sum(flx_absiv(c,:))*tri(p,1)
+           write(iulog,*) "flx_absdn1= ", trd(p,2)*(1.-albgrd(c,2))," flx_absdn2= ", sum(flx_absdn(c,:))*trd(p,2)
+           write(iulog,*) "flx_absin1= ", tri(p,2)*(1.-albgri(c,2))," flx_absin2= ", sum(flx_absin(c,:))*tri(p,2)
 
-           ! Diagnostic: shortwave penetrating ground (e.g. top layer)
-           if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
-              sabg_pen(p) = sabg(p) - sabg_lyr(p, snl(c)+1)
-           end if
+           write(iulog,*) "albgrd_nir= ", albgrd(c,2)
+           write(iulog,*) "coszen= ", coszen(c)
+           call endrun()
+        endif
+
+        ! Diagnostic: shortwave penetrating ground (e.g. top layer)
+        if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
+           sabg_pen(p) = sabg(p) - sabg_lyr(p, snl(c)+1)
+        end if
 
 #if (defined SNICAR_FRC)
 
-           ! BC aerosol forcing (pft-level):
-           sfc_frc_bc(p) = sabg(p) - sabg_bc(p)
-   
-           ! OC aerosol forcing (pft-level):
-           if (DO_SNO_OC) then
-              sfc_frc_oc(p) = sabg(p) - sabg_oc(p)
-           else
-              sfc_frc_oc(p) = 0._r8
-           endif
-   
-           ! dust aerosol forcing (pft-level):
-           sfc_frc_dst(p) = sabg(p) - sabg_dst(p)
-   
-           ! all-aerosol forcing (pft-level):
-           sfc_frc_aer(p) = sabg(p) - sabg_pur(p)        
-           
-           ! forcings averaged only over snow:
-           if (frac_sno(c) > 0._r8) then
-              sfc_frc_bc_sno(p)  = sfc_frc_bc(p)/frac_sno(c)
-              sfc_frc_oc_sno(p)  = sfc_frc_oc(p)/frac_sno(c)
-              sfc_frc_dst_sno(p) = sfc_frc_dst(p)/frac_sno(c)
-              sfc_frc_aer_sno(p) = sfc_frc_aer(p)/frac_sno(c)
-           else
-              sfc_frc_bc_sno(p)  = spval
-              sfc_frc_oc_sno(p)  = spval
-              sfc_frc_dst_sno(p) = spval
-              sfc_frc_aer_sno(p) = spval
-           endif
+        ! BC aerosol forcing (pft-level):
+        sfc_frc_bc(p) = sabg(p) - sabg_bc(p)
+
+        ! OC aerosol forcing (pft-level):
+        if (DO_SNO_OC) then
+           sfc_frc_oc(p) = sabg(p) - sabg_oc(p)
+        else
+           sfc_frc_oc(p) = 0._r8
+        endif
+
+        ! dust aerosol forcing (pft-level):
+        sfc_frc_dst(p) = sabg(p) - sabg_dst(p)
+
+        ! all-aerosol forcing (pft-level):
+        sfc_frc_aer(p) = sabg(p) - sabg_pur(p)        
+
+        ! forcings averaged only over snow:
+        if (frac_sno(c) > 0._r8) then
+           sfc_frc_bc_sno(p)  = sfc_frc_bc(p)/frac_sno(c)
+           sfc_frc_oc_sno(p)  = sfc_frc_oc(p)/frac_sno(c)
+           sfc_frc_dst_sno(p) = sfc_frc_dst(p)/frac_sno(c)
+           sfc_frc_aer_sno(p) = sfc_frc_aer(p)/frac_sno(c)
+        else
+           sfc_frc_bc_sno(p)  = spval
+           sfc_frc_oc_sno(p)  = spval
+           sfc_frc_dst_sno(p) = spval
+           sfc_frc_aer_sno(p) = spval
+        endif
 
 #endif
-        endif
      enddo
 
      ! Radiation diagnostics
 
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pactive(p)) then
-           g = pgridcell(p)
-        
-           ! NDVI and reflected solar radiation
-           
-           rvis = albd(p,1)*forc_solad(g,1) + albi(p,1)*forc_solai(g,1)
-           rnir = albd(p,2)*forc_solad(g,2) + albi(p,2)*forc_solai(g,2)
-           fsr(p) = rvis + rnir
-           
-           fsds_vis_d(p) = forc_solad(g,1)
-           fsds_nir_d(p) = forc_solad(g,2)
-           fsds_vis_i(p) = forc_solai(g,1)
-           fsds_nir_i(p) = forc_solai(g,2)
-           fsr_vis_d(p)  = albd(p,1)*forc_solad(g,1)
-           fsr_nir_d(p)  = albd(p,2)*forc_solad(g,2)
-           fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
-           fsr_nir_i(p)  = albi(p,2)*forc_solai(g,2)
-           
-           local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
-           local_secp1 = mod(local_secp1,isecspday)
-           if (local_secp1 == isecspday/2) then
-              fsds_vis_d_ln(p) = forc_solad(g,1)
-              fsds_nir_d_ln(p) = forc_solad(g,2)
-              fsr_vis_d_ln(p) = albd(p,1)*forc_solad(g,1)
-              fsr_nir_d_ln(p) = albd(p,2)*forc_solad(g,2)
-              fsds_vis_i_ln(p) = forc_solai(g,1)
-              parveg_ln(p)     = parveg(p)
-           else
-              fsds_vis_d_ln(p) = spval
-              fsds_nir_d_ln(p) = spval
-              fsr_vis_d_ln(p) = spval
-              fsr_nir_d_ln(p) = spval
-              fsds_vis_i_ln(p) = spval
-              parveg_ln(p)     = spval
-           end if
+        g = pgridcell(p)
 
-           ! diagnostic variables (downwelling and absorbed radiation partitioning) for history files
-           ! (OPTIONAL)
-           c = pcolumn(p)
-           if (snl(c) < 0) then
-              fsds_sno_vd(p) = forc_solad(g,1)
-              fsds_sno_nd(p) = forc_solad(g,2)
-              fsds_sno_vi(p) = forc_solai(g,1)
-              fsds_sno_ni(p) = forc_solai(g,2)
+        ! NDVI and reflected solar radiation
 
-              fsr_sno_vd(p) = fsds_vis_d(p)*albsnd_hst(c,1)
-              fsr_sno_nd(p) = fsds_nir_d(p)*albsnd_hst(c,2)
-              fsr_sno_vi(p) = fsds_vis_i(p)*albsni_hst(c,1)
-              fsr_sno_ni(p) = fsds_nir_i(p)*albsni_hst(c,2)
-           else
-              fsds_sno_vd(p) = spval
-              fsds_sno_nd(p) = spval
-              fsds_sno_vi(p) = spval
-              fsds_sno_ni(p) = spval
+        rvis = albd(p,1)*forc_solad(g,1) + albi(p,1)*forc_solai(g,1)
+        rnir = albd(p,2)*forc_solad(g,2) + albi(p,2)*forc_solai(g,2)
+        fsr(p) = rvis + rnir
 
-              fsr_sno_vd(p) = spval
-              fsr_sno_nd(p) = spval
-              fsr_sno_vi(p) = spval
-              fsr_sno_ni(p) = spval
-           endif
+        fsds_vis_d(p) = forc_solad(g,1)
+        fsds_nir_d(p) = forc_solad(g,2)
+        fsds_vis_i(p) = forc_solai(g,1)
+        fsds_nir_i(p) = forc_solai(g,2)
+        fsr_vis_d(p)  = albd(p,1)*forc_solad(g,1)
+        fsr_nir_d(p)  = albd(p,2)*forc_solad(g,2)
+        fsr_vis_i(p)  = albi(p,1)*forc_solai(g,1)
+        fsr_nir_i(p)  = albi(p,2)*forc_solai(g,2)
+
+        local_secp1 = secs + nint((grc%londeg(g)/degpsec)/dtime)*dtime
+        local_secp1 = mod(local_secp1,isecspday)
+        if (local_secp1 == isecspday/2) then
+           fsds_vis_d_ln(p) = forc_solad(g,1)
+           fsds_nir_d_ln(p) = forc_solad(g,2)
+           fsr_vis_d_ln(p) = albd(p,1)*forc_solad(g,1)
+           fsr_nir_d_ln(p) = albd(p,2)*forc_solad(g,2)
+           fsds_vis_i_ln(p) = forc_solai(g,1)
+           parveg_ln(p)     = parveg(p)
+        else
+           fsds_vis_d_ln(p) = spval
+           fsds_nir_d_ln(p) = spval
+           fsr_vis_d_ln(p) = spval
+           fsr_nir_d_ln(p) = spval
+           fsds_vis_i_ln(p) = spval
+           parveg_ln(p)     = spval
         end if
+
+        ! diagnostic variables (downwelling and absorbed radiation partitioning) for history files
+        ! (OPTIONAL)
+        c = pcolumn(p)
+        if (snl(c) < 0) then
+           fsds_sno_vd(p) = forc_solad(g,1)
+           fsds_sno_nd(p) = forc_solad(g,2)
+           fsds_sno_vi(p) = forc_solai(g,1)
+           fsds_sno_ni(p) = forc_solai(g,2)
+
+           fsr_sno_vd(p) = fsds_vis_d(p)*albsnd_hst(c,1)
+           fsr_sno_nd(p) = fsds_nir_d(p)*albsnd_hst(c,2)
+           fsr_sno_vi(p) = fsds_vis_i(p)*albsni_hst(c,1)
+           fsr_sno_ni(p) = fsds_nir_i(p)*albsni_hst(c,2)
+        else
+           fsds_sno_vd(p) = spval
+           fsds_sno_nd(p) = spval
+           fsds_sno_vi(p) = spval
+           fsds_sno_ni(p) = spval
+
+           fsr_sno_vd(p) = spval
+           fsr_sno_nd(p) = spval
+           fsr_sno_vi(p) = spval
+           fsr_sno_ni(p) = spval
+        endif
      end do 
 
     end associate 

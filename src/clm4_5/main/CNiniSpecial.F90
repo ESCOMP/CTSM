@@ -68,6 +68,9 @@ subroutine CNiniSpecial ()
    allocate(specialp(endp-begp+1))
 
    ! fill special landunit filters
+   ! WJS (6-12-13): Unlike most other filters, which apply only over active points, these
+   ! filters apply over all points. This is to be consistent with other initialization
+   ! code, much of which initializes values over all points (not just active points).
    num_specialc = 0
    do c = begc, endc
       l = clandunit(c)

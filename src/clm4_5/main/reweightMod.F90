@@ -254,7 +254,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon, only : istice_mec
+    use clm_varcon, only : istice_mec, isturb_MIN, isturb_MAX
     use domainMod , only : ldomain
 !
 ! !ARGUMENTS:
@@ -282,6 +282,16 @@ contains
     ! might need input from virtual (0-weight) landunits
     if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_p = .true.
 
+    ! We don't really need to run over 0-weight urban pfts. But because of some
+    ! messiness in the urban code (many loops are over the landunit filter, then drill
+    ! down to columns - so we would need to add 'col%active(c)' conditionals in many
+    ! places) it keeps the code cleaner to run over 0-weight urban pfts. This generally
+    ! shouldn't add much computation time, since in most places, all urban pfts are
+    ! non-zero weight if the landunit is non-zero weight.
+    if (lun%active(l) .and. (lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX)) then
+       is_active_p = .true.
+    end if
+
   end function is_active_p
 !------------------------------------------------------------------------
 
@@ -298,7 +308,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon, only : istice_mec
+    use clm_varcon, only : istice_mec, isturb_MIN, isturb_MAX
     use domainMod , only : ldomain
 !
 ! !ARGUMENTS:
@@ -325,6 +335,16 @@ contains
     ! always run over ice_mec landunits within the glcmask, because this is where glc
     ! might need input from virtual (0-weight) landunits
     if (lun%itype(l) == istice_mec .and. ldomain%glcmask(g) == 1) is_active_c = .true.
+
+    ! We don't really need to run over 0-weight urban columns. But because of some
+    ! messiness in the urban code (many loops are over the landunit filter, then drill
+    ! down to columns - so we would need to add 'col%active(c)' conditionals in many
+    ! places) it keeps the code cleaner to run over 0-weight urban columns. This generally
+    ! shouldn't add much computation time, since in most places, all urban columns are
+    ! non-zero weight if the landunit is non-zero weight.
+    if (lun%active(l) .and. (lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX)) then
+       is_active_c = .true.
+    end if
     
   end function is_active_c
 !------------------------------------------------------------------------

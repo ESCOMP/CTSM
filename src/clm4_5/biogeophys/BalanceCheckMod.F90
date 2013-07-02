@@ -633,9 +633,11 @@ contains
 
     found = .false.
     do c = lbc, ubc
-       if (abs(errsoi_col(c)) > 1.0e-7_r8 ) then
-          found = .true.
-          indexc = c
+       if (cactive(c)) then
+          if (abs(errsoi_col(c)) > 1.0e-7_r8 ) then
+             found = .true.
+             indexc = c
+          end if
        end if
     end do
     if ( found ) then

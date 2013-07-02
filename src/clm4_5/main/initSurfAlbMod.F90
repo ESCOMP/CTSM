@@ -52,7 +52,7 @@ contains
     use clmtype
     use spmdMod             , only : masterproc,iam
     use decompMod           , only : get_proc_clumps, get_clump_bounds
-    use filterMod           , only : filter
+    use filterMod           , only : filter, filter_inactive_and_active
     use clm_varpar          , only : nlevsoi, nlevsno, nlevlak, nlevgrnd
     use clm_varcon          , only : zlnd, istsoil, denice, denh2o, &
                                      icol_roof, icol_road_imperv, &
@@ -330,19 +330,29 @@ contains
        ! Compute Surface Albedo - all land points (including lake) other than urban
        ! Needs as input fracion of soil covered by snow (Z.-L. Yang U. Texas)
 
+       ! Note that in both the SurfaceAlbedo call and the UrbanAlbedo call, we use the
+       ! version of the filters that includes inactive as well as active points, because
+       ! some variables computed there are needed over points that later become active
+       ! due to landuse change.
+
        call SurfaceAlbedo(begg, endg, begc, endc, begp, endp, &
-                          filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
-                          filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
+                          filter_inactive_and_active(nc)%num_nourbanc, &
+                          filter_inactive_and_active(nc)%nourbanc, &
+                          filter_inactive_and_active(nc)%num_nourbanp, &
+                          filter_inactive_and_active(nc)%nourbanp, &
                           calday, declin)
        
 
        ! Determine albedos for urban landunits
 
-       if (filter(nc)%num_urbanl > 0) then
+       if (filter_inactive_and_active(nc)%num_urbanl > 0) then
           call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp, &
-                           filter(nc)%num_urbanl, filter(nc)%urbanl, &
-                           filter(nc)%num_urbanc, filter(nc)%urbanc, &
-                           filter(nc)%num_urbanp, filter(nc)%urbanp )
+                           filter_inactive_and_active(nc)%num_urbanl, &
+                           filter_inactive_and_active(nc)%urbanl, &
+                           filter_inactive_and_active(nc)%num_urbanc, &
+                           filter_inactive_and_active(nc)%urbanc, &
+                           filter_inactive_and_active(nc)%num_urbanp, &
+                           filter_inactive_and_active(nc)%urbanp )
 
        end if
 

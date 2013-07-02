@@ -57,18 +57,20 @@ contains
 ! !OTHER LOCAL VARIABLES:
 !EOP
     integer :: c,fc                      ! indices
-    integer :: num_allc                  ! number of total column points
-    integer :: filter_allc(ubc-lbc+1)    ! filter for all column points
+    integer :: num_allc                  ! number of active column points
+    integer :: filter_allc(ubc-lbc+1)    ! filter for all active column points
 ! -----------------------------------------------------------------
 
-    ! Set up a filter for all column points
+    ! Set up a filter for all active column points
 
-    num_allc = ubc-lbc+1
     fc = 0
     do c = lbc,ubc
-       fc = fc + 1
-       filter_allc(fc) = c
+       if (col%active(c)) then
+          fc = fc + 1
+          filter_allc(fc) = c
+       end if
     end do
+    num_allc = fc
 
     ! Note: lake points are excluded from many of the following averages. For some fields,
     ! this is because the field doesn't apply over lakes. However, for many others, this

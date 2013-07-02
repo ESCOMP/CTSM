@@ -86,7 +86,7 @@ module clm_driver
   use clm_varctl          , only : wrtdia, fpftdyn, iulog, create_glacier_mec_landunit
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds, get_proc_bounds
-  use filterMod           , only : filter
+  use filterMod           , only : filter, filter_inactive_and_active
   use reweightMod         , only : reweightWrapup
 #if (defined CNDV)
   use CNDVMod             , only : dv, histCNDV
@@ -328,8 +328,18 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
       call alt_calc(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
 
 #if (defined CN)
-      call decomp_vertprofiles(begp, endp, begc, endc, filter(nc)%num_soilc, filter(nc)%soilc, &
-         filter(nc)%num_soilp, filter(nc)%soilp)
+      !  Note (WJS, 6-12-13): Because of this routine's placement in the driver sequence
+      !  (it is called very early in each timestep, before weights are adjusted and
+      !  filters are updated), it may be necessary for this routine to compute values over
+      !  inactive as well as active points (since some inactive points may soon become
+      !  active) - so that's what is done now. Currently, it seems to be okay to do this,
+      !  because the variables computed here seem to only depend on quantities that are
+      !  valid over inactive as well as active points.
+      call decomp_vertprofiles(begp, endp, begc, endc, &
+                               filter_inactive_and_active(nc)%num_soilc, &
+                               filter_inactive_and_active(nc)%soilc, &
+                               filter_inactive_and_active(nc)%num_soilp, &
+                               filter_inactive_and_active(nc)%soilp)
 #endif
 
       call t_stopf("decomp_vert")
@@ -720,11 +730,17 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      if (doalb) then
         call t_startf('surfalb')
 
+        ! The following calls don't really need to use the filter_inactive_and_active
+        ! version of the filters, but do so for consistency with the calls to these
+        ! routines from initSurfAlbMod
+
         ! Albedos for non-urban columns
 
         call SurfaceAlbedo(begg, endg, begc, endc, begp, endp, &
-                           filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
-                           filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
+                           filter_inactive_and_active(nc)%num_nourbanc, &
+                           filter_inactive_and_active(nc)%nourbanc, &
+                           filter_inactive_and_active(nc)%num_nourbanp, &
+                           filter_inactive_and_active(nc)%nourbanp, &
                            nextsw_cday, declinp1)
 
         call t_stopf('surfalb')
@@ -733,11 +749,14 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 
         call t_startf('urbsurfalb')
 
-        if (filter(nc)%num_urbanl > 0) then
+        if (filter_inactive_and_active(nc)%num_urbanl > 0) then
            call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp,   &
-                            filter(nc)%num_urbanl, filter(nc)%urbanl, &
-                            filter(nc)%num_urbanc, filter(nc)%urbanc, &
-                            filter(nc)%num_urbanp, filter(nc)%urbanp)
+                            filter_inactive_and_active(nc)%num_urbanl, &
+                            filter_inactive_and_active(nc)%urbanl, &
+                            filter_inactive_and_active(nc)%num_urbanc, &
+                            filter_inactive_and_active(nc)%urbanc, &
+                            filter_inactive_and_active(nc)%num_urbanp, &
+                            filter_inactive_and_active(nc)%urbanp)
         end if
 
         call t_stopf('urbsurfalb')

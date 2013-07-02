@@ -87,6 +87,11 @@ contains
 ! !DESCRIPTION: 
 ! Determine urban landunit component albedos
 !
+! Note that this is called with the "inactive_and_active" version of the filters, because
+! the variables computed here are needed over inactive points that might later become
+! active (due to landuse change). Thus, this routine cannot depend on variables that are
+! only computed over active points.
+!
 ! !USES:
     use clmtype
     use shr_orb_mod  , only : shr_orb_decl, shr_orb_cosz
@@ -1377,25 +1382,21 @@ contains
 
           road_a_dir(fl)              = 0.0_r8
           road_r_dir(fl)              = 0.0_r8
-          if ( wtroad_imperv(fl) > 0.0_r8 ) then
-             improad_a_dir(fl)           = (1._r8-alb_improad_dir(fl,ib)) * sdir_road(fl,ib) 
-             improad_r_dir(fl)           =     alb_improad_dir(fl,ib)  * sdir_road(fl,ib) 
-             improad_r_sky_dir(fl)       = improad_r_dir(fl) * vf_sr(l)
-             improad_r_sunwall_dir(fl)   = improad_r_dir(fl) * vf_wr(l)
-             improad_r_shadewall_dir(fl) = improad_r_dir(fl) * vf_wr(l)
-             road_a_dir(fl)              = road_a_dir(fl) + improad_a_dir(fl)*wtroad_imperv(fl)
-             road_r_dir(fl)              = road_r_dir(fl) + improad_r_dir(fl)*wtroad_imperv(fl)
-          end if
+          improad_a_dir(fl)           = (1._r8-alb_improad_dir(fl,ib)) * sdir_road(fl,ib) 
+          improad_r_dir(fl)           =     alb_improad_dir(fl,ib)  * sdir_road(fl,ib) 
+          improad_r_sky_dir(fl)       = improad_r_dir(fl) * vf_sr(l)
+          improad_r_sunwall_dir(fl)   = improad_r_dir(fl) * vf_wr(l)
+          improad_r_shadewall_dir(fl) = improad_r_dir(fl) * vf_wr(l)
+          road_a_dir(fl)              = road_a_dir(fl) + improad_a_dir(fl)*wtroad_imperv(fl)
+          road_r_dir(fl)              = road_r_dir(fl) + improad_r_dir(fl)*wtroad_imperv(fl)
 
-          if ( wtroad_perv(fl)   > 0.0_r8 ) then
-             perroad_a_dir(fl)           = (1._r8-alb_perroad_dir(fl,ib)) * sdir_road(fl,ib) 
-             perroad_r_dir(fl)           =     alb_perroad_dir(fl,ib)  * sdir_road(fl,ib) 
-             perroad_r_sky_dir(fl)       = perroad_r_dir(fl) * vf_sr(l)
-             perroad_r_sunwall_dir(fl)   = perroad_r_dir(fl) * vf_wr(l)
-             perroad_r_shadewall_dir(fl) = perroad_r_dir(fl) * vf_wr(l)
-             road_a_dir(fl)              = road_a_dir(fl) + perroad_a_dir(fl)*wtroad_perv(fl)
-             road_r_dir(fl)              = road_r_dir(fl) + perroad_r_dir(fl)*wtroad_perv(fl)
-          end if
+          perroad_a_dir(fl)           = (1._r8-alb_perroad_dir(fl,ib)) * sdir_road(fl,ib) 
+          perroad_r_dir(fl)           =     alb_perroad_dir(fl,ib)  * sdir_road(fl,ib) 
+          perroad_r_sky_dir(fl)       = perroad_r_dir(fl) * vf_sr(l)
+          perroad_r_sunwall_dir(fl)   = perroad_r_dir(fl) * vf_wr(l)
+          perroad_r_shadewall_dir(fl) = perroad_r_dir(fl) * vf_wr(l)
+          road_a_dir(fl)              = road_a_dir(fl) + perroad_a_dir(fl)*wtroad_perv(fl)
+          road_r_dir(fl)              = road_r_dir(fl) + perroad_r_dir(fl)*wtroad_perv(fl)
 
           road_r_sky_dir(fl)          = road_r_dir(fl) * vf_sr(l)
           road_r_sunwall_dir(fl)      = road_r_dir(fl) * vf_wr(l)
@@ -1417,25 +1418,21 @@ contains
 
           road_a_dif(fl)              = 0.0_r8
           road_r_dif(fl)              = 0.0_r8
-          if ( wtroad_imperv(fl) > 0.0_r8 ) then
-             improad_a_dif(fl)           = (1._r8-alb_improad_dif(fl,ib)) * sdif_road(fl,ib) 
-             improad_r_dif(fl)           =     alb_improad_dif(fl,ib)  * sdif_road(fl,ib) 
-             improad_r_sky_dif(fl)       = improad_r_dif(fl) * vf_sr(l)
-             improad_r_sunwall_dif(fl)   = improad_r_dif(fl) * vf_wr(l)
-             improad_r_shadewall_dif(fl) = improad_r_dif(fl) * vf_wr(l)
-             road_a_dif(fl)              = road_a_dif(fl) + improad_a_dif(fl)*wtroad_imperv(fl)
-             road_r_dif(fl)              = road_r_dif(fl) + improad_r_dif(fl)*wtroad_imperv(fl)
-          end if
+          improad_a_dif(fl)           = (1._r8-alb_improad_dif(fl,ib)) * sdif_road(fl,ib) 
+          improad_r_dif(fl)           =     alb_improad_dif(fl,ib)  * sdif_road(fl,ib) 
+          improad_r_sky_dif(fl)       = improad_r_dif(fl) * vf_sr(l)
+          improad_r_sunwall_dif(fl)   = improad_r_dif(fl) * vf_wr(l)
+          improad_r_shadewall_dif(fl) = improad_r_dif(fl) * vf_wr(l)
+          road_a_dif(fl)              = road_a_dif(fl) + improad_a_dif(fl)*wtroad_imperv(fl)
+          road_r_dif(fl)              = road_r_dif(fl) + improad_r_dif(fl)*wtroad_imperv(fl)
 
-          if ( wtroad_perv(fl)   > 0.0_r8 ) then
-             perroad_a_dif(fl)           = (1._r8-alb_perroad_dif(fl,ib)) * sdif_road(fl,ib) 
-             perroad_r_dif(fl)           =     alb_perroad_dif(fl,ib)  * sdif_road(fl,ib) 
-             perroad_r_sky_dif(fl)       = perroad_r_dif(fl) * vf_sr(l)
-             perroad_r_sunwall_dif(fl)   = perroad_r_dif(fl) * vf_wr(l)
-             perroad_r_shadewall_dif(fl) = perroad_r_dif(fl) * vf_wr(l)
-             road_a_dif(fl)              = road_a_dif(fl) + perroad_a_dif(fl)*wtroad_perv(fl)
-             road_r_dif(fl)              = road_r_dif(fl) + perroad_r_dif(fl)*wtroad_perv(fl)
-          end if
+          perroad_a_dif(fl)           = (1._r8-alb_perroad_dif(fl,ib)) * sdif_road(fl,ib) 
+          perroad_r_dif(fl)           =     alb_perroad_dif(fl,ib)  * sdif_road(fl,ib) 
+          perroad_r_sky_dif(fl)       = perroad_r_dif(fl) * vf_sr(l)
+          perroad_r_sunwall_dif(fl)   = perroad_r_dif(fl) * vf_wr(l)
+          perroad_r_shadewall_dif(fl) = perroad_r_dif(fl) * vf_wr(l)
+          road_a_dif(fl)              = road_a_dif(fl) + perroad_a_dif(fl)*wtroad_perv(fl)
+          road_r_dif(fl)              = road_r_dif(fl) + perroad_r_dif(fl)*wtroad_perv(fl)
 
           road_r_sky_dif(fl)          = road_r_dif(fl) * vf_sr(l)
           road_r_sunwall_dif(fl)      = road_r_dif(fl) * vf_wr(l)
@@ -1455,23 +1452,23 @@ contains
 
           ! initialize sum of direct and diffuse solar absorption and reflection for road and both walls
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) sabs_improad_dir(l,ib)   = improad_a_dir(fl)
-          if ( wtroad_perv(fl)   > 0.0_r8 ) sabs_perroad_dir(l,ib)   = perroad_a_dir(fl)
+          sabs_improad_dir(l,ib)   = improad_a_dir(fl)
+          sabs_perroad_dir(l,ib)   = perroad_a_dir(fl)
           sabs_sunwall_dir(l,ib)   = sunwall_a_dir(fl)
           sabs_shadewall_dir(l,ib) = shadewall_a_dir(fl)
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) sabs_improad_dif(l,ib)   = improad_a_dif(fl)
-          if ( wtroad_perv(fl)   > 0.0_r8 ) sabs_perroad_dif(l,ib)   = perroad_a_dif(fl)
+          sabs_improad_dif(l,ib)   = improad_a_dif(fl)
+          sabs_perroad_dif(l,ib)   = perroad_a_dif(fl)
           sabs_sunwall_dif(l,ib)   = sunwall_a_dif(fl)
           sabs_shadewall_dif(l,ib) = shadewall_a_dif(fl)
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) sref_improad_dir(fl,ib)   = improad_r_sky_dir(fl) 
-          if ( wtroad_perv(fl)   > 0.0_r8 ) sref_perroad_dir(fl,ib)   = perroad_r_sky_dir(fl) 
+          sref_improad_dir(fl,ib)   = improad_r_sky_dir(fl) 
+          sref_perroad_dir(fl,ib)   = perroad_r_sky_dir(fl) 
           sref_sunwall_dir(fl,ib)   = sunwall_r_sky_dir(fl) 
           sref_shadewall_dir(fl,ib) = shadewall_r_sky_dir(fl) 
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) sref_improad_dif(fl,ib)   = improad_r_sky_dif(fl)
-          if ( wtroad_perv(fl)   > 0.0_r8 ) sref_perroad_dif(fl,ib)   = perroad_r_sky_dif(fl)
+          sref_improad_dif(fl,ib)   = improad_r_sky_dif(fl)
+          sref_perroad_dif(fl,ib)   = perroad_r_sky_dif(fl)
           sref_sunwall_dif(fl,ib)   = sunwall_r_sky_dif(fl)
           sref_shadewall_dif(fl,ib) = shadewall_r_sky_dif(fl)
         endif
@@ -1510,18 +1507,14 @@ contains
 
              road_a_dir(fl) = 0.0_r8
              road_r_dir(fl) = 0.0_r8
-             if ( wtroad_imperv(fl) > 0.0_r8 ) then
-                improad_a_dir(fl) = (1._r8-alb_improad_dir(fl,ib)) * stot(fl) 
-                improad_r_dir(fl) =     alb_improad_dir(fl,ib)  * stot(fl) 
-                road_a_dir(fl)    = road_a_dir(fl) + improad_a_dir(fl)*wtroad_imperv(fl)
-                road_r_dir(fl)    = road_r_dir(fl) + improad_r_dir(fl)*wtroad_imperv(fl)
-             end if
-             if ( wtroad_perv(fl)   > 0.0_r8 ) then
-                perroad_a_dir(fl) = (1._r8-alb_perroad_dir(fl,ib)) * stot(fl) 
-                perroad_r_dir(fl) =     alb_perroad_dir(fl,ib)  * stot(fl) 
-                road_a_dir(fl)    = road_a_dir(fl) + perroad_a_dir(fl)*wtroad_perv(fl)
-                road_r_dir(fl)    = road_r_dir(fl) + perroad_r_dir(fl)*wtroad_perv(fl)
-             end if
+             improad_a_dir(fl) = (1._r8-alb_improad_dir(fl,ib)) * stot(fl) 
+             improad_r_dir(fl) =     alb_improad_dir(fl,ib)  * stot(fl) 
+             road_a_dir(fl)    = road_a_dir(fl) + improad_a_dir(fl)*wtroad_imperv(fl)
+             road_r_dir(fl)    = road_r_dir(fl) + improad_r_dir(fl)*wtroad_imperv(fl)
+             perroad_a_dir(fl) = (1._r8-alb_perroad_dir(fl,ib)) * stot(fl) 
+             perroad_r_dir(fl) =     alb_perroad_dir(fl,ib)  * stot(fl) 
+             road_a_dir(fl)    = road_a_dir(fl) + perroad_a_dir(fl)*wtroad_perv(fl)
+             road_r_dir(fl)    = road_r_dir(fl) + perroad_r_dir(fl)*wtroad_perv(fl)
 
              stot(fl) = road_r_sunwall_dir(fl)/canyon_hwr(fl) + shadewall_r_sunwall_dir(fl)
              sunwall_a_dir(fl) = (1._r8-alb_wall_dir(fl,ib)) * stot(fl)
@@ -1533,24 +1526,20 @@ contains
 
              ! step (2)
 
-             if ( wtroad_imperv(fl) > 0.0_r8 ) sabs_improad_dir(l,ib)   = sabs_improad_dir(l,ib)   + improad_a_dir(fl)
-             if ( wtroad_perv(fl)   > 0.0_r8 ) sabs_perroad_dir(l,ib)   = sabs_perroad_dir(l,ib)   + perroad_a_dir(fl)
+             sabs_improad_dir(l,ib)   = sabs_improad_dir(l,ib)   + improad_a_dir(fl)
+             sabs_perroad_dir(l,ib)   = sabs_perroad_dir(l,ib)   + perroad_a_dir(fl)
              sabs_sunwall_dir(l,ib)   = sabs_sunwall_dir(l,ib)   + sunwall_a_dir(fl)
              sabs_shadewall_dir(l,ib) = sabs_shadewall_dir(l,ib) + shadewall_a_dir(fl)
 
              ! step (3)
 
-             if ( wtroad_imperv(fl) > 0.0_r8 ) then
-                improad_r_sky_dir(fl)       = improad_r_dir(fl) * vf_sr(l)
-                improad_r_sunwall_dir(fl)   = improad_r_dir(fl) * vf_wr(l)
-                improad_r_shadewall_dir(fl) = improad_r_dir(fl) * vf_wr(l)
-             end if
+             improad_r_sky_dir(fl)       = improad_r_dir(fl) * vf_sr(l)
+             improad_r_sunwall_dir(fl)   = improad_r_dir(fl) * vf_wr(l)
+             improad_r_shadewall_dir(fl) = improad_r_dir(fl) * vf_wr(l)
 
-             if ( wtroad_perv(fl)   > 0.0_r8 ) then
-                perroad_r_sky_dir(fl)       = perroad_r_dir(fl) * vf_sr(l)
-                perroad_r_sunwall_dir(fl)   = perroad_r_dir(fl) * vf_wr(l)
-                perroad_r_shadewall_dir(fl) = perroad_r_dir(fl) * vf_wr(l)
-             end if
+             perroad_r_sky_dir(fl)       = perroad_r_dir(fl) * vf_sr(l)
+             perroad_r_sunwall_dir(fl)   = perroad_r_dir(fl) * vf_wr(l)
+             perroad_r_shadewall_dir(fl) = perroad_r_dir(fl) * vf_wr(l)
 
              road_r_sky_dir(fl)          = road_r_dir(fl) * vf_sr(l)
              road_r_sunwall_dir(fl)      = road_r_dir(fl) * vf_wr(l)
@@ -1566,8 +1555,8 @@ contains
 
              ! step (4)
 
-             if ( wtroad_imperv(fl) > 0.0_r8 ) sref_improad_dir(fl,ib)   = sref_improad_dir(fl,ib) + improad_r_sky_dir(fl)
-             if ( wtroad_perv(fl)   > 0.0_r8 ) sref_perroad_dir(fl,ib)   = sref_perroad_dir(fl,ib) + perroad_r_sky_dir(fl)
+             sref_improad_dir(fl,ib)   = sref_improad_dir(fl,ib) + improad_r_sky_dir(fl)
+             sref_perroad_dir(fl,ib)   = sref_perroad_dir(fl,ib) + perroad_r_sky_dir(fl)
              sref_sunwall_dir(fl,ib)   = sref_sunwall_dir(fl,ib) + sunwall_r_sky_dir(fl)
              sref_shadewall_dir(fl,ib) = sref_shadewall_dir(fl,ib) + shadewall_r_sky_dir(fl)
 
@@ -1590,18 +1579,14 @@ contains
              stot(fl) = (sunwall_r_road_dif(fl) + shadewall_r_road_dif(fl))*canyon_hwr(fl)
              road_a_dif(fl)    = 0.0_r8
              road_r_dif(fl)    = 0.0_r8
-             if ( wtroad_imperv(fl) > 0.0_r8 ) then
-                improad_a_dif(fl) = (1._r8-alb_improad_dif(fl,ib)) * stot(fl) 
-                improad_r_dif(fl) =     alb_improad_dif(fl,ib)  * stot(fl) 
-                road_a_dif(fl)    = road_a_dif(fl) + improad_a_dif(fl)*wtroad_imperv(fl)
-                road_r_dif(fl)    = road_r_dif(fl) + improad_r_dif(fl)*wtroad_imperv(fl)
-             end if
-             if ( wtroad_perv(fl)   > 0.0_r8 ) then
-                perroad_a_dif(fl) = (1._r8-alb_perroad_dif(fl,ib)) * stot(fl) 
-                perroad_r_dif(fl) =     alb_perroad_dif(fl,ib)  * stot(fl) 
-                road_a_dif(fl)    = road_a_dif(fl) + perroad_a_dif(fl)*wtroad_perv(fl)
-                road_r_dif(fl)    = road_r_dif(fl) + perroad_r_dif(fl)*wtroad_perv(fl)
-             end if
+             improad_a_dif(fl) = (1._r8-alb_improad_dif(fl,ib)) * stot(fl) 
+             improad_r_dif(fl) =     alb_improad_dif(fl,ib)  * stot(fl) 
+             road_a_dif(fl)    = road_a_dif(fl) + improad_a_dif(fl)*wtroad_imperv(fl)
+             road_r_dif(fl)    = road_r_dif(fl) + improad_r_dif(fl)*wtroad_imperv(fl)
+             perroad_a_dif(fl) = (1._r8-alb_perroad_dif(fl,ib)) * stot(fl) 
+             perroad_r_dif(fl) =     alb_perroad_dif(fl,ib)  * stot(fl) 
+             road_a_dif(fl)    = road_a_dif(fl) + perroad_a_dif(fl)*wtroad_perv(fl)
+             road_r_dif(fl)    = road_r_dif(fl) + perroad_r_dif(fl)*wtroad_perv(fl)
 
              stot(fl) = road_r_sunwall_dif(fl)/canyon_hwr(fl) + shadewall_r_sunwall_dif(fl)
              sunwall_a_dif(fl) = (1._r8-alb_wall_dif(fl,ib)) * stot(fl)
@@ -1613,24 +1598,20 @@ contains
 
              ! step (2)
 
-             if ( wtroad_imperv(fl) > 0.0_r8 ) sabs_improad_dif(l,ib)   = sabs_improad_dif(l,ib)   + improad_a_dif(fl)
-             if ( wtroad_perv(fl)   > 0.0_r8 ) sabs_perroad_dif(l,ib)   = sabs_perroad_dif(l,ib)   + perroad_a_dif(fl)
+             sabs_improad_dif(l,ib)   = sabs_improad_dif(l,ib)   + improad_a_dif(fl)
+             sabs_perroad_dif(l,ib)   = sabs_perroad_dif(l,ib)   + perroad_a_dif(fl)
              sabs_sunwall_dif(l,ib)   = sabs_sunwall_dif(l,ib)   + sunwall_a_dif(fl)
              sabs_shadewall_dif(l,ib) = sabs_shadewall_dif(l,ib) + shadewall_a_dif(fl)
 
              ! step (3)
 
-             if ( wtroad_imperv(fl) > 0.0_r8 ) then
-                improad_r_sky_dif(fl)       = improad_r_dif(fl) * vf_sr(l)
-                improad_r_sunwall_dif(fl)   = improad_r_dif(fl) * vf_wr(l)
-                improad_r_shadewall_dif(fl) = improad_r_dif(fl) * vf_wr(l)
-             end if
+             improad_r_sky_dif(fl)       = improad_r_dif(fl) * vf_sr(l)
+             improad_r_sunwall_dif(fl)   = improad_r_dif(fl) * vf_wr(l)
+             improad_r_shadewall_dif(fl) = improad_r_dif(fl) * vf_wr(l)
 
-             if ( wtroad_perv(fl)   > 0.0_r8 ) then
-                perroad_r_sky_dif(fl)       = perroad_r_dif(fl) * vf_sr(l)
-                perroad_r_sunwall_dif(fl)   = perroad_r_dif(fl) * vf_wr(l)
-                perroad_r_shadewall_dif(fl) = perroad_r_dif(fl) * vf_wr(l)
-             end if
+             perroad_r_sky_dif(fl)       = perroad_r_dif(fl) * vf_sr(l)
+             perroad_r_sunwall_dif(fl)   = perroad_r_dif(fl) * vf_wr(l)
+             perroad_r_shadewall_dif(fl) = perroad_r_dif(fl) * vf_wr(l)
 
              road_r_sky_dif(fl)          = road_r_dif(fl) * vf_sr(l)
              road_r_sunwall_dif(fl)      = road_r_dif(fl) * vf_wr(l)
@@ -1646,8 +1627,8 @@ contains
 
              ! step (4)
 
-             if ( wtroad_imperv(fl) > 0.0_r8 ) sref_improad_dif(fl,ib)   = sref_improad_dif(fl,ib)   + improad_r_sky_dif(fl)
-             if ( wtroad_perv(fl)   > 0.0_r8 ) sref_perroad_dif(fl,ib)   = sref_perroad_dif(fl,ib)   + perroad_r_sky_dif(fl)
+             sref_improad_dif(fl,ib)   = sref_improad_dif(fl,ib)   + improad_r_sky_dif(fl)
+             sref_perroad_dif(fl,ib)   = sref_perroad_dif(fl,ib)   + perroad_r_sky_dif(fl)
              sref_sunwall_dif(fl,ib)   = sref_sunwall_dif(fl,ib)   + sunwall_r_sky_dif(fl)
              sref_shadewall_dif(fl,ib) = sref_shadewall_dif(fl,ib) + shadewall_r_sky_dif(fl)
 
@@ -1667,14 +1648,10 @@ contains
           
           sref_canyon_dir(fl) = 0.0_r8
           sref_canyon_dif(fl) = 0.0_r8
-          if ( wtroad_imperv(fl) > 0.0_r8 ) then
-             sref_canyon_dir(fl) = sref_canyon_dir(fl) + sref_improad_dir(fl,ib)*wtroad_imperv(fl)
-             sref_canyon_dif(fl) = sref_canyon_dif(fl) + sref_improad_dif(fl,ib)*wtroad_imperv(fl)
-          end if
-          if ( wtroad_perv(fl)   > 0.0_r8 ) then
-             sref_canyon_dir(fl) = sref_canyon_dir(fl) + sref_perroad_dir(fl,ib)*wtroad_perv(fl)
-             sref_canyon_dif(fl) = sref_canyon_dif(fl) + sref_perroad_dif(fl,ib)*wtroad_perv(fl)
-          end if
+          sref_canyon_dir(fl) = sref_canyon_dir(fl) + sref_improad_dir(fl,ib)*wtroad_imperv(fl)
+          sref_canyon_dif(fl) = sref_canyon_dif(fl) + sref_improad_dif(fl,ib)*wtroad_imperv(fl)
+          sref_canyon_dir(fl) = sref_canyon_dir(fl) + sref_perroad_dir(fl,ib)*wtroad_perv(fl)
+          sref_canyon_dif(fl) = sref_canyon_dif(fl) + sref_perroad_dif(fl,ib)*wtroad_perv(fl)
           sref_canyon_dir(fl) = sref_canyon_dir(fl) + (sref_sunwall_dir(fl,ib) + sref_shadewall_dir(fl,ib))*canyon_hwr(fl)
           sref_canyon_dif(fl) = sref_canyon_dif(fl) + (sref_sunwall_dif(fl,ib) + sref_shadewall_dif(fl,ib))*canyon_hwr(fl)
 
@@ -1682,14 +1659,10 @@ contains
 
           sabs_canyon_dir(fl) = 0.0_r8
           sabs_canyon_dif(fl) = 0.0_r8
-          if ( wtroad_imperv(fl) > 0.0_r8 ) then
-             sabs_canyon_dir(fl) = sabs_canyon_dir(fl) + sabs_improad_dir(l,ib)*wtroad_imperv(fl)
-             sabs_canyon_dif(fl) = sabs_canyon_dif(fl) + sabs_improad_dif(l,ib)*wtroad_imperv(fl)
-          end if
-          if ( wtroad_perv(fl)   > 0.0_r8 ) then
-             sabs_canyon_dir(fl) = sabs_canyon_dir(fl) + sabs_perroad_dir(l,ib)*wtroad_perv(fl)
-             sabs_canyon_dif(fl) = sabs_canyon_dif(fl) + sabs_perroad_dif(l,ib)*wtroad_perv(fl)
-          end if
+          sabs_canyon_dir(fl) = sabs_canyon_dir(fl) + sabs_improad_dir(l,ib)*wtroad_imperv(fl)
+          sabs_canyon_dif(fl) = sabs_canyon_dif(fl) + sabs_improad_dif(l,ib)*wtroad_imperv(fl)
+          sabs_canyon_dir(fl) = sabs_canyon_dir(fl) + sabs_perroad_dir(l,ib)*wtroad_perv(fl)
+          sabs_canyon_dif(fl) = sabs_canyon_dif(fl) + sabs_perroad_dif(l,ib)*wtroad_perv(fl)
           sabs_canyon_dir(fl) = sabs_canyon_dir(fl) + (sabs_sunwall_dir(l,ib) + sabs_shadewall_dir(l,ib))*canyon_hwr(fl)
           sabs_canyon_dif(fl) = sabs_canyon_dif(fl) + (sabs_sunwall_dif(l,ib) + sabs_shadewall_dif(l,ib))*canyon_hwr(fl)
 
@@ -1909,35 +1882,31 @@ contains
        road_a(fl)              = 0.0_r8
        road_r(fl)              = 0.0_r8
        road_e(fl)              = 0.0_r8
-       if ( wtroad_imperv(fl) > 0.0_r8 ) then
-          improad_a(fl)           =     em_improad(fl)  * lwdown_road(fl) 
-          improad_r(fl)           = (1._r8-em_improad(fl)) * lwdown_road(fl) 
-          improad_r_sky(fl)       = improad_r(fl) * vf_sr(l)
-          improad_r_sunwall(fl)   = improad_r(fl) * vf_wr(l)
-          improad_r_shadewall(fl) = improad_r(fl) * vf_wr(l)
-          improad_e(fl)           = em_improad(fl) * sb * (t_improad(fl)**4) 
-          improad_e_sky(fl)       = improad_e(fl) * vf_sr(l)
-          improad_e_sunwall(fl)   = improad_e(fl) * vf_wr(l)
-          improad_e_shadewall(fl) = improad_e(fl) * vf_wr(l)
-          road_a(fl)              = road_a(fl) + improad_a(fl)*wtroad_imperv(fl)
-          road_r(fl)              = road_r(fl) + improad_r(fl)*wtroad_imperv(fl)
-          road_e(fl)              = road_e(fl) + improad_e(fl)*wtroad_imperv(fl)
-       end if
+       improad_a(fl)           =     em_improad(fl)  * lwdown_road(fl) 
+       improad_r(fl)           = (1._r8-em_improad(fl)) * lwdown_road(fl) 
+       improad_r_sky(fl)       = improad_r(fl) * vf_sr(l)
+       improad_r_sunwall(fl)   = improad_r(fl) * vf_wr(l)
+       improad_r_shadewall(fl) = improad_r(fl) * vf_wr(l)
+       improad_e(fl)           = em_improad(fl) * sb * (t_improad(fl)**4) 
+       improad_e_sky(fl)       = improad_e(fl) * vf_sr(l)
+       improad_e_sunwall(fl)   = improad_e(fl) * vf_wr(l)
+       improad_e_shadewall(fl) = improad_e(fl) * vf_wr(l)
+       road_a(fl)              = road_a(fl) + improad_a(fl)*wtroad_imperv(fl)
+       road_r(fl)              = road_r(fl) + improad_r(fl)*wtroad_imperv(fl)
+       road_e(fl)              = road_e(fl) + improad_e(fl)*wtroad_imperv(fl)
 
-       if ( wtroad_perv(fl)   > 0.0_r8 ) then
-          perroad_a(fl)           =     em_perroad(fl)  * lwdown_road(fl)
-          perroad_r(fl)           = (1._r8-em_perroad(fl)) * lwdown_road(fl)
-          perroad_r_sky(fl)       = perroad_r(fl) * vf_sr(l)
-          perroad_r_sunwall(fl)   = perroad_r(fl) * vf_wr(l)
-          perroad_r_shadewall(fl) = perroad_r(fl) * vf_wr(l)
-          perroad_e(fl)           = em_perroad(fl) * sb * (t_perroad(fl)**4) 
-          perroad_e_sky(fl)       = perroad_e(fl) * vf_sr(l)
-          perroad_e_sunwall(fl)   = perroad_e(fl) * vf_wr(l)
-          perroad_e_shadewall(fl) = perroad_e(fl) * vf_wr(l)
-          road_a(fl)              = road_a(fl) + perroad_a(fl)*wtroad_perv(fl)
-          road_r(fl)              = road_r(fl) + perroad_r(fl)*wtroad_perv(fl)
-          road_e(fl)              = road_e(fl) + perroad_e(fl)*wtroad_perv(fl)
-       end if
+       perroad_a(fl)           =     em_perroad(fl)  * lwdown_road(fl)
+       perroad_r(fl)           = (1._r8-em_perroad(fl)) * lwdown_road(fl)
+       perroad_r_sky(fl)       = perroad_r(fl) * vf_sr(l)
+       perroad_r_sunwall(fl)   = perroad_r(fl) * vf_wr(l)
+       perroad_r_shadewall(fl) = perroad_r(fl) * vf_wr(l)
+       perroad_e(fl)           = em_perroad(fl) * sb * (t_perroad(fl)**4) 
+       perroad_e_sky(fl)       = perroad_e(fl) * vf_sr(l)
+       perroad_e_sunwall(fl)   = perroad_e(fl) * vf_wr(l)
+       perroad_e_shadewall(fl) = perroad_e(fl) * vf_wr(l)
+       road_a(fl)              = road_a(fl) + perroad_a(fl)*wtroad_perv(fl)
+       road_r(fl)              = road_r(fl) + perroad_r(fl)*wtroad_perv(fl)
+       road_e(fl)              = road_e(fl) + perroad_e(fl)*wtroad_perv(fl)
 
        road_r_sky(fl)          = road_r(fl) * vf_sr(l)
        road_r_sunwall(fl)      = road_r(fl) * vf_wr(l)
@@ -1968,13 +1937,13 @@ contains
 
        ! initialize sum of net and upward longwave radiation for road and both walls
 
-       if ( wtroad_imperv(fl) > 0.0_r8 ) lwnet_improad(fl)   = improad_e(fl)   - improad_a(fl)
-       if ( wtroad_perv(fl)   > 0.0_r8 ) lwnet_perroad(fl)   = perroad_e(fl)   - perroad_a(fl)
+       lwnet_improad(fl)   = improad_e(fl)   - improad_a(fl)
+       lwnet_perroad(fl)   = perroad_e(fl)   - perroad_a(fl)
        lwnet_sunwall(fl)   = sunwall_e(fl)   - sunwall_a(fl)
        lwnet_shadewall(fl) = shadewall_e(fl) - shadewall_a(fl)
 
-       if ( wtroad_imperv(fl) > 0.0_r8 ) lwup_improad(fl)   = improad_r_sky(fl)   + improad_e_sky(fl)
-       if ( wtroad_perv(fl)   > 0.0_r8 ) lwup_perroad(fl)   = perroad_r_sky(fl)   + perroad_e_sky(fl)
+       lwup_improad(fl)   = improad_r_sky(fl)   + improad_e_sky(fl)
+       lwup_perroad(fl)   = perroad_r_sky(fl)   + perroad_e_sky(fl)
        lwup_sunwall(fl)   = sunwall_r_sky(fl)   + sunwall_e_sky(fl)
        lwup_shadewall(fl) = shadewall_r_sky(fl) + shadewall_e_sky(fl)
 
@@ -2008,18 +1977,14 @@ contains
                        + shadewall_r_road(fl) + shadewall_e_road(fl))*canyon_hwr(fl)
           road_a(fl)    = 0.0_r8
           road_r(fl)    = 0.0_r8
-          if ( wtroad_imperv(fl) > 0.0_r8 ) then
-             improad_r(fl) = (1._r8-em_improad(fl)) * lwtot(fl)
-             improad_a(fl) =     em_improad(fl)  * lwtot(fl)
-             road_a(fl)    = road_a(fl) + improad_a(fl)*wtroad_imperv(fl)
-             road_r(fl)    = road_r(fl) + improad_r(fl)*wtroad_imperv(fl)
-          end if
-          if ( wtroad_perv(fl)   > 0.0_r8 ) then
-             perroad_r(fl) = (1._r8-em_perroad(fl)) * lwtot(fl) 
-             perroad_a(fl) =     em_perroad(fl)  * lwtot(fl) 
-             road_a(fl)    = road_a(fl) + perroad_a(fl)*wtroad_perv(fl)
-             road_r(fl)    = road_r(fl) + perroad_r(fl)*wtroad_perv(fl)
-          end if
+          improad_r(fl) = (1._r8-em_improad(fl)) * lwtot(fl)
+          improad_a(fl) =     em_improad(fl)  * lwtot(fl)
+          road_a(fl)    = road_a(fl) + improad_a(fl)*wtroad_imperv(fl)
+          road_r(fl)    = road_r(fl) + improad_r(fl)*wtroad_imperv(fl)
+          perroad_r(fl) = (1._r8-em_perroad(fl)) * lwtot(fl) 
+          perroad_a(fl) =     em_perroad(fl)  * lwtot(fl) 
+          road_a(fl)    = road_a(fl) + perroad_a(fl)*wtroad_perv(fl)
+          road_r(fl)    = road_r(fl) + perroad_r(fl)*wtroad_perv(fl)
 
           lwtot(fl) = (road_r_sunwall(fl) + road_e_sunwall(fl))/canyon_hwr(fl) &
                       + (shadewall_r_sunwall(fl) + shadewall_e_sunwall(fl))
@@ -2040,24 +2005,20 @@ contains
 
           ! step (2)
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) lwnet_improad(fl)   = lwnet_improad(fl)   - improad_a(fl)
-          if ( wtroad_perv(fl)   > 0.0_r8 ) lwnet_perroad(fl)   = lwnet_perroad(fl)   - perroad_a(fl)
+          lwnet_improad(fl)   = lwnet_improad(fl)   - improad_a(fl)
+          lwnet_perroad(fl)   = lwnet_perroad(fl)   - perroad_a(fl)
           lwnet_sunwall(fl)   = lwnet_sunwall(fl)   - sunwall_a(fl)
           lwnet_shadewall(fl) = lwnet_shadewall(fl) - shadewall_a(fl)
 
           ! step (3)
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) then
-             improad_r_sky(fl)       = improad_r(fl) * vf_sr(l)
-             improad_r_sunwall(fl)   = improad_r(fl) * vf_wr(l)
-             improad_r_shadewall(fl) = improad_r(fl) * vf_wr(l)
-          end if
+          improad_r_sky(fl)       = improad_r(fl) * vf_sr(l)
+          improad_r_sunwall(fl)   = improad_r(fl) * vf_wr(l)
+          improad_r_shadewall(fl) = improad_r(fl) * vf_wr(l)
 
-          if ( wtroad_perv(fl)   > 0.0_r8 ) then
-             perroad_r_sky(fl)       = perroad_r(fl) * vf_sr(l)
-             perroad_r_sunwall(fl)   = perroad_r(fl) * vf_wr(l)
-             perroad_r_shadewall(fl) = perroad_r(fl) * vf_wr(l)
-          end if
+          perroad_r_sky(fl)       = perroad_r(fl) * vf_sr(l)
+          perroad_r_sunwall(fl)   = perroad_r(fl) * vf_wr(l)
+          perroad_r_shadewall(fl) = perroad_r(fl) * vf_wr(l)
 
           road_r_sky(fl)          = road_r(fl) * vf_sr(l)
           road_r_sunwall(fl)      = road_r(fl) * vf_wr(l)
@@ -2073,8 +2034,8 @@ contains
 
           ! step (4)
 
-          if ( wtroad_imperv(fl) > 0.0_r8 ) lwup_improad(fl)   = lwup_improad(fl)   + improad_r_sky(fl)
-          if ( wtroad_perv(fl)   > 0.0_r8 ) lwup_perroad(fl)   = lwup_perroad(fl)   + perroad_r_sky(fl)
+          lwup_improad(fl)   = lwup_improad(fl)   + improad_r_sky(fl)
+          lwup_perroad(fl)   = lwup_perroad(fl)   + perroad_r_sky(fl)
           lwup_sunwall(fl)   = lwup_sunwall(fl)   + sunwall_r_sky(fl)
           lwup_shadewall(fl) = lwup_shadewall(fl) + shadewall_r_sky(fl)
 
@@ -2092,15 +2053,15 @@ contains
        ! total net longwave radiation for canyon. project wall fluxes to horizontal surface
 
        lwnet_canyon(fl) = 0.0_r8
-       if ( wtroad_imperv(fl) > 0.0_r8 ) lwnet_canyon(fl) = lwnet_canyon(fl) + lwnet_improad(fl)*wtroad_imperv(fl)
-       if ( wtroad_perv(fl)   > 0.0_r8 ) lwnet_canyon(fl) = lwnet_canyon(fl) + lwnet_perroad(fl)*wtroad_perv(fl)
+       lwnet_canyon(fl) = lwnet_canyon(fl) + lwnet_improad(fl)*wtroad_imperv(fl)
+       lwnet_canyon(fl) = lwnet_canyon(fl) + lwnet_perroad(fl)*wtroad_perv(fl)
        lwnet_canyon(fl) = lwnet_canyon(fl) + (lwnet_sunwall(fl) + lwnet_shadewall(fl))*canyon_hwr(fl)
 
        ! total emitted longwave for canyon. project wall fluxes to horizontal
 
        lwup_canyon(fl) = 0.0_r8
-       if( wtroad_imperv(fl) > 0.0_r8 ) lwup_canyon(fl) = lwup_canyon(fl) + lwup_improad(fl)*wtroad_imperv(fl)
-       if( wtroad_perv(fl)   > 0.0_r8 ) lwup_canyon(fl) = lwup_canyon(fl) + lwup_perroad(fl)*wtroad_perv(fl)
+       lwup_canyon(fl) = lwup_canyon(fl) + lwup_improad(fl)*wtroad_imperv(fl)
+       lwup_canyon(fl) = lwup_canyon(fl) + lwup_perroad(fl)*wtroad_perv(fl)
        lwup_canyon(fl) = lwup_canyon(fl) + (lwup_sunwall(fl) + lwup_shadewall(fl))*canyon_hwr(fl)
 
        ! conservation check. note: previous conservation check confirms partioning of incident
