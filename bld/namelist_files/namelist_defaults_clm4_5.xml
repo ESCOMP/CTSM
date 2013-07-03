@@ -211,7 +211,7 @@ lnd/clm2/surfdata_map/surfdata_5x5_amazon_simyr2000_c130524.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" crop="off" >
 lnd/clm2/surfdata_map/surfdata_1x1_brazil_simyr2000_c130524.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" sim_year="2000" crop="off" >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr2000_c130509.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr2000_c130627.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" crop="off" >
@@ -237,7 +237,7 @@ lnd/clm2/surfdata_map/surfdata_1.9x2.5_simyr1850_c130524.nc</fsurdat>
 lnd/clm2/surfdata_map/surfdata_10x15_simyr1850_c130524.nc</fsurdat>
 
 <fsurdat hgrid="1x1_tropicAtl" sim_year="1850" crop="off" >
-lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr1850_c130509.nc</fsurdat>
+lnd/clm2/surfdata_map/surfdata_1x1_tropicAtl_simyr1850_c130627.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850" crop="off" >
 lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130524.nc</fsurdat>
@@ -260,7 +260,7 @@ lnd/clm2/surfdata_map/surfdata_ne30np4_simyr1850_c130524.nc</fsurdat>
  crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_48x96_rcp8.5_simyr1850-2100_c130524.nc</fpftdyn>
 
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000"
- crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_hist_simyr1850-2005_c130509.nc</fpftdyn>
+ crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_1x1_tropicAtl_hist_simyr1850-2005_c130627.nc</fpftdyn>
 
 <fpftdyn hgrid="ne30np4"       sim_year_range="1850-2000" 
  crop="off"  >lnd/clm2/surfdata_map/surfdata.pftdyn_ne30np4_rcp8.5_simyr1850-2100_c130524.nc</fpftdyn>

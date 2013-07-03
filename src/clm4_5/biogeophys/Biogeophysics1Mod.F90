@@ -70,7 +70,7 @@ contains
                                     icol_roof, icol_sunwall, icol_shadewall,     &
                                     icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
     use clm_varcon         , only : istcrop
-    use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, max_pft_per_gcell, nlevsoi
+    use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, nlevsoi
     use QSatMod            , only : QSat
     use shr_const_mod      , only : SHR_CONST_PI
 !
@@ -124,7 +124,6 @@ contains
     real(r8) :: eff_porosity  ! effective porosity in layer
     real(r8) :: vol_ice       ! partial volume of ice lens in layer
     real(r8) :: vol_liq       ! partial volume of liquid water in layer
-    integer  :: pi            !index
     real(r8) :: fh2o_eff(lbc:ubc) ! effective surface water fraction (i.e. seen by atm)
 !------------------------------------------------------------------------------
 
@@ -143,8 +142,6 @@ contains
    forc_v                    =>    clm_a2l%forc_v          , & ! Input:  [real(r8) (:)] atmospheric wind speed in north direction (m/s)
    forc_hgt_u                =>    clm_a2l%forc_hgt_u      , & ! Input:  [real(r8) (:)] observational height of wind [m]         
    forc_hgt_q                =>    clm_a2l%forc_hgt_q      , & ! Input:  [real(r8) (:)] observational height of specific humidity [m]
-   npfts                     =>     grc%npfts              , & ! Input:  [integer (:)] number of pfts on gridcell                
-   pfti                      =>     grc%pfti               , & ! Input:  [integer (:)] initial pft on gridcell                   
 
 
    ityplun                   =>    lun%itype               , & ! Input:  [integer (:)] landunit type                             
@@ -480,41 +477,37 @@ contains
 
     ! Make forcing height a pft-level quantity that is the atmospheric forcing 
     ! height plus each pft's z0m+displa
-    do pi = 1,max_pft_per_gcell
-       do g = lbg, ubg
-          if (pi <= npfts(g)) then
-            p = pfti(g) + pi - 1
-            if (pactive(p)) then
-              l = plandunit(p)
-              c = pcolumn(p)
-              if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
-                if (frac_veg_nosno(p) == 0) then
-                  forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
-                  forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
-                  forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
-                else
-                  forc_hgt_u_pft(p) = forc_hgt_u(g) + z0m(p) + displa(p)
-                  forc_hgt_t_pft(p) = forc_hgt_t(g) + z0m(p) + displa(p)
-                  forc_hgt_q_pft(p) = forc_hgt_q(g) + z0m(p) + displa(p)
-                end if
-              else if (ityplun(l) == istwet .or. ityplun(l) == istice      &
-                                            .or. ityplun(l) == istice_mec) then
-                forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c)
-                forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c)
-                forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c)
-              ! Appropriate momentum roughness length will be added in SLakeFLuxesMod.
-              else if (ityplun(l) == istdlak) then
-                forc_hgt_u_pft(p) = forc_hgt_u(g)
-                forc_hgt_t_pft(p) = forc_hgt_t(g)
-                forc_hgt_q_pft(p) = forc_hgt_q(g)
-              else if (urbpoi(l)) then
-                forc_hgt_u_pft(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
-                forc_hgt_t_pft(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
-                forc_hgt_q_pft(p) = forc_hgt_q(g) + z_0_town(l) + z_d_town(l)
-              end if
-            end if
+    do p = lbp, ubp
+       if (pactive(p)) then
+          g = pgridcell(p)
+          l = plandunit(p)
+          c = pcolumn(p)
+          if (ityplun(l) == istsoil .or. ityplun(l) == istcrop) then
+             if (frac_veg_nosno(p) == 0) then
+                forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+                forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
+                forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+             else
+                forc_hgt_u_pft(p) = forc_hgt_u(g) + z0m(p) + displa(p)
+                forc_hgt_t_pft(p) = forc_hgt_t(g) + z0m(p) + displa(p)
+                forc_hgt_q_pft(p) = forc_hgt_q(g) + z0m(p) + displa(p)
+             end if
+          else if (ityplun(l) == istwet .or. ityplun(l) == istice      &
+               .or. ityplun(l) == istice_mec) then
+             forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c)
+             forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c)
+             forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c)
+             ! Appropriate momentum roughness length will be added in SLakeFLuxesMod.
+          else if (ityplun(l) == istdlak) then
+             forc_hgt_u_pft(p) = forc_hgt_u(g)
+             forc_hgt_t_pft(p) = forc_hgt_t(g)
+             forc_hgt_q_pft(p) = forc_hgt_q(g)
+          else if (urbpoi(l)) then
+             forc_hgt_u_pft(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
+             forc_hgt_t_pft(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
+             forc_hgt_q_pft(p) = forc_hgt_q(g) + z_0_town(l) + z_d_town(l)
           end if
-       end do
+       end if
     end do
 
     do fp = 1,num_nolakep

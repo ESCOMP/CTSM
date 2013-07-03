@@ -66,6 +66,7 @@ module clm_varpar
   logical, parameter :: crop_prog   = .false. ! If prognostic crops is turned on
 #endif
   integer, parameter :: maxpatch_pft= MAXPATCH_PFT ! max number of plant functional types in naturally vegetated landunit
+  integer, parameter :: maxpatch_urb= 5       ! max number of urban pfts (columns) in urban landunit
 
   integer            :: nlevdecomp                    ! number of biogeochemically active soil layers
   integer            :: nlevdecomp_full               ! number of biogeochemical layers (includes lower layers that are biogeochemically inactive)
@@ -103,20 +104,8 @@ module clm_varpar
   integer :: cft_ub             ! In PFT arrays, upper bound of PFTs on the crop landunit
   integer :: cft_size           ! Number of PFTs on crop landunit
 
-  integer :: maxpatch           ! max number of patches
   integer :: maxpatch_glcmec    ! max number of elevation classes
-  integer :: maxpatch_urb       ! max number of urban pfts (columns) in urban landunit
-  integer :: npatch_urban       ! number of urban pfts (columns) in urban landunit
-  integer :: npatch_lake        ! number of lake pfts (columns) in lake landunit
-  integer :: npatch_wet         ! number of wetland pfts (columns) in wetland landunit
-  integer :: npatch_glacier     ! number of glacier pfts (columns) in glacier landunit
-  integer :: npatch_glacier_mec ! number of glacier_mec pfts (columns) in glacier_mec landunit
-  integer :: max_pft_per_gcell 
-  integer :: max_pft_per_lu 
   integer :: max_pft_per_col
-  integer :: npatch_urban_tbd
-  integer :: npatch_urban_hd
-  integer :: npatch_urban_md
 
   real(r8) :: mach_eps            ! machine epsilon
 
@@ -151,29 +140,11 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-    ! WJS (5-15-13): Introducing this duplicate variable to avoid circular dependencies --
-    !  clm_varcon uses clm_varpar, so we can't have clm_varpar use numurbl from
-    !  clm_varcon. I should be able to remove this once I do away with max_pft_per_gcell
-    integer, parameter :: my_numurbl = 3
 !EOP
 !------------------------------------------------------------------------------
 
-  maxpatch_urb   = 5
-  npatch_urban_tbd = maxpatch_pft + 1
-  npatch_urban_hd  = npatch_urban_tbd + maxpatch_urb
-  npatch_urban_md  = npatch_urban_hd + maxpatch_urb
-  npatch_lake      = npatch_urban_md + maxpatch_urb
-  npatch_wet     = npatch_lake  + 1
-  npatch_glacier = npatch_wet   + 1
-  npatch_glacier_mec = npatch_glacier + maxpatch_glcmec
-  maxpatch       = npatch_glacier_mec
   mach_eps       = epsilon(1.0_r8)
 
-  max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb*my_numurbl + maxpatch_glcmec
-  if (crop_prog) then
-     max_pft_per_gcell = max_pft_per_gcell +  numcft  
-  end if
-  max_pft_per_lu    = max(numpft+1, numcft, maxpatch_urb)
   max_pft_per_col   = max(numpft+1, numcft, maxpatch_urb)
 
   nlevsoifl   =  10

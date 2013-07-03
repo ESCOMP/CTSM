@@ -3067,7 +3067,6 @@ contains
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
 !
 ! !USES:
-    use clm_varpar  , only : maxpatch
     use clm_varctl  , only : scmlon,scmlat,single_column
     use shr_scam_mod, only : shr_scam_getCloseLatLon
     use shr_string_mod, only: shr_string_toLower
@@ -3100,13 +3099,10 @@ contains
     real(r8) , pointer :: pfts1dlat(:)       ! holds pfts1d_jxy var
     real(r8) , pointer :: land1dlon(:)       ! holds land1d_ixy var
     real(r8) , pointer :: land1dlat(:)       ! holds land1d_jxy var
-    integer :: cols(maxpatch)                ! grid cell columns for scam
-    integer :: pfts(maxpatch)                ! grid cell pfts for scam
-    integer :: landunits(maxpatch)           ! grid cell landunits for scam
+    integer, allocatable :: cols(:)          ! grid cell columns for scam
+    integer, allocatable :: pfts(:)          ! grid cell pfts for scam
+    integer, allocatable :: landunits(:)     ! grid cell landunits for scam
     integer :: cc,i,ii                       ! index variable
-    integer :: totpfts                       ! total number of pfts
-    integer :: totcols                       ! total number of columns
-    integer :: totlandunits                  ! total number of landunits
     integer, allocatable :: dids(:)                       ! dim ids
     integer :: varid                         ! netCDF variable id
     integer :: status                        ! return code
@@ -3136,7 +3132,7 @@ contains
     else
        call shr_scam_getCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
     end if
-     
+
     call ncd_inqvdims(ncid,ndims,vardesc)
 
 
@@ -3156,109 +3152,115 @@ contains
 
           allocate (cols1dlon(dimlen))
           allocate (cols1dlat(dimlen))
-       
-       status = pio_inq_varid(ncid, 'cols1d_lon', varid)
-       status = pio_get_var(ncid, varid, cols1dlon)
-       status = pio_inq_varid(ncid, 'cols1d_lat', varid)
-       status = pio_get_var(ncid, varid, cols1dlat)
-       
-       cols(:)     = huge(1)
-       data_offset = huge(1)
+          allocate (cols(dimlen))
+
+          status = pio_inq_varid(ncid, 'cols1d_lon', varid)
+          status = pio_get_var(ncid, varid, cols1dlon)
+          status = pio_inq_varid(ncid, 'cols1d_lat', varid)
+          status = pio_get_var(ncid, varid, cols1dlat)
+
+          cols(:)     = huge(1)
+          data_offset = huge(1)
           ii = 1
-       ndata = 0
+          ndata = 0
           do cc = 1, dimlen
-          if (cols1dlon(cc) == closelon.and.cols1dlat(cc) == closelat) then
+             if (cols1dlon(cc) == closelon.and.cols1dlat(cc) == closelat) then
                 cols(ii)=cc
                 ndata  =ii
                 ii=ii+1
+             end if
+          end do
+          if (ndata == 0) then
+             write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
+             call endrun( subname//'ERROR:: no columns for this position' )
+          else
+             data_offset=cols(1)
           end if
-       end do
-       if (ndata == 0) then
-          write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
-          call endrun( subname//'ERROR:: no columns for this position' )
-       else
-          data_offset=cols(1)
-       end if
-       
-       deallocate (cols1dlon)
-       deallocate (cols1dlat)
-       
+
+          deallocate (cols1dlon)
+          deallocate (cols1dlat)
+          deallocate (cols)
+
           start(i) = data_offset
           count(i) = ndata
        else if ( trim(dimname)=='pft') then
-       
+
           allocate (pfts1dlon(dimlen))
           allocate (pfts1dlat(dimlen))
+          allocate (pfts(dimlen))
 
-       status = pio_inq_varid(ncid, 'pfts1d_lon', varid)
-       status = pio_get_var(ncid, varid, pfts1dlon)
+          status = pio_inq_varid(ncid, 'pfts1d_lon', varid)
+          status = pio_get_var(ncid, varid, pfts1dlon)
 
-       status = pio_inq_varid(ncid, 'pfts1d_lat', varid)
-       status = pio_get_var(ncid, varid, pfts1dlat)
-       
-       pfts(:)     = huge(1)
-       data_offset = huge(1)
+          status = pio_inq_varid(ncid, 'pfts1d_lat', varid)
+          status = pio_get_var(ncid, varid, pfts1dlat)
+
+          pfts(:)     = huge(1)
+          data_offset = huge(1)
           ii     = 1
-       ndata = 0
+          ndata = 0
           do cc = 1, dimlen
-          if (pfts1dlon(cc) == closelon.and.pfts1dlat(cc) == closelat) then
+             if (pfts1dlon(cc) == closelon.and.pfts1dlat(cc) == closelat) then
                 pfts(ii)=cc
                 ndata  =ii
                 ii=ii+1
+             end if
+          end do
+          if (ndata == 0) then
+             write(iulog,*)'couldnt find any pfts for this latitude ',closelat,' and longitude ',closelon
+             call endrun( subname//'ERROR:: no PFTs for this position' )
+          else
+             data_offset=pfts(1)
           end if
-       end do
-       if (ndata == 0) then
-          write(iulog,*)'couldnt find any pfts for this latitude ',closelat,' and longitude ',closelon
-          call endrun( subname//'ERROR:: no PFTs for this position' )
-       else
-          data_offset=pfts(1)
-       end if
-       
-       deallocate (pfts1dlon)
-       deallocate (pfts1dlat)
-       
+
+          deallocate (pfts1dlon)
+          deallocate (pfts1dlat)
+          deallocate (pfts)
+
           start(i) = data_offset
           count(i) = ndata
        else if ( trim(dimname)=='landunit') then
-       
+
           allocate (land1dlon(dimlen))
           allocate (land1dlat(dimlen))
+          allocate (landunits(dimlen))
 
-       status = pio_inq_varid(ncid, 'land1d_lon', varid)
-       status = pio_get_var(ncid, varid, land1dlon)
+          status = pio_inq_varid(ncid, 'land1d_lon', varid)
+          status = pio_get_var(ncid, varid, land1dlon)
 
-       status = pio_inq_varid(ncid, 'land1d_lat', varid)
-       status = pio_get_var(ncid, varid, land1dlat)
-       
-       landunits(:) = huge(1)
-       data_offset  = huge(1)
+          status = pio_inq_varid(ncid, 'land1d_lat', varid)
+          status = pio_get_var(ncid, varid, land1dlat)
+
+          landunits(:) = huge(1)
+          data_offset  = huge(1)
           ii     = 1
-       ndata = 0
+          ndata = 0
           do cc = 1, dimlen
-          if (land1dlon(cc) == closelon.and.land1dlat(cc) == closelat) then
+             if (land1dlon(cc) == closelon.and.land1dlat(cc) == closelat) then
                 landunits(ii)=cc
                 ndata  =ii
                 ii=ii+1
+             end if
+          end do
+          if (ndata == 0) then
+             write(iulog,*)'couldnt find any landunits for this latitude ',closelat,' and longitude ',closelon
+             call endrun( subname//'ERROR:: no landunits for this position' )
+          else
+             data_offset=landunits(1)
           end if
-       end do
-       if (ndata == 0) then
-          write(iulog,*)'couldnt find any landunits for this latitude ',closelat,' and longitude ',closelon
-          call endrun( subname//'ERROR:: no landunits for this position' )
-       else
-          data_offset=landunits(1)
-       end if
-       
-       deallocate (land1dlon)
-       deallocate (land1dlat)
-       
+
+          deallocate (land1dlon)
+          deallocate (land1dlat)
+          deallocate (landunits)
+
           start(i) = data_offset
           count(i) = ndata
-          else
-             start(i)=1
-             count(i)=dimlen
-          end if
-       enddo
-       deallocate(dids)
+       else
+          start(i)=1
+          count(i)=dimlen
+       end if
+    enddo
+    deallocate(dids)
 
   end subroutine scam_field_offsets
 

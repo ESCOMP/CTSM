@@ -95,7 +95,6 @@ contains
 ! Averaging is only done for points that are not equal to "spval".
 !
 ! !USES:
-    use clm_varpar, only : max_pft_per_col
 !
 ! !ARGUMENTS:
     implicit none
@@ -167,7 +166,6 @@ contains
 ! Averaging is only done for points that are not equal to "spval".
 !
 ! !USES:
-    use clm_varpar, only : max_pft_per_col
 !
 ! !ARGUMENTS:
     implicit none
@@ -435,7 +433,6 @@ contains
 ! Averaging is only done for points that are not equal to "spval".
 !
 ! !USES:
-    use clm_varpar, only : max_pft_per_lu
 !
 ! !ARGUMENTS:
     implicit none
@@ -558,7 +555,6 @@ contains
 ! Averaging is only done for points that are not equal to "spval".
 !
 ! !USES:
-    use clm_varpar, only : max_pft_per_gcell
 !
 ! !ARGUMENTS:
     implicit none
@@ -683,7 +679,6 @@ contains
 ! Averaging is only done for points that are not equal to "spval".
 !
 ! !USES:
-    use clm_varpar, only : max_pft_per_gcell
 !
 ! !ARGUMENTS:
     implicit none

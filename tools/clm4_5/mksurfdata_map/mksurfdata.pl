@@ -553,10 +553,7 @@ EOF
 EOF
             my $urbdesc = "urb3den";
 
-            my $resol = "";
-            if ( $res ne "1x1_tropicAtl" ) {
-               $resol = "-res $hgrd{'veg'}";
-            }
+            my $resol = "-res $hgrd{'veg'}";
             my $sim_yr0 = $sim_year;
             my $sim_yrn = $sim_year;
             if ( $sim_year =~ /([0-9]+)-([0-9]+)/ ) {
