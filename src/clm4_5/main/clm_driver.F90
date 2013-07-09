@@ -494,7 +494,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
 
      ! Surface Radiation for urban columns
 
-     call UrbanRadiation(nc, begl, endl, begc, endc, begp, endp, &
+     call UrbanRadiation(begl, endl, begc, endc, begp, endp, &
                          filter(nc)%num_nourbanl, filter(nc)%nourbanl, &
                          filter(nc)%num_urbanl, filter(nc)%urbanl, &
                          filter(nc)%num_urbanc, filter(nc)%urbanc, &
@@ -529,7 +529,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
      ! Fluxes for all Urban landunits
 
      call t_startf('uflux')
-     call UrbanFluxes(nc, begp, endp, begl, endl, begc, endc, &
+     call UrbanFluxes(begp, endp, begl, endl, begc, endc, &
                       filter(nc)%num_nourbanl, filter(nc)%nourbanl, &
                       filter(nc)%num_urbanl, filter(nc)%urbanl, &
                       filter(nc)%num_urbanc, filter(nc)%urbanc, &
@@ -750,7 +750,7 @@ subroutine clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate)
         call t_startf('urbsurfalb')
 
         if (filter_inactive_and_active(nc)%num_urbanl > 0) then
-           call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp,   &
+           call UrbanAlbedo(begl, endl, begc, endc, begp, endp,   &
                             filter_inactive_and_active(nc)%num_urbanl, &
                             filter_inactive_and_active(nc)%urbanl, &
                             filter_inactive_and_active(nc)%num_urbanc, &

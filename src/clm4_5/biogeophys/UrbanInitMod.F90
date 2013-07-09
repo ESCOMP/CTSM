@@ -180,7 +180,6 @@ contains
    wtroad_perv         =>   lun%wtroad_perv         , & ! Output: [real(r8) (:)]  weight of pervious column to total road 
    ht_roof             =>   lun%ht_roof             , & ! Output: [real(r8) (:)]  height of urban roof (m)                
    wtlunit_roof        =>   lun%wtlunit_roof        , & ! Output: [real(r8) (:)]  weight of roof with respect to landunit 
-   wind_hgt_canyon     =>   lun%wind_hgt_canyon     , & ! Output: [real(r8) (:)]  height above road at which wind in canyon is to be computed (m)
    eflx_traffic_factor =>   lef%eflx_traffic_factor , & ! Output: [real(r8) (:)]  multiplicative factor for sensible heat flux from urban traffic
    t_building_max      =>   lps%t_building_max      , & ! Output: [real(r8) (:)]  maximum internal building temperature (K)
    t_building_min      =>   lps%t_building_min      , & ! Output: [real(r8) (:)]  minimum internal building temperature (K)
@@ -210,7 +209,6 @@ contains
           wtroad_perv(l)        = urbinp%wtroad_perv(g,dindx)
           ht_roof(l)            = urbinp%ht_roof(g,dindx)
           wtlunit_roof(l)       = urbinp%wtlunit_roof(g,dindx)
-          wind_hgt_canyon(l)    = urbinp%wind_hgt_canyon(g,dindx)
           tk_wall(l,:)          = urbinp%tk_wall(g,dindx,:)
           tk_roof(l,:)          = urbinp%tk_roof(g,dindx,:)
           tk_improad(l,:)       = urbinp%tk_improad(g,dindx,:)

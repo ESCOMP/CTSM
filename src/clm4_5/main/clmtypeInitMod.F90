@@ -450,7 +450,6 @@ contains
    allocate(lun%wtroad_perv(beg:end))
    allocate(lun%ht_roof(beg:end))
    allocate(lun%wtlunit_roof(beg:end))
-   allocate(lun%wind_hgt_canyon(beg:end))
    allocate(lun%z_0_town(beg:end))
    allocate(lun%z_d_town(beg:end))
 
@@ -458,7 +457,6 @@ contains
    lun%wtroad_perv(beg:end) = nan
    lun%ht_roof(beg:end) = nan
    lun%wtlunit_roof(beg:end) = nan
-   lun%wind_hgt_canyon(beg:end) = nan
    lun%z_0_town(beg:end) = nan
    lun%z_d_town(beg:end) = nan
 

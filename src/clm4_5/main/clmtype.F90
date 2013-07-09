@@ -2301,7 +2301,6 @@ type, public :: landunit_type
 
    ! Urban related info MV - this should be moved to land physical state - MV
    real(r8), pointer :: ht_roof(:)        ! height of urban roof (m)
-   real(r8), pointer :: wind_hgt_canyon(:)! height above road at which wind in canyon is to be computed (m)
    real(r8), pointer :: z_0_town(:)       ! urban landunit momentum roughness length (m)
    real(r8), pointer :: z_d_town(:)       ! urban landunit displacement height (m)
    

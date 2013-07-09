@@ -346,7 +346,7 @@ contains
        ! Determine albedos for urban landunits
 
        if (filter_inactive_and_active(nc)%num_urbanl > 0) then
-          call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp, &
+          call UrbanAlbedo(begl, endl, begc, endc, begp, endp, &
                            filter_inactive_and_active(nc)%num_urbanl, &
                            filter_inactive_and_active(nc)%urbanl, &
                            filter_inactive_and_active(nc)%num_urbanc, &

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_18        sacks 07/09/2013 rework urban indexing
    clm4_5_17        sacks 07/03/2013 misc cleanup and bug fixes
    clm4_5_16        sacks 07/02/2013 only run filters over 'active' points
    clm4_5_15      muszala 07/01/2013 complete associate refactor for pointers in clm4_5 source
