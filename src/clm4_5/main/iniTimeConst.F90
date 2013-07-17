@@ -1184,7 +1184,7 @@ subroutine iniTimeConst
             om_sucsat     = min(10.3_r8 - 0.2_r8*(zsoi(lev)/zsapric), 10.1_r8)
             om_hksat      = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), 0.0001_r8)
 
-            bd            = (1._r8-watsat(c,lev))*2.7e3_r8 
+            bd(c,lev)     = (1._r8-watsat(c,lev))*2.7e3_r8 
             watsat(c,lev) = (1._r8 - om_frac)*watsat(c,lev) + om_watsat*om_frac
             tkm           = (1._r8-om_frac)*(8.80_r8*sand+2.92_r8*clay)/(sand+clay)+om_tkm*om_frac ! W/(m K)
             bsw(c,lev)    = (1._r8-om_frac)*(2.91_r8 + 0.159_r8*clay) + om_frac*om_b   

@@ -1,4 +1,117 @@
 ===============================================================
+Tag name:  clm4_5_19
+Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
+Date: Wed Jul 17 14:29:32 MDT 2013
+One-line Summary: fix setting of bd in iniTimeConst
+
+Purpose of changes:
+
+In iniTimeConst, bd (bulk density) was being set incorrectly, so that,
+for a given processor, the same value was being put in all (c,j)
+locations. In addition to being incorrect, this meant that results
+differed depending on processor count. This tag fixes this problem.
+
+This only affects CLM4.5 BGC runs, because the bd array is only used
+in CNNitrifDenitrifMod.F90. (However, as a side note: This array
+SHOULD be used in DUSTMod and initSLakeMod, which currently recompute
+bd.)
+
+
+Requirements for tag:
+
+Test level of tag: 
+
+Bugs fixed (include bugzilla ID):
+   1736 (bd set incorrectly in iniTimeConst, leads to results that depend on processor count)
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Known Limitations:
+                                 1147 (mkgriddata can't straddle over Greenwich)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1017 (SCM mode can NOT restart)
+                                  896 (T62 mode does not work)
+                                  701 (svn keyword)
+                                  452 (Problem with support of soil-colors != 8 or 20)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M       models/lnd/clm/src/clm4_5/main/iniTimeConst.F90
+
+
+Machines testing ran on:  (Tests in priority order)
+
+  build-namelist unit tester:   NO
+
+  CESM test lists:
+
+    yellowstone/aux_clm     intel       yes ***
+       All PASS or xFAIL
+    yellowstone/aux_clm     pgi         yes
+       All PASS
+    frankfurt/aux_clm       intel       yes **
+       All PASS
+    frankfurt/aux_clm       pgi         yes
+       All PASS
+    frankfurt/aux_clm       nag         yes
+       All PASS
+
+  CESM history file comparison:
+  (ccsm_utils/Tools/component_gen_comp -compare $oldtag -generate $newtag -testid $testid -baselineroot $CESMDATAROOT/ccsm_baselines/ -model clm2)
+
+    yellowstone/aux_clm     intel       yes **
+       All PASS or BFAIL1 except CLM45BGC comparisons
+
+  test_driver.sh tools testing:
+
+    yellowstone interactive:    no
+    frankfurt interactive:      no
+
+  yellowstone/PTCLM:            no
+
+CLM tag used for the baseline comparison tests if applicable: clm4_5_18
+
+Changes answers relative to baseline: YES
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CLM45BGC
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        Larger than roundoff; still to be determined if this gives new
+        climate (Dave Lawrence will run a simulation to determine this)
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: (Not yet done)
+
+   URL for LMWG diagnostics output used to validate new climate: (Not
+   yet done)
+	
+===============================================================
+===============================================================
 Tag name:  clm4_5_18
 Originator(s):  sacks (Bill Sacks,UCAR/CGD,303-497-1762)
 Date: Tue Jul  9 10:07:08 MDT 2013
