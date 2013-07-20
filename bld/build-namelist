@@ -1007,6 +1007,12 @@ if ( $glc_nec > 0 ) {
 
 add_default($nl, 'fpftcon');
 add_default($nl, 'albice', 'glc_nec'=>$glc_nec);
+if ($phys eq "clm4_5") {
+  #
+  #get constant data.  
+  #
+  add_default($nl, 'fconsts');
+}
 
 # Create crop land unit
 if ($phys eq "clm4_0") {
@@ -1032,7 +1038,6 @@ if ( $nl->get_value('co2_type') =~ /constant/ ) {
     add_default($nl, $var, 'sim_year'=>$sim_year );
   }
 }
-#add_default($nl, 'wrtdia',       'val'=> '.false.');
 
 add_default($nl, 'urban_hac');
 add_default($nl, 'urban_traffic');

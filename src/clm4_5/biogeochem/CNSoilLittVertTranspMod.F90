@@ -21,12 +21,24 @@ module CNSoilLittVertTranspMod
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNSoilLittVertTransp   
+
+  public :: CNSoilLittVertTransp
+  public :: readCNSoilLittVertTranspConsts
+
+  type, private :: CNSoilLittVertTranspType
+   real(r8) :: som_diffus   		       ! Soil organic matter diffusion
+   real(r8) :: cryoturb_diffusion_k   	       ! The cryoturbation diffusive constant
+
+  end type CNSoilLittVertTranspType
+
+   type(CNSoilLittVertTranspType),     private ::  CNSoilLittVertTranspConstInst
+!
+!EOP
 !
 ! !PUBLIC DATA MEMBERS:
-   real(r8), public :: som_diffus = 1e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 1 cm^2 / yr
+   real(r8), public :: som_diffus   ! = 1e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 1 cm^2 / yr
    real(r8), public :: som_adv_flux =  0._r8
-   real(r8), public :: cryoturb_diffusion_k =  5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
+   real(r8), public :: cryoturb_diffusion_k   ! = 5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
    real(r8), public :: max_depth_cryoturb = 3._r8          ! (m) this is the maximum depth of cryoturbation
    real(r8), public :: max_altdepth_cryoturbation = 2._r8  ! (m) maximum active layer thickness for cryoturbation to occur
 ! !REVISION HISTORY:
@@ -40,6 +52,56 @@ module CNSoilLittVertTranspMod
 
 contains
 
+!-----------------------------------------------------------------------  
+!BOP
+! !IROUTINE: readCNSoilLittVertTranspConsts
+!
+! !INTERFACE:
+subroutine readCNSoilLittVertTranspConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+   use abortutils   , only: endrun
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Jan 20 2013 : Created by Rajendra Paudel
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNSoilLittVertTranspType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv ! has variable been read in or not
+   real(r8)           :: tempr ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+   !
+   ! read in constants
+   !
+
+   tString='som_diffus'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   !CNSoilLittVertTranspConstInst%som_diffus=tempr
+   !SPM Todo.  This constant cannot be on file since 
+   CNSoilLittVertTranspConstInst%som_diffus=1e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 1 cm^2 / yr
+
+   tString='cryoturb_diffusion_k'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   !CNSoilLittVertTranspConstInst%cryoturb_diffusion_k=tempr
+   !SPM Todo.  This constant cannot be on file since 
+   CNSoilLittVertTranspConstInst%cryoturb_diffusion_k = 5e-4_r8 / (secspday * 365._r8)  ! [m^2/sec] = 5 cm^2 / yr = 1m^2 / 200 yr
+
+   end subroutine readCNSoilLittVertTranspConsts
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -122,6 +184,10 @@ subroutine CNSoilLittVertTransp(lbc, ubc, num_soilc, filter_soilc)
    )
    
    dtime = get_step_size()
+
+ !Set parameters of vertical mixing of SOM
+	som_diffus = CNSoilLittVertTranspConstInst%som_diffus 
+	cryoturb_diffusion_k = CNSoilLittVertTranspConstInst%cryoturb_diffusion_k 
    
    ntype = 2
    if ( use_c13 ) then

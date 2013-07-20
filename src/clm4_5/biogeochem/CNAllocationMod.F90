@@ -19,9 +19,18 @@ module CNAllocationMod
   save
   private
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNAllocationInit         ! Initialization
-  public :: CNAllocation             ! run method
-  public :: CNAllocation_Carbon_only ! Return Carbon_only status
+   public :: CNAllocationInit         ! Initialization
+   public :: CNAllocation             ! run method
+   public :: CNAllocation_Carbon_only ! Return Carbon_only status
+   public :: readCNAllocConsts
+
+   type :: CNAllocConstType
+      real(r8) :: bdnr           !bulk denitrification rate (1/s)
+      real(r8) :: dayscrecover   !number of days to recover negative cpool
+   end type CNAllocConstType
+
+   ! CNAllocConstInst is populated in readCNAllocConsts which is called in 
+   type(CNAllocConstType),protected ::  CNAllocConstInst
 
 ! !PUBLIC DATA MEMBERS:
    character(len=*), parameter, public :: suplnAll=& ! Supplemental Nitrogen for all PFT's
@@ -68,6 +77,54 @@ end function CNAllocation_Carbon_only
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: readCNAllocConsts
+!
+! !INTERFACE:
+subroutine readCNAllocConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   CNConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Dec 3 2012 : Created by S. Muszala
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNAllocConstType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv ! has variable been read in or not
+   real(r8)           :: tempr ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+
+   !
+   ! read in constants
+   !   
+   tString='bdnr'
+   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNAllocConstInst%bdnr=tempr
+
+   tString='dayscrecover'
+   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNAllocConstInst%dayscrecover=tempr
+
+end subroutine readCNAllocConsts
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: CNAllocationInit
 !
 ! !INTERFACE:
@@ -107,9 +164,9 @@ subroutine CNAllocationInit ( lbc, ubc, lbp, ubp )
    ! set time steps
    dt = real( get_step_size(), r8 )
 
-   ! set some space-and-time constant parameters 
-   bdnr         = 0.5_r8 * (dt/secspday)
-   dayscrecover = 30.0_r8
+   ! set space-and-time constant parameters from CN constant file
+   bdnr         = CNAllocConstInst%bdnr * (dt/secspday)
+   dayscrecover = CNAllocConstInst%dayscrecover
 
    ! Change namelist settings into private logical variables
    select case(suplnitro)

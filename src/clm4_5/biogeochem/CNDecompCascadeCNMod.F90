@@ -1,4 +1,4 @@
-module CNDecompCascadeMod_BGC
+module CNDecompCascadeCNMod
 #ifdef CN
 
 #ifndef CENTURY_DECOMP
@@ -6,10 +6,10 @@ module CNDecompCascadeMod_BGC
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: CNDecompMod
+! !MODULE: CNDecompCascadeCNMod
 !
 ! !DESCRIPTION:
-! Module that sets the coeffiecients used in the decomposition cascade submodel.  This uses the BGC parameters as in CLMCN 4.0
+! Module that sets the coeffiecients used in the decomposition cascade submodel.  This uses the CN parameters as in CLMCN 4.0
 !
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
@@ -18,6 +18,7 @@ module CNDecompCascadeMod_BGC
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
    use clm_varctl  , only: iulog, spinup_state
    use clm_varcon, only: zsoi
+   use CNSharedConstsMod, only:CNConstShareInst
 #ifdef LCH4
    use clm_varctl, only: anoxia
    use ch4varcon, only: mino2lim
@@ -28,12 +29,44 @@ module CNDecompCascadeMod_BGC
    private
 ! !PUBLIC MEMBER FUNCTIONS:
    public:: init_decompcascade, decomp_rate_constants
+   public :: readCNDecompCnConsts
+
+   type, private :: CNDecompCnConstType
+      real(r8):: cn_s1_cn        !C:N for SOM 1
+      real(r8):: cn_s2_cn        !C:N for SOM 2
+      real(r8):: cn_s3_cn        !C:N for SOM 3
+      real(r8):: cn_s4_cn        !C:N for SOM 4
+
+      real(r8):: rf_l1s1_cn      !respiration fraction litter 1 -> SOM 1
+      real(r8):: rf_l2s2_cn      !respiration fraction litter 2 -> SOM 2
+      real(r8):: rf_l3s3_cn      !respiration fraction litter 3 -> SOM 3
+      real(r8):: rf_s1s2_cn      !respiration fraction SOM 1 -> SOM 2
+      real(r8):: rf_s2s3_cn      !respiration fraction SOM 2 -> SOM 3
+      real(r8):: rf_s3s4_cn      !respiration fraction SOM 3 -> SOM 4
+
+      real(r8) :: cwd_fcel_cn    !cellulose fraction for CWD
+      real(r8) :: cwd_flig_cn    !
+
+      real(r8) :: k_l1_cn        !decomposition rate for litter 1
+      real(r8) :: k_l2_cn        !decomposition rate for litter 2
+      real(r8) :: k_l3_cn        !decomposition rate for litter 3
+      real(r8) :: k_s1_cn        !decomposition rate for SOM 1
+      real(r8) :: k_s2_cn        !decomposition rate for SOM 2
+      real(r8) :: k_s3_cn        !decomposition rate for SOM 3
+      real(r8) :: k_s4_cn        !decomposition rate for SOM 4
+
+      real(r8) :: k_frag_cn      !fragmentation rate for CWD
+      real(r8) :: minpsi_cn      !minimum soil water potential for heterotrophic resp
+   end type CNDecompCnConstType
+
+   type(CNDecompCnConstType),private ::  CNDecompCnConstInst
+
 !
 ! !PUBLIC DATA MEMBERS:
 #if (defined VERTSOILC)
-   real(r8), public :: decomp_depth_efolding = 0.5_r8    ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
+   real(r8), public :: decomp_depth_efolding      != 0.5_r8 ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
 #endif
-   real(r8), public :: froz_q10 = 1.5_r8                 ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
+   real(r8), public :: froz_q10                 != 1.5_r8 ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
 #ifdef LCH4
    logical,  public :: anoxia_wtsat = .false.            ! true ==> weight anoxia by inundated fraction
 #endif
@@ -46,6 +79,144 @@ module CNDecompCascadeMod_BGC
 !-----------------------------------------------------------------------
 
 contains
+
+! !IROUTINE: readCNDecompCnConsts
+!
+! !INTERFACE:
+subroutine readCNDecompCnConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+   use abortutils   , only: endrun
+
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Dec 3 2012 : Created by S. Muszala
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNDecompCnConstType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv ! has variable been read in or not
+   real(r8)           :: tempr ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+
+   tString='cn_s1'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%cn_s1_cn=tempr
+
+   tString='cn_s2'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%cn_s2_cn=tempr
+
+   tString='cn_s3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%cn_s3_cn=tempr
+
+   tString='cn_s4'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%cn_s4_cn=tempr
+
+   tString='rf_l1s1'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%rf_l1s1_cn=tempr
+
+   tString='rf_l2s2'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%rf_l2s2_cn=tempr
+
+   tString='rf_l3s3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%rf_l3s3_cn=tempr
+
+   tString='rf_s1s2'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%rf_s1s2_cn=tempr
+
+   tString='rf_s2s3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%rf_s2s3_cn=tempr
+
+   tString='rf_s3s4'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%rf_s3s4_cn=tempr
+
+   tString='cwd_fcel'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%cwd_fcel_cn=tempr
+   
+   tString='k_l1'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_l1_cn=tempr
+
+   tString='k_l2'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_l2_cn=tempr
+
+   tString='k_l3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_l3_cn=tempr
+
+   tString='k_s1'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_s1_cn=tempr
+ 
+   tString='k_s2'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_s2_cn=tempr
+
+   tString='k_s3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_s3_cn=tempr
+
+   tString='k_s4'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_s4_cn=tempr
+
+   tString='k_frag'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%k_frag_cn=tempr
+
+   tString='minpsi_hr'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%minpsi_cn=tempr 
+
+   tString='cwd_flig'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompCnConstInst%cwd_flig_cn=tempr
+
+end subroutine readCNDecompCnConsts
 
 
 !-----------------------------------------------------------------------
@@ -136,23 +307,23 @@ subroutine init_decompcascade(begc, endc)
 
    !------- time-constant coefficients ---------- !
    ! set soil organic matter compartment C:N ratios (from Biome-BGC v4.2.0)
-   cn_s1 = 12.0_r8
-   cn_s2 = 12.0_r8
-   cn_s3 = 10.0_r8
-   cn_s4 = 10.0_r8
+   cn_s1=CNDecompCnConstInst%cn_s1_cn
+   cn_s2=CNDecompCnConstInst%cn_s2_cn
+   cn_s3=CNDecompCnConstInst%cn_s3_cn
+   cn_s4=CNDecompCnConstInst%cn_s4_cn
 
    ! set respiration fractions for fluxes between compartments
    ! (from Biome-BGC v4.2.0)
-   rf_l1s1 = 0.39_r8
-   rf_l2s2 = 0.55_r8
-   rf_l3s3 = 0.29_r8
-   rf_s1s2 = 0.28_r8
-   rf_s2s3 = 0.46_r8
-   rf_s3s4 = 0.55_r8
+   rf_l1s1=CNDecompCnConstInst%rf_l1s1_cn
+   rf_l2s2=CNDecompCnConstInst%rf_l2s2_cn
+   rf_l3s3=CNDecompCnConstInst%rf_l3s3_cn
+   rf_s1s2=CNDecompCnConstInst%rf_s1s2_cn
+   rf_s2s3=CNDecompCnConstInst%rf_s2s3_cn
+   rf_s3s4=CNDecompCnConstInst%rf_s3s4_cn
 
    ! set the cellulose and lignin fractions for coarse woody debris
-   cwd_fcel = 0.76_r8
-   cwd_flig = 0.24_r8
+   cwd_fcel=CNDecompCnConstInst%cwd_fcel_cn
+   cwd_flig=CNDecompCnConstInst%cwd_flig_cn
 
    !-------------------  list of pools and their attributes  ------------
 
@@ -403,8 +574,6 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 !
    ! column level
 
-#ifdef LCH4
-#endif
 
    real(r8) :: dt                           ! decomp timestep (seconds)   
    real(r8):: dtd                           ! decomp timestep (days)
@@ -433,8 +602,6 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    real(r8):: ck_s3        ! corrected decomposition rate constant SOM 3
    real(r8):: ck_s4        ! corrected decomposition rate constant SOM 3
    real(r8):: ck_frag      ! corrected fragmentation rate constant CWD
-   real(r8):: cwd_fcel     ! cellulose fraction of coarse woody debris
-   real(r8):: cwd_flig     ! lignin fraction of coarse woody debris
    real(r8):: cwdc_loss    ! fragmentation rate for CWD carbon (gC/m2/s)
    real(r8):: cwdn_loss    ! fragmentation rate for CWD nitrogen (gN/m2/s)
 
@@ -446,6 +613,7 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    integer :: i_soil3
    integer :: i_soil4
    integer :: c, fc, j, k, l
+   real(r8) :: Q10     		! temperature dependence
 
 #if (defined VERTSOILC)
    real(r8) :: depth_scalar(lbc:ubc,1:nlevdecomp) 
@@ -480,25 +648,41 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    ! daily time step model, and the result of the log function is
    ! the corresponding continuous-time decay rate (1/day), following
    ! Olson, 1963.
-   k_l1 = -log(1.0_r8-0.7_r8)
-   k_l2 = -log(1.0_r8-0.07_r8)
-   k_l3 = -log(1.0_r8-0.014_r8)
-   k_s1 = -log(1.0_r8-0.07_r8)
-   k_s2 = -log(1.0_r8-0.014_r8)
-   k_s3 = -log(1.0_r8-0.0014_r8)
-   k_s4 = -log(1.0_r8-0.0001_r8)
-   k_frag = -log(1.0_r8-0.001_r8)
+   k_l1=CNDecompCnConstInst%k_l1_cn
+   k_l2=CNDecompCnConstInst%k_l2_cn
+   k_l3=CNDecompCnConstInst%k_l3_cn
+
+   k_s1=CNDecompCnConstInst%k_s1_cn
+   k_s2=CNDecompCnConstInst%k_s2_cn
+   k_s3=CNDecompCnConstInst%k_s3_cn
+   k_s4=CNDecompCnConstInst%k_s4_cn
+
+   k_frag=CNDecompCnConstInst%k_frag_cn
 
    ! calculate the new discrete-time decay rate for model timestep
    k_l1 = 1.0_r8-exp(-k_l1*dtd)
    k_l2 = 1.0_r8-exp(-k_l2*dtd)
    k_l3 = 1.0_r8-exp(-k_l3*dtd)
+
    k_s1 = 1.0_r8-exp(-k_s1*dtd)
    k_s2 = 1.0_r8-exp(-k_s2*dtd)
    k_s3 = 1.0_r8-exp(-k_s3*dtd)
    k_s4 = 1.0_r8-exp(-k_s4*dtd)
+
    k_frag = 1.0_r8-exp(-k_frag*dtd)
+
+   minpsi=CNDecompCnConstInst%minpsi_cn
+
+   Q10 = CNConstShareInst%Q10
+
+   ! set "froz_q10" parameter
+	froz_q10  = CNConstShareInst%froz_q10
    
+#if (defined VERTSOILC)
+   ! Set "decomp_depth_efolding" parameter
+   decomp_depth_efolding = CNConstShareInst%decomp_depth_efolding
+#endif
+
    ! The following code implements the acceleration part of the AD spinup
    ! algorithm, by multiplying all of the SOM decomposition base rates by 10.0.
 
@@ -516,17 +700,6 @@ endif
    i_soil2 = 6
    i_soil3 = 7
    i_soil4 = 8
-
-
-
-   ! ! CWD fragmentation -> litter pools
-   !  thse have now been put into the regular decomposition cascade
-   ! cwdc_loss = cwdc_vr(c,j) * ck_frag / dt
-   ! cwdc_to_litr2c_vr(c,j) = cwdc_loss * cwd_fcel
-   ! cwdc_to_litr3c_vr(c,j) = cwdc_loss * cwd_flig
-   ! cwdn_loss = cwdn_vr(c,j) * ck_frag / dt
-   ! cwdn_to_litr2n_vr(c,j) = cwdn_loss * cwd_fcel
-   ! cwdn_to_litr3n_vr(c,j) = cwdn_loss * cwd_flig
 
 
    !--- time dependent coefficients-----!
@@ -573,9 +746,9 @@ endif
             !! use separate (possibly equal) t funcs above and below freezing point
             !! t_scalar(c,1)=t_scalar(c,1) + (1.5**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
             if (t_soisno(c,j) .ge. SHR_CONST_TKFRZ) then
-               t_scalar(c,1)=t_scalar(c,1) + (1.5**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
+               t_scalar(c,1)=t_scalar(c,1) + (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
             else
-               t_scalar(c,1)=t_scalar(c,1) + (1.5**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
+               t_scalar(c,1)=t_scalar(c,1) + (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
             endif
          end do
       end do
@@ -588,8 +761,6 @@ endif
       ! Orchard, V.A., and F.J. Cook, 1983. Relationship between soil respiration
       ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
       
-      minpsi = -10.0_r8;
-
       do j = 1,nlev_soildecomp_standard
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -660,9 +831,9 @@ endif
                !! use separate (possibly equal) t funcs above and below freezing point
                !! t_scalar(c,j)= (1.5**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                if (t_soisno(c,j) .ge. SHR_CONST_TKFRZ) then
-                  t_scalar(c,j)= (1.5**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
+                  t_scalar(c,j)= (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                else
-                  t_scalar(c,j)= (1.5**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
+                  t_scalar(c,j)= (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
                endif
          end do
       end do
@@ -676,7 +847,6 @@ endif
       ! Orchard, V.A., and F.J. Cook, 1983. Relationship between soil respiration
       ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
       
-      minpsi = -10.0_r8;
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -772,4 +942,4 @@ end subroutine decomp_rate_constants
 #endif
 
 
-end module CNDecompCascadeMod_BGC
+end module CNDecompCascadeCNMod

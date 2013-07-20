@@ -13,23 +13,31 @@ module CNDecompMod
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
    use shr_const_mod, only: SHR_CONST_TKFRZ
-    use clm_varctl  , only: iulog
     use clm_varcon, only: dzsoi_decomp
-#ifndef CENTURY_DECOMP
-    use CNDecompCascadeMod_BGC, only : decomp_rate_constants
+#ifdef CENTURY_DECOMP
+    use CNDecompCascadeBGCMod, only : decomp_rate_constants
 #else
-    use CNDecompCascadeMod_CENTURY, only : decomp_rate_constants
+    use CNDecompCascadeCNMod, only : decomp_rate_constants
 #endif
 #ifdef NITRIF_DENITRIF
     use CNNitrifDenitrifMod, only: nitrif_denitrif
 #endif
     use CNVerticalProfileMod, only: decomp_vertprofiles
 
+   use CNSharedConstsMod, only:CNConstShareInst
    implicit none
    save
    private
 ! !PUBLIC MEMBER FUNCTIONS:
-   public:: CNDecompAlloc
+   public :: CNDecompAlloc
+   public :: readCNDecompConsts
+
+   type, private :: CNDecompConstType
+      real(r8) :: dnp         !denitrification proportion
+   end type CNDecompConstType
+
+   type(CNDecompConstType),private ::  CNDecompConstInst
+
    
 !
 ! !REVISION HISTORY:
@@ -40,6 +48,48 @@ module CNDecompMod
 !-----------------------------------------------------------------------
 
 contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: readCNDecompConsts
+!
+! !INTERFACE:
+subroutine readCNDecompConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+   use abortutils   , only: endrun
+
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Dec 3 2012 : Created by S. Muszala
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNDecompConstType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv ! has variable been read in or not
+   real(r8)           :: tempr ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+
+   tString='dnp'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompConstInst%dnp=tempr 
+ 
+end subroutine readCNDecompConsts
+
 
 !-----------------------------------------------------------------------
 !BOP
@@ -81,10 +131,8 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    real(r8):: pmnf_decomp_cascade(lbc:ubc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
    real(r8):: immob(lbc:ubc,1:nlevdecomp)        !potential N immobilization
    real(r8):: ratio        !temporary variable
-   real(r8):: dnp          !denitrification proportion
    real(r8):: cn_decomp_pools(lbc:ubc,1:nlevdecomp,1:ndecomp_pools)
    integer, parameter :: i_atm = 0
-
 
    ! For methane code
    real(r8):: phr_vr(lbc:ubc,1:nlevdecomp)       !potential HR (gC/m3/s)
@@ -263,7 +311,6 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    ! column loop to calculate actual immobilization and decomp rates, following
    ! resolution of plant/heterotroph  competition for mineral N
    
-   dnp = 0.01_r8
    
    ! calculate c:n ratios of applicable pools
    do l = 1, ndecomp_pools
@@ -304,7 +351,7 @@ subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
 #ifndef NITRIF_DENITRIF
                   sminn_to_denit_decomp_cascade_vr(c,j,k) = 0._r8
                else
-                  sminn_to_denit_decomp_cascade_vr(c,j,k) = -dnp * pmnf_decomp_cascade(c,j,k)
+                  sminn_to_denit_decomp_cascade_vr(c,j,k) = -CNDecompConstInst%dnp * pmnf_decomp_cascade(c,j,k)
 #endif
                end if
                decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)

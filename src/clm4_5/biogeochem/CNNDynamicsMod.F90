@@ -1,6 +1,4 @@
-
 module CNNDynamicsMod
-#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -17,6 +15,7 @@ module CNNDynamicsMod
    implicit none
    save
    private
+
 ! !PUBLIC MEMBER FUNCTIONS:
    public :: CNNDeposition
    public :: CNNFixation
@@ -30,15 +29,68 @@ module CNNDynamicsMod
    real(r8), public :: nfix_timeconst = 10._r8  ! (days) time over which to exponentially relax the npp flux for N fixation term (if .le. 0. or .ge. 365; use old annual method)
 #endif
 
-!
-! !REVISION HISTORY:
-! 6/1/04: Created by Peter Thornton
-!
-!EOP
+   public :: readCNNDynamicsConsts
+
+   type, private :: CNNDynamicsConstType
+      real(r8):: sf        !soluble fraction of mineral N (unitless)
+   end type CNNDynamicsConstType
+
+   type(CNNDynamicsConstType),private ::  CNNDynamicsConstInst
+
 !-----------------------------------------------------------------------
 
 contains
 
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: readCNNDynamicsConsts
+!
+! !INTERFACE:
+subroutine readCNNDynamicsConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+   use abortutils   , only: endrun
+
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Jan 10 2013 : Created by R. Paudel
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNNDynamicsConstType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv ! has variable been read in or not
+   real(r8)           :: tempr ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+
+   !
+   ! read in constants
+   !   
+   tString='sf_minn'
+   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNNDynamicsConstInst%sf=tempr
+   
+    !CNNDynamicsConstInst%sf=0.1_r8
+
+end subroutine readCNNDynamicsConsts
+
+!
+! !REVISION HISTORY:
+! 6/1/04: Created by Peter Thornton
+!
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -241,8 +293,8 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    dt = real( get_step_size(), r8 )
 
 #ifndef NITRIF_DENITRIF
-   ! Assume that 10% of the soil mineral N is in a soluble form
-   sf = 0.1_r8
+   ! set constant sf 
+   sf = CNNDynamicsConstInst%sf
 #else
    ! Assume that 100% of the soil NO3 is in a soluble form
    sf_no3 = 1.0_r8
@@ -438,12 +490,6 @@ subroutine CNNFert(lbp, ubp, lbc, ubc, num_soilc, filter_soilc)
    )
 
    call p2c(lbp, ubp, lbc, ubc, num_soilc,filter_soilc,fert,fert_to_sminn)
-!
-! DEBUG...
-!   do fc = 1,num_soilc
-!      c = filter_soilc(fc)
-!      write(*,*) "fert_to_sminn = ",c, fert_to_sminn(c), fert(p)
-!   end do
 
     end associate 
  end subroutine CNNFert
@@ -588,6 +634,5 @@ subroutine CNSoyfix (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, fil
     end associate 
  end subroutine CNSoyfix
 
-#endif
 
 end module CNNDynamicsMod

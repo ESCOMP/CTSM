@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm4_5_20      muszala 07/20/2013 refactor to allow CN and BGC params. to be read from netcdf file
    clm4_5_19        sacks 07/17/2013 fix setting of bd in iniTimeConst
    clm4_5_18        sacks 07/09/2013 rework urban indexing
    clm4_5_17        sacks 07/03/2013 misc cleanup and bug fixes

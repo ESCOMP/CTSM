@@ -60,9 +60,9 @@ subroutine iniTimeConst
   use ncdio_pio       
 #ifdef CN
 #ifndef CENTURY_DECOMP
-  use CNDecompCascadeMod_BGC, only : init_decompcascade
+  use CNDecompCascadeCNMod, only : init_decompcascade
 #else
-  use CNDecompCascadeMod_CENTURY, only : init_decompcascade
+  use CNDecompCascadeBGCMod, only : init_decompcascade
 #endif
 #endif
   use clm_varcon      , only : pc, mu

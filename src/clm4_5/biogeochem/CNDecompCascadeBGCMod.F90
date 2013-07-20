@@ -1,5 +1,5 @@
 
-module CNDecompCascadeMod_CENTURY
+module CNDecompCascadeBGCMod
 #ifdef CN
 
 #ifdef CENTURY_DECOMP
@@ -8,10 +8,10 @@ module CNDecompCascadeMod_CENTURY
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: CNDecompMod
+! !MODULE: CNDecompCascadeBGCMod
 !
 ! !DESCRIPTION:
-! Module that sets the coeffiecients used in the decomposition cascade submodel.  This uses the CENTURY parameters
+! Module that sets the coeffiecients used in the decomposition cascade submodel.  This uses the CENTURY/BGC parameters
 !
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
@@ -20,25 +20,61 @@ module CNDecompCascadeMod_CENTURY
    use clm_varpar   , only: i_met_lit, i_cel_lit, i_lig_lit, i_cwd
    use clm_varctl   , only: iulog, spinup_state
    use clm_varcon   , only: zsoi
+   use CNSharedConstsMod, only:CNConstShareInst
 #ifdef LCH4
    use clm_varctl   , only: anoxia
    use ch4varcon    , only: mino2lim
 #endif
    use abortutils,   only: endrun
 
+
    implicit none
    save
    private
 ! !PUBLIC MEMBER FUNCTIONS:
    public:: init_decompcascade, decomp_rate_constants
+   public :: readCNDecompBgcConsts
+
+      type, private :: CNDecompBgcConstType
+      real(r8):: cn_s1_bgc        !C:N for SOM 1
+      real(r8):: cn_s2_bgc        !C:N for SOM 2
+      real(r8):: cn_s3_bgc        !C:N for SOM 3
+
+      real(r8):: rf_l1s1_bgc      !respiration fraction litter 1 -> SOM 1
+      real(r8):: rf_l2s1_bgc
+      real(r8):: rf_l3s2_bgc
+
+      real(r8):: rf_s2s1_bgc    
+      real(r8):: rf_s2s3_bgc    
+      real(r8):: rf_s3s1_bgc    
+
+      real(r8):: rf_cwdl2_bgc 
+      real(r8):: rf_cwdl3_bgc
+
+      real(r8):: tau_l1_bgc                ! turnover time of  litter 1 (yr)
+      real(r8):: tau_l2_l3_bgc             ! turnover time of  litter 2 and litter 3 (yr)
+      real(r8):: tau_s1_bgc                ! turnover time of  SOM 1 (yr)
+      real(r8):: tau_s2_bgc                ! turnover time of  SOM 2 (yr)
+      real(r8):: tau_s3_bgc                ! turnover time of  SOM 3 (yr)
+      real(r8):: tau_cwd_bgc               ! corrected fragmentation rate constant CWD
+
+      real(r8) :: cwd_fcel_bgc    !cellulose fraction for CWD
+      real(r8) :: cwd_flig_bgc    !
+
+      real(r8) :: k_frag_bgc      !fragmentation rate for CWD
+      real(r8) :: minpsi_bgc      !minimum soil water potential for heterotrophic resp
+   end type CNDecompBgcConstType
+
+   type(CNDecompBgcConstType),private ::  CNDecompBgcConstInst
+
 !
 ! !PUBLIC DATA MEMBERS:
-   real(r8), public :: decomp_depth_efolding = 0.5_r8         ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
+   real(r8), public :: decomp_depth_efolding                  ! (meters) e-folding depth for reduction in decomposition [set to large number for depth-independance]
    logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
    real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
    logical , public :: use_century_tfunc = .false.
    logical , public :: anoxia_wtsat = .false.                 ! true ==> weight anoxia by inundated fraction
-   real(r8), public :: froz_q10 = 1.5_r8                      ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
+   real(r8), public :: froz_q10                               ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
    integer , public :: nlev_soildecomp_standard               ! used here and in ch4Mod
 
    !! parameters for AD spinup
@@ -48,6 +84,143 @@ module CNDecompCascadeMod_CENTURY
 !-----------------------------------------------------------------------
 
 contains
+
+! !IROUTINE: readCNDecompBgcConsts
+!
+! !INTERFACE:
+subroutine readCNDecompBgcConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+   use abortutils   , only: endrun
+
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Dec 3 2012 : Created by S. Muszala
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNDecompCenturyConstType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv   ! has variable been read in or not
+   real(r8)           :: tempr   ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+   tString='tau_l1'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%tau_l1_bgc=tempr
+
+   tString='tau_l2_l3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%tau_l2_l3_bgc=tempr
+
+   tString='tau_s1'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%tau_s1_bgc=tempr
+
+   tString='tau_s2'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%tau_s2_bgc=tempr
+
+   tString='tau_s3'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%tau_s3_bgc=tempr
+
+   tString='tau_cwd'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%tau_cwd_bgc=tempr
+
+   tString='cn_s1_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%cn_s1_bgc=tempr
+
+   tString='cn_s2_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%cn_s2_bgc=tempr
+
+   tString='cn_s3_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%cn_s3_bgc=tempr
+
+   tString='rf_l1s1_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_l1s1_bgc=tempr
+
+   tString='rf_l2s1_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_l2s1_bgc=tempr
+
+   tString='rf_l3s2_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_l3s2_bgc=tempr   
+
+   tString='rf_s2s1_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_s2s1_bgc=tempr
+
+   tString='rf_s2s3_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_s2s3_bgc=tempr
+
+   tString='rf_s3s1_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_s3s1_bgc=tempr
+
+   tString='rf_cwdl2_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_cwdl2_bgc=tempr
+
+   tString='rf_cwdl3_bgc'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%rf_cwdl3_bgc=tempr
+
+   tString='cwd_fcel'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%cwd_fcel_bgc=tempr
+   
+   tString='k_frag'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%k_frag_bgc=tempr
+
+   tString='minpsi_hr'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%minpsi_bgc=tempr 
+
+   tString='cwd_flig'
+   call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNDecompBgcConstInst%cwd_flig_bgc=tempr 
+
+end subroutine readCNDecompBgcConsts
 
 
 !-----------------------------------------------------------------------
@@ -60,7 +233,7 @@ subroutine init_decompcascade(begc, endc)
 
 ! !DESCRIPTION:
 !
-!  initialize rate constants and decomposition pathways following the decomposition cascade of the CENTURY model.
+!  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
 !  written by C. Koven 
 !
 ! !USES:
@@ -98,7 +271,6 @@ subroutine init_decompcascade(begc, endc)
    real(r8) :: cn_s1
    real(r8) :: cn_s2
    real(r8) :: cn_s3
-   real(r8) :: cn_s4
    real(r8) :: f_s1s2(begc:endc,1:nlevdecomp)
    real(r8) :: f_s1s3(begc:endc,1:nlevdecomp)
    real(r8) :: f_s2s1
@@ -150,24 +322,24 @@ subroutine init_decompcascade(begc, endc)
 
    !------- time-constant coefficients ---------- !
    ! set soil organic matter compartment C:N ratios
-   cn_s1 = 8.0_r8
-   cn_s2 = 11.0_r8
-   cn_s3 = 11.0_r8
+   cn_s1 = CNDecompBgcConstInst%cn_s1_bgc
+   cn_s2 = CNDecompBgcConstInst%cn_s2_bgc
+   cn_s3 = CNDecompBgcConstInst%cn_s3_bgc
 
    ! set respiration fractions for fluxes between compartments
-   rf_l1s1 = 0.55_r8
-   rf_l2s1 = 0.5_r8
-   rf_l3s2 = 0.5_r8
-   rf_s2s1 = 0.55_r8
-   rf_s2s3 = 0.55_r8
-   rf_s3s1 = 0.55_r8
-   rf_cwdl2 = 0._r8
-   rf_cwdl3 = 0._r8
+   rf_l1s1 = CNDecompBgcConstInst%rf_l1s1_bgc
+   rf_l2s1 = CNDecompBgcConstInst%rf_l2s1_bgc
+   rf_l3s2 = CNDecompBgcConstInst%rf_l3s2_bgc
+   rf_s2s1 = CNDecompBgcConstInst%rf_s2s1_bgc
+   rf_s2s3 = CNDecompBgcConstInst%rf_s2s3_bgc
+   rf_s3s1 = CNDecompBgcConstInst%rf_s3s1_bgc
 
+   rf_cwdl2 =   CNDecompBgcConstInst%rf_cwdl2_bgc
+   rf_cwdl3 =   CNDecompBgcConstInst%rf_cwdl3_bgc
 
    ! set the cellulose and lignin fractions for coarse woody debris
-   cwd_fcel = 0.76_r8
-   cwd_flig = 0.24_r8
+   cwd_fcel = CNDecompBgcConstInst%cwd_fcel_bgc
+   cwd_flig = CNDecompBgcConstInst%cwd_flig_bgc
 
    ! set path fractions
    f_s2s1 = 0.42_r8/(0.45_r8)
@@ -393,7 +565,6 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    use shr_const_mod, only : SHR_CONST_PI
    use clm_varcon, only: secspday
    use clm_time_manager, only : get_days_per_year
-
    !
 ! !ARGUMENTS:
    implicit none
@@ -430,11 +601,9 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    real(r8):: tau_s2                ! turnover time of  SOM 2 (yr)
    real(r8):: tau_s3                ! turnover time of  SOM 3 (yr)
    real(r8):: tau_cwd               ! corrected fragmentation rate constant CWD
-   real(r8):: cwd_fcel              ! cellulose fraction of coarse woody debris
-   real(r8):: cwd_flig              ! lignin fraction of coarse woody debris
    real(r8):: cwdc_loss             ! fragmentation rate for CWD carbon (gC/m2/s)
    real(r8):: cwdn_loss             ! fragmentation rate for CWD nitrogen (gN/m2/s)
-
+   real(r8):: Q10
    integer :: i_litr1
    integer :: i_litr2
    integer :: i_litr3
@@ -442,7 +611,6 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    integer :: i_soil2
    integer :: i_soil3
    integer :: c, fc, j, k, l
-   real(r8) :: q10 = 1.5_r8
    real(r8) :: catanf    ! hyperbolic temperature function from CENTURY
    real(r8) :: catanf_30 ! reference rate at 30C
    real(r8) :: t1        ! temperature argument
@@ -476,14 +644,6 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
    
    days_per_year = get_days_per_year()
 
-   ! tau (yrs) at reference temperature
-   ! the aboveground parameters from century
-   ! tau_l1 = 1./14.8
-   ! tau_l2 = 1./3.9
-   ! tau_s1 = 1./6.0
-   ! tau_l2 = 1./0.2
-   ! tau_l3 = 1./.0045
-
    ! the belowground parameters from century
    tau_l1 = 1./18.5
    tau_l2_l3 = 1./4.9
@@ -493,15 +653,33 @@ subroutine decomp_rate_constants(lbc, ubc, num_soilc, filter_soilc)
 
    ! century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1
    tau_cwd  = 1./0.3
+! Todo:  SPM - the explicit divide gives different results than when that
+! value is placed in the parameters netcdf file.  To get bfb, keep the 
+! divide in source.
+   !tau_l1 = CNDecompBgcConstInst%tau_l1_bgc
+   !tau_l2_l3 = CNDecompBgcConstInst%tau_l2_l3_bgc
+   !tau_s1 = CNDecompBgcConstInst%tau_s1_bgc
+   !tau_s2 = CNDecompBgcConstInst%tau_s2_bgc
+   !tau_s3 = CNDecompBgcConstInst%tau_s3_bgc
+!set turnover rate of coarse woody debris
+   !tau_cwd = CNDecompBgcConstInst%tau_cwd_bgc
+
+   ! set "Q10" parameter
+   Q10 = CNConstShareInst%Q10
+
+   ! set "froz_q10" parameter
+	froz_q10  = CNConstShareInst%froz_q10 
+
+   ! Set "decomp_depth_efolding" parameter
+   decomp_depth_efolding = CNConstShareInst%decomp_depth_efolding
 
    ! translate to per-second time constant
-   k_l1 = 1._r8 / (secspday * days_per_year * tau_l1)
+   k_l1 = 1._r8    / (secspday * days_per_year * tau_l1)
    k_l2_l3 = 1._r8 / (secspday * days_per_year * tau_l2_l3)
-   k_s1 = 1._r8 / (secspday * days_per_year * tau_s1)
-   k_s2 = 1._r8 / (secspday * days_per_year * tau_s2)
-   k_s3 = 1._r8 / (secspday * days_per_year * tau_s3)
-   k_frag = 1._r8 / (secspday * days_per_year * tau_cwd)
-   
+   k_s1 = 1._r8    / (secspday * days_per_year * tau_s1)
+   k_s2 = 1._r8    / (secspday * days_per_year * tau_s2)
+   k_s3 = 1._r8    / (secspday * days_per_year * tau_s3)
+   k_frag = 1._r8  / (secspday * days_per_year * tau_cwd)
 
    ! calc ref rate
    catanf_30 = catanf(30._r8)
@@ -559,12 +737,10 @@ endif
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                if (j==1) t_scalar(c,:) = 0._r8
-               !! use separate (possibly equal) t funcs above and below freezing point
-               !! t_scalar(c,1)=t_scalar(c,1) + (q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j) 
                if (t_soisno(c,j) .ge. SHR_CONST_TKFRZ) then
-                  t_scalar(c,1)=t_scalar(c,1) + (q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
+                  t_scalar(c,1)=t_scalar(c,1) + (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
                else
-                  t_scalar(c,1)=t_scalar(c,1) + (q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
+                  t_scalar(c,1)=t_scalar(c,1) + (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
                endif
             end do
          end do
@@ -660,12 +836,10 @@ endif
          do j = 1, nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               !! use separate (possibly equal) t funcs above and below freezing point
-               !! t_scalar(c,j)= (q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                if (t_soisno(c,j) .ge. SHR_CONST_TKFRZ) then
-                  t_scalar(c,j)= (q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
+                  t_scalar(c,j)= (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                else
-                  t_scalar(c,j)= (q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
+                  t_scalar(c,j)= (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
                endif
             end do
          end do
@@ -793,4 +967,4 @@ endif
 
 #endif
 
-end module CNDecompCascadeMod_CENTURY
+end module CNDecompCascadeBGCMod

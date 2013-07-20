@@ -59,9 +59,17 @@ module clm_varctl
   character(len=256), public :: flndtopo   = ' '        ! topography on lnd grid
   character(len=256), public :: fpftdyn    = ' '        ! dynamic landuse dataset
   character(len=256), public :: fpftcon    = ' '        ! ASCII data file with PFT physiological constants
+  character(len=256), public :: fconsts      = ' '      ! CN constants file name
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
+
+
+#ifdef CN
+  logical, public :: defCN = .true.
+#else
+  logical, public :: defCN = .false.  ! logical to replace #ifdef CN
+#endif
 
 !
 ! Irrigate logic

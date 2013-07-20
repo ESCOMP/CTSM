@@ -596,9 +596,9 @@ subroutine ch4_prod (lbc, ubc, lbp, ubp, num_methc, filter_methc, num_methp, &
    use clm_varctl,       only : anoxia
    use clm_varpar, only : nlevdecomp, nlevdecomp_full
 #ifdef CENTURY_DECOMP
-   use CNDecompCascadeMod_CENTURY, only : nlev_soildecomp_standard
+   use CNDecompCascadeBGCMod, only : nlev_soildecomp_standard
 #else
-   use CNDecompCascadeMod_BGC, only : nlev_soildecomp_standard
+   use CNDecompCascadeCNMod, only : nlev_soildecomp_standard
 #endif
    use pftvarcon, only  : noveg
    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)

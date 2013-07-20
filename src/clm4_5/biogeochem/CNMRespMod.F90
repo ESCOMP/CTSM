@@ -1,5 +1,4 @@
 module CNMRespMod
-#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -14,22 +13,74 @@ module CNMRespMod
    use shr_kind_mod , only: r8 => shr_kind_r8
    use clm_varpar   , only: nlevgrnd
    use shr_const_mod, only: SHR_CONST_TKFRZ
+   use CNSharedConstsMod, only: CNConstShareInst	
+
    implicit none
    save
    private
+
 ! !PUBLIC MEMBER FUNCTIONS:
    public :: CNMResp
-!
-! !REVISION HISTORY:
-! 8/14/03: Created by Peter Thornton
-! 10/23/03, Peter Thornton: Migrated all subroutines to vector data structures.
-!
-!EOP
+   public :: readCNMRespConsts
+
+   type, private :: CNMRespConstType
+      real(r8):: br        !base rate for maintenance respiration(gC/gN/s)
+   end type CNMRespConstType
+
+   type(CNMRespConstType),private ::  CNMRespConstInst
+
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: readCNMRespConsts
+!
+! !INTERFACE:
+subroutine readCNMRespConsts ( ncid )
+!
+! !DESCRIPTION:
+!
+! !USES:
+   use shr_kind_mod , only: r8 => shr_kind_r8
+   use ncdio_pio , only : file_desc_t,ncd_io
+   use abortutils   , only: endrun
+
+! !ARGUMENTS:
+   implicit none
+   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+!
+! !CALLED FROM:   readConstantsMod.F90::CNConstReadFile
+!
+! !REVISION HISTORY:
+!  Jan 10 2013 : Created by R. Paudel
+!
+! !LOCAL VARIABLES:
+   character(len=32)  :: subname = 'CNMRespConstType'
+   character(len=100) :: errCode = 'Error reading in CN const file '
+   logical            :: readv ! has variable been read in or not
+   real(r8)           :: tempr ! temporary to read in constant
+   character(len=100) :: tString ! temp. var for reading
+
+!EOP
+!-----------------------------------------------------------------------
+
+   !
+   ! read in constants
+   !   
+   tString='br_mr'
+   call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
+   if ( .not. readv ) call endrun( trim(subname)//trim(errCode)//trim(tString))
+   CNMRespConstInst%br=tempr
+   
+end subroutine readCNMRespConsts
+!
+! !REVISION HISTORY:
+! 8/14/03: Created by Peter Thornton
+! 10/23/03, Peter Thornton: Migrated all subroutines to vector data structures.
+!-------------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE: CNMResp
@@ -62,9 +113,9 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer :: c,p,j          ! indices
    integer :: fp             ! soil filter pft index
    integer :: fc             ! soil filter column index
+   real(r8):: Q10            ! temperature dependence
    real(r8):: mr             ! maintenance respiration (gC/m2/s)
    real(r8):: br             ! base rate (gC/gN/s)
-   real(r8):: q10            ! temperature dependence
    real(r8):: tc             ! temperature correction, 2m air temp (unitless)
    real(r8):: tcsoi(lbc:ubc,nlevgrnd) ! temperature correction by soil layer (unitless)
 !EOP
@@ -102,13 +153,14 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    ! Ecological Applications, 1(2), 157-167.
    ! Original expression is br = 0.0106 molC/(molN h)
    ! Conversion by molecular weights of C and N gives 2.525e-6 gC/(gN s)
-   br = 2.525e-6_r8
+   ! set constants
+   br = CNMRespConstInst%br
    ! Peter Thornton: 3/13/09 
    ! Q10 was originally set to 2.0, an arbitrary choice, but reduced to 1.5 as part of the tuning
    ! to improve seasonal cycle of atmospheric CO2 concentration in global
    ! simulatoins
-   q10 = 1.5_r8
-
+   !Set Q10 from CNSharedConstsMod
+   Q10 = CNConstShareInst%Q10
    ! column loop to calculate temperature factors in each soil layer
    do j=1,nlevgrnd
       do fc = 1, num_soilc
@@ -117,7 +169,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
          ! calculate temperature corrections for each soil layer, for use in
          ! estimating fine root maintenance respiration with depth
 
-         tcsoi(c,j) = q10**((t_soisno(c,j)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
+         tcsoi(c,j) = Q10**((t_soisno(c,j)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
       end do
    end do
 
@@ -129,7 +181,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! gC/m2/s for each of the live plant tissues.
       ! Leaf and live wood MR
 
-      tc = q10**((t_ref2m(p)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
+      tc = Q10**((t_ref2m(p)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
       if (frac_veg_nosno(p) == 1) then
          leaf_mr(p) = lmrsun(p) * laisun(p) * 12.011e-6_r8 + &
                       lmrsha(p) * laisha(p) * 12.011e-6_r8
@@ -165,7 +217,5 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
     end associate 
  end subroutine CNMResp
-
-#endif
-
+!------------------------------------------------------------------
 end module CNMRespMod

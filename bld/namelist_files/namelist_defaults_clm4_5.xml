@@ -61,6 +61,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Plant function types (relative to {csmdata}) -->
 <fpftcon           >lnd/clm2/pftdata/pft-physiology.c130503.nc</fpftcon>
 
+<!-- Constant file for biogeochem modules (relative to {csmdata}) -->
+<fconsts           >lnd/clm2/constdata/cnConstOrnl.c130708.nc</fconsts>
+
 <!--
 
      Original initial condition file at 1 degree resolution

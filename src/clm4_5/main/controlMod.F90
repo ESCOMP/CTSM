@@ -27,14 +27,15 @@ module controlMod
                             create_glacier_mec_landunit, glc_dyntopo, glc_smb, &
                             glc_grid, subgridflag, &
                             use_c13, use_c14, irrigate, &
-                            spinup_state, override_bgc_restart_mismatch_dump
+                            spinup_state, override_bgc_restart_mismatch_dump, &
+                            fconsts
   use CanopyFluxesMod , only : perchroot, perchroot_alt
 #if (defined LCH4) && (defined CN)
   use clm_varctl   , only : anoxia
-#ifndef CENTURY_DECOMP
-  use CNDecompCascadeMod_BGC , only : anoxia_wtsat
+#ifdef CENTURY_DECOMP
+  use CNDecompCascadeBGCMod , only : anoxia_wtsat
 #else
-  use CNDecompCascadeMod_CENTURY , only : anoxia_wtsat
+  use CNDecompCascadeCNMod , only : anoxia_wtsat
 #endif
 #endif
 ! Lakes
@@ -68,10 +69,10 @@ module controlMod
 
   use CNVerticalProfileMod, only: exponential_rooting_profile, rootprof_exp, surfprof_exp, pftspecific_rootingprofile
 
-#ifndef CENTURY_DECOMP
-  use CNDecompCascadeMod_BGC, only: decomp_depth_efolding, froz_q10
+#ifdef CENTURY_DECOMP
+  use CNDecompCascadeBGCMod, only: decomp_depth_efolding, froz_q10
 #else
-  use CNDecompCascadeMod_CENTURY, only: decomp_depth_efolding, froz_q10
+  use CNDecompCascadeCNMod, only: decomp_depth_efolding, froz_q10
 #endif
 
 #endif         
@@ -221,7 +222,7 @@ contains
 
     namelist /clm_inparm/  &
          fsurdat, fatmtopo, flndtopo, &
-         fpftcon, fpftdyn,  fsnowoptics, fsnowaging
+         fpftcon, fconsts, fpftdyn,  fsnowoptics, fsnowaging
 
     ! History, restart options
 
@@ -459,6 +460,7 @@ contains
     call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fconsts , len(fconsts) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
@@ -633,6 +635,11 @@ contains
        write(iulog,*) '   fsurdat, surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(fsurdat)
+    end if
+    if (fconsts == ' ') then
+       write(iulog,*) '   fconsts, constant dataset not set'
+    else
+       write(iulog,*) '   constant data   = ',trim(fconsts)
     end if
     if (fatmlndfrc == ' ') then
        write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'

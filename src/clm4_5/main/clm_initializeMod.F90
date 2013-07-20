@@ -88,6 +88,7 @@ contains
 #if (defined LCH4)
     use ch4varcon        , only : ch4conrd
 #endif
+    use readConstantsMod, only : readConstants
 !
 ! !ARGUMENTS:
 !
@@ -133,6 +134,11 @@ contains
     call clm_varpar_init()
     call clm_varcon_init()
     call ncd_pio_init()
+
+    ! ------------------------------------------------------------------------
+    ! Read in constants files
+    ! ------------------------------------------------------------------------
+    call readConstants()
 
     if (masterproc) call control_print()
 
